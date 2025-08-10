@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
-import {PublicLayout} from './layouts/public-layout/public-layout';
-import {Login} from './layouts/public-layout/pages/login/login';
+import { PublicLayout } from './layouts/public-layout/public-layout';
+import { Login } from './layouts/public-layout/pages/login/login';
+import { PrivateLayout } from './layouts/private-layout/private-layout';
+import { Clients } from './layouts/private-layout/pages/clients/clients';
+import { Schools } from './layouts/private-layout/pages/schools/schools';
+import { Courses } from './layouts/private-layout/pages/courses/courses';
+import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 
 export const routes: Routes = [
   {
@@ -22,6 +27,37 @@ export const routes: Routes = [
         title: 'Thinking Mind | Login',
         component: Login
       },
+    ]
+  },
+  {
+    path: 'private',
+    component: PrivateLayout,
+    children: [
+      {
+        pathMatch: 'full',
+        path: '',
+        redirectTo: 'clients'
+      },
+      {
+        path: 'clients',
+        title: 'Thinking Mind | Clientes',
+        component: Clients
+      },
+      {
+        path: 'schools',
+        title: 'Thinking Mind | Colegios',
+        component: Schools
+      },
+      {
+        path: 'courses',
+        title: 'Thinking Mind | Cursos',
+        component: Courses
+      },
+      {
+        path: 'accounts-receivable',
+        title: 'Thinking Mind | Cuentas por Cobrar',
+        component: AccountsReceivable
+      }
     ]
   }
 ];
