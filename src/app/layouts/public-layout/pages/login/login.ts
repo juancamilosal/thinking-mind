@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
+import {Sidebar} from '../../../../components/sidebar/sidebar';
 
 @Component({
   selector: 'app-login',
-  imports: [],
+  imports: [
+    Sidebar
+  ],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
