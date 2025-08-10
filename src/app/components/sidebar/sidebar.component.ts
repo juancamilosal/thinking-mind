@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -6,9 +6,10 @@ import { CommonModule } from '@angular/common';
   selector: 'app-sidebar',
   standalone: true,
   imports: [RouterLink, RouterLinkActive, CommonModule],
-  templateUrl: './sidebar.html'
+  templateUrl: './sidebar.component.html'
 })
-export class Sidebar {
+export class SidebarComponent {
+  @Output() sidebarStateChange = new EventEmitter<boolean>();
   isOpen = false;
   menuItems = [
     { path: '/private/clients', icon: 'users', label: 'Clientes' },
@@ -17,7 +18,4 @@ export class Sidebar {
     { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' }
   ];
 
-  toggleSidebar() {
-    this.isOpen = !this.isOpen;
-  }
 }
