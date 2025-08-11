@@ -10,7 +10,15 @@
       </button>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <!-- Aquí se mostrarán las tarjetas de cursos dinámicamente -->
+      @for (course of COURSES; track course.courseId) {
+        <app-course-card
+          [courseCode]="course.courseCode"
+          [courseId]="course.courseId"
+          [courseName]="course.courseName"
+          [coursePrice]="course.coursePrice"
+          [courseImageUrl]="course.courseImageUrl"
+        />
+      }
     </div>
   </div>
 </div>
