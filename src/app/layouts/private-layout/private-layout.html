@@ -1,7 +1,8 @@
-<div class="flex min-h-screen bg-gray-100">
-  <app-sidebar/>
-  <main class="flex-1 ml-64 p-8">
-    <router-outlet />
-  </main>
+<div class="h-screen sm:flex overflow-hidden">
+    <app-sidebar class="flex-shrink-0" />
+    <div class="flex-1 overflow-auto">
+        <router-outlet />
+    </div>
 </div>
+
 
