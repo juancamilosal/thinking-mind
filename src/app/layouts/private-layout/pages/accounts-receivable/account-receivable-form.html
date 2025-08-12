@@ -1,0 +1,157 @@
+<div class="p-6 max-w-2xl mt-10 mx-auto bg-white rounded-xl shadow-md">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold">Crear Cuenta por Cobrar</h2>
+    <button
+      (click)="onCancel()"
+      class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+      Regresar
+    </button>
+  </div>
+
+  <form [formGroup]="accountForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    
+    <!-- Información del Cliente -->
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        Información del Cliente
+      </h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Nombre del Cliente -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Nombre del Cliente *
+          </label>
+          <input type="text" 
+                 formControlName="clientName"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 placeholder="Ej: Juan Pérez">
+          <p *ngIf="isFieldInvalid('clientName')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('clientName') }}
+          </p>
+        </div>
+
+        <!-- Email del Cliente -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Email del Cliente *
+          </label>
+          <input type="email" 
+                 formControlName="clientEmail"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 placeholder="cliente@email.com">
+          <p *ngIf="isFieldInvalid('clientEmail')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('clientEmail') }}
+          </p>
+        </div>
+
+        <!-- Teléfono del Cliente -->
+        <div class="md:col-span-2 space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Teléfono del Cliente *
+          </label>
+          <input type="tel" 
+                 formControlName="clientPhone"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 placeholder="3001234567">
+          <p *ngIf="isFieldInvalid('clientPhone')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('clientPhone') }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de la Cuenta -->
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+        </svg>
+        Información de la Cuenta
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Monto -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Monto *
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-3 text-gray-500">$</span>
+            <input type="number" 
+                   formControlName="amount"
+                   class="mt-1 block w-full pl-8 pr-4 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                   placeholder="0.00"
+                   step="0.01">
+          </div>
+          <p *ngIf="isFieldInvalid('amount')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('amount') }}
+          </p>
+        </div>
+
+        <!-- Fecha de Vencimiento -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Fecha de Vencimiento *
+          </label>
+          <input type="date" 
+                 formControlName="dueDate"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <p *ngIf="isFieldInvalid('dueDate')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('dueDate') }}
+          </p>
+        </div>
+
+        <!-- Número de Factura -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Número de Factura *
+          </label>
+          <input type="text" 
+                 formControlName="invoiceNumber"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 placeholder="Ej: FAC-001">
+          <p *ngIf="isFieldInvalid('invoiceNumber')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('invoiceNumber') }}
+          </p>
+        </div>
+
+        <!-- Descripción -->
+        <div class="md:col-span-2 space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Descripción *
+          </label>
+          <textarea formControlName="description"
+                    rows="3"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 resize-none"
+                    placeholder="Describe el servicio o producto..."></textarea>
+          <p *ngIf="isFieldInvalid('description')" 
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('description') }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón de Submit -->
+    <div class="pt-4">
+      <button
+        type="submit"
+        [disabled]="accountForm.invalid"
+        class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Crear Cuenta por Cobrar
+      </button>
+    </div>
+  </form>
+</div>

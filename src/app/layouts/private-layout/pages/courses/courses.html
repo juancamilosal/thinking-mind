@@ -1,0 +1,24 @@
+<div class="p-6">
+  <h1 class="text-2xl font-bold mb-6">Gestión de Cursos</h1>
+  <div class="space-y-6">
+    <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+      <input type="text" placeholder="Buscar curso..."
+             class="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <button
+        class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto">
+        Buscar
+      </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      @for (course of COURSES; track course.courseId) {
+        <app-course-card
+          [courseCode]="course.courseCode"
+          [courseId]="course.courseId"
+          [courseName]="course.courseName"
+          [coursePrice]="course.coursePrice"
+          [courseImageUrl]="course.courseImageUrl"
+        />
+      }
+    </div>
+  </div>
+</div>
