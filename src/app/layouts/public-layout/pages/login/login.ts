@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -8,21 +9,25 @@ import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } 
   styleUrl: './login.css'
 })
 
-export class Login {
-  private formBuilder = inject(FormBuilder);
+export class Login implements OnInit {
+  loginForm: FormGroup;
 
-  loginForm = this.formBuilder.group({
-        email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(6)]]
-      });
+  constructor(private fb: FormBuilder, private route: Router) {}
+
+  ngOnInit(): void {
+    this.loginForm = this.fb.group({
+      email: [null, [Validators.required, Validators.email]],
+      password: [null, [Validators.required]]
+    })
+  }
 
   onSubmit() {
-      if (this.loginForm.valid) {
-        console.log('Login Form Data:', this.loginForm.value);
-        // login logic
-      } else {
+      if (this.loginForm.invalid) {
         console.log('Form is invalid');
+        return;
       }
+      console.log('Login Form Data:', this.loginForm.value);
+      this.route.navigateByUrl('/private');
   }
 
 }
