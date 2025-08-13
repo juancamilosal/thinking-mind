@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AccountReceivableFormComponent, AccountReceivable } from './account-receivable-form';
+import { AccountReceivableFormComponent } from './account-receivable-form';
+import {AccountReceivable} from '../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-accounts-receivable',
@@ -20,7 +21,8 @@ export class AccountsReceivable {
       clientName: 'María García',
       clientEmail: 'maria@email.com',
       clientPhone: '3001234567',
-      amount: 500000,
+      studentName: 'Luis Pérez',
+      amount: 850000,
       description: 'Curso de Inglés Avanzado',
       dueDate: '2024-02-15',
       invoiceNumber: 'FAC-001',
@@ -32,6 +34,7 @@ export class AccountsReceivable {
       clientName: 'Carlos López',
       clientEmail: 'carlos@email.com',
       clientPhone: '3009876543',
+      studentName: 'Mariana Torres',
       amount: 750000,
       description: 'Curso de Matemáticas',
       dueDate: '2024-02-20',
@@ -47,6 +50,7 @@ export class AccountsReceivable {
       clientName: 'Ana Rodríguez',
       clientEmail: 'ana@email.com',
       clientPhone: '3005555555',
+      studentName: 'Juan Martínez',
       amount: 300000,
       description: 'Curso de Ciencias',
       dueDate: '2024-01-30',
