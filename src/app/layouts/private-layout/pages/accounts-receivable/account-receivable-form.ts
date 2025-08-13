@@ -10,10 +10,10 @@ import {AccountReceivable} from '../../../../core/models/AccountReceivable';
   standalone: true
 })
 export class AccountReceivableFormComponent implements OnInit {
-  @Output() formSubmit = new EventEmitter<AccountReceivable>();
-  @Output() formCancel = new EventEmitter<void>();
-
+  @Output() accountCreated = new EventEmitter<AccountReceivable>();
+  @Output() formClosed = new EventEmitter<void>();
   accountForm: FormGroup;
+
   constructor(private fb: FormBuilder) {
   }
 
@@ -34,25 +34,19 @@ export class AccountReceivableFormComponent implements OnInit {
     if (this.accountForm.valid) {
       const formData: AccountReceivable = {
         ...this.accountForm.value,
-        id: this.generateId(),
         status: 'pending' as const,
         createdDate: new Date().toISOString().split('T')[0]
       };
-      this.formSubmit.emit(formData);
+      this.accountCreated.emit(formData); // Cambiar de formSubmit a accountCreated
       this.accountForm.reset();
     }
   }
 
   onCancel() {
     this.accountForm.reset();
-    this.formCancel.emit();
+    this.formClosed.emit(); // Cambiar de formCancel a formClosed
   }
 
-  private generateId(): string {
-    return 'AR-' + Date.now().toString();
-  }
-
-  // Métodos para validaciones
   isFieldInvalid(fieldName: string): boolean {
     const field = this.accountForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
