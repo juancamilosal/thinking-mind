@@ -1,19 +1,7 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
-export interface AccountReceivable {
-  id?: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  amount: number;
-  description: string;
-  dueDate: string;
-  invoiceNumber: string;
-  status: 'pending' | 'paid';
-  createdDate: string;
-}
+import {AccountReceivable} from '../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-account-receivable-form',
@@ -21,47 +9,44 @@ export interface AccountReceivable {
   templateUrl: './account-receivable-form.html',
   standalone: true
 })
-export class AccountReceivableFormComponent {
-  @Output() formSubmit = new EventEmitter<AccountReceivable>();
-  @Output() formCancel = new EventEmitter<void>();
-
+export class AccountReceivableFormComponent implements OnInit {
+  @Output() accountCreated = new EventEmitter<AccountReceivable>();
+  @Output() formClosed = new EventEmitter<void>();
   accountForm: FormGroup;
 
   constructor(private fb: FormBuilder) {
-    this.accountForm = this.fb.group({
-      clientName: ['', [Validators.required, Validators.minLength(2)]],
-      clientEmail: ['', [Validators.required, Validators.email]],
-      clientPhone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
-      amount: ['', [Validators.required, Validators.min(0.01)]],
-      description: ['', [Validators.required, Validators.minLength(5)]],
-      dueDate: ['', Validators.required],
-      invoiceNumber: ['', Validators.required]
-    });
   }
+
+  ngOnInit(): void {
+    this.accountForm = this.fb.group({
+      clientName: [null, [Validators.required, Validators.minLength(2)]],
+      clientEmail: [null, [Validators.required, Validators.email]],
+      studentName: [null, [Validators.required, Validators.minLength(2)]],
+      clientPhone: [null, [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      amount: [null, [Validators.required, Validators.min(0.01)]],
+      description: [null, [Validators.required, Validators.minLength(5)]],
+      dueDate: [null, Validators.required],
+      invoiceNumber: [null, Validators.required]
+    });
+    }
 
   onSubmit() {
     if (this.accountForm.valid) {
       const formData: AccountReceivable = {
         ...this.accountForm.value,
-        id: this.generateId(),
         status: 'pending' as const,
         createdDate: new Date().toISOString().split('T')[0]
       };
-      this.formSubmit.emit(formData);
+      this.accountCreated.emit(formData); // Cambiar de formSubmit a accountCreated
       this.accountForm.reset();
     }
   }
 
   onCancel() {
     this.accountForm.reset();
-    this.formCancel.emit();
+    this.formClosed.emit(); // Cambiar de formCancel a formClosed
   }
 
-  private generateId(): string {
-    return 'AR-' + Date.now().toString();
-  }
-
-  // Métodos para validaciones
   isFieldInvalid(fieldName: string): boolean {
     const field = this.accountForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
@@ -69,11 +54,26 @@ export class AccountReceivableFormComponent {
 
   getFieldError(fieldName: string): string {
     const field = this.accountForm.get(fieldName);
+
+    // Mapeo de nombres técnicos a nombres amigables
+    const fieldLabels: { [key: string]: string } = {
+      'clientName': 'Nombre del cliente',
+      'clientEmail': 'Email del cliente',
+      'clientPhone': 'Teléfono del cliente',
+      'studentName': 'Nombre del estudiante',
+      'amount': 'Monto',
+      'description': 'Descripción',
+      'dueDate': 'Fecha de vencimiento',
+      'invoiceNumber': 'Número de factura'
+    };
+
+    const friendlyName = fieldLabels[fieldName] || fieldName;
+
     if (field?.errors) {
-      if (field.errors['required']) return `${fieldName} es requerido`;
+      if (field.errors['required']) return `${friendlyName} es requerido`;
       if (field.errors['email']) return 'Email inválido';
-      if (field.errors['minlength']) return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
-      if (field.errors['pattern']) return 'Formato inválido';
+      if (field.errors['minlength']) return `${friendlyName} debe tener mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+      if (field.errors['pattern']) return `${friendlyName} tiene formato inválido`;
       if (field.errors['min']) return 'El monto debe ser mayor a 0';
     }
     return '';

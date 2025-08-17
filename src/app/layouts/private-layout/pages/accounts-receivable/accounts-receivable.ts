@@ -1,15 +1,19 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AccountReceivableFormComponent, AccountReceivable } from './account-receivable-form';
+import { AccountReceivableFormComponent } from './account-receivable-form';
+import { AccountReceivableDetailComponent } from './account-receivable-detail';
+import {AccountReceivable} from '../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-accounts-receivable',
-  imports: [CommonModule, AccountReceivableFormComponent],
+  imports: [CommonModule, AccountReceivableFormComponent, AccountReceivableDetailComponent],
   templateUrl: './accounts-receivable.html',
   standalone: true
 })
 export class AccountsReceivable {
   showForm = false;
+  showDetail = false;
+  selectedAccount: AccountReceivable | null = null;
   activeTab: 'pending' | 'paid' = 'pending';
   accounts: AccountReceivable[] = [];
 
@@ -20,7 +24,8 @@ export class AccountsReceivable {
       clientName: 'María García',
       clientEmail: 'maria@email.com',
       clientPhone: '3001234567',
-      amount: 500000,
+      studentName: 'Luis Pérez',
+      amount: 850000,
       description: 'Curso de Inglés Avanzado',
       dueDate: '2024-02-15',
       invoiceNumber: 'FAC-001',
@@ -32,6 +37,7 @@ export class AccountsReceivable {
       clientName: 'Carlos López',
       clientEmail: 'carlos@email.com',
       clientPhone: '3009876543',
+      studentName: 'Mariana Torres',
       amount: 750000,
       description: 'Curso de Matemáticas',
       dueDate: '2024-02-20',
@@ -47,6 +53,7 @@ export class AccountsReceivable {
       clientName: 'Ana Rodríguez',
       clientEmail: 'ana@email.com',
       clientPhone: '3005555555',
+      studentName: 'Juan Martínez',
       amount: 300000,
       description: 'Curso de Ciencias',
       dueDate: '2024-01-30',
@@ -61,11 +68,30 @@ export class AccountsReceivable {
   }
 
   openForm() {
+    console.log('openForm() ejecutado');
     this.showForm = true;
+    console.log('showForm:', this.showForm);
   }
 
   closeForm() {
     this.showForm = false;
+  }
+
+  // Método que faltaba - requerido por el template
+  getFilteredAccounts(): AccountReceivable[] {
+    return this.activeTab === 'pending' ? this.pendingAccounts : this.paidAccounts;
+  }
+
+  // Método que faltaba - requerido por el template
+  onAccountCreated(account: AccountReceivable) {
+    // Generar un ID único
+    account.id = 'AR-' + (Date.now().toString().slice(-3)).padStart(3, '0');
+    account.status = 'pending';
+    account.createdDate = new Date().toISOString().split('T')[0];
+    
+    this.pendingAccounts.push(account);
+    this.updateAccounts();
+    this.closeForm();
   }
 
   onFormSubmit(account: AccountReceivable) {
@@ -120,5 +146,15 @@ export class AccountsReceivable {
       this.paidAccounts = this.paidAccounts.filter(acc => acc.id !== accountId);
     }
     this.updateAccounts();
+  }
+
+  viewDetail(account: AccountReceivable) {
+    this.selectedAccount = account;
+    this.showDetail = true;
+  }
+
+  backToList() {
+    this.showDetail = false;
+    this.selectedAccount = null;
   }
 }
