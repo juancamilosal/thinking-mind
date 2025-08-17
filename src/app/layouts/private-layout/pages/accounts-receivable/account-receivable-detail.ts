@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Agregar esta importación
 import {AccountReceivable} from '../../../../core/models/AccountReceivable';
+import { PaymentDetailComponent } from './payment-detail/payment-detail';
 
 export interface Payment {
   id: string;
@@ -10,11 +11,16 @@ export interface Payment {
   paymentDate: string;
   paymentMethod: string;
   reference: string;
+  payerName: string;
+  approvalNumber: string;
+  bank: string;
+  paymentTime?: string;
+  notes?: string;
 }
 
 @Component({
   selector: 'app-account-receivable-detail',
-  imports: [CommonModule, FormsModule], // Agregar FormsModule aquí
+  imports: [CommonModule, FormsModule, PaymentDetailComponent], // Agregar PaymentDetailComponent aquí
   templateUrl: './account-receivable-detail.html',
   standalone: true
 })
@@ -31,7 +37,12 @@ export class AccountReceivableDetailComponent {
       amount: 200000,
       paymentDate: '2024-01-25',
       paymentMethod: 'Transferencia',
-      reference: 'TRF-001'
+      reference: 'TRF-001',
+      payerName: 'María García',
+      approvalNumber: 'APR-2024-001',
+      bank: 'Banco de Bogotá',
+      paymentTime: '14:30',
+      notes: 'Pago parcial del curso'
     },
     {
       id: 'PAY-002',
@@ -39,14 +50,26 @@ export class AccountReceivableDetailComponent {
       amount: 150000,
       paymentDate: '2024-02-05',
       paymentMethod: 'Efectivo',
-      reference: 'EFE-001'
+      reference: 'EFE-001',
+      payerName: 'María García',
+      approvalNumber: 'APR-2024-002',
+      bank: 'N/A',
+      paymentTime: '10:15',
+      notes: 'Pago en efectivo en oficina'
     }
   ];
+
+  selectedPayment: Payment | null = null;
+  showPaymentDetail = false;
+  showPaymentDetailView = false;
 
   showAddPaymentForm = false;
   newPaymentAmount = 0;
   newPaymentMethod = '';
   newPaymentReference = '';
+  newPayerName = '';
+  newApprovalNumber = '';
+  newBank = '';
 
   onBack() {
     this.backToList.emit();
@@ -62,6 +85,10 @@ export class AccountReceivableDetailComponent {
 
   getPaymentProgress(): number {
     return (this.getTotalPaid() / this.account.amount) * 100;
+  }
+
+  getPaymentProgressCapped(): number {
+    return Math.min(this.getPaymentProgress(), 100);
   }
 
   formatCurrency(amount: number): string {
@@ -87,7 +114,11 @@ export class AccountReceivableDetailComponent {
         amount: this.newPaymentAmount,
         paymentDate: new Date().toISOString().split('T')[0],
         paymentMethod: this.newPaymentMethod,
-        reference: this.newPaymentReference
+        reference: this.newPaymentReference,
+        payerName: this.newPayerName,
+        approvalNumber: this.newApprovalNumber,
+        bank: this.newBank,
+        paymentTime: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
       };
 
       this.payments.push(newPayment);
@@ -101,6 +132,24 @@ export class AccountReceivableDetailComponent {
     this.newPaymentAmount = 0;
     this.newPaymentMethod = '';
     this.newPaymentReference = '';
+    this.newPayerName = '';
+    this.newApprovalNumber = '';
+    this.newBank = '';
+  }
+
+  viewPaymentDetail(payment: Payment) {
+    this.selectedPayment = payment;
+    this.showPaymentDetailView = true;
+  }
+
+  closePaymentDetail() {
+    this.selectedPayment = null;
+    this.showPaymentDetail = false;
+  }
+
+  backToPaymentHistory() {
+    this.selectedPayment = null;
+    this.showPaymentDetailView = false;
   }
 
   getStatusColor(): string {
