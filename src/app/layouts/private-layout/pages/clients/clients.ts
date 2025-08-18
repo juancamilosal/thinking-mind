@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {FormBuilder, FormGroup, Validators, ReactiveFormsModule} from '@angular/forms';
+import {CommonModule} from '@angular/common';
+import {ClientService} from '../../../../core/services/client.service';
+import {Client} from '../../../../core/models/Clients';
 
 @Component({
   selector: 'app-clients',
@@ -11,15 +13,25 @@ import { CommonModule } from '@angular/common';
 export class Clients implements OnInit {
   clientForm!: FormGroup;
   showForm = false;
+  clients: Client[] = [];
   documentTypes = [
-    { id: 'cc', name: 'Cédula de Ciudadanía' },
-    { id: 'pp', name: 'Pasaporte' },
-    { id: 'ce', name: 'Cédula de Extranjería' }
+    {id: 'cc', name: 'Cédula de Ciudadanía'},
+    {id: 'pp', name: 'Pasaporte'},
+    {id: 'ce', name: 'Cédula de Extranjería'}
   ];
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private clientServices: ClientService) {
+  }
 
-  ngOnInit() {
+
+  ngOnInit(): void {
+    this.initForm();
+    console.log('=== INICIO ngOnInit ===');
+    console.log('Iniciando consulta de clientes...');
+    this.createClient();
+  }
+
+  initForm() {
     this.clientForm = this.fb.group({
       documentType: ['', Validators.required],
       firstName: ['', Validators.required],
@@ -49,5 +61,12 @@ export class Clients implements OnInit {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
     });
+  }
+
+  createClient() {
+    this.clientServices.searchClient().subscribe(data => {
+        this.clients = data.data;
+      }
+    )
   }
 }
