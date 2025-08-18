@@ -1,12 +1,12 @@
 import { Component, HostListener, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
-import { NgClass, isPlatformBrowser } from "@angular/common";
+import { isPlatformBrowser } from "@angular/common";
 
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, NgClass],
+  imports: [RouterOutlet, SidebarComponent],
   templateUrl: './private-layout.html'
 })
 export class PrivateLayout implements OnInit {
