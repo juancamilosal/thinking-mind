@@ -1,21 +1,15 @@
 # =============================
 # Etapa 1: Build de Angular
 # =============================
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
-
-# Dependencias necesarias para compilar paquetes nativos (lightningcss, etc.)
-RUN apk add --no-cache python3 make g++ libc6-compat
 
 # Copiar archivos necesarios para instalar dependencias
 COPY package.json package-lock.json ./
 
-# Instalar dependencias incluyendo dev (Angular CLI y demás)
+# Instalar dependencias (incluye dev necesarias para Angular CLI)
 RUN npm ci
-
-# Recompilar lightningcss desde fuente (porque no hay binarios precompilados para musl)
-RUN npm rebuild lightningcss --build-from-source
 
 # Copiar el resto del código fuente
 COPY . .
