@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "n": {
+    "thinkingmind-fe": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -62,7 +62,7 @@
               "buildTarget": "n:build:production"
             },
             "development": {
-              "buildTarget": "n:build:development"
+              "buildTarget": "thinkingmind-fe:build:development"
             }
           },
           "defaultConfiguration": "development"

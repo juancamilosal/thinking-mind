@@ -22,7 +22,7 @@ FROM nginx:alpine
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copiar los archivos compilados desde el builder
-COPY --from=builder /app/dist/n/browser /usr/share/nginx/html
+COPY --from=builder /app/dist/thinkingmind-fe/browser /usr/share/nginx/html
 
 # Copiar configuración personalizada de NGINX si la tienes
 # COPY nginx.conf /etc/nginx/nginx.conf
