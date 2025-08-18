@@ -26,7 +26,8 @@ FROM nginx:alpine
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copiar los archivos compilados desde el builder
-COPY --from=builder /app/dist/thinkingmind-fe/browser /usr/share/nginx/html
+COPY --from=builder /app/dist/thinkingmind-fe /usr/share/nginx/html
+
 
 EXPOSE 80
 
