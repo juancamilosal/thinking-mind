@@ -3,70 +3,31 @@ import {FormBuilder, FormGroup, Validators, ReactiveFormsModule} from '@angular/
 import {CommonModule} from '@angular/common';
 import {ClientService} from '../../../../core/services/client.service';
 import {Client} from '../../../../core/models/Clients';
+import {FormClient} from './form-client/form-client';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormClient],
   templateUrl: './clients.html'
 })
 export class Clients implements OnInit {
-  clientForm!: FormGroup;
   showForm = false;
   clients: Client[] = [];
-  documentTypes = [
-    {id: 'cc', name: 'Cédula de Ciudadanía'},
-    {id: 'pp', name: 'Pasaporte'},
-    {id: 'ce', name: 'Cédula de Extranjería'}
-  ];
-
   constructor(private fb: FormBuilder, private clientServices: ClientService) {
   }
 
-
   ngOnInit(): void {
-    this.initForm();
-    console.log('=== INICIO ngOnInit ===');
-    console.log('Iniciando consulta de clientes...');
-    this.createClient();
-  }
-
-  initForm() {
-    this.clientForm = this.fb.group({
-      documentType: ['', Validators.required],
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      email: ['', [Validators.required, Validators.email]],
-      address: ['', Validators.required]
-    });
+    this.searchClient();
   }
 
   toggleForm() {
     this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.clientForm.reset();
-    }
   }
 
-  onSubmit() {
-    if (this.clientForm.valid) {
-      console.log(this.clientForm.value);
-    } else {
-      this.markFormGroupTouched(this.clientForm);
-    }
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup) {
-    Object.values(formGroup.controls).forEach(control => {
-      control.markAsTouched();
-    });
-  }
-
-  createClient() {
+  searchClient() {
     this.clientServices.searchClient().subscribe(data => {
-        this.clients = data.data;
-      }
-    )
+      this.clients = data.data;
+    });
   }
 }

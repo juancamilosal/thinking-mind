@@ -33,7 +33,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-          @for(client of clients; track client.tipo_documento) {
+          @for(client of clients; track client.numero_documento) {
             <tr>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ client.nombre}}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{client.apellido}}</td>
@@ -60,104 +60,6 @@
         Regresar
       </button>
     </div>
-
-    <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="space-y-6">
-      <!-- Tipo de Documento -->
-      <div class="space-y-2">
-        <label for="documentType" class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-        <select
-          id="documentType"
-          formControlName="documentType"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-          <option value="">Seleccione un tipo de documento</option>
-          @for(type of documentTypes; track type.id) {
-            <option [value]="type.id">{{ type.name }}</option>
-          }
-        </select>
-        @if(clientForm.get('documentType')?.touched && clientForm.get('documentType')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El tipo de documento es obligatorio</p>
-        }
-      </div>
-
-      <!-- Nombre -->
-      <div class="space-y-2">
-        <label for="firstName" class="block text-sm font-medium text-gray-700">Nombre</label>
-        <input
-          type="text"
-          id="firstName"
-          formControlName="firstName"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(clientForm.get('firstName')?.touched && clientForm.get('firstName')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El nombre es obligatorio</p>
-        }
-      </div>
-
-      <!-- Apellido -->
-      <div class="space-y-2">
-        <label for="lastName" class="block text-sm font-medium text-gray-700">Apellido</label>
-        <input
-          type="text"
-          id="lastName"
-          formControlName="lastName"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(clientForm.get('lastName')?.touched && clientForm.get('lastName')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El apellido es obligatorio</p>
-        }
-      </div>
-
-      <!-- Número de Celular -->
-      <div class="space-y-2">
-        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Número de Celular</label>
-        <input
-          type="tel"
-          id="phoneNumber"
-          formControlName="phoneNumber"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(clientForm.get('phoneNumber')?.touched && clientForm.get('phoneNumber')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El número de celular es obligatorio</p>
-        }
-        @if(clientForm.get('phoneNumber')?.touched && clientForm.get('phoneNumber')?.errors?.['pattern']) {
-          <p class="text-red-500 text-sm mt-1">Ingrese un número de celular válido (10 dígitos)</p>
-        }
-      </div>
-
-      <!-- Correo Electrónico -->
-      <div class="space-y-2">
-        <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(clientForm.get('email')?.touched && clientForm.get('email')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El correo electrónico es obligatorio</p>
-        }
-        @if(clientForm.get('email')?.touched && clientForm.get('email')?.errors?.['email']) {
-          <p class="text-red-500 text-sm mt-1">Ingrese un correo electrónico válido</p>
-        }
-      </div>
-
-      <!-- Dirección -->
-      <div class="space-y-2">
-        <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-        <input
-          type="text"
-          id="address"
-          formControlName="address"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(clientForm.get('address')?.touched && clientForm.get('address')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">La dirección es obligatoria</p>
-        }
-      </div>
-
-      <!-- Botón de Submit -->
-      <div class="pt-4">
-        <button
-          type="submit"
-          class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-          Registrar Cliente
-        </button>
-      </div>
-    </form>
+    <app-form-client (goBack)="toggleForm()" (searchClient)="searchClient()"/>
   </div>
 }

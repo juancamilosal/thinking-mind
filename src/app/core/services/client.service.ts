@@ -19,7 +19,7 @@ export class ClientService {
     return this.http.get<ResponseAPI<Client[]>>(this.apiCliente);
   }
 
-  createClient(): Observable<ResponseAPI<Client[]>> {
-    return this.http.get<ResponseAPI<Client[]>>(this.apiCliente);
+  createClient(client: Client): Observable<ResponseAPI<Client>> {
+    return this.http.post<ResponseAPI<Client>>(this.apiCliente, client);
   }
 }
