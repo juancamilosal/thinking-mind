@@ -1,0 +1,53 @@
+<div class="p-10 bg-gray-50 min-h-screen rounded-xl mt-6 ml-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ courseName }}</h1>
+    <button (click)="close.emit()"
+      class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+      Regresar
+    </button>
+  </div>
+  <div class="top-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+      ${{ coursePrice | number:'1.0-0' }}
+  </div>
+  <span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1 rounded-full">
+        {{ courseCode }}
+  </span>
+  <div class="text-xl font-semibold text-gray-800 mb-2">Duración: {{ courseDuration }}</div>
+  <h2 class="text-xl font-semibold text-gray-800 mb-2">Descripción</h2>
+  <p class="text-justify">Clases de inglés y francés con profesores nativos, el programa Will-Go! está diseñado para que nuestros estudiantes tengan una experiencia de aprendizaje significativa como un refuerzo a sus estudios del idioma. Con un programa académico completo y actividades desafiantes, el inglés será algo novedoso y divertido.
+
+    EL PROGRAMA ACADÉMICO
+    Las clases son divertidas y distintas de lo normal: Tienes actividades, debates, juegos de rol y uso de diferentes medios. Todo orientado al aprendizaje del idioma.
+
+    ¡Siempre hay algo nuevo por hacer y aprender!
+    EL DÍA CONTINÚA CON JUEGOS, DEPORTES Y ACTIVIDADES EN INGLÉS
+    Desde juegos al aire libre, hasta Arts & Crafts y concursos de creatividad, las actividades del Will-Go! son una forma divertida de poner a prueba el idioma y darle un uso para producir algo novedoso. Estarán acompañados de los Activity Leaders, quienes desarrollan todo el programa en inglés.
+
+    Clases inglés francés nativos</p>
+  <div class="mt-4">
+    <h2 class="text-xl font-semibold text-gray-800 mb-2">Contenido del Curso</h2>
+    <ul class="list-disc pl-5 space-y-2">
+      <li>Introducción al curso</li>
+      <li>Conceptos básicos</li>
+      <li>Prácticas recomendadas</li>
+      <li>Evaluación final</li>
+    </ul>
+    <!-- Botones de acción -->
+    <div class="flex space-x-20 mt-5">
+      <!-- Botón Editar -->
+      <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+        </svg>
+        <span>Editar</span>
+      </button>
+
+      <!-- Botón Eliminar -->
+      <button class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 102 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 10-2 0v3a1 1 0 102 0V9z" clip-rule="evenodd"/>
+        </svg>
+        <span>Eliminar</span>
+      </button>
+    </div>
+</div>
