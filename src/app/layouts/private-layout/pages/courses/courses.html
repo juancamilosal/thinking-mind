@@ -1,36 +1,38 @@
 <div class="p-6">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Cursos</h1>
-@if (!showCourseInfo) {
-  <div class="space-y-6">
-    <div class="flex gap-4 flex-wrap sm:flex-nowrap">
-      <input type="text" placeholder="Buscar curso..."
-             class="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-      <button
-        class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto">
-        Buscar
-      </button>
+  
+  @if (!showCourseInfo) {
+    <div class="space-y-6">
+      <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+        <input type="text" placeholder="Buscar curso..."
+               class="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <button
+          class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto">
+          Buscar
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @for (course of COURSES; track course.courseId) {
+          <app-course-card
+            [courseCode]="course.courseCode"
+            [courseId]="course.courseId"
+            [courseName]="course.courseName"
+            [coursePrice]="course.coursePrice"
+            [courseImageUrl]="course.courseImageUrl"
+            (click)="openCourseInfo(course)"
+          />
+        }
+      </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      @for (course of COURSES; track course.courseId) {
-        <app-course-card
-          [courseCode]="course.courseCode"
-          [courseId]="course.courseId"
-          [courseName]="course.courseName"
-          [coursePrice]="course.coursePrice"
-          [courseImageUrl]="course.courseImageUrl"
-          (click)="openCourseInfo(course)"
-        />
-      }
-    </div>
-  </div>
+  } @else {
+    <app-course-info
+      [courseId]="selectedCourse.courseId"
+      [courseName]="selectedCourse.courseName"
+      [coursePrice]="selectedCourse.coursePrice"
+      [courseCode]="selectedCourse.courseCode"
+      [courseDuration]="selectedCourse.courseDuration"
+      (close)="closeCourseInfo()">
+    </app-course-info>
+  }
 </div>
-} @else {
-      <app-course-info
-        [courseId]="selectedCourse.courseId"
-        [courseName]="selectedCourse.name"
-        [coursePrice]="selectedCourse.price"
-        [courseCode]="selectedCourse.code"
-        [courseDuration]="selectedCourse.duration"
-        (close)="closeCourseInfo()">
-      </app-course-info>
-    }

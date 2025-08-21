@@ -1,14 +1,14 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import {Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { School } from '../../../../core/models/School';
-import { SchoolDetail } from './school-detail/school-detail';
+import {SchoolService} from '../../../../core/services/school.service';
 
 
 @Component({
   selector: 'app-schools',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SchoolDetail],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './schools.html'
 })
 export class Schools implements OnInit {
@@ -19,7 +19,6 @@ export class Schools implements OnInit {
   schools: School[] = [];
   selectedSchool: School | null = null;
 
-  schools: School[] = [];
 
   constructor(private fb: FormBuilder, private schoolServices: SchoolService) {
   }
@@ -97,12 +96,11 @@ export class Schools implements OnInit {
       });
     }
   }
-}
 
   searchSchool() {
     this.schoolServices.searchSchool().subscribe(data => {
-      this.schools = data.data;
-    }
-  )
-  }
+        this.schools = data.data;
+      }
+    )}
 }
+
