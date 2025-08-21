@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AccountReceivableFormComponent } from './account-receivable-form';
-import { AccountReceivableDetailComponent } from './account-receivable-detail';
+import { AccountReceivableFormComponent } from './account-recevable-form/account-receivable-form';
+import { AccountReceivableDetailComponent } from './accout-receivable-detail/account-receivable-detail';
 import {AccountReceivable} from '../../../../core/models/AccountReceivable';
 
 @Component({
@@ -21,10 +21,16 @@ export class AccountsReceivable {
   pendingAccounts: AccountReceivable[] = [
     {
       id: 'AR-001',
+      clientDocumentType: 'CC',
+      clientDocumentNumber: '98765432',
       clientName: 'María García',
       clientEmail: 'maria@email.com',
       clientPhone: '3001234567',
+      studentDocumentType: 'CC',
+      studentDocumentNumber: '12345678',
       studentName: 'Luis Pérez',
+      colegio: 'Colegio San José',
+      curso: 'ingles',
       amount: 850000,
       description: 'Curso de Inglés Avanzado',
       dueDate: '2024-02-15',
@@ -34,10 +40,16 @@ export class AccountsReceivable {
     },
     {
       id: 'AR-002',
+      clientDocumentType: 'PP',
+      clientDocumentNumber: '11223344',
       clientName: 'Carlos López',
       clientEmail: 'carlos@email.com',
       clientPhone: '3009876543',
+      studentDocumentType: 'PP',
+      studentDocumentNumber: '87654321',
       studentName: 'Mariana Torres',
+      colegio: 'Instituto Nacional',
+      curso: 'matematicas',
       amount: 750000,
       description: 'Curso de Matemáticas',
       dueDate: '2024-02-20',
@@ -50,10 +62,16 @@ export class AccountsReceivable {
   paidAccounts: AccountReceivable[] = [
     {
       id: 'AR-003',
+      clientDocumentType: 'CE',
+      clientDocumentNumber: '55667788',
       clientName: 'Ana Rodríguez',
       clientEmail: 'ana@email.com',
       clientPhone: '3005555555',
+      studentDocumentType: 'CE',
+      studentDocumentNumber: '11223344',
       studentName: 'Juan Martínez',
+      colegio: 'Colegio La Salle',
+      curso: 'ciencias',
       amount: 300000,
       description: 'Curso de Ciencias',
       dueDate: '2024-01-30',
@@ -88,7 +106,7 @@ export class AccountsReceivable {
     account.id = 'AR-' + (Date.now().toString().slice(-3)).padStart(3, '0');
     account.status = 'pending';
     account.createdDate = new Date().toISOString().split('T')[0];
-    
+
     this.pendingAccounts.push(account);
     this.updateAccounts();
     this.closeForm();

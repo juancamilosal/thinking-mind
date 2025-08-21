@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Payment } from '../account-receivable-detail';
+import { Payment } from '../accout-receivable-detail/account-receivable-detail';
 
 @Component({
   selector: 'app-payment-detail',

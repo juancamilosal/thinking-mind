@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Agregar esta importación
-import {AccountReceivable} from '../../../../core/models/AccountReceivable';
-import { PaymentDetailComponent } from './payment-detail/payment-detail';
+import {AccountReceivable} from '../../../../../core/models/AccountReceivable';
+import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 
 export interface Payment {
   id: string;

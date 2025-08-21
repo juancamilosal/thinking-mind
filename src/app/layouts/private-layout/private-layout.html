@@ -5,4 +5,11 @@
     </div>
 </div>
 
+<!-- Modal de notificaciones -->
+<app-notification-modal 
+    [isVisible]="isNotificationVisible"
+    [notification]="currentNotification"
+    (close)="onNotificationClose()">
+</app-notification-modal>
+
 
