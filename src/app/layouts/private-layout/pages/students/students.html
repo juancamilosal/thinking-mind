@@ -105,14 +105,16 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">
-                      @if (typeof student.acudiente === 'object') {
+                      @if (student.acudiente && typeof student.acudiente === 'object') {
                         {{ student.acudiente.nombre }} {{ student.acudiente.apellido }}
-                      } @else {
+                      } @else if (student.acudiente) {
                         ID: {{ student.acudiente }}
+                      } @else {
+                        Sin acudiente
                       }
                     </div>
                     <div class="text-sm text-gray-500">
-                      @if (typeof student.acudiente === 'object') {
+                      @if (student.acudiente && typeof student.acudiente === 'object') {
                         {{ student.acudiente.tipo_documento }}: {{ student.acudiente.numero_documento }}
                       }
                     </div>

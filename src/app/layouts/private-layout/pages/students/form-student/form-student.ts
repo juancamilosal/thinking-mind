@@ -76,15 +76,24 @@ export class FormStudent implements OnInit, OnChanges {
         lastName: this.studentData.apellido,
         school: this.studentData.colegio
       });
-
-      // Si el acudiente es un objeto, cargar sus datos
-      if (typeof this.studentData.acudiente === 'object') {
+  
+      // Si el acudiente es un objeto y no es null, cargar sus datos
+      if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
         this.guardianId = this.studentData.acudiente.id ? this.studentData.acudiente.id.toString() : '';
         this.studentForm.patchValue({
           guardianDocumentType: this.studentData.acudiente.tipo_documento,
           guardianDocumentNumber: this.studentData.acudiente.numero_documento,
           guardianFirstName: this.studentData.acudiente.nombre,
           guardianLastName: this.studentData.acudiente.apellido
+        });
+      } else {
+        // Si el acudiente es null o no es un objeto, limpiar los campos
+        this.guardianId = '';
+        this.studentForm.patchValue({
+          guardianDocumentType: null,
+          guardianDocumentNumber: null,
+          guardianFirstName: null,
+          guardianLastName: null
         });
       }
     }
