@@ -1,5 +1,6 @@
 <div class="p-6">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Cursos</h1>
+@if (!showCourseInfo) {
   <div class="space-y-6">
     <div class="flex gap-4 flex-wrap sm:flex-nowrap">
       <input type="text" placeholder="Buscar curso..."
@@ -17,8 +18,19 @@
           [courseName]="course.courseName"
           [coursePrice]="course.coursePrice"
           [courseImageUrl]="course.courseImageUrl"
+          (click)="openCourseInfo(course)"
         />
       }
     </div>
   </div>
 </div>
+} @else {
+      <app-course-info
+        [courseId]="selectedCourse.courseId"
+        [courseName]="selectedCourse.name"
+        [coursePrice]="selectedCourse.price"
+        [courseCode]="selectedCourse.code"
+        [courseDuration]="selectedCourse.duration"
+        (close)="closeCourseInfo()">
+      </app-course-info>
+    }

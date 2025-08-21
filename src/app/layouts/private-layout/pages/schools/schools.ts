@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { School } from '../../../../core/models/School';
 import { SchoolDetail } from './school-detail/school-detail';
+
 
 @Component({
   selector: 'app-schools',
@@ -18,9 +19,17 @@ export class Schools implements OnInit {
   schools: School[] = [];
   selectedSchool: School | null = null;
 
-  constructor(private fb: FormBuilder) {}
+  schools: School[] = [];
+
+  constructor(private fb: FormBuilder, private schoolServices: SchoolService) {
+  }
 
   ngOnInit() {
+    this.initForm();
+    this.searchSchool();
+  }
+
+  initForm(){
     this.schoolForm = this.fb.group({
       schoolName: ['', Validators.required],
       city: ['', Validators.required],
@@ -50,6 +59,7 @@ export class Schools implements OnInit {
       control.markAsTouched();
     });
   }
+
 
   viewSchool(school: School) {
     this.selectedSchool = school;
@@ -86,5 +96,13 @@ export class Schools implements OnInit {
         phoneNumber: this.selectedSchool.phoneNumber
       });
     }
+  }
+}
+
+  searchSchool() {
+    this.schoolServices.searchSchool().subscribe(data => {
+      this.schools = data.data;
+    }
+  )
   }
 }
