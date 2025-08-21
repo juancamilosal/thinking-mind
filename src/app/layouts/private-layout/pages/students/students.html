@@ -17,6 +17,24 @@
       </button>
     </div>
 
+    <!-- Barra de Búsqueda -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+        <input
+          type="text"
+          placeholder="Buscar por nombre, apellido o documento..."
+          [value]="searchTerm"
+          (input)="onSearchInputChange($event)"
+          (keyup.enter)="onSearch()"
+          class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        <button
+          (click)="onSearch()"
+          class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
+          Buscar
+        </button>
+      </div>
+    </div>
+
     <!-- Tabla de Estudiantes -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
@@ -34,7 +52,32 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            @if (students.length === 0) {
+            @if (isLoading) {
+              @for (item of [1,2,3,4,5]; track $index) {
+                <tr class="animate-pulse">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-36"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex space-x-2">
+                      <div class="h-8 bg-gray-200 rounded w-16"></div>
+                      <div class="h-8 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            } @else if (students.length === 0) {
               <tr>
                 <td colspan="5" class="px-6 py-12 text-center">
                   <div class="flex flex-col items-center justify-center space-y-3">
@@ -107,14 +150,20 @@
     (close)="closeDetail()" 
     (edit)="editStudent($event)">
   </app-student-detail>
-} @else {
+}
+
+@if (showForm) {
   <div class="p-6 bg-gray-50 min-h-screen">
     <div class="max-w-4xl mx-auto">
       <div class="bg-white rounded-xl shadow-lg p-8">
         <div class="flex justify-between items-center mb-8">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Registro de Estudiante</h1>
-            <p class="text-gray-600">Completa la información del estudiante y su acudiente</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+              {{ editMode ? 'Editar Información Estudiante' : 'Registro de Estudiante' }}
+            </h1>
+            <p class="text-gray-600">
+              {{ editMode ? 'Actualiza la información del estudiante y su acudiente' : 'Completa la información del estudiante y su acudiente' }}
+            </p>
           </div>
           <button
             (click)="toggleForm()"

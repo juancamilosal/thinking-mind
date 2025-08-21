@@ -15,8 +15,19 @@ export class ClientService {
   constructor(private http: HttpClient) {
   }
 
-  searchClient(): Observable<ResponseAPI<Client[]>> {
-    return this.http.get<ResponseAPI<Client[]>>(this.apiCliente);
+  searchClient(searchTerm?: string): Observable<ResponseAPI<Client[]>> {
+    if (!searchTerm) {
+      return this.http.get<ResponseAPI<Client[]>>(this.apiCliente + '?fields=*,estudiantes.*');
+    }
+
+    const params = {
+      'filter[_or][0][nombre][_icontains]': searchTerm,
+      'filter[_or][1][apellido][_icontains]': searchTerm,
+      'filter[_or][2][numero_documento][_icontains]': searchTerm,
+      'fields': '*,estudiantes.*'
+    };
+
+    return this.http.get<ResponseAPI<Client[]>>(this.apiCliente, { params });
   }
 
   searchClientByDocument(documentType: string, documentNumber: string): Observable<ResponseAPI<Client[]>> {

@@ -17,6 +17,9 @@ export class Schools implements OnInit {
   showDetail = false;
   editMode = false;
   schools: School[] = [];
+  isLoading = false;
+  searchTerm = '';
+  private searchTimeout: any;
   selectedSchool: School | null = null;
 
 
@@ -96,11 +99,38 @@ export class Schools implements OnInit {
     }
   }
 
-  searchSchool() {
-    this.schoolServices.searchSchool().subscribe(data => {
+  searchSchool(searchTerm?: string) {
+    this.isLoading = true;
+    this.schoolServices.searchSchool(searchTerm).subscribe({
+      next: (data) => {
         this.schools = data.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading schools:', error);
+        this.isLoading = false;
       }
-    )}
+    });
+  }
+
+  onSearch() {
+    this.searchSchool(this.searchTerm.trim() || undefined);
+  }
+
+  onSearchInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+    
+    // Limpiar timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
+    // Establecer nuevo timeout para búsqueda automática
+    this.searchTimeout = setTimeout(() => {
+      this.searchSchool(this.searchTerm.trim() || undefined);
+    }, 500); // 500ms de delay
+  }
 
   createSchool() {
     const school = {

@@ -18,6 +18,9 @@ export class Students implements OnInit {
   editMode = false;
   students: Student[] = [];
   selectedStudent: Student | null = null;
+  isLoading = false;
+  searchTerm = '';
+  private searchTimeout: any;
   
   constructor(private fb: FormBuilder, private studentService: StudentService) {
   }
@@ -30,10 +33,37 @@ export class Students implements OnInit {
     this.showForm = !this.showForm;
   }
 
-  searchStudent() {
-    this.studentService.searchStudent().subscribe(data => {
-      this.students = data.data;
+  searchStudent(searchTerm?: string) {
+    this.isLoading = true;
+    this.studentService.searchStudent(searchTerm).subscribe({
+      next: (data) => {
+        this.students = data.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading students:', error);
+        this.isLoading = false;
+      }
     });
+  }
+
+  onSearch() {
+    this.searchStudent(this.searchTerm.trim() || undefined);
+  }
+
+  onSearchInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+    
+    // Limpiar timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
+    // Establecer nuevo timeout para búsqueda automática
+    this.searchTimeout = setTimeout(() => {
+      this.searchStudent(this.searchTerm.trim() || undefined);
+    }, 500); // 500ms de delay
   }
 
   viewStudent(student: Student) {
@@ -46,6 +76,7 @@ export class Students implements OnInit {
     this.selectedStudent = student;
     this.showForm = true;
     this.editMode = true;
+    this.showDetail = false;
   }
 
   closeDetail() {

@@ -54,6 +54,11 @@ export class FormStudent implements OnInit, OnChanges {
     this.studentForm.get('guardianDocumentNumber')?.valueChanges.subscribe(() => {
       this.searchGuardianInfo();
     });
+
+    // Cargar datos si ya existen al inicializar
+    if (this.studentData) {
+      this.loadStudentData();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
