@@ -6,6 +6,7 @@ import {ClientService} from '../../../../../core/services/client.service';
 import {Student} from '../../../../../core/models/Student';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {NotificationService} from '../../../../../core/services/notification.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-form-student',
@@ -31,7 +32,8 @@ export class FormStudent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private studentService: StudentService,
     private clientService: ClientService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -196,16 +198,36 @@ export class FormStudent implements OnInit, OnChanges {
   }
 
   deleteStudent() {
-    if (this.studentData?.id && confirm('¿Estás seguro de que deseas eliminar este estudiante? Esta acción no se puede deshacer.')) {
-      this.studentService.deleteStudent(this.studentData.id).subscribe({
-        next: (response) => {
-          console.log('Estudiante eliminado:', response);
-          this.studentUpdated.emit();
+    if (this.studentData?.id) {
+      const studentName = `${this.studentData.nombre} ${this.studentData.apellido}`;
+      
+      this.confirmationService.showDeleteConfirmation(
+        studentName,
+        'estudiante',
+        () => {
+          // Callback de confirmación
+          this.studentService.deleteStudent(this.studentData!.id).subscribe({
+            next: (response) => {
+              this.notificationService.showSuccess(
+                'Estudiante eliminado',
+                `${studentName} ha sido eliminado exitosamente.`
+              );
+              this.studentUpdated.emit();
+            },
+            error: (error) => {
+              console.error('Error al eliminar estudiante:', error);
+              this.notificationService.showError(
+                'Error al eliminar',
+                'No se pudo eliminar el estudiante. Inténtalo nuevamente.'
+              );
+            }
+          });
         },
-        error: (error) => {
-          console.error('Error al eliminar estudiante:', error);
+        () => {
+          // Callback de cancelación (opcional)
+          console.log('Eliminación cancelada');
         }
-      });
+      );
     }
   }
 

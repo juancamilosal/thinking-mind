@@ -46,7 +46,7 @@ export class StudentService {
     return this.http.patch<ResponseAPI<Student>>(`${this.apiStudent}/${id}`, student);
   }
 
-  deleteStudent(id: string): Observable<ResponseAPI<any>> {
+  deleteStudent(id: string | undefined): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiStudent}/${id}`);
   }
 }

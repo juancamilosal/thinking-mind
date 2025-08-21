@@ -1,0 +1,64 @@
+<!-- Overlay del modal -->
+<div *ngIf="isVisible" 
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+     (click)="onCancel()">
+  
+  <!-- Contenido del modal -->
+  <div class="relative w-full max-w-md transform transition-all duration-300 ease-out"
+       (click)="$event.stopPropagation()">
+    
+    <!-- Card principal -->
+    <div class="relative rounded-2xl shadow-2xl bg-white" [ngClass]="getBackgroundClass()">
+      
+      <!-- Header con icono y botón cerrar -->
+      <div class="flex items-start justify-between p-6 pb-4">
+        <div class="flex items-center space-x-3">
+          <!-- Icono -->
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center" 
+                 [ngClass]="confirmation?.type === 'danger' ? 'bg-red-100' : 
+                           confirmation?.type === 'warning' ? 'bg-yellow-100' : 'bg-blue-100'">
+              <svg class="w-8 h-8" [ngClass]="getIconClass()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getIcon()"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Título -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-900">{{ confirmation?.title }}</h3>
+          </div>
+        </div>
+        
+        <!-- Botón cerrar -->
+        <button (click)="onCancel()" 
+                class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Contenido del mensaje -->
+      <div class="px-6 pb-6">
+        <p class="text-gray-700 leading-relaxed text-lg">{{ confirmation?.message }}</p>
+      </div>
+      
+      <!-- Footer con botones de acción -->
+      <div class="px-6 pb-6 flex space-x-3">
+        <!-- Botón Cancelar -->
+        <button (click)="onCancel()" 
+                class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg transition-all duration-200 transform hover:scale-105 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+          {{ confirmation?.cancelText || 'Cancelar' }}
+        </button>
+        
+        <!-- Botón Confirmar -->
+        <button (click)="onConfirm()" 
+                class="flex-1 px-4 py-3 text-sm font-medium text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                [ngClass]="getConfirmButtonClass()">
+          {{ confirmation?.confirmText || 'Confirmar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -263,21 +263,7 @@
   <!-- Botón de Submit -->
   <!-- Botón de Submit -->
   <div class="pt-6">
-    <!-- Botón de eliminar (solo en modo edición) -->
-    @if (editMode) {
-      <div class="mb-4">
-        <button
-          type="button"
-          (click)="deleteStudent()"
-          class="w-full px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all transform hover:scale-105 shadow-lg font-semibold text-lg flex items-center justify-center space-x-3">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-          <span>Eliminar Estudiante</span>
-        </button>
-      </div>
-    }
-    
+    <!-- Botón de actualizar/registrar -->
     <button
       type="submit"
       [disabled]="studentForm.invalid"
@@ -293,5 +279,20 @@
       }
       <span>{{ editMode ? 'Actualizar Estudiante' : 'Registrar Estudiante' }}</span>
     </button>
+    
+    <!-- Botón de eliminar (solo en modo edición) -->
+    @if (editMode) {
+      <div class="mt-4">
+        <button
+          type="button"
+          (click)="deleteStudent()"
+          class="w-full px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all transform hover:scale-105 shadow-lg font-semibold text-lg flex items-center justify-center space-x-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          <span>Eliminar Estudiante</span>
+        </button>
+      </div>
+    }
   </div>
 </form>

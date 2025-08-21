@@ -4,6 +4,7 @@ import {ClientService} from '../../../../../core/services/client.service';
 import {Client} from '../../../../../core/models/Clients';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {NotificationService} from '../../../../../core/services/notification.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-form-client',
@@ -26,7 +27,8 @@ export class FormClient implements OnInit, OnChanges {
   constructor(
     private fb: FormBuilder,
     private clientServices: ClientService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -146,16 +148,36 @@ export class FormClient implements OnInit, OnChanges {
   }
 
   deleteClient() {
-    if (this.clientData?.id && confirm('¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
-      this.clientServices.deleteClient(this.clientData.id).subscribe({
-        next: (response) => {
-          console.log('Cliente eliminado:', response);
-          this.clientUpdated.emit();
+    if (this.clientData?.id) {
+      const clientName = `${this.clientData.nombre} ${this.clientData.apellido}`;
+      
+      this.confirmationService.showDeleteConfirmation(
+        clientName,
+        'cliente',
+        () => {
+          // Callback de confirmación
+          this.clientServices.deleteClient(this.clientData!.id).subscribe({
+            next: (response) => {
+              this.notificationService.showSuccess(
+                'Cliente eliminado',
+                `${clientName} ha sido eliminado exitosamente.`
+              );
+              this.clientUpdated.emit();
+            },
+            error: (error) => {
+              console.error('Error al eliminar cliente:', error);
+              this.notificationService.showError(
+                'Error al eliminar',
+                'No se pudo eliminar el cliente. Inténtalo nuevamente.'
+              );
+            }
+          });
         },
-        error: (error) => {
-          console.error('Error al eliminar cliente:', error);
+        () => {
+          // Callback de cancelación (opcional)
+          console.log('Eliminación cancelada');
         }
-      });
+      );
     }
   }
 }

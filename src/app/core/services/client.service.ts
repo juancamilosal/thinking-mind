@@ -46,7 +46,7 @@ export class ClientService {
     return this.http.patch<ResponseAPI<Client>>(`${this.apiCliente}/${id}`, client);
   }
 
-  deleteClient(id: number): Observable<ResponseAPI<any>> {
+  deleteClient(id: number | undefined): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiCliente}/${id}`);
   }
 }
