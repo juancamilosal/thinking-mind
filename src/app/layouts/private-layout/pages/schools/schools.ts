@@ -47,7 +47,7 @@ export class Schools implements OnInit {
 
   onSubmit() {
     if (this.schoolForm.valid) {
-      console.log(this.schoolForm.value);
+      this.createSchool();
     } else {
       this.markFormGroupTouched(this.schoolForm);
     }
@@ -58,7 +58,6 @@ export class Schools implements OnInit {
       control.markAsTouched();
     });
   }
-
 
   viewSchool(school: School) {
     this.selectedSchool = school;
@@ -88,11 +87,11 @@ export class Schools implements OnInit {
   loadSchoolData() {
     if (this.selectedSchool) {
       this.schoolForm.patchValue({
-        schoolName: this.selectedSchool.schoolName,
-        city: this.selectedSchool.city,
-        address: this.selectedSchool.address,
-        principalName: this.selectedSchool.principalName,
-        phoneNumber: this.selectedSchool.phoneNumber
+        schoolName: this.selectedSchool.nombre,
+        city: this.selectedSchool.ciudad,
+        address: this.selectedSchool.direccion,
+        principalName: this.selectedSchool.nombre_rector,
+        phoneNumber: this.selectedSchool.celular
       });
     }
   }
@@ -102,5 +101,17 @@ export class Schools implements OnInit {
         this.schools = data.data;
       }
     )}
+
+  createSchool() {
+    const school = {
+      nombre: this.schoolForm.value.schoolName,
+      ciudad: this.schoolForm.value.city,
+      direccion: this.schoolForm.value.address,
+      nombre_rector: this.schoolForm.value.principalName,
+      celular: this.schoolForm.value.phoneNumber
+    }
+    this.schoolServices.createSchool(school).subscribe(data => {
+      console.log(data.data);
+    })}
 }
 
