@@ -180,33 +180,33 @@ export class FormStudent implements OnInit, OnChanges {
     });
   }
 
-  updateStudent(): void {
-    const student = {
-      id: this.studentData?.id,
-      tipo_documento: this.studentForm.get('documentType')?.value,
-      numero_documento: this.studentForm.get('documentNumber')?.value,
-      nombre: this.studentForm.get('firstName')?.value,
-      apellido: this.studentForm.get('lastName')?.value,
-      colegio: this.studentForm.get('school')?.value,
-      acudiente: this.guardianId,
-    };
-
-    this.studentService.updateStudent(student.id, student).subscribe({
-      next: (): void => {
-        const studentName = `${student.nombre} ${student.apellido}`;
-        this.notificationService.showSuccess('Estudiante actualizado', `El estudiante ${studentName} ha sido actualizado exitosamente.`);
-        this.studentUpdated.emit();
-      },
-      error: (error): void => {
-        if (error.status === 400) {
-          this.notificationService.showError('Estudiante ya se encuentra creado', `Ya existe un estudiante registrado con el número de documento ${student.numero_documento}.`);
-        } else if (error.status >= 500) {
-          this.notificationService.showServerError();
-        } else {
-          this.notificationService.showError('Error', 'No se pudo actualizar el estudiante. Inténtalo nuevamente.');
+  updateStudent() {
+    if (this.studentForm.valid && this.studentData?.id) {
+      const studentToUpdate = this.studentForm.value;
+      this.studentService.updateStudent(this.studentData.id, studentToUpdate).subscribe({
+        next: (response) => {
+          console.log('Estudiante actualizado:', response);
+          this.studentUpdated.emit();
+        },
+        error: (error) => {
+          console.error('Error al actualizar estudiante:', error);
         }
-      }
-    });
+      });
+    }
+  }
+
+  deleteStudent() {
+    if (this.studentData?.id && confirm('¿Estás seguro de que deseas eliminar este estudiante? Esta acción no se puede deshacer.')) {
+      this.studentService.deleteStudent(this.studentData.id).subscribe({
+        next: (response) => {
+          console.log('Estudiante eliminado:', response);
+          this.studentUpdated.emit();
+        },
+        error: (error) => {
+          console.error('Error al eliminar estudiante:', error);
+        }
+      });
+    }
   }
 
   private markFormGroupTouched(): void {

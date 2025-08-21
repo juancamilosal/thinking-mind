@@ -45,4 +45,8 @@ export class ClientService {
   updateClient(id: number, client: Client): Observable<ResponseAPI<Client>> {
     return this.http.patch<ResponseAPI<Client>>(`${this.apiCliente}/${id}`, client);
   }
+
+  deleteClient(id: number): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${this.apiCliente}/${id}`);
+  }
 }

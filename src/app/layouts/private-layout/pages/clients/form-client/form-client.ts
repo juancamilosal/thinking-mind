@@ -130,33 +130,32 @@ export class FormClient implements OnInit, OnChanges {
     });
   }
 
-  updateClient=(): void => {
-    const client = {
-      id: this.clientData?.id,
-      tipo_documento: this.clientForm.get('documentType')?.value,
-      numero_documento: this.clientForm.get('documentNumber')?.value,
-      nombre: this.clientForm.get('firstName')?.value,
-      apellido: this.clientForm.get('lastName')?.value,
-      celular: this.clientForm.get('phoneNumber')?.value,
-      email: this.clientForm.get('email')?.value,
-      direccion: this.clientForm.get('address')?.value,
-    }
-
-    this.clientServices.updateClient(client.id!, client).subscribe({
-      next: (): void => {
-        const clientName = `${client.nombre} ${client.apellido}`;
-        this.notificationService.showSuccess('Cliente actualizado', `El cliente ${clientName} ha sido actualizado exitosamente.`);
-        this.clientUpdated.emit();
-      },
-      error: (error): void => {
-        if (error.status === 400) {
-          this.notificationService.showError('Cliente ya se encuentra creado', `Ya existe un cliente registrado con el número de documento ${client.numero_documento}.`);
-        } else if (error.status >= 500) {
-          this.notificationService.showServerError();
-        } else {
-          this.notificationService.showError('Error', 'No se pudo actualizar el cliente. Inténtalo nuevamente.');
+  updateClient() {
+    if (this.clientForm.valid && this.clientData?.id) {
+      const clientToUpdate = this.clientForm.value;
+      this.clientServices.updateClient(this.clientData.id, clientToUpdate).subscribe({
+        next: (response) => {
+          console.log('Cliente actualizado:', response);
+          this.clientUpdated.emit();
+        },
+        error: (error) => {
+          console.error('Error al actualizar cliente:', error);
         }
-      }
-    });
+      });
+    }
+  }
+
+  deleteClient() {
+    if (this.clientData?.id && confirm('¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
+      this.clientServices.deleteClient(this.clientData.id).subscribe({
+        next: (response) => {
+          console.log('Cliente eliminado:', response);
+          this.clientUpdated.emit();
+        },
+        error: (error) => {
+          console.error('Error al eliminar cliente:', error);
+        }
+      });
+    }
   }
 }
