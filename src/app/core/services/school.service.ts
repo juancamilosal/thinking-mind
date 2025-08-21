@@ -15,8 +15,17 @@ export class SchoolService {
   constructor(private http: HttpClient) {
   }
 
-  searchSchool(): Observable<ResponseAPI<School[]>> {
-    return this.http.get<ResponseAPI<School[]>>(this.apiSchool);
+  searchSchool(searchTerm?: string): Observable<ResponseAPI<School[]>> {
+    if (!searchTerm) {
+      return this.http.get<ResponseAPI<School[]>>(this.apiSchool);
+    }
+    
+    const params = {
+      'filter[_or][0][nombre][_icontains]': searchTerm,
+      'filter[_or][1][ciudad][_icontains]': searchTerm,
+      'filter[_or][2][nombre_rector][_icontains]': searchTerm
+    };
+    return this.http.get<ResponseAPI<School[]>>(this.apiSchool, { params });
   }
 
   createSchool(school: School): Observable<ResponseAPI<School>> {

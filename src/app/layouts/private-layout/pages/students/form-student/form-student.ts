@@ -6,6 +6,7 @@ import {ClientService} from '../../../../../core/services/client.service';
 import {Student} from '../../../../../core/models/Student';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {NotificationService} from '../../../../../core/services/notification.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-form-student',
@@ -31,7 +32,8 @@ export class FormStudent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private studentService: StudentService,
     private clientService: ClientService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -54,6 +56,11 @@ export class FormStudent implements OnInit, OnChanges {
     this.studentForm.get('guardianDocumentNumber')?.valueChanges.subscribe(() => {
       this.searchGuardianInfo();
     });
+
+    // Cargar datos si ya existen al inicializar
+    if (this.studentData) {
+      this.loadStudentData();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -72,14 +79,23 @@ export class FormStudent implements OnInit, OnChanges {
         school: this.studentData.colegio
       });
 
-      // Si el acudiente es un objeto, cargar sus datos
-      if (typeof this.studentData.acudiente === 'object') {
+      // Si el acudiente es un objeto y no es null, cargar sus datos
+      if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
         this.guardianId = this.studentData.acudiente.id ? this.studentData.acudiente.id.toString() : '';
         this.studentForm.patchValue({
           guardianDocumentType: this.studentData.acudiente.tipo_documento,
           guardianDocumentNumber: this.studentData.acudiente.numero_documento,
           guardianFirstName: this.studentData.acudiente.nombre,
           guardianLastName: this.studentData.acudiente.apellido
+        });
+      } else {
+        // Si el acudiente es null o no es un objeto, limpiar los campos
+        this.guardianId = '';
+        this.studentForm.patchValue({
+          guardianDocumentType: null,
+          guardianDocumentNumber: null,
+          guardianFirstName: null,
+          guardianLastName: null
         });
       }
     }
@@ -166,33 +182,53 @@ export class FormStudent implements OnInit, OnChanges {
     });
   }
 
-  updateStudent(): void {
-    const student = {
-      id: this.studentData?.id,
-      tipo_documento: this.studentForm.get('documentType')?.value,
-      numero_documento: this.studentForm.get('documentNumber')?.value,
-      nombre: this.studentForm.get('firstName')?.value,
-      apellido: this.studentForm.get('lastName')?.value,
-      colegio: this.studentForm.get('school')?.value,
-      acudiente: this.guardianId,
-    };
-
-    this.studentService.updateStudent(Number(student.id!), student).subscribe({
-      next: (): void => {
-        const studentName = `${student.nombre} ${student.apellido}`;
-        this.notificationService.showSuccess('Estudiante actualizado', `El estudiante ${studentName} ha sido actualizado exitosamente.`);
-        this.studentUpdated.emit();
-      },
-      error: (error): void => {
-        if (error.status === 400) {
-          this.notificationService.showError('Estudiante ya se encuentra creado', `Ya existe un estudiante registrado con el número de documento ${student.numero_documento}.`);
-        } else if (error.status >= 500) {
-          this.notificationService.showServerError();
-        } else {
-          this.notificationService.showError('Error', 'No se pudo actualizar el estudiante. Inténtalo nuevamente.');
+  updateStudent() {
+    if (this.studentForm.valid && this.studentData?.id) {
+      const studentToUpdate = this.studentForm.value;
+      this.studentService.updateStudent(this.studentData.id, studentToUpdate).subscribe({
+        next: (response) => {
+          console.log('Estudiante actualizado:', response);
+          this.studentUpdated.emit();
+        },
+        error: (error) => {
+          console.error('Error al actualizar estudiante:', error);
         }
-      }
-    });
+      });
+    }
+  }
+
+  deleteStudent() {
+    if (this.studentData?.id) {
+      const studentName = `${this.studentData.nombre} ${this.studentData.apellido}`;
+      
+      this.confirmationService.showDeleteConfirmation(
+        studentName,
+        'estudiante',
+        () => {
+          // Callback de confirmación
+          this.studentService.deleteStudent(this.studentData!.id).subscribe({
+            next: (response) => {
+              this.notificationService.showSuccess(
+                'Estudiante eliminado',
+                `${studentName} ha sido eliminado exitosamente.`
+              );
+              this.studentUpdated.emit();
+            },
+            error: (error) => {
+              console.error('Error al eliminar estudiante:', error);
+              this.notificationService.showError(
+                'Error al eliminar',
+                'No se pudo eliminar el estudiante. Inténtalo nuevamente.'
+              );
+            }
+          });
+        },
+        () => {
+          // Callback de cancelación (opcional)
+          console.log('Eliminación cancelada');
+        }
+      );
+    }
   }
 
   private markFormGroupTouched(): void {

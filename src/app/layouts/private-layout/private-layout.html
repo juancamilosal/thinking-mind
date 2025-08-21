@@ -12,4 +12,12 @@
     (close)="onNotificationClose()">
 </app-notification-modal>
 
+<!-- Modal de confirmación -->
+<app-confirmation-modal 
+    [isVisible]="isConfirmationVisible"
+    [confirmation]="currentConfirmation"
+    (confirm)="onConfirmationConfirm()"
+    (cancel)="onConfirmationCancel()">
+</app-confirmation-modal>
+
 

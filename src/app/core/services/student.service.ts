@@ -15,9 +15,19 @@ export class StudentService {
   constructor(private http: HttpClient) {
   }
 
-  searchStudent(): Observable<ResponseAPI<Student[]>> {
+  searchStudent(searchTerm?: string): Observable<ResponseAPI<Student[]>> {
+    const baseUrl = this.apiStudent + '?fields=*,acudiente.*';
 
-    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent + '?fields=*,acudiente.*');
+    if (!searchTerm) {
+      return this.http.get<ResponseAPI<Student[]>>(baseUrl);
+    }
+
+    const params = {
+      'filter[_or][0][nombre][_icontains]': searchTerm,
+      'filter[_or][1][apellido][_icontains]': searchTerm,
+      'filter[_or][2][numero_documento][_icontains]': searchTerm
+    };
+    return this.http.get<ResponseAPI<Student[]>>(baseUrl, { params });
   }
 
   searchStudentByDocument(documentType: string, documentNumber: string): Observable<ResponseAPI<Student[]>> {
@@ -32,7 +42,11 @@ export class StudentService {
     return this.http.post<ResponseAPI<Student>>(this.apiStudent, student);
   }
 
-  updateStudent(id: number, student: Student): Observable<ResponseAPI<Student>> {
+  updateStudent(id: string | undefined, student: Student): Observable<ResponseAPI<Student>> {
     return this.http.patch<ResponseAPI<Student>>(`${this.apiStudent}/${id}`, student);
+  }
+
+  deleteStudent(id: string | undefined): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${this.apiStudent}/${id}`);
   }
 }

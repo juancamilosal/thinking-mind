@@ -19,6 +19,9 @@ export class Clients implements OnInit {
   editMode = false;
   selectedClient: Client | null = null;
   clients: Client[] = [];
+  isLoading = false;
+  searchTerm = '';
+  private searchTimeout: any;
   
   constructor(
     private fb: FormBuilder, 
@@ -36,10 +39,37 @@ export class Clients implements OnInit {
     this.selectedClient = null;
   }
 
-  searchClient() {
-    this.clientServices.searchClient().subscribe(data => {
-      this.clients = data.data;
+  searchClient(searchTerm?: string) {
+    this.isLoading = true;
+    this.clientServices.searchClient(searchTerm).subscribe({
+      next: (data) => {
+        this.clients = data.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading clients:', error);
+        this.isLoading = false;
+      }
     });
+  }
+
+  onSearch() {
+    this.searchClient(this.searchTerm.trim() || undefined);
+  }
+
+  onSearchInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+    
+    // Limpiar timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
+    // Establecer nuevo timeout para búsqueda automática
+    this.searchTimeout = setTimeout(() => {
+      this.searchClient(this.searchTerm.trim() || undefined);
+    }, 500); // 500ms de delay
   }
 
   viewClient(client: Client) {

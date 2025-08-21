@@ -4,6 +4,7 @@ import {ClientService} from '../../../../../core/services/client.service';
 import {Client} from '../../../../../core/models/Clients';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {NotificationService} from '../../../../../core/services/notification.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-form-client',
@@ -26,7 +27,8 @@ export class FormClient implements OnInit, OnChanges {
   constructor(
     private fb: FormBuilder,
     private clientServices: ClientService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -49,7 +51,7 @@ export class FormClient implements OnInit, OnChanges {
       email: [null, [Validators.required, Validators.email]],
       address: [null, Validators.required]
     });
-    
+
     if (this.editMode && this.clientData) {
       this.loadClientData();
     }
@@ -130,33 +132,52 @@ export class FormClient implements OnInit, OnChanges {
     });
   }
 
-  updateClient=(): void => {
-    const client = {
-      id: this.clientData?.id,
-      tipo_documento: this.clientForm.get('documentType')?.value,
-      numero_documento: this.clientForm.get('documentNumber')?.value,
-      nombre: this.clientForm.get('firstName')?.value,
-      apellido: this.clientForm.get('lastName')?.value,
-      celular: this.clientForm.get('phoneNumber')?.value,
-      email: this.clientForm.get('email')?.value,
-      direccion: this.clientForm.get('address')?.value,
-    }
-
-    this.clientServices.updateClient(Number(client.id!), client).subscribe({
-      next: (): void => {
-        const clientName = `${client.nombre} ${client.apellido}`;
-        this.notificationService.showSuccess('Cliente actualizado', `El cliente ${clientName} ha sido actualizado exitosamente.`);
-        this.clientUpdated.emit();
-      },
-      error: (error): void => {
-        if (error.status === 400) {
-          this.notificationService.showError('Cliente ya se encuentra creado', `Ya existe un cliente registrado con el número de documento ${client.numero_documento}.`);
-        } else if (error.status >= 500) {
-          this.notificationService.showServerError();
-        } else {
-          this.notificationService.showError('Error', 'No se pudo actualizar el cliente. Inténtalo nuevamente.');
+  updateClient() {
+    if (this.clientForm.valid && this.clientData?.id) {
+      const clientToUpdate = this.clientForm.value;
+      this.clientServices.updateClient(this.clientData.id, clientToUpdate).subscribe({
+        next: (response) => {
+          console.log('Cliente actualizado:', response);
+          this.clientUpdated.emit();
+        },
+        error: (error) => {
+          console.error('Error al actualizar cliente:', error);
         }
-      }
-    });
+      });
+    }
+  }
+
+  deleteClient() {
+    if (this.clientData?.id) {
+      const clientName = `${this.clientData.nombre} ${this.clientData.apellido}`;
+      
+      this.confirmationService.showDeleteConfirmation(
+        clientName,
+        'cliente',
+        () => {
+          // Callback de confirmación
+          this.clientServices.deleteClient(this.clientData!.id).subscribe({
+            next: (response) => {
+              this.notificationService.showSuccess(
+                'Cliente eliminado',
+                `${clientName} ha sido eliminado exitosamente.`
+              );
+              this.clientUpdated.emit();
+            },
+            error: (error) => {
+              console.error('Error al eliminar cliente:', error);
+              this.notificationService.showError(
+                'Error al eliminar',
+                'No se pudo eliminar el cliente. Inténtalo nuevamente.'
+              );
+            }
+          });
+        },
+        () => {
+          // Callback de cancelación (opcional)
+          console.log('Eliminación cancelada');
+        }
+      );
+    }
   }
 }

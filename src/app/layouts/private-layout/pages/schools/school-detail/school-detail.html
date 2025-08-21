@@ -1,4 +1,4 @@
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="onClose()">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" (click)="onClose()">
   <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-xl">
@@ -93,9 +93,9 @@
 
     <!-- Footer -->
     <div class="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end space-x-3">
-      <button (click)="onClose()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-        Cerrar
-      </button>
+        <button (click)="onClose()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+          Cerrar
+        </button>
       <button (click)="onEdit()" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
