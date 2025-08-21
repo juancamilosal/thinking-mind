@@ -49,7 +49,7 @@ export class FormClient implements OnInit, OnChanges {
       email: [null, [Validators.required, Validators.email]],
       address: [null, Validators.required]
     });
-    
+
     if (this.editMode && this.clientData) {
       this.loadClientData();
     }
@@ -142,7 +142,7 @@ export class FormClient implements OnInit, OnChanges {
       direccion: this.clientForm.get('address')?.value,
     }
 
-    this.clientServices.updateClient(Number(client.id!), client).subscribe({
+    this.clientServices.updateClient(client.id!, client).subscribe({
       next: (): void => {
         const clientName = `${client.nombre} ${client.apellido}`;
         this.notificationService.showSuccess('Cliente actualizado', `El cliente ${clientName} ha sido actualizado exitosamente.`);

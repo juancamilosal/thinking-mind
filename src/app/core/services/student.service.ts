@@ -17,11 +17,11 @@ export class StudentService {
 
   searchStudent(searchTerm?: string): Observable<ResponseAPI<Student[]>> {
     const baseUrl = this.apiStudent + '?fields=*,acudiente.*';
-    
+
     if (!searchTerm) {
       return this.http.get<ResponseAPI<Student[]>>(baseUrl);
     }
-    
+
     const params = {
       'filter[_or][0][nombre][_icontains]': searchTerm,
       'filter[_or][1][apellido][_icontains]': searchTerm,
@@ -42,7 +42,7 @@ export class StudentService {
     return this.http.post<ResponseAPI<Student>>(this.apiStudent, student);
   }
 
-  updateStudent(id: number, student: Student): Observable<ResponseAPI<Student>> {
+  updateStudent(id: string | undefined, student: Student): Observable<ResponseAPI<Student>> {
     return this.http.patch<ResponseAPI<Student>>(`${this.apiStudent}/${id}`, student);
   }
 }

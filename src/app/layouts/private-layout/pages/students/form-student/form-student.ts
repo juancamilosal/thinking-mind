@@ -76,7 +76,7 @@ export class FormStudent implements OnInit, OnChanges {
         lastName: this.studentData.apellido,
         school: this.studentData.colegio
       });
-  
+
       // Si el acudiente es un objeto y no es null, cargar sus datos
       if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
         this.guardianId = this.studentData.acudiente.id ? this.studentData.acudiente.id.toString() : '';
@@ -191,7 +191,7 @@ export class FormStudent implements OnInit, OnChanges {
       acudiente: this.guardianId,
     };
 
-    this.studentService.updateStudent(Number(student.id!), student).subscribe({
+    this.studentService.updateStudent(student.id, student).subscribe({
       next: (): void => {
         const studentName = `${student.nombre} ${student.apellido}`;
         this.notificationService.showSuccess('Estudiante actualizado', `El estudiante ${studentName} ha sido actualizado exitosamente.`);
