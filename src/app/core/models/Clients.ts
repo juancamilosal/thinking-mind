@@ -1,4 +1,7 @@
+import {Student} from './Student';
+
 export class Client {
+  id?: number;
   tipo_documento: string;
   numero_documento: string;
   nombre: string;
@@ -6,4 +9,5 @@ export class Client {
   celular: string;
   email: string;
   direccion: string;
+  estudiantes?: Student[];
 }

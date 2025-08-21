@@ -11,7 +11,7 @@
   <form [formGroup]="accountForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
     <!-- Información del Cliente -->
-    <div class="bg-gray-50 p-4 rounded-lg">
+    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
       <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
         <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -21,6 +21,37 @@
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Tipo de Documento del Cliente -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Tipo de Documento *
+          </label>
+          <select formControlName="clientDocumentType"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Seleccione tipo de documento</option>
+            <option *ngFor="let docType of DOCUMENT_TYPE" [value]="docType.id">{{ docType.name }}</option>
+          </select>
+          <p *ngIf="isFieldInvalid('clientDocumentType')"
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('clientDocumentType') }}
+          </p>
+        </div>
+
+        <!-- Número de Documento del Cliente -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Número de Documento *
+          </label>
+          <input type="text"
+                 formControlName="clientDocumentNumber"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 placeholder="Ej: 12345678">
+          <p *ngIf="isFieldInvalid('clientDocumentNumber')"
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('clientDocumentNumber') }}
+          </p>
+        </div>
+
         <!-- Nombre del Cliente -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-700">
@@ -28,8 +59,8 @@
           </label>
           <input type="text"
                  formControlName="clientName"
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                 placeholder="Ej: Juan Pérez">
+                 readonly
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-100 cursor-not-allowed">
           <p *ngIf="isFieldInvalid('clientName')"
              class="text-red-500 text-sm mt-1">
             {{ getFieldError('clientName') }}
@@ -43,8 +74,8 @@
           </label>
           <input type="email"
                  formControlName="clientEmail"
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                 placeholder="cliente@email.com">
+                 readonly
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-100 cursor-not-allowed">
           <p *ngIf="isFieldInvalid('clientEmail')"
              class="text-red-500 text-sm mt-1">
             {{ getFieldError('clientEmail') }}
@@ -58,39 +89,114 @@
           </label>
           <input type="tel"
                  formControlName="clientPhone"
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                 placeholder="3001234567">
+                 readonly
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-100 cursor-not-allowed">
           <p *ngIf="isFieldInvalid('clientPhone')"
              class="text-red-500 text-sm mt-1">
             {{ getFieldError('clientPhone') }}
           </p>
         </div>
+      </div>
+    </div>
 
-        <!-- Información del Estudiante -->
+    <!-- Información del Estudiante -->
+    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14l-9-5 9 5z"/>
+        </svg>
+        Información del Estudiante
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Tipo de Documento del Estudiante -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Tipo de Documento *
+          </label>
+          <select formControlName="studentDocumentType"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Seleccione un tipo de documento</option>
+            <option *ngFor="let type of DOCUMENT_TYPE" [value]="type.id">{{ type.name }}</option>
+          </select>
+          <p *ngIf="isFieldInvalid('studentDocumentType')"
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('studentDocumentType') }}
+          </p>
+        </div>
+
+        <!-- Número de Documento del Estudiante -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Número de Documento *
+          </label>
+          <input type="number"
+                 formControlName="studentDocumentNumber"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 placeholder="Ej: 12345678">
+          <p *ngIf="isFieldInvalid('studentDocumentNumber')"
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('studentDocumentNumber') }}
+          </p>
+        </div>
+
+        <!-- Nombre del Estudiante -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-700">
             Nombre Del Estudiante *
           </label>
-          <input type="tel"
+          <input type="text"
                  formControlName="studentName"
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                 placeholder="Juan Fernando Sanchez">
+                 readonly
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-100 cursor-not-allowed">
           <p *ngIf="isFieldInvalid('studentName')"
              class="text-red-500 text-sm mt-1">
             {{ getFieldError('studentName') }}
           </p>
         </div>
+
+        <!-- Colegio -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Colegio *
+          </label>
+          <input type="text"
+                 formControlName="colegio"
+                 readonly
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-100 cursor-not-allowed">
+          <p *ngIf="isFieldInvalid('colegio')"
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('colegio') }}
+          </p>
+        </div>
+
+        <!-- Curso -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            Curso *
+          </label>
+          <select formControlName="curso"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Seleccione un curso</option>
+            <option *ngFor="let course of COURSES" [value]="course.id">{{ course.name }}</option>
+          </select>
+          <p *ngIf="isFieldInvalid('curso')"
+             class="text-red-500 text-sm mt-1">
+            {{ getFieldError('curso') }}
+          </p>
+        </div>
       </div>
     </div>
 
-    <!-- Información de la Cuenta -->
-    <div class="bg-gray-50 p-4 rounded-lg">
+    <!-- Cuenta por Cobrar -->
+    <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
       <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
         </svg>
-        Información de la Cuenta
+        Cuenta por Cobrar
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

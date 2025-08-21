@@ -3,6 +3,7 @@ import { PublicLayout } from './layouts/public-layout/public-layout';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
+import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
@@ -42,6 +43,11 @@ export const routes: Routes = [
         path: 'clients',
         title: 'Thinking Mind | Clientes',
         component: Clients
+      },
+      {
+        path: 'students',
+        title: 'Thinking Mind | Estudiantes',
+        component: Students
       },
       {
         path: 'schools',

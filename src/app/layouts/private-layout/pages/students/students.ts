@@ -1,0 +1,62 @@
+import {Component, OnInit} from '@angular/core';
+import {FormBuilder} from '@angular/forms';
+import {CommonModule} from '@angular/common';
+import {StudentService} from '../../../../core/services/student.service';
+import {Student} from '../../../../core/models/Student';
+import {FormStudent} from './form-student/form-student';
+import {StudentDetail} from './student-detail/student-detail';
+
+@Component({
+  selector: 'app-students',
+  standalone: true,
+  imports: [CommonModule, FormStudent, StudentDetail],
+  templateUrl: './students.html'
+})
+export class Students implements OnInit {
+  showForm = false;
+  showDetail = false;
+  editMode = false;
+  students: Student[] = [];
+  selectedStudent: Student | null = null;
+  
+  constructor(private fb: FormBuilder, private studentService: StudentService) {
+  }
+
+  ngOnInit(): void {
+    this.searchStudent();
+  }
+
+  toggleForm() {
+    this.showForm = !this.showForm;
+  }
+
+  searchStudent() {
+    this.studentService.searchStudent().subscribe(data => {
+      this.students = data.data;
+    });
+  }
+
+  viewStudent(student: Student) {
+    this.selectedStudent = student;
+    this.showDetail = true;
+    this.editMode = false;
+  }
+
+  editStudent(student: Student) {
+    this.selectedStudent = student;
+    this.showForm = true;
+    this.editMode = true;
+  }
+
+  closeDetail() {
+    this.showDetail = false;
+    this.selectedStudent = null;
+  }
+
+  onStudentUpdated() {
+    this.showForm = false;
+    this.editMode = false;
+    this.selectedStudent = null;
+    this.searchStudent();
+  }
+}
