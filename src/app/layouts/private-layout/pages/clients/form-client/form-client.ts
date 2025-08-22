@@ -164,10 +164,18 @@ export class FormClient implements OnInit, OnChanges {
               this.clientUpdated.emit();
             },
             error: (error) => {
-              this.notificationService.showError(
-                'Error al eliminar',
-                'No se pudo eliminar el cliente. Inténtalo nuevamente.'
-              );
+              // Verificar si es un error 500 que indica relaciones activas
+              if (error.status === 500) {
+                this.notificationService.showError(
+                  'No se puede eliminar el cliente',
+                  `No se puede eliminar a ${clientName} porque tiene cuentas por cobrar asociadas. Debe eliminar o transferir las cuentas por cobrar antes de eliminar el cliente.`
+                );
+              } else {
+                this.notificationService.showError(
+                  'Error al eliminar',
+                  'No se pudo eliminar el cliente. Inténtalo nuevamente.'
+                );
+              }
             }
           });
         }
