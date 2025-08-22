@@ -47,12 +47,11 @@ export class AccountReceivableFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.accountForm = this.fb.group({
-      client_id: [null, [Validators.required]],
-      student_id: [null, [Validators.required]],
+      client_id: [null,],
+      student_id: [null],
       amount: [0, [Validators.required, Validators.min(0.01)]],
       deadline: ['', [Validators.required]],
       description: [null, [Validators.required, Validators.minLength(6)]],
-      // Campos adicionales para la búsqueda automática
       clientDocumentType: ['', [Validators.required]],
       clientDocumentNumber: ['', [Validators.required]],
       clientName: [''],
@@ -177,15 +176,17 @@ export class AccountReceivableFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.accountForm.valid && !this.isSubmitting) {
+    // Validar que el formulario sea válido y que tengamos los IDs necesarios
+    if (this.accountForm.valid && !this.isSubmitting && this.clientId && this.studentId) {
       this.isSubmitting = true;
+
       const accountReceivableData = {
-        cliente_id: this.clientId,
-        estudiante_id: this.studentId,
-        monto: this.accountForm.get('monto')?.value,
-        saldo: this.accountForm.get('saldo')?.value,
-        curso: this.accountForm.get('curso')?.value,
-        fecha_limite: this.accountForm.get('fecha_limite')?.value,
+        cliente_id: this.clientId, // Mantener como string UUID
+        estudiante_id: this.studentId, // Mantener como string UUID
+        monto: this.accountForm.get('amount')?.value,
+        curso: this.accountForm.get('course')?.value,
+        fecha_limite: this.accountForm.get('deadline')?.value,
+        descripcion: this.accountForm.get('description')?.value,
         estado: 'pendiente'
       };
 
@@ -201,10 +202,10 @@ export class AccountReceivableFormComponent implements OnInit {
             id: response.data.id,
             cliente_id: this.clientId,
             estudiante_id: this.studentId,
-            monto: this.accountForm.get('monto')?.value,
-            saldo: this.accountForm.get('saldo')?.value,
-            curso: this.accountForm.get('curso')?.value,
-            fecha_limite: this.accountForm.get('fecha_limite')?.value,
+            monto: this.accountForm.get('amount')?.value,
+            saldo: this.accountForm.get('amount')?.value,
+            curso: this.accountForm.get('course')?.value,
+            fecha_limite: this.accountForm.get('deadline')?.value,
             estado: 'pendiente',
             clientName: this.accountForm.get('clientName')?.value,
             clientEmail: this.accountForm.get('clientEmail')?.value,
@@ -230,7 +231,14 @@ export class AccountReceivableFormComponent implements OnInit {
         }
       });
     } else {
-      this.markFormGroupTouched();
+      // Mostrar qué validaciones faltan
+      if (!this.clientId) {
+        this.notificationService.showError('Error', 'Debe seleccionar un cliente válido.');
+      } else if (!this.studentId) {
+        this.notificationService.showError('Error', 'Debe seleccionar un estudiante válido.');
+      } else {
+        this.markFormGroupTouched();
+      }
     }
   }
 

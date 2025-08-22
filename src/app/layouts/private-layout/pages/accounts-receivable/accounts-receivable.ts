@@ -84,15 +84,15 @@ export class AccountsReceivable implements OnInit {
 
   // Mantener esta versión - usa 'saldo' en lugar de 'amount'
   getTotalPending(): number {
-    return this.pendingAccounts.reduce((total, account) => total + account.saldo, 0);
+    return this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
   }
-
+  
   // Mantener esta versión - usa 'fecha_limite' en lugar de 'dueDate' y 'saldo' en lugar de 'amount'
   getTotalOverdue(): number {
     const today = new Date().toISOString().split('T')[0];
     return this.pendingAccounts
       .filter(account => account.fecha_limite < today)
-      .reduce((total, account) => total + account.saldo, 0);
+      .reduce((total, account) => total + (account.saldo || 0), 0);
   }
 
   formatCurrency(amount: number): string {

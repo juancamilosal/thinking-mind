@@ -181,7 +181,7 @@
                       <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(account.monto) }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(account.saldo) }}</div>
+                      <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(account.saldo || 0) }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm text-gray-900">{{ account.fecha_limite }}</div>

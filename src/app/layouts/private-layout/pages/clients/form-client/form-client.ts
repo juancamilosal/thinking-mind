@@ -60,13 +60,13 @@ export class FormClient implements OnInit, OnChanges {
   loadClientData(): void {
     if (this.clientData) {
       this.clientForm.patchValue({
-        tipo_documento: this.clientData.tipo_documento,
-        nuemero_documento: this.clientData.numero_documento,
-        nombre: this.clientData.nombre,
-        apellido: this.clientData.apellido,
-        celular: this.clientData.celular,
+        documentType: this.clientData.tipo_documento,
+        documentNumber: this.clientData.numero_documento,
+        firstName: this.clientData.nombre,
+        lastName: this.clientData.apellido,
+        phoneNumber: this.clientData.celular,
         email: this.clientData.email,
-        direccion: this.clientData.direccion
+        address: this.clientData.direccion
       });
     }
   }
