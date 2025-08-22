@@ -47,19 +47,22 @@ export class AccountReceivableFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.accountForm = this.fb.group({
+      client_id: [null, [Validators.required]],
+      student_id: [null, [Validators.required]],
+      amount: [0, [Validators.required, Validators.min(0.01)]],
+      deadline: ['', [Validators.required]],
+      description: [null, [Validators.required, Validators.minLength(6)]],
+      // Campos adicionales para la búsqueda automática
       clientDocumentType: ['', [Validators.required]],
-      clientDocumentNumber: ['', [Validators.required, Validators.minLength(6)]],
-      clientName: ['', [Validators.required, Validators.minLength(2)]],
-      clientEmail: ['', [Validators.required, Validators.email]],
-      clientPhone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      clientDocumentNumber: ['', [Validators.required]],
+      clientName: [''],
+      clientEmail: [''],
+      clientPhone: [''],
       studentDocumentType: ['', [Validators.required]],
-      studentDocumentNumber: ['', [Validators.required, Validators.minLength(6)]],
-      studentName: ['', [Validators.required, Validators.minLength(2)]],
-      colegio: ['', [Validators.required, Validators.minLength(2)]],
-      curso: ['', [Validators.required]],
-      monto: [0, [Validators.required, Validators.min(0.01)]],
-      saldo: [0, [Validators.required, Validators.min(0)]],
-      fecha_limite: ['', [Validators.required]]
+      studentDocumentNumber: ['', [Validators.required]],
+      studentName: [''],
+      colegio: [''],
+      course: ['', [Validators.required]]
     });
 
     // Suscribirse a cambios en los campos de documento del cliente
@@ -91,69 +94,91 @@ export class AccountReceivableFormComponent implements OnInit {
   searchClientInfo(): void {
     const documentType = this.accountForm.get('clientDocumentType')?.value;
     const documentNumber = this.accountForm.get('clientDocumentNumber')?.value;
-
-    // Solo buscar si ambos campos tienen valor y el número tiene al menos 6 caracteres
-    if (documentType && documentNumber && documentNumber.length >= 6) {
-      this.clientService.searchClientByDocument(documentType, documentNumber).subscribe({
-        next: (response) => {
-          if (response.data && response.data.length > 0) {
-            const client = response.data[0];
-            this.clientId = client.id ? client.id.toString() : '';
-            // Llenar automáticamente los campos del cliente
-            this.accountForm.patchValue({
-              clientName: `${client.nombre} ${client.apellido}`,
-              clientEmail: client.email,
-              clientPhone: client.celular
-            });
-          } else {
-            this.clientId = '';
-          }
-        },
-        error: (error) => {
-          console.error('Error al buscar cliente:', error);
-          this.clientId = '';
-        }
-      });
-    } else {
+    if (!documentType || !documentNumber || documentNumber.toString().length < 6) {
       this.clientId = '';
+      this.accountForm.patchValue({
+        clientName: '',
+        clientEmail: '',
+        clientPhone: ''
+      });
+      return;
     }
+
+    this.clientService.searchClientByDocument(documentType, documentNumber.toString()).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servicio cliente:', response); // Debug log
+        if (response.data && response.data.length > 0) {
+          const client = response.data[0];
+          this.clientId = client.id ? client.id.toString() : '';
+          this.accountForm.patchValue({
+            clientName: `${client.nombre || ''} ${client.apellido || ''}`.trim(),
+            clientEmail: client.email || '',
+            clientPhone: client.celular || ''
+          });
+
+        } else {
+          this.clientId = '';
+          this.accountForm.patchValue({
+            clientName: '',
+            clientEmail: '',
+            clientPhone: ''
+          });
+        }
+      },
+      error: (error) => {
+        this.clientId = '';
+        this.accountForm.patchValue({
+          clientName: '',
+          clientEmail: '',
+          clientPhone: ''
+        });
+      }
+    });
   }
 
   searchStudentInfo(): void {
     const documentType = this.accountForm.get('studentDocumentType')?.value;
     const documentNumber = this.accountForm.get('studentDocumentNumber')?.value;
-
-    // Solo buscar si ambos campos tienen valor y el número tiene al menos 6 caracteres
-    if (documentType && documentNumber && documentNumber.length >= 6) {
-      this.studentService.searchStudentByDocument(documentType, documentNumber).subscribe({
-        next: (response) => {
-          if (response.data && response.data.length > 0) {
-            const student = response.data[0];
-            this.studentId = student.id ? student.id.toString() : '';
-            // Llenar automáticamente los campos del estudiante
-            this.accountForm.patchValue({
-              studentName: `${student.nombre} ${student.apellido}`,
-              colegio: student.colegio
-            });
-          } else {
-            this.studentId = '';
-          }
-        },
-        error: (error) => {
-          console.error('Error al buscar estudiante:', error);
-          this.studentId = '';
-        }
-      });
-    } else {
+    if (!documentType || !documentNumber || documentNumber.toString().length < 6) {
       this.studentId = '';
+      this.accountForm.patchValue({
+        studentName: '',
+        colegio: ''
+      });
+      return;
     }
+
+    this.studentService.searchStudentByDocument(documentType, documentNumber.toString()).subscribe({
+      next: (response) => {
+        if (response.data && response.data.length > 0) {
+          const student = response.data[0];
+          this.studentId = student.id ? student.id.toString() : '';
+          this.accountForm.patchValue({
+            studentName: `${student.nombre || ''} ${student.apellido || ''}`.trim(),
+            colegio: student.colegio || ''
+          });
+
+        } else {
+          this.studentId = '';
+          this.accountForm.patchValue({
+            studentName: '',
+            colegio: ''
+          });
+        }
+      },
+      error: (error) => {
+        this.studentId = '';
+        this.accountForm.patchValue({
+          studentName: '',
+          colegio: ''
+        });
+      }
+    });
   }
 
   onSubmit() {
     if (this.accountForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;
-
-      // Preparar los datos para enviar a Directus
       const accountReceivableData = {
         cliente_id: this.clientId,
         estudiante_id: this.studentId,
@@ -172,7 +197,6 @@ export class AccountReceivableFormComponent implements OnInit {
             'La cuenta por cobrar ha sido registrada exitosamente.'
           );
 
-          // Emitir el evento con los datos del formulario para la UI local
           const formData: AccountReceivable = {
             id: response.data.id,
             cliente_id: this.clientId,
@@ -195,8 +219,6 @@ export class AccountReceivableFormComponent implements OnInit {
         },
         error: (error) => {
           this.isSubmitting = false;
-          console.error('Error al crear cuenta por cobrar:', error);
-
           if (error.status >= 500) {
             this.notificationService.showServerError();
           } else {
@@ -232,10 +254,29 @@ export class AccountReceivableFormComponent implements OnInit {
   }
 
   getFieldError(fieldName: string): string {
-    const field = this.accountForm.get(fieldName);
+    const control = this.accountForm.get(fieldName);
+    if (control && control.errors && control.touched) {
+      if (control.errors['required']) {
+        return `${this.getFieldDisplayName(fieldName)} es obligatorio`;
+      }
+      if (control.errors['email']) {
+        return 'Ingrese un email válido';
+      }
+      if (control.errors['minlength']) {
+        return `${this.getFieldDisplayName(fieldName)} debe tener al menos ${control.errors['minlength'].requiredLength} caracteres`;
+      }
+      if (control.errors['pattern']) {
+        return `${this.getFieldDisplayName(fieldName)} no tiene el formato correcto`;
+      }
+      if (control.errors['min']) {
+        return `${this.getFieldDisplayName(fieldName)} debe ser mayor a ${control.errors['min'].min}`;
+      }
+    }
+    return '';
+  }
 
-    // Mapeo de nombres técnicos a nombres amigables
-    const fieldLabels: { [key: string]: string } = {
+  private getFieldDisplayName(fieldName: string): string {
+    const fieldNames: { [key: string]: string } = {
       'clientDocumentType': 'Tipo de documento del cliente',
       'clientDocumentNumber': 'Número de documento del cliente',
       'clientName': 'Nombre del cliente',
@@ -250,16 +291,6 @@ export class AccountReceivableFormComponent implements OnInit {
       'saldo': 'Saldo',
       'fecha_limite': 'Fecha límite'
     };
-
-    const friendlyName = fieldLabels[fieldName] || fieldName;
-
-    if (field?.errors) {
-      if (field.errors['required']) return `${friendlyName} es requerido`;
-      if (field.errors['email']) return 'Email inválido';
-      if (field.errors['minlength']) return `${friendlyName} debe tener mínimo ${field.errors['minlength'].requiredLength} caracteres`;
-      if (field.errors['pattern']) return `${friendlyName} tiene formato inválido`;
-      if (field.errors['min']) return 'El monto debe ser mayor a 0';
-    }
-    return '';
+    return fieldNames[fieldName] || fieldName;
   }
 }
