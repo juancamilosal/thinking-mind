@@ -80,11 +80,11 @@ export class AccountReceivableDetailComponent {
   }
 
   getRemainingBalance(): number {
-    return this.account.amount - this.getTotalPaid();
+    return this.account.monto - this.getTotalPaid();
   }
 
   getPaymentProgress(): number {
-    return (this.getTotalPaid() / this.account.amount) * 100;
+    return (this.getTotalPaid() / this.account.monto) * 100;
   }
 
   getPaymentProgressCapped(): number {
@@ -165,4 +165,6 @@ export class AccountReceivableDetailComponent {
     if (progress >= 50) return 'Pago Parcial';
     return 'Pendiente';
   }
+
+  protected readonly onabort = onabort;
 }
