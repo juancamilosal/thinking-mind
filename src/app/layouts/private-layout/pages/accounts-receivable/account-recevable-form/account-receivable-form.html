@@ -5,7 +5,17 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
       </svg>
     </div>
-    <h2 class="text-3xl font-bold text-gray-800">Crear Cuenta por Cobrar</h2>
+    <div class="w-full flex justify-between">
+      <h2 class="text-3xl font-bold text-gray-800">Crear Cuenta por Cobrar</h2>
+      <button
+        (click)="formClosed.emit()"
+        class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Regresar</span>
+      </button>
+    </div>
   </div>
 
   <form [formGroup]="accountForm" (ngSubmit)="onSubmit()" class="space-y-8">
@@ -57,7 +67,7 @@
                    formControlName="clientName"
                    readonly
                    placeholder="Se completará automáticamente"
-                   class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-blue-50 cursor-not-allowed text-blue-600">
+                   class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-blue-50 cursor-not-allowed">
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -76,7 +86,7 @@
                    formControlName="clientEmail"
                    readonly
                    placeholder="Se completará automáticamente"
-                   class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-blue-50 cursor-not-allowed text-blue-600">
+                   class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-blue-50 cursor-not-allowed">
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -95,7 +105,7 @@
                    formControlName="clientPhone"
                    readonly
                    placeholder="Se completará automáticamente"
-                   class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-blue-50 cursor-not-allowed text-blue-600">
+                   class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-blue-50 cursor-not-allowed">
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -151,7 +161,7 @@
                    formControlName="studentName"
                    readonly
                    placeholder="Se completará automáticamente"
-                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm bg-green-50 cursor-not-allowed text-green-600">
+                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm bg-green-50 cursor-not-allowed">
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -170,7 +180,7 @@
                    formControlName="colegio"
                    readonly
                    placeholder="Se completará automáticamente"
-                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm bg-green-50 cursor-not-allowed text-green-600">
+                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm bg-green-50 cursor-not-allowed">
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
               <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -215,7 +225,7 @@
             <input type="number"
                    formControlName="amount"
                    class="w-full pl-10 pr-6 py-4 rounded-lg border border-orange-300 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 bg-white"
-                   placeholder="0.00"
+                   placeholder="0"
                    step="0.01">
           </div>
           @if(isFieldInvalid('amount')) {

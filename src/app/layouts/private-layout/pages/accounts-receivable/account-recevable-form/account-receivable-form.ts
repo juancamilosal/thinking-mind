@@ -49,9 +49,9 @@ export class AccountReceivableFormComponent implements OnInit {
     this.accountForm = this.fb.group({
       client_id: [null,],
       student_id: [null],
-      amount: [0, [Validators.required, Validators.min(0.01)]],
+      amount: [null, [Validators.required, Validators.min(0.01)]],
       deadline: ['', [Validators.required]],
-      description: [null, [Validators.required, Validators.minLength(6)]],
+      description: [null],
       clientDocumentType: ['', [Validators.required]],
       clientDocumentNumber: ['', [Validators.required]],
       clientName: [''],
@@ -186,7 +186,7 @@ export class AccountReceivableFormComponent implements OnInit {
         monto: this.accountForm.get('amount')?.value,
         curso: this.accountForm.get('course')?.value,
         fecha_limite: this.accountForm.get('deadline')?.value,
-        descripcion: this.accountForm.get('description')?.value,
+        observaciones: this.accountForm.get('description')?.value,
         estado: 'pendiente'
       };
 
