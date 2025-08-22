@@ -15,7 +15,6 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
   styleUrl: './form-client.css'
 })
 export class FormClient implements OnInit, OnChanges {
-
   @Input() editMode: boolean = false;
   @Input() clientData: Client | null = null;
   @Output() goBack = new EventEmitter();
@@ -23,6 +22,7 @@ export class FormClient implements OnInit, OnChanges {
   @Output() clientUpdated = new EventEmitter();
   clientForm!: FormGroup;
   DOCUMENT_TYPE = DOCUMENT_TYPE;
+  isSubmitting = false; // Nueva propiedad
 
   constructor(
     private fb: FormBuilder,
@@ -60,20 +60,20 @@ export class FormClient implements OnInit, OnChanges {
   loadClientData(): void {
     if (this.clientData) {
       this.clientForm.patchValue({
-        documentType: this.clientData.tipo_documento,
-        documentNumber: this.clientData.numero_documento,
-        firstName: this.clientData.nombre,
-        lastName: this.clientData.apellido,
-        phoneNumber: this.clientData.celular,
+        tipo_documento: this.clientData.tipo_documento,
+        nuemero_documento: this.clientData.numero_documento,
+        nombre: this.clientData.nombre,
+        apellido: this.clientData.apellido,
+        celular: this.clientData.celular,
         email: this.clientData.email,
-        address: this.clientData.direccion
+        direccion: this.clientData.direccion
       });
     }
   }
 
   onSubmit=(): void => {
-    console.log(this.clientForm.valid)
-    if (this.clientForm.valid) {
+    if (this.clientForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
       if (this.editMode) {
         this.updateClient();
       } else {
@@ -89,27 +89,25 @@ export class FormClient implements OnInit, OnChanges {
       control.markAsTouched();
     });
   }
-
-  createClient=(): void => {
+  createClient() {
     const client = {
       tipo_documento: this.clientForm.get('documentType')?.value,
       numero_documento: this.clientForm.get('documentNumber')?.value,
       nombre: this.clientForm.get('firstName')?.value,
       apellido: this.clientForm.get('lastName')?.value,
-      celular: this.clientForm.get('phoneNumber')?.value,
+      celular: this.clientForm.get('cellphone')?.value,
       email: this.clientForm.get('email')?.value,
       direccion: this.clientForm.get('address')?.value,
     }
-
     this.clientServices.createClient(client).subscribe({
-      next: (): void => {
-        const clientName = `${client.nombre} ${client.apellido}`;
-        this.notificationService.showClientCreated(clientName);
-        this.clientServices.searchClient();
-        this.goBack.emit();
-        this.searchClient.emit();
+      next: (response) => {
+        this.isSubmitting = false;
+        console.log('Cliente creado:', response);
+        this.clientUpdated.emit();
+        this.notificationService.showClientCreated(`${client.nombre} ${client.apellido}`);
       },
-      error: (error): void => {
+      error: (error) => {
+        this.isSubmitting = false;
         const errorArray = error.errors || error.error;
         if (errorArray && Array.isArray(errorArray) && errorArray.length > 0) {
           const directusError = errorArray[0];
@@ -119,10 +117,11 @@ export class FormClient implements OnInit, OnChanges {
             return;
           }
         }
+
         if (error.status === 400) {
-          this.notificationService.showError('Cliente ya se encuentra creado', `Ya existe un cliente registrado con el número de documento ${client.numero_documento}.`);
+          this.notificationService.showError('Cliente ya se encuentra creado', `Ya existe un cliente registrado con el número de documento ${client.tipo_documento} ${client.numero_documento}.`);
         } else if (error.status === 409) {
-          this.notificationService.showError('Cliente ya se encuentra creado', `Ya existe un cliente registrado con el número de documento ${client.numero_documento}.`);
+          this.notificationService.showError('Cliente ya se encuentra creado', `Ya existe un cliente registrado con el número de documento ${client.tipo_documento} ${client.numero_documento}.`);
         } else if (error.status >= 500) {
           this.notificationService.showServerError();
         } else {
@@ -137,11 +136,15 @@ export class FormClient implements OnInit, OnChanges {
       const clientToUpdate = this.clientForm.value;
       this.clientServices.updateClient(this.clientData.id, clientToUpdate).subscribe({
         next: (response) => {
+          this.isSubmitting = false;
           console.log('Cliente actualizado:', response);
           this.clientUpdated.emit();
+          this.notificationService.showSuccess('Cliente actualizado', 'La información del cliente ha sido actualizada exitosamente.');
         },
         error: (error) => {
+          this.isSubmitting = false; // Asegurar que se resetee en error
           console.error('Error al actualizar cliente:', error);
+          this.notificationService.showError('Error al actualizar', 'No se pudo actualizar el cliente. Inténtalo nuevamente.');
         }
       });
     }
@@ -150,12 +153,10 @@ export class FormClient implements OnInit, OnChanges {
   deleteClient() {
     if (this.clientData?.id) {
       const clientName = `${this.clientData.nombre} ${this.clientData.apellido}`;
-      
       this.confirmationService.showDeleteConfirmation(
         clientName,
         'cliente',
         () => {
-          // Callback de confirmación
           this.clientServices.deleteClient(this.clientData!.id).subscribe({
             next: (response) => {
               this.notificationService.showSuccess(
@@ -165,17 +166,12 @@ export class FormClient implements OnInit, OnChanges {
               this.clientUpdated.emit();
             },
             error: (error) => {
-              console.error('Error al eliminar cliente:', error);
               this.notificationService.showError(
                 'Error al eliminar',
                 'No se pudo eliminar el cliente. Inténtalo nuevamente.'
               );
             }
           });
-        },
-        () => {
-          // Callback de cancelación (opcional)
-          console.log('Eliminación cancelada');
         }
       );
     }
