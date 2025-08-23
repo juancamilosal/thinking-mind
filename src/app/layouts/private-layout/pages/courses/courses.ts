@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import {CourseCardComponent} from '../../../../components/course-card/course-card';
 import {CourseInfoComponent} from '../../../../components/course-info/course-info';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
+import { FormCourse } from './form-course/form-course';
 
 @Component({
   selector: 'app-courses',
   imports: [
-    CourseCardComponent, CourseInfoComponent
-  ],
+    CourseCardComponent, CourseInfoComponent,
+    FormCourse
+],
   templateUrl: './courses.html',
   standalone: true
 })
@@ -18,13 +20,13 @@ import { Course } from '../../../../core/models/Course';
 export class Courses {
   courseForm!: FormGroup;
   showForm = false;
+  showCourseInfo = false;
   showDetail = false;
   editMode = false;
   selectedCourse: Course | null = null;
   courses: Course[] = [];
   isLoading = false;
   searchTerm = '';
-  showCourseInfo = false;
   private searchTimeout: any;
 
   constructor(private fb: FormBuilder, private courseServices: CourseService) {
@@ -90,5 +92,10 @@ export class Courses {
   closeCourseInfo() {
     this.selectedCourse = null;
     this.showCourseInfo = false;
+  }
+
+  onCourseUpdated() {
+    this.searchCourse();
+    this.toggleForm();
   }
 }

@@ -30,4 +30,12 @@ export class CourseService {
   createCourse(course: Course): Observable<ResponseAPI<Course>> {
     return this.http.post<ResponseAPI<Course>>(this.apiCourse, course);
   }
+
+  updateCourse(id: number, course: Course): Observable<ResponseAPI<Course>> {
+    return this.http.patch<ResponseAPI<Course>>(`${this.apiCourse}/${id}`, course);
+  }
+
+  deleteCourse(id: number | undefined): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${this.apiCourse}/${id}`);
+  }
 }
