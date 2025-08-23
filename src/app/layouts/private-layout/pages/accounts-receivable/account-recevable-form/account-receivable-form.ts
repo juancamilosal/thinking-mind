@@ -187,7 +187,7 @@ export class AccountReceivableFormComponent implements OnInit {
         curso: this.accountForm.get('course')?.value,
         fecha_limite: this.accountForm.get('deadline')?.value,
         observaciones: this.accountForm.get('description')?.value,
-        estado: 'pendiente'
+        estado: 'PENDIENTE'
       };
 
       this.accountReceivableService.createAccountReceivable(accountReceivableData).subscribe({
@@ -209,6 +209,7 @@ export class AccountReceivableFormComponent implements OnInit {
             estado: 'pendiente',
             clientName: this.accountForm.get('clientName')?.value,
             clientEmail: this.accountForm.get('clientEmail')?.value,
+            clientPhone: this.accountForm.get('clientPhone')?.value,
             studentName: this.accountForm.get('studentName')?.value,
             createdDate: new Date().toISOString().split('T')[0]
           };

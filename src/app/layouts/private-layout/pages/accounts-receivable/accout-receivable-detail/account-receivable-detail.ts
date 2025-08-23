@@ -1,68 +1,28 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Agregar esta importación
-import {AccountReceivable} from '../../../../../core/models/AccountReceivable';
+import { FormsModule } from '@angular/forms';
+import {AccountReceivable, PaymentRecord} from '../../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 
-export interface Payment {
-  id: string;
-  paymentNumber: string;
-  amount: number;
-  paymentDate: string;
-  paymentMethod: string;
-  reference: string;
-  payerName: string;
-  approvalNumber: string;
-  bank: string;
-  paymentTime?: string;
-  notes?: string;
-}
+// Eliminar la interfaz Payment duplicada
 
 @Component({
   selector: 'app-account-receivable-detail',
-  imports: [CommonModule, FormsModule, PaymentDetailComponent], // Agregar PaymentDetailComponent aquí
+  imports: [CommonModule, FormsModule, PaymentDetailComponent],
   templateUrl: './account-receivable-detail.html',
   standalone: true
 })
 export class AccountReceivableDetailComponent {
-  @Input() account!: AccountReceivable; // Usar ! para indicar que siempre tendrá valor
+  @Input() account!: AccountReceivable;
   @Output() backToList = new EventEmitter<void>();
-  @Output() addPayment = new EventEmitter<Payment>();
+  @Output() addPayment = new EventEmitter<PaymentRecord>(); // Cambiar Payment por PaymentRecord
 
-  // Datos de ejemplo de pagos
-  payments: Payment[] = [
-    {
-      id: 'PAY-001',
-      paymentNumber: 'Pago 1',
-      amount: 200000,
-      paymentDate: '2024-01-25',
-      paymentMethod: 'Transferencia',
-      reference: 'TRF-001',
-      payerName: 'María García',
-      approvalNumber: 'APR-2024-001',
-      bank: 'Banco de Bogotá',
-      paymentTime: '14:30',
-      notes: 'Pago parcial del curso'
-    },
-    {
-      id: 'PAY-002',
-      paymentNumber: 'Pago 2',
-      amount: 150000,
-      paymentDate: '2024-02-05',
-      paymentMethod: 'Efectivo',
-      reference: 'EFE-001',
-      payerName: 'María García',
-      approvalNumber: 'APR-2024-002',
-      bank: 'N/A',
-      paymentTime: '10:15',
-      notes: 'Pago en efectivo en oficina'
-    }
-  ];
+  get payments(): PaymentRecord[] {
+    return this.account?.pagos || [];
+  }
 
-  selectedPayment: Payment | null = null;
-  showPaymentDetail = false;
+  selectedPayment: PaymentRecord | null = null;
   showPaymentDetailView = false;
-
   showAddPaymentForm = false;
   newPaymentAmount = 0;
   newPaymentMethod = '';
@@ -76,7 +36,7 @@ export class AccountReceivableDetailComponent {
   }
 
   getTotalPaid(): number {
-    return this.payments.reduce((total, payment) => total + payment.amount, 0);
+    return this.payments.reduce((total, payment) => total + payment.valor, 0);
   }
 
   getRemainingBalance(): number {
@@ -99,6 +59,15 @@ export class AccountReceivableDetailComponent {
     }).format(amount);
   }
 
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  }
+
   toggleAddPaymentForm() {
     this.showAddPaymentForm = !this.showAddPaymentForm;
     if (!this.showAddPaymentForm) {
@@ -107,21 +76,20 @@ export class AccountReceivableDetailComponent {
   }
 
   addNewPayment() {
-    if (this.newPaymentAmount > 0 && this.newPaymentMethod && this.newPaymentReference) {
-      const newPayment: Payment = {
-        id: 'PAY-' + (this.payments.length + 1).toString().padStart(3, '0'),
-        paymentNumber: `Pago ${this.payments.length + 1}`,
-        amount: this.newPaymentAmount,
-        paymentDate: new Date().toISOString().split('T')[0],
-        paymentMethod: this.newPaymentMethod,
-        reference: this.newPaymentReference,
-        payerName: this.newPayerName,
-        approvalNumber: this.newApprovalNumber,
-        bank: this.newBank,
-        paymentTime: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+    if (this.newPaymentAmount && this.newPaymentMethod && this.newPaymentReference &&
+        this.newPayerName && this.newApprovalNumber && this.newBank) {
+
+      const newPayment: PaymentRecord = {
+        id: 'temp-' + Date.now(),
+        cuanta_cobrar_id: this.account.id,
+        valor: this.newPaymentAmount,
+        fecha_pago: new Date().toISOString(),
+        metodo_pago: this.newPaymentMethod,
+        pagador: this.newPayerName,
+        numero_aprobacion: this.newApprovalNumber,
+        estado: 'PAGADO'
       };
 
-      this.payments.push(newPayment);
       this.addPayment.emit(newPayment);
       this.resetPaymentForm();
       this.showAddPaymentForm = false;
@@ -137,19 +105,18 @@ export class AccountReceivableDetailComponent {
     this.newBank = '';
   }
 
-  viewPaymentDetail(payment: Payment) {
+  viewPaymentDetail(payment: PaymentRecord) {
     this.selectedPayment = payment;
     this.showPaymentDetailView = true;
   }
 
   closePaymentDetail() {
-    this.selectedPayment = null;
-    this.showPaymentDetail = false;
+    this.showPaymentDetailView = false;
   }
 
   backToPaymentHistory() {
-    this.selectedPayment = null;
     this.showPaymentDetailView = false;
+    this.selectedPayment = null;
   }
 
   getStatusColor(): string {
@@ -165,6 +132,4 @@ export class AccountReceivableDetailComponent {
     if (progress >= 50) return 'Pago Parcial';
     return 'Pendiente';
   }
-
-  protected readonly onabort = onabort;
 }

@@ -20,7 +20,7 @@ export class AccountReceivableService {
 
   searchAccountReceivable(searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<any[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*').pipe(
+      return this.http.get<ResponseAPI<any[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,pagos.*').pipe(
         map(response => ({
           ...response,
           data: response.data.map(item => this.mapToAccountReceivable(item))
@@ -50,6 +50,7 @@ export class AccountReceivableService {
       curso: item.curso,
       fecha_limite: item.fecha_limite,
       estado: item.estado,
+      pagos: item.pagos || [],
       // Extraer campos para la UI
       clientName: typeof item.cliente_id === 'object'
         ? `${item.cliente_id.nombre} ${item.cliente_id.apellido}`
@@ -57,6 +58,9 @@ export class AccountReceivableService {
       clientEmail: typeof item.cliente_id === 'object'
         ? item.cliente_id.email
         : item.clientEmail,
+      clientPhone: typeof item.cliente_id === 'object'
+        ? item.cliente_id.celular
+        : item.clientPhone,
       studentName: typeof item.estudiante_id === 'object'
         ? `${item.estudiante_id.nombre} ${item.estudiante_id.apellido}`
         : item.studentName,
