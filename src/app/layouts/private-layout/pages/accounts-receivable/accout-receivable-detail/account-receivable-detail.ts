@@ -6,7 +6,6 @@ import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
 import {PaymentService} from '../../../../../core/services/payment.service';
 
-
 @Component({
   selector: 'app-account-receivable-detail',
   imports: [CommonModule, FormsModule, PaymentDetailComponent],
@@ -17,7 +16,8 @@ export class AccountReceivableDetailComponent {
   @Input() account!: AccountReceivable;
   @Output() backToList = new EventEmitter<void>();
   @Output() llamarFuncion = new EventEmitter<void>();
-  @Output() addPayment = new EventEmitter<PaymentRecord>(); // Cambiar Payment por PaymentRecord
+  @Output() addPayment = new EventEmitter<PaymentRecord>();
+  
   get payments(): PaymentRecord[] {
     return this.account?.pagos || [];
   }
@@ -25,16 +25,31 @@ export class AccountReceivableDetailComponent {
   selectedPayment: PaymentRecord | null = null;
   showPaymentDetailView = false;
   showAddPaymentForm = false;
-  newPaymentAmount :number;
+  newPaymentAmount: number;
   newPaymentMethod: string;
-  newPaymentReference:string;
-  newPayerName:string;
-  newApprovalNumber:string;
-  newBank :string;
+  newPaymentReference: string;
+  newPayerName: string;
+  newApprovalNumber: string;
+  newBank: string;
   PAYMENT_METHOD = PAYMENT_METHOD;
 
-  constructor(private paymentService: PaymentService, private cdr: ChangeDetectorRef) {
+  constructor(private paymentService: PaymentService, private cdr: ChangeDetectorRef) {}
 
+  // Método para capitalizar texto
+  capitalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  // Método para manejar la capitalización del nombre del pagador
+  onPayerNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.newPayerName = capitalizedValue;
   }
 
   onBack() {

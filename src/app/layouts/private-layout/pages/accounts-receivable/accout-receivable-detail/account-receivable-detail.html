@@ -174,6 +174,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Pagador</label>
                 <input type="text"
                        [(ngModel)]="newPayerName"
+                       (input)="onPayerNameChange($event)"
                        class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                        placeholder="Nombre completo">
             </div>
