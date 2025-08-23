@@ -26,11 +26,11 @@ export class AccountReceivableDetailComponent {
   showPaymentDetailView = false;
   showAddPaymentForm = false;
   newPaymentAmount :number;
-  newPaymentMethod = '';
-  newPaymentReference = '';
-  newPayerName = '';
-  newApprovalNumber = '';
-  newBank = '';
+  newPaymentMethod: string;
+  newPaymentReference:string;
+  newPayerName:string;
+  newApprovalNumber:string;
+  newBank :string;
   PAYMENT_METHOD = PAYMENT_METHOD;
 
   constructor(private paymentService: PaymentService, private cdr: ChangeDetectorRef) {
@@ -83,7 +83,7 @@ export class AccountReceivableDetailComponent {
 
   addNewPayment() {
     const payment = {
-      cuenta_cobrar_id: this.account.id, // ✅ Correcto
+      cuenta_cobrar_id: this.account.id,
       valor: this.newPaymentAmount,
       fecha_pago: new Date().toISOString(),
       metodo_pago: this.newPaymentMethod,
