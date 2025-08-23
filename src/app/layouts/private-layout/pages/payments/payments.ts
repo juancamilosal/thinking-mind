@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {FormBuilder, FormsModule} from '@angular/forms';
+import {PaymentService} from '../../../../core/services/payment.service';
+import {PaymentRecord} from '../../../../core/models/AccountReceivable';
 
 export interface Payment {
   id: string;
@@ -17,23 +19,23 @@ export interface Payment {
   templateUrl: './payments.html'
 })
 export class Payments implements OnInit {
-  payments: Payment[] = [];
+  payments: PaymentRecord[] = [];
   filteredPayments: Payment[] = [];
   searchTerm: string = '';
   isLoading: boolean = false;
 
-  ngOnInit() {
-    this.loadPayments();
+  constructor(private paymentService: PaymentService) {
   }
 
-  loadPayments() {
-    this.isLoading = true;
-    // Simular carga de datos - aquí irían los datos reales
-    setTimeout(() => {
-      this.payments = [];
-      this.filteredPayments = this.payments;
-      this.isLoading = false;
-    }, 1000);
+
+  ngOnInit() {
+    this.getPayments();
+  }
+
+  getPayments = () => {
+    this.paymentService.getPayments().subscribe(data => {
+      this.payments = data.data;
+    })
   }
 
   onSearchInputChange(event: any) {
@@ -47,11 +49,11 @@ export class Payments implements OnInit {
 
   filterPayments() {
     if (!this.searchTerm.trim()) {
-      this.filteredPayments = this.payments;
+      this.payments = this.payments;
       return;
     }
 
-    this.filteredPayments = this.payments.filter(payment =>
+    this.payments = this.payments.filter(payment =>
       payment.pagador.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       payment.estado.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
@@ -66,12 +68,12 @@ export class Payments implements OnInit {
   }
 
   getStatusColor(estado: string): string {
-    switch (estado) {
-      case 'Completado':
+    switch (estado.toUpperCase()) {
+      case 'PAGADO':
         return 'text-green-600 bg-green-100';
-      case 'Pendiente':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'Cancelado':
+      case 'PENDIENTE':
+        return 'text-orange-600 bg-orange-100';
+      case 'RECHAZADO':
         return 'text-red-600 bg-red-100';
       default:
         return 'text-gray-600 bg-gray-100';
