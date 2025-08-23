@@ -5,6 +5,7 @@ import {AccountReceivable, PaymentRecord} from '../../../../../core/models/Accou
 import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
 import {PaymentService} from '../../../../../core/services/payment.service';
+import {AccountReceivableService} from '../../../../../core/services/account-receivable.service';
 
 @Component({
   selector: 'app-account-receivable-detail',
@@ -17,7 +18,7 @@ export class AccountReceivableDetailComponent {
   @Output() backToList = new EventEmitter<void>();
   @Output() llamarFuncion = new EventEmitter<void>();
   @Output() addPayment = new EventEmitter<PaymentRecord>();
-  
+
   get payments(): PaymentRecord[] {
     return this.account?.pagos || [];
   }
@@ -33,7 +34,11 @@ export class AccountReceivableDetailComponent {
   newBank: string;
   PAYMENT_METHOD = PAYMENT_METHOD;
 
-  constructor(private paymentService: PaymentService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private paymentService: PaymentService,
+    private cdr: ChangeDetectorRef,
+    private accountService: AccountReceivableService
+  ) {}
 
   // Método para capitalizar texto
   capitalizeText(text: string): string {
@@ -110,7 +115,45 @@ export class AccountReceivableDetailComponent {
       next: ():void => {
         this.resetPaymentForm();
         this.showAddPaymentForm = false;
+        // Actualizar tanto los pagos como el saldo de la cuenta
+        this.refreshAccountData();
+        // Emitir evento para actualizar el componente padre
+        this.llamarFuncion.emit();
+      }
+    });
+  }
+
+  // Nuevo método para actualizar todos los datos de la cuenta
+  refreshAccountData() {
+    this.accountService.getAccountById(this.account.id).subscribe({
+      next: (response) => {
+        console.log('Cuenta actualizada:', response);
+        if (response.data) {
+          // Actualizar el saldo y los pagos
+          this.account.saldo = response.data.saldo;
+          this.account.pagos = response.data.pagos || [];
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener la cuenta actualizada:', error);
+        // Fallback: solo actualizar los pagos
         this.refreshPayments();
+      }
+    });
+  }
+
+  refreshPayments() {
+    this.paymentService.getPaymentsByAccountId(this.account.id).subscribe({
+      next: (response) => {
+        console.log('Pagos actualizados:', response);
+        if (response.data) {
+          this.account.pagos = response.data;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener los pagos:', error);
       }
     });
   }
@@ -146,26 +189,9 @@ export class AccountReceivableDetailComponent {
   }
 
   getStatusText(): string {
-    const progress = this.getPaymentProgress();
-    if (progress >= 100) return 'Pagado Completamente';
-    if (progress >= 50) return 'Pago Parcial';
+    if (this.account.estado === 'PAGADO') {
+      return 'Pagado';
+    }
     return 'Pendiente';
   }
-
-
-  refreshPayments() {
-    this.paymentService.getPaymentsByAccountId(this.account.id).subscribe({
-      next: (response) => {
-        console.log('Pagos actualizados:', response);
-        if (response.data) {
-          this.account.pagos = response.data;
-          this.cdr.detectChanges();
-        }
-      },
-      error: (error) => {
-        console.error('Error al obtener los pagos:', error);
-      }
-    });
-  }
-
 }
