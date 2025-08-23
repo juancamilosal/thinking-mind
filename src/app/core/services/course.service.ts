@@ -22,8 +22,7 @@ export class CourseService {
 
     const params = {
       'filter[_or][0][nombre][_icontains]': searchTerm,
-      'filter[_or][1][ciudad][_icontains]': searchTerm,
-      'filter[_or][2][nombre_rector][_icontains]': searchTerm
+      'filter[_or][1][codigo][_icontains]': searchTerm
     };
     return this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params });
   }

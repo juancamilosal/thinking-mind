@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import {CourseCardComponent} from '../../../../components/course-card/course-card';
 import {CourseInfoComponent} from '../../../../components/course-info/course-info';
@@ -20,11 +20,12 @@ export class Courses {
   showForm = false;
   showDetail = false;
   editMode = false;
+  selectedCourse: Course | null = null;
   courses: Course[] = [];
   isLoading = false;
   searchTerm = '';
-  selectedCourse: any = null;
   showCourseInfo = false;
+  private searchTimeout: any;
 
   constructor(private fb: FormBuilder, private courseServices: CourseService) {
     }
@@ -32,6 +33,12 @@ export class Courses {
   ngOnInit() {
     this.initForm();
     this.searchCourse();
+  }
+
+  toggleForm() {
+    this.showForm = !this.showForm;
+    this.editMode = false;
+    this.selectedCourse = null;
   }
 
   initForm() {
@@ -56,7 +63,24 @@ export class Courses {
     });
   }
 
+  onSearch() {
+    this.searchCourse(this.searchTerm.trim() || undefined);
+  }
 
+  onSearchInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+
+    // Limpiar timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Establecer nuevo timeout para búsqueda automática
+    this.searchTimeout = setTimeout(() => {
+      this.searchCourse(this.searchTerm.trim() || undefined);
+    }, 500); // 500ms de delay
+  }
 
   openCourseInfo(course: any) {
     this.selectedCourse = course;

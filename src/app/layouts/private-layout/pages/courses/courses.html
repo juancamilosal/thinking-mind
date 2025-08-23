@@ -1,36 +1,59 @@
-<div class="p-6">
-  <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Cursos</h1>
+@if (!showCourseInfo) {
+  <div class="p-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Cursos</h1>
+      <p class="text-gray-600">Administra la información de tus cursos</p>
+    </div>
 
-  @if (!showCourseInfo) {
-    <div class="space-y-6">
+    <!-- Botón Ingresar Curso -->
+    <div class="flex justify-center mb-8">
+      <button (click)="toggleForm()"
+              class="px-8 py-4 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          <span>Ingresar Curso</span>
+        </button>
+    </div>
+
+    <!-- Barra de Búsqueda -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
       <div class="flex gap-4 flex-wrap sm:flex-nowrap">
-        <input type="text" placeholder="Buscar curso..."
-               class="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input
+          type="text"
+          placeholder="Buscar por nombre, o código..."
+          [value]="searchTerm"
+          (input)="onSearchInputChange($event)"
+          (keyup.enter)="onSearch()"
+          class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
         <button
-          class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto">
+          (click)="onSearch()"
+          class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
           Buscar
         </button>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        @for (course of courses; track course.id) {
-          <app-course-card
-            [courseName]="course.nombre"
-            [coursePrice]="course.precio"
-            [courseCode]="course.codigo"
-            [courseImageUrl]="course.img_url"
-            (click)="openCourseInfo(course)"
-          />
-        }
-      </div>
     </div>
-  } @else {
-    <app-course-info
-      [courseId]="selectedCourse.courseId"
-      [courseName]="selectedCourse.courseName"
-      [coursePrice]="selectedCourse.coursePrice"
-      [courseCode]="selectedCourse.courseCode"
-      (close)="closeCourseInfo()">
-    </app-course-info>
-  }
-</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          @for (course of courses; track course.id) {
+            <app-course-card
+              [courseName]="course.nombre"
+              [coursePrice]="course.precio"
+              [courseCode]="course.codigo"
+              [courseImageUrl]="course.img_url"
+              (click)="openCourseInfo(course)"
+            />
+          }
+    </div>
+  </div>
+    } @else {
+      <app-course-info
+        [courseId]="selectedCourse?.id ?? ''"
+        [courseName]="selectedCourse?.nombre ?? ''"
+        [coursePrice]="selectedCourse?.precio ?? ''"
+        [courseCode]="selectedCourse?.codigo ?? ''"
+        (close)="closeCourseInfo()">
+      </app-course-info>
+    }
+
