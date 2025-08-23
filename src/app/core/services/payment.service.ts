@@ -20,7 +20,7 @@ export class PaymentService {
 
   getPaymentsByAccountId(accountId: string): Observable<ResponseAPI<PaymentRecord[]>> {
     const params = {
-      'filter[cuanta_cobrar_id][_eq]': accountId
+      'filter[cuenta_cobrar_id][_eq]': accountId
     };
     return this.http.get<ResponseAPI<PaymentRecord[]>>(this.apiUrl, { params });
   }

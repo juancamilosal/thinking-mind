@@ -82,24 +82,22 @@ export class AccountReceivableDetailComponent {
   }
 
   addNewPayment() {
-    if (this.newPaymentAmount && this.newPaymentMethod && this.newPaymentReference &&
-        this.newPayerName && this.newApprovalNumber && this.newBank) {
-
-      const newPayment: PaymentRecord = {
-        id: 'temp-' + Date.now(),
-        cuenta_cobrar_id: this.account.id,
-        valor: this.newPaymentAmount,
-        fecha_pago: new Date().toISOString(),
-        metodo_pago: this.newPaymentMethod,
-        pagador: this.newPayerName,
-        numero_aprobacion: this.newApprovalNumber,
-        estado: 'PAGADO'
-      };
-
-      this.addPayment.emit(newPayment);
-      this.resetPaymentForm();
-      this.showAddPaymentForm = false;
+    const payment = {
+      cuenta_cobrar_id: this.account.id, // ✅ Correcto
+      valor: this.newPaymentAmount,
+      fecha_pago: new Date().toISOString(),
+      metodo_pago: this.newPaymentMethod,
+      pagador: this.newPayerName,
+      estado: 'PAGADO'
     }
+
+    this.paymentService.createPayment(payment).subscribe({
+      next: ():void => {
+        this.resetPaymentForm();
+        this.showAddPaymentForm = false;
+        this.refreshPayments();
+      }
+    });
   }
 
   private resetPaymentForm() {
@@ -139,60 +137,20 @@ export class AccountReceivableDetailComponent {
     return 'Pendiente';
   }
 
-  // Agregar este método después del método prueba()
+
   refreshPayments() {
     this.paymentService.getPaymentsByAccountId(this.account.id).subscribe({
       next: (response) => {
-        // Actualizar los pagos en el account
-        this.account.pagos = response.data;
+        console.log('Pagos actualizados:', response);
+        if (response.data) {
+          this.account.pagos = response.data;
+          this.cdr.detectChanges();
+        }
       },
       error: (error) => {
         console.error('Error al obtener los pagos:', error);
       }
     });
   }
-  
-  prueba = ()=> {
-    const payment = {
-      cuenta_cobrar_id: this.account.id,
-      valor: this.newPaymentAmount,
-      fecha_pago: new Date().toISOString(),
-      metodo_pago: this.newPaymentMethod,
-      pagador: this.newPayerName,
-      numero_aprobacion: this.newApprovalNumber || '1',
-      estado: 'PAGADO'
-    }
-  
-    console.log('Enviando pago:', payment);
-  
-    this.paymentService.createPayment(payment).subscribe({
-      next: (response) => {
-        console.log('Respuesta del servidor:', response);
-        console.log('Pagos antes de actualizar:', this.account.pagos);
-        
-        // Actualizar localmente
-        if (!this.account.pagos) {
-          this.account.pagos = [];
-        }
-        this.account.pagos = [...this.account.pagos, response.data];
-        
-        console.log('Pagos después de actualizar:', this.account.pagos);
-        
-        // Forzar la detección de cambios
-        this.cdr.detectChanges();
-        
-        // Resetear el formulario
-        this.resetPaymentForm();
-        this.showAddPaymentForm = false;
-        
-        // Emitir evento para actualizar el componente padre
-        this.llamarFuncion.emit();
-        
-        console.log('Pago creado exitosamente:', response);
-      },
-      error: (error) => {
-        console.error('Error al crear el pago:', error);
-      }
-    });
-  }
+
 }

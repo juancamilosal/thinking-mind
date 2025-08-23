@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AccountReceivableFormComponent } from './account-recevable-form/account-receivable-form';
 import { AccountReceivableDetailComponent } from './accout-receivable-detail/account-receivable-detail';
@@ -23,7 +23,10 @@ export class AccountsReceivable implements OnInit {
   pendingAccounts: AccountReceivable[] = [];
   paidAccounts: AccountReceivable[] = [];
 
-  constructor(private accountService: AccountReceivableService) {
+  constructor(
+    private accountService: AccountReceivableService,
+    private cdr: ChangeDetectorRef
+  ) {
     // Remover this.updateAccounts() del constructor
   }
 
@@ -136,17 +139,23 @@ export class AccountsReceivable implements OnInit {
 
   // Agregar este método después de loadAccounts()
   refreshAccountDetail() {
-    if (this.selectedAccount) {
-      // Buscar la cuenta actualizada en los datos recargados
-      const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
-        .find(account => account.id === this.selectedAccount!.id);
-      
-      if (updatedAccount) {
-        this.selectedAccount = updatedAccount;
-      }
-    }
+    console.log('Refrescando datos del componente padre...');
     
-    // Recargar todos los datos
+    // Recargar todos los datos desde el servidor
     this.loadAccounts();
+    
+    // Después de cargar, actualizar la cuenta seleccionada
+    setTimeout(() => {
+      if (this.selectedAccount) {
+        const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
+          .find(account => account.id === this.selectedAccount!.id);
+        
+        if (updatedAccount) {
+          console.log('Cuenta actualizada encontrada:', updatedAccount);
+          this.selectedAccount = updatedAccount;
+          this.cdr.detectChanges(); // Forzar detección de cambios
+        }
+      }
+    }, 100); // Pequeño delay para asegurar que los datos se carguen
   }
 }

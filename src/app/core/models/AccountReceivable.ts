@@ -3,7 +3,7 @@ import {Student} from './Student';
 
 export class PaymentRecord {
   id?: string;
-  cuenta_cobrar_id: string;  // ✅ Este es el campo correcto
+  cuenta_cobrar_id: string; // ✅ Mantener este nombre correcto
   valor: number;
   fecha_pago: string;
   metodo_pago: string;
