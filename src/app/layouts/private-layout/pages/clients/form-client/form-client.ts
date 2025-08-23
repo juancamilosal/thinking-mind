@@ -60,13 +60,13 @@ export class FormClient implements OnInit, OnChanges {
   loadClientData(): void {
     if (this.clientData) {
       this.clientForm.patchValue({
-        tipo_documento: this.clientData.tipo_documento,
-        nuemero_documento: this.clientData.numero_documento,
-        nombre: this.clientData.nombre,
-        apellido: this.clientData.apellido,
-        celular: this.clientData.celular,
+        documentType: this.clientData.tipo_documento,
+        documentNumber: this.clientData.numero_documento,
+        firstName: this.clientData.nombre,
+        lastName: this.clientData.apellido,
+        phoneNumber: this.clientData.celular,
         email: this.clientData.email,
-        direccion: this.clientData.direccion
+        address: this.clientData.direccion
       });
     }
   }
@@ -95,14 +95,13 @@ export class FormClient implements OnInit, OnChanges {
       numero_documento: this.clientForm.get('documentNumber')?.value,
       nombre: this.clientForm.get('firstName')?.value,
       apellido: this.clientForm.get('lastName')?.value,
-      celular: this.clientForm.get('cellphone')?.value,
+      celular: this.clientForm.get('phoneNumber')?.value,
       email: this.clientForm.get('email')?.value,
       direccion: this.clientForm.get('address')?.value,
     }
     this.clientServices.createClient(client).subscribe({
-      next: (response) => {
+      next: (): void => {
         this.isSubmitting = false;
-        console.log('Cliente creado:', response);
         this.clientUpdated.emit();
         this.notificationService.showClientCreated(`${client.nombre} ${client.apellido}`);
       },
@@ -135,9 +134,8 @@ export class FormClient implements OnInit, OnChanges {
     if (this.clientForm.valid && this.clientData?.id) {
       const clientToUpdate = this.clientForm.value;
       this.clientServices.updateClient(this.clientData.id, clientToUpdate).subscribe({
-        next: (response) => {
+        next: (): void => {
           this.isSubmitting = false;
-          console.log('Cliente actualizado:', response);
           this.clientUpdated.emit();
           this.notificationService.showSuccess('Cliente actualizado', 'La información del cliente ha sido actualizada exitosamente.');
         },
@@ -150,7 +148,7 @@ export class FormClient implements OnInit, OnChanges {
     }
   }
 
-  deleteClient() {
+  deleteClient(): void {
     if (this.clientData?.id) {
       const clientName = `${this.clientData.nombre} ${this.clientData.apellido}`;
       this.confirmationService.showDeleteConfirmation(
@@ -166,10 +164,18 @@ export class FormClient implements OnInit, OnChanges {
               this.clientUpdated.emit();
             },
             error: (error) => {
-              this.notificationService.showError(
-                'Error al eliminar',
-                'No se pudo eliminar el cliente. Inténtalo nuevamente.'
-              );
+              // Verificar si es un error 500 que indica relaciones activas
+              if (error.status === 500) {
+                this.notificationService.showError(
+                  'No se puede eliminar el cliente',
+                  `No se puede eliminar a ${clientName} porque tiene cuentas por cobrar asociadas. Debe eliminar o transferir las cuentas por cobrar antes de eliminar el cliente.`
+                );
+              } else {
+                this.notificationService.showError(
+                  'Error al eliminar',
+                  'No se pudo eliminar el cliente. Inténtalo nuevamente.'
+                );
+              }
             }
           });
         }

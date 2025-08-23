@@ -187,7 +187,15 @@ export class FormStudent implements OnInit, OnChanges {
 
   updateStudent() {
     if (this.studentForm.valid && this.studentData?.id) {
-      const studentToUpdate = this.studentForm.value;
+      const studentToUpdate = {
+        tipo_documento: this.studentForm.get('documentType')?.value,
+        numero_documento: this.studentForm.get('documentNumber')?.value,
+        nombre: this.studentForm.get('firstName')?.value,
+        apellido: this.studentForm.get('lastName')?.value,
+        colegio: this.studentForm.get('school')?.value,
+        acudiente: this.guardianId,
+      };
+      
       this.studentService.updateStudent(this.studentData.id, studentToUpdate).subscribe({
         next: (response) => {
           this.isSubmitting = false;

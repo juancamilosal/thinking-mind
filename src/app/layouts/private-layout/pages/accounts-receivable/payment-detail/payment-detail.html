@@ -1,14 +1,15 @@
 <div class="min-h-screen bg-gray-50 p-6">
   <!-- Header con navegación -->
-  <div class="flex items-center mb-8">
-    <button (click)="onBack()"
-            class="flex items-center px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors mr-4">
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+  <div class="flex item-center justify-between my-5">
+    <h1 class="text-3xl font-bold text-gray-800">Detalle del Pago</h1>
+    <button
+      (click)="onBack()"
+      class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
       </svg>
-      Volver al Historial de Pagos
+      <span>Regresar</span>
     </button>
-    <h1 class="text-3xl font-bold text-gray-800">Detalle del {{ payment.paymentNumber }}</h1>
   </div>
 
   <!-- Información Principal del Pago -->
@@ -29,32 +30,30 @@
         <div class="space-y-4">
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Monto del Pago:</span>
-            <span class="text-2xl font-bold text-green-600">{{ formatCurrency(payment.amount) }}</span>
+            <span class="text-2xl font-bold text-green-600">{{ formatCurrency(payment.valor) }}</span>
           </div>
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Fecha del Pago:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.paymentDate }}</span>
-          </div>
-
-          <div class="flex justify-between items-center" *ngIf="payment.paymentTime">
-            <span class="text-gray-600 font-medium">Hora del Pago:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.paymentTime }}</span>
+            <span class="text-gray-900 font-semibold">{{ formatDate(payment.fecha_pago) }}</span>
           </div>
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Método de Pago:</span>
-            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{{ payment.paymentMethod }}</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{{ payment.metodo_pago }}</span>
           </div>
 
           <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">Referencia:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.reference }}</span>
+            <span class="text-gray-600 font-medium">Estado:</span>
+            <span class="px-3 py-1 rounded-full text-sm font-semibold" 
+                  [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+              {{ payment.estado }}
+            </span>
           </div>
         </div>
       </div>
 
-      <!-- Información del Pagador y Banco -->
+      <!-- Información del Pagador -->
       <div class="space-y-6">
         <div class="border-b pb-4">
           <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
@@ -69,39 +68,25 @@
         <div class="space-y-4">
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Nombre del Pagador:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.payerName }}</span>
-          </div>
-
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">Banco:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.bank }}</span>
+            <span class="text-gray-900 font-semibold">{{ payment.pagador }}</span>
           </div>
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Número de Aprobación:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.approvalNumber }}</span>
+            <span class="text-gray-900 font-semibold">{{ payment.numero_aprobacion }}</span>
           </div>
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">ID del Pago:</span>
             <span class="text-gray-900 font-semibold">{{ payment.id }}</span>
           </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600 font-medium">Cuenta por Cobrar:</span>
+            <span class="text-gray-900 font-semibold">{{ payment.cuanta_cobrar_id }}</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Notas Adicionales -->
-  <div *ngIf="payment.notes" class="bg-white rounded-xl shadow-lg p-6">
-    <div class="border-b pb-4 mb-4">
-      <h2 class="text-xl font-bold text-gray-800 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-        </svg>
-        Notas Adicionales
-      </h2>
-    </div>
-    <p class="text-gray-700 text-lg">{{ payment.notes }}</p>
   </div>
 </div>

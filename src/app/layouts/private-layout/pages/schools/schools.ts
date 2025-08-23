@@ -3,12 +3,12 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { School } from '../../../../core/models/School';
 import {SchoolService} from '../../../../core/services/school.service';
-
+import {FormSchool} from './form-school/form-school';
 
 @Component({
   selector: 'app-schools',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormSchool],
   templateUrl: './schools.html'
 })
 export class Schools implements OnInit {
@@ -84,7 +84,7 @@ export class Schools implements OnInit {
     this.showForm = false;
     this.editMode = false;
     this.selectedSchool = null;
-    // Aquí se podría agregar la lógica para recargar la lista de colegios
+    this.searchSchool();
   }
 
   loadSchoolData() {

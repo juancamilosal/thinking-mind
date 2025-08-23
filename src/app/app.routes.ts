@@ -7,6 +7,7 @@ import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
+import { Payments } from './layouts/private-layout/pages/payments/payments';
 
 export const routes: Routes = [
   {
@@ -63,6 +64,11 @@ export const routes: Routes = [
         path: 'accounts-receivable',
         title: 'Thinking Mind | Cuentas por Cobrar',
         component: AccountsReceivable
+      },
+      {
+        path: 'payments',
+        title: 'Thinking Mind | Pagos',
+        component: Payments
       }
     ]
   }
