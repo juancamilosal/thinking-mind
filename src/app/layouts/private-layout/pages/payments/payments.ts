@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {FormBuilder, FormsModule} from '@angular/forms';
 import {PaymentService} from '../../../../core/services/payment.service';
 import {PaymentRecord} from '../../../../core/models/AccountReceivable';
+import { Router } from '@angular/router';
 
 export interface Payment {
   id: string;
@@ -24,7 +25,7 @@ export class Payments implements OnInit {
   searchTerm: string = '';
   isLoading: boolean = false;
 
-  constructor(private paymentService: PaymentService) {
+  constructor(private paymentService: PaymentService, private router: Router) {
   }
 
 
@@ -78,5 +79,11 @@ export class Payments implements OnInit {
       default:
         return 'text-gray-600 bg-gray-100';
     }
+  }
+
+  viewPaymentDetail(payment: PaymentRecord) {
+    this.router.navigate(['/private/payment-detail'], {
+      state: { payment: payment }
+    });
   }
 }
