@@ -1,3 +1,14 @@
+<!-- Vista de detalle del pago -->
+@if (showPaymentDetailView && selectedPayment) {
+  <div>
+    <app-payment-detail
+      [payment]="selectedPayment"
+      (backToPaymentHistory)="backToPaymentHistory()">
+    </app-payment-detail>
+  </div>
+}
+
+@if (!showPaymentDetailView){
 <div class="p-6 bg-gray-50 min-h-screen">
   <!-- Header -->
   <div class="mb-8">
@@ -110,7 +121,7 @@
                     <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(payment.valor) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ payment.fecha_pago }}</div>
+                    <div class="text-sm text-gray-900">{{ formatDate(payment.fecha_pago) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span [class]="getStatusColor(payment.estado)" class="px-3 py-1 rounded-full text-xs font-medium">
@@ -135,3 +146,4 @@
     }
   </div>
 </div>
+}

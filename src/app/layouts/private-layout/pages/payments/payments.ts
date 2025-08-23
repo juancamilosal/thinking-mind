@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import {FormBuilder, FormsModule} from '@angular/forms';
 import {PaymentService} from '../../../../core/services/payment.service';
 import {PaymentRecord} from '../../../../core/models/AccountReceivable';
-import { Router } from '@angular/router';
+import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/payment-detail';
 
 export interface Payment {
   id: string;
@@ -16,7 +16,7 @@ export interface Payment {
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaymentDetailComponent],
   templateUrl: './payments.html'
 })
 export class Payments implements OnInit {
@@ -24,10 +24,13 @@ export class Payments implements OnInit {
   filteredPayments: Payment[] = [];
   searchTerm: string = '';
   isLoading: boolean = false;
+  
+  // Variables para el detalle del pago
+  selectedPayment: PaymentRecord | null = null;
+  showPaymentDetailView = false;
 
-  constructor(private paymentService: PaymentService, private router: Router) {
+  constructor(private paymentService: PaymentService) {
   }
-
 
   ngOnInit() {
     this.getPayments();
@@ -60,6 +63,18 @@ export class Payments implements OnInit {
     );
   }
 
+  // Método para mostrar el detalle del pago
+  viewPaymentDetail(payment: PaymentRecord) {
+    this.selectedPayment = payment;
+    this.showPaymentDetailView = true;
+  }
+
+  // Método para volver al listado de pagos
+  backToPaymentHistory() {
+    this.showPaymentDetailView = false;
+    this.selectedPayment = null;
+  }
+
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -68,22 +83,28 @@ export class Payments implements OnInit {
     }).format(amount);
   }
 
-  getStatusColor(estado: string): string {
-    switch (estado.toUpperCase()) {
-      case 'PAGADO':
-        return 'text-green-600 bg-green-100';
-      case 'PENDIENTE':
-        return 'text-orange-600 bg-orange-100';
-      case 'RECHAZADO':
-        return 'text-red-600 bg-red-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }); // Esto devuelve DD/MM/YYYY
   }
-
-  viewPaymentDetail(payment: PaymentRecord) {
-    this.router.navigate(['/private/payment-detail'], {
-      state: { payment: payment }
-    });
+  
+  getStatusColor(estado: string): string {
+    switch (estado) {
+      case 'PAGADO':
+      case 'Completado':
+        return 'bg-green-100 text-green-800';
+      case 'PENDIENTE':
+      case 'Pendiente':
+        return 'bg-orange-100 text-orange-800';
+      case 'RECHAZADO':
+      case 'Cancelado':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   }
 }
