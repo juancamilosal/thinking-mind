@@ -9,7 +9,8 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl: string = environment.payment; // Asumiendo que el endpoint es 'pagos'
+  private apiUrl: string = environment.payment;
+  private manualPayment: string = environment.manual_payment;
 
   constructor(private http: HttpClient) {}
 
@@ -24,8 +25,8 @@ export class PaymentService {
     return this.http.get<ResponseAPI<PaymentRecord[]>>(this.apiUrl, { params });
   }
 
-  createPayment(payment: PaymentRecord): Observable<ResponseAPI<PaymentRecord>> {
-    return this.http.post<ResponseAPI<PaymentRecord>>(this.apiUrl, payment);
+  createPayment(payment: PaymentRecord ): Observable<ResponseAPI<PaymentRecord>> {
+    return this.http.post<ResponseAPI<PaymentRecord>>(this.manualPayment, payment);
   }
 
   updatePayment(id: string, payment: Partial<PaymentRecord>): Observable<ResponseAPI<PaymentRecord>> {

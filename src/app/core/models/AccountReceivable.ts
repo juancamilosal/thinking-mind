@@ -1,14 +1,14 @@
 import {Client} from './Clients';
 import {Student} from './Student';
 
-export interface PaymentRecord {
-  id: string;
-  cuanta_cobrar_id: string;
+export class PaymentRecord {
+  id?: string;
+  cuenta_cobrar_id: string;  // ✅ Este es el campo correcto
   valor: number;
   fecha_pago: string;
   metodo_pago: string;
   pagador: string;
-  numero_aprobacion: string;
+  numero_aprobacion?: string;
   estado: string;
 }
 

@@ -156,56 +156,26 @@
                 <input type="number"
                        [(ngModel)]="newPaymentAmount"
                        class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                       placeholder="0.00"
+                       placeholder="0"
                        step="0.01">
               </div>
             </div>
-
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
               <select [(ngModel)]="newPaymentMethod"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">Seleccionar método</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Tarjeta">Tarjeta</option>
-                <option value="Cheque">Cheque</option>
+                @for (paymentMethod of PAYMENT_METHOD; track paymentMethod.value) {
+                  <option [value]="paymentMethod.value">{{ paymentMethod.name }} </option>
+                }
               </select>
             </div>
-
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Referencia</label>
-              <input type="text"
-                     [(ngModel)]="newPaymentReference"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     placeholder="Ej: TRF-001">
-            </div>
-          </div>
-
-          <!-- Segunda fila de campos -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Pagador</label>
-              <input type="text"
-                     [(ngModel)]="newPayerName"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     placeholder="Nombre completo">
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Número de Aprobación</label>
-              <input type="text"
-                     [(ngModel)]="newApprovalNumber"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     placeholder="Ej: APR-2024-001">
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Banco</label>
-              <input type="text"
-                     [(ngModel)]="newBank"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     placeholder="Nombre del banco">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Pagador</label>
+                <input type="text"
+                       [(ngModel)]="newPayerName"
+                       class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Nombre completo">
             </div>
           </div>
 
@@ -214,8 +184,8 @@
                     class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
               Cancelar
             </button>
-            <button (click)="addNewPayment()"
-                    [disabled]="!newPaymentAmount || !newPaymentMethod || !newPaymentReference || !newPayerName || !newApprovalNumber || !newBank"
+            <button (click)="prueba()"
+                    [disabled]="!newPaymentAmount || !newPaymentMethod || !newPayerName"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               Registrar Pago
             </button>
@@ -256,7 +226,7 @@
           <!-- En la sección de la tabla de pagos, líneas 230-270 aproximadamente -->
           <tbody class="bg-white divide-y divide-gray-200">
             @for (payment of payments; track payment.id; let i = $index) {
-              <tr class="hover:bg-gray-50 transition-colors cursor-pointer" 
+              <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
                   (click)="viewPaymentDetail(payment)">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center space-x-3">
@@ -284,7 +254,7 @@
                   <span class="text-sm text-gray-900">{{ payment.numero_aprobacion }}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 py-1 text-xs font-semibold rounded-full" 
+                  <span class="px-2 py-1 text-xs font-semibold rounded-full"
                         [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
                     {{ payment.estado }}
                   </span>

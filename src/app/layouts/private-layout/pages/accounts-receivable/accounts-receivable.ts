@@ -31,16 +31,15 @@ export class AccountsReceivable implements OnInit {
     this.loadAccounts();
   }
 
-  private loadAccounts(): void {
+  protected loadAccounts(): void {
     this.isLoading = true;
     this.accountService.searchAccountReceivable().subscribe({
       next: (response) => {
         if (response.data) {
-          // Separar las cuentas por estado
-          this.pendingAccounts = response.data.filter(account => 
+          this.pendingAccounts = response.data.filter(account =>
             account.estado === 'PENDIENTE' || account.estado === 'pendiente'
           );
-          this.paidAccounts = response.data.filter(account => 
+          this.paidAccounts = response.data.filter(account =>
             account.estado === 'PAGADO' || account.estado === 'pagado'
           );
           this.updateAccounts();
@@ -86,7 +85,7 @@ export class AccountsReceivable implements OnInit {
   getTotalPending(): number {
     return this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
   }
-  
+
   // Mantener esta versión - usa 'fecha_limite' en lugar de 'dueDate' y 'saldo' en lugar de 'amount'
   getTotalOverdue(): number {
     const today = new Date().toISOString().split('T')[0];
@@ -133,5 +132,21 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
+  }
+
+  // Agregar este método después de loadAccounts()
+  refreshAccountDetail() {
+    if (this.selectedAccount) {
+      // Buscar la cuenta actualizada en los datos recargados
+      const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
+        .find(account => account.id === this.selectedAccount!.id);
+      
+      if (updatedAccount) {
+        this.selectedAccount = updatedAccount;
+      }
+    }
+    
+    // Recargar todos los datos
+    this.loadAccounts();
   }
 }

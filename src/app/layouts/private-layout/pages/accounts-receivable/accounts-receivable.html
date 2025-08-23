@@ -86,7 +86,7 @@
           {{ activeTab === 'pending' ? 'Cuentas Pendientes' : 'Cuentas Pagadas' }}
         </h2>
       </div>
-      
+
       <!-- Loading Skeleton -->
       @if (isLoading) {
         <div class="overflow-x-auto">
@@ -199,7 +199,8 @@
   <!-- Vista del detalle -->
   <app-account-receivable-detail
     [account]="selectedAccount!"
-    (backToList)="backToList()">
+    (backToList)="backToList()"
+(llamarFuncion)="refreshAccountDetail()">
   </app-account-receivable-detail>
 } @else if (showForm) {
   <!-- Formulario - Página completa -->

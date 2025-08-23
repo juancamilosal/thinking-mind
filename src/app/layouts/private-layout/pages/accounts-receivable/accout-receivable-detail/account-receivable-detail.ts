@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {AccountReceivable, PaymentRecord} from '../../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../payment-detail/payment-detail';
+import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
+import {PaymentService} from '../../../../../core/services/payment.service';
 
-// Eliminar la interfaz Payment duplicada
 
 @Component({
   selector: 'app-account-receivable-detail',
@@ -15,8 +16,8 @@ import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 export class AccountReceivableDetailComponent {
   @Input() account!: AccountReceivable;
   @Output() backToList = new EventEmitter<void>();
+  @Output() llamarFuncion = new EventEmitter<void>();
   @Output() addPayment = new EventEmitter<PaymentRecord>(); // Cambiar Payment por PaymentRecord
-
   get payments(): PaymentRecord[] {
     return this.account?.pagos || [];
   }
@@ -24,12 +25,17 @@ export class AccountReceivableDetailComponent {
   selectedPayment: PaymentRecord | null = null;
   showPaymentDetailView = false;
   showAddPaymentForm = false;
-  newPaymentAmount = 0;
+  newPaymentAmount :number;
   newPaymentMethod = '';
   newPaymentReference = '';
   newPayerName = '';
   newApprovalNumber = '';
   newBank = '';
+  PAYMENT_METHOD = PAYMENT_METHOD;
+
+  constructor(private paymentService: PaymentService, private cdr: ChangeDetectorRef) {
+
+  }
 
   onBack() {
     this.backToList.emit();
@@ -81,7 +87,7 @@ export class AccountReceivableDetailComponent {
 
       const newPayment: PaymentRecord = {
         id: 'temp-' + Date.now(),
-        cuanta_cobrar_id: this.account.id,
+        cuenta_cobrar_id: this.account.id,
         valor: this.newPaymentAmount,
         fecha_pago: new Date().toISOString(),
         metodo_pago: this.newPaymentMethod,
@@ -131,5 +137,62 @@ export class AccountReceivableDetailComponent {
     if (progress >= 100) return 'Pagado Completamente';
     if (progress >= 50) return 'Pago Parcial';
     return 'Pendiente';
+  }
+
+  // Agregar este método después del método prueba()
+  refreshPayments() {
+    this.paymentService.getPaymentsByAccountId(this.account.id).subscribe({
+      next: (response) => {
+        // Actualizar los pagos en el account
+        this.account.pagos = response.data;
+      },
+      error: (error) => {
+        console.error('Error al obtener los pagos:', error);
+      }
+    });
+  }
+  
+  prueba = ()=> {
+    const payment = {
+      cuenta_cobrar_id: this.account.id,
+      valor: this.newPaymentAmount,
+      fecha_pago: new Date().toISOString(),
+      metodo_pago: this.newPaymentMethod,
+      pagador: this.newPayerName,
+      numero_aprobacion: this.newApprovalNumber || '1',
+      estado: 'PAGADO'
+    }
+  
+    console.log('Enviando pago:', payment);
+  
+    this.paymentService.createPayment(payment).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servidor:', response);
+        console.log('Pagos antes de actualizar:', this.account.pagos);
+        
+        // Actualizar localmente
+        if (!this.account.pagos) {
+          this.account.pagos = [];
+        }
+        this.account.pagos = [...this.account.pagos, response.data];
+        
+        console.log('Pagos después de actualizar:', this.account.pagos);
+        
+        // Forzar la detección de cambios
+        this.cdr.detectChanges();
+        
+        // Resetear el formulario
+        this.resetPaymentForm();
+        this.showAddPaymentForm = false;
+        
+        // Emitir evento para actualizar el componente padre
+        this.llamarFuncion.emit();
+        
+        console.log('Pago creado exitosamente:', response);
+      },
+      error: (error) => {
+        console.error('Error al crear el pago:', error);
+      }
+    });
   }
 }
