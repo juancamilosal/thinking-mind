@@ -37,18 +37,8 @@ export class FormStudent implements OnInit, OnChanges {
   ) {}
 
   ngOnInit(): void {
-    this.studentForm = this.fb.group({
-      documentType: [null, [Validators.required]],
-      documentNumber: [null, [Validators.required, Validators.minLength(6)]],
-      firstName: [null, [Validators.required, Validators.minLength(2)]],
-      lastName: [null, [Validators.required, Validators.minLength(2)]],
-      school: [null, [Validators.required, Validators.minLength(2)]],
-      guardianDocumentType: [null, [Validators.required]],
-      guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
-      guardianFirstName: [null, [Validators.required, Validators.minLength(2)]],
-      guardianLastName: [null, [Validators.required, Validators.minLength(2)]]
-    });
 
+    this.initForm();
     this.studentForm.get('guardianDocumentType')?.valueChanges.subscribe(() => {
       this.searchGuardianInfo();
     });
@@ -61,6 +51,20 @@ export class FormStudent implements OnInit, OnChanges {
     if (this.studentData) {
       this.loadStudentData();
     }
+  }
+
+  initForm = (): void => {
+    this.studentForm = this.fb.group({
+      documentType: [null, [Validators.required]],
+      documentNumber: [null, [Validators.required, Validators.minLength(6)]],
+      firstName: [null, [Validators.required, Validators.minLength(2)]],
+      lastName: [null, [Validators.required, Validators.minLength(2)]],
+      school: [null, [Validators.required, Validators.minLength(2)]],
+      guardianDocumentType: [null, [Validators.required]],
+      guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
+      guardianFirstName: [null, [Validators.required, Validators.minLength(2)]],
+      guardianLastName: [null, [Validators.required, Validators.minLength(2)]]
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -79,7 +83,6 @@ export class FormStudent implements OnInit, OnChanges {
         school: this.studentData.colegio
       });
 
-      // Si el acudiente es un objeto y no es null, cargar sus datos
       if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
         this.guardianId = this.studentData.acudiente.id ? this.studentData.acudiente.id.toString() : '';
         this.studentForm.patchValue({
@@ -195,7 +198,7 @@ export class FormStudent implements OnInit, OnChanges {
         colegio: this.studentForm.get('school')?.value,
         acudiente: this.guardianId,
       };
-      
+
       this.studentService.updateStudent(this.studentData.id, studentToUpdate).subscribe({
         next: (response) => {
           this.isSubmitting = false;
@@ -244,5 +247,32 @@ export class FormStudent implements OnInit, OnChanges {
       const control = this.studentForm.get(key);
       control?.markAsTouched();
     });
+  }
+
+  capitalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  onFirstNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.studentForm.get('firstName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onLastNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.studentForm.get('lastName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onSchoolChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.studentForm.get('school')?.setValue(capitalizedValue, { emitEvent: false });
   }
 }

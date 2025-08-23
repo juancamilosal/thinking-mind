@@ -18,6 +18,7 @@
             <div class="space-y-3">
               <label for="schoolName" class="block text-sm font-semibold text-gray-700">Nombre del Colegio *</label>
               <input
+                (input)="onSchoolNameChange($event)"
                 type="text"
                 id="schoolName"
                 formControlName="schoolName"
@@ -37,6 +38,7 @@
             <div class="space-y-3">
               <label for="city" class="block text-sm font-semibold text-gray-700">Ciudad *</label>
               <input
+                (input)="onCityNameChange($event)"
                 type="text"
                 id="city"
                 formControlName="city"
@@ -56,6 +58,7 @@
             <div class="space-y-3">
               <label for="principalName" class="block text-sm font-semibold text-gray-700">Nombre del Rector *</label>
               <input
+                (input)="onPrincipalNameChange($event)"
                 type="text"
                 id="principalName"
                 formControlName="principalName"
@@ -103,6 +106,7 @@
           <div class="space-y-3">
             <label for="address" class="block text-sm font-semibold text-gray-700">Dirección *</label>
             <input
+              (input)="onAddressChange($event)"
               type="text"
               id="address"
               formControlName="address"

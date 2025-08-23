@@ -67,6 +67,7 @@
             <div class="space-y-3">
               <label for="firstName" class="block text-sm font-semibold text-green-700">Nombre *</label>
               <input
+                (input)="onFirstNameChange($event)"
                 type="text"
                 id="firstName"
                 formControlName="firstName"
@@ -94,6 +95,7 @@
             <div class="space-y-3">
               <label for="lastName" class="block text-sm font-semibold text-green-700">Apellido *</label>
               <input
+                (input)="onLastNameChange($event)"
                 type="text"
                 id="lastName"
                 formControlName="lastName"
@@ -121,6 +123,7 @@
             <div class="space-y-3 md:col-span-2">
               <label for="school" class="block text-sm font-semibold text-green-700">Colegio *</label>
               <input
+                (input)="onSchoolChange($event)"
                 type="text"
                 id="school"
                 formControlName="school"
