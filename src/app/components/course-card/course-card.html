@@ -5,11 +5,11 @@
       [src]="courseImageUrl"
       [alt]="courseName"
       class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-      onerror="this.src='https://via.placeholder.com/300x200?text=Curso'">
-    
+      onerror="this.src='https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop'">
+
     <!-- Overlay gradient sutil -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-    
+
     <!-- Badge de precio flotante -->
     <div class="absolute top-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
       ${{ coursePrice | number:'1.0-0' }}
@@ -24,15 +24,15 @@
         {{ courseCode }}
       </span>
     </div>
-    
+
     <!-- Nombre del curso -->
     <h3 class="text-xl font-bold text-gray-800 mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
       {{ courseName }}
     </h3>
-    
+
     <!-- Separador decorativo -->
     <div class="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4"></div>
-    
+
     <!-- Información adicional -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-2 text-gray-500">
@@ -42,7 +42,7 @@
         <span class="text-sm">Disponible</span>
       </div>
     </div>
-    
+
     <!-- Botones de acción -->
     <div class="flex space-x-3">
       <!-- Botón Editar -->
@@ -52,7 +52,7 @@
         </svg>
         <span>Editar</span>
       </button>
-      
+
       <!-- Botón Eliminar -->
       <button class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -62,7 +62,7 @@
       </button>
     </div>
   </div>
-  
+
   <!-- Borde inferior decorativo -->
   <div class="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
 </div>

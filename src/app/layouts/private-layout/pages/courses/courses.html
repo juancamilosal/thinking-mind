@@ -1,6 +1,6 @@
 <div class="p-6">
   <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Cursos</h1>
-  
+
   @if (!showCourseInfo) {
     <div class="space-y-6">
       <div class="flex gap-4 flex-wrap sm:flex-nowrap">
@@ -11,15 +11,14 @@
           Buscar
         </button>
       </div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        @for (course of COURSES; track course.courseId) {
+        @for (course of courses; track course.id) {
           <app-course-card
-            [courseCode]="course.courseCode"
-            [courseId]="course.courseId"
-            [courseName]="course.courseName"
-            [coursePrice]="course.coursePrice"
-            [courseImageUrl]="course.courseImageUrl"
+            [courseName]="course.nombre"
+            [coursePrice]="course.precio"
+            [courseCode]="course.codigo"
+            [courseImageUrl]="course.img_url"
             (click)="openCourseInfo(course)"
           />
         }
@@ -31,7 +30,6 @@
       [courseName]="selectedCourse.courseName"
       [coursePrice]="selectedCourse.coursePrice"
       [courseCode]="selectedCourse.courseCode"
-      [courseDuration]="selectedCourse.courseDuration"
       (close)="closeCourseInfo()">
     </app-course-info>
   }

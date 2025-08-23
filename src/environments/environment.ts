@@ -4,4 +4,5 @@ export const environment = {
   clients: apiUrl + 'items/clientes',
   students: apiUrl + 'items/estudiantes',
   schools: apiUrl + 'items/colegios',
+  courses: apiUrl + 'items/Cursos',
 }
