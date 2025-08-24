@@ -37,9 +37,19 @@ export class Payments implements OnInit {
   }
 
   getPayments = () => {
-    this.paymentService.getPayments().subscribe(data => {
-      this.payments = data.data;
-    })
+    this.isLoading = true;
+    this.paymentService.getPayments().subscribe({
+      next: (data) => {
+        this.payments = data.data;
+      },
+      error: (error) => {
+        console.error('Error loading payments:', error);
+        // Aquí puedes agregar manejo de errores con notificaciones
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
 
   onSearchInputChange(event: any) {
