@@ -45,9 +45,9 @@ export class Courses {
 
   initForm() {
     this.courseForm = this.fb.group({
-      courseName: ['', Validators.required],
-      price: ['', Validators.required],
-      code: ['', Validators.required]
+      nombre: ['', Validators.required],
+      precio: ['', Validators.required],
+      codigo: ['', Validators.required]
     });
   }
 
