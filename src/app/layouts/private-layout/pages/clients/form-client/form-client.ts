@@ -12,7 +12,6 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
     ReactiveFormsModule
   ],
   templateUrl: './form-client.html',
-  styleUrl: './form-client.css'
 })
 export class FormClient implements OnInit, OnChanges {
   @Input() editMode: boolean = false;
@@ -22,7 +21,7 @@ export class FormClient implements OnInit, OnChanges {
   @Output() clientUpdated = new EventEmitter();
   clientForm!: FormGroup;
   DOCUMENT_TYPE = DOCUMENT_TYPE;
-  isSubmitting = false; // Nueva propiedad
+  isSubmitting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -40,6 +39,7 @@ export class FormClient implements OnInit, OnChanges {
       this.loadClientData();
     }
   }
+
 
   initForm=(): void => {
     this.clientForm = this.fb.group({
@@ -181,5 +181,32 @@ export class FormClient implements OnInit, OnChanges {
         }
       );
     }
+  }
+
+  capitalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  onFirstNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.clientForm.get('firstName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onLastNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.clientForm.get('lastName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onAddressChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.clientForm.get('address')?.setValue(capitalizedValue, { emitEvent: false });
   }
 }

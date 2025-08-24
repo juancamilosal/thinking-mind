@@ -78,12 +78,44 @@
           <div class="space-y-4">
             <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Valor Total de la Cuenta:</span>
-              <span class="text-2xl font-bold text-blue-600">{{ formatCurrency(account.monto) }}</span>
+              @if (!isEditingAmount) {
+                <div class="flex items-center space-x-2">
+                  <span class="text-2xl font-bold text-blue-600 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded" 
+                        (click)="startEditingAmount()" 
+                        title="Clic para editar">
+                    {{ formatCurrency(account.monto) }}
+                  </span>
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                  </svg>
+                </div>
+              } @else {
+                <div class="flex items-center space-x-2">
+                  <div class="relative">
+                    <span class="absolute left-3 top-2 text-gray-500">$</span>
+                    <input type="number" 
+                           [(ngModel)]="editedAmount"
+                           class="w-40 pl-8 pr-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold text-blue-600"
+                           step="0.01"
+                           min="0"
+                           (keyup.enter)="saveAmount()"
+                           (keyup.escape)="cancelEditingAmount()">
+                  </div>
+                  <button (click)="saveAmount()" 
+                          class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+                    ✓
+                  </button>
+                  <button (click)="cancelEditingAmount()" 
+                          class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
+                    ✕
+                  </button>
+                </div>
+              }
             </div>
 
             <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Total Pagado:</span>
-              <span class="text-xl font-semibold text-green-600">{{ formatCurrency(getTotalPaid()) }}</span>
+              <span class="text-xl font-semibold text-green-600">{{ formatCurrency(account.saldo) }}</span>
             </div>
 
             <div class="flex justify-between items-center">
@@ -98,12 +130,12 @@
 
             <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Estado:</span>
-              <span [class]="getStatusColor()" class="font-bold">{{ getStatusText() }}</span>
+              <span [class]="getStatusColor()" class="font-bold">{{ account.estado }}</span>
             </div>
 
             <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Número de Factura:</span>
-              <span class="text-gray-900 font-semibold">{{ account.cliente_id }}</span>
+              <span class="text-gray-900 font-semibold">{{ account.id }}</span>
             </div>
           </div>
         </div>
@@ -171,11 +203,12 @@
               </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Pagador</label>
-                <input type="text"
-                       [(ngModel)]="newPayerName"
-                       class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                       placeholder="Nombre completo">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Pagador</label>
+              <input type="text"
+                     [(ngModel)]="newPayerName"
+                     (input)="onPayerNameChange($event)"
+                     class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="Nombre completo">
             </div>
           </div>
 
@@ -220,15 +253,16 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Estado
               </th>
-              <!-- Eliminamos la columna de Acciones -->
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acción
+              </th>
             </tr>
           </thead>
-          <!-- En la sección de la tabla de pagos, líneas 230-270 aproximadamente -->
+          <!-- En la sección de la tabla de pagos -->
           <tbody class="bg-white divide-y divide-gray-200">
             @for (payment of payments; track payment.id; let i = $index) {
-              <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
-                  (click)="viewPaymentDetail(payment)">
-                <td class="px-6 py-4 whitespace-nowrap">
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                       <span class="text-blue-600 font-semibold text-sm">{{ i + 1 }}</span>
@@ -236,35 +270,47 @@
                     <span class="text-sm font-medium text-gray-900">Pago {{ i + 1 }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="text-lg font-bold text-green-600">{{ formatCurrency(payment.valor) }}</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="text-sm text-gray-900">{{ formatDate(payment.fecha_pago) }}</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                     {{ payment.metodo_pago }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="text-sm text-gray-900">{{ payment.pagador }}</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="text-sm text-gray-900">{{ payment.numero_aprobacion }}</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="px-2 py-1 text-xs font-semibold rounded-full"
                         [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
                     {{ payment.estado }}
                   </span>
                 </td>
-                <!-- Eliminamos la celda de Acciones -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <button (click)="deletePayment(payment)"
+                          [disabled]="!canDeletePayment(payment)"
+                          [class]="canDeletePayment(payment) ?
+                            'text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors duration-200 cursor-pointer' :
+                            'text-gray-400 p-2 rounded-lg cursor-not-allowed'"
+                          [title]="canDeletePayment(payment) ? 'Eliminar pago' : 'Solo se pueden eliminar pagos con método PASARE DE PAGO'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </td>
               </tr>
             }
             @if (payments.length === 0){
               <tr >
-                <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                   <div class="flex flex-col items-center">
                     <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

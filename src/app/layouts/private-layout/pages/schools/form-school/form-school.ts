@@ -10,7 +10,6 @@ import {NotificationService} from '../../../../../core/services/notification.ser
     ReactiveFormsModule
   ],
   templateUrl: './form-school.html',
-  styleUrl: './form-school.css'
 })
 export class FormSchool implements OnInit, OnChanges {
 
@@ -40,11 +39,11 @@ export class FormSchool implements OnInit, OnChanges {
 
   initForm(): void {
     this.schoolForm = this.fb.group({
-      schoolName: ['', Validators.required],
-      city: ['', Validators.required],
-      address: ['', Validators.required],
-      principalName: ['', Validators.required],
-      phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]]
+      schoolName: [null, Validators.required],
+      city: [null, Validators.required],
+      address: [null, Validators.required],
+      principalName: [null, Validators.required],
+      phoneNumber: [null, [Validators.required, Validators.pattern('^[0-9]{10}$')]]
     });
   }
 
@@ -127,4 +126,38 @@ export class FormSchool implements OnInit, OnChanges {
       celular: this.schoolForm.get('phoneNumber')?.value,
     }
   }
+
+  capitalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  onSchoolNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.schoolForm.get('schoolName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onCityNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.schoolForm.get('city')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onPrincipalNameChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.schoolForm.get('principalName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onAddressChange(event: any): void {
+    const value = event.target.value;
+    const capitalizedValue = this.capitalizeText(value);
+    this.schoolForm.get('address')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
 }

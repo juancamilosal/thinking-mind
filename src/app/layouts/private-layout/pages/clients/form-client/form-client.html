@@ -62,6 +62,7 @@
                 type="text"
                 id="firstName"
                 formControlName="firstName"
+                (input)="onFirstNameChange($event)"
                 placeholder="Ingrese el nombre"
                 class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
               @if(clientForm.get('firstName')?.touched && clientForm.get('firstName')?.errors?.['required']) {
@@ -81,6 +82,7 @@
                 type="text"
                 id="lastName"
                 formControlName="lastName"
+                (input)="onLastNameChange($event)"
                 placeholder="Ingrese el apellido"
                 class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
               @if(clientForm.get('lastName')?.touched && clientForm.get('lastName')?.errors?.['required']) {
@@ -152,6 +154,7 @@
           <div class="space-y-3">
             <label for="address" class="block text-sm font-semibold text-blue-700">Dirección *</label>
             <input
+              (input)="onAddressChange($event)"
               type="text"
               id="address"
               formControlName="address"

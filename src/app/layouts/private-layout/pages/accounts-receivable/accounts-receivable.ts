@@ -1,8 +1,8 @@
 import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { AccountReceivableFormComponent } from './account-recevable-form/account-receivable-form';
-import { AccountReceivableDetailComponent } from './accout-receivable-detail/account-receivable-detail';
-import {AccountReceivable} from '../../../../core/models/AccountReceivable';
+import {CommonModule} from '@angular/common';
+import {AccountReceivableFormComponent} from './account-recevable-form/account-receivable-form';
+import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
+import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 
 @Component({
@@ -18,20 +18,19 @@ export class AccountsReceivable implements OnInit {
   activeTab: 'pending' | 'paid' = 'pending';
   accounts: AccountReceivable[] = [];
   isLoading = false;
-
-  // Remover los datos estáticos y usar arrays vacíos
   pendingAccounts: AccountReceivable[] = [];
   paidAccounts: AccountReceivable[] = [];
+  total: TotalAccounts;
 
   constructor(
     private accountService: AccountReceivableService,
     private cdr: ChangeDetectorRef
   ) {
-    // Remover this.updateAccounts() del constructor
   }
 
   ngOnInit(): void {
     this.loadAccounts();
+    this.totalAccounts();
   }
 
   protected loadAccounts(): void {
@@ -43,17 +42,22 @@ export class AccountsReceivable implements OnInit {
             account.estado === 'PENDIENTE' || account.estado === 'pendiente'
           );
           this.paidAccounts = response.data.filter(account =>
-            account.estado === 'PAGADO' || account.estado === 'pagado'
+            account.estado === 'PAGADO' || account.estado === 'pagado' || account.estado === 'PAGADA'
           );
           this.updateAccounts();
         }
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading accounts:', error);
         this.isLoading = false;
       }
     });
+  }
+
+  totalAccounts = (): void => {
+    this.accountService.totalAccounts().subscribe(data => {
+      this.total = data.data;
+    })
   }
 
   openForm() {
@@ -84,7 +88,7 @@ export class AccountsReceivable implements OnInit {
     this.accounts = this.activeTab === 'pending' ? this.pendingAccounts : this.paidAccounts;
   }
 
-  // Mantener esta versión - usa 'saldo' en lugar de 'amount'
+
   getTotalPending(): number {
     return this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
   }
@@ -110,8 +114,8 @@ export class AccountsReceivable implements OnInit {
     const accountIndex = this.pendingAccounts.findIndex(acc => acc.id === accountId);
     if (accountIndex !== -1) {
       const account = this.pendingAccounts[accountIndex];
-      account.estado = 'pagado';
-      account.saldo = 0; // Al marcar como pagado, el saldo se vuelve 0
+      account.estado = 'PAGADA'; // Cambiar de 'pagado' a 'PAGADA'
+      account.saldo = 0;
       this.paidAccounts.push(account);
       this.pendingAccounts.splice(accountIndex, 1);
       this.updateAccounts();
@@ -135,21 +139,28 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
+    
+    // Recargar todos los datos para reflejar los cambios
+    this.loadAccounts();
+    this.totalAccounts();
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   // Agregar este método después de loadAccounts()
   refreshAccountDetail() {
     console.log('Refrescando datos del componente padre...');
-    
+
     // Recargar todos los datos desde el servidor
     this.loadAccounts();
-    
+
     // Después de cargar, actualizar la cuenta seleccionada
     setTimeout(() => {
       if (this.selectedAccount) {
         const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
           .find(account => account.id === this.selectedAccount!.id);
-        
+
         if (updatedAccount) {
           console.log('Cuenta actualizada encontrada:', updatedAccount);
           this.selectedAccount = updatedAccount;

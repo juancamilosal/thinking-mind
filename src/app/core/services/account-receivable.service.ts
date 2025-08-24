@@ -4,15 +4,25 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
-import {AccountReceivable} from '../models/AccountReceivable';
+import {AccountReceivable, TotalAccounts} from '../models/AccountReceivable';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AccountReceivableService {
   private apiUrl: string = environment.accountsReceivable;
-
+  private apiUrlTotalAccounts = environment.total_accounts
   constructor(private http: HttpClient) {}
+
+  // Agregar este método
+  getAccountById(id: string): Observable<ResponseAPI<AccountReceivable>> {
+    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,pagos.*`).pipe(
+      map(response => ({
+        ...response,
+        data: this.mapToAccountReceivable(response.data)
+      }))
+    );
+  }
 
   createAccountReceivable(accountReceivable: any): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(this.apiUrl, accountReceivable);
@@ -66,6 +76,11 @@ export class AccountReceivableService {
         : item.studentName,
       createdDate: item.createdDate
     };
+  }
+
+  totalAccounts(): Observable<ResponseAPI<TotalAccounts>> {
+    return this.http.get<ResponseAPI<TotalAccounts>>(this.apiUrlTotalAccounts)
+
   }
 
   updateAccountReceivable(id: string, accountReceivable: any): Observable<ResponseAPI<any>> {
