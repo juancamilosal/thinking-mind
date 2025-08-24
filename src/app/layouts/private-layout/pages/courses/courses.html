@@ -1,4 +1,4 @@
-@if (!showForm) {
+@if (!showForm && !showCourseInfo) {
   <div class="p-6 bg-gray-50 min-h-screen">
     <!-- Header -->
     <div class="mb-8">
@@ -48,8 +48,6 @@
           }
     </div>
   </div>
-  } @else if (courses.length === 0){
-
   } @else if (showCourseInfo){
   <app-course-info
     [courseId]="selectedCourse?.id ?? ''"
@@ -58,9 +56,7 @@
     [courseCode]="selectedCourse?.codigo ?? ''"
     (close)="closeCourseInfo()">
   </app-course-info>
-  }
-
-@if (showForm) {
+  } @else if (showForm) {
   <div class="p-6 bg-gray-50 min-h-screen">
     <div class="max-w-4xl mx-auto">
       <div class="bg-white rounded-xl shadow-lg p-8">

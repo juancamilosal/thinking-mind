@@ -84,7 +84,7 @@ export class Courses {
     }, 500); // 500ms de delay
   }
 
-  openCourseInfo(course: any) {
+  openCourseInfo(course: Course) {
     this.selectedCourse = course;
     this.showCourseInfo = true;
   }
