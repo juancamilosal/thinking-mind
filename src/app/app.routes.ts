@@ -58,7 +58,17 @@ export const routes: Routes = [
         path: 'payments',
         title: 'Thinking Mind | Pagos',
         component: Payments
+      },
+      // Ruta wildcard para rutas no encontradas dentro de private
+      {
+        path: '**',
+        redirectTo: '/login'
       }
     ]
+  },
+  // Ruta wildcard global para cualquier ruta no encontrada
+  {
+    path: '**',
+    redirectTo: '/login'
   }
 ];
