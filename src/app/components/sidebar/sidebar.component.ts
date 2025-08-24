@@ -24,7 +24,8 @@ export class SidebarComponent {
     { path: '/private/clients', icon: 'users', label: 'Clientes' },
     { path: '/private/students', icon: 'student', label: 'Estudiantes' },
     { path: '/private/schools', icon: 'building', label: 'Colegios' },
+    { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
+    { path: '/private/payments', icon: 'payment', label: 'Pagos' },
     { path: '/private/courses', icon: 'book', label: 'Cursos' },
-    { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' }
   ];
 }

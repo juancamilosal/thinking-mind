@@ -18,7 +18,6 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
   styleUrl: './form-student.css'
 })
 export class FormStudent implements OnInit, OnChanges {
-
   @Input() editMode: boolean = false;
   @Input() studentData: Student | null = null;
   @Output() goBack = new EventEmitter();
@@ -27,6 +26,7 @@ export class FormStudent implements OnInit, OnChanges {
   studentForm!: FormGroup;
   DOCUMENT_TYPE = DOCUMENT_TYPE;
   guardianId: string = '';
+  isSubmitting = false; // Nueva propiedad
 
   constructor(
     private fb: FormBuilder,
@@ -129,7 +129,8 @@ export class FormStudent implements OnInit, OnChanges {
   }
 
   onSubmit(): void {
-    if (this.studentForm.valid) {
+    if (this.studentForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
       if (this.editMode) {
         this.updateStudent();
       } else {
@@ -152,6 +153,7 @@ export class FormStudent implements OnInit, OnChanges {
 
     this.studentService.createStudent(student).subscribe({
       next: (): void => {
+        this.isSubmitting = false;
         const studentName = `${student.nombre} ${student.apellido}`;
         this.notificationService.showStudentCreated(studentName);
         this.studentService.searchStudent();
@@ -159,6 +161,7 @@ export class FormStudent implements OnInit, OnChanges {
         this.searchStudent.emit();
       },
       error: (error): void => {
+        this.isSubmitting = false;
         const errorArray = error.errors || error.error;
         if (errorArray && Array.isArray(errorArray) && errorArray.length > 0) {
           const directusError = errorArray[0];
@@ -184,13 +187,23 @@ export class FormStudent implements OnInit, OnChanges {
 
   updateStudent() {
     if (this.studentForm.valid && this.studentData?.id) {
-      const studentToUpdate = this.studentForm.value;
+      const studentToUpdate = {
+        tipo_documento: this.studentForm.get('documentType')?.value,
+        numero_documento: this.studentForm.get('documentNumber')?.value,
+        nombre: this.studentForm.get('firstName')?.value,
+        apellido: this.studentForm.get('lastName')?.value,
+        colegio: this.studentForm.get('school')?.value,
+        acudiente: this.guardianId,
+      };
+      
       this.studentService.updateStudent(this.studentData.id, studentToUpdate).subscribe({
         next: (response) => {
+          this.isSubmitting = false;
           console.log('Estudiante actualizado:', response);
           this.studentUpdated.emit();
         },
         error: (error) => {
+          this.isSubmitting = false;
           console.error('Error al actualizar estudiante:', error);
         }
       });
@@ -200,7 +213,7 @@ export class FormStudent implements OnInit, OnChanges {
   deleteStudent() {
     if (this.studentData?.id) {
       const studentName = `${this.studentData.nombre} ${this.studentData.apellido}`;
-      
+
       this.confirmationService.showDeleteConfirmation(
         studentName,
         'estudiante',
@@ -215,17 +228,12 @@ export class FormStudent implements OnInit, OnChanges {
               this.studentUpdated.emit();
             },
             error: (error) => {
-              console.error('Error al eliminar estudiante:', error);
               this.notificationService.showError(
                 'Error al eliminar',
                 'No se pudo eliminar el estudiante. Inténtalo nuevamente.'
               );
             }
           });
-        },
-        () => {
-          // Callback de cancelación (opcional)
-          console.log('Eliminación cancelada');
         }
       );
     }
