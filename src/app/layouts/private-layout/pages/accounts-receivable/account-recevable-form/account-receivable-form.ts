@@ -7,6 +7,9 @@ import {ClientService} from '../../../../../core/services/client.service';
 import {StudentService} from '../../../../../core/services/student.service';
 import {AccountReceivableService} from '../../../../../core/services/account-receivable.service';
 import {NotificationService} from '../../../../../core/services/notification.service';
+import {CourseService} from '../../../../../core/services/course.service';
+import {Course} from '../../../../../core/models/Course';
+import {ResponseAPI} from '../../../../../core/models/ResponseAPI';
 
 
 @Component({
@@ -23,48 +26,22 @@ export class AccountReceivableFormComponent implements OnInit {
   isSubmitting = false;
   clientId: string = '';
   studentId: string = '';
-
-  COURSES = [
-    { id: 'matematicas', name: 'Matemáticas' },
-    { id: 'ciencias', name: 'Ciencias' },
-    { id: 'ingles', name: 'Inglés' },
-    { id: 'espanol', name: 'Español' },
-    { id: 'historia', name: 'Historia' },
-    { id: 'geografia', name: 'Geografía' },
-    { id: 'fisica', name: 'Física' },
-    { id: 'quimica', name: 'Química' },
-    { id: 'biologia', name: 'Biología' },
-    { id: 'educacion_fisica', name: 'Educación Física' }
-  ];
+  courses: Course[] = [];
+  isLoadingCourses = false;
 
   constructor(
     private fb: FormBuilder,
     private clientService: ClientService,
     private studentService: StudentService,
     private accountReceivableService: AccountReceivableService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private courseService: CourseService,
   ) {}
 
   ngOnInit(): void {
-    this.accountForm = this.fb.group({
-      client_id: [null,],
-      student_id: [null],
-      amount: [null, [Validators.required, Validators.min(0.01)]],
-      deadline: ['', [Validators.required]],
-      description: [null],
-      clientDocumentType: ['', [Validators.required]],
-      clientDocumentNumber: ['', [Validators.required]],
-      clientName: [''],
-      clientEmail: [''],
-      clientPhone: [''],
-      studentDocumentType: ['', [Validators.required]],
-      studentDocumentNumber: ['', [Validators.required]],
-      studentName: [''],
-      colegio: [''],
-      course: ['', [Validators.required]]
-    });
+    this.initForm();
+    this.loadCourses();
 
-    // Suscribirse a cambios en los campos de documento del cliente
     this.accountForm.get('clientDocumentType')?.valueChanges.subscribe(() => {
       this.searchClientInfo();
     });
@@ -73,7 +50,6 @@ export class AccountReceivableFormComponent implements OnInit {
       this.searchClientInfo();
     });
 
-    // Suscribirse a cambios en los campos de documento del estudiante
     this.accountForm.get('studentDocumentType')?.valueChanges.subscribe(() => {
       this.searchStudentInfo();
     });
@@ -82,11 +58,58 @@ export class AccountReceivableFormComponent implements OnInit {
       this.searchStudentInfo();
     });
 
-    // Sincronizar saldo con monto inicialmente
-    this.accountForm.get('monto')?.valueChanges.subscribe((monto) => {
-      if (monto && !this.accountForm.get('saldo')?.value) {
-        this.accountForm.patchValue({ saldo: monto });
+    this.accountForm.get('course')?.valueChanges.subscribe((courseId) => {
+      this.onCourseChange(courseId);
+    });
+  }
+
+  loadCourses(): void {
+    this.isLoadingCourses = true;
+    this.courseService.searchCourse().subscribe({
+      next: (response) => {
+          this.courses = response.data;
+      },
+      error: (error) => {
+        this.notificationService.showError('Error', 'Error al cargar los cursos');
+      },
+      complete: () => {
+        this.isLoadingCourses = false;
       }
+    });
+  }
+
+  onCourseChange(courseId: string): void {
+    if (courseId) {
+      const selectedCourse = this.courses.find(course => course.id === courseId);
+      if (selectedCourse && selectedCourse.precio) {
+        this.accountForm.patchValue({
+          amount: selectedCourse.precio
+        });
+      }
+    } else {
+      this.accountForm.patchValue({
+        amount: null
+      });
+    }
+  }
+
+  initForm=(): void => {
+    this.accountForm = this.fb.group({
+      client_id: [null,],
+      student_id: [null],
+      amount: [null, [Validators.required, Validators.min(0.01)]],
+      deadline: [null, [Validators.required]],
+      description: [null],
+      clientDocumentType: [null, [Validators.required]],
+      clientDocumentNumber: [null, [Validators.required]],
+      clientName: [null],
+      clientEmail: [null],
+      clientPhone: [null],
+      studentDocumentType: [null, [Validators.required]],
+      studentDocumentNumber: [null, [Validators.required]],
+      studentName: [null],
+      colegio: [null],
+      course: [null, [Validators.required]]
     });
   }
 
@@ -105,7 +128,6 @@ export class AccountReceivableFormComponent implements OnInit {
 
     this.clientService.searchClientByDocument(documentType, documentNumber.toString()).subscribe({
       next: (response) => {
-        console.log('Respuesta del servicio cliente:', response); // Debug log
         if (response.data && response.data.length > 0) {
           const client = response.data[0];
           this.clientId = client.id ? client.id.toString() : '';
@@ -176,7 +198,6 @@ export class AccountReceivableFormComponent implements OnInit {
   }
 
   onSubmit() {
-    // Validar que el formulario sea válido y que tengamos los IDs necesarios
     if (this.accountForm.valid && !this.isSubmitting && this.clientId && this.studentId) {
       this.isSubmitting = true;
 

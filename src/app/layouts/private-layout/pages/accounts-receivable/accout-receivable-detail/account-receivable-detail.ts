@@ -154,7 +154,6 @@ export class AccountReceivableDetailComponent {
   refreshAccountData() {
     this.accountService.getAccountById(this.account.id).subscribe({
       next: (response) => {
-        console.log('Cuenta actualizada:', response);
         if (response.data) {
           // Actualizar el saldo y los pagos
           this.account.saldo = response.data.saldo;
@@ -173,7 +172,6 @@ export class AccountReceivableDetailComponent {
   refreshPayments() {
     this.paymentService.getPaymentsByAccountId(this.account.id).subscribe({
       next: (response) => {
-        console.log('Pagos actualizados:', response);
         if (response.data) {
           this.account.pagos = response.data;
           this.cdr.detectChanges();
@@ -294,24 +292,24 @@ export class AccountReceivableDetailComponent {
     this.isEditingAmount = true;
     this.editedAmount = this.account.monto;
   }
-  
+
   cancelEditingAmount() {
     this.isEditingAmount = false;
     this.editedAmount = 0;
   }
-  
+
   saveAmount() {
     if (this.editedAmount > 0) {
       // Determinar el nuevo estado basado en la comparación monto vs saldo
       let newEstado = '';
       const currentSaldo = this.account.saldo || 0;
-      
+
       if (currentSaldo >= this.editedAmount) {
         newEstado = 'PAGADA';
       } else {
         newEstado = 'PENDIENTE';
       }
-  
+
       // Actualizar tanto el monto como el estado en Directus
       this.accountService.updateAccountReceivable(this.account.id, {
         monto: this.editedAmount,

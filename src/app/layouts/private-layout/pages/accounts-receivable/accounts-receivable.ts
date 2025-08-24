@@ -61,7 +61,6 @@ export class AccountsReceivable implements OnInit {
   }
 
   openForm() {
-    console.log('openForm() ejecutado');
     this.showForm = true;
   }
 
@@ -139,34 +138,23 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
-    
-    // Recargar todos los datos para reflejar los cambios
     this.loadAccounts();
     this.totalAccounts();
-    
-    // Forzar detección de cambios
     this.cdr.detectChanges();
   }
 
-  // Agregar este método después de loadAccounts()
   refreshAccountDetail() {
-    console.log('Refrescando datos del componente padre...');
-
-    // Recargar todos los datos desde el servidor
     this.loadAccounts();
-
-    // Después de cargar, actualizar la cuenta seleccionada
     setTimeout(() => {
       if (this.selectedAccount) {
         const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
           .find(account => account.id === this.selectedAccount!.id);
 
         if (updatedAccount) {
-          console.log('Cuenta actualizada encontrada:', updatedAccount);
           this.selectedAccount = updatedAccount;
-          this.cdr.detectChanges(); // Forzar detección de cambios
+          this.cdr.detectChanges();
         }
       }
-    }, 100); // Pequeño delay para asegurar que los datos se carguen
+    }, 100);
   }
 }
