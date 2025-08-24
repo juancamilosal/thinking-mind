@@ -12,20 +12,20 @@ RUN npm ci
 # Copiar el resto del código fuente
 COPY . .
 
-# Compilar la aplicación Angular usando npx para evitar problemas con ng global
-RUN npx ng build
+# Compilar la aplicación Angular para producción sin SSR
+RUN npx ng build --configuration=production
 
 # Etapa 2: Servir con NGINX
 FROM nginx:alpine
 
-# Eliminar la configuración por defecto de NGINX si es necesario
+# Eliminar la configuración por defecto de NGINX
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copiar los archivos compilados desde el builder
 COPY --from=builder /app/dist/thinkingmind-fe/browser /usr/share/nginx/html
 
-# Copiar configuración personalizada de NGINX si la tienes
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Copiar configuración personalizada de NGINX
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
