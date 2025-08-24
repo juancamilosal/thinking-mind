@@ -42,7 +42,7 @@ export class AccountsReceivable implements OnInit {
             account.estado === 'PENDIENTE' || account.estado === 'pendiente'
           );
           this.paidAccounts = response.data.filter(account =>
-            account.estado === 'PAGADO' || account.estado === 'pagado'
+            account.estado === 'PAGADO' || account.estado === 'pagado' || account.estado === 'PAGADA'
           );
           this.updateAccounts();
         }
@@ -114,8 +114,8 @@ export class AccountsReceivable implements OnInit {
     const accountIndex = this.pendingAccounts.findIndex(acc => acc.id === accountId);
     if (accountIndex !== -1) {
       const account = this.pendingAccounts[accountIndex];
-      account.estado = 'pagado';
-      account.saldo = 0; // Al marcar como pagado, el saldo se vuelve 0
+      account.estado = 'PAGADA'; // Cambiar de 'pagado' a 'PAGADA'
+      account.saldo = 0;
       this.paidAccounts.push(account);
       this.pendingAccounts.splice(accountIndex, 1);
       this.updateAccounts();

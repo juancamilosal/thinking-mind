@@ -117,12 +117,37 @@ export class AccountReceivableDetailComponent {
 
     this.paymentService.createPayment(payment).subscribe({
       next: ():void => {
-        this.resetPaymentForm();
-        this.showAddPaymentForm = false;
-        // Actualizar tanto los pagos como el saldo de la cuenta
-        this.refreshAccountData();
-        // Emitir evento para actualizar el componente padre
-        this.llamarFuncion.emit();
+        // Calcular el nuevo saldo sumando el pago
+        const newSaldo = this.account.saldo + this.newPaymentAmount;
+
+        // Determinar el nuevo estado basado en el saldo vs monto
+        const newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+
+        // Actualizar el saldo y estado en la cuenta por cobrar en Directus
+        this.accountService.updateAccountReceivable(this.account.id, {
+          saldo: newSaldo,
+          estado: newEstado
+        }).subscribe({
+          next: (updateResponse) => {
+            // Actualizar los datos locales
+            this.account.saldo = newSaldo;
+            this.account.estado = newEstado;
+
+            this.resetPaymentForm();
+            this.showAddPaymentForm = false;
+            // Actualizar tanto los pagos como el saldo de la cuenta
+            this.refreshAccountData();
+
+          },
+          error: (updateError) => {
+            console.error('Error al actualizar el saldo y estado:', updateError);
+            // Aún así, actualizar los datos para reflejar el nuevo pago
+            this.resetPaymentForm();
+            this.showAddPaymentForm = false;
+            this.refreshAccountData();
+
+          }
+        });
       }
     });
   }
@@ -193,7 +218,7 @@ export class AccountReceivableDetailComponent {
   }
 
   getStatusText(): string {
-    if (this.account.estado === 'PAGADO') {
+    if (this.account.estado === 'PAGADA') {
       return 'Pagado';
     }
     return 'Pendiente';
@@ -214,8 +239,14 @@ export class AccountReceivableDetailComponent {
             // Calcular el nuevo saldo restando el valor del pago eliminado
             const newSaldo = this.account.saldo - payment.valor;
 
-            // Actualizar el saldo en la cuenta por cobrar en Directus
-            this.accountService.updateAccountReceivable(this.account.id, { saldo: newSaldo }).subscribe({
+            // Determinar el nuevo estado basado en el saldo vs monto
+            const newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+
+            // Actualizar el saldo y estado en la cuenta por cobrar en Directus
+            this.accountService.updateAccountReceivable(this.account.id, {
+              saldo: newSaldo,
+              estado: newEstado
+            }).subscribe({
               next: (updateResponse) => {
                 this.notificationService.showSuccess(
                   'Pago eliminado',
@@ -224,6 +255,7 @@ export class AccountReceivableDetailComponent {
 
                 // Actualizar los datos locales
                 this.account.saldo = newSaldo;
+                this.account.estado = newEstado;
 
                 // Actualizar tanto los pagos como el saldo de la cuenta
                 this.refreshAccountData();
