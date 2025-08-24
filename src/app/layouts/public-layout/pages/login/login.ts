@@ -1,33 +1,39 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  standalone: true,
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './login.html',
-  styleUrl: './login.css'
+  styleUrls: ['./login.css']
 })
-
 export class Login implements OnInit {
-  loginForm: FormGroup;
+  loginForm!: FormGroup;
+  showPassword: boolean = false;
 
-  constructor(private fb: FormBuilder, private route: Router) {}
+  constructor(private formBuilder: FormBuilder) {}
 
   ngOnInit(): void {
-    this.loginForm = this.fb.group({
-      email: [null, [Validators.required, Validators.email]],
-      password: [null, [Validators.required]]
-    })
+    this.loginForm = this.formBuilder.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
   }
 
-  onSubmit() {
-      if (this.loginForm.invalid) {
-        console.log('Form is invalid');
-        return;
-      }
-      console.log('Login Form Data:', this.loginForm.value);
-      this.route.navigateByUrl('/private');
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
+  onSubmit(): void {
+    if (this.loginForm.valid) {
+      const formData = this.loginForm.value;
+      console.log('Form Data:', formData);
+      // Aquí puedes agregar la lógica de autenticación
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores
+      this.loginForm.markAllAsTouched();
+    }
+  }
 }
