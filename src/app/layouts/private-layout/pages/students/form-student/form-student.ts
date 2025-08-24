@@ -202,7 +202,6 @@ export class FormStudent implements OnInit, OnChanges {
       this.studentService.updateStudent(this.studentData.id, studentToUpdate).subscribe({
         next: (response) => {
           this.isSubmitting = false;
-          console.log('Estudiante actualizado:', response);
           this.studentUpdated.emit();
         },
         error: (error) => {

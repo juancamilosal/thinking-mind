@@ -11,33 +11,22 @@ import { Payments } from './layouts/private-layout/pages/payments/payments';
 
 export const routes: Routes = [
   {
-    pathMatch: 'full',
     path: '',
-    redirectTo: 'public'
+    pathMatch: 'full',
+    redirectTo: 'login'
   },
   {
-    path: 'public',
-    component: PublicLayout,
-    children: [
-      {
-        pathMatch: 'full',
-        path: '',
-        redirectTo: 'login'
-      },
-      {
-        path: 'login',
-        title: 'Thinking Mind | Login',
-        component: Login
-      },
-    ]
+    path: 'login',
+    title: 'Thinking Mind | Login',
+    component: Login
   },
   {
     path: 'private',
     component: PrivateLayout,
     children: [
       {
-        pathMatch: 'full',
         path: '',
+        pathMatch: 'full',
         redirectTo: 'clients'
       },
       {
