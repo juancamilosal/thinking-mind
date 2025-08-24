@@ -84,7 +84,7 @@ export class FormCourse implements OnInit, OnChanges {
       nombre: this.courseForm.value.nombre,
       precio: this.courseForm.value.precio,
       codigo: this.courseForm.value.codigo,
-      img_url: ''
+      imagen: this.courseForm.value.imagen
     }
 
     this.courseServices.createCourse(course).subscribe({

@@ -3,8 +3,11 @@
     <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ courseName }}</h1>
     <button (click)="close.emit()"
-      class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-      Regresar
+      class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      <span>Regresar</span>
     </button>
   </div>
   <div class="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
@@ -15,26 +18,7 @@
         {{ courseCode }}
     </span>
   </div>
-  <div class="text-xl font-semibold text-gray-800 mb-2">Duración: 10 días</div>
-  <h2 class="text-xl font-semibold text-gray-800 mt-2 mb-2">Descripción</h2>
-  <p class="text-justify">Clases de inglés y francés con profesores nativos, el programa Will-Go! está diseñado para que nuestros estudiantes tengan una experiencia de aprendizaje significativa como un refuerzo a sus estudios del idioma. Con un programa académico completo y actividades desafiantes, el inglés será algo novedoso y divertido.
-
-    EL PROGRAMA ACADÉMICO
-    Las clases son divertidas y distintas de lo normal: Tienes actividades, debates, juegos de rol y uso de diferentes medios. Todo orientado al aprendizaje del idioma.
-
-    ¡Siempre hay algo nuevo por hacer y aprender!
-    EL DÍA CONTINÚA CON JUEGOS, DEPORTES Y ACTIVIDADES EN INGLÉS
-    Desde juegos al aire libre, hasta Arts & Crafts y concursos de creatividad, las actividades del Will-Go! son una forma divertida de poner a prueba el idioma y darle un uso para producir algo novedoso. Estarán acompañados de los Activity Leaders, quienes desarrollan todo el programa en inglés.
-
-    Clases inglés francés nativos</p>
   <div class="mt-4">
-    <h2 class="text-xl font-semibold text-gray-800 mb-2">Contenido del Curso</h2>
-    <ul class="list-disc pl-5 space-y-2">
-      <li>Introducción al curso</li>
-      <li>Conceptos básicos</li>
-      <li>Prácticas recomendadas</li>
-      <li>Evaluación final</li>
-    </ul>
     <!-- Botones de acción -->
     <div class="flex space-x-20 mt-5">
       <!-- Botón Editar -->

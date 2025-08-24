@@ -7,6 +7,7 @@ export const environment = {
   courses: apiUrl + 'items/Cursos',
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',
+  files: apiUrl + 'files',
 
   //Flujos
   manual_payment: apiUrl + 'flows/trigger/2b02aa2e-58ca-48a0-a360-84861acd0692',

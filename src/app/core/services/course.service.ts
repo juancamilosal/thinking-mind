@@ -11,6 +11,7 @@ import {environment} from '../../../environments/environment';
 
 export class CourseService {
   apiCourse: string = environment.courses;
+  apiFile: string = environment.files;
 
   constructor(private http: HttpClient) {
   }
@@ -37,5 +38,11 @@ export class CourseService {
 
   deleteCourse(id: number | undefined): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiCourse}/${id}`);
+  }
+
+  uploadFile(file: File): Observable<ResponseAPI<any>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ResponseAPI<any>>(`${this.apiFile}`, formData);
   }
 }
