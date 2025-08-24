@@ -6,6 +6,8 @@ import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
 import {PaymentService} from '../../../../../core/services/payment.service';
 import {AccountReceivableService} from '../../../../../core/services/account-receivable.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { NotificationService } from '../../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-account-receivable-detail',
@@ -37,7 +39,9 @@ export class AccountReceivableDetailComponent {
   constructor(
     private paymentService: PaymentService,
     private cdr: ChangeDetectorRef,
-    private accountService: AccountReceivableService
+    private accountService: AccountReceivableService,
+    private confirmationService: ConfirmationService,
+    private notificationService: NotificationService
   ) {}
 
   // Método para capitalizar texto
@@ -193,5 +197,62 @@ export class AccountReceivableDetailComponent {
       return 'Pagado';
     }
     return 'Pendiente';
+  }
+
+  // Nuevo método para eliminar pago
+  // Método para eliminar pago y actualizar saldo
+  deletePayment(payment: PaymentRecord): void {
+    const paymentName = `Pago de ${this.formatCurrency(payment.valor)} - ${payment.pagador}`;
+
+    this.confirmationService.showDeleteConfirmation(
+      paymentName,
+      'pago',
+      () => {
+        // Callback de confirmación
+        this.paymentService.deletePayment(payment.id).subscribe({
+          next: (response) => {
+            // Calcular el nuevo saldo restando el valor del pago eliminado
+            const newSaldo = this.account.saldo - payment.valor;
+
+            // Actualizar el saldo en la cuenta por cobrar en Directus
+            this.accountService.updateAccountReceivable(this.account.id, { saldo: newSaldo }).subscribe({
+              next: (updateResponse) => {
+                this.notificationService.showSuccess(
+                  'Pago eliminado',
+                  `El pago ha sido eliminado exitosamente y el saldo ha sido actualizado.`
+                );
+
+                // Actualizar los datos locales
+                this.account.saldo = newSaldo;
+
+                // Actualizar tanto los pagos como el saldo de la cuenta
+                this.refreshAccountData();
+
+                // Emitir evento para actualizar el componente padre
+                this.llamarFuncion.emit();
+              },
+              error: (updateError) => {
+                console.error('Error al actualizar el saldo:', updateError);
+                this.notificationService.showError(
+                  'Error al actualizar saldo',
+                  'El pago fue eliminado pero no se pudo actualizar el saldo. Por favor, actualiza la página.'
+                );
+
+                // Aún así, actualizar los datos para reflejar la eliminación del pago
+                this.refreshAccountData();
+                this.llamarFuncion.emit();
+              }
+            });
+          },
+          error: (error) => {
+            console.error('Error al eliminar pago:', error);
+            this.notificationService.showError(
+              'Error al eliminar',
+              'No se pudo eliminar el pago. Inténtalo nuevamente.'
+            );
+          }
+        });
+      }
+    );
   }
 }
