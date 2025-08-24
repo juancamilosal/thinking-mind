@@ -140,8 +140,6 @@ export class AccountReceivableDetailComponent {
 
           },
           error: (updateError) => {
-            console.error('Error al actualizar el saldo y estado:', updateError);
-            // Aún así, actualizar los datos para reflejar el nuevo pago
             this.resetPaymentForm();
             this.showAddPaymentForm = false;
             this.refreshAccountData();
@@ -286,5 +284,54 @@ export class AccountReceivableDetailComponent {
         });
       }
     );
+  }
+
+  // Agregar estas propiedades después de las existentes
+  isEditingAmount = false;
+  editedAmount: number = 0;
+  // Agregar estos métodos después de canDeletePayment()
+  startEditingAmount() {
+    this.isEditingAmount = true;
+    this.editedAmount = this.account.monto;
+  }
+  
+  cancelEditingAmount() {
+    this.isEditingAmount = false;
+    this.editedAmount = 0;
+  }
+  
+  saveAmount() {
+    if (this.editedAmount > 0) {
+      // Determinar el nuevo estado basado en la comparación monto vs saldo
+      let newEstado = '';
+      const currentSaldo = this.account.saldo || 0;
+      
+      if (currentSaldo >= this.editedAmount) {
+        newEstado = 'PAGADA';
+      } else {
+        newEstado = 'PENDIENTE';
+      }
+  
+      // Actualizar tanto el monto como el estado en Directus
+      this.accountService.updateAccountReceivable(this.account.id, {
+        monto: this.editedAmount,
+        estado: newEstado
+      }).subscribe({
+        next: (updatedAccount) => {
+          this.account.monto = this.editedAmount;
+          this.account.estado = newEstado;
+          this.isEditingAmount = false;
+          this.notificationService.showSuccess('Éxito', `El monto de la cuenta ha sido actualizado. Estado: ${newEstado}`);
+          this.llamarFuncion.emit(); // Actualizar la lista principal
+        },
+        error: (err) => {
+          this.notificationService.showError('Error', 'No se pudo actualizar el monto de la cuenta.');
+        }
+      });
+    }
+  }
+  // Agregar este método después de getStatusText()
+  canDeletePayment(payment: PaymentRecord): boolean {
+    return payment.metodo_pago !== 'PASARELA DE PAGO';
   }
 }
