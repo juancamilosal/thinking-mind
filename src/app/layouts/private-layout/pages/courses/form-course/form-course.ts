@@ -40,9 +40,9 @@ export class FormCourse implements OnInit, OnChanges {
 
   initForm=(): void => {
     this.courseForm = this.fb.group({
-      name: [null, Validators.required],
-      price: [null, Validators.required],
-      code: [null, [Validators.required]],
+      nombre: [null, Validators.required],
+      precio: [null, Validators.required],
+      codigo: [null, [Validators.required]],
     });
 
     if (this.editMode && this.courseData) {
@@ -53,9 +53,9 @@ export class FormCourse implements OnInit, OnChanges {
   loadCourseData(): void {
     if (this.courseData) {
       this.courseForm.patchValue({
-        name: this.courseData.nombre,
-        price: this.courseData.precio,
-        code: this.courseData.codigo,
+        nombre: this.courseData.nombre,
+        precio: this.courseData.precio,
+        codigo: this.courseData.codigo,
       });
     }
   }
@@ -81,9 +81,9 @@ export class FormCourse implements OnInit, OnChanges {
 
   createCourse=(): void => {
     const course = {
-      nombre: this.courseForm.value.name,
-      precio: this.courseForm.value.price,
-      codigo: this.courseForm.value.code,
+      nombre: this.courseForm.value.nombre,
+      precio: this.courseForm.value.precio,
+      codigo: this.courseForm.value.codigo,
       img_url: ''
     }
 
