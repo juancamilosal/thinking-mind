@@ -138,20 +138,34 @@
 
         <!-- Submit Button -->
         <div class="pt-4">
-          <button
-            type="submit"
-            [disabled]="loginForm.invalid"
-            class="w-full bg-gradient-to-r from-teal-500 via-blue-500 to-red-500 hover:from-teal-600 hover:via-blue-600 hover:to-red-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-teal-300 relative group overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            [class.opacity-50]="loginForm.invalid"
-            [class.cursor-not-allowed]="loginForm.invalid">
-            <span class="relative z-10 flex items-center justify-center">
-              <svg class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Busca el botón de submit en tu HTML y reemplázalo con esto: -->
+          <button 
+            type="submit" 
+            [disabled]="loginForm.invalid || isLoading"
+            class="w-full py-4 px-6 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            [class]="isLoading ? 'bg-gray-400' : 'bg-gradient-to-r from-teal-600 via-blue-600 to-red-600 hover:from-teal-700 hover:via-blue-700 hover:to-red-700'">
+            
+            <!-- Contenido del botón -->
+            <div class="flex items-center justify-center space-x-2">
+              <!-- Spinner de carga -->
+              <div *ngIf="isLoading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              
+              <!-- Icono de login (cuando no está cargando) -->
+              <svg *ngIf="!isLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
               </svg>
-              Iniciar Sesión
-            </span>
-            <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              
+              <!-- Texto del botón -->
+              <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+            </div>
           </button>
+          
+          <!-- Modal de notificaciones -->
+          <app-notification-modal 
+            [isVisible]="showNotification"
+            [notification]="notificationData"
+            (close)="onNotificationClose()">
+          </app-notification-modal>
         </div>
       </form>
     </div>
@@ -164,3 +178,10 @@
     </div>
   </div>
 </section>
+
+<!-- Modal de notificaciones -->
+<app-notification-modal 
+  [isVisible]="showNotification"
+  [notification]="notificationData"
+  (close)="onNotificationClose()">
+</app-notification-modal>

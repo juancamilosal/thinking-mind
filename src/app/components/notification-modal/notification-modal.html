@@ -1,14 +1,15 @@
 <!-- Overlay del modal -->
 <div *ngIf="isVisible" 
      class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+     style="background-color: rgba(0, 0, 0, 0.5);"
      (click)="closeModal()">
   
   <!-- Contenido del modal -->
-  <div class="relative w-full max-w-md transform transition-all duration-300 ease-out"
+  <div class="relative w-full max-w-md transform transition-all duration-300 ease-out modal-content"
        (click)="$event.stopPropagation()">
     
     <!-- Card principal -->
-    <div class="relative rounded-2xl shadow-2xl" [ngClass]="getBackgroundClass()">
+    <div class="relative rounded-2xl shadow-2xl bg-white" [ngClass]="getBackgroundClass()">
       
       <!-- Header con icono y botón cerrar -->
       <div class="flex items-start justify-between p-6 pb-4">
