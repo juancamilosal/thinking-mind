@@ -139,6 +139,13 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
+    
+    // Recargar todos los datos para reflejar los cambios
+    this.loadAccounts();
+    this.totalAccounts();
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   // Agregar este método después de loadAccounts()
