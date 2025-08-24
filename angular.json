@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "n": {
+    "thinkingmind-fe": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,6 +13,8 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/thinkingmind-fe",
+            "index": "src/index.html",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
@@ -25,14 +27,18 @@
             "styles": [
               "src/styles.css"
             ],
-            "outputMode": "static"
+            "server": "src/main.server.ts",
+            "outputMode": "server",
+            "ssr": {
+              "entry": "src/server.ts"
+            }
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "700kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -58,7 +64,7 @@
               "buildTarget": "n:build:production"
             },
             "development": {
-              "buildTarget": "n:build:development"
+              "buildTarget": "thinkingmind-fe:build:development"
             }
           },
           "defaultConfiguration": "development"

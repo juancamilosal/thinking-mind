@@ -10,7 +10,7 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, NgClass, NotificationModalComponent, ConfirmationModalComponent],
+  imports: [RouterOutlet, SidebarComponent, NotificationModalComponent, ConfirmationModalComponent],
   templateUrl: './private-layout.html'
 })
 export class PrivateLayout implements OnInit {
@@ -18,11 +18,11 @@ export class PrivateLayout implements OnInit {
   isSidebarOpen = false;
   windowWidth = 0;
   isBrowser = false;
-  
+
   // Propiedades para el modal de notificaciones
   isNotificationVisible = false;
   currentNotification: NotificationData | null = null;
-  
+
   // Propiedades para el modal de confirmación
   isConfirmationVisible = false;
   currentConfirmation: ConfirmationData | null = null;
@@ -40,34 +40,34 @@ export class PrivateLayout implements OnInit {
       this.windowWidth = window.innerWidth;
       this.isSidebarOpen = this.windowWidth >= 640;
     }
-    
+
     // Suscribirse a las notificaciones
     this.notificationService.notification$.subscribe(notification => {
       this.currentNotification = notification;
     });
-    
+
     this.notificationService.isVisible$.subscribe(isVisible => {
       this.isNotificationVisible = isVisible;
     });
-    
+
     // Suscribirse a las confirmaciones
     this.confirmationService.confirmation$.subscribe(confirmation => {
       this.currentConfirmation = confirmation;
     });
-    
+
     this.confirmationService.isVisible$.subscribe(isVisible => {
       this.isConfirmationVisible = isVisible;
     });
   }
-  
+
   onNotificationClose() {
     this.notificationService.hideNotification();
   }
-  
+
   onConfirmationConfirm() {
     this.confirmationService.confirm();
   }
-  
+
   onConfirmationCancel() {
     this.confirmationService.cancel();
   }
