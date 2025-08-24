@@ -4,9 +4,8 @@ import { CommonModule } from '@angular/common';
 export interface Course {
   id: string;
   name: string;
-  price: number;
+  price: string;
   code: string;
-  duration: number;
   imageUrl: string;
 }
 
@@ -20,9 +19,8 @@ export interface Course {
 export class CourseInfoComponent {
   @Input() courseId: string;
   @Input() courseName: string;
-  @Input() coursePrice: number;
+  @Input() coursePrice: string;
   @Input() courseCode: string;
-  @Input() courseDuration: number;
   @Input() courseImageUrl: string;
 
   @Output() close = new EventEmitter<void>();

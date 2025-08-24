@@ -100,6 +100,14 @@ export class NotificationService {
     );
   }
 
+  showCourseCreated(courseName: string): void {
+    this.showSuccess(
+      'Curso Creado',
+      `El curso ${courseName} ha sido creado exitosamente.`,
+      3000
+    );
+  }
+
   showValidationError(message: string = 'Por favor, verifica los datos ingresados.'): void {
     this.showError(
       'Error de Validación',
