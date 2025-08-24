@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { AccountReceivableFormComponent } from './account-receivable-form';
-import { AccountReceivableDetailComponent } from './account-receivable-detail';
-import {AccountReceivable} from '../../../../core/models/AccountReceivable';
+import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {AccountReceivableFormComponent} from './account-recevable-form/account-receivable-form';
+import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
+import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
+import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 
 @Component({
   selector: 'app-accounts-receivable',
@@ -10,93 +11,71 @@ import {AccountReceivable} from '../../../../core/models/AccountReceivable';
   templateUrl: './accounts-receivable.html',
   standalone: true
 })
-export class AccountsReceivable {
+export class AccountsReceivable implements OnInit {
   showForm = false;
   showDetail = false;
   selectedAccount: AccountReceivable | null = null;
   activeTab: 'pending' | 'paid' = 'pending';
   accounts: AccountReceivable[] = [];
+  isLoading = false;
+  pendingAccounts: AccountReceivable[] = [];
+  paidAccounts: AccountReceivable[] = [];
+  total: TotalAccounts;
 
-  // Datos de ejemplo
-  pendingAccounts: AccountReceivable[] = [
-    {
-      id: 'AR-001',
-      clientName: 'María García',
-      clientEmail: 'maria@email.com',
-      clientPhone: '3001234567',
-      studentName: 'Luis Pérez',
-      amount: 850000,
-      description: 'Curso de Inglés Avanzado',
-      dueDate: '2024-02-15',
-      invoiceNumber: 'FAC-001',
-      status: 'pending',
-      createdDate: '2024-01-15'
-    },
-    {
-      id: 'AR-002',
-      clientName: 'Carlos López',
-      clientEmail: 'carlos@email.com',
-      clientPhone: '3009876543',
-      studentName: 'Mariana Torres',
-      amount: 750000,
-      description: 'Curso de Matemáticas',
-      dueDate: '2024-02-20',
-      invoiceNumber: 'FAC-002',
-      status: 'pending',
-      createdDate: '2024-01-20'
-    }
-  ];
+  constructor(
+    private accountService: AccountReceivableService,
+    private cdr: ChangeDetectorRef
+  ) {
+  }
 
-  paidAccounts: AccountReceivable[] = [
-    {
-      id: 'AR-003',
-      clientName: 'Ana Rodríguez',
-      clientEmail: 'ana@email.com',
-      clientPhone: '3005555555',
-      studentName: 'Juan Martínez',
-      amount: 300000,
-      description: 'Curso de Ciencias',
-      dueDate: '2024-01-30',
-      invoiceNumber: 'FAC-003',
-      status: 'paid',
-      createdDate: '2024-01-10'
-    }
-  ];
+  ngOnInit(): void {
+    this.loadAccounts();
+    this.totalAccounts();
+  }
 
-  constructor() {
-    this.updateAccounts();
+  protected loadAccounts(): void {
+    this.isLoading = true;
+    this.accountService.searchAccountReceivable().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.pendingAccounts = response.data.filter(account =>
+            account.estado === 'PENDIENTE' || account.estado === 'pendiente'
+          );
+          this.paidAccounts = response.data.filter(account =>
+            account.estado === 'PAGADO' || account.estado === 'pagado' || account.estado === 'PAGADA'
+          );
+          this.updateAccounts();
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  totalAccounts = (): void => {
+    this.accountService.totalAccounts().subscribe(data => {
+      this.total = data.data;
+    })
   }
 
   openForm() {
     console.log('openForm() ejecutado');
     this.showForm = true;
-    console.log('showForm:', this.showForm);
   }
 
   closeForm() {
     this.showForm = false;
   }
 
-  // Método que faltaba - requerido por el template
   getFilteredAccounts(): AccountReceivable[] {
     return this.activeTab === 'pending' ? this.pendingAccounts : this.paidAccounts;
   }
 
-  // Método que faltaba - requerido por el template
   onAccountCreated(account: AccountReceivable) {
-    // Generar un ID único
-    account.id = 'AR-' + (Date.now().toString().slice(-3)).padStart(3, '0');
-    account.status = 'pending';
-    account.createdDate = new Date().toISOString().split('T')[0];
-    
-    this.pendingAccounts.push(account);
-    this.updateAccounts();
-    this.closeForm();
-  }
-
-  onFormSubmit(account: AccountReceivable) {
-    this.pendingAccounts.push(account);
-    this.updateAccounts();
+    // Después de crear la cuenta, recargar los datos
+    this.loadAccounts();
     this.closeForm();
   }
 
@@ -109,15 +88,17 @@ export class AccountsReceivable {
     this.accounts = this.activeTab === 'pending' ? this.pendingAccounts : this.paidAccounts;
   }
 
+
   getTotalPending(): number {
-    return this.pendingAccounts.reduce((total, account) => total + account.amount, 0);
+    return this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
   }
 
+  // Mantener esta versión - usa 'fecha_limite' en lugar de 'dueDate' y 'saldo' en lugar de 'amount'
   getTotalOverdue(): number {
     const today = new Date().toISOString().split('T')[0];
     return this.pendingAccounts
-      .filter(account => account.dueDate < today)
-      .reduce((total, account) => total + account.amount, 0);
+      .filter(account => account.fecha_limite < today)
+      .reduce((total, account) => total + (account.saldo || 0), 0);
   }
 
   formatCurrency(amount: number): string {
@@ -128,11 +109,13 @@ export class AccountsReceivable {
     }).format(amount);
   }
 
+  // Mantener esta versión - usa 'estado' en lugar de 'status' y establece saldo a 0
   markAsPaid(accountId: string) {
     const accountIndex = this.pendingAccounts.findIndex(acc => acc.id === accountId);
     if (accountIndex !== -1) {
       const account = this.pendingAccounts[accountIndex];
-      account.status = 'paid';
+      account.estado = 'PAGADA'; // Cambiar de 'pagado' a 'PAGADA'
+      account.saldo = 0;
       this.paidAccounts.push(account);
       this.pendingAccounts.splice(accountIndex, 1);
       this.updateAccounts();
@@ -156,5 +139,34 @@ export class AccountsReceivable {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
+    
+    // Recargar todos los datos para reflejar los cambios
+    this.loadAccounts();
+    this.totalAccounts();
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+  }
+
+  // Agregar este método después de loadAccounts()
+  refreshAccountDetail() {
+    console.log('Refrescando datos del componente padre...');
+
+    // Recargar todos los datos desde el servidor
+    this.loadAccounts();
+
+    // Después de cargar, actualizar la cuenta seleccionada
+    setTimeout(() => {
+      if (this.selectedAccount) {
+        const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
+          .find(account => account.id === this.selectedAccount!.id);
+
+        if (updatedAccount) {
+          console.log('Cuenta actualizada encontrada:', updatedAccount);
+          this.selectedAccount = updatedAccount;
+          this.cdr.detectChanges(); // Forzar detección de cambios
+        }
+      }
+    }, 100); // Pequeño delay para asegurar que los datos se carguen
   }
 }

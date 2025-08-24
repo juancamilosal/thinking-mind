@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Payment } from '../account-receivable-detail';
+import { PaymentRecord } from '../../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-payment-detail',
@@ -9,7 +9,7 @@ import { Payment } from '../account-receivable-detail';
   standalone: true
 })
 export class PaymentDetailComponent {
-  @Input() payment!: Payment;
+  @Input() payment!: PaymentRecord;
   @Output() backToPaymentHistory = new EventEmitter<void>();
 
   onBack() {
@@ -22,5 +22,16 @@ export class PaymentDetailComponent {
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(amount);
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }

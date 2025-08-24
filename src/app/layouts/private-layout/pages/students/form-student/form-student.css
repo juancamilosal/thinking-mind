@@ -1,0 +1,16 @@
+/* Estilos específicos para el formulario de estudiantes */
+.form-section {
+  @apply bg-gray-50 p-4 rounded-lg border;
+}
+
+.form-section h3 {
+  @apply text-lg font-semibold text-gray-800 mb-4;
+}
+
+.readonly-field {
+  @apply bg-gray-100 cursor-not-allowed;
+}
+
+.error-message {
+  @apply text-red-500 text-sm mt-1;
+}

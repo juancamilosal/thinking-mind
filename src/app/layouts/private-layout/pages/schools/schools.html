@@ -1,143 +1,165 @@
 @if (!showForm) {
-  <div class="p-6 w-full">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Gestión de Colegios</h1>
-      <button
-        (click)="toggleForm()"
-        class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-        Ingresar Colegio
+  <div class="p-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Colegios</h1>
+      <p class="text-gray-600">Administra la información de los colegios registrados</p>
+    </div>
+
+    <!-- Botón Ingresar Colegio -->
+    <div class="flex justify-center mb-8">
+      <button (click)="toggleForm()"
+              class="px-8 py-4 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        <span>Ingresar Colegio</span>
       </button>
     </div>
 
-    <div class="space-y-6">
+    <!-- Barra de Búsqueda -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
       <div class="flex gap-4 flex-wrap sm:flex-nowrap">
         <input
           type="text"
-          placeholder="Buscar colegios..."
-          class="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          placeholder="Buscar por nombre, ciudad o rector..."
+          [value]="searchTerm"
+          (input)="onSearchInputChange($event)"
+          (keyup.enter)="onSearch()"
+          class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
         <button
-          class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto">
+          (click)="onSearch()"
+          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto font-medium">
           Buscar
         </button>
       </div>
+    </div>
 
+    <!-- Tabla de Colegios -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-100">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Colegio</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Rector</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número de Celular</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Nombre del Colegio</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Ciudad</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Dirección</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Rector</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Teléfono</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Colegio San José</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Bogotá</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Calle 123 #45-67</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Carlos Rodríguez</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">3001234567</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button class="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                <button class="text-red-600 hover:text-red-900">Eliminar</button>
-              </td>
-            </tr>
+          <tbody class="divide-y divide-gray-200">
+            @if (isLoading) {
+              @for (item of [1,2,3,4,5]; track $index) {
+                <tr class="animate-pulse">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-40"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-36"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-32"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-28"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex space-x-2">
+                      <div class="h-8 bg-gray-200 rounded w-16"></div>
+                      <div class="h-8 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            } @else if (schools.length === 0) {
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                  <div class="flex flex-col items-center justify-center space-y-3">
+                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-500">No hay colegios registrados</p>
+                    <p class="text-sm text-gray-400">Crea tu primer registro de colegio</p>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for(school of schools; track school.id) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ school.nombre }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ school.ciudad }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ school.direccion }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ school.nombre_rector }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ school.celular }}</td>
+                  <td class="px-6 py-4 text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 transform hover:scale-105">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Ver
+                      </button>
+                      <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 hover:text-green-700 transition-all duration-200 transform hover:scale-105">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Editar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
           </tbody>
         </table>
       </div>
+
+      <!-- Mensaje cuando no hay colegios -->
+      <!-- @if (schools.length === 0) {
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No hay colegios registrados</h3>
+          <p class="text-gray-500">Comienza agregando el primer colegio al sistema</p>
+        </div>
+      } -->
     </div>
   </div>
 } @else {
-  <div class="p-6 max-w-2xl mt-10 mx-auto bg-white rounded-xl shadow-md">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold">Registro de Colegio</h2>
-      <button
-        (click)="toggleForm()"
-        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-        Regresar
-      </button>
+  <div class="p-6 bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-xl shadow-lg p-8">
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Registro de Colegio</h1>
+            <p class="text-gray-600">Completa la información del colegio</p>
+          </div>
+          <button
+            (click)="toggleForm()"
+            class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span>Regresar</span>
+          </button>
+        </div>
+
+        <app-form-school
+          [editMode]="editMode"
+          [schoolData]="selectedSchool"
+          (goBack)="toggleForm()"
+          (searchSchool)="searchSchool()"
+          (schoolUpdated)="onSchoolUpdated()">
+        </app-form-school>
+      </div>
     </div>
-
-    <form [formGroup]="schoolForm" (ngSubmit)="onSubmit()" class="space-y-6">
-      <!-- Nombre del Colegio -->
-      <div class="space-y-2">
-        <label for="schoolName" class="block text-sm font-medium text-gray-700">Nombre del Colegio</label>
-        <input
-          type="text"
-          id="schoolName"
-          formControlName="schoolName"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(schoolForm.get('schoolName')?.touched && schoolForm.get('schoolName')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El nombre del colegio es obligatorio</p>
-        }
-      </div>
-
-      <!-- Ciudad -->
-      <div class="space-y-2">
-        <label for="city" class="block text-sm font-medium text-gray-700">Ciudad</label>
-        <input
-          type="text"
-          id="city"
-          formControlName="city"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(schoolForm.get('city')?.touched && schoolForm.get('city')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">La ciudad es obligatoria</p>
-        }
-      </div>
-
-      <!-- Dirección -->
-      <div class="space-y-2">
-        <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-        <input
-          type="text"
-          id="address"
-          formControlName="address"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(schoolForm.get('address')?.touched && schoolForm.get('address')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">La dirección es obligatoria</p>
-        }
-      </div>
-
-      <!-- Nombre del Rector -->
-      <div class="space-y-2">
-        <label for="principalName" class="block text-sm font-medium text-gray-700">Nombre del Rector</label>
-        <input
-          type="text"
-          id="principalName"
-          formControlName="principalName"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(schoolForm.get('principalName')?.touched && schoolForm.get('principalName')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El nombre del rector es obligatorio</p>
-        }
-      </div>
-
-      <!-- Número de Celular -->
-      <div class="space-y-2">
-        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Número de Celular</label>
-        <input
-          type="tel"
-          id="phoneNumber"
-          formControlName="phoneNumber"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        @if(schoolForm.get('phoneNumber')?.touched && schoolForm.get('phoneNumber')?.errors?.['required']) {
-          <p class="text-red-500 text-sm mt-1">El número de celular es obligatorio</p>
-        }
-        @if(schoolForm.get('phoneNumber')?.touched && schoolForm.get('phoneNumber')?.errors?.['pattern']) {
-          <p class="text-red-500 text-sm mt-1">Ingrese un número de celular válido (10 dígitos)</p>
-        }
-      </div>
-
-      <!-- Botón de Submit -->
-      <div class="pt-4">
-        <button
-          type="submit"
-          class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-          Registrar Colegio
-        </button>
-      </div>
-    </form>
   </div>
 }
+
