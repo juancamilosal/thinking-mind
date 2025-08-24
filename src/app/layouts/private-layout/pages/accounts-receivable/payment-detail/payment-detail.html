@@ -45,7 +45,7 @@
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Estado:</span>
-            <span class="px-3 py-1 rounded-full text-sm font-semibold" 
+            <span class="px-3 py-1 rounded-full text-sm font-semibold"
                   [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
               {{ payment.estado }}
             </span>
@@ -83,7 +83,7 @@
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Cuenta por Cobrar:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.cuanta_cobrar_id }}</span>
+            <span class="text-gray-900 font-semibold">{{ payment.cuenta_cobrar_id }}</span>
           </div>
         </div>
       </div>
