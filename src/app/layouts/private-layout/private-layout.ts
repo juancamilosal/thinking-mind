@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
-import { NgClass, isPlatformBrowser } from "@angular/common";
+import { isPlatformBrowser } from "@angular/common";
 import { NotificationModalComponent, NotificationData } from '../../components/notification-modal/notification-modal';
 import { ConfirmationModalComponent, ConfirmationData } from '../../components/confirmation-modal/confirmation-modal';
 import { NotificationService } from '../../core/services/notification.service';
@@ -10,7 +10,7 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, NgClass, NotificationModalComponent, ConfirmationModalComponent],
+  imports: [RouterOutlet, SidebarComponent, NotificationModalComponent, ConfirmationModalComponent],
   templateUrl: './private-layout.html'
 })
 export class PrivateLayout implements OnInit {

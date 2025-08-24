@@ -6,5 +6,8 @@ export const environment = {
   schools: apiUrl + 'items/colegios',
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',
-  manual_payment: apiUrl + 'flows/trigger/2b02aa2e-58ca-48a0-a360-84861acd0692'
+
+  //Flujos
+  manual_payment: apiUrl + 'flows/trigger/2b02aa2e-58ca-48a0-a360-84861acd0692',
+  total_accounts: apiUrl + 'flows/trigger/6dd2a98f-b283-46b5-9a36-5dd1d4f9adc9'
 };

@@ -28,3 +28,8 @@ export class AccountReceivable {
   studentName?: string;
   createdDate?: string;
 }
+
+export class TotalAccounts {
+  total_charge:number
+  total_expired: number
+}
