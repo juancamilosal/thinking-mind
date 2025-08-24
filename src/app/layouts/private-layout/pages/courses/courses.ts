@@ -1,24 +1,90 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import {CourseCardComponent} from '../../../../components/course-card/course-card';
-import {COURSES} from '../../../../core/const/CoursesConst';
 import {CourseInfoComponent} from '../../../../components/course-info/course-info';
+import { CourseService } from '../../../../core/services/course.service';
+import { Course } from '../../../../core/models/Course';
+import { FormCourse } from './form-course/form-course';
 
 @Component({
   selector: 'app-courses',
   imports: [
-    CourseCardComponent, CourseInfoComponent
-  ],
+    CourseCardComponent, CourseInfoComponent,
+    FormCourse
+],
   templateUrl: './courses.html',
   standalone: true
 })
+
 export class Courses {
-
-  protected readonly COURSES = COURSES;
-
-  selectedCourse: any = null;
+  courseForm!: FormGroup;
+  showForm = false;
   showCourseInfo = false;
+  showDetail = false;
+  editMode = false;
+  selectedCourse: Course | null = null;
+  courses: Course[] = [];
+  isLoading = false;
+  searchTerm = '';
+  private searchTimeout: any;
 
-  openCourseInfo(course: any) {
+  constructor(private fb: FormBuilder, private courseServices: CourseService) {
+    }
+
+  ngOnInit() {
+    this.initForm();
+    this.searchCourse();
+  }
+
+  toggleForm() {
+    this.showForm = !this.showForm;
+    this.editMode = false;
+    this.selectedCourse = null;
+  }
+
+  initForm() {
+    this.courseForm = this.fb.group({
+      nombre: ['', Validators.required],
+      precio: ['', Validators.required],
+      codigo: ['', Validators.required]
+    });
+  }
+
+  searchCourse(searchTerm?: string) {
+    this.isLoading = true;
+    this.courseServices.searchCourse(searchTerm).subscribe({
+      next: (data) => {
+        this.courses = data.data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onSearch() {
+    this.searchCourse(this.searchTerm.trim() || undefined);
+  }
+
+  onSearchInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+
+    // Limpiar timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Establecer nuevo timeout para búsqueda automática
+    this.searchTimeout = setTimeout(() => {
+      this.searchCourse(this.searchTerm.trim() || undefined);
+    }, 500); // 500ms de delay
+  }
+
+  openCourseInfo(course: Course) {
     this.selectedCourse = course;
     this.showCourseInfo = true;
   }
@@ -26,5 +92,10 @@ export class Courses {
   closeCourseInfo() {
     this.selectedCourse = null;
     this.showCourseInfo = false;
+  }
+
+  onCourseUpdated() {
+    this.searchCourse();
+    this.toggleForm();
   }
 }
