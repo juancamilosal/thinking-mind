@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +14,7 @@ export class Login implements OnInit {
   loginForm!: FormGroup;
   showPassword: boolean = false;
 
-  constructor(private formBuilder: FormBuilder) {}
+  constructor(private formBuilder: FormBuilder, private router: Router) {}
 
   ngOnInit(): void {
     this.loginForm = this.formBuilder.group({
@@ -26,14 +27,10 @@ export class Login implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  onSubmit(): void {
-    if (this.loginForm.valid) {
-      const formData = this.loginForm.value;
-      console.log('Form Data:', formData);
-      // Aquí puedes agregar la lógica de autenticación
-    } else {
-      // Marcar todos los campos como tocados para mostrar errores
-      this.loginForm.markAllAsTouched();
+  onSubmit() {
+    if (this.loginForm.invalid) {
+      return;
     }
+    this.router.navigateByUrl('/private');
   }
 }
