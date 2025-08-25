@@ -9,7 +9,7 @@
     <h3 class="text-2xl font-bold text-gray-800">Información del Curso</h3>
   </div>
 
-  <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" (ngSubmit)="onUpload()" class="space-y-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Nombre -->
       <div class="space-y-3">
@@ -68,11 +68,14 @@
         }
       </div>
 
+      <!-- Imágen -->
       <div class="space-y-3">
         <label for="imagen" class="block text-sm font-semibold text-gray-700">Imagen</label>
         <input
           type="file"
           id="imagen"
+          accept="image/*"
+          (change)="onFileSelected($event)"
           formControlName="imagen"
           placeholder="Adjunta una imagen"
           class="">
