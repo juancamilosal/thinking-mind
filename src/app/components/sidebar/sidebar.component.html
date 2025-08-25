@@ -22,7 +22,7 @@
         [class.-translate-x-full]="!isSidebarOpen"
         aria-label="Sidebar"
 >
-    <div class="h-full px-4 py-6 overflow-y-auto">
+    <div class="h-full px-4 py-6 overflow-y-auto flex flex-col">
         <!-- Logo/Brand Section -->
         <div class="mb-8 text-center border-b border-slate-700 pb-6">
             <div class="flex items-center justify-center mb-3">
@@ -87,6 +87,21 @@
                 </li>
             }
         </ul>
+        
+        <!-- Botón de Cerrar Sesión -->
+        <div class="mt-auto pt-6 border-t border-slate-700">
+            <button
+                (click)="logout()"
+                class="w-full flex items-center p-4 text-slate-300 rounded-xl hover:bg-gradient-to-r hover:from-red-600 hover:via-red-500 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
+            >
+                <div class="w-10 h-10 rounded-lg bg-slate-700 group-hover:bg-white/20 flex items-center justify-center transition-all duration-300 mr-4">
+                    <svg class="w-6 h-6 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                </div>
+                <span class="text-lg font-semibold">Cerrar Sesión</span>
+            </button>
+        </div>
     </div>
 </aside>
 <!-- Contenido -->

@@ -9,6 +9,7 @@ export const environment = {
   payment: apiUrl + 'items/pagos',
   files: apiUrl + 'files',
   login: apiUrl + 'auth/login',
+  logout: apiUrl + 'auth/logout',
   me: apiUrl + 'users/me',
 
 

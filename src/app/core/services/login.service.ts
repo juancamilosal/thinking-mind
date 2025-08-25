@@ -12,6 +12,7 @@ import {User} from '../models/User';
 
 export class LoginService {
   apiLogin: string = environment.login;
+  apiLogout: string = environment.logout;
   apiMe: string= environment.me;
 
   constructor(private http: HttpClient) {
@@ -21,7 +22,30 @@ export class LoginService {
     return this.http.post<ResponseAPI<any>>(this.apiLogin, login);
   }
 
-  me(): Observable<ResponseAPI<User>> {
-    return this.http.get<ResponseAPI<User>>(this.apiMe);
+  logout(): Observable<ResponseAPI<any>> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    const payload = refreshToken ? { refresh_token: refreshToken } : {};
+    return this.http.post<ResponseAPI<any>>(this.apiLogout, payload);
   }
+
+  me(): Observable<ResponseAPI<User>> {
+    // Obtener todos los campos del usuario
+    const params = {
+      'fields': '*'
+    };
+    return this.http.get<ResponseAPI<User>>(this.apiMe, { params });
+  }
+
+  // Función utilitaria para filtrar campos nulos
+  filterNullFields(obj: any): any {
+    const filtered: any = {};
+    for (const key in obj) {
+      if (obj[key] !== null && obj[key] !== undefined) {
+        filtered[key] = obj[key];
+      }
+    }
+    return filtered;
+  }
+
+
 }

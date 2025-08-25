@@ -42,9 +42,33 @@ export class Login implements OnInit {
 
     this.loginServices.login(this.loginForm.value).subscribe({
       next: (response) => {
-        // Login exitoso
-        this.isLoading = false;
-        this.router.navigateByUrl('/private');
+        // Login exitoso - guardar tokens
+        if (response.data && response.data.access_token) {
+          localStorage.setItem('access_token', response.data.access_token);
+        }
+        if (response.data && response.data.refresh_token) {
+          localStorage.setItem('refresh_token', response.data.refresh_token);
+        }
+        
+        // Obtener información del usuario y guardarla en sessionStorage
+        this.loginServices.me().subscribe({
+          next: (userResponse) => {
+            if (userResponse.data) {
+              // Filtrar campos nulos antes de guardar en sessionStorage
+            const filteredUserData = this.loginServices.filterNullFields(userResponse.data);
+            sessionStorage.setItem('user_info', JSON.stringify(filteredUserData));
+            console.log('User info stored in sessionStorage:', filteredUserData);
+            }
+            this.isLoading = false;
+            this.router.navigateByUrl('/private');
+          },
+          error: (userError) => {
+            console.error('Error al obtener información del usuario:', userError);
+            // Continuar con la navegación aunque falle la obtención del usuario
+            this.isLoading = false;
+            this.router.navigateByUrl('/private');
+          }
+        });
       },
       error: (error) => {
         // Credenciales incorrectas o error de login
