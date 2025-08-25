@@ -43,7 +43,9 @@ export class FormCourse implements OnInit, OnChanges {
     this.courseForm = this.fb.group({
       nombre: [null, Validators.required],
       precio: [null, Validators.required],
-      codigo: [null, [Validators.required]],
+      sku: [null, [Validators.required]],
+      imagen: [null],
+      precio_inscripcion: [null]
     });
 
     if (this.editMode && this.courseData) {
@@ -56,7 +58,9 @@ export class FormCourse implements OnInit, OnChanges {
       this.courseForm.patchValue({
         nombre: this.courseData.nombre,
         precio: this.courseData.precio,
-        codigo: this.courseData.codigo,
+        sku: this.courseData.sku,
+        imagen: this.courseData.imagen,
+        precio_inscripcion: this.courseData.precio_inscripcion,
       });
     }
   }
@@ -83,8 +87,9 @@ export class FormCourse implements OnInit, OnChanges {
     const course = {
       nombre: this.courseForm.value.nombre,
       precio: this.courseForm.value.precio,
-      codigo: this.courseForm.value.codigo,
-      imagen: this.courseForm.value.imagen
+      sku: this.courseForm.value.sku,
+      imagen: this.courseForm.value.imagen,
+      precio_inscripcion: this.courseForm.value.precio_inscripcion,
     }
 
     this.courseServices.createCourse(course).subscribe({
@@ -107,7 +112,7 @@ export class FormCourse implements OnInit, OnChanges {
         if (error.status === 400) {
           this.notificationService.showError('Curso ya se encuentra creado', `Ya existe un curso registrado con el nombre ${course.nombre}.`);
         } else if (error.status === 409) {
-          this.notificationService.showError('Curso ya se encuentra creado', `Ya existe un curso registrado con el código ${course.codigo}.`);
+          this.notificationService.showError('Curso ya se encuentra creado', `Ya existe un curso registrado con el código ${course.sku}.`);
         } else if (error.status >= 500) {
           this.notificationService.showServerError();
         } else {
