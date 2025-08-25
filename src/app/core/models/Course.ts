@@ -7,5 +7,4 @@ export class Course {
   img_url?: string; // URL construida para mostrar la imagen
   sku?: string;
   precio_inscripcion?: number;
-  imagen: File;
 }
