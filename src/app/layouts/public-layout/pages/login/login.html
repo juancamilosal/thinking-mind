@@ -102,14 +102,62 @@
               <button
                 type="button"
                 (click)="togglePasswordVisibility()"
-                class="text-gray-400 hover:text-gray-600 transition-all duration-300 hover:scale-110 focus:outline-none">
-                <svg *ngIf="!showPassword" class="w-5 h-5 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                class="relative p-1 text-gray-400 hover:text-blue-500 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-md group">
+                
+                <!-- Eye Open Icon (when password is hidden) -->
+                <svg *ngIf="!showPassword" 
+                     class="w-5 h-5 transition-all duration-300 transform group-hover:scale-110" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24">
+                  <!-- Eye outline -->
+                  <path stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                  </path>
+                  <!-- Eye pupil -->
+                  <circle cx="12" 
+                          cy="12" 
+                          r="3" 
+                          stroke-linecap="round" 
+                          stroke-linejoin="round" 
+                          stroke-width="2">
+                  </circle>
+                  <!-- Eye highlight -->
+                  <circle cx="12" 
+                          cy="12" 
+                          r="1" 
+                          fill="currentColor" 
+                          class="animate-pulse">
+                  </circle>
                 </svg>
-                <svg *ngIf="showPassword" class="w-5 h-5 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                
+                <!-- Eye Closed Icon (when password is visible) -->
+                <svg *ngIf="showPassword" 
+                     class="w-5 h-5 transition-all duration-300 transform group-hover:scale-110" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24">
+                  <!-- Crossed out eye -->
+                  <path stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242">
+                  </path>
+                  <!-- Diagonal line through eye -->
+                  <path stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2.5" 
+                        d="M3 3l18 18" 
+                        class="text-red-500">
+                  </path>
                 </svg>
+                
+                <!-- Tooltip -->
+                <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                  {{ showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña' }}
+                </div>
               </button>
               <!-- Success Icon -->
               <svg *ngIf="loginForm.get('password')?.valid && loginForm.get('password')?.touched"
