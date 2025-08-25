@@ -81,10 +81,22 @@ export class Courses {
       clearTimeout(this.searchTimeout);
     }
 
+    // Si el campo está vacío, buscar inmediatamente
+    if (this.searchTerm.trim() === '') {
+      this.searchCourse();
+      return;
+    }
+
     // Establecer nuevo timeout para búsqueda automática
     this.searchTimeout = setTimeout(() => {
       this.searchCourse(this.searchTerm.trim() || undefined);
-    }, 500); // 500ms de delay
+    }, 300); // Reducido a 300ms para mayor responsividad
+  }
+
+  // Método mejorado para limpiar búsqueda
+  clearSearch() {
+    this.searchTerm = '';
+    this.searchCourse();
   }
 
   openCourseInfo(course: Course) {
@@ -122,5 +134,26 @@ export class Courses {
         this.isLoading = false;
       }
     });
+  }
+
+  editCourse(course: Course) {
+    this.selectedCourse = course;
+    this.editMode = true;
+    this.showForm = true;
+  }
+
+  deleteCourse(course: Course) {
+    if (confirm(`¿Estás seguro de que deseas eliminar el curso "${course.nombre}"?`)) {
+      this.courseServices.deleteCourse(course.id).subscribe({
+        next: (response) => {
+          console.log('Curso eliminado exitosamente');
+          this.searchCourse(); // Recargar la lista de cursos
+        },
+        error: (error) => {
+          console.error('Error al eliminar el curso:', error);
+          // Aquí puedes agregar una notificación de error
+        }
+      });
+    }
   }
 }

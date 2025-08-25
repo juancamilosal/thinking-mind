@@ -14,9 +14,9 @@ export class AccountReceivableService {
   private apiUrlTotalAccounts = environment.total_accounts
   constructor(private http: HttpClient) {}
 
-  // Agregar este método
+
   getAccountById(id: string): Observable<ResponseAPI<AccountReceivable>> {
-    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,pagos.*`).pipe(
+    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,pagos.*,curso_id.`).pipe(
       map(response => ({
         ...response,
         data: this.mapToAccountReceivable(response.data)
@@ -30,7 +30,7 @@ export class AccountReceivableService {
 
   searchAccountReceivable(searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<any[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,pagos.*').pipe(
+      return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,curso_id.*,pagos.*').pipe(
         map(response => ({
           ...response,
           data: response.data.map(item => this.mapToAccountReceivable(item))
@@ -57,11 +57,10 @@ export class AccountReceivableService {
       estudiante_id: typeof item.estudiante_id === 'object' ? item.estudiante_id.id : item.estudiante_id,
       monto: item.monto,
       saldo: item.saldo,
-      curso: item.curso,
+      curso_id: item.curso_id,
       fecha_limite: item.fecha_limite,
       estado: item.estado,
       pagos: item.pagos || [],
-      // Extraer campos para la UI
       clientName: typeof item.cliente_id === 'object'
         ? `${item.cliente_id.nombre} ${item.cliente_id.apellido}`
         : item.clientName,
@@ -80,7 +79,6 @@ export class AccountReceivableService {
 
   totalAccounts(): Observable<ResponseAPI<TotalAccounts>> {
     return this.http.get<ResponseAPI<TotalAccounts>>(this.apiUrlTotalAccounts)
-
   }
 
   updateAccountReceivable(id: string, accountReceivable: any): Observable<ResponseAPI<any>> {

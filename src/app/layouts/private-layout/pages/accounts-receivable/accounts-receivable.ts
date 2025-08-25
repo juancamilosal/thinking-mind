@@ -73,8 +73,8 @@ export class AccountsReceivable implements OnInit {
   }
 
   onAccountCreated(account: AccountReceivable) {
-    // Después de crear la cuenta, recargar los datos
     this.loadAccounts();
+    this.totalAccounts();
     this.closeForm();
   }
 
@@ -92,7 +92,6 @@ export class AccountsReceivable implements OnInit {
     return this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
   }
 
-  // Mantener esta versión - usa 'fecha_limite' en lugar de 'dueDate' y 'saldo' en lugar de 'amount'
   getTotalOverdue(): number {
     const today = new Date().toISOString().split('T')[0];
     return this.pendingAccounts
@@ -108,17 +107,18 @@ export class AccountsReceivable implements OnInit {
     }).format(amount);
   }
 
-  // Mantener esta versión - usa 'estado' en lugar de 'status' y establece saldo a 0
   markAsPaid(accountId: string) {
     const accountIndex = this.pendingAccounts.findIndex(acc => acc.id === accountId);
     if (accountIndex !== -1) {
       const account = this.pendingAccounts[accountIndex];
-      account.estado = 'PAGADA'; // Cambiar de 'pagado' a 'PAGADA'
+      account.estado = 'PAGADA';
       account.saldo = 0;
       this.paidAccounts.push(account);
       this.pendingAccounts.splice(accountIndex, 1);
       this.updateAccounts();
     }
+    this.loadAccounts();
+    this.totalAccounts();
   }
 
   deleteAccount(accountId: string) {
@@ -128,6 +128,8 @@ export class AccountsReceivable implements OnInit {
       this.paidAccounts = this.paidAccounts.filter(acc => acc.id !== accountId);
     }
     this.updateAccounts();
+    this.loadAccounts();
+    this.totalAccounts(); // ← Y aquí
   }
 
   viewDetail(account: AccountReceivable) {

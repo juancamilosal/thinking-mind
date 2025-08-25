@@ -17,6 +17,10 @@ import { NotificationService } from '../../../../../core/services/notification.s
 })
 export class AccountReceivableDetailComponent {
   @Input() account!: AccountReceivable;
+  
+  ngOnInit() {
+    console.log('Account recibido en detalle:', this.account); // Agregar esta línea
+  }
   @Output() backToList = new EventEmitter<void>();
   @Output() llamarFuncion = new EventEmitter<void>();
   @Output() addPayment = new EventEmitter<PaymentRecord>();

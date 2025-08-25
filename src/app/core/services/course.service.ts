@@ -41,6 +41,10 @@ export class CourseService {
     );
   }
 
+  getCourseById(id: string): Observable<ResponseAPI<Course>> {
+    return this.http.get<ResponseAPI<Course>>(`${this.apiCourse}/${id}`);
+  }
+
   createCourse(course: Course): Observable<ResponseAPI<Course>> {
     return this.http.post<ResponseAPI<Course>>(this.apiCourse, course);
   }
@@ -57,5 +61,9 @@ export class CourseService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<ResponseAPI<any>>(`${this.apiFile}`, formData);
+  }
+
+  deleteFile(fileId: string): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${this.apiFile}/${fileId}`);
   }
 }

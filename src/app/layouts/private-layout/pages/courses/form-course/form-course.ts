@@ -145,13 +145,13 @@ export class FormCourse implements OnInit, OnChanges {
   private submitCourse(course: any): void {
     this.courseServices.createCourse(course).subscribe({
       next: (response) => {
-        this.isSubmitting = false; // Desactivar estado de carga
+        this.isSubmitting = false;
         this.notificationService.showSuccess('Curso creado exitosamente',"");
-        this.searchCourse.emit();
-        this.goBack.emit();
+        this.courseUpdated.emit();
+        // Remover: this.goBack.emit();
       },
       error: (error) => {
-        this.isSubmitting = false; // Desactivar estado de carga en caso de error
+        this.isSubmitting = false;
         console.error('Error creating course:', error);
         this.notificationService.showError('Error al crear el curso');
       }
@@ -160,16 +160,16 @@ export class FormCourse implements OnInit, OnChanges {
 
   updateCourse() {
     if (this.courseForm.valid && this.courseData?.id) {
-      if (this.selectedFile) {
-        this.uploadImageAndUpdateCourse();
-      } else {
-        this.updateCourseWithoutNewImage();
-      }
+      this.isSubmitting = true; // Activar estado de carga
+      // Solo actualizar datos del formulario, la imagen ya se procesó automáticamente
+      this.updateCourseWithoutNewImage();
     }
   }
 
   private uploadImageAndUpdateCourse(): void {
     this.isUploadingImage = true;
+    // No activar isSubmitting aquí para que el botón no cambie a "ACTUALIZANDO"
+
     this.courseServices.uploadFile(this.selectedFile!).subscribe({
       next: (response) => {
         this.uploadedImageId = response.data.id;
@@ -183,29 +183,6 @@ export class FormCourse implements OnInit, OnChanges {
     });
   }
 
-  private updateCourseWithNewImage(): void {
-    const courseToUpdate = {
-      nombre: this.courseForm.value.nombre,
-      precio: this.courseForm.value.precio,
-      sku: this.courseForm.value.codigo,
-      img: this.uploadedImageId
-    };
-
-    this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
-      next: (response) => {
-        this.isSubmitting = false; // Desactivar estado de carga
-        this.notificationService.showSuccess('Curso actualizado exitosamente', "");
-        this.courseUpdated.emit();
-        this.goBack.emit();
-      },
-      error: (error) => {
-        this.isSubmitting = false; // Desactivar estado de carga en caso de error
-        console.error('Error updating course:', error);
-        this.notificationService.showError('Error al actualizar el curso');
-      }
-    });
-  }
-
   private updateCourseWithoutNewImage(): void {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
@@ -215,15 +192,47 @@ export class FormCourse implements OnInit, OnChanges {
 
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
-        this.isSubmitting = false; // Desactivar estado de carga
+        this.isSubmitting = false;
         this.notificationService.showSuccess('Curso actualizado exitosamente', "");
         this.courseUpdated.emit();
-        this.goBack.emit();
       },
       error: (error) => {
-        this.isSubmitting = false; // Desactivar estado de carga en caso de error
+        this.isSubmitting = false;
         console.error('Error updating course:', error);
         this.notificationService.showError('Error al actualizar el curso',"");
+      }
+    });
+  }
+
+  private updateCourseWithNewImage(): void {
+    const courseToUpdate = {
+      nombre: this.courseForm.value.nombre,
+      precio: this.courseForm.value.precio,
+      sku: this.courseForm.value.codigo,
+      img: this.uploadedImageId
+    };
+
+    const previousImageId = this.courseData?.img;
+
+    this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
+      next: (response) => {
+        if (previousImageId) {
+          this.courseServices.deleteFile(previousImageId).subscribe({
+            next: () => {
+              console.log('Imagen anterior eliminada exitosamente');
+
+            },
+            error: (error) => {
+              console.warn('No se pudo eliminar la imagen anterior:', error);
+            }
+          });
+        }
+        this.notificationService.showSuccess('Curso actualizado exitosamente', "");
+        this.courseUpdated.emit();
+      },
+      error: (error) => {
+        console.error('Error updating course:', error);
+        this.notificationService.showError('Error al actualizar el curso');
       }
     });
   }
@@ -291,6 +300,11 @@ export class FormCourse implements OnInit, OnChanges {
       this.imagePreview = e.target.result;
     };
     reader.readAsDataURL(file);
+
+    // Si estamos en modo edición, automáticamente subir y actualizar el curso
+    if (this.editMode && this.courseData?.id && this.courseForm.valid) {
+      this.uploadImageAndUpdateCourse();
+    }
   }
 
   // Métodos para drag & drop

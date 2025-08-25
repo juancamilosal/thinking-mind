@@ -68,7 +68,7 @@ export class AccountReceivableFormComponent implements OnInit {
     this.courseService.searchCourse().subscribe({
       next: (response) => {
           // Ordenar los cursos alfabéticamente por nombre
-          this.courses = response.data.sort((a, b) => 
+          this.courses = response.data.sort((a, b) =>
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
       },
@@ -208,7 +208,7 @@ export class AccountReceivableFormComponent implements OnInit {
         cliente_id: this.clientId, // Mantener como string UUID
         estudiante_id: this.studentId, // Mantener como string UUID
         monto: this.accountForm.get('amount')?.value,
-        curso: this.accountForm.get('course')?.value,
+        curso_id: this.accountForm.get('course')?.value, // Cambio de 'curso' a 'curso_id'
         fecha_limite: this.accountForm.get('deadline')?.value,
         observaciones: this.accountForm.get('description')?.value,
         estado: 'PENDIENTE'
@@ -228,7 +228,7 @@ export class AccountReceivableFormComponent implements OnInit {
             estudiante_id: this.studentId,
             monto: this.accountForm.get('amount')?.value,
             saldo: this.accountForm.get('amount')?.value,
-            curso: this.accountForm.get('course')?.value,
+            curso_id: this.accountForm.get('course')?.value, // Mantener 'curso' para el modelo local
             fecha_limite: this.accountForm.get('deadline')?.value,
             estado: 'pendiente',
             clientName: this.accountForm.get('clientName')?.value,

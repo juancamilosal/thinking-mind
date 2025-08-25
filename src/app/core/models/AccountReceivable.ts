@@ -1,9 +1,9 @@
 import {Client} from './Clients';
 import {Student} from './Student';
-
+import {Course} from './Course';
 export class PaymentRecord {
   id?: string;
-  cuenta_cobrar_id: string; // ✅ Mantener este nombre correcto
+  cuenta_cobrar_id: string;
   valor: number;
   fecha_pago: string;
   metodo_pago: string;
@@ -18,7 +18,7 @@ export class AccountReceivable {
   estudiante_id: Student | string;
   monto: number;
   saldo?: number;
-  curso: string;
+  curso_id: Course | null;
   fecha_limite: string;
   estado: string;
   pagos?: PaymentRecord[];

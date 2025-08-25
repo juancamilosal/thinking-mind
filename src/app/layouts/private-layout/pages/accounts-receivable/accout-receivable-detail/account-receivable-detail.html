@@ -58,7 +58,7 @@
 
             <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Curso:</span>
-              <span class="text-gray-900 font-semibold">{{ account.curso }}</span>
+              <span class="text-gray-900 font-semibold">{{ account.curso_id?.nombre }}</span>
             </div>
           </div>
         </div>
@@ -80,8 +80,8 @@
               <span class="text-gray-600 font-medium">Valor Total de la Cuenta:</span>
               @if (!isEditingAmount) {
                 <div class="flex items-center space-x-2">
-                  <span class="text-2xl font-bold text-blue-600 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded" 
-                        (click)="startEditingAmount()" 
+                  <span class="text-2xl font-bold text-blue-600 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded"
+                        (click)="startEditingAmount()"
                         title="Clic para editar">
                     {{ formatCurrency(account.monto) }}
                   </span>
@@ -93,7 +93,7 @@
                 <div class="flex items-center space-x-2">
                   <div class="relative">
                     <span class="absolute left-3 top-2 text-gray-500">$</span>
-                    <input type="number" 
+                    <input type="number"
                            [(ngModel)]="editedAmount"
                            class="w-40 pl-8 pr-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold text-blue-600"
                            step="0.01"
@@ -101,11 +101,11 @@
                            (keyup.enter)="saveAmount()"
                            (keyup.escape)="cancelEditingAmount()">
                   </div>
-                  <button (click)="saveAmount()" 
+                  <button (click)="saveAmount()"
                           class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
                     ✓
                   </button>
-                  <button (click)="cancelEditingAmount()" 
+                  <button (click)="cancelEditingAmount()"
                           class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
                     ✕
                   </button>
