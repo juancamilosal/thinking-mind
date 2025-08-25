@@ -27,6 +27,7 @@ export class FormCourse implements OnInit, OnChanges {
   uploadedImageId: string | null = null;
   isDragOver: boolean = false;
   isUploadingImage: boolean = false;
+  isSubmitting: boolean = false; // Nueva variable para el estado de envío
 
   constructor(
     private fb: FormBuilder,
@@ -76,7 +77,8 @@ export class FormCourse implements OnInit, OnChanges {
   }
 
   onSubmit=(): void => {
-    if (this.courseForm.valid) {
+    if (this.courseForm.valid && !this.isSubmitting) {
+      this.isSubmitting = true; // Activar estado de carga
       if (this.editMode) {
         this.updateCourse();
       } else {
@@ -142,12 +144,17 @@ export class FormCourse implements OnInit, OnChanges {
 
   private submitCourse(course: any): void {
     this.courseServices.createCourse(course).subscribe({
-      next: (): void => {
-        this.notificationService.showCourseCreated(course.nombre);
-        this.courseServices.searchCourse();
-        this.goBack.emit();
+      next: (response) => {
+        this.isSubmitting = false; // Desactivar estado de carga
+        this.notificationService.showSuccess('Curso creado exitosamente',"");
         this.searchCourse.emit();
+        this.goBack.emit();
       },
+      error: (error) => {
+        this.isSubmitting = false; // Desactivar estado de carga en caso de error
+        console.error('Error creating course:', error);
+        this.notificationService.showError('Error al crear el curso');
+      }
     });
   }
 
@@ -186,11 +193,15 @@ export class FormCourse implements OnInit, OnChanges {
 
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
+        this.isSubmitting = false; // Desactivar estado de carga
+        this.notificationService.showSuccess('Curso actualizado exitosamente', "");
         this.courseUpdated.emit();
-        this.notificationService.showSuccess('Curso actualizado', 'El curso ha sido actualizado exitosamente.');
+        this.goBack.emit();
       },
       error: (error) => {
-        this.notificationService.showError('Error', 'No se pudo actualizar el curso.');
+        this.isSubmitting = false; // Desactivar estado de carga en caso de error
+        console.error('Error updating course:', error);
+        this.notificationService.showError('Error al actualizar el curso');
       }
     });
   }
@@ -204,12 +215,15 @@ export class FormCourse implements OnInit, OnChanges {
 
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
+        this.isSubmitting = false; // Desactivar estado de carga
+        this.notificationService.showSuccess('Curso actualizado exitosamente', "");
         this.courseUpdated.emit();
-        this.notificationService.showSuccess('Curso actualizado exitosamente','El curso ha sido actualizado exitosamente.');
+        this.goBack.emit();
       },
       error: (error) => {
-        console.error('Error al actualizar curso:', error);
-        this.notificationService.showError('Error', 'No se pudo actualizar el curso.');
+        this.isSubmitting = false; // Desactivar estado de carga en caso de error
+        console.error('Error updating course:', error);
+        this.notificationService.showError('Error al actualizar el curso',"");
       }
     });
   }
