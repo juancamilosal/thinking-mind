@@ -160,7 +160,6 @@ export class FormSchool implements OnInit, OnChanges {
         const schoolName = `${school.nombre}`;
         this.notificationService.showSuccess('Colegio actualizado', `El colegio ${schoolName} ha sido actualizado exitosamente.`);
         this.schoolUpdated.emit();
-        this.goBack.emit();
       },
       error: (error): void => {
         this.isSubmitting = false;

@@ -203,10 +203,12 @@ export class FormStudent implements OnInit, OnChanges {
         next: (response) => {
           this.isSubmitting = false;
           this.studentUpdated.emit();
+          this.notificationService.showSuccess('Estudiante actualizado', 'La información del estudiante ha sido actualizada exitosamente.');
         },
         error: (error) => {
           this.isSubmitting = false;
           console.error('Error al actualizar estudiante:', error);
+          this.notificationService.showError('Error al actualizar', 'No se pudo actualizar el estudiante. Inténtalo nuevamente.');
         }
       });
     }
