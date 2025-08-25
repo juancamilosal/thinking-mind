@@ -21,6 +21,7 @@ export class FormCourse implements OnInit, OnChanges {
   @Output() courseUpdated = new EventEmitter();
   courseForm!: FormGroup;
   selectedFile: File | null = null;
+  selectedFileName: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -165,7 +166,11 @@ export class FormCourse implements OnInit, OnChanges {
 
   //Para subir archivos
   onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0];
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFileName = input.files[0].name;
+      this.selectedFile = event.target.files[0];
+    }
   }
 
   onUpload(): void {

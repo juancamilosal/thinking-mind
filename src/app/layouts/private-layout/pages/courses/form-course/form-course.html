@@ -84,12 +84,19 @@
         <label for="imagen" class="block text-sm font-semibold text-gray-700">Imagen</label>
         <input
           type="file"
-          id="imagen"
+          id="imagen-input"
           accept="image/*"
           (change)="onFileSelected($event)"
           formControlName="imagen"
-          placeholder="Adjunta una imagen"
-          class="">
+          class="hidden">
+        <label
+          for="imagen-input"
+          class="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg cursor-pointer hover:bg-blue-600 transition-colors">
+          Selecciona imagen
+        </label>
+        <span class="ml-3 text-sm text-gray-600">
+          {{ selectedFileName || 'Sin archivo seleccionado' }}
+        </span>
       </div>
 
       <!-- Botón de Submit -->
