@@ -67,7 +67,7 @@
           <app-course-card
             [courseName]="course.nombre"
             [coursePrice]="course.precio"
-            [courseCode]="course.codigo"
+            [courseCode]="course.sku"
             [courseImageUrl]="course.img_url"
             (click)="openCourseInfo(course)"
           />
@@ -81,7 +81,7 @@
     [courseId]="selectedCourse?.id ?? ''"
     [courseName]="selectedCourse?.nombre ?? ''"
     [coursePrice]="selectedCourse?.precio ?? ''"
-    [courseCode]="selectedCourse?.codigo ?? ''"
+    [courseCode]="selectedCourse?.sku ?? ''"
     (close)="closeCourseInfo()">
   </app-course-info>
   } @else if (showForm) {

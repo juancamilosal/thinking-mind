@@ -1,17 +1,26 @@
-<div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 max-w-sm mx-auto group">
-  <!-- Foto centrada del curso con overlay gradient -->
-  <div class="relative w-full h-52 overflow-hidden">
+<div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 w-full mx-auto group">
+  <!-- Foto cuadrada del curso con overlay gradient -->
+  <div class="relative w-full aspect-square overflow-hidden">
+    <!-- Mostrar imagen del servicio si existe, sino mostrar SVG por defecto -->
+    <div *ngIf="!courseImageUrl" class="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+      <!-- SVG educativo por defecto -->
+      <svg class="w-24 h-24 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+      </svg>
+    </div>
+
     <img
+      *ngIf="courseImageUrl"
       [src]="courseImageUrl"
       [alt]="courseName"
       class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-      onerror="this.src='https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop'">
+      (error)="onImageError($event)">
 
     <!-- Overlay gradient sutil -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
     <!-- Badge de precio flotante -->
-    <div class="absolute top-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+    <div class="absolute top-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
       ${{ coursePrice | number:'1.0-0' }}
     </div>
   </div>
@@ -46,7 +55,7 @@
     <!-- Botones de acción -->
     <div class="flex space-x-3">
       <!-- Botón Editar -->
-      <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+      <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
         </svg>
@@ -54,7 +63,7 @@
       </button>
 
       <!-- Botón Eliminar -->
-      <button class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+      <button class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 102 0v3a1 1 0 11-2 0V9zm4 0a1 1 0 10-2 0v3a1 1 0 102 0V9z" clip-rule="evenodd"/>
         </svg>

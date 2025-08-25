@@ -20,5 +20,12 @@ export class CourseCardComponent {
   @Input() courseName: string = 'Inglés Básico 1';
   @Input() coursePrice: string = '299000';
   @Input() courseCode: string = 'ANG-001';
-  @Input() courseImageUrl: string = 'https://hotmart.com/media/2021/09/blog-image-criar-cursos-online.jpg';
+  @Input() courseImageUrl: string = '';
+
+  onImageError(event: any) {
+    // Si hay error al cargar la imagen, ocultar el elemento img
+    event.target.style.display = 'none';
+    // El SVG se mostrará automáticamente porque courseImageUrl será falsy
+    this.courseImageUrl = '';
+  }
 }

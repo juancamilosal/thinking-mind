@@ -67,7 +67,10 @@ export class AccountReceivableFormComponent implements OnInit {
     this.isLoadingCourses = true;
     this.courseService.searchCourse().subscribe({
       next: (response) => {
-          this.courses = response.data;
+          // Ordenar los cursos alfabéticamente por nombre
+          this.courses = response.data.sort((a, b) => 
+            a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
+          );
       },
       error: (error) => {
         this.notificationService.showError('Error', 'Error al cargar los cursos');

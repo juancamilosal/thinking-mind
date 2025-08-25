@@ -31,7 +31,7 @@ export class NotificationService {
   }
 
   // Método para mostrar notificación de error
-  showError(title: string, message: string, duration?: number): void {
+  showError(title: string, message?: string, duration?: number): void {
     this.showNotification({
       type: 'error',
       title,
