@@ -55,7 +55,10 @@ export class Courses {
     this.isLoading = true;
     this.courseServices.searchCourse(searchTerm).subscribe({
       next: (data) => {
-        this.courses = data.data;
+        // Ordenar los cursos alfabéticamente por nombre
+        this.courses = data.data.sort((a, b) => 
+          a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
+        );
         this.isLoading = false;
       },
       error: (error) => {
@@ -105,7 +108,10 @@ export class Courses {
     this.courseServices.searchCourse(this.searchTerm).subscribe({
       next: (response) => {
         if (response.data) {
-          this.courses = response.data;
+          // Ordenar los cursos alfabéticamente por nombre
+          this.courses = response.data.sort((a, b) => 
+            a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
+          );
         }
       },
       error: (error) => {

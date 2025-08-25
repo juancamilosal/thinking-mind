@@ -2,7 +2,9 @@ export class Course {
   id?: string;
   nombre: string;
   precio: string;
-  sku: string;
-  imagen: File;
-  precio_inscripcion?: string;
+  codigo: string;
+  img?: string; // Campo que viene del servicio
+  img_url?: string; // URL construida para mostrar la imagen
+  sku?: string;
+  precio_inscripcion?: number;
 }
