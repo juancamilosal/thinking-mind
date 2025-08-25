@@ -3,5 +3,8 @@ export class Course {
   nombre: string;
   precio: string;
   codigo: string;
-  img_url: string;
+  img?: string; // Campo que viene del servicio
+  img_url?: string; // URL construida para mostrar la imagen
+  sku?: string;
+  precio_inscripcion?: number;
 }

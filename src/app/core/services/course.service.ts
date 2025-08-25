@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {Observable, map} from 'rxjs';
 import {ResponseAPI} from '../models/ResponseAPI';
 import {Course} from '../models/Course';
 import {environment} from '../../../environments/environment';
@@ -11,20 +11,32 @@ import {environment} from '../../../environments/environment';
 
 export class CourseService {
   apiCourse: string = environment.courses;
+  private apiUrl = 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io/';
 
   constructor(private http: HttpClient) {
   }
 
   searchCourse(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
-    if (!searchTerm) {
-      return this.http.get<ResponseAPI<Course[]>>(this.apiCourse);
-    }
+    const request = !searchTerm 
+      ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse)
+      : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { 
+          params: {
+            'filter[_or][0][nombre][_icontains]': searchTerm,
+            'filter[_or][1][codigo][_icontains]': searchTerm
+          }
+        });
 
-    const params = {
-      'filter[_or][0][nombre][_icontains]': searchTerm,
-      'filter[_or][1][codigo][_icontains]': searchTerm
-    };
-    return this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params });
+    return request.pipe(
+      map(response => {
+        if (response.data) {
+          response.data = response.data.map(course => ({
+            ...course,
+            img_url: course.img ? `${this.apiUrl}assets/${course.img}` : undefined
+          }));
+        }
+        return response;
+      })
+    );
   }
 
   createCourse(course: Course): Observable<ResponseAPI<Course>> {
