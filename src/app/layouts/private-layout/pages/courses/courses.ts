@@ -10,9 +10,11 @@ import { FormCourse } from './form-course/form-course';
 @Component({
   selector: 'app-courses',
   imports: [
-    CourseCardComponent, CourseInfoComponent,
+    CommonModule,
+    CourseCardComponent, 
+    CourseInfoComponent,
     FormCourse
-],
+  ],
   templateUrl: './courses.html',
   standalone: true
 })

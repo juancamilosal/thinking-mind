@@ -4,17 +4,18 @@ import { CommonModule } from '@angular/common';
 import { School } from '../../../../core/models/School';
 import {SchoolService} from '../../../../core/services/school.service';
 import {FormSchool} from './form-school/form-school';
+import {SchoolDetail} from './school-detail/school-detail';
 
 @Component({
   selector: 'app-schools',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormSchool],
+  imports: [CommonModule, ReactiveFormsModule, FormSchool, SchoolDetail],
   templateUrl: './schools.html'
 })
 export class Schools implements OnInit {
   schoolForm!: FormGroup;
   showForm = false;
-  showDetail = false;
+  showModal = false;
   editMode = false;
   schools: School[] = [];
   isLoading = false;
@@ -45,6 +46,13 @@ export class Schools implements OnInit {
     this.showForm = !this.showForm;
     if (!this.showForm) {
       this.schoolForm.reset();
+      this.editMode = false;
+      this.selectedSchool = null;
+    } else {
+      // Si se está abriendo el formulario y no hay selectedSchool, es para crear
+      if (!this.selectedSchool) {
+        this.editMode = false;
+      }
     }
   }
 
@@ -63,9 +71,11 @@ export class Schools implements OnInit {
   }
 
   viewSchool(school: School) {
+    console.log('viewSchool called with:', school);
     this.selectedSchool = school;
-    this.showDetail = true;
-    this.editMode = false;
+    this.showModal = true;
+    console.log('showModal set to:', this.showModal);
+    console.log('selectedSchool set to:', this.selectedSchool);
   }
 
   editSchool(school: School) {
@@ -75,12 +85,19 @@ export class Schools implements OnInit {
     this.loadSchoolData();
   }
 
-  closeDetail() {
-    this.showDetail = false;
+  closeModal() {
+    this.showModal = false;
     this.selectedSchool = null;
   }
 
   onSchoolUpdated() {
+    this.showForm = false;
+    this.editMode = false;
+    this.selectedSchool = null;
+    this.searchSchool();
+  }
+
+  onSchoolDeleted() {
     this.showForm = false;
     this.editMode = false;
     this.selectedSchool = null;
@@ -103,7 +120,9 @@ export class Schools implements OnInit {
     this.isLoading = true;
     this.schoolServices.searchSchool(searchTerm).subscribe({
       next: (data) => {
+        console.log('Schools loaded:', data);
         this.schools = data.data;
+        console.log('Schools array:', this.schools);
         this.isLoading = false;
       },
       error: (error) => {

@@ -18,6 +18,7 @@ export class AccountsReceivable implements OnInit {
   activeTab: 'pending' | 'paid' = 'pending';
   accounts: AccountReceivable[] = [];
   isLoading = false;
+  isLoadingTotals = false;
   pendingAccounts: AccountReceivable[] = [];
   paidAccounts: AccountReceivable[] = [];
   total: TotalAccounts;
@@ -55,9 +56,17 @@ export class AccountsReceivable implements OnInit {
   }
 
   totalAccounts = (): void => {
-    this.accountService.totalAccounts().subscribe(data => {
-      this.total = data.data;
-    })
+    this.isLoadingTotals = true;
+    this.accountService.totalAccounts().subscribe({
+      next: (data) => {
+        this.total = data.data;
+        this.isLoadingTotals = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar totales:', error);
+        this.isLoadingTotals = false;
+      }
+    });
   }
 
   openForm() {

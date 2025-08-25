@@ -43,7 +43,7 @@ export class FormClient implements OnInit, OnChanges {
 
   initForm=(): void => {
     this.clientForm = this.fb.group({
-      documentType: [null, Validators.required],
+      documentType: ['CC', Validators.required],
       documentNumber: [null, Validators.required],
       firstName: [null, Validators.required],
       lastName: [null, Validators.required],
