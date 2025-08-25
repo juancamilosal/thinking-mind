@@ -20,6 +20,7 @@ export class FormCourse implements OnInit, OnChanges {
   @Output() searchCourse = new EventEmitter();
   @Output() courseUpdated = new EventEmitter();
   courseForm!: FormGroup;
+  selectedFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -83,7 +84,7 @@ export class FormCourse implements OnInit, OnChanges {
       nombre: this.courseForm.value.nombre,
       precio: this.courseForm.value.precio,
       codigo: this.courseForm.value.codigo,
-      img_url: ''
+      imagen: this.courseForm.value.imagen
     }
 
     this.courseServices.createCourse(course).subscribe({
@@ -155,5 +156,21 @@ export class FormCourse implements OnInit, OnChanges {
         }
       );
     }
+  }
+
+  //Para subir archivos
+  onFileSelected(event: any): void {
+    this.selectedFile = event.target.files[0];
+  }
+
+  onUpload(): void {
+    this.courseServices.uploadFile(this.selectedFile).subscribe({
+      next: (response) => {
+        console.log('File uploaded successfully', response);
+      },
+      error: (error) => {
+        console.error('Error uploading file', error);
+      }
+    });
   }
 }

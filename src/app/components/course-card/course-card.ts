@@ -20,5 +20,5 @@ export class CourseCardComponent {
   @Input() courseName: string = 'Inglés Básico 1';
   @Input() coursePrice: string = '299000';
   @Input() courseCode: string = 'ANG-001';
-  @Input() courseImageUrl: string = 'https://hotmart.com/media/2021/09/blog-image-criar-cursos-online.jpg';
+  @Input() courseImage: File | null = null;
 }

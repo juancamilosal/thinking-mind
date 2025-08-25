@@ -1,5 +1,5 @@
 <!-- Información del Curso -->
-<div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 shadow-lg border border-blue-200 mb-8">
+<div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-xl border-l-4 border-blue-500 shadow-lg mb-8">
   <div class="flex items-center mb-6">
     <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full p-3 mr-4">
       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -9,7 +9,7 @@
     <h3 class="text-2xl font-bold text-gray-800">Información del Curso</h3>
   </div>
 
-  <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" (ngSubmit)="onUpload()" class="space-y-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Nombre -->
       <div class="space-y-3">
@@ -68,18 +68,31 @@
         }
       </div>
 
-    <!-- Botón de Submit -->
-    <div class="pt-6">
-      <!-- Botón de actualizar/registrar -->
-      <button
-        type="submit"
-        [disabled]="courseForm.invalid"
-        class="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:scale-105 shadow-lg font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-3">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-        </svg>
-        <span>{{ editMode ? 'Actualizar Curso' : 'Registrar Curso' }}</span>
-      </button>
+      <!-- Imágen -->
+      <div class="space-y-3">
+        <label for="imagen" class="block text-sm font-semibold text-gray-700">Imagen</label>
+        <input
+          type="file"
+          id="imagen"
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          formControlName="imagen"
+          placeholder="Adjunta una imagen"
+          class="">
+      </div>
+
+      <!-- Botón de Submit -->
+      <div class="pt-6">
+        <!-- Botón de actualizar/registrar -->
+        <button
+          type="submit"
+          [disabled]="courseForm.invalid"
+          class="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:scale-105 shadow-lg font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          <span>{{ editMode ? 'Actualizar Curso' : 'Registrar Curso' }}</span>
+        </button>
 
       <!-- Botón de eliminar (solo en modo edición) -->
       @if (editMode) {

@@ -34,7 +34,7 @@
         </button>
       </div>
     </div>
-
+    
     <!-- Loading Skeleton para Cursos -->
     @if (isLoading) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -68,12 +68,13 @@
             [courseName]="course.nombre"
             [coursePrice]="course.precio"
             [courseCode]="course.codigo"
-            [courseImageUrl]="course.img_url"
+            [courseImage]="course.imagen"
             (click)="openCourseInfo(course)"
           />
         }
       </div>
     }
+
   </div>
 }
   @else if (showCourseInfo){

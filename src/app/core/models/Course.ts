@@ -3,5 +3,5 @@ export class Course {
   nombre: string;
   precio: string;
   codigo: string;
-  img_url: string;
+  imagen: File;
 }
