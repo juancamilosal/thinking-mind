@@ -128,9 +128,9 @@
  }
 
 @if (showDetail) {
-  <app-client-detail 
-    [client]="selectedClient" 
-    (close)="closeDetail()" 
+  <app-client-detail
+    [client]="selectedClient"
+    (close)="closeDetail()"
     (edit)="editClient($event)">
   </app-client-detail>
 }
@@ -157,11 +157,11 @@
             <span>Regresar</span>
           </button>
         </div>
-        <app-form-client 
-          [editMode]="editMode" 
-          [clientData]="selectedClient" 
-          (goBack)="toggleForm()" 
-          (searchClient)="searchClient()" 
+        <app-form-client
+          [editMode]="editMode"
+          [clientData]="selectedClient"
+          (goBack)="toggleForm()"
+          (searchClient)="searchClient()"
           (clientUpdated)="onClientUpdated()">
         </app-form-client>
       </div>

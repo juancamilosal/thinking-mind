@@ -34,21 +34,50 @@
         </button>
       </div>
     </div>
+    
+    <!-- Loading Skeleton para Cursos -->
+    @if (isLoading) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @for (item of [1,2,3,4,5,6,7,8]; track item) {
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+            <!-- Imagen skeleton -->
+            <div class="h-48 bg-gray-200"></div>
 
-    <!-- Tarjetas de Cursos -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          @for (course of courses; track course.id) {
-            <app-course-card
-              [courseName]="course.nombre"
-              [coursePrice]="course.precio"
-              [courseCode]="course.codigo"
-              [courseImage]="course.imagen"
-              (click)="openCourseInfo(course)"
-            />
-          }
-    </div>
+            <!-- Contenido skeleton -->
+            <div class="p-6">
+              <!-- Título -->
+              <div class="h-6 bg-gray-200 rounded mb-3"></div>
+
+              <!-- Código -->
+              <div class="h-4 bg-gray-200 rounded w-24 mb-3"></div>
+
+              <!-- Precio -->
+              <div class="h-5 bg-gray-200 rounded w-20 mb-4"></div>
+
+              <!-- Botón -->
+              <div class="h-10 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Tarjetas de Cursos reales -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @for (course of courses; track course.id) {
+          <app-course-card
+            [courseName]="course.nombre"
+            [coursePrice]="course.precio"
+            [courseCode]="course.codigo"
+            [courseImage]="course.imagen"
+            (click)="openCourseInfo(course)"
+          />
+        }
+      </div>
+    }
+
   </div>
-  } @else if (showCourseInfo){
+}
+  @else if (showCourseInfo){
   <app-course-info
     [courseId]="selectedCourse?.id ?? ''"
     [courseName]="selectedCourse?.nombre ?? ''"

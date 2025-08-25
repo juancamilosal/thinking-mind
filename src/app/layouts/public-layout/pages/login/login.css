@@ -1,0 +1,137 @@
+/* Animación de entrada suave */
+.login-container {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Animación del fondo con colores del sidebar */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Efectos de hover mejorados con colores del sidebar */
+input:focus {
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Animación del botón con colores del sidebar */
+button[type="submit"] {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #14b8a6, #3b82f6, #ef4444);
+}
+
+button[type="submit"]:hover {
+  box-shadow: 0 20px 40px rgba(20, 184, 166, 0.3);
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(135deg, #0d9488, #2563eb, #dc2626);
+}
+
+/* Efecto de ondas en el botón */
+button[type="submit"]:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Animación de los elementos decorativos */
+.decorative-element {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+/* Efecto de brillo en los inputs con colores del sidebar */
+input:focus + .input-glow {
+  opacity: 1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Animación de las burbujas de fondo */
+@keyframes bubble {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* Transiciones suaves para todos los elementos */
+* {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efecto de cristal en la tarjeta */
+.glass-effect {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Gradiente personalizado para el fondo que coincide con el sidebar */
+.thinking-mind-sidebar-gradient {
+  background: linear-gradient(135deg,
+    #0f172a 0%,    /* slate-900 */
+    #1e293b 25%,   /* slate-800 */
+    #334155 50%,   /* slate-700 */
+    #475569 75%,   /* slate-600 */
+    #64748b 100%   /* slate-500 */
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* Animación de entrada para la tarjeta */
+.card-entrance {
+  animation: cardSlideIn 0.6s ease-out;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

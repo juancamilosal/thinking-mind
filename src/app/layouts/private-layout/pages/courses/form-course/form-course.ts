@@ -62,7 +62,6 @@ export class FormCourse implements OnInit, OnChanges {
   }
 
   onSubmit=(): void => {
-    console.log(this.courseForm.valid)
     if (this.courseForm.valid) {
       if (this.editMode) {
         this.updateCourse();
@@ -123,7 +122,6 @@ export class FormCourse implements OnInit, OnChanges {
       const courseToUpdate = this.courseForm.value;
       this.courseServices.updateCourse(Number(this.courseData.id), courseToUpdate).subscribe({
         next: (response) => {
-          console.log('Curso actualizado:', response);
           this.courseUpdated.emit();
         },
         error: (error) => {
@@ -149,17 +147,12 @@ export class FormCourse implements OnInit, OnChanges {
               this.courseUpdated.emit();
             },
             error: (error) => {
-              console.error('Error al eliminar curso:', error);
               this.notificationService.showError(
                 'Error al eliminar',
                 'No se pudo eliminar el curso. Inténtalo nuevamente.'
               );
             }
           });
-        },
-        () => {
-          // Callback de cancelación (opcional)
-          console.log('Eliminación cancelada');
         }
       );
     }

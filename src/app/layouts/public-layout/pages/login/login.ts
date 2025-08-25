@@ -1,33 +1,71 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import {Router} from '@angular/router';
+import {LoginService} from '../../../../core/services/login.service';
+import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  standalone: true,
+  imports: [ReactiveFormsModule, CommonModule, NotificationModalComponent],
   templateUrl: './login.html',
-  styleUrl: './login.css'
+  styleUrls: ['./login.css']
 })
-
 export class Login implements OnInit {
-  loginForm: FormGroup;
+  loginForm!: FormGroup;
+  showPassword: boolean = false;
+  isLoading: boolean = false; // Estado de carga
+  
+  // Variables para el modal de notificaciones
+  showNotification: boolean = false;
+  notificationData: NotificationData | null = null;
 
-  constructor(private fb: FormBuilder, private route: Router) {}
+  constructor(private formBuilder: FormBuilder, private router: Router, private loginServices: LoginService) {}
 
   ngOnInit(): void {
-    this.loginForm = this.fb.group({
-      email: [null, [Validators.required, Validators.email]],
-      password: [null, [Validators.required]]
-    })
+    this.loginForm = this.formBuilder.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit() {
-      if (this.loginForm.invalid) {
-        console.log('Form is invalid');
-        return;
+    if (this.loginForm.invalid || this.isLoading)
+      return;
+
+    this.isLoading = true; // Activar estado de carga
+
+    this.loginServices.login(this.loginForm.value).subscribe({
+      next: (response) => {
+        // Login exitoso
+        this.isLoading = false;
+        this.router.navigateByUrl('/private');
+      },
+      error: (error) => {
+        // Credenciales incorrectas o error de login
+        this.isLoading = false;
+        this.showErrorNotification();
       }
-      console.log('Login Form Data:', this.loginForm.value);
-      this.route.navigateByUrl('/private');
+    });
   }
 
+  showErrorNotification() {
+    this.notificationData = {
+      type: 'error',
+      title: 'Error de autenticación',
+      message: 'Las credenciales ingresadas son incorrectas. Por favor, verifica tu email y contraseña.',
+      duration: 5000 // 5 segundos
+    };
+    this.showNotification = true;
+  }
+
+  onNotificationClose() {
+    this.showNotification = false;
+    this.notificationData = null;
+  }
 }

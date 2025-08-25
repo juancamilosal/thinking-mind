@@ -11,33 +11,22 @@ import { Payments } from './layouts/private-layout/pages/payments/payments';
 
 export const routes: Routes = [
   {
-    pathMatch: 'full',
     path: '',
-    redirectTo: 'public'
+    pathMatch: 'full',
+    redirectTo: 'login'
   },
   {
-    path: 'public',
-    component: PublicLayout,
-    children: [
-      {
-        pathMatch: 'full',
-        path: '',
-        redirectTo: 'login'
-      },
-      {
-        path: 'login',
-        title: 'Thinking Mind | Login',
-        component: Login
-      },
-    ]
+    path: 'login',
+    title: 'Thinking Mind | Login',
+    component: Login
   },
   {
     path: 'private',
     component: PrivateLayout,
     children: [
       {
-        pathMatch: 'full',
         path: '',
+        pathMatch: 'full',
         redirectTo: 'clients'
       },
       {
@@ -69,7 +58,17 @@ export const routes: Routes = [
         path: 'payments',
         title: 'Thinking Mind | Pagos',
         component: Payments
+      },
+      // Ruta wildcard para rutas no encontradas dentro de private
+      {
+        path: '**',
+        redirectTo: '/login'
       }
     ]
+  },
+  // Ruta wildcard global para cualquier ruta no encontrada
+  {
+    path: '**',
+    redirectTo: '/login'
   }
 ];

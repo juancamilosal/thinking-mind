@@ -120,12 +120,12 @@ export class Schools implements OnInit {
   onSearchInputChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.searchTerm = target.value;
-    
+
     // Limpiar timeout anterior
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    
+
     // Establecer nuevo timeout para búsqueda automática
     this.searchTimeout = setTimeout(() => {
       this.searchSchool(this.searchTerm.trim() || undefined);
@@ -140,8 +140,6 @@ export class Schools implements OnInit {
       nombre_rector: this.schoolForm.value.principalName,
       celular: this.schoolForm.value.phoneNumber
     }
-    this.schoolServices.createSchool(school).subscribe(data => {
-      console.log(data.data);
-    })}
+    this.schoolServices.createSchool(school).subscribe()}
 }
 

@@ -98,4 +98,23 @@ export class Courses {
     this.searchCourse();
     this.toggleForm();
   }
+
+
+  loadCourses(): void {
+    this.isLoading = true;
+    this.courseServices.searchCourse(this.searchTerm).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.courses = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
+        // Manejar error
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
 }
