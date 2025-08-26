@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
+import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 
 @Component({
   selector: 'app-payment-record',
@@ -18,7 +19,7 @@ export class PaymentRecord implements OnInit {
   courses: Course[] = [];
   isLoadingCourses = false;
 
-  constructor(private fb: FormBuilder, private courseService: CourseService) {}
+  constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -57,16 +58,7 @@ export class PaymentRecord implements OnInit {
       this.markFormGroupTouched(this.paymentForm);
 
       const formData = this.paymentForm.value;
-
-      console.log('Payment Record Form Data:', formData);
-
-      // Here you would typically send the data to a service
-      // For now, we'll just simulate a successful submission
-      setTimeout(() => {
-        this.isSubmitting = false;
-        console.log('Form submitted successfully!');
-        // You could show a success message or redirect here
-      }, 2000);
+      this.createAccountRecord();
     } else {
       this.markFormGroupTouched(this.paymentForm);
     }
@@ -83,7 +75,6 @@ export class PaymentRecord implements OnInit {
     });
   }
 
-  // Text capitalization methods
   onGuardianFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
     this.paymentForm.get('guardianFirstName')?.setValue(value, { emitEvent: false });
@@ -130,8 +121,6 @@ export class PaymentRecord implements OnInit {
     }
   }
 
-
-
   loadCourses(): void {
     this.isLoadingCourses = true;
     this.courseService.searchCourse().subscribe({
@@ -175,5 +164,41 @@ export class PaymentRecord implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  private parseCurrencyToNumber(currencyString: string): number {
+    // Remover el símbolo de moneda, espacios y puntos de separación de miles
+    // Ejemplo: "$ 3.905.826" -> "3905826" -> 3905826
+    return parseFloat(currencyString.replace(/[^\d]/g, ''));
+  }
+
+  createAccountRecord= ()=> {
+    const coursePriceString = this.paymentForm.get('coursePrice')?.value;
+    const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
+
+    const paymentForm = {
+      cliente: {
+        tipo_documento: this.paymentForm.get('guardianDocumentType')?.value,
+        numero_documento: this.paymentForm.get('guardianDocumentNumber')?.value,
+        nombre: this.paymentForm.get('guardianFirstName')?.value,
+        apellido: this.paymentForm.get('guardianLastName')?.value,
+        celular: this.paymentForm.get('guardianPhoneNumber')?.value,
+        email: this.paymentForm.get('guardianEmail')?.value,
+        direccion: this.paymentForm.get('guardianAddress')?.value,
+      },
+      estudiante: {
+        tipo_documento: this.paymentForm.get('studentDocumentType')?.value,
+        numero_documento: this.paymentForm.get('studentDocumentNumber')?.value,
+        nombre: this.paymentForm.get('studentFirstName')?.value,
+        apellido: this.paymentForm.get('studentLastName')?.value,
+        colegio: this.paymentForm.get('studentSchool')?.value,
+      },
+      curso_id: this.paymentForm.get('selectedCourse')?.value,
+      precio: coursePriceNumber,
+      estado: 'PENDIENTE'
+    }
+    this.accountReceivableService.createAccountRecord(paymentForm).subscribe(()=>{
+      this.isSubmitting = false;
+    })
   }
 }

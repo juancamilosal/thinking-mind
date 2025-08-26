@@ -36,9 +36,10 @@ export class TotalAccounts {
 }
 
 export class PaymentReceivable {
-  id: string;
-  cliente_id: string;
-  estudiante_id: string;
+  id?: string;
+  cliente: Client | string;
+  estudiante: Student | string;
   curso_id: string;
   precio: number;
+  estado: string;
 }
