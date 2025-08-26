@@ -8,6 +8,7 @@ import { Schools } from './layouts/private-layout/pages/schools/schools';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
+import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,11 @@ export const routes: Routes = [
     path: 'login',
     title: 'Thinking Mind | Login',
     component: Login
+  },
+  {
+    path: 'payment-record',
+    title: 'Thinking Mind | Payment Registro de Pago',
+    component: PaymentRecord
   },
   {
     path: 'private',
