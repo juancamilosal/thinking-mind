@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
-import {AccountReceivable, TotalAccounts} from '../models/AccountReceivable';
+import {AccountReceivable, PaymentReceivable, PaymentRecord, TotalAccounts} from '../models/AccountReceivable';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +12,7 @@ import {AccountReceivable, TotalAccounts} from '../models/AccountReceivable';
 export class AccountReceivableService {
   private apiUrl: string = environment.accountsReceivable;
   private apiUrlTotalAccounts = environment.total_accounts
+  private apiUrlPaymentReceivable = environment.payment_record;
   constructor(private http: HttpClient) {}
 
 
@@ -87,5 +88,9 @@ export class AccountReceivableService {
 
   deleteAccountReceivable(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
+  }
+
+  createAccountRecord(paymentReceivable: PaymentReceivable): Observable<ResponseAPI<PaymentReceivable>> {
+    return this.http.post<ResponseAPI<PaymentReceivable>>(this.apiUrlPaymentReceivable, paymentReceivable);
   }
 }
