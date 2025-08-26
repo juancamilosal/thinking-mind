@@ -43,6 +43,10 @@ export class Courses {
     this.showForm = !this.showForm;
     this.editMode = false;
     this.selectedCourse = null;
+    // Consultar el servicio para actualizar la lista cuando se regresa del formulario
+    if (!this.showForm) {
+      this.searchCourse();
+    }
   }
 
   initForm() {

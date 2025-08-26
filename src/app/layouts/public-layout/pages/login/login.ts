@@ -16,7 +16,7 @@ export class Login implements OnInit {
   loginForm!: FormGroup;
   showPassword: boolean = false;
   isLoading: boolean = false; // Estado de carga
-  
+
   // Variables para el modal de notificaciones
   showNotification: boolean = false;
   notificationData: NotificationData | null = null;
@@ -42,16 +42,16 @@ export class Login implements OnInit {
 
     this.loginServices.login(this.loginForm.value).subscribe({
       next: (response) => {
-        // Login exitoso - guardar tokens
+        this.router.navigateByUrl('/private');
         if (response.data && response.data.access_token) {
           localStorage.setItem('access_token', response.data.access_token);
         }
         if (response.data && response.data.refresh_token) {
           localStorage.setItem('refresh_token', response.data.refresh_token);
         }
-        
+
         // Obtener información del usuario y guardarla en sessionStorage
-        this.loginServices.me().subscribe({
+        /*this.loginServices.me().subscribe({
           next: (userResponse) => {
             if (userResponse.data) {
               // Filtrar campos nulos antes de guardar en sessionStorage
@@ -68,7 +68,7 @@ export class Login implements OnInit {
             this.isLoading = false;
             this.router.navigateByUrl('/private');
           }
-        });
+        });*/
       },
       error: (error) => {
         // Credenciales incorrectas o error de login

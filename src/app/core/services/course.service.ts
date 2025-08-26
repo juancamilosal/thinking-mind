@@ -49,7 +49,7 @@ export class CourseService {
     return this.http.post<ResponseAPI<Course>>(this.apiCourse, course);
   }
 
-  updateCourse(id: string, course: { nombre: any; precio: any; sku: any }): Observable<ResponseAPI<Course>> {
+  updateCourse(id: string, course: any): Observable<ResponseAPI<Course>> {
     return this.http.patch<ResponseAPI<Course>>(`${this.apiCourse}/${id}`, course);
   }
 
