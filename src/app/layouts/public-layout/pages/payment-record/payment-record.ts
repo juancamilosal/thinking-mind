@@ -10,11 +10,12 @@ import { PaymentConfirmationComponent } from './payment-confirmation/payment-con
 import {Client} from '../../../../core/models/Clients';
 import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
+import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
 @Component({
   selector: 'app-payment-record',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PaymentConfirmationComponent],
+  imports: [CommonModule, ReactiveFormsModule, PaymentConfirmationComponent, NotificationModalComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })
@@ -39,6 +40,10 @@ export class PaymentRecord implements OnInit {
   showPaymentsModal = false;
   selectedAccountData: any = null;
   selectedAccountPayments: any[] = [];
+
+  // Variables para el modal de notificaciones
+  showNotification: boolean = false;
+  notificationData: NotificationData | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -408,10 +413,40 @@ export class PaymentRecord implements OnInit {
       next: (response: any) => {
         this.isSubmitting = false;
         this.showConfirmation = false;
+        // Mostrar notificación de éxito
+        this.showSuccessNotification();
+        // Buscar nuevamente para actualizar la tabla
+        this.searchClientIfReady();
       },
       error: (error) => {
         this.isSubmitting = false;
+        this.showErrorNotification();
       }
     })
+  }
+
+  showSuccessNotification() {
+    this.notificationData = {
+      type: 'success',
+      title: 'Curso registrado con éxito',
+      message: 'El curso ha sido registrado exitosamente. Puedes dirigirte a la tabla de Cursos Registrados y realizar el pago.',
+      duration: 5000 // 5 segundos
+    };
+    this.showNotification = true;
+  }
+
+  showErrorNotification() {
+    this.notificationData = {
+      type: 'error',
+      title: 'Error al registrar curso',
+      message: 'No se pudo registrar el curso. Por favor, inténtalo nuevamente.',
+      duration: 5000 // 5 segundos
+    };
+    this.showNotification = true;
+  }
+
+  onNotificationClose() {
+    this.showNotification = false;
+    this.notificationData = null;
   }
 }
