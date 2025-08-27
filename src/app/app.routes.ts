@@ -9,6 +9,7 @@ import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
+import { Reports } from './layouts/private-layout/pages/reports/reports';
 
 export const routes: Routes = [
   {
@@ -64,6 +65,11 @@ export const routes: Routes = [
         path: 'payments',
         title: 'Thinking Mind | Pagos',
         component: Payments
+      },
+      {
+        path: 'reports',
+        title: 'Thinking Mind | Reportes',
+        component: Reports
       },
       // Ruta wildcard para rutas no encontradas dentro de private
       {
