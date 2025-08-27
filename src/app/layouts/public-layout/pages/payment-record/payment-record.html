@@ -386,19 +386,27 @@
                   </thead>
                   <tbody class="divide-y divide-emerald-100">
                     @for (course of cliente; track course.id; let i = $index) {
-                      <tr class="hover:bg-emerald-50 transition-colors duration-200">
-                        <td class="px-6 py-4 text-sm font-medium text-emerald-900">{{ course.cuentas_cobrar[i].curso_id.nombre}}</td>
-                        <td class="px-6 py-4 text-sm text-emerald-800">{{ course.estudiantes[i].nombre}} {{ course.estudiantes[i].apellido}}</td>
-                        <td class="px-6 py-4 text-sm text-emerald-800">{{ course.cuentas_cobrar[i].monto}}</td>
-                        <td class="px-6 py-4 text-sm font-semibold text-emerald-900">{{ course.cuentas_cobrar[i].saldo}}</td>
-                        <td class="px-6 py-4 text-center">
-                          <button
-                            (click)="onPayCourse(course)"
-                            class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                            Pagar
-                          </button>
-                        </td>
-                      </tr>
+                      @for(account of cliente[i].cuentas_cobrar; track account.id; let i = $index) {
+                        <tr class="hover:bg-emerald-50 transition-colors duration-200">
+                          <td
+                            class="px-6 py-4 text-sm font-medium text-emerald-900">{{ account.curso_id.nombre }}
+                          </td>
+                          <td
+                            class="px-6 py-4 text-sm text-emerald-800">{{ course.estudiantes[i].nombre }} {{ course.estudiantes[i].apellido }}
+                          </td>
+                          <td class="px-6 py-4 text-sm text-emerald-800">{{ course.cuentas_cobrar[i].monto }}</td>
+                          <td
+                            class="px-6 py-4 text-sm font-semibold text-emerald-900">{{ course.cuentas_cobrar[i].saldo }}
+                          </td>
+                          <td class="px-6 py-4 text-center">
+                            <button
+                              (click)="onPayCourse(course)"
+                              class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                              Pagar
+                            </button>
+                          </td>
+                        </tr>
+                      }
                     }
                   </tbody>
                 </table>
