@@ -89,8 +89,8 @@ export class AccountReceivableService {
   deleteAccountReceivable(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }
+  createAccountRecord(paymentReceivable: PaymentReceivable): Observable<ResponseAPI<any>> {
 
-  createAccountRecord(paymentReceivable: PaymentReceivable): Observable<ResponseAPI<PaymentReceivable>> {
-    return this.http.post<ResponseAPI<PaymentReceivable>>(this.apiUrlPaymentReceivable, paymentReceivable);
+    return this.http.post<ResponseAPI<any>>(this.apiUrlPaymentReceivable , paymentReceivable);
   }
 }

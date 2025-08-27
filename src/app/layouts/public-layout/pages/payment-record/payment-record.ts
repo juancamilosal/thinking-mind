@@ -5,10 +5,13 @@ import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
+import { ClientService } from '../../../../core/services/client.service';
+import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
 
 @Component({
   selector: 'app-payment-record',
-  imports: [CommonModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, PaymentConfirmationComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })
@@ -18,13 +21,16 @@ export class PaymentRecord implements OnInit {
   isSubmitting = false;
   courses: Course[] = [];
   isLoadingCourses = false;
+  showConfirmation = false;
+  isSearchingClient = false;
 
-  constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService) {}
+  constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService, private clientService: ClientService) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
   }
+
 
   initForm(): void {
     this.paymentForm = this.fb.group({
@@ -52,13 +58,7 @@ export class PaymentRecord implements OnInit {
 
   onSubmit(): void {
     if (this.paymentForm.valid) {
-      this.isSubmitting = true;
-
-      // Mark all fields as touched to show validation errors
-      this.markFormGroupTouched(this.paymentForm);
-
-      const formData = this.paymentForm.value;
-      this.createAccountRecord();
+      this.showConfirmation = true;
     } else {
       this.markFormGroupTouched(this.paymentForm);
     }
@@ -98,6 +98,66 @@ export class PaymentRecord implements OnInit {
   onStudentSchoolChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
     this.paymentForm.get('studentSchool')?.setValue(value, { emitEvent: false });
+  }
+
+  onGuardianDocumentTypeChange(event: any): void {
+    this.searchClientIfReady();
+  }
+
+  onGuardianDocumentNumberChange(event: any): void {
+    this.searchClientIfReady();
+  }
+
+  private searchClientIfReady(): void {
+    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+
+    if (documentType && documentNumber && documentNumber.length >= 6) {
+      this.searchClientPayment(documentType, documentNumber);
+    } else {
+      // Limpiar campos si no hay suficiente información
+      this.clearGuardianFields();
+    }
+  }
+
+  private searchClientPayment(documentType: string, documentNumber: string): void {
+    this.isSearchingClient = true;
+
+    this.clientService.searchClientPayment(documentType, documentNumber).subscribe({
+      next: (response) => {
+        this.isSearchingClient = false;
+        if (response.data && response.data.length > 0) {
+          const client = response.data[0];
+          this.fillGuardianFields(client);
+        } else {
+          this.clearGuardianFields();
+        }
+      },
+      error: (error) => {
+        this.isSearchingClient = false;
+        this.clearGuardianFields();
+      }
+    });
+  }
+
+  private fillGuardianFields(client: any): void {
+    this.paymentForm.patchValue({
+      guardianFirstName: client.nombre || '',
+      guardianLastName: client.apellido || '',
+      guardianPhoneNumber: client.celular || '',
+      guardianEmail: client.email || '',
+      guardianAddress: client.direccion || ''
+    });
+  }
+
+  private clearGuardianFields(): void {
+    this.paymentForm.patchValue({
+      guardianFirstName: '',
+      guardianLastName: '',
+      guardianPhoneNumber: '',
+      guardianEmail: '',
+      guardianAddress: ''
+    });
   }
 
   private capitalizeText(text: string): string {
@@ -172,6 +232,15 @@ export class PaymentRecord implements OnInit {
     return parseFloat(currencyString.replace(/[^\d]/g, ''));
   }
 
+  goBackToForm(): void {
+    this.showConfirmation = false;
+  }
+
+  confirmAndSubmit(): void {
+    this.isSubmitting = true;
+    this.createAccountRecord();
+  }
+
   createAccountRecord= ()=> {
     const coursePriceString = this.paymentForm.get('coursePrice')?.value;
     const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
@@ -197,8 +266,21 @@ export class PaymentRecord implements OnInit {
       precio: coursePriceNumber,
       estado: 'PENDIENTE'
     }
-    this.accountReceivableService.createAccountRecord(paymentForm).subscribe(()=>{
-      this.isSubmitting = false;
+    this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
+      next: (response: any) => {
+        this.isSubmitting = false;
+        console.log('Registro creado exitosamente:', response);
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          const clienteData = response.data[0];
+          const cuentasPorCobrar = clienteData.cuentas_cobrar;
+
+        }
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        console.error('Error al crear el registro:', error);
+        // Aquí puedes agregar lógica para manejar errores
+      }
     })
   }
 }
