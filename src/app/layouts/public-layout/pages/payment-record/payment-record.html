@@ -390,8 +390,11 @@
                           <td
                             class="px-6 py-4 text-sm font-medium text-emerald-900">{{ courseData.courseName }}
                           </td>
-                          <td
-                            class="px-6 py-4 text-sm text-emerald-800">{{ courseData.studentName }}
+                          <td class="px-6 py-4 text-sm text-emerald-800">
+                            <div class="flex flex-col">
+                              <span class="font-medium">{{ courseData.studentName }}</span>
+                              <span class="text-xs text-emerald-600 mt-1">{{ courseData.studentDocumentType }}: {{ courseData.studentDocumentNumber }}</span>
+                            </div>
                           </td>
                           <td class="px-6 py-4 text-sm text-emerald-800">{{ courseData.coursePrice }}</td>
                           <td
@@ -450,6 +453,7 @@
                 <select
                   id="studentDocumentType"
                   formControlName="studentDocumentType"
+                  (input)="onStudentDocumentTypeChange($event)"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                   <option value="">Seleccione un tipo de documento</option>
                   @for (type of DOCUMENT_TYPE; track type.id) {
@@ -479,6 +483,7 @@
                   placeholder="Ingrese el número de documento"
                   pattern="[0-9]*"
                   (keypress)="onlyNumbers($event)"
+                  (blur)="onStudentDocumentNumberChange($event)"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                 @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['required']) {
                    <p class="text-red-500 text-sm mt-2 flex items-center">

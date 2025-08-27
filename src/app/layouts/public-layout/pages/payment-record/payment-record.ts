@@ -8,6 +8,8 @@ import {AccountReceivableService} from '../../../../core/services/account-receiv
 import { ClientService } from '../../../../core/services/client.service';
 import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
 import {Client} from '../../../../core/models/Clients';
+import {StudentService} from '../../../../core/services/student.service';
+import {Student} from '../../../../core/models/Student';
 
 @Component({
   selector: 'app-payment-record',
@@ -30,9 +32,16 @@ export class PaymentRecord implements OnInit {
   clientData: any = null;
   registeredCourses: any[] = [];
   cliente: Client[];
+  student: Student[];
   showAddCourseForm = false;
 
-  constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService, private clientService: ClientService) {}
+  constructor(
+    private fb: FormBuilder,
+    private courseService: CourseService,
+    private accountReceivableService: AccountReceivableService,
+    private clientService: ClientService,
+    private studentService: StudentService,
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -116,6 +125,14 @@ export class PaymentRecord implements OnInit {
     this.searchClientIfReady();
   }
 
+  onStudentDocumentTypeChange(event: any): void {
+    this.searchStudentIfReady();
+  }
+
+  onStudentDocumentNumberChange(event: any): void {
+    this.searchStudentIfReady();
+  }
+
   private searchClientIfReady(): void {
     const documentType = this.paymentForm.get('guardianDocumentType')?.value;
     const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
@@ -124,6 +141,15 @@ export class PaymentRecord implements OnInit {
       this.searchClientPayment(documentType, documentNumber);
     } else {
       this.clearGuardianFields();
+    }
+  }
+
+  private searchStudentIfReady(): void {
+    const documentType = this.paymentForm.get('studentDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('studentDocumentNumber')?.value;
+
+    if (documentType && documentNumber && documentNumber.length >= 6) {
+      this.searchStudentPayment(documentType, documentNumber);
     }
   }
 
@@ -147,6 +173,19 @@ export class PaymentRecord implements OnInit {
     });
   }
 
+  private searchStudentPayment(documentType: string, documentNumber: string): void {
+
+      this.studentService.searchStudentPayment(documentType, documentNumber).subscribe(data => {
+        this.student = data.data;
+
+        if(data.data.length > 0){
+          this.fillStudentFields(this.student[0]);
+        } else {
+          this.clearStudentFields();
+        }
+      })
+  }
+
   private fillGuardianFields(client: any): void {
     this.paymentForm.patchValue({
       guardianFirstName: client.nombre || '',
@@ -154,6 +193,14 @@ export class PaymentRecord implements OnInit {
       guardianPhoneNumber: client.celular || '',
       guardianEmail: client.email || '',
       guardianAddress: client.direccion || ''
+    });
+  }
+
+  private fillStudentFields(student: any): void {
+    this.paymentForm.patchValue({
+      studentFirstName: student.nombre || '',
+      studentLastName: student.apellido || '',
+      studentSchool: student.colegio || '',
     });
   }
 
@@ -167,6 +214,15 @@ export class PaymentRecord implements OnInit {
     });
   }
 
+  private clearStudentFields(): void {
+    this.paymentForm.patchValue({
+      studentFirstName: '',
+      studentLastName: '',
+      studentSchool: '',
+    });
+  }
+
+
   private prepareRegisteredCoursesTable(client: any): void {
     this.registeredCourses = [];
     if (client.cuentas_cobrar && client.estudiantes) {
@@ -176,6 +232,8 @@ export class PaymentRecord implements OnInit {
           id: cuenta.id,
           courseName: cuenta.curso_id?.nombre || 'N/A',
           studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
+          studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
+          studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
           coursePrice: this.formatCurrency(parseFloat(cuenta.curso_id?.precio || '0')),
           balance: this.formatCurrency(cuenta.saldo || 0), // Saldo es lo que ya se ha pagado (Total Abonado)
           status: cuenta.estado,
