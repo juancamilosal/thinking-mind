@@ -170,17 +170,20 @@ export class PaymentRecord implements OnInit {
       this.cliente = data.data;
       if(data.data.length > 0){
         const client = data.data[0];
-        this.clientData = client; // Store client data for payments modal
+        this.clientData = client;
         this.fillGuardianFields(client);
         if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
           this.prepareRegisteredCoursesTable(client);
+          this.showRegisteredCourses = true;
+        } else {
+          this.registeredCourses = [];
+          this.showRegisteredCourses = false;
         }
-
-        this.showRegisteredCourses = true;
       } else {
         this.clearGuardianFields();
         this.showRegisteredCourses = false;
         this.clientData = null;
+        this.registeredCourses = [];
       }
     });
   }
