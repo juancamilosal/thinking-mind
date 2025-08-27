@@ -30,6 +30,7 @@ export class PaymentRecord implements OnInit {
   clientData: any = null;
   registeredCourses: any[] = [];
   cliente: Client[];
+  showAddCourseForm = false;
 
   constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService, private clientService: ClientService) {}
 
@@ -202,6 +203,24 @@ export class PaymentRecord implements OnInit {
   onPayCourse(courseData: any): void {
     // Logic for payment will be implemented here
     console.log('Paying for course:', courseData);
+  }
+
+  showAddCourseFormView(): void {
+    this.showAddCourseForm = true;
+    // Clear student and course fields for new registration
+    this.paymentForm.patchValue({
+      studentDocumentType: 'TI',
+      studentDocumentNumber: '',
+      studentFirstName: '',
+      studentLastName: '',
+      studentSchool: '',
+      selectedCourse: '',
+      coursePrice: ''
+    });
+  }
+
+  backToTableView(): void {
+    this.showAddCourseForm = false;
   }
 
   private capitalizeText(text: string): string {
