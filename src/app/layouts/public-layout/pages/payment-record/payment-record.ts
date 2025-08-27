@@ -24,6 +24,11 @@ export class PaymentRecord implements OnInit {
   showConfirmation = false;
   isSearchingClient = false;
 
+  // New properties for registered courses table
+  showRegisteredCourses = false;
+  clientData: any = null;
+  registeredCourses: any[] = [];
+
   constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService, private clientService: ClientService) {}
 
   ngOnInit(): void {
@@ -115,7 +120,6 @@ export class PaymentRecord implements OnInit {
     if (documentType && documentNumber && documentNumber.length >= 6) {
       this.searchClientPayment(documentType, documentNumber);
     } else {
-      // Limpiar campos si no hay suficiente información
       this.clearGuardianFields();
     }
   }
@@ -126,16 +130,29 @@ export class PaymentRecord implements OnInit {
     this.clientService.searchClientPayment(documentType, documentNumber).subscribe({
       next: (response) => {
         this.isSearchingClient = false;
-        if (response.data && response.data.length > 0) {
-          const client = response.data[0];
-          this.fillGuardianFields(client);
+        if (response) {
+          const client: any = response;
+          this.clientData = client;
+          if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
+            console.log('Client has cuentas_cobrar, showing table');
+            this.fillGuardianFields(client);
+            this.prepareRegisteredCoursesTable(client);
+            this.showRegisteredCourses = true;
+          } else {
+            this.fillGuardianFields(client);
+            this.showRegisteredCourses = true;
+          }
         } else {
+          console.log('No client data found');
           this.clearGuardianFields();
+          this.showRegisteredCourses = false;
         }
       },
       error: (error) => {
+        console.error('Error in searchClientPayment:', error);
         this.isSearchingClient = false;
         this.clearGuardianFields();
+        this.showRegisteredCourses = false;
       }
     });
   }
@@ -158,6 +175,33 @@ export class PaymentRecord implements OnInit {
       guardianEmail: '',
       guardianAddress: ''
     });
+  }
+
+  private prepareRegisteredCoursesTable(client: any): void {
+    this.registeredCourses = [];
+
+    if (client.cuentas_cobrar && client.estudiantes) {
+      client.cuentas_cobrar.forEach((cuenta: any) => {
+        const student = client.estudiantes.find((est: any) => est.acudiente === client.id);
+
+        const courseData = {
+          id: cuenta.id,
+          courseName: cuenta.curso_id?.nombre || 'N/A',
+          studentName: student ? `${student.nombre} ${student.apellido}` : 'N/A',
+          coursePrice: this.formatCurrency(parseFloat(cuenta.curso_id?.precio || '0')),
+          balance: this.formatCurrency(cuenta.monto || 0),
+          status: cuenta.estado,
+          courseId: cuenta.curso_id?.id
+        };
+
+        this.registeredCourses.push(courseData);
+      });
+    }
+  }
+
+  onPayCourse(courseData: any): void {
+    // Logic for payment will be implemented here
+    console.log('Paying for course:', courseData);
   }
 
   private capitalizeText(text: string): string {
@@ -269,7 +313,6 @@ export class PaymentRecord implements OnInit {
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
         this.isSubmitting = false;
-        console.log('Registro creado exitosamente:', response);
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const clienteData = response.data[0];
           const cuentasPorCobrar = clienteData.cuentas_cobrar;
@@ -278,8 +321,6 @@ export class PaymentRecord implements OnInit {
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error al crear el registro:', error);
-        // Aquí puedes agregar lógica para manejar errores
       }
     })
   }

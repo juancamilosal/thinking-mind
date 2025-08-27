@@ -53,8 +53,8 @@ export class ClientService {
 
   searchClientPayment(documentType: string, documentNumber: string): Observable<ResponseAPI<Client[]>>{
     const params = {
-      'filter[tipo_documento][_eq]': documentType,
-      'filter[numero_documento][_eq]': documentNumber,
+      'tipo_documento': documentType,
+      'numero_documento': documentNumber,
     };
     return this.http.get<ResponseAPI<Client[]>>(this.apiSearchClientPayment , { params });
   }
