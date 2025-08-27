@@ -35,6 +35,11 @@ export class PaymentRecord implements OnInit {
   student: Student[];
   showAddCourseForm = false;
 
+  // Properties for payments modal
+  showPaymentsModal = false;
+  selectedAccountData: any = null;
+  selectedAccountPayments: any[] = [];
+
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
@@ -160,6 +165,7 @@ export class PaymentRecord implements OnInit {
       this.cliente = data.data;
       if(data.data.length > 0){
         const client = data.data[0];
+        this.clientData = client; // Store client data for payments modal
         this.fillGuardianFields(client);
         if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
           this.prepareRegisteredCoursesTable(client);
@@ -169,6 +175,7 @@ export class PaymentRecord implements OnInit {
       } else {
         this.clearGuardianFields();
         this.showRegisteredCourses = false;
+        this.clientData = null;
       }
     });
   }
@@ -235,6 +242,7 @@ export class PaymentRecord implements OnInit {
           studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
           studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
           coursePrice: this.formatCurrency(parseFloat(cuenta.curso_id?.precio || '0')),
+          coursePriceNumber: parseFloat(cuenta.curso_id?.precio || '0'), // Valor numérico para el pipe
           balance: this.formatCurrency(cuenta.saldo || 0), // Saldo es lo que ya se ha pagado (Total Abonado)
           status: cuenta.estado,
           courseId: cuenta.curso_id?.id
@@ -246,6 +254,27 @@ export class PaymentRecord implements OnInit {
 
   onPayCourse(courseData: any): void {
     console.log('Paying for course:', courseData);
+  }
+
+  onViewPayments(courseData: any): void {
+
+    const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) =>
+      cuenta.id === courseData.id
+    );
+
+    if (account) {
+      this.selectedAccountData = courseData;
+      this.selectedAccountPayments = account.pagos || [];
+      this.showPaymentsModal = true;
+    } else {
+      console.error('No se encontró la cuenta para mostrar los pagos');
+    }
+  }
+
+  closePaymentsModal(): void {
+    this.showPaymentsModal = false;
+    this.selectedAccountData = null;
+    this.selectedAccountPayments = [];
   }
 
   showAddCourseFormView(): void {

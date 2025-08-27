@@ -409,11 +409,20 @@
                             </span>
                           </td>
                           <td class="px-6 py-4 text-center">
-                            <button
-                              (click)="onPayCourse(courseData)"
-                              class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                              Pagar
-                            </button>
+                            <div class="flex gap-2 justify-center">
+                              <button
+                                type="button"
+                                (click)="onPayCourse(courseData)"
+                                class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                                Pagar
+                              </button>
+                              <button
+                                type="button"
+                                (click)="onViewPayments(courseData)"
+                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                                Ver Pagos
+                              </button>
+                            </div>
                           </td>
                         </tr>
                     }
@@ -755,3 +764,95 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para Ver Pagos -->
+@if (showPaymentsModal) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <!-- Header del Modal -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xl font-semibold">Historial de Pagos</h3>
+          <button
+            (click)="closePaymentsModal()"
+            class="text-white hover:text-gray-200 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        @if (selectedAccountData) {
+          <div class="mt-2 text-sm opacity-90">
+            <p><strong>Estudiante:</strong> {{ selectedAccountData.studentName }}</p>
+            <p><strong>Curso:</strong> {{ selectedAccountData.courseName }}</p>
+            <p><strong>Monto Total:</strong> ${{ selectedAccountData.coursePriceNumber | number }}</p>
+            <p><strong>Total Abonado:</strong> {{ selectedAccountData.balance }}</p>
+            <p><strong>Estado:</strong> {{ selectedAccountData.status }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
+          <div class="space-y-4">
+            @for (payment of selectedAccountPayments; track payment.id) {
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">ID del Pago</label>
+                    <p class="text-sm text-gray-900 font-mono">{{ payment.id }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">Valor</label>
+                    <p class="text-lg font-semibold text-green-600">${{ payment.valor | number }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">Fecha de Pago</label>
+                    <p class="text-sm text-gray-900">{{ payment.fecha_pago | date:'dd/MM/yyyy HH:mm' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">Método de Pago</label>
+                    <p class="text-sm text-gray-900">{{ payment.metodo_pago }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">Pagador</label>
+                    <p class="text-sm text-gray-900">{{ payment.pagador }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-600">Número de Aprobación</label>
+                    <p class="text-sm text-gray-900 font-mono">{{ payment.numero_aprobacion }}</p>
+                  </div>
+                  <div class="md:col-span-2 lg:col-span-3">
+                    <label class="text-sm font-medium text-gray-600">Estado</label>
+                    <span
+                      [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' : 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold'">
+                      {{ payment.estado }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No hay pagos registrados</h3>
+            <p class="mt-1 text-sm text-gray-500">Esta cuenta no tiene pagos asociados.</p>
+          </div>
+        }
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="bg-gray-50 px-6 py-4 flex justify-end">
+        <button
+          (click)="closePaymentsModal()"
+          class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}
