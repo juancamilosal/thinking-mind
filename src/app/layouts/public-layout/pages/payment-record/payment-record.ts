@@ -7,6 +7,7 @@ import { Course } from '../../../../core/models/Course';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 import { ClientService } from '../../../../core/services/client.service';
 import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
+import {Client} from '../../../../core/models/Clients';
 
 @Component({
   selector: 'app-payment-record',
@@ -28,6 +29,7 @@ export class PaymentRecord implements OnInit {
   showRegisteredCourses = false;
   clientData: any = null;
   registeredCourses: any[] = [];
+  cliente: Client[];
 
   constructor(private fb: FormBuilder, private courseService: CourseService, private accountReceivableService: AccountReceivableService, private clientService: ClientService) {}
 
@@ -126,31 +128,21 @@ export class PaymentRecord implements OnInit {
 
   private searchClientPayment(documentType: string, documentNumber: string): void {
     this.isSearchingClient = true;
-
-    this.clientService.searchClientPayment(documentType, documentNumber).subscribe({
-      next: (response) => {
-        this.isSearchingClient = false;
-        if (response) {
-          const client: any = response;
-          this.clientData = client;
-          if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
-            console.log('Client has cuentas_cobrar, showing table');
-            this.fillGuardianFields(client);
-            this.prepareRegisteredCoursesTable(client);
-            this.showRegisteredCourses = true;
-          } else {
-            this.fillGuardianFields(client);
-            this.showRegisteredCourses = true;
-          }
-        } else {
-          console.log('No client data found');
-          this.clearGuardianFields();
-          this.showRegisteredCourses = false;
+    this.clientService.searchClientPayment(documentType, documentNumber).subscribe(data => {
+      this.isSearchingClient = false;
+      this.cliente = data.data;
+      if(data.data.length > 0){
+        // Automatically fill guardian fields when data is found
+        const client = data.data[0];
+        this.fillGuardianFields(client);
+        
+        // Check if client has accounts receivable and prepare table
+        if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
+          this.prepareRegisteredCoursesTable(client);
         }
-      },
-      error: (error) => {
-        console.error('Error in searchClientPayment:', error);
-        this.isSearchingClient = false;
+        
+        this.showRegisteredCourses = true;
+      } else {
         this.clearGuardianFields();
         this.showRegisteredCourses = false;
       }
@@ -178,11 +170,17 @@ export class PaymentRecord implements OnInit {
   }
 
   private prepareRegisteredCoursesTable(client: any): void {
+    console.log('Preparing registered courses table with client:', client);
     this.registeredCourses = [];
 
     if (client.cuentas_cobrar && client.estudiantes) {
-      client.cuentas_cobrar.forEach((cuenta: any) => {
+      console.log('Found cuentas_cobrar:', client.cuentas_cobrar);
+      console.log('Found estudiantes:', client.estudiantes);
+
+      client.cuentas_cobrar.forEach((cuenta: any, index: number) => {
+        console.log(`Processing cuenta ${index}:`, cuenta);
         const student = client.estudiantes.find((est: any) => est.acudiente === client.id);
+        console.log('Found student for cuenta:', student);
 
         const courseData = {
           id: cuenta.id,
@@ -194,8 +192,13 @@ export class PaymentRecord implements OnInit {
           courseId: cuenta.curso_id?.id
         };
 
+        console.log('Created courseData:', courseData);
         this.registeredCourses.push(courseData);
       });
+
+      console.log('Final registeredCourses array:', this.registeredCourses);
+    } else {
+      console.log('No cuentas_cobrar or estudiantes found');
     }
   }
 
@@ -271,8 +274,6 @@ export class PaymentRecord implements OnInit {
   }
 
   private parseCurrencyToNumber(currencyString: string): number {
-    // Remover el símbolo de moneda, espacios y puntos de separación de miles
-    // Ejemplo: "$ 3.905.826" -> "3905826" -> 3905826
     return parseFloat(currencyString.replace(/[^\d]/g, ''));
   }
 

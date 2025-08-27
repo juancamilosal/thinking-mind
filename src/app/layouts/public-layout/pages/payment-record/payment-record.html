@@ -380,17 +380,17 @@
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Curso</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Curso</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo</th>
+                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Acción</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-emerald-100">
-                    @for (course of registeredCourses; track course.id) {
+                    @for (course of cliente; track course.id; let i = $index) {
                       <tr class="hover:bg-emerald-50 transition-colors duration-200">
-                        <td class="px-6 py-4 text-sm font-medium text-emerald-900">{{ course.courseName }}</td>
-                        <td class="px-6 py-4 text-sm text-emerald-800">{{ course.studentName }}</td>
-                        <td class="px-6 py-4 text-sm text-emerald-800">{{ course.coursePrice }}</td>
-                        <td class="px-6 py-4 text-sm font-semibold text-emerald-900">{{ course.balance }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-emerald-900">{{ course.cuentas_cobrar[i].curso_id.nombre}}</td>
+                        <td class="px-6 py-4 text-sm text-emerald-800">{{ course.estudiantes[i].nombre}} {{ course.estudiantes[i].apellido}}</td>
+                        <td class="px-6 py-4 text-sm text-emerald-800">{{ course.cuentas_cobrar[i].monto}}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-emerald-900">{{ course.cuentas_cobrar[i].saldo}}</td>
                         <td class="px-6 py-4 text-center">
                           <button
                             (click)="onPayCourse(course)"
