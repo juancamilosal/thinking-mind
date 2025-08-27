@@ -132,15 +132,12 @@ export class PaymentRecord implements OnInit {
       this.isSearchingClient = false;
       this.cliente = data.data;
       if(data.data.length > 0){
-        // Automatically fill guardian fields when data is found
         const client = data.data[0];
         this.fillGuardianFields(client);
-        
-        // Check if client has accounts receivable and prepare table
         if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
           this.prepareRegisteredCoursesTable(client);
         }
-        
+
         this.showRegisteredCourses = true;
       } else {
         this.clearGuardianFields();
@@ -284,6 +281,11 @@ export class PaymentRecord implements OnInit {
   confirmAndSubmit(): void {
     this.isSubmitting = true;
     this.createAccountRecord();
+    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+    setTimeout(()=>{
+      this.searchClientPayment(documentType, documentNumber);
+    },500)
   }
 
   createAccountRecord= ()=> {
@@ -314,14 +316,11 @@ export class PaymentRecord implements OnInit {
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
         this.isSubmitting = false;
-        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          const clienteData = response.data[0];
-          const cuentasPorCobrar = clienteData.cuentas_cobrar;
-
-        }
+        this.showConfirmation = false;
       },
       error: (error) => {
         this.isSubmitting = false;
+        console.error('Error creating account record:', error);
       }
     })
   }
