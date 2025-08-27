@@ -168,46 +168,30 @@ export class PaymentRecord implements OnInit {
   }
 
   private prepareRegisteredCoursesTable(client: any): void {
-    console.log('Preparing registered courses table with client:', client);
     this.registeredCourses = [];
-
     if (client.cuentas_cobrar && client.estudiantes) {
-      console.log('Found cuentas_cobrar:', client.cuentas_cobrar);
-      console.log('Found estudiantes:', client.estudiantes);
-
       client.cuentas_cobrar.forEach((cuenta: any, index: number) => {
-        console.log(`Processing cuenta ${index}:`, cuenta);
-        const student = client.estudiantes.find((est: any) => est.acudiente === client.id);
-        console.log('Found student for cuenta:', student);
-
+        const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
         const courseData = {
           id: cuenta.id,
           courseName: cuenta.curso_id?.nombre || 'N/A',
-          studentName: student ? `${student.nombre} ${student.apellido}` : 'N/A',
+          studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
           coursePrice: this.formatCurrency(parseFloat(cuenta.curso_id?.precio || '0')),
-          balance: this.formatCurrency(cuenta.monto || 0),
+          balance: this.formatCurrency(cuenta.saldo || 0), // Saldo es lo que ya se ha pagado (Total Abonado)
           status: cuenta.estado,
           courseId: cuenta.curso_id?.id
         };
-
-        console.log('Created courseData:', courseData);
         this.registeredCourses.push(courseData);
       });
-
-      console.log('Final registeredCourses array:', this.registeredCourses);
-    } else {
-      console.log('No cuentas_cobrar or estudiantes found');
     }
   }
 
   onPayCourse(courseData: any): void {
-    // Logic for payment will be implemented here
     console.log('Paying for course:', courseData);
   }
 
   showAddCourseFormView(): void {
     this.showAddCourseForm = true;
-    // Clear student and course fields for new registration
     this.paymentForm.patchValue({
       studentDocumentType: 'TI',
       studentDocumentNumber: '',
@@ -300,6 +284,7 @@ export class PaymentRecord implements OnInit {
   confirmAndSubmit(): void {
     this.isSubmitting = true;
     this.createAccountRecord();
+    this.showAddCourseForm = false;
     const documentType = this.paymentForm.get('guardianDocumentType')?.value;
     const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
     setTimeout(()=>{
@@ -339,7 +324,6 @@ export class PaymentRecord implements OnInit {
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error creating account record:', error);
       }
     })
   }

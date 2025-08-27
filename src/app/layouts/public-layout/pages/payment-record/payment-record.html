@@ -385,33 +385,31 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-emerald-100">
-                    @for (course of cliente; track course.id; let i = $index) {
-                      @for(account of cliente[i].cuentas_cobrar; track account.id; let i = $index) {
+                    @for (courseData of registeredCourses; track courseData.id) {
                         <tr class="hover:bg-emerald-50 transition-colors duration-200">
                           <td
-                            class="px-6 py-4 text-sm font-medium text-emerald-900">{{ account.curso_id.nombre }}
+                            class="px-6 py-4 text-sm font-medium text-emerald-900">{{ courseData.courseName }}
                           </td>
                           <td
-                            class="px-6 py-4 text-sm text-emerald-800">{{ course.estudiantes[i].nombre }} {{ course.estudiantes[i].apellido }}
+                            class="px-6 py-4 text-sm text-emerald-800">{{ courseData.studentName }}
                           </td>
-                          <td class="px-6 py-4 text-sm text-emerald-800">{{ course.cuentas_cobrar[i].monto }}</td>
+                          <td class="px-6 py-4 text-sm text-emerald-800">{{ courseData.coursePrice }}</td>
                           <td
-                            class="px-6 py-4 text-sm font-semibold text-emerald-900">{{ course.cuentas_cobrar[i].saldo }}
+                            class="px-6 py-4 text-sm font-semibold text-emerald-900">{{ courseData.balance }}
                           </td>
                           <td class="px-6 py-4 text-center">
                             <button
-                              (click)="onPayCourse(course)"
+                              (click)="onPayCourse(courseData)"
                               class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
                               Pagar
                             </button>
                           </td>
                         </tr>
-                      }
                     }
                   </tbody>
                 </table>
               </div>
-              
+
               <!-- Botón Registrar Otro Curso -->
               @if (!showAddCourseForm) {
                 <div class="flex justify-center mt-6">
@@ -704,7 +702,7 @@
                 </span>
               </button>
             }
-            
+
             <!-- Botón de Envío -->
             <button
               type="submit"
