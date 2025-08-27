@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LoginService } from '../../core/services/login.service';
+import path from 'node:path';
 
 
 @Component({
@@ -49,5 +50,6 @@ export class SidebarComponent {
     { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
     { path: '/private/payments', icon: 'payment', label: 'Pagos' },
     { path: '/private/courses', icon: 'book', label: 'Cursos' },
+    { path: '/private/reports', icon: 'chart-bar', label: 'Reportes' }
   ];
 }
