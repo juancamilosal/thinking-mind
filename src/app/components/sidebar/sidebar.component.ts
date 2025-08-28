@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LoginService } from '../../core/services/login.service';
+import { UserService } from '../../core/services/user.service';
 
 
 @Component({
@@ -13,7 +14,7 @@ import { LoginService } from '../../core/services/login.service';
 export class SidebarComponent {
   isSidebarOpen = false;
 
-  constructor(private router: Router, private loginService: LoginService) {}
+  constructor(private router: Router, private loginService: LoginService, private userService: UserService) {}
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
@@ -26,17 +27,14 @@ export class SidebarComponent {
   logout() {
     this.loginService.logout().subscribe({
       next: () => {
-        // Limpiar tokens y datos de usuario
         localStorage.clear();
-        sessionStorage.clear();
-        // Redirigir al login
+        this.userService.clearUser();
         this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
-        // Aún así limpiar datos y redirigir al login en caso de error
         localStorage.clear();
-        sessionStorage.clear();
+        this.userService.clearUser();
         this.router.navigate(['/login']);
       }
     });
