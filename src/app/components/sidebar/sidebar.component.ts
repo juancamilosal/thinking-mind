@@ -1,9 +1,7 @@
-import { Component, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LoginService } from '../../core/services/login.service';
-import path from 'node:path';
-
 
 @Component({
   selector: 'app-sidebar',
@@ -27,17 +25,12 @@ export class SidebarComponent {
   logout() {
     this.loginService.logout().subscribe({
       next: () => {
-        // Limpiar tokens y datos de usuario
         localStorage.clear();
-        sessionStorage.clear();
-        // Redirigir al login
         this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
-        // Aún así limpiar datos y redirigir al login en caso de error
         localStorage.clear();
-        sessionStorage.clear();
         this.router.navigate(['/login']);
       }
     });
