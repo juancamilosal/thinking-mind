@@ -5,10 +5,16 @@ import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
+import { SKIP_AUTH_INTERCEPTOR } from '../tokens/skip-auth-interceptor.token';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
+  
+  // Verificar si se debe omitir el interceptor
+  if (req.context.get(SKIP_AUTH_INTERCEPTOR)) {
+    return next(req);
+  }
   
   // Verificar si estamos en el navegador antes de acceder a localStorage
   let accessToken: string | null = null;
