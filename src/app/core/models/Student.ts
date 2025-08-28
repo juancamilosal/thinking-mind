@@ -7,6 +7,6 @@ export class Student {
   nombre: string;
   apellido: string;
   colegio: string;
-  acudiente: Client | string;
+  acudiente?: Client | string;
 }
 

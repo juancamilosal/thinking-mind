@@ -1,6 +1,7 @@
 import {Client} from './Clients';
 import {Student} from './Student';
 import {Course} from './Course';
+
 export class PaymentRecord {
   id?: string;
   cuenta_cobrar_id: string;
@@ -32,4 +33,13 @@ export class AccountReceivable {
 export class TotalAccounts {
   total_charge:number
   total_expired: number
+}
+
+export class PaymentReceivable {
+  id?: string;
+  cliente: Client | string;
+  estudiante: Student | string;
+  curso_id: string;
+  precio: number;
+  estado: string;
 }

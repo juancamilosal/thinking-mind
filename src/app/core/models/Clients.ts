@@ -1,4 +1,5 @@
 import {Student} from './Student';
+import {AccountReceivable, PaymentRecord} from './AccountReceivable';
 
 export class Client {
   id?: number;
@@ -10,4 +11,5 @@ export class Client {
   email: string;
   direccion: string;
   estudiantes?: Student[];
+  cuentas_cobrar?: AccountReceivable[]
 }

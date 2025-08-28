@@ -4,10 +4,18 @@ import { CommonModule } from '@angular/common';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
+import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
+import { ClientService } from '../../../../core/services/client.service';
+import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
+import {Client} from '../../../../core/models/Clients';
+import {StudentService} from '../../../../core/services/student.service';
+import {Student} from '../../../../core/models/Student';
+import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
 @Component({
   selector: 'app-payment-record',
-  imports: [CommonModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, PaymentConfirmationComponent, NotificationModalComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })
@@ -17,13 +25,39 @@ export class PaymentRecord implements OnInit {
   isSubmitting = false;
   courses: Course[] = [];
   isLoadingCourses = false;
+  showConfirmation = false;
+  isSearchingClient = false;
 
-  constructor(private fb: FormBuilder, private courseService: CourseService) {}
+  // New properties for registered courses table
+  showRegisteredCourses = false;
+  clientData: any = null;
+  registeredCourses: any[] = [];
+  cliente: Client[];
+  student: Student[];
+  showAddCourseForm = false;
+
+  // Properties for payments modal
+  showPaymentsModal = false;
+  selectedAccountData: any = null;
+  selectedAccountPayments: any[] = [];
+
+  // Variables para el modal de notificaciones
+  showNotification: boolean = false;
+  notificationData: NotificationData | null = null;
+
+  constructor(
+    private fb: FormBuilder,
+    private courseService: CourseService,
+    private accountReceivableService: AccountReceivableService,
+    private clientService: ClientService,
+    private studentService: StudentService,
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
   }
+
 
   initForm(): void {
     this.paymentForm = this.fb.group({
@@ -51,22 +85,7 @@ export class PaymentRecord implements OnInit {
 
   onSubmit(): void {
     if (this.paymentForm.valid) {
-      this.isSubmitting = true;
-
-      // Mark all fields as touched to show validation errors
-      this.markFormGroupTouched(this.paymentForm);
-
-      const formData = this.paymentForm.value;
-
-      console.log('Payment Record Form Data:', formData);
-
-      // Here you would typically send the data to a service
-      // For now, we'll just simulate a successful submission
-      setTimeout(() => {
-        this.isSubmitting = false;
-        console.log('Form submitted successfully!');
-        // You could show a success message or redirect here
-      }, 2000);
+      this.showConfirmation = true;
     } else {
       this.markFormGroupTouched(this.paymentForm);
     }
@@ -83,7 +102,6 @@ export class PaymentRecord implements OnInit {
     });
   }
 
-  // Text capitalization methods
   onGuardianFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
     this.paymentForm.get('guardianFirstName')?.setValue(value, { emitEvent: false });
@@ -109,6 +127,181 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.get('studentSchool')?.setValue(value, { emitEvent: false });
   }
 
+  onGuardianDocumentTypeChange(event: any): void {
+    this.searchClientIfReady();
+  }
+
+  onGuardianDocumentNumberChange(event: any): void {
+    this.searchClientIfReady();
+  }
+
+  onStudentDocumentTypeChange(event: any): void {
+    this.searchStudentIfReady();
+  }
+
+  onStudentDocumentNumberChange(event: any): void {
+    this.searchStudentIfReady();
+  }
+
+  private searchClientIfReady(): void {
+    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+
+    if (documentType && documentNumber && documentNumber.length >= 6) {
+      this.searchClientPayment(documentType, documentNumber);
+    } else {
+      this.clearGuardianFields();
+    }
+  }
+
+  private searchStudentIfReady(): void {
+    const documentType = this.paymentForm.get('studentDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('studentDocumentNumber')?.value;
+
+    if (documentType && documentNumber && documentNumber.length >= 6) {
+      this.searchStudentPayment(documentType, documentNumber);
+    }
+  }
+
+  private searchClientPayment(documentType: string, documentNumber: string): void {
+    this.isSearchingClient = true;
+    this.clientService.searchClientPayment(documentType, documentNumber).subscribe(data => {
+      this.isSearchingClient = false;
+      this.cliente = data.data;
+      if(data.data.length > 0){
+        const client = data.data[0];
+        this.clientData = client;
+        this.fillGuardianFields(client);
+        if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
+          this.prepareRegisteredCoursesTable(client);
+          this.showRegisteredCourses = true;
+        } else {
+          this.registeredCourses = [];
+          this.showRegisteredCourses = false;
+        }
+      } else {
+        this.clearGuardianFields();
+        this.showRegisteredCourses = false;
+        this.clientData = null;
+        this.registeredCourses = [];
+      }
+    });
+  }
+
+  private searchStudentPayment(documentType: string, documentNumber: string): void {
+
+      this.studentService.searchStudentPayment(documentType, documentNumber).subscribe(data => {
+        this.student = data.data;
+
+        if(data.data.length > 0){
+          this.fillStudentFields(this.student[0]);
+        } else {
+          this.clearStudentFields();
+        }
+      })
+  }
+
+  private fillGuardianFields(client: any): void {
+    this.paymentForm.patchValue({
+      guardianFirstName: client.nombre || '',
+      guardianLastName: client.apellido || '',
+      guardianPhoneNumber: client.celular || '',
+      guardianEmail: client.email || '',
+      guardianAddress: client.direccion || ''
+    });
+  }
+
+  private fillStudentFields(student: any): void {
+    this.paymentForm.patchValue({
+      studentFirstName: student.nombre || '',
+      studentLastName: student.apellido || '',
+      studentSchool: student.colegio || '',
+    });
+  }
+
+  private clearGuardianFields(): void {
+    this.paymentForm.patchValue({
+      guardianFirstName: '',
+      guardianLastName: '',
+      guardianPhoneNumber: '',
+      guardianEmail: '',
+      guardianAddress: ''
+    });
+  }
+
+  private clearStudentFields(): void {
+    this.paymentForm.patchValue({
+      studentFirstName: '',
+      studentLastName: '',
+      studentSchool: '',
+    });
+  }
+
+
+  private prepareRegisteredCoursesTable(client: any): void {
+    this.registeredCourses = [];
+    if (client.cuentas_cobrar && client.estudiantes) {
+      client.cuentas_cobrar.forEach((cuenta: any, index: number) => {
+        const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
+        const courseData = {
+          id: cuenta.id,
+          courseName: cuenta.curso_id?.nombre || 'N/A',
+          studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
+          studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
+          studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
+          coursePrice: this.formatCurrency(parseFloat(cuenta.curso_id?.precio || '0')),
+          coursePriceNumber: parseFloat(cuenta.curso_id?.precio || '0'), // Valor numérico para el pipe
+          balance: this.formatCurrency(cuenta.saldo || 0), // Saldo es lo que ya se ha pagado (Total Abonado)
+          status: cuenta.estado,
+          courseId: cuenta.curso_id?.id
+        };
+        this.registeredCourses.push(courseData);
+      });
+    }
+  }
+
+  onPayCourse(courseData: any): void {
+    console.log('Paying for course:', courseData);
+  }
+
+  onViewPayments(courseData: any): void {
+
+    const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) =>
+      cuenta.id === courseData.id
+    );
+
+    if (account) {
+      this.selectedAccountData = courseData;
+      this.selectedAccountPayments = account.pagos || [];
+      this.showPaymentsModal = true;
+    } else {
+      console.error('No se encontró la cuenta para mostrar los pagos');
+    }
+  }
+
+  closePaymentsModal(): void {
+    this.showPaymentsModal = false;
+    this.selectedAccountData = null;
+    this.selectedAccountPayments = [];
+  }
+
+  showAddCourseFormView(): void {
+    this.showAddCourseForm = true;
+    this.paymentForm.patchValue({
+      studentDocumentType: 'TI',
+      studentDocumentNumber: '',
+      studentFirstName: '',
+      studentLastName: '',
+      studentSchool: '',
+      selectedCourse: '',
+      coursePrice: ''
+    });
+  }
+
+  backToTableView(): void {
+    this.showAddCourseForm = false;
+  }
+
   private capitalizeText(text: string): string {
     return text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   }
@@ -129,8 +322,6 @@ export class PaymentRecord implements OnInit {
       event.preventDefault();
     }
   }
-
-
 
   loadCourses(): void {
     this.isLoadingCourses = true;
@@ -175,5 +366,90 @@ export class PaymentRecord implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  private parseCurrencyToNumber(currencyString: string): number {
+    return parseFloat(currencyString.replace(/[^\d]/g, ''));
+  }
+
+  goBackToForm(): void {
+    this.showConfirmation = false;
+  }
+
+  confirmAndSubmit(): void {
+    this.isSubmitting = true;
+    this.createAccountRecord();
+    this.showAddCourseForm = false;
+    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+    setTimeout(()=>{
+      this.searchClientPayment(documentType, documentNumber);
+    },500)
+  }
+
+  createAccountRecord= ()=> {
+    const coursePriceString = this.paymentForm.get('coursePrice')?.value;
+    const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
+
+    const paymentForm = {
+      cliente: {
+        tipo_documento: this.paymentForm.get('guardianDocumentType')?.value,
+        numero_documento: this.paymentForm.get('guardianDocumentNumber')?.value,
+        nombre: this.paymentForm.get('guardianFirstName')?.value,
+        apellido: this.paymentForm.get('guardianLastName')?.value,
+        celular: this.paymentForm.get('guardianPhoneNumber')?.value,
+        email: this.paymentForm.get('guardianEmail')?.value,
+        direccion: this.paymentForm.get('guardianAddress')?.value,
+      },
+      estudiante: {
+        tipo_documento: this.paymentForm.get('studentDocumentType')?.value,
+        numero_documento: this.paymentForm.get('studentDocumentNumber')?.value,
+        nombre: this.paymentForm.get('studentFirstName')?.value,
+        apellido: this.paymentForm.get('studentLastName')?.value,
+        colegio: this.paymentForm.get('studentSchool')?.value,
+      },
+      curso_id: this.paymentForm.get('selectedCourse')?.value,
+      precio: coursePriceNumber,
+      estado: 'PENDIENTE'
+    }
+    this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
+      next: (response: any) => {
+        this.isSubmitting = false;
+        this.showConfirmation = false;
+        // Mostrar notificación de éxito
+        this.showSuccessNotification();
+        // Buscar nuevamente para actualizar la tabla
+        this.searchClientIfReady();
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        this.showErrorNotification();
+      }
+    })
+  }
+
+  showSuccessNotification() {
+    this.notificationData = {
+      type: 'success',
+      title: 'Curso registrado con éxito',
+      message: 'El curso ha sido registrado exitosamente. Puedes dirigirte a la tabla de Cursos Registrados y realizar el pago.',
+      duration: 5000 // 5 segundos
+    };
+    this.showNotification = true;
+  }
+
+  showErrorNotification() {
+    this.notificationData = {
+      type: 'error',
+      title: 'Error al registrar curso',
+      message: 'No se pudo registrar el curso. Por favor, inténtalo nuevamente.',
+      duration: 5000 // 5 segundos
+    };
+    this.showNotification = true;
+  }
+
+  onNotificationClose() {
+    this.showNotification = false;
+    this.notificationData = null;
   }
 }

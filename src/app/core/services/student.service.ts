@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpParams} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {ResponseAPI} from '../models/ResponseAPI';
 import {Student} from '../models/Student';
@@ -11,6 +11,7 @@ import {environment} from '../../../environments/environment';
 export class StudentService {
 
   apiStudent: string = environment.students;
+  apiSearchStudentPayment: string = environment.search_student;
 
   constructor(private http: HttpClient) {
   }
@@ -48,5 +49,13 @@ export class StudentService {
 
   deleteStudent(id: string | undefined): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiStudent}/${id}`);
+  }
+
+  searchStudentPayment(documentType: string, documentNumber: string): Observable<ResponseAPI<Student[]>>{
+    const params = {
+      'tipo_documento': documentType,
+      'numero_documento': documentNumber,
+    };
+    return this.http.get<ResponseAPI<Student[]>>(this.apiSearchStudentPayment , { params });
   }
 }
