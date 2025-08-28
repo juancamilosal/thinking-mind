@@ -303,7 +303,15 @@ export class PaymentRecord implements OnInit {
   }
 
   private capitalizeText(text: string): string {
-    return text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => {
+        if (word.length === 0) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   }
 
   onlyNumbers(event: KeyboardEvent): void {
@@ -433,7 +441,7 @@ export class PaymentRecord implements OnInit {
       type: 'success',
       title: 'Curso registrado con éxito',
       message: 'El curso ha sido registrado exitosamente. Puedes dirigirte a la tabla de Cursos Registrados y realizar el pago.',
-      duration: 5000 // 5 segundos
+      duration: 5000
     };
     this.showNotification = true;
   }
@@ -443,7 +451,7 @@ export class PaymentRecord implements OnInit {
       type: 'error',
       title: 'Error al registrar curso',
       message: 'No se pudo registrar el curso. Por favor, inténtalo nuevamente.',
-      duration: 5000 // 5 segundos
+      duration: 5000
     };
     this.showNotification = true;
   }
