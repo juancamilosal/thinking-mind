@@ -1,9 +1,7 @@
-import { Component, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LoginService } from '../../core/services/login.service';
-import { UserService } from '../../core/services/user.service';
-import path from 'node:path';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,7 +12,7 @@ import path from 'node:path';
 export class SidebarComponent {
   isSidebarOpen = false;
 
-  constructor(private router: Router, private loginService: LoginService, private userService: UserService) {}
+  constructor(private router: Router, private loginService: LoginService) {}
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
@@ -28,13 +26,11 @@ export class SidebarComponent {
     this.loginService.logout().subscribe({
       next: () => {
         localStorage.clear();
-        this.userService.clearUser();
         this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
         localStorage.clear();
-        this.userService.clearUser();
         this.router.navigate(['/login']);
       }
     });
