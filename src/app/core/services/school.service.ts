@@ -31,4 +31,12 @@ export class SchoolService {
   createSchool(school: School): Observable<ResponseAPI<School>> {
     return this.http.post<ResponseAPI<School>>(this.apiSchool, school);
   }
+
+  updateSchool(id: string, school: any): Observable<ResponseAPI<School>> {
+    return this.http.patch<ResponseAPI<School>>(`${this.apiSchool}/${id}`, school);
+  }
+
+  deleteSchool(id: string): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${this.apiSchool}/${id}`);
+  }
 }

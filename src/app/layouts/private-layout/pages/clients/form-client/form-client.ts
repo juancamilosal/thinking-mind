@@ -43,7 +43,7 @@ export class FormClient implements OnInit, OnChanges {
 
   initForm=(): void => {
     this.clientForm = this.fb.group({
-      documentType: [null, Validators.required],
+      documentType: ['CC', Validators.required],
       documentNumber: [null, Validators.required],
       firstName: [null, Validators.required],
       lastName: [null, Validators.required],
@@ -132,7 +132,15 @@ export class FormClient implements OnInit, OnChanges {
 
   updateClient() {
     if (this.clientForm.valid && this.clientData?.id) {
-      const clientToUpdate = this.clientForm.value;
+      const clientToUpdate = {
+        tipo_documento: this.clientForm.get('documentType')?.value,
+        numero_documento: this.clientForm.get('documentNumber')?.value,
+        nombre: this.clientForm.get('firstName')?.value,
+        apellido: this.clientForm.get('lastName')?.value,
+        celular: this.clientForm.get('phoneNumber')?.value,
+        email: this.clientForm.get('email')?.value,
+        direccion: this.clientForm.get('address')?.value,
+      };
       this.clientServices.updateClient(this.clientData.id, clientToUpdate).subscribe({
         next: (): void => {
           this.isSubmitting = false;

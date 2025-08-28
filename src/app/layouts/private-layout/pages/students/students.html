@@ -82,9 +82,10 @@
                 <td colspan="5" class="px-6 py-12 text-center">
                   <div class="flex flex-col items-center justify-center space-y-3">
                     <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
-                    </svg>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                          <circle cx="19" cy="7" r="2" stroke-width="2"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 21v-2a4 4 0 00-3-3.87"/>
+                        </svg>
                     <p class="text-lg font-medium text-gray-500">No hay estudiantes registrados</p>
                     <p class="text-sm text-gray-400">Crea tu primer registro de estudiante</p>
                   </div>
@@ -147,9 +148,9 @@
 }
 
 @if (showDetail) {
-  <app-student-detail 
-    [student]="selectedStudent" 
-    (close)="closeDetail()" 
+  <app-student-detail
+    [student]="selectedStudent"
+    (close)="closeDetail()"
     (edit)="editStudent($event)">
   </app-student-detail>
 }
@@ -176,10 +177,10 @@
             <span>Regresar</span>
           </button>
         </div>
-        <app-form-student 
-          [editMode]="editMode" 
-          [studentData]="selectedStudent" 
-          (goBack)="toggleForm()" 
+        <app-form-student
+          [editMode]="editMode"
+          [studentData]="selectedStudent"
+          (goBack)="toggleForm()"
           (searchStudent)="searchStudent()"
           (studentUpdated)="onStudentUpdated()"/>
       </div>

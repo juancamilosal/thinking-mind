@@ -10,7 +10,8 @@ import {environment} from '../../../environments/environment';
 })
 export class ClientService {
 
-  apiCliente: string = environment.clients
+  apiCliente: string = environment.clients;
+  apiSearchClientPayment: string = environment.search_cliente;
 
   constructor(private http: HttpClient) {
   }
@@ -48,5 +49,13 @@ export class ClientService {
 
   deleteClient(id: number | undefined): Observable<ResponseAPI<Client>> {
     return this.http.delete<ResponseAPI<Client>>(`${this.apiCliente}/${id}`);
+  }
+
+  searchClientPayment(documentType: string, documentNumber: string): Observable<ResponseAPI<Client[]>>{
+    const params = {
+      'tipo_documento': documentType,
+      'numero_documento': documentNumber,
+    };
+    return this.http.get<ResponseAPI<Client[]>>(this.apiSearchClientPayment , { params });
   }
 }

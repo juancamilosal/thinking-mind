@@ -1,6 +1,8 @@
 import { Component, HostListener } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { LoginService } from '../../core/services/login.service';
+import path from 'node:path';
 
 
 @Component({
@@ -12,12 +14,33 @@ import { CommonModule } from '@angular/common';
 export class SidebarComponent {
   isSidebarOpen = false;
 
+  constructor(private router: Router, private loginService: LoginService) {}
+
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
 
   closeSidebar() {
     this.isSidebarOpen = false;
+  }
+
+  logout() {
+    this.loginService.logout().subscribe({
+      next: () => {
+        // Limpiar tokens y datos de usuario
+        localStorage.clear();
+        sessionStorage.clear();
+        // Redirigir al login
+        this.router.navigate(['/login']);
+      },
+      error: (error) => {
+        console.error('Error al cerrar sesión:', error);
+        // Aún así limpiar datos y redirigir al login en caso de error
+        localStorage.clear();
+        sessionStorage.clear();
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
   menuItems = [
@@ -27,5 +50,6 @@ export class SidebarComponent {
     { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
     { path: '/private/payments', icon: 'payment', label: 'Pagos' },
     { path: '/private/courses', icon: 'book', label: 'Cursos' },
+    { path: '/private/reports', icon: 'chart-bar', label: 'Reportes' }
   ];
 }

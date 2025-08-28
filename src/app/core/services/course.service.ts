@@ -24,7 +24,7 @@ export class CourseService {
       : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
           params: {
             'filter[_or][0][nombre][_icontains]': searchTerm,
-            'filter[_or][1][codigo][_icontains]': searchTerm
+            'filter[_or][1][sku][_icontains]': searchTerm
           }
         });
 
@@ -41,11 +41,15 @@ export class CourseService {
     );
   }
 
+  getCourseById(id: string): Observable<ResponseAPI<Course>> {
+    return this.http.get<ResponseAPI<Course>>(`${this.apiCourse}/${id}`);
+  }
+
   createCourse(course: Course): Observable<ResponseAPI<Course>> {
     return this.http.post<ResponseAPI<Course>>(this.apiCourse, course);
   }
 
-  updateCourse(id: string, course: { nombre: any; precio: any; sku: any }): Observable<ResponseAPI<Course>> {
+  updateCourse(id: string, course: any): Observable<ResponseAPI<Course>> {
     return this.http.patch<ResponseAPI<Course>>(`${this.apiCourse}/${id}`, course);
   }
 
@@ -57,5 +61,9 @@ export class CourseService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<ResponseAPI<any>>(`${this.apiFile}`, formData);
+  }
+
+  deleteFile(fileId: string): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${this.apiFile}/${fileId}`);
   }
 }

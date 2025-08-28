@@ -55,12 +55,12 @@ export class FormStudent implements OnInit, OnChanges {
 
   initForm = (): void => {
     this.studentForm = this.fb.group({
-      documentType: [null, [Validators.required]],
+      documentType: ['TI', [Validators.required]],
       documentNumber: [null, [Validators.required, Validators.minLength(6)]],
       firstName: [null, [Validators.required, Validators.minLength(2)]],
       lastName: [null, [Validators.required, Validators.minLength(2)]],
       school: [null, [Validators.required, Validators.minLength(2)]],
-      guardianDocumentType: [null, [Validators.required]],
+      guardianDocumentType: ['CC', [Validators.required]],
       guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
       guardianFirstName: [null, [Validators.required, Validators.minLength(2)]],
       guardianLastName: [null, [Validators.required, Validators.minLength(2)]]
@@ -203,10 +203,12 @@ export class FormStudent implements OnInit, OnChanges {
         next: (response) => {
           this.isSubmitting = false;
           this.studentUpdated.emit();
+          this.notificationService.showSuccess('Estudiante actualizado', 'La información del estudiante ha sido actualizada exitosamente.');
         },
         error: (error) => {
           this.isSubmitting = false;
           console.error('Error al actualizar estudiante:', error);
+          this.notificationService.showError('Error al actualizar', 'No se pudo actualizar el estudiante. Inténtalo nuevamente.');
         }
       });
     }

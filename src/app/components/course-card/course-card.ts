@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface Course {
@@ -21,11 +21,23 @@ export class CourseCardComponent {
   @Input() coursePrice: string = '299000';
   @Input() courseCode: string = 'ANG-001';
   @Input() courseImageUrl: string = '';
+  
+  // Nuevos outputs para los eventos
+  @Output() editCourse = new EventEmitter<void>();
+  @Output() deleteCourse = new EventEmitter<void>();
 
   onImageError(event: any) {
     // Si hay error al cargar la imagen, ocultar el elemento img
     event.target.style.display = 'none';
     // El SVG se mostrará automáticamente porque courseImageUrl será falsy
     this.courseImageUrl = '';
+  }
+  
+  onEdit() {
+    this.editCourse.emit();
+  }
+  
+  onDelete() {
+    this.deleteCourse.emit();
   }
 }
