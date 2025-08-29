@@ -6,7 +6,8 @@
   </div>
 
   <!-- Form Reportes -->
-  <div class="max-w-[600px] bg-gradient-to-r from-purple-50 to-violet-50 p-8 rounded-xl border-l-4 border-purple-500 shadow-lg mb-8">
+  <form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    <div class="max-w-[600px] bg-gradient-to-r from-purple-50 to-violet-50 p-8 rounded-xl border-l-4 border-purple-500 shadow-lg mb-8">
       <div class="flex flex-col gap-2 px-4 py-3">
         <div class="flex items-center mb-6">
           <div class="bg-gradient-to-r from-purple-500 to-violet-500 rounded-full p-3 mr-4">
@@ -16,47 +17,172 @@
           </div>
           <h3 class="text-2xl font-bold text-gray-800">Generación de Reportes</h3>
         </div>
+        <!-- Tipo de Reporte -->
         <label class="text-[#0d141c] text-base font-medium leading-normal pb-2">Tipo de Reporte</label>
           <select
-            class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 bg-[image:--select-button-svg] placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal">
-            <option value="one">Selecciona el tipo de reporte</option>
-            <option value="two">Cartera</option>
-            <option value="three">Registro de Estudiantes por Programa</option>
+            id="reportType"
+            formControlName="reportType"
+            class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 bg-[image:--select-button-svg] placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal">
+            <option value="">Selecciona el tipo de reporte</option>
+            @for(type of REPORT_TYPE; track type.value) {
+                  <option [value]="type.value">{{ type.name }}</option>
+                }
           </select>
       </div>
         <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-          <label class="flex flex-col min-w-40 flex-1">
-            <p class="text-[#0d141c] text-base font-medium leading-normal pb-2">Rango de Fechas</p>
+          <div class="flex flex-col min-w-40 flex-1">
+            <label class="text-[#0d141c] text-base font-medium leading-normal pb-2">Rango de Fechas</label>
             <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicial</label>
             <input
               type="date"
-              placeholder="Fecha inicial"
-              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"
-            />
-          </label>
-          <label class="flex flex-col min-w-40 flex-1">
+              id="startDate"
+              formControlName="startDate"
+              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"/>
+          </div>
+          <div class="flex flex-col min-w-40 flex-1">
             <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Final</label>
             <input
               type="date"
-              placeholder="Fecha final"
-              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"
-            />
-          </label>
+              id="endDate"
+              formControlName="endDate"
+              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"/>
+          </div>
         </div>
+        <!-- Botones -->
         <div class="flex gap-4 px-4 py-3">
-          <button
-            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
-            Limpiar
-          </button>
           <button
             class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
             Generar Reporte
           </button>
           <button
-              class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
+            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
             Descargar Reporte
+          </button>
+          <button
+            (click)="clearForm()"
+            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
+            Limpiar
           </button>
         </div>
     </div>
+    </form>
+    <!-- @if(reportForm.valid && reportForm.value.reportType === 'CARTERA') { -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-800">Reporte de Pagos</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagador</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Pago</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (payments.length === 0) {
+              <tr>
+                <td colspan="5" class="px-6 py-16">
+                  <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div class="bg-gray-100 rounded-full p-6">
+                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                      </svg>
+                    </div>
+                    <div class="space-y-2">
+                      <h3 class="text-xl font-semibold text-gray-700">
+                        No hay pagos registrados en las fechas seleccionadas
+                      </h3>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (payment of payments; track payment.id) {
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900">{{ payment.valor }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ payment.fecha_pago }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span [class]="payment.estado" class="px-3 py-1 rounded-full text-xs font-medium">
+                      {{ payment.estado }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            }
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    <!-- @if(reportForm.valid && reportForm.value.reportType === 'REGISTROESTUDIANTES') { -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-800">Reporte de Registro de Estudiantes</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Programa</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incritos</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (payments.length === 0) {
+              <tr>
+                <td colspan="5" class="px-6 py-16">
+                  <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div class="bg-gray-100 rounded-full p-6">
+                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14l-9-5 9 5z"/>
+                      </svg>
+                    </div>
+                    <div class="space-y-2">
+                      <h3 class="text-xl font-semibold text-gray-700">
+                        No hay estudiantes registrados en las fechas seleccionadas
+                      </h3>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (payment of payments; track payment.id) {
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900">{{ payment.valor }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ payment.fecha_pago }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span [class]="payment.estado" class="px-3 py-1 rounded-full text-xs font-medium">
+                      {{ payment.estado }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
 </div>
 
