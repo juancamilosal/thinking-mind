@@ -11,6 +11,7 @@ export class PaymentRecord {
   pagador: string;
   numero_aprobacion?: string;
   estado: string;
+  comprobante?: string;
 }
 
 export class AccountReceivable {

@@ -36,4 +36,12 @@ export class PaymentService {
   deletePayment(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }
+
+  uploadFile(formData: FormData): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(environment.files, formData);
+  }
+
+  getDirectusUrl(): string {
+    return 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io';
+  }
 }
