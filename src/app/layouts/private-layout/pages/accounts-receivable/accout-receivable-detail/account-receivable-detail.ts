@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, ChangeDetectorRef } from '@angular/core';
+import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {AccountReceivable, PaymentRecord} from '../../../../../core/models/AccountReceivable';
@@ -15,12 +15,13 @@ import { NotificationService } from '../../../../../core/services/notification.s
   templateUrl: './account-receivable-detail.html',
   standalone: true
 })
-export class AccountReceivableDetailComponent {
+export class AccountReceivableDetailComponent implements OnInit {
   @Input() account!: AccountReceivable;
-  
+
   ngOnInit() {
-    console.log('Account recibido en detalle:', this.account); // Agregar esta línea
+
   }
+
   @Output() backToList = new EventEmitter<void>();
   @Output() llamarFuncion = new EventEmitter<void>();
   @Output() addPayment = new EventEmitter<PaymentRecord>();
@@ -38,7 +39,13 @@ export class AccountReceivableDetailComponent {
   newPayerName: string;
   newApprovalNumber: string;
   newBank: string;
+  newPaymentImage: File | null = null;
+  isSubmittingPayment = false;
+  isDeletingPayment = false;
+  deletingPaymentId: string | null = null;
   PAYMENT_METHOD = PAYMENT_METHOD;
+  isEditingAmount = false;
+  editedAmount: number = 0;
 
   constructor(
     private paymentService: PaymentService,
@@ -48,7 +55,7 @@ export class AccountReceivableDetailComponent {
     private notificationService: NotificationService
   ) {}
 
-  // Método para capitalizar texto
+
   capitalizeText(text: string): string {
     if (!text) return '';
     return text
@@ -61,7 +68,7 @@ export class AccountReceivableDetailComponent {
       .join(' ');
   }
 
-  // Método para manejar la capitalización del nombre del pagador
+
   onPayerNameChange(event: any): void {
     const value = event.target.value;
     const capitalizedValue = this.capitalizeText(value);
@@ -113,64 +120,84 @@ export class AccountReceivableDetailComponent {
   }
 
   addNewPayment() {
-    const payment = {
+    this.isSubmittingPayment = true;
+
+    const payment: any = {
       cuenta_cobrar_id: this.account.id,
       valor: this.newPaymentAmount,
       fecha_pago: new Date().toISOString(),
       metodo_pago: this.newPaymentMethod,
       pagador: this.newPayerName,
-      estado: 'PAGADO'
-    }
+      estado: 'PAGADO',
+      comprobante: null
+    };
 
+    if (this.newPaymentImage) {
+      const formData = new FormData();
+      formData.append('file', this.newPaymentImage);
+
+      this.paymentService.uploadFile(formData).subscribe({
+        next: (uploadResponse) => {
+          payment.comprobante = uploadResponse.data.id;
+          this.createPaymentRecord(payment);
+        },
+        error: (uploadError) => {
+          this.isSubmittingPayment = false;
+          this.notificationService.showError('Error', 'No se pudo subir la imagen del comprobante.');
+        }
+      });
+    } else {
+      this.createPaymentRecord(payment);
+    }
+  }
+
+  private createPaymentRecord(payment: any) {
     this.paymentService.createPayment(payment).subscribe({
       next: ():void => {
-        // Calcular el nuevo saldo sumando el pago
         const newSaldo = this.account.saldo + this.newPaymentAmount;
-
-        // Determinar el nuevo estado basado en el saldo vs monto
         const newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
-
-        // Actualizar el saldo y estado en la cuenta por cobrar en Directus
         this.accountService.updateAccountReceivable(this.account.id, {
           saldo: newSaldo,
           estado: newEstado
         }).subscribe({
           next: (updateResponse) => {
-            // Actualizar los datos locales
             this.account.saldo = newSaldo;
             this.account.estado = newEstado;
 
             this.resetPaymentForm();
             this.showAddPaymentForm = false;
-            // Actualizar tanto los pagos como el saldo de la cuenta
+            this.isSubmittingPayment = false;
             this.refreshAccountData();
+            this.notificationService.showSuccess('Éxito', 'El pago ha sido registrado correctamente.');
 
           },
           error: (updateError) => {
             this.resetPaymentForm();
             this.showAddPaymentForm = false;
+            this.isSubmittingPayment = false;
             this.refreshAccountData();
 
           }
         });
+      },
+      error: (paymentError) => {
+        this.isSubmittingPayment = false;
+        this.notificationService.showError('Error', 'No se pudo registrar el pago.');
       }
     });
   }
 
-  // Nuevo método para actualizar todos los datos de la cuenta
+
   refreshAccountData() {
     this.accountService.getAccountById(this.account.id).subscribe({
       next: (response) => {
         if (response.data) {
-          // Actualizar el saldo y los pagos
           this.account.saldo = response.data.saldo;
           this.account.pagos = response.data.pagos || [];
           this.cdr.detectChanges();
         }
       },
       error: (error) => {
-        console.error('Error al obtener la cuenta actualizada:', error);
-        // Fallback: solo actualizar los pagos
         this.refreshPayments();
       }
     });
@@ -197,6 +224,31 @@ export class AccountReceivableDetailComponent {
     this.newPayerName = '';
     this.newApprovalNumber = '';
     this.newBank = '';
+    this.newPaymentImage = null;
+    this.isSubmittingPayment = false;
+  }
+
+  onImageSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        this.newPaymentImage = file;
+      } else {
+        this.notificationService.showError('Error', 'Por favor seleccione un archivo de imagen válido.');
+        event.target.value = '';
+      }
+    }
+  }
+
+  viewPaymentImage(payment: PaymentRecord) {
+    if (payment.comprobante) {
+      const imageUrl = `${this.paymentService.getDirectusUrl()}/assets/${payment.comprobante}`;
+      window.open(imageUrl, '_blank');
+    }
+  }
+
+  hasPaymentImage(payment: PaymentRecord): boolean {
+    return payment.comprobante && payment.comprobante.trim() !== '';
   }
 
   viewPaymentDetail(payment: PaymentRecord) {
@@ -227,8 +279,7 @@ export class AccountReceivableDetailComponent {
     return 'Pendiente';
   }
 
-  // Nuevo método para eliminar pago
-  // Método para eliminar pago y actualizar saldo
+
   deletePayment(payment: PaymentRecord): void {
     const paymentName = `Pago de ${this.formatCurrency(payment.valor)} - ${payment.pagador}`;
 
@@ -236,16 +287,15 @@ export class AccountReceivableDetailComponent {
       paymentName,
       'pago',
       () => {
-        // Callback de confirmación
+
+        this.isDeletingPayment = true;
+        this.deletingPaymentId = payment.id;
         this.paymentService.deletePayment(payment.id).subscribe({
           next: (response) => {
-            // Calcular el nuevo saldo restando el valor del pago eliminado
             const newSaldo = this.account.saldo - payment.valor;
 
-            // Determinar el nuevo estado basado en el saldo vs monto
             const newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
 
-            // Actualizar el saldo y estado en la cuenta por cobrar en Directus
             this.accountService.updateAccountReceivable(this.account.id, {
               saldo: newSaldo,
               estado: newEstado
@@ -256,15 +306,12 @@ export class AccountReceivableDetailComponent {
                   `El pago ha sido eliminado exitosamente y el saldo ha sido actualizado.`
                 );
 
-                // Actualizar los datos locales
                 this.account.saldo = newSaldo;
                 this.account.estado = newEstado;
-
-                // Actualizar tanto los pagos como el saldo de la cuenta
                 this.refreshAccountData();
-
-                // Emitir evento para actualizar el componente padre
                 this.llamarFuncion.emit();
+                this.isDeletingPayment = false;
+                this.deletingPaymentId = null;
               },
               error: (updateError) => {
                 console.error('Error al actualizar el saldo:', updateError);
@@ -273,9 +320,10 @@ export class AccountReceivableDetailComponent {
                   'El pago fue eliminado pero no se pudo actualizar el saldo. Por favor, actualiza la página.'
                 );
 
-                // Aún así, actualizar los datos para reflejar la eliminación del pago
                 this.refreshAccountData();
                 this.llamarFuncion.emit();
+                this.isDeletingPayment = false;
+                this.deletingPaymentId = null;
               }
             });
           },
@@ -285,16 +333,15 @@ export class AccountReceivableDetailComponent {
               'Error al eliminar',
               'No se pudo eliminar el pago. Inténtalo nuevamente.'
             );
+            this.isDeletingPayment = false;
+            this.deletingPaymentId = null;
           }
         });
       }
     );
   }
 
-  // Agregar estas propiedades después de las existentes
-  isEditingAmount = false;
-  editedAmount: number = 0;
-  // Agregar estos métodos después de canDeletePayment()
+
   startEditingAmount() {
     this.isEditingAmount = true;
     this.editedAmount = this.account.monto;
@@ -317,7 +364,7 @@ export class AccountReceivableDetailComponent {
         newEstado = 'PENDIENTE';
       }
 
-      // Actualizar tanto el monto como el estado en Directus
+
       this.accountService.updateAccountReceivable(this.account.id, {
         monto: this.editedAmount,
         estado: newEstado
@@ -335,7 +382,7 @@ export class AccountReceivableDetailComponent {
       });
     }
   }
-  // Agregar este método después de getStatusText()
+
   canDeletePayment(payment: PaymentRecord): boolean {
     return payment.metodo_pago !== 'PASARELA DE PAGO';
   }
