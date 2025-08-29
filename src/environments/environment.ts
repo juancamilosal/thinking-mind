@@ -11,6 +11,7 @@ export const environment = {
   security: {
     login: apiUrl + 'auth/login',
     logout: apiUrl + 'auth/logout',
+    refresh: apiUrl + 'auth/refresh',
     me: apiUrl + 'users/me',
   },
 
