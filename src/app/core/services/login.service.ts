@@ -30,8 +30,4 @@ export class LoginService {
     return this.http.get<ResponseAPI<any>>(this.apiSecurity.security.me, {withCredentials: true});
   }
 
-  refreshToken(): Observable<ResponseAPI<any>> {
-    const context = new HttpContext().set(SKIP_AUTH_INTERCEPTOR, true);
-    return this.http.post<ResponseAPI<any>>(this.apiSecurity.security.refresh, {mode: 'session'}, {context, withCredentials: true});
-  }
 }
