@@ -4,6 +4,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { REPORT_TYPE } from '../../../../core/const/ReportType';
 import { PaymentRecord } from '../../../../core/models/AccountReceivable';
+import { PaymentService } from '../../../../core/services/payment.service';
 
 @Component({
   selector: 'app-reports',
@@ -20,7 +21,8 @@ export class Reports {
   constructor(
     private fb: FormBuilder,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private paymentService: PaymentService
   ) {}
 
   ngOnInit(): void {
@@ -35,15 +37,19 @@ export class Reports {
     });
   }
 
-  onSubmit(): void {
+  generateReport(): void {
     if (this.reportForm.valid) {
       const { reportType, startDate, endDate } = this.reportForm.value;
-
+      this.paymentService.getPayments().subscribe({
+      next: (data) => {
+        this.payments = data.data;
+      },
+      error: (error) => {
+        console.error('Error loading payments:', error);
+        this.notificationService.showError('Error loading payments');
+      }
+    });
     }
-  }
-
-  generateReport(): void {
-
   }
 
   downloadReport(): void {
@@ -52,5 +58,6 @@ export class Reports {
 
   clearForm(): void {
     this.reportForm.reset();
+    this.payments = [];
   }
 }

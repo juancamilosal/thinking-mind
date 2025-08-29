@@ -6,7 +6,7 @@
   </div>
 
   <!-- Form Reportes -->
-  <form [formGroup]="reportForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <form [formGroup]="reportForm" class="space-y-6">
     <div class="max-w-[600px] bg-gradient-to-r from-purple-50 to-violet-50 p-8 rounded-xl border-l-4 border-purple-500 shadow-lg mb-8">
       <div class="flex flex-col gap-2 px-4 py-3">
         <div class="flex items-center mb-6">
@@ -51,6 +51,7 @@
         <!-- Botones -->
         <div class="flex gap-4 px-4 py-3">
           <button
+            (click)="generateReport()"
             class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
             Generar Reporte
           </button>
@@ -66,7 +67,9 @@
         </div>
     </div>
     </form>
-    <!-- @if(reportForm.valid && reportForm.value.reportType === 'CARTERA') { -->
+    <!-- Resultados del Reporte -->
+     <!-- Cartera -->
+    @if(reportForm.valid && reportForm.value.reportType === 'CARTERA') {
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-xl font-semibold text-gray-800">Reporte de Pagos</h2>
@@ -125,7 +128,8 @@
 
         </div>
       </div>
-    <!-- @if(reportForm.valid && reportForm.value.reportType === 'REGISTROESTUDIANTES') { -->
+    }
+    @if(reportForm.valid && reportForm.value.reportType === 'REGISTROESTUDIANTES') {
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-xl font-semibold text-gray-800">Reporte de Registro de Estudiantes</h2>
@@ -183,6 +187,7 @@
           </table>
         </div>
       </div>
+    }
 
 </div>
 
