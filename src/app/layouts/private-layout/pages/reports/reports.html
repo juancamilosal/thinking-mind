@@ -122,10 +122,10 @@
                   </td>
                 </tr>
               }
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Recaudado:</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">$Valor prueba</th>
-              </tr>
+                <tr class="bg-gray-100 rounded-md">
+                  <th class="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">Total Recaudado:</th>
+                  <th class="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">{{ formatCurrency(calculateTotal()) }}</th>
+                </tr>
             }
             </tbody>
           </table>

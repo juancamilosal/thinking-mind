@@ -42,9 +42,19 @@ export class Reports {
     if (this.reportForm.valid) {
       const { reportType, startDate, endDate } = this.reportForm.value;
       this.reportGenerated = true;
+
       this.paymentService.getPayments().subscribe({
       next: (data) => {
-        this.payments = data.data;
+        this.payments = data.data.filter(payment => {
+          const paymentDate = new Date(payment.fecha_pago);
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+
+          start.setHours(0, 0, 0, 0);
+          end.setHours(23, 59, 59, 999);
+
+          return paymentDate >= start && paymentDate <= end;
+        });
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -52,6 +62,12 @@ export class Reports {
       }
     });
     }
+  }
+
+  calculateTotal(): number {
+  return this.payments
+    .filter(payment => payment.estado === 'PAGADO')
+    .reduce((total, payment) => total + payment.valor, 0);
   }
 
   downloadReport(): void {
