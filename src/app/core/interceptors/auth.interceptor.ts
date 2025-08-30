@@ -4,8 +4,7 @@ import { catchError, switchMap, filter, take } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginService } from '../services/login.service';
-import { isPlatformBrowser } from '@angular/common';
-import { PLATFORM_ID } from '@angular/core';
+import { StorageServices } from '../services/storage.services';
 
 // Variables globales para el estado del refresh
 let isRefreshing = false;
@@ -14,20 +13,14 @@ let refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 export const AuthInterceptor: HttpInterceptorFn = (request: HttpRequest<any>, next: HttpHandlerFn): Observable<HttpEvent<any>> => {
   const router = inject(Router);
   const loginService = inject(LoginService);
-  const platformId = inject(PLATFORM_ID);
   
   // No interceptar las peticiones de login y refresh
   if (shouldSkipInterceptor(request)) {
     return next(request);
   }
 
-  // Solo acceder a localStorage si estamos en el navegador
-  if (!isPlatformBrowser(platformId)) {
-    return next(request);
-  }
-
   // Agregar el token de acceso si está disponible
-  const accessToken = localStorage.getItem('access_token');
+  const accessToken = StorageServices.getAccessToken();
   if (accessToken) {
     request = addTokenToRequest(request, accessToken);
   }
@@ -35,7 +28,7 @@ export const AuthInterceptor: HttpInterceptorFn = (request: HttpRequest<any>, ne
   return next(request).pipe(
      catchError((error: HttpErrorResponse) => {
        if (error.status === 401) {
-         return handle401Error(request, next, router, loginService, platformId);
+         return handle401Error(request, next, router, loginService);
        }
        return throwError(() => error);
      })
@@ -55,24 +48,19 @@ function addTokenToRequest(request: HttpRequest<any>, token: string): HttpReques
   });
 }
 
-function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: Router, loginService: LoginService, platformId: Object): Observable<HttpEvent<any>> {
-  // Si no estamos en el navegador, no podemos manejar tokens
-  if (!isPlatformBrowser(platformId)) {
-    return throwError(() => new Error('No se puede manejar autenticación en el servidor'));
-  }
-
+function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: Router, loginService: LoginService): Observable<HttpEvent<any>> {
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = StorageServices.getRefreshToken();
      if (refreshToken) {
        return loginService.refreshToken().pipe(
         switchMap((response: any) => {
           isRefreshing = false;
           const newAccessToken = response?.access_token || response?.data?.access_token;
           if (newAccessToken) {
-            localStorage.setItem('access_token', newAccessToken);
+            StorageServices.setAccessToken(newAccessToken);
             refreshTokenSubject.next(newAccessToken);
             return next(addTokenToRequest(request, newAccessToken));
           }
@@ -98,11 +86,8 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
 
 function redirectToLogin(router: Router): Observable<never> {
   isRefreshing = false;
-  // Solo limpiar localStorage si estamos en el navegador
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-  }
+  // Limpiar tokens usando StorageServices
+  StorageServices.clearTokens();
   router.navigate(['/login']);
   return throwError(() => 'Token refresh failed');
 }
