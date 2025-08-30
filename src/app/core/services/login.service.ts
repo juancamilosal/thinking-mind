@@ -4,8 +4,7 @@ import {Observable} from 'rxjs';
 import {ResponseAPI} from '../models/ResponseAPI';
 import {environment} from '../../../environments/environment';
 import {Login} from '../models/Login';
-import {User} from '../models/User';
-import {SKIP_AUTH_INTERCEPTOR} from '../interceptors/skip-auth-interceptor.token';
+import {SKIP_AUTH_INTERCEPTOR} from '../../interceptors/SkipAuthInterceptor';
 
 @Injectable({
   providedIn: 'root'
