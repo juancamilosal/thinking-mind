@@ -42,12 +42,12 @@ export class Login implements OnInit {
     if (this.loginForm.invalid || this.isLoading)
       return;
 
-    this.isLoading = true; // Activar estado de carga
+    this.isLoading = true;
 
     this.loginServices.login(this.loginForm.value).subscribe({
       next: (response) => {
         this.router.navigateByUrl('/private');
-
+        this.loginServices.me().subscribe({})
       },
       error: (error) => {
         this.isLoading = false;
@@ -61,7 +61,7 @@ export class Login implements OnInit {
       type: 'error',
       title: 'Error de autenticación',
       message: 'Las credenciales ingresadas son incorrectas. Por favor, verifica tu email y contraseña.',
-      duration: 5000 // 5 segundos
+      duration: 5000
     };
     this.showNotification = true;
   }

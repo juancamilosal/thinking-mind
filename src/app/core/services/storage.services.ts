@@ -3,7 +3,10 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root'
 })
+
 export class StorageServices {
+  public static CURRENT_USER = 'current_user';
+
   private static get isBrowser(): boolean {
     return typeof window !== 'undefined' && typeof sessionStorage !== 'undefined';
   }
@@ -52,12 +55,12 @@ export class StorageServices {
     return this.getItemFromSessionStorage('refresh_token');
   }
 
-  static setUserData(userData: any): void {
-    this.saveObjectInSessionStorage('user_data', userData);
+  static setUserData(current_user: any): void {
+    this.saveObjectInSessionStorage(this.CURRENT_USER, current_user);
   }
 
-  static getUserData(): any {
-    return this.getItemObjectFromSessionStorage('user_data');
+  static getCurrentUser(): any {
+    return this.getItemObjectFromSessionStorage(this.CURRENT_USER);
   }
 
   static clearTokens(): void {
