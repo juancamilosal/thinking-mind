@@ -138,8 +138,8 @@
       <div class="bg-white rounded-xl shadow-lg p-8">
         <div class="flex justify-between items-center mb-8">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Registro de Colegio</h1>
-            <p class="text-gray-600">Completa la información del colegio</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ editMode ? 'Editar Colegio' : 'Registro de Colegio' }}</h1>
+            <p class="text-gray-600">{{ editMode ? 'Actualiza la información del colegio' : 'Completa la información del colegio' }}</p>
           </div>
           <button
             (click)="toggleForm()"
