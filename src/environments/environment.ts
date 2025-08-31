@@ -4,6 +4,7 @@ export const environment = {
   clients: apiUrl + 'items/clientes',
   students: apiUrl + 'items/estudiantes',
   schools: apiUrl + 'items/colegios',
+  rectores: apiUrl + 'items/rectores',
   courses: apiUrl + 'items/Cursos',
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',

@@ -5,6 +5,7 @@ import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
 import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
+import { Rectores } from './layouts/private-layout/pages/rectores/rectores';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
@@ -50,6 +51,11 @@ export const routes: Routes = [
         path: 'schools',
         title: 'Thinking Mind | Colegios',
         component: Schools
+      },
+      {
+        path: 'rectores',
+        title: 'Thinking Mind | Rectores',
+        component: Rectores
       },
       {
         path: 'courses',

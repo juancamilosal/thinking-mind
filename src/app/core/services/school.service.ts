@@ -15,9 +15,13 @@ export class SchoolService {
   constructor(private http: HttpClient) {
   }
 
+  getAllSchools(): Observable<ResponseAPI<School[]>> {
+    return this.http.get<ResponseAPI<School[]>>(this.apiSchool);
+  }
+
   searchSchool(searchTerm?: string): Observable<ResponseAPI<School[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<School[]>>(this.apiSchool);
+      return this.getAllSchools();
     }
     
     const params = {

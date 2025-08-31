@@ -252,14 +252,10 @@ export class FormStudent implements OnInit, OnChanges {
 
   capitalizeText(text: string): string {
     if (!text) return '';
-    return text
-      .toLowerCase()
-      .split(' ')
-      .map(word => {
-        if (word.length === 0) return word;
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(' ');
+    return text.toLowerCase().split(' ').map(word => {
+      if (word.length === 0) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
   }
 
   onFirstNameChange(event: any): void {
