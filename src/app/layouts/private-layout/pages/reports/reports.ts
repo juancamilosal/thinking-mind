@@ -208,9 +208,9 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   getStatusArrow(estado: number): string {
     switch (estado) {
       case 1:
-        return '↑'; // Aumentaron estudiantes registrados
+        return '↑';
       case 2:
-        return '='; // Se mantienen igual
+        return '↑';
       default:
         return '';
     }
