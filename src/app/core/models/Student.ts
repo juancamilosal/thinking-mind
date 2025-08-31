@@ -8,5 +8,6 @@ export class Student {
   apellido: string;
   colegio: string;
   acudiente?: Client | string;
+  colegio_id?: string;
 }
 
