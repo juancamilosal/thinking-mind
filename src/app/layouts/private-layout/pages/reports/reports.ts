@@ -295,13 +295,13 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   this.notificationService.showSuccess('Reporte PDF descargado exitosamente','');
-}
+  }
 
   getTotalEnrolledStudents(): number {
   return this.enrollReportData.reduce((total, item) => total + item.studentCount, 0);
-}
+  }
 
-/*
+
   downloadExcel(): void {
   this.showDownloadOptions = false;
 
@@ -318,19 +318,19 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       ['Pagador', 'Valor', 'Fecha de Pago', 'Estado']
     ];
 
-    // Add payment data
+    // Add payment data - convert numbers to strings
     this.payments.forEach(payment => {
       worksheetData.push([
         payment.pagador,
-        payment.valor,
+        payment.valor.toString(), // Convert to string
         this.formatDate(payment.fecha_pago),
         payment.estado
       ]);
     });
 
-    // Add total row
+    // Add total row - convert number to string
     worksheetData.push([]);
-    worksheetData.push(['', '', 'Total Recaudado:', this.calculateTotal()]);
+    worksheetData.push(['', '', 'Total Recaudado:', this.calculateTotal().toString()]); // Convert to string
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
@@ -362,18 +362,18 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       ['Colegio', 'Curso', 'Nº de Estudiantes']
     ];
 
-    // Add enrollment data
+    // Add enrollment data - convert numbers to strings
     this.enrollReportData.forEach(item => {
       worksheetData.push([
         item.schoolName,
         item.courseName,
-        item.studentCount
+        item.studentCount.toString() // Convert to string
       ]);
     });
 
-    // Add total row
+    // Add total row - convert number to string
     worksheetData.push([]);
-    worksheetData.push(['', 'Total de Estudiantes:', this.getTotalEnrolledStudents()]);
+    worksheetData.push(['', 'Total de Estudiantes:', this.getTotalEnrolledStudents().toString()]); // Convert to string
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
@@ -394,5 +394,5 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   this.notificationService.showSuccess('Reporte Excel descargado exitosamente','');
-  } */
+  }
 }
