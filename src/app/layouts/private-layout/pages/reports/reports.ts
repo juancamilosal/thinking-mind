@@ -6,6 +6,11 @@ import { REPORT_TYPE } from '../../../../core/const/ReportType';
 import { PaymentRecord } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+//Para descargas
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 interface EnrollReportData {
   schoolName: string;
@@ -212,14 +217,182 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   downloadPDF(): void {
-    this.showDownloadOptions = false;
-    // TODO: Implement PDF download logic
-    this.notificationService.showSuccess('Descargando reporte en PDF...','');
+  this.showDownloadOptions = false;
+
+  const doc = new jsPDF();
+  const reportType = this.reportForm.value.reportType;
+  const startDate = this.formatDate(this.reportForm.value.startDate);
+  const endDate = this.formatDate(this.reportForm.value.endDate);
+
+  // Add title
+  doc.setFontSize(20);
+  doc.text('Reporte Generado', 14, 22);
+
+  // Add date range
+  doc.setFontSize(12);
+  doc.text(`Período: ${startDate} - ${endDate}`, 14, 35);
+
+  if (reportType === 'CARTERA' && this.payments.length > 0) {
+    // Payment Report PDF
+    const tableData = this.payments.map(payment => [
+      payment.pagador,
+      this.formatCurrency(payment.valor),
+      this.formatDate(payment.fecha_pago),
+      payment.estado
+    ]);
+
+    // Add total row
+    const total = this.calculateTotal();
+    tableData.push(['', '', 'Total Recaudado:', this.formatCurrency(total)]);
+
+    autoTable(doc, {
+      head: [['Pagador', 'Valor', 'Fecha de Pago', 'Estado']],
+      body: tableData,
+      startY: 45,
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] }, // Blue color
+      didDrawCell: (data) => {
+        // Style the total row
+        if (data.row.index === tableData.length - 1) {
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+        }
+      }
+    });
+
+    doc.save(`Reporte_Cartera_${new Date().toISOString().split('T')[0]}.pdf`);
+
+  } else if (reportType === 'INSCRIPCIONES' && this.enrollReportData.length > 0) {
+    // Enrollment Report PDF
+    const tableData = this.enrollReportData.map(item => [
+      item.schoolName,
+      item.courseName,
+      item.studentCount.toString()
+    ]);
+
+    // Add total row
+    const totalStudents = this.getTotalEnrolledStudents();
+    tableData.push(['', 'Total de Estudiantes:', totalStudents.toString()]);
+
+    autoTable(doc, {
+      head: [['Colegio', 'Curso', 'Nº de Estudiantes']],
+      body: tableData,
+      startY: 45,
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [139, 92, 246] }, // Purple color
+      didDrawCell: (data) => {
+        // Style the total row
+        if (data.row.index === tableData.length - 1) {
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+        }
+      }
+    });
+
+    doc.save(`Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
+  this.notificationService.showSuccess('Reporte PDF descargado exitosamente','');
+}
+
+  getTotalEnrolledStudents(): number {
+  return this.enrollReportData.reduce((total, item) => total + item.studentCount, 0);
+}
+
+/*
   downloadExcel(): void {
-    this.showDownloadOptions = false;
-    // TODO: Implement Excel download logic
-    this.notificationService.showSuccess('Descargando reporte en Excel...','');
+  this.showDownloadOptions = false;
+
+  const reportType = this.reportForm.value.reportType;
+  const startDate = this.formatDate(this.reportForm.value.startDate);
+  const endDate = this.formatDate(this.reportForm.value.endDate);
+
+  if (reportType === 'CARTERA' && this.payments.length > 0) {
+    // Payment Report Excel
+    const worksheetData = [
+      ['Reporte de Cartera'],
+      [`Período: ${startDate} - ${endDate}`],
+      [], // Empty row
+      ['Pagador', 'Valor', 'Fecha de Pago', 'Estado']
+    ];
+
+    // Add payment data
+    this.payments.forEach(payment => {
+      worksheetData.push([
+        payment.pagador,
+        payment.valor,
+        this.formatDate(payment.fecha_pago),
+        payment.estado
+      ]);
+    });
+
+    // Add total row
+    worksheetData.push([]);
+    worksheetData.push(['', '', 'Total Recaudado:', this.calculateTotal()]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 25 }, // Pagador
+      { wch: 15 }, // Valor
+      { wch: 15 }, // Fecha
+      { wch: 12 }  // Estado
+    ];
+
+    // Apply styles to header
+    worksheet['A1'] = { ...worksheet['A1'], s: { font: { bold: true, sz: 16 } } };
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte Cartera');
+
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `Reporte_Cartera_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+  } else if (reportType === 'INSCRIPCIONES' && this.enrollReportData.length > 0) {
+    // Enrollment Report Excel
+    const worksheetData = [
+      ['Reporte de Inscripciones'],
+      [`Período: ${startDate} - ${endDate}`],
+      [], // Empty row
+      ['Colegio', 'Curso', 'Nº de Estudiantes']
+    ];
+
+    // Add enrollment data
+    this.enrollReportData.forEach(item => {
+      worksheetData.push([
+        item.schoolName,
+        item.courseName,
+        item.studentCount
+      ]);
+    });
+
+    // Add total row
+    worksheetData.push([]);
+    worksheetData.push(['', 'Total de Estudiantes:', this.getTotalEnrolledStudents()]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 30 }, // Colegio
+      { wch: 25 }, // Curso
+      { wch: 20 }  // Nº de Estudiantes
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte Inscripciones');
+
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
+
+  this.notificationService.showSuccess('Reporte Excel descargado exitosamente','');
+  } */
 }
