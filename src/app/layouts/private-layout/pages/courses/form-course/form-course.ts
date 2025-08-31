@@ -107,7 +107,7 @@ export class FormCourse implements OnInit, OnChanges {
 
   createCourse=(): void => {
     this.isSubmitting = true;
-    
+
     if (!this.courseCreated) {
       // Primer paso: crear el curso sin imagen
       this.createCourseOnly();
@@ -128,18 +128,14 @@ export class FormCourse implements OnInit, OnChanges {
 
     this.courseServices.createCourse(course).subscribe({
       next: (response) => {
-        console.log('Curso creado exitosamente:', response);
         this.createdCourseId = response.data.id;
         this.courseCreated = true;
         this.isSubmitting = false;
-        
-        // Mostrar sección de imagen y cambiar texto del botón
         this.showImageSection = true;
         this.notificationService.showSuccess('Curso creado exitosamente', 'Ahora puedes agregar una imagen al curso');
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error creating course:', error);
         this.notificationService.showError('Error al crear el curso', error.error?.message || 'Error desconocido');
       }
     });
@@ -149,12 +145,10 @@ export class FormCourse implements OnInit, OnChanges {
 
   private uploadImageAndFinish(): void {
     if (!this.selectedFile) {
-      // Si no hay imagen, mostrar modal directamente
       this.showSuccessModal();
       return;
     }
 
-    // Subir imagen y actualizar curso
     this.isUploadingImage = true;
     this.courseServices.uploadFile(this.selectedFile).subscribe({
       next: (response) => {
@@ -164,27 +158,21 @@ export class FormCourse implements OnInit, OnChanges {
           next: (updatedCourse) => {
             this.isUploadingImage = false;
             this.isSubmitting = false;
-            
-            // Actualizar la vista con la imagen subida
             this.uploadedImageId = imageId;
-            // Limpiar la imagen seleccionada para mostrar la imagen subida
             this.selectedFile = null;
             this.imagePreview = null;
-            
-            // Si el curso actualizado tiene img_url, actualizar courseData
             if (updatedCourse && updatedCourse.data && updatedCourse.data.img_url) {
               if (!this.courseData) {
                 this.courseData = {} as Course;
               }
               this.courseData.img_url = updatedCourse.data.img_url;
             }
-            
+
             this.showSuccessModal();
           },
           error: (error) => {
             this.isUploadingImage = false;
             this.isSubmitting = false;
-            console.error('Error updating course with image:', error);
             this.notificationService.showError('Error al asociar la imagen', error.error?.message || 'Error desconocido');
           }
         });
@@ -192,16 +180,14 @@ export class FormCourse implements OnInit, OnChanges {
       error: (error) => {
         this.isUploadingImage = false;
         this.isSubmitting = false;
-        console.error('Error uploading image:', error);
         this.notificationService.showError('Error al subir la imagen', error.error?.message || 'Error desconocido');
       }
     });
   }
 
   private showSuccessModal(): void {
-    this.isSubmitting = false; // Resetear estado de carga
+    this.isSubmitting = false;
     this.notificationService.showSuccess('Curso creado exitosamente', 'El curso ha sido creado correctamente.');
-    // Forzar detección de cambios para que el modal aparezca inmediatamente
     this.cdr.detectChanges();
     this.courseUpdated.emit();
   }
@@ -216,7 +202,6 @@ export class FormCourse implements OnInit, OnChanges {
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error creating course:', error);
         this.notificationService.showError('Error al crear el curso');
       }
     });
@@ -224,16 +209,13 @@ export class FormCourse implements OnInit, OnChanges {
 
   updateCourse() {
     if (this.courseForm.valid && this.courseData?.id) {
-      this.isSubmitting = true; // Activar estado de carga
-      // Solo actualizar datos del formulario, la imagen ya se procesó automáticamente
+      this.isSubmitting = true;
       this.updateCourseWithoutNewImage();
     }
   }
 
   private uploadImageAndUpdateCourse(): void {
     this.isUploadingImage = true;
-    // No activar isSubmitting aquí para que el botón no cambie a "ACTUALIZANDO"
-
     this.courseServices.uploadFile(this.selectedFile!).subscribe({
       next: (response) => {
         this.uploadedImageId = response.data.id;
@@ -262,7 +244,6 @@ export class FormCourse implements OnInit, OnChanges {
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error updating course:', error);
         this.notificationService.showError('Error al actualizar el curso',"");
       }
     });
@@ -284,7 +265,6 @@ export class FormCourse implements OnInit, OnChanges {
           this.courseServices.deleteFile(previousImageId).subscribe({
             next: () => {
               console.log('Imagen anterior eliminada exitosamente');
-
             },
             error: (error) => {
               console.warn('No se pudo eliminar la imagen anterior:', error);
@@ -307,7 +287,6 @@ export class FormCourse implements OnInit, OnChanges {
         this.courseData.nombre,
         'curso',
         () => {
-          // Callback de confirmación
           this.courseServices.deleteCourse(this.courseData!.id).subscribe({
             next: (response) => {
               this.notificationService.showSuccess(
@@ -328,8 +307,6 @@ export class FormCourse implements OnInit, OnChanges {
     }
   }
 
-  //Para subir archivos
-  // Métodos para manejo de archivos
   triggerFileInput(): void {
     if (this.isUploadingImage) return;
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -344,13 +321,12 @@ export class FormCourse implements OnInit, OnChanges {
   }
 
   private processSelectedFile(file: File): void {
-    // Validar tipo de archivo
+
     if (!file.type.startsWith('image/')) {
       this.notificationService.showError('Error', 'Por favor selecciona un archivo de imagen válido.');
       return;
     }
 
-    // Validar tamaño (5MB máximo)
     if (file.size > 5 * 1024 * 1024) {
       this.notificationService.showError('Error', 'El archivo es demasiado grande. Tamaño máximo: 5MB.');
       return;
@@ -358,20 +334,17 @@ export class FormCourse implements OnInit, OnChanges {
 
     this.selectedFile = file;
 
-    // Crear preview de la imagen
     const reader = new FileReader();
     reader.onload = (e: any) => {
       this.imagePreview = e.target.result;
     };
     reader.readAsDataURL(file);
 
-    // Si estamos en modo edición, automáticamente subir y actualizar el curso
     if (this.editMode && this.courseData?.id && this.courseForm.valid) {
       this.uploadImageAndUpdateCourse();
     }
   }
 
-  // Métodos para drag & drop
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -403,7 +376,7 @@ export class FormCourse implements OnInit, OnChanges {
     this.imagePreview = null;
     this.uploadedImageId = null;
 
-    // Limpiar el input file
+
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
@@ -417,11 +390,11 @@ export class FormCourse implements OnInit, OnChanges {
 
   removeCurrentImage(event: Event): void {
     event.stopPropagation();
-    // Limpiar la imagen actual del curso
+
     if (this.courseData) {
       this.courseData.img_url = undefined;
     }
-    // Permitir seleccionar una nueva imagen
+
     this.triggerFileInput();
   }
 
@@ -437,7 +410,6 @@ export class FormCourse implements OnInit, OnChanges {
     if (this.selectedFile) {
       this.courseServices.uploadFile(this.selectedFile).subscribe({
         next: (response) => {
-          console.log('File uploaded successfully', response);
           this.notificationService.showSuccess('Imagen subida exitosamente','');
         },
         error: (error) => {

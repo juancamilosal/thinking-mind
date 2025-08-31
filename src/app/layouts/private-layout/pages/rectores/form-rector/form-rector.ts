@@ -40,12 +40,15 @@ export class FormRector implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+
     if (changes['editMode'] || changes['rectorData']) {
-      // Reinicializar el formulario cuando cambia el modo o los datos
+
       this.initForm();
-      
+
       if (this.editMode && this.rectorData) {
-        this.loadRectorData();
+        setTimeout(() => {
+          this.loadRectorData();
+        }, 0);
       }
     }
   }
@@ -80,12 +83,11 @@ export class FormRector implements OnInit, OnChanges {
 
   loadRectorData(): void {
     if (this.rectorData) {
-      // El servicio devuelve colegio_id como objeto, necesitamos extraer el id
-      const schoolId = typeof this.rectorData.colegio_id === 'object' && this.rectorData.colegio_id !== null 
-        ? this.rectorData.colegio_id.id 
+      const schoolId = typeof this.rectorData.colegio_id === 'object' && this.rectorData.colegio_id !== null
+        ? this.rectorData.colegio_id.id
         : this.rectorData.colegio_id;
-      
-      this.rectorForm.patchValue({
+
+      const patchData = {
         firstName: this.rectorData.first_name,
         lastName: this.rectorData.last_name,
         email: this.rectorData.email,
@@ -93,7 +95,8 @@ export class FormRector implements OnInit, OnChanges {
         schoolId: schoolId,
         password: '',
         confirmPassword: ''
-      });
+      };
+      this.rectorForm.patchValue(patchData);
     }
   }
 
@@ -159,7 +162,6 @@ export class FormRector implements OnInit, OnChanges {
       colegio_id: this.rectorForm.get('schoolId')?.value,
     };
 
-    // Solo incluir password si se proporcionó
     const password = this.rectorForm.get('password')?.value;
     if (password) {
       userData.password = password;

@@ -71,7 +71,6 @@ export class Schools implements OnInit {
   }
 
   viewSchool(school: School) {
-    console.log('viewSchool called with:', school);
     this.selectedSchool = school;
     this.showModal = true;
   }
