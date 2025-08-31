@@ -26,7 +26,7 @@ export class Reports {
   payments: PaymentRecord[] = [];
   enrollReportData: EnrollReportData[] = [];
   reportGenerated: boolean = false;
-
+  showDownloadOptions: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -48,6 +48,7 @@ export class Reports {
     });
   }
 
+  // Función para generar el reporte basado en el tipo seleccionado
   generateReport(): void {
      if (this.reportForm.invalid) {
     this.notificationService.showWarning('Por favor, completa todos los campos del formulario.', '');
@@ -69,7 +70,8 @@ export class Reports {
     }
   }
 
-private  generatePaymentsReport(startDate: string, endDate: string): void {
+  // Generar reporte de pagos dentro del rango de fechas
+  private  generatePaymentsReport(startDate: string, endDate: string): void {
     this.paymentService.getPayments().subscribe({
       next: (data) => {
         this.payments = data.data.filter(payment => {
@@ -79,13 +81,6 @@ private  generatePaymentsReport(startDate: string, endDate: string): void {
 
           start.setHours(0, 0, 0, 0);
           end.setHours(23, 59, 59, 999);
-
-          console.log('Date filter:', {
-        startDate: startDate,
-        endDate: endDate,
-        startDateTime: start.toISOString(),
-        endDateTime: end.toISOString()
-      });
 
           return paymentDate >= start && paymentDate <= end;
         });
@@ -97,10 +92,16 @@ private  generatePaymentsReport(startDate: string, endDate: string): void {
     });
   }
 
+  calculateTotal(): number {
+  return this.payments
+    .filter(payment => payment.estado === 'PAGADO')
+    .reduce((total, payment) => total + payment.valor, 0);
+  }
+
+// Generar reporte de inscripciones dentro del rango de fechas
 private generateEnrollReport(startDate: string, endDate: string): void {
   this.accountReceivableService.getAccountsForReport().subscribe({
     next: (response: any) => {
-      console.log('Raw response before mapping:', response);
       const rawData = response.data || response;
       const paidAccounts = rawData.filter((account: any) => {
         if (!account.estudiante_id || typeof account.estudiante_id === 'string') return false;
@@ -154,22 +155,12 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   });
 }
 
-
-  calculateTotal(): number {
-  return this.payments
-    .filter(payment => payment.estado === 'PAGADO')
-    .reduce((total, payment) => total + payment.valor, 0);
-  }
-
-  downloadReport(): void {
-
-  }
-
   clearForm(): void {
     this.reportForm.reset();
     this.payments = [];
     this.enrollReportData = [];
     this.reportGenerated = false;
+    this.showDownloadOptions = false;
   }
 
   formatCurrency(amount: number): string {
@@ -214,5 +205,21 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       default:
         return '';
     }
+  }
+
+  toggleDownloadOptions(): void {
+    this.showDownloadOptions = !this.showDownloadOptions;
+  }
+
+  downloadPDF(): void {
+    this.showDownloadOptions = false;
+    // TODO: Implement PDF download logic
+    this.notificationService.showSuccess('Descargando reporte en PDF...','');
+  }
+
+  downloadExcel(): void {
+    this.showDownloadOptions = false;
+    // TODO: Implement Excel download logic
+    this.notificationService.showSuccess('Descargando reporte en Excel...','');
   }
 }
