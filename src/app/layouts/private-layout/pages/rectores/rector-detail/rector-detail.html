@@ -40,31 +40,21 @@
               <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
                 <label class="block text-sm font-medium text-purple-700 mb-2">Nombre Completo</label>
                 <p class="text-lg font-semibold text-gray-800">
-                  {{ capitalizeText(rector.nombre) }} {{ capitalizeText(rector.apellido) }}
+                  {{ capitalizeText(rector.first_name) }} {{ capitalizeText(rector.last_name) }}
                 </p>
-              </div>
-              <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                <label class="block text-sm font-medium text-purple-700 mb-2">Número de Contacto</label>
-                <p class="text-lg font-semibold text-gray-800">{{ rector.celular }}</p>
               </div>
               <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
                 <label class="block text-sm font-medium text-purple-700 mb-2">Email</label>
                 <p class="text-lg font-semibold text-gray-800">{{ rector.email }}</p>
               </div>
-            </div>
-          </div>
-
-          <!-- Información Institucional -->
-          <div class="mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-              <svg class="w-6 h-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-              </svg>
-              Información Institucional
-            </h2>
-            <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
-              <label class="block text-sm font-medium text-purple-700 mb-2">Colegio</label>
-              <p class="text-lg font-semibold text-gray-800">{{ getSchoolName(rector.colegio_id) }}</p>
+              <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                <label class="block text-sm font-medium text-purple-700 mb-2">Celular</label>
+                <p class="text-lg font-semibold text-gray-800">{{ rector.celular || 'N/A' }}</p>
+              </div>
+              <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                <label class="block text-sm font-medium text-purple-700 mb-2">Colegio ID</label>
+                <p class="text-lg font-semibold text-gray-800">{{ rector.colegio_id || 'N/A' }}</p>
+              </div>
             </div>
           </div>
 

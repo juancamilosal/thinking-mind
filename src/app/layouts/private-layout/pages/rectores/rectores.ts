@@ -1,13 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RectorService } from '../../../../core/services/rector.service';
+import { UserService } from '../../../../core/services/user.service';
 import { SchoolService } from '../../../../core/services/school.service';
-import { Rector } from '../../../../core/models/Rector';
 import { FormRector } from './form-rector/form-rector';
 import { RectorDetail } from './rector-detail/rector-detail';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { StorageServices } from '../../../../core/services/storage.services';
+import {User} from '../../../../core/models/User';
 
 @Component({
   selector: 'app-rectores',
@@ -19,8 +18,8 @@ export class Rectores implements OnInit {
   showForm = false;
   showDetail = false;
   editMode = false;
-  selectedRector: Rector | null = null;
-  rectores: Rector[] = [];
+  selectedRector: User | null = null;
+  rectores: User[] = [];
   isLoading = false;
   searchTerm = '';
   schools: { [key: number]: string } = {};
@@ -28,14 +27,14 @@ export class Rectores implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private rectorService: RectorService,
+    private userService: UserService,
     private schoolService: SchoolService,
     private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.loadSchools();
-    this.searchRector();
+    this.searchRector(undefined, false); // false indica que es carga inicial, no mostrar errores
   }
 
   loadSchools(): void {
@@ -61,15 +60,16 @@ export class Rectores implements OnInit {
     this.selectedRector = null;
   }
 
-  searchRector(searchTerm?: string) {
+  searchRector(searchTerm?: string, showErrorNotification: boolean = true) {
     this.isLoading = true;
-    this.rectorService.searchRector(searchTerm).subscribe({
+    const roleId = 'a4ed6390-5421-46d1-b81e-5cad06115abc';
+    this.userService.getUsersByRole(roleId, searchTerm).subscribe({
       next: (data) => {
         this.rectores = data.data;
         this.isLoading = false;
       },
       error: (error) => {
-        if (error.status === 403) {
+        if (error.status === 403 && showErrorNotification) {
           this.notificationService.showError(
             'Error de Autenticación',
             'No tienes permisos para acceder a esta información. Por favor, inicia sesión nuevamente.'
@@ -95,16 +95,16 @@ export class Rectores implements OnInit {
 
 
     this.searchTimeout = setTimeout(() => {
-      this.searchRector(this.searchTerm.trim() || undefined);
+      this.searchRector(this.searchTerm.trim() || undefined, true); // true para mostrar errores en búsquedas manuales
     }, 500);
   }
 
-  viewRector(rector: Rector) {
+  viewRector(rector: User) {
     this.selectedRector = rector;
     this.showDetail = true;
   }
 
-  editRector(rector: Rector) {
+  editRector(rector: User) {
     this.selectedRector = rector;
     this.editMode = true;
     this.showForm = true;
@@ -117,7 +117,7 @@ export class Rectores implements OnInit {
   }
 
   onRectorUpdated() {
-    this.searchRector();
+    this.searchRector(undefined, false); // false para no mostrar errores al actualizar la lista
     this.toggleForm();
   }
 }

@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { RectorService } from '../../../../../core/services/rector.service';
+import { UserService } from '../../../../../core/services/user.service';
 import { SchoolService } from '../../../../../core/services/school.service';
-import { Rector } from '../../../../../core/models/Rector';
 import { School } from '../../../../../core/models/School';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import {User} from '../../../../../core/models/User';
 
 @Component({
   selector: 'app-form-rector',
@@ -16,19 +16,19 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
 })
 export class FormRector implements OnInit, OnChanges {
   @Input() editMode: boolean = false;
-  @Input() rectorData: Rector | null = null;
+  @Input() rectorData: User | null = null;
   @Output() goBack = new EventEmitter();
   @Output() searchRector = new EventEmitter();
   @Output() rectorUpdated = new EventEmitter();
   rectorForm!: FormGroup;
   isSubmitting = false;
-  schools: School[] = [];
   showPassword = false;
   showConfirmPassword = false;
+  schools: School[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private rectorService: RectorService,
+    private userService: UserService,
     private schoolService: SchoolService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService
@@ -40,31 +40,32 @@ export class FormRector implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['rectorData'] && this.rectorForm) {
+    if (changes['editMode'] || changes['rectorData']) {
+      // Reinicializar el formulario cuando cambia el modo o los datos
+      this.initForm();
+      
       if (this.editMode && this.rectorData) {
         this.loadRectorData();
-      } else {
-        this.rectorForm.reset();
       }
     }
   }
 
   initForm(): void {
-    this.rectorForm = this.fb.group({
-      firstName: [null, Validators.required],
-      lastName: [null, Validators.required],
-      phoneNumber: [null, [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      email: [null, [Validators.required, Validators.email]],
-      schoolId: [null, Validators.required],
-      role:[],
-      password: [null, [Validators.required, Validators.minLength(6)]],
-      confirmPassword: [null, Validators.required]
-    }, { validators: this.passwordMatchValidator });
+    const passwordValidators = this.editMode ? [] : [Validators.required, Validators.minLength(6)];
+    const confirmPasswordValidators = this.editMode ? [] : [Validators.required, this.passwordMatchValidator.bind(this)];
 
-    if (this.editMode && this.rectorData) {
-      this.loadRectorData();
-    }
+    this.rectorForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      celular: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      schoolId: ['', Validators.required],
+      password: ['', passwordValidators],
+      confirmPassword: ['', confirmPasswordValidators]
+    });
   }
+
+
 
   loadSchools(): void {
     this.schoolService.getAllSchools().subscribe({
@@ -79,12 +80,17 @@ export class FormRector implements OnInit, OnChanges {
 
   loadRectorData(): void {
     if (this.rectorData) {
+      // El servicio devuelve colegio_id como objeto, necesitamos extraer el id
+      const schoolId = typeof this.rectorData.colegio_id === 'object' && this.rectorData.colegio_id !== null 
+        ? this.rectorData.colegio_id.id 
+        : this.rectorData.colegio_id;
+      
       this.rectorForm.patchValue({
-        firstName: this.rectorData.nombre,
-        lastName: this.rectorData.apellido,
-        phoneNumber: this.rectorData.celular,
+        firstName: this.rectorData.first_name,
+        lastName: this.rectorData.last_name,
         email: this.rectorData.email,
-        schoolId: this.rectorData.colegio_id,
+        celular: this.rectorData.celular,
+        schoolId: schoolId,
         password: '',
         confirmPassword: ''
       });
@@ -111,18 +117,19 @@ export class FormRector implements OnInit, OnChanges {
   }
 
   createRector() {
-    const rector = {
-      nombre: this.rectorForm.get('firstName')?.value,
-      apellido: this.rectorForm.get('lastName')?.value,
-      celular: this.rectorForm.get('phoneNumber')?.value,
+    const userData = {
+      first_name: this.rectorForm.get('firstName')?.value,
+      last_name: this.rectorForm.get('lastName')?.value,
       email: this.rectorForm.get('email')?.value,
+      celular: this.rectorForm.get('celular')?.value,
       colegio_id: this.rectorForm.get('schoolId')?.value,
       password: this.rectorForm.get('password')?.value,
+      role: 'a4ed6390-5421-46d1-b81e-5cad06115abc'
     };
 
-    this.rectorService.crearRector(rector).subscribe({
+    this.userService.createUser(userData).subscribe({
       next: (): void => {
-        this.notificationService.showSuccess('Éxito', 'Rector creado exitosamente');
+        this.notificationService.showSuccess('Éxito', 'Usuario creado exitosamente');
         this.rectorUpdated.emit();
         this.isSubmitting = false;
       },
@@ -132,9 +139,9 @@ export class FormRector implements OnInit, OnChanges {
             const field = this.getFieldDisplayName(err.field);
             return `${field}: ${err.message}`;
           }).join('\n');
-          this.notificationService.showError('Error', `Error al crear rector:\n${errorMessages}`);
+          this.notificationService.showError('Error', `Error al crear usuario:\n${errorMessages}`);
         } else {
-          this.notificationService.showError('Error', 'Error al crear rector. Por favor, inténtalo de nuevo.');
+          this.notificationService.showError('Error', 'Error al crear usuario. Por favor, inténtalo de nuevo.');
         }
         this.isSubmitting = false;
       }
@@ -144,17 +151,23 @@ export class FormRector implements OnInit, OnChanges {
   updateRector() {
     if (!this.rectorData?.id) return;
 
-    const rector = {
-      nombre: this.rectorForm.get('firstName')?.value,
-      apellido: this.rectorForm.get('lastName')?.value,
-      celular: this.rectorForm.get('phoneNumber')?.value,
+    const userData: any = {
+      first_name: this.rectorForm.get('firstName')?.value,
+      last_name: this.rectorForm.get('lastName')?.value,
       email: this.rectorForm.get('email')?.value,
+      celular: this.rectorForm.get('celular')?.value,
       colegio_id: this.rectorForm.get('schoolId')?.value,
     };
 
-    this.rectorService.updateRector(this.rectorData.id, rector).subscribe({
+    // Solo incluir password si se proporcionó
+    const password = this.rectorForm.get('password')?.value;
+    if (password) {
+      userData.password = password;
+    }
+
+    this.userService.updateUser(this.rectorData.id, userData).subscribe({
       next: (): void => {
-        this.notificationService.showSuccess('Éxito', 'Rector actualizado exitosamente');
+        this.notificationService.showSuccess('Éxito', 'Usuario actualizado exitosamente');
         this.rectorUpdated.emit();
         this.isSubmitting = false;
       },
@@ -164,9 +177,9 @@ export class FormRector implements OnInit, OnChanges {
             const field = this.getFieldDisplayName(err.field);
             return `${field}: ${err.message}`;
           }).join('\n');
-          this.notificationService.showError('Error', `Error al actualizar rector:\n${errorMessages}`);
+          this.notificationService.showError('Error', `Error al actualizar usuario:\n${errorMessages}`);
         } else {
-          this.notificationService.showError('Error', 'Error al actualizar rector. Por favor, inténtalo de nuevo.');
+          this.notificationService.showError('Error', 'Error al actualizar usuario. Por favor, inténtalo de nuevo.');
         }
         this.isSubmitting = false;
       }
@@ -175,18 +188,18 @@ export class FormRector implements OnInit, OnChanges {
 
   deleteRector(): void {
     if (this.rectorData?.id) {
-      const rectorName = `${this.rectorData.nombre} ${this.rectorData.apellido}`;
+      const userName = `${this.rectorData.first_name} ${this.rectorData.last_name}`;
       this.confirmationService.showDeleteConfirmation(
-        rectorName,
-        'rector',
+        userName,
+        'usuario',
         () => {
-          this.rectorService.deleteRector(this.rectorData!.id!).subscribe({
+          this.userService.deleteUser(this.rectorData!.id!).subscribe({
             next: () => {
-              this.notificationService.showSuccess('Éxito', 'Rector eliminado exitosamente');
+              this.notificationService.showSuccess('Éxito', 'Usuario eliminado exitosamente');
               this.rectorUpdated.emit();
             },
             error: (error) => {
-              this.notificationService.showError('Error', 'Error al eliminar el rector');
+              this.notificationService.showError('Error', 'Error al eliminar el usuario');
             }
           });
         }
@@ -196,11 +209,12 @@ export class FormRector implements OnInit, OnChanges {
 
   private getFieldDisplayName(fieldName: string): string {
     const fieldNames: { [key: string]: string } = {
-      'nombre': 'Nombre',
-      'apellido': 'Apellido',
-      'numero_contacto': 'Número de Contacto',
-      'email': 'Email',
-      'colegio_id': 'Colegio'
+      'first_name': 'Nombre',
+      'last_name': 'Apellido',
+      'email': 'Correo electrónico',
+      'celular': 'Celular',
+      'colegio_id': 'Colegio',
+      'password': 'Contraseña'
     };
     return fieldNames[fieldName] || fieldName;
   }
@@ -224,8 +238,12 @@ export class FormRector implements OnInit, OnChanges {
   }
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
-    const password = control.get('password');
-    const confirmPassword = control.get('confirmPassword');
+    if (!control || !control.parent) {
+      return null;
+    }
+
+    const password = control.parent.get('password');
+    const confirmPassword = control.parent.get('confirmPassword');
 
     if (!password || !confirmPassword) {
       return null;

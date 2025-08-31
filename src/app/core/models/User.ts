@@ -1,11 +1,11 @@
-export class User {
+import {School} from './School';
+
+export interface User {
   id: string;
-  role: string;
-  document_type: string;
-  document_number: string;
   first_name: string;
   last_name: string;
-  personal_email: string;
   email: string;
-  cellphone: string;
+  role?: string;
+  celular?: string;
+  colegio_id?: School;
 }

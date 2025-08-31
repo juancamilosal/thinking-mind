@@ -9,7 +9,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
             </svg>
           </div>
-          <h3 class="text-2xl font-bold text-purple-800">Información del Rector</h3>
+          <h3 class="text-2xl font-bold text-purple-800">Información del Usuario</h3>
         </div>
 
         <form [formGroup]="rectorForm" (ngSubmit)="onSubmit()" class="space-y-6">
@@ -54,32 +54,7 @@
               }
             </div>
 
-            <!-- Número de Contacto -->
-            <div class="space-y-3">
-              <label for="phoneNumber" class="block text-sm font-semibold text-purple-700">Número de Contacto *</label>
-              <input
-                type="tel"
-                id="phoneNumber"
-                formControlName="phoneNumber"
-                placeholder="Ingrese el número de contacto"
-                class="w-full px-6 py-4 rounded-lg border border-purple-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white">
-              @if(rectorForm.get('phoneNumber')?.touched && rectorForm.get('phoneNumber')?.errors?.['required']) {
-                <p class="text-red-500 text-sm mt-2 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                  </svg>
-                  El número de contacto es obligatorio
-                </p>
-              }
-              @if(rectorForm.get('phoneNumber')?.touched && rectorForm.get('phoneNumber')?.errors?.['pattern']) {
-                <p class="text-red-500 text-sm mt-2 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                  </svg>
-                  Ingrese un número de contacto válido (10 dígitos)
-                </p>
-              }
-            </div>
+
 
             <!-- Email -->
             <div class="space-y-3">
@@ -108,6 +83,33 @@
               }
             </div>
 
+            <!-- Celular -->
+            <div class="space-y-3">
+              <label for="celular" class="block text-sm font-semibold text-purple-700">Celular *</label>
+              <input
+                type="tel"
+                id="celular"
+                formControlName="celular"
+                placeholder="Ej: 3001234567"
+                class="w-full px-6 py-4 rounded-lg border border-purple-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white">
+              @if(rectorForm.get('celular')?.touched && rectorForm.get('celular')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El celular es obligatorio
+                </p>
+              }
+              @if(rectorForm.get('celular')?.touched && rectorForm.get('celular')?.errors?.['pattern']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El celular debe tener 10 dígitos
+                </p>
+              }
+            </div>
+
             <!-- Colegio -->
             <div class="space-y-3">
               <label for="schoolId" class="block text-sm font-semibold text-purple-700">Colegio *</label>
@@ -115,7 +117,7 @@
                 id="schoolId"
                 formControlName="schoolId"
                 class="w-full px-6 py-4 rounded-lg border border-purple-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white">
-                <option value="" disabled>Seleccione un colegio</option>
+                <option value="">Seleccione un colegio</option>
                 @for (school of schools; track school.id) {
                   <option [value]="school.id">{{ school.nombre }}</option>
                 }
@@ -130,9 +132,13 @@
               }
             </div>
 
+
+
             <!-- Contraseña -->
             <div class="space-y-3">
-              <label for="password" class="block text-sm font-semibold text-purple-700">Contraseña *</label>
+              <label for="password" class="block text-sm font-semibold text-purple-700">
+                Contraseña {{ editMode ? '(opcional)' : '*' }}
+              </label>
               <div class="relative">
                 <input
                   [type]="showPassword ? 'text' : 'password'"
@@ -176,7 +182,9 @@
 
             <!-- Confirmar Contraseña -->
             <div class="space-y-3">
-              <label for="confirmPassword" class="block text-sm font-semibold text-purple-700">Confirmar Contraseña *</label>
+              <label for="confirmPassword" class="block text-sm font-semibold text-purple-700">
+                Confirmar Contraseña {{ editMode ? '(opcional)' : '*' }}
+              </label>
               <div class="relative">
                 <input
                   [type]="showConfirmPassword ? 'text' : 'password'"
@@ -241,7 +249,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                   </svg>
                 }
-                <span>{{ editMode ? 'Actualizar Rector' : 'Registrar Rector' }}</span>
+                <span>{{ editMode ? 'Actualizar Usuario' : 'Registrar Usuario' }}</span>
               }
             </button>
 
@@ -253,7 +261,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
-                <span>Eliminar Rector</span>
+                <span>Eliminar Usuario</span>
               </button>
             }
           </div>
