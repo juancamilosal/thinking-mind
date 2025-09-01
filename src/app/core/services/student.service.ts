@@ -17,7 +17,7 @@ export class StudentService {
   }
 
   searchStudent(searchTerm?: string): Observable<ResponseAPI<Student[]>> {
-    const baseUrl = this.apiStudent + '?fields=*,acudiente.*';
+    const baseUrl = this.apiStudent + '?fields=*,acudiente.*, colegio_id.*';
 
     if (!searchTerm) {
       return this.http.get<ResponseAPI<Student[]>>(baseUrl);
@@ -62,8 +62,15 @@ export class StudentService {
   getStudentsBySchool(schoolId: string): Observable<ResponseAPI<Student[]>> {
     const params = {
       'filter[colegio_id][_eq]': schoolId,
-      'fields': '*,acudiente.*, curso_id.*, curso_id.cuentas_cobrar.*'
+      'fields': '*,acudiente.*, acudiente.cuentas_cobrar.*, acudiente.cuentas_cobrar.curso_id.*'
     };
     return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+  }
+
+  getStudentById(id: string): Observable<ResponseAPI<Student>> {
+    const params = {
+      'fields': '*,acudiente.*, curso_id.*'
+    };
+    return this.http.get<ResponseAPI<Student>>(`${this.apiStudent}/${id}`, { params });
   }
 }

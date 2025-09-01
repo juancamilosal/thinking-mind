@@ -23,6 +23,7 @@ export class AccountReceivable {
   curso_id: Course | null;
   fecha_limite: string;
   estado: string;
+  pin_entregado?: boolean | string;
   pagos?: PaymentRecord[];
   clientName?: string;
   clientEmail?: string;
