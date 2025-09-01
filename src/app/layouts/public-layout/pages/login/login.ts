@@ -46,8 +46,17 @@ export class Login implements OnInit {
 
     this.loginServices.login(this.loginForm.value).subscribe({
       next: (response) => {
-        this.router.navigateByUrl('/private');
-        this.loginServices.me().subscribe({})
+        // Después del login exitoso, obtener información del usuario
+        this.loginServices.me().subscribe({
+          next: (userResponse) => {
+            this.isLoading = false;
+            this.router.navigateByUrl('/private');
+          },
+          error: (userError) => {
+            this.isLoading = false;
+            this.showUserInfoErrorNotification();
+          }
+        });
       },
       error: (error) => {
         this.isLoading = false;

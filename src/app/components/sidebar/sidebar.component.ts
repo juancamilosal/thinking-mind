@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LoginService } from '../../core/services/login.service';
@@ -13,9 +13,9 @@ import { Subscription } from 'rxjs';
   templateUrl: './sidebar.component.html'
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  isSidebarOpen = false;
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
+  @Output() sidebarClose = new EventEmitter<void>();
 
   constructor(private router: Router, private loginService: LoginService) {}
 
@@ -27,24 +27,23 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.userSubscription.unsubscribe();
   }
 
-  toggleSidebar() {
-    this.isSidebarOpen = !this.isSidebarOpen;
-  }
-
   closeSidebar() {
-    this.isSidebarOpen = false;
+    // Emite evento para cerrar el sidebar móvil
+    this.sidebarClose.emit();
   }
 
   logout() {
     this.loginService.logout().subscribe({
       next: () => {
         localStorage.clear();
+        sessionStorage.clear();
         this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
-        // Incluso si hay error, limpiamos el localStorage y redirigimos
+        // Incluso si hay error, limpiamos el localStorage y sessionStorage y redirigimos
         localStorage.clear();
+        sessionStorage.clear();
         this.router.navigate(['/login']);
       }
     });
