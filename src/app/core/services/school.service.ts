@@ -16,7 +16,7 @@ export class SchoolService {
   }
 
   getAllSchools(): Observable<ResponseAPI<School[]>> {
-    return this.http.get<ResponseAPI<School[]>>(this.apiSchool + '?fields=*,estudiante_id.*,rector_id.*');
+    return this.http.get<ResponseAPI<School[]>>(this.apiSchool + '?fields=*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,rector_id.*');
   }
 
   searchSchool(searchTerm?: string): Observable<ResponseAPI<School[]>> {
@@ -42,5 +42,9 @@ export class SchoolService {
 
   deleteSchool(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiSchool}/${id}`);
+  }
+
+  getSchoolById(id: string): Observable<ResponseAPI<School>> {
+    return this.http.get<ResponseAPI<School>>(`${this.apiSchool}/${id}?fields=*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.curso_id.*`);
   }
 }

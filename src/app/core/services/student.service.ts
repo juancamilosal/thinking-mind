@@ -58,4 +58,12 @@ export class StudentService {
     };
     return this.http.get<ResponseAPI<Student[]>>(this.apiSearchStudentPayment , { params });
   }
+
+  getStudentsBySchool(schoolId: string): Observable<ResponseAPI<Student[]>> {
+    const params = {
+      'filter[colegio_id][_eq]': schoolId,
+      'fields': '*,acudiente.*, curso_id.*, curso_id.cuentas_cobrar.*'
+    };
+    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+  }
 }

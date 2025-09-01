@@ -11,6 +11,8 @@ import { AccountsReceivable } from './layouts/private-layout/pages/accounts-rece
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
+import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
+import { EstudiantesColegio } from './layouts/private-layout/pages/estudiantes-colegio/estudiantes-colegio';
 
 export const routes: Routes = [
   {
@@ -76,6 +78,16 @@ export const routes: Routes = [
         path: 'reports',
         title: 'Thinking Mind | Reportes',
         component: Reports
+      },
+      {
+        path: 'list-schools',
+        title: 'Thinking Mind | Listado del Colegio',
+        component: ListSchool
+      },
+      {
+        path: 'estudiantes-colegio/:schoolId',
+        title: 'Thinking Mind | Estudiantes del Colegio',
+        component: EstudiantesColegio
       },
       // Ruta wildcard para rutas no encontradas dentro de private
       {

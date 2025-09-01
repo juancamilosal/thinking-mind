@@ -1,4 +1,5 @@
 import {User} from './User';
+import {Student} from './Student';
 
 export class School {
   id?: string;
@@ -7,5 +8,5 @@ export class School {
   direccion: string;
   rector_id?: User[];
   celular: string;
-  estudiante_id?: any[];
+  estudiante_id?: Student[];
 }

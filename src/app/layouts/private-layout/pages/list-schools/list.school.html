@@ -1,0 +1,157 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Listado del Colegio</h1>
+    <p class="text-gray-600">Visualiza la información completa de todos los colegios registrados</p>
+  </div>
+
+  <!-- Barra de Búsqueda -->
+  <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+      <div class="flex-1 relative">
+        <input
+          type="text"
+          placeholder="Buscar por nombre, ciudad o rector..."
+          [value]="searchTerm"
+          (input)="onSearchInputChange($event)"
+          (keyup.enter)="onSearch()"
+          class="w-full px-6 py-4 pl-12 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+        <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+      <button
+        (click)="onSearch()"
+        class="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <span>Buscar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla de Colegios -->
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-800">Listado Completo de Colegios</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Colegio</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rectores</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiantes</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <!-- Loading Skeleton -->
+          @if (isLoading) {
+            @for (item of [1,2,3,4,5]; track $index) {
+              <tr class="animate-pulse">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                  <div class="h-3 bg-gray-200 rounded w-24"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-24"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-40"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-28"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-16"></div>
+                </td>
+              </tr>
+            }
+          } @else if (schools.length === 0) {
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center justify-center space-y-3">
+                  <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  </svg>
+                  <p class="text-lg font-medium text-gray-500">No hay colegios registrados</p>
+                  <p class="text-sm text-gray-400">Los colegios aparecerán aquí cuando sean creados</p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for(school of schools; track school.id) {
+              <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="navigateToStudents(school.id)">
+                <td class="px-6 py-4">
+                  <div class="text-sm font-medium text-gray-900">{{ school.nombre }}</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-700">{{ school.ciudad }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">{{ school.direccion }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  @if (school.rector_id && school.rector_id.length > 0) {
+                    @if (school.rector_id.length === 1) {
+                      <div class="text-sm">
+                        <span class="text-gray-900 font-medium">{{ school.rector_id[0].first_name }} {{ school.rector_id[0].last_name }}</span>
+                        <div class="text-xs text-gray-500">{{ school.rector_id[0].email }}</div>
+                      </div>
+                    } @else {
+                      <div class="space-y-1">
+                        @for (rector of school.rector_id; track rector.id) {
+                          <div class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full inline-block mr-1 mb-1">
+                            {{ rector.first_name }} {{ rector.last_name }}
+                          </div>
+                        }
+                      </div>
+                    }
+                  } @else {
+                    <span class="text-gray-400 italic text-sm">Sin rector asignado</span>
+                  }
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-700">{{ school.celular || 'N/A' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  @if (school.estudiante_id && school.estudiante_id.length > 0) {
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      {{ school.estudiante_id.length }} estudiante{{ school.estudiante_id.length !== 1 ? 's' : '' }}
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      Sin estudiantes
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Información adicional -->
+  @if (!isLoading && schools.length > 0) {
+    <div class="mt-6 bg-white rounded-xl shadow-lg p-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-700">Total de colegios: {{ schools.length }}</span>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500">
+          Última actualización: {{ currentDate.toLocaleString('es-ES') }}
+        </div>
+      </div>
+    </div>
+  }
+</div>

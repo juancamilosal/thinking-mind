@@ -1,4 +1,5 @@
 import { Client } from './Clients';
+import { Course } from './Course';
 
 export class Student {
   id?: string;
@@ -9,5 +10,6 @@ export class Student {
   colegio: string;
   acudiente?: Client | string;
   colegio_id?: string;
+  curso_id?: Course;
 }
 
