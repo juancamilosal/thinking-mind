@@ -81,7 +81,7 @@ export class ListSchool implements OnInit {
   }
 
   navigateToStudents(schoolId: string): void {
-    this.router.navigate(['/private/estudiantes-colegio', schoolId]);
+    this.router.navigate(['/private/students-school', schoolId]);
   }
 
   ngOnDestroy(): void {

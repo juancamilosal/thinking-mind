@@ -17,7 +17,7 @@ export class StudentService {
   }
 
   searchStudent(searchTerm?: string): Observable<ResponseAPI<Student[]>> {
-    const baseUrl = this.apiStudent + '?fields=*,acudiente.*, colegio_id.*';
+    const baseUrl = this.apiStudent + '?fields=*,acudiente.*';
 
     if (!searchTerm) {
       return this.http.get<ResponseAPI<Student[]>>(baseUrl);
