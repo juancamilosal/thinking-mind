@@ -107,7 +107,7 @@ export class Schools implements OnInit {
         schoolName: this.selectedSchool.nombre,
         city: this.selectedSchool.ciudad,
         address: this.selectedSchool.direccion,
-        principalName: this.selectedSchool.nombre_rector,
+        principalName: this.selectedSchool.rector_id,
         phoneNumber: this.selectedSchool.celular
       });
     }

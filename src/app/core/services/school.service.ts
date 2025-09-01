@@ -16,14 +16,14 @@ export class SchoolService {
   }
 
   getAllSchools(): Observable<ResponseAPI<School[]>> {
-    return this.http.get<ResponseAPI<School[]>>(this.apiSchool);
+    return this.http.get<ResponseAPI<School[]>>(this.apiSchool + '?fields=*,estudiante_id.*,rector_id.*');
   }
 
   searchSchool(searchTerm?: string): Observable<ResponseAPI<School[]>> {
     if (!searchTerm) {
       return this.getAllSchools();
     }
-    
+
     const params = {
       'filter[_or][0][nombre][_icontains]': searchTerm,
       'filter[_or][1][ciudad][_icontains]': searchTerm,

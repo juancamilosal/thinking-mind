@@ -62,11 +62,15 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
           if (newAccessToken) {
             StorageServices.setAccessToken(newAccessToken);
             refreshTokenSubject.next(newAccessToken);
-            return next(addTokenToRequest(request, newAccessToken));
+            // Reintentar la petición original con el nuevo token
+            const retryRequest = addTokenToRequest(request, newAccessToken);
+            return next(retryRequest);
           }
           return redirectToLogin(router);
         }),
-        catchError(() => {
+        catchError((error) => {
+          isRefreshing = false;
+          refreshTokenSubject.next(null);
           return redirectToLogin(router);
         })
       );
@@ -74,11 +78,14 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
        return redirectToLogin(router);
      }
   } else {
+    // Si ya se está refrescando el token, esperar a que termine
     return refreshTokenSubject.pipe(
       filter(token => token != null),
       take(1),
       switchMap(token => {
-        return next(addTokenToRequest(request, token));
+        // Reintentar la petición original con el token refrescado
+        const retryRequest = addTokenToRequest(request, token);
+        return next(retryRequest);
       })
     );
   }

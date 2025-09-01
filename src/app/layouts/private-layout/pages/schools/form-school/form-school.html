@@ -54,26 +54,6 @@
               }
             </div>
 
-            <!-- Nombre del Rector -->
-            <div class="space-y-3">
-              <label for="principalName" class="block text-sm font-semibold text-gray-700">Nombre del Rector *</label>
-              <input
-                (input)="onPrincipalNameChange($event)"
-                type="text"
-                id="principalName"
-                formControlName="principalName"
-                placeholder="Ingrese el nombre del rector"
-                class="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-              @if(schoolForm.get('principalName')?.touched && schoolForm.get('principalName')?.errors?.['required']) {
-                <p class="text-red-500 text-sm mt-2 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                  </svg>
-                  El nombre del rector es obligatorio
-                </p>
-              }
-            </div>
-
             <!-- Número de Celular -->
             <div class="space-y-3">
               <label for="phoneNumber" class="block text-sm font-semibold text-gray-700">Número de Celular *</label>
@@ -100,26 +80,26 @@
                 </p>
               }
             </div>
-          </div>
 
-          <!-- Dirección -->
-          <div class="space-y-3">
-            <label for="address" class="block text-sm font-semibold text-gray-700">Dirección *</label>
-            <input
-              (input)="onAddressChange($event)"
-              type="text"
-              id="address"
-              formControlName="address"
-              placeholder="Ingrese la dirección"
-              class="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-            @if(schoolForm.get('address')?.touched && schoolForm.get('address')?.errors?.['required']) {
-              <p class="text-red-500 text-sm mt-2 flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                La dirección es obligatoria
-              </p>
-            }
+            <!-- Dirección -->
+            <div class="space-y-3">
+              <label for="address" class="block text-sm font-semibold text-gray-700">Dirección *</label>
+              <input
+                (input)="onAddressChange($event)"
+                type="text"
+                id="address"
+                formControlName="address"
+                placeholder="Ingrese la dirección"
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+              @if(schoolForm.get('address')?.touched && schoolForm.get('address')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  La dirección es obligatoria
+                </p>
+              }
+            </div>
           </div>
 
           <!-- Botones de Submit y Eliminar -->
