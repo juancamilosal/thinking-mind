@@ -6,10 +6,12 @@ import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 import { ClientService } from '../../../../core/services/client.service';
+import { SchoolService } from '../../../../core/services/school.service';
 import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
 import {Client} from '../../../../core/models/Clients';
 import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
+import {School} from '../../../../core/models/School';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
 @Component({
@@ -24,6 +26,7 @@ export class PaymentRecord implements OnInit {
   DOCUMENT_TYPE = DOCUMENT_TYPE;
   isSubmitting = false;
   courses: Course[] = [];
+  schools: School[] = [];
   isLoadingCourses = false;
   showConfirmation = false;
   isSearchingClient = false;
@@ -51,11 +54,13 @@ export class PaymentRecord implements OnInit {
     private accountReceivableService: AccountReceivableService,
     private clientService: ClientService,
     private studentService: StudentService,
+    private schoolService: SchoolService,
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
+    this.loadSchools();
   }
 
 
@@ -75,7 +80,7 @@ export class PaymentRecord implements OnInit {
       studentDocumentNumber: ['', [Validators.required, Validators.minLength(6), Validators.pattern(/^[0-9]+$/)]],
       studentFirstName: ['', [Validators.required, Validators.minLength(2)]],
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
-      studentSchool: ['', [Validators.required, Validators.minLength(2)]],
+      studentSchool: ['', [Validators.required]],
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
@@ -342,6 +347,17 @@ export class PaymentRecord implements OnInit {
       error: (error) => {
         console.error('Error loading courses:', error);
         this.isLoadingCourses = false;
+      }
+    });
+  }
+
+  loadSchools(): void {
+    this.schoolService.getAllSchools().subscribe({
+      next: (response) => {
+        this.schools = response.data;
+      },
+      error: (error) => {
+        console.error('Error loading schools:', error);
       }
     });
   }

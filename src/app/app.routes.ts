@@ -89,14 +89,12 @@ export const routes: Routes = [
         title: 'Thinking Mind | Estudiantes del Colegio',
         component: EstudiantesColegio
       },
-      // Ruta wildcard para rutas no encontradas dentro de private
       {
         path: '**',
         redirectTo: '/login'
       }
     ]
   },
-  // Ruta wildcard global para cualquier ruta no encontrada
   {
     path: '**',
     redirectTo: '/login'

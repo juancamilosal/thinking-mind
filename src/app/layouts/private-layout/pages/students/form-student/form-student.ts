@@ -3,7 +3,9 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {CommonModule} from '@angular/common';
 import {StudentService} from '../../../../../core/services/student.service';
 import {ClientService} from '../../../../../core/services/client.service';
+import {SchoolService} from '../../../../../core/services/school.service';
 import {Student} from '../../../../../core/models/Student';
+import {School} from '../../../../../core/models/School';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {NotificationService} from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
@@ -25,6 +27,7 @@ export class FormStudent implements OnInit, OnChanges {
   @Output() studentUpdated = new EventEmitter();
   studentForm!: FormGroup;
   DOCUMENT_TYPE = DOCUMENT_TYPE;
+  schools: School[] = [];
   guardianId: string = '';
   isSubmitting = false; // Nueva propiedad
 
@@ -32,6 +35,7 @@ export class FormStudent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private studentService: StudentService,
     private clientService: ClientService,
+    private schoolService: SchoolService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService
   ) {}
@@ -39,6 +43,7 @@ export class FormStudent implements OnInit, OnChanges {
   ngOnInit(): void {
 
     this.initForm();
+    this.loadSchools();
     this.studentForm.get('guardianDocumentType')?.valueChanges.subscribe(() => {
       this.searchGuardianInfo();
     });
@@ -71,6 +76,18 @@ export class FormStudent implements OnInit, OnChanges {
     if (changes['studentData'] && this.studentData && this.studentForm) {
       this.loadStudentData();
     }
+  }
+
+  loadSchools(): void {
+    this.schoolService.getAllSchools().subscribe({
+      next: (response) => {
+        this.schools = response.data;
+      },
+      error: (error) => {
+        console.error('Error loading schools:', error);
+        this.notificationService.showError('Error al cargar los colegios');
+      }
+    });
   }
 
   loadStudentData(): void {
