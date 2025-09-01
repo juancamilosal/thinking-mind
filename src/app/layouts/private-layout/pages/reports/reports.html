@@ -1,9 +1,240 @@
 <div class="p-6 bg-gray-50 min-h-screen">
   <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800 mb-2">Generar Reportes</h1>
+  <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Reportes</h1>
       <p class="text-gray-600">Genera y descarga tus reportes</p>
-    </div>
+  </div>
+
+  <!-- Form Reportes -->
+  <form [formGroup]="reportForm" class="space-y-6">
+    <div class="max-w-[600px] bg-gradient-to-r from-purple-50 to-violet-50 p-8 rounded-xl border-l-4 border-purple-500 shadow-lg mb-8">
+      <div class="flex flex-col gap-2 px-4 py-3">
+        <div class="flex items-center mb-6">
+          <div class="bg-gradient-to-r from-purple-500 to-violet-500 rounded-full p-3 mr-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800">Generación de Reportes</h3>
+        </div>
+        <!-- Tipo de Reporte -->
+        <label class="text-[#0d141c] text-base font-medium leading-normal pb-2">Tipo de Reporte</label>
+          <select
+            id="reportType"
+            formControlName="reportType"
+            class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 bg-[image:--select-button-svg] placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal">
+            <option value="">Selecciona el tipo de reporte</option>
+            @for(type of REPORT_TYPE; track type.value) {
+                  <option [value]="type.value">{{ type.name }}</option>
+                }
+          </select>
+      </div>
+        <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+          <div class="flex flex-col min-w-40 flex-1">
+            <label class="text-[#0d141c] text-base font-medium leading-normal pb-2">Rango de Fechas</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicial</label>
+            <input
+              type="date"
+              id="startDate"
+              formControlName="startDate"
+              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"/>
+          </div>
+          <div class="flex flex-col min-w-40 flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Final</label>
+            <input
+              type="date"
+              id="endDate"
+              formControlName="endDate"
+              class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"/>
+          </div>
+        </div>
+        <!-- Botones -->
+        <div class="flex gap-4 px-4 py-3">
+          <button
+            type="button"
+            (click)="generateReport()"
+            class="px-6 py-3 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-lg hover:from-purple-600 hover:to-violet-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
+            Generar
+          </button>
+
+        <!-- Boton descargas animado -->
+        @if(!showDownloadOptions) {
+          <button
+            type="button"
+            (click)="toggleDownloadOptions()"
+            class="gap-2 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:from-violet-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto flex items-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Descargar
+            <svg
+              class="w-4 h-4 transition-transform duration-200"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        } @else {
+          <div class="flex gap-2 animate-fade-in">
+            <!-- PDF Button -->
+            <button
+              type="button"
+              (click)="downloadPDF()"
+              class="group relative px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all transform hover:scale-105 shadow-md font-medium flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19L8,14H10L11,17L12,14H14L12,19H10Z"/>
+              </svg>
+              <span class="text-sm">PDF</span>
+            </button>
+
+            <!-- Excel Button -->
+            <button
+              type="button"
+              (click)="downloadExcel()"
+              class="group relative px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-md font-medium flex items-center gap-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12.5,10A3.5,3.5 0 0,1 16,13.5A3.5,3.5 0 0,1 12.5,17A3.5,3.5 0 0,1 9,13.5A3.5,3.5 0 0,1 12.5,10M12.5,12A1.5,1.5 0 0,0 11,13.5A1.5,1.5 0 0,0 12.5,15A1.5,1.5 0 0,0 14,13.5A1.5,1.5 0 0,0 12.5,12Z"/>
+              </svg>
+              <span class="text-sm">Excel</span>
+            </button>
+          </div>
+        }
+
+        <button
+          type="button"
+          (click)="clearForm()"
+          class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
+          Limpiar
+        </button>
+      </div>
+          </div>
+          </form>
+    <!-- Resultados del Reporte -->
+     <!-- Cartera -->
+    @if(reportGenerated && reportForm.valid && reportForm.value.reportType === 'CARTERA') {
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-800">Reporte de Pagos</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagador</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Pago</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (payments.length === 0) {
+              <tr>
+                <td colspan="5" class="px-6 py-16">
+                  <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div class="bg-gray-100 rounded-full p-6">
+                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                      </svg>
+                    </div>
+                    <div class="space-y-2">
+                      <h3 class="text-xl font-semibold text-gray-700">
+                        No hay pagos registrados en las fechas seleccionadas
+                      </h3>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (payment of payments; track payment.id) {
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(payment.valor) }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ formatDate(payment.fecha_pago) }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span [class]="getStatusColor(payment.estado)" class="px-3 py-1 rounded-full text-xs font-medium">
+                      {{ payment.estado }}
+                    </span>
+                  </td>
+                </tr>
+              }
+                <tr class="bg-gray-100 rounded-md">
+                  <th class="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">Total Recaudado:</th>
+                  <th class="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">{{ formatCurrency(calculateTotal()) }}</th>
+                </tr>
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+    <!-- Inscripciones -->
+    @if(reportGenerated && reportForm.valid && reportForm.value.reportType === 'INSCRIPCIONES') {
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-800">Reporte de Inscipciones</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Programa</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incritos</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (enrollReportData.length === 0) {
+              <tr>
+                <td colspan="5" class="px-6 py-16">
+                  <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div class="bg-gray-100 rounded-full p-6">
+                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14l-9-5 9 5z"/>
+                      </svg>
+                    </div>
+                    <div class="space-y-2">
+                      <h3 class="text-xl font-semibold text-gray-700">
+                        No hay inscipciones registradas en las fechas seleccionadas
+                      </h3>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (item of enrollReportData; track $index) {
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ item.courseName }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-gray-900">{{ item.schoolName }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ item.studentCount }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium">
+                      {{ getStatusArrow(item.studentCount) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
 
 </div>
 

@@ -93,4 +93,11 @@ export class AccountReceivableService {
 
     return this.http.post<ResponseAPI<any>>(this.apiUrlPaymentReceivable , paymentReceivable);
   }
+
+  //Para el reporte de inscripciones
+  getAccountsForReport(): Observable<ResponseAPI<AccountReceivable[]>> {
+  return this.http.get<ResponseAPI<any>>(
+    this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*'
+  );
+  }
 }

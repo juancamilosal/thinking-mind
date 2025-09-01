@@ -249,8 +249,8 @@ export class PaymentRecord implements OnInit {
           studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
           studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
           studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
-          coursePrice: this.formatCurrency(parseFloat(cuenta.curso_id?.precio || '0')),
-          coursePriceNumber: parseFloat(cuenta.curso_id?.precio || '0'), // Valor numérico para el pipe
+          coursePrice: this.formatCurrency(cuenta.monto || 0), // Usar monto en lugar del precio del curso
+          coursePriceNumber: cuenta.monto || 0, // Valor numérico del monto
           balance: this.formatCurrency(cuenta.saldo || 0), // Saldo es lo que ya se ha pagado (Total Abonado)
           status: cuenta.estado,
           courseId: cuenta.curso_id?.id
