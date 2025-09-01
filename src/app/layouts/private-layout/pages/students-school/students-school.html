@@ -277,7 +277,7 @@
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-700">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                          [class]="account.estado === 'PENDIENTE' ? 'bg-yellow-100 text-yellow-800' : account.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                          [class]="account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (account.estado === 'PAGADO' || account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                       {{ account.estado }}
                     </span>
                   </td>
