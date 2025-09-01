@@ -12,7 +12,7 @@ import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
-import { EstudiantesColegio } from './layouts/private-layout/pages/estudiantes-colegio/estudiantes-colegio';
+import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 
 export const routes: Routes = [
   {
@@ -85,9 +85,9 @@ export const routes: Routes = [
         component: ListSchool
       },
       {
-        path: 'estudiantes-colegio/:schoolId',
+        path: 'students-school/:schoolId',
         title: 'Thinking Mind | Estudiantes del Colegio',
-        component: EstudiantesColegio
+        component: StudentsSchool
       },
       {
         path: '**',

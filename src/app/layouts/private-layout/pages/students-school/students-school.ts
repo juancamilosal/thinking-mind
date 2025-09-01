@@ -19,12 +19,12 @@ interface StudentAccountReceivable {
 }
 
 @Component({
-  selector: 'app-estudiantes-colegio',
+  selector: 'app-students-school',
   standalone: true,
   imports: [CommonModule, StudentDetail],
-  templateUrl: './estudiantes-colegio.html'
+  templateUrl: './students-school.html'
 })
-export class EstudiantesColegio implements OnInit, OnDestroy {
+export class StudentsSchool implements OnInit, OnDestroy {
   students: Student[] = [];
   school: School | null = null;
   studentAccountsReceivable: StudentAccountReceivable[] = [];
@@ -97,22 +97,22 @@ export class EstudiantesColegio implements OnInit, OnDestroy {
 
   processStudentAccountsReceivable(): void {
     this.studentAccountsReceivable = [];
-    
+
     this.students.forEach(student => {
       if (student.acudiente && typeof student.acudiente === 'object') {
         const client = student.acudiente as Client;
         if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
-          const studentAccounts = client.cuentas_cobrar.filter(account => 
+          const studentAccounts = client.cuentas_cobrar.filter(account =>
             account.estudiante_id === student.id
           ).map(account => ({
             ...account,
             pin_entregado: account.pin_entregado || 'NO'
           }));
-          
+
           if (studentAccounts.length > 0) {
             const totalAmount = studentAccounts.reduce((sum, account) => sum + account.monto, 0);
             const totalPending = studentAccounts.filter(account => account.estado === 'PENDIENTE').length;
-            
+
             this.studentAccountsReceivable.push({
               student: student,
               accountsReceivable: studentAccounts,
@@ -123,18 +123,18 @@ export class EstudiantesColegio implements OnInit, OnDestroy {
         }
       }
     });
-    
+
     this.filteredStudentAccounts = [...this.studentAccountsReceivable];
     this.updateTotalAccountsCount();
   }
 
   onSearchInputChange(event: any): void {
     this.searchTerm = event.target.value;
-    
+
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    
+
     this.searchTimeout = setTimeout(() => {
       this.searchStudents();
     }, 500);
@@ -151,8 +151,8 @@ export class EstudiantesColegio implements OnInit, OnDestroy {
       const student = studentAccount.student;
       const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
       const document = `${student.tipo_documento} ${student.numero_documento}`.toLowerCase();
-      
-      return fullName.includes(term) || 
+
+      return fullName.includes(term) ||
              document.includes(term) ||
              student.nombre.toLowerCase().includes(term) ||
              student.apellido.toLowerCase().includes(term) ||
@@ -178,9 +178,7 @@ export class EstudiantesColegio implements OnInit, OnDestroy {
           this.showStudentModal = true;
         },
         error: (error) => {
-          // Si falla la carga completa, usar los datos disponibles
           this.selectedStudent = student;
-          // Agregar la información de la cuenta si está disponible
           if (account) {
             (this.selectedStudent as any).accountInfo = account;
           }
@@ -189,7 +187,6 @@ export class EstudiantesColegio implements OnInit, OnDestroy {
       });
     } else {
       this.selectedStudent = student;
-      // Agregar la información de la cuenta si está disponible
       if (account) {
         (this.selectedStudent as any).accountInfo = account;
       }
@@ -229,7 +226,6 @@ export class EstudiantesColegio implements OnInit, OnDestroy {
     this.accountReceivableService.updateAccountReceivable(account.id, { pin_entregado: newValue })
       .subscribe({
         next: (response) => {
-          // Sin notificación modal
         },
         error: (error) => {
           console.error('Error updating pin_entregado:', error);
