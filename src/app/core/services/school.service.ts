@@ -15,11 +15,15 @@ export class SchoolService {
   constructor(private http: HttpClient) {
   }
 
+  getAllSchools(): Observable<ResponseAPI<School[]>> {
+    return this.http.get<ResponseAPI<School[]>>(this.apiSchool + '?fields=*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,rector_id.*');
+  }
+
   searchSchool(searchTerm?: string): Observable<ResponseAPI<School[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<School[]>>(this.apiSchool);
+      return this.getAllSchools();
     }
-    
+
     const params = {
       'filter[_or][0][nombre][_icontains]': searchTerm,
       'filter[_or][1][ciudad][_icontains]': searchTerm,
@@ -38,5 +42,9 @@ export class SchoolService {
 
   deleteSchool(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiSchool}/${id}`);
+  }
+
+  getSchoolById(id: string): Observable<ResponseAPI<School>> {
+    return this.http.get<ResponseAPI<School>>(`${this.apiSchool}/${id}?fields=*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,estudiante_id.acudiente.cuentas_cobrar.curso_id.*,estudiante_id.curso_id.*`);
   }
 }

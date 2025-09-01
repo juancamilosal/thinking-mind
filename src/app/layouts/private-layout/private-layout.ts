@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { HeaderComponent } from '../../components/header/header.component';
 import { NgClass, isPlatformBrowser } from "@angular/common";
 import { NotificationModalComponent, NotificationData } from '../../components/notification-modal/notification-modal';
 import { ConfirmationModalComponent, ConfirmationData } from '../../components/confirmation-modal/confirmation-modal';
@@ -10,7 +11,7 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, NotificationModalComponent, ConfirmationModalComponent],
+  imports: [RouterOutlet, SidebarComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent],
   templateUrl: './private-layout.html'
 })
 export class PrivateLayout implements OnInit {
@@ -18,6 +19,7 @@ export class PrivateLayout implements OnInit {
   isSidebarOpen = false;
   windowWidth = 0;
   isBrowser = false;
+  isMobileSidebarOpen = false;
 
   // Propiedades para el modal de notificaciones
   isNotificationVisible = false;
@@ -70,6 +72,10 @@ export class PrivateLayout implements OnInit {
 
   onConfirmationCancel() {
     this.confirmationService.cancel();
+  }
+
+  onToggleSidebar() {
+    this.isMobileSidebarOpen = !this.isMobileSidebarOpen;
   }
 
   @HostListener('window:resize')

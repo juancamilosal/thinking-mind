@@ -49,7 +49,7 @@ export class FormSchool implements OnInit, OnChanges {
         }
       }
     }
-    
+
     if (changes['schoolData'] && this.schoolData && this.editMode) {
       // Si el formulario no está inicializado aún, esperamos a que se inicialice
       if (this.schoolForm) {
@@ -66,7 +66,6 @@ export class FormSchool implements OnInit, OnChanges {
       schoolName: [null, Validators.required],
       city: [null, Validators.required],
       address: [null, Validators.required],
-      principalName: [null, Validators.required],
       phoneNumber: [null, [Validators.required, Validators.pattern('^[0-9]{10}$')]]
     });
   }
@@ -77,7 +76,7 @@ export class FormSchool implements OnInit, OnChanges {
         schoolName: this.schoolData.nombre,
         city: this.schoolData.ciudad,
         address: this.schoolData.direccion,
-        principalName: this.schoolData.nombre_rector,
+        principalName: this.schoolData.rector_id,
         phoneNumber: this.schoolData.celular
       });
     }
@@ -107,7 +106,6 @@ export class FormSchool implements OnInit, OnChanges {
       nombre: this.schoolForm.get('schoolName')?.value,
       ciudad: this.schoolForm.get('city')?.value,
       direccion: this.schoolForm.get('address')?.value,
-      nombre_rector: this.schoolForm.get('principalName')?.value,
       celular: this.schoolForm.get('phoneNumber')?.value,
     }
 
@@ -187,11 +185,10 @@ export class FormSchool implements OnInit, OnChanges {
 
   capitalizeText(text: string): string {
     if (!text) return '';
-    return text
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return text.toLowerCase().split(' ').map(word => {
+      if (word.length === 0) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
   }
 
   onSchoolNameChange(event: any): void {

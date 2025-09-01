@@ -11,6 +11,7 @@ export class PaymentRecord {
   pagador: string;
   numero_aprobacion?: string;
   estado: string;
+  comprobante?: string;
 }
 
 export class AccountReceivable {
@@ -22,6 +23,7 @@ export class AccountReceivable {
   curso_id: Course | null;
   fecha_limite: string;
   estado: string;
+  pin_entregado?: boolean | string;
   pagos?: PaymentRecord[];
   clientName?: string;
   clientEmail?: string;

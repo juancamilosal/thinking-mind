@@ -5,11 +5,14 @@ import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
 import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
+import { Rectores } from './layouts/private-layout/pages/rectores/rectores';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
+import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
+import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 
 export const routes: Routes = [
   {
@@ -52,6 +55,11 @@ export const routes: Routes = [
         component: Schools
       },
       {
+        path: 'rectores',
+        title: 'Thinking Mind | Rectores',
+        component: Rectores
+      },
+      {
         path: 'courses',
         title: 'Thinking Mind | Cursos',
         component: Courses
@@ -71,14 +79,22 @@ export const routes: Routes = [
         title: 'Thinking Mind | Reportes',
         component: Reports
       },
-      // Ruta wildcard para rutas no encontradas dentro de private
+      {
+        path: 'list-schools',
+        title: 'Thinking Mind | Listado del Colegio',
+        component: ListSchool
+      },
+      {
+        path: 'students-school/:schoolId',
+        title: 'Thinking Mind | Estudiantes del Colegio',
+        component: StudentsSchool
+      },
       {
         path: '**',
         redirectTo: '/login'
       }
     ]
   },
-  // Ruta wildcard global para cualquier ruta no encontrada
   {
     path: '**',
     redirectTo: '/login'

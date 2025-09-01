@@ -4,15 +4,18 @@ export const environment = {
   clients: apiUrl + 'items/clientes',
   students: apiUrl + 'items/estudiantes',
   schools: apiUrl + 'items/colegios',
+  rectores: apiUrl + 'items/rectores',
   courses: apiUrl + 'items/Cursos',
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',
   files: apiUrl + 'files',
-  login: apiUrl + 'auth/login',
-  logout: apiUrl + 'auth/logout',
-  me: apiUrl + 'users/me',
-
-
+  security: {
+    login: apiUrl + 'auth/login',
+    logout: apiUrl + 'auth/logout',
+    refresh: apiUrl + 'auth/refresh',
+    me: apiUrl + 'users/me',
+  },
+  users: apiUrl + 'users',
   //Flujos
   manual_payment: apiUrl + 'flows/trigger/2b02aa2e-58ca-48a0-a360-84861acd0692',
   total_accounts: apiUrl + 'flows/trigger/6dd2a98f-b283-46b5-9a36-5dd1d4f9adc9',

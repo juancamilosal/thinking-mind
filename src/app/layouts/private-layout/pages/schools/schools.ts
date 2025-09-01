@@ -71,11 +71,8 @@ export class Schools implements OnInit {
   }
 
   viewSchool(school: School) {
-    console.log('viewSchool called with:', school);
     this.selectedSchool = school;
     this.showModal = true;
-    console.log('showModal set to:', this.showModal);
-    console.log('selectedSchool set to:', this.selectedSchool);
   }
 
   editSchool(school: School) {
@@ -110,7 +107,7 @@ export class Schools implements OnInit {
         schoolName: this.selectedSchool.nombre,
         city: this.selectedSchool.ciudad,
         address: this.selectedSchool.direccion,
-        principalName: this.selectedSchool.nombre_rector,
+        principalName: this.selectedSchool.rector_id,
         phoneNumber: this.selectedSchool.celular
       });
     }
@@ -120,13 +117,10 @@ export class Schools implements OnInit {
     this.isLoading = true;
     this.schoolServices.searchSchool(searchTerm).subscribe({
       next: (data) => {
-        console.log('Schools loaded:', data);
         this.schools = data.data;
-        console.log('Schools array:', this.schools);
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading schools:', error);
         this.isLoading = false;
       }
     });
@@ -140,15 +134,13 @@ export class Schools implements OnInit {
     const target = event.target as HTMLInputElement;
     this.searchTerm = target.value;
 
-    // Limpiar timeout anterior
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
 
-    // Establecer nuevo timeout para búsqueda automática
     this.searchTimeout = setTimeout(() => {
       this.searchSchool(this.searchTerm.trim() || undefined);
-    }, 500); // 500ms de delay
+    }, 500);
   }
 
   createSchool() {

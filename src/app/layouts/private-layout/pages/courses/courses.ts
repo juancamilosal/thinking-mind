@@ -11,7 +11,7 @@ import { FormCourse } from './form-course/form-course';
   selector: 'app-courses',
   imports: [
     CommonModule,
-    CourseCardComponent, 
+    CourseCardComponent,
     CourseInfoComponent,
     FormCourse
   ],
@@ -62,7 +62,7 @@ export class Courses {
     this.courseServices.searchCourse(searchTerm).subscribe({
       next: (data) => {
         // Ordenar los cursos alfabéticamente por nombre
-        this.courses = data.data.sort((a, b) => 
+        this.courses = data.data.sort((a, b) =>
           a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
         );
         this.isLoading = false;
@@ -127,7 +127,7 @@ export class Courses {
       next: (response) => {
         if (response.data) {
           // Ordenar los cursos alfabéticamente por nombre
-          this.courses = response.data.sort((a, b) => 
+          this.courses = response.data.sort((a, b) =>
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
         }
@@ -152,7 +152,6 @@ export class Courses {
     if (confirm(`¿Estás seguro de que deseas eliminar el curso "${course.nombre}"?`)) {
       this.courseServices.deleteCourse(course.id).subscribe({
         next: (response) => {
-          console.log('Curso eliminado exitosamente');
           this.searchCourse(); // Recargar la lista de cursos
         },
         error: (error) => {
