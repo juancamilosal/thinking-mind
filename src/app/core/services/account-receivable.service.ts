@@ -31,7 +31,7 @@ export class AccountReceivableService {
 
   searchAccountReceivable(searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,curso_id.*,pagos.*, comprobante.*').pipe(
+      return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*').pipe(
         map(response => ({
           ...response,
           data: response.data.map(item => this.mapToAccountReceivable(item))
@@ -74,6 +74,9 @@ export class AccountReceivableService {
       studentName: typeof item.estudiante_id === 'object'
         ? `${item.estudiante_id.nombre} ${item.estudiante_id.apellido}`
         : item.studentName,
+      schoolName: typeof item.estudiante_id === 'object' && item.estudiante_id.colegio_id
+        ? item.estudiante_id.colegio_id.nombre
+        : item.schoolName,
       createdDate: item.createdDate
     };
   }

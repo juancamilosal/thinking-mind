@@ -57,6 +57,11 @@
             </div>
 
             <div class="flex justify-between items-center">
+              <span class="text-gray-600 font-medium">Colegio:</span>
+              <span class="text-gray-900 font-semibold">{{ account.schoolName || 'N/A' }}</span>
+            </div>
+
+            <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Curso:</span>
               <span class="text-gray-900 font-semibold">{{ account.curso_id?.nombre }}</span>
             </div>
@@ -353,8 +358,8 @@
                           [class]="canDeletePayment(payment) && !isDeletingPayment ?
                             'text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors duration-200 cursor-pointer' :
                             'text-gray-400 p-2 rounded-lg cursor-not-allowed'"
-                          [title]="!canDeletePayment(payment) ? 'Solo se pueden eliminar pagos con método PASARE DE PAGO' : 
-                                   isDeletingPayment && deletingPaymentId === payment.id ? 'Eliminando pago...' : 
+                          [title]="!canDeletePayment(payment) ? 'Solo se pueden eliminar pagos con método PASARE DE PAGO' :
+                                   isDeletingPayment && deletingPaymentId === payment.id ? 'Eliminando pago...' :
                                    isDeletingPayment ? 'Espera a que termine la eliminación actual' : 'Eliminar pago'">
                     @if (isDeletingPayment && deletingPaymentId === payment.id) {
                       <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

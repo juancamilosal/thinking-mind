@@ -179,7 +179,7 @@ export class AccountReceivableFormComponent implements OnInit {
           this.studentId = student.id ? student.id.toString() : '';
           this.accountForm.patchValue({
             studentName: `${student.nombre || ''} ${student.apellido || ''}`.trim(),
-            colegio: student.colegio || ''
+            colegio: student.colegio_id || ''
           });
 
         } else {

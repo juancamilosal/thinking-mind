@@ -29,6 +29,7 @@ export class AccountReceivable {
   clientEmail?: string;
   clientPhone?: string;
   studentName?: string;
+  schoolName?: string;
   createdDate?: string;
 }
 

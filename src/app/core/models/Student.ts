@@ -8,7 +8,6 @@ export class Student {
   numero_documento: string;
   nombre: string;
   apellido: string;
-  colegio: string;
   acudiente?: Client | string;
   colegio_id?: School;
   curso_id?: Course;

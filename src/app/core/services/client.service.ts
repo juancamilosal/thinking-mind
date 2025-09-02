@@ -18,7 +18,7 @@ export class ClientService {
 
   searchClient(searchTerm?: string): Observable<ResponseAPI<Client[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<Client[]>>(this.apiCliente + '?fields=*,estudiantes.*');
+      return this.http.get<ResponseAPI<Client[]>>(this.apiCliente + '?fields=*,estudiantes.*,estudiantes.colegio_id.*');
     }
 
     const params = {

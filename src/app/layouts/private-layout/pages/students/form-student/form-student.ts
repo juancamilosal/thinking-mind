@@ -97,7 +97,7 @@ export class FormStudent implements OnInit, OnChanges {
         documentNumber: this.studentData.numero_documento,
         firstName: this.studentData.nombre,
         lastName: this.studentData.apellido,
-        school: this.studentData.colegio
+        school: this.studentData.colegio_id
       });
 
       if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
