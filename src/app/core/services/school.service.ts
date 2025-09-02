@@ -11,7 +11,7 @@ import {environment} from '../../../environments/environment';
 
 export class SchoolService {
   apiSchool: string = environment.schools;
-
+  apiStudentSchool: string = environment.list_student_school;
   constructor(private http: HttpClient) {
   }
 
@@ -48,11 +48,7 @@ export class SchoolService {
     return this.http.get<ResponseAPI<School>>(`${this.apiSchool}/${id}?fields=*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,estudiante_id.acudiente.cuentas_cobrar.curso_id.*,estudiante_id.curso_id.*`);
   }
 
-  getSchoolsByRectorId(rectorId: string): Observable<ResponseAPI<School[]>> {
-    const params = {
-      'filter[rector_id][_eq]': rectorId,
-      'fields': '*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,rector_id.*'
-    };
-    return this.http.get<ResponseAPI<School[]>>(this.apiSchool, { params });
+  getListStudentBySchool(): Observable<ResponseAPI<School>> {
+    return this.http.get<ResponseAPI<School>>(this.apiStudentSchool);
   }
 }

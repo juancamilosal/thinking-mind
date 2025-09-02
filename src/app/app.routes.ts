@@ -14,6 +14,7 @@ import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -34,6 +35,7 @@ export const routes: Routes = [
   {
     path: 'private',
     component: PrivateLayout,
+    canActivate: [authGuard],
     children: [
       {
         path: '',

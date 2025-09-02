@@ -21,6 +21,7 @@ export const environment = {
   total_accounts: apiUrl + 'flows/trigger/6dd2a98f-b283-46b5-9a36-5dd1d4f9adc9',
   payment_record: apiUrl + 'flows/trigger/7e95991a-52b2-4208-a423-ae5cdb52b163',
   search_cliente: apiUrl + 'flows/trigger/f88c7b92-e1b2-4a50-851d-9afb8c971c19',
-  search_student: apiUrl + 'flows/trigger/08fe708c-06b9-4da1-95f2-448cf5015b10'
+  search_student: apiUrl + 'flows/trigger/08fe708c-06b9-4da1-95f2-448cf5015b10',
+  list_student_school: apiUrl + 'flows/trigger/b843f482-7a50-4a5a-8d93-f78a04fc2b80'
 };
 

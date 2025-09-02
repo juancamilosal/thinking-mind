@@ -84,7 +84,7 @@ export class PaymentRecord implements OnInit {
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
-      coursePrice: [{ value: '', disabled: true }, [Validators.required]]
+      coursePrice: [{ value: '', disabled: true }, [Validators.required]],
     });
   }
 
@@ -258,7 +258,8 @@ export class PaymentRecord implements OnInit {
           coursePriceNumber: cuenta.monto || 0, // Valor numérico del monto
           balance: this.formatCurrency(cuenta.saldo || 0), // Saldo es lo que ya se ha pagado (Total Abonado)
           status: cuenta.estado,
-          courseId: cuenta.curso_id?.id
+          courseId: cuenta.curso_id?.id,
+          date: cuenta.created_at,
         };
         this.registeredCourses.push(courseData);
       });
@@ -430,8 +431,10 @@ export class PaymentRecord implements OnInit {
       },
       curso_id: this.paymentForm.get('selectedCourse')?.value,
       precio: coursePriceNumber,
-      estado: 'PENDIENTE'
-    }
+      estado: 'PENDIENTE',
+      fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
+    };
+
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
         this.isSubmitting = false;

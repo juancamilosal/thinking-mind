@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LoginService } from '../../core/services/login.service';
 import { User } from '../../core/models/User';
+import { StorageServices } from '../../core/services/storage.services';
 import { Subscription } from 'rxjs';
 
 
@@ -33,19 +34,29 @@ export class SidebarComponent implements OnInit, OnDestroy {
   constructor(private router: Router, private loginService: LoginService) {}
 
   ngOnInit() {
+    this.checkAuthentication();
     this.checkUserRole();
   }
 
+  checkAuthentication() {
+    const accessToken = StorageServices.getAccessToken();
+    const currentUser = StorageServices.getCurrentUser();
+    
+    if (!accessToken || !currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    this.currentUser = currentUser;
+  }
+
   checkUserRole() {
-    const userData = sessionStorage.getItem('current_user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-        this.menuItems = [
-          { path: '/private/dashboard', icon: 'home', label: 'Dashboard' },
-          { path: '/private/list-schools', icon: 'list', label: 'Listado' }
-        ];
-      }
+    const currentUser = StorageServices.getCurrentUser();
+    if (currentUser && currentUser.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+      this.menuItems = [
+        { path: '/private/dashboard', icon: 'home', label: 'Dashboard' },
+        { path: '/private/list-schools', icon: 'list', label: 'Listado' }
+      ];
     }
   }
 
@@ -61,15 +72,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   logout() {
     this.loginService.logout().subscribe({
       next: () => {
-        localStorage.clear();
-        sessionStorage.clear();
+        StorageServices.clearAllSession();
         this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
-        // Incluso si hay error, limpiamos el localStorage y sessionStorage y redirigimos
-        localStorage.clear();
-        sessionStorage.clear();
+        // Incluso si hay error, limpiamos la sesión y redirigimos
+        StorageServices.clearAllSession();
         this.router.navigate(['/login']);
       }
     });

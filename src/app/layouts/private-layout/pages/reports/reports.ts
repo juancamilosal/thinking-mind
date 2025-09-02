@@ -6,6 +6,7 @@ import { REPORT_TYPE } from '../../../../core/const/ReportType';
 import { PaymentRecord } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import {SchoolService} from '../../../../core/services/school.service';
 
 interface EnrollReportData {
   schoolName: string;
@@ -33,11 +34,13 @@ export class Reports {
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
     private paymentService: PaymentService,
-    private accountReceivableService: AccountReceivableService
+    private accountReceivableService: AccountReceivableService,
+    private schoolService: SchoolService,
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    this.schoolService.getListStudentBySchool().subscribe()
   }
 
   initForm=(): void => {

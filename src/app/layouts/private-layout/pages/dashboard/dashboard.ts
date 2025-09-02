@@ -107,8 +107,6 @@ export class Dashboard implements OnInit {
     }).subscribe({
       next: ({ students, accounts }) => {
         this.students = students.data;
-        console.log('Total cuentas recibidas:', accounts.data.length);
-
         const schoolAccounts = accounts.data.filter(account => {
           if (typeof account.estudiante_id === 'object' && account.estudiante_id !== null) {
             const colegioId = (account.estudiante_id as any).colegio_id?.id;
@@ -145,7 +143,6 @@ export class Dashboard implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading admin data:', error);
         this.isLoading = false;
       }
     });
@@ -186,11 +183,6 @@ export class Dashboard implements OnInit {
         pinsDelivered++;
       }
     });
-
-    console.log('Cuentas procesadas:', accounts.length);
-    console.log('Estados PAGADA:', studentsWithPaidStatus);
-    console.log('Estados PENDIENTE:', studentsWithPendingStatus);
-    console.log('Pines SI:', pinsDelivered);
 
     this.rectorStats.totalStudentsWithPaidStatus = studentsWithPaidStatus;
     this.rectorStats.totalStudentsWithPendingStatus = studentsWithPendingStatus;
