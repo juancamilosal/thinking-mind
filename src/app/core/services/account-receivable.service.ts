@@ -29,21 +29,24 @@ export class AccountReceivableService {
     return this.http.post<ResponseAPI<any>>(this.apiUrl, accountReceivable);
   }
 
-  searchAccountReceivable(searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {
-    if (!searchTerm) {
-      return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*').pipe(
-        map(response => ({
-          ...response,
-          data: response.data.map(item => this.mapToAccountReceivable(item))
-        }))
-      );
+  searchAccountReceivable(searchTerm?: string, colegioId?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    let params: any = {};
+
+    // Filtro por colegio si se proporciona
+    if (colegioId) {
+      params['filter[estudiante_id][colegio_id][_eq]'] = colegioId;
     }
 
-    const params = {
-      'filter[_or][0][descripcion][_icontains]': searchTerm,
-      'filter[_or][1][numero_factura][_icontains]': searchTerm
-    };
-    return this.http.get<ResponseAPI<any[]>>(this.apiUrl, { params }).pipe(
+    // Filtro por término de búsqueda si se proporciona
+    if (searchTerm) {
+      params['filter[_or][0][descripcion][_icontains]'] = searchTerm;
+      params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
+    }
+
+    const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
         ...response,
         data: response.data.map(item => this.mapToAccountReceivable(item))

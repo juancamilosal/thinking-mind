@@ -74,7 +74,7 @@ export class StorageServices {
     if (this.isBrowser) {
       sessionStorage.removeItem('access_token');
       sessionStorage.removeItem('refresh_token');
-      sessionStorage.removeItem('user_data');
+      sessionStorage.removeItem(this.CURRENT_USER);
     }
   }
 

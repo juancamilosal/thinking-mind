@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { REPORT_TYPE } from '../../../../core/const/ReportType';
@@ -7,6 +8,7 @@ import { PaymentRecord } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
+import * as ExcelJS from 'exceljs';
 
 interface EnrollReportData {
   schoolName: string;
@@ -14,9 +16,36 @@ interface EnrollReportData {
   studentCount: number;
 }
 
+interface SchoolData {
+  id: string;
+  colegio: string;
+  cursos: CourseData[];
+  expanded?: boolean;
+}
+
+interface CourseData {
+  id: string;
+  curso: string;
+  precio: string;
+  sku: string;
+  estudiantes: StudentData[];
+  nuevos_hoy: number;
+  total_estudiantes: number;
+  expanded?: boolean;
+}
+
+interface StudentData {
+  id: string;
+  nombre: string;
+  apellido: string;
+  tipo_documento: string;
+  numero_documento: string;
+  fecha_creacion: string | null;
+}
+
 @Component({
   selector: 'app-reports',
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule],
   templateUrl: './reports.html',
   standalone: true
 })
@@ -28,6 +57,8 @@ export class Reports {
   enrollReportData: EnrollReportData[] = [];
   reportGenerated: boolean = false;
   showDownloadOptions: boolean = false;
+  schoolsData: SchoolData[] = [];
+  loadingSchoolsData: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -40,32 +71,29 @@ export class Reports {
 
   ngOnInit(): void {
     this.initForm();
-    this.schoolService.getListStudentBySchool().subscribe()
   }
 
   initForm=(): void => {
     this.reportForm = this.fb.group({
-      reportType: ['', Validators.required],
-      startDate: [null, Validators.required],
-      endDate: [null, Validators.required]
+      reportType: ['', [Validators.required]]
     });
   }
 
   // Función para generar el reporte basado en el tipo seleccionado
   generateReport(): void {
      if (this.reportForm.invalid) {
-    this.notificationService.showWarning('Por favor, completa todos los campos del formulario.', '');
+    this.notificationService.showWarning('Por favor, selecciona un tipo de reporte.', '');
     return;
     }
     this.reportGenerated = true;
-    const { reportType, startDate, endDate } = this.reportForm.value;
+    const { reportType } = this.reportForm.value;
 
     switch (reportType) {
     case 'CARTERA':
-      this.generatePaymentsReport(startDate, endDate);
+      this.generatePaymentsReport();
       break;
     case 'INSCRIPCIONES':
-      this.generateEnrollReport(startDate, endDate);
+      this.loadSchoolsData();
       break;
     default:
       this.notificationService.showError('Tipo de reporte no válido.');
@@ -73,24 +101,26 @@ export class Reports {
     }
   }
 
-  // Generar reporte de pagos dentro del rango de fechas
-  private  generatePaymentsReport(startDate: string, endDate: string): void {
+  // Generar reporte de pagos
+  private  generatePaymentsReport(): void {
     this.paymentService.getPayments().subscribe({
       next: (data) => {
-        this.payments = data.data.filter(payment => {
-          const paymentDate = new Date(payment.fecha_pago);
-          const start = new Date(startDate + 'T00:00:00Z');
-          const end = new Date(endDate + 'T23:59:59.999Z');
-
-          start.setHours(0, 0, 0, 0);
-          end.setHours(23, 59, 59, 999);
-
-          return paymentDate >= start && paymentDate <= end;
-        });
+        this.payments = data.data;
       },
       error: (error) => {
         console.error('Error loading payments:', error);
-        this.notificationService.showError('Error loading payments');
+        
+        if (error.status === 401) {
+          this.notificationService.showError(
+            'Sesión expirada', 
+            'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+          );
+        } else {
+          this.notificationService.showError(
+            'Error al cargar pagos', 
+            'No se pudieron cargar los datos de pagos. Inténtalo nuevamente.'
+          );
+        }
       }
     });
   }
@@ -152,9 +182,20 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       }
     },
     error: (error) => {
-      console.error('Error loading enrollments:', error);
-      this.notificationService.showError('Error al cargar las inscripciones');
-    }
+        console.error('Error loading enrollments:', error);
+        
+        if (error.status === 401) {
+          this.notificationService.showError(
+            'Sesión expirada', 
+            'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+          );
+        } else {
+          this.notificationService.showError(
+            'Error al cargar inscripciones', 
+            'No se pudieron cargar los datos de inscripciones. Inténtalo nuevamente.'
+          );
+        }
+      }
   });
 }
 
@@ -162,16 +203,90 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.reportForm.reset();
     this.payments = [];
     this.enrollReportData = [];
+    this.schoolsData = [];
     this.reportGenerated = false;
     this.showDownloadOptions = false;
+    this.loadingSchoolsData = false;
+  }
+
+  loadSchoolsData(): void {
+    this.loadingSchoolsData = true;
+    this.schoolService.getListStudentBySchool().subscribe({
+      next: (response: any) => {
+        console.log('Response from service:', response);
+        // El servicio retorna directamente el array, no dentro de una propiedad 'data'
+        const schoolsArray = Array.isArray(response) ? response : response.data || [];
+        this.schoolsData = schoolsArray.map((school: any) => ({
+          ...school,
+          expanded: false,
+          cursos: school.cursos.map((curso: any) => ({
+            ...curso,
+            expanded: false
+          }))
+        }));
+        console.log('Processed schoolsData:', this.schoolsData);
+        this.loadingSchoolsData = false;
+      },
+      error: (error) => {
+        console.error('Error loading schools data:', error);
+        
+        // Si es un error 401, el interceptor ya manejó la renovación del token
+        // y reintentó la petición, así que este error significa que falló definitivamente
+        if (error.status === 401) {
+          this.notificationService.showError(
+            'Sesión expirada', 
+            'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+          );
+        } else {
+          this.notificationService.showError(
+            'Error al cargar datos', 
+            'No se pudieron cargar los datos de colegios. Inténtalo nuevamente.'
+          );
+        }
+        
+        this.loadingSchoolsData = false;
+      }
+    });
+  }
+
+  toggleSchool(schoolIndex: number): void {
+    this.schoolsData[schoolIndex].expanded = !this.schoolsData[schoolIndex].expanded;
+  }
+
+  toggleCourse(schoolIndex: number, courseIndex: number): void {
+    this.schoolsData[schoolIndex].cursos[courseIndex].expanded = !this.schoolsData[schoolIndex].cursos[courseIndex].expanded;
   }
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  // Método para verificar si hay estudiantes nuevos hoy en un colegio
+  hasNewStudentsToday(school: SchoolData): boolean {
+    return school.cursos.some(curso => curso.nuevos_hoy > 0);
+  }
+
+  // Método para obtener el total de estudiantes nuevos hoy en un colegio
+  getTotalNewStudentsToday(school: SchoolData): number {
+    return school.cursos.reduce((total, curso) => total + curso.nuevos_hoy, 0);
+  }
+
+  // Método para verificar si un estudiante se inscribió hoy
+  isStudentNewToday(student: StudentData): boolean {
+    if (!student.fecha_creacion) return false;
+    const today = new Date();
+    const studentDate = new Date(student.fecha_creacion);
+    return today.toDateString() === studentDate.toDateString();
+  }
+
+  // Método para obtener el total de estudiantes en un colegio
+  getTotalStudentsInSchool(school: SchoolData): number {
+    return school.cursos.reduce((total, curso) => total + curso.total_estudiantes, 0);
   }
 
   formatDate(dateString: string): string {
@@ -221,8 +336,245 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   downloadExcel(): void {
-    this.showDownloadOptions = false;
-    // TODO: Implement Excel download logic
-    this.notificationService.showSuccess('Descargando reporte en Excel...','');
+    try {
+      // Crear un nuevo libro de trabajo
+      const workbook = new ExcelJS.Workbook();
+      
+      // Calcular totales
+      const totalCourses = this.schoolsData.reduce((sum, school) => sum + school.cursos.length, 0);
+      const totalStudents = this.schoolsData.reduce((sum, school) => 
+        sum + school.cursos.reduce((courseSum, course) => courseSum + course.total_estudiantes, 0), 0
+      );
+      const totalNewToday = this.schoolsData.reduce((sum, school) => 
+        sum + school.cursos.reduce((courseSum, course) => courseSum + course.nuevos_hoy, 0), 0
+      );
+      
+      // Crear hoja de resumen
+      const summarySheet = workbook.addWorksheet('Resumen');
+      
+      // Agregar datos de resumen
+      summarySheet.addRow(['REPORTE DE INSCRIPCIONES POR COLEGIO Y CURSO']);
+      summarySheet.addRow(['Fecha de generación:', new Date().toLocaleDateString('es-CO')]);
+      summarySheet.addRow(['']); // Línea vacía
+      summarySheet.addRow(['RESUMEN GENERAL']);
+      summarySheet.addRow(['Total de Colegios:', this.schoolsData.length]);
+      summarySheet.addRow(['Total de Cursos:', totalCourses]);
+      summarySheet.addRow(['Total de Estudiantes:', totalStudents]);
+      summarySheet.addRow(['Nuevos Estudiantes Hoy:', totalNewToday]);
+      
+      // Estilo para el título
+      summarySheet.getCell('A1').font = { bold: true, size: 14 };
+      summarySheet.getCell('A1').fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2F5597' }
+      };
+      summarySheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+      
+      // Crear hoja detallada
+      const detailedSheet = workbook.addWorksheet('Detalle Completo');
+      
+      // Agregar título principal
+      const titleRow = detailedSheet.addRow(['DETALLE COMPLETO POR COLEGIO']);
+      titleRow.getCell(1).font = { bold: true, size: 16 };
+      titleRow.getCell(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2F5597' }
+      };
+      titleRow.getCell(1).font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+      detailedSheet.addRow(['']); // Línea vacía
+      
+      // Agregar datos agrupados por colegio
+      this.schoolsData.forEach(school => {
+        // Calcular totales del colegio
+        const totalStudentsInSchool = this.getTotalStudentsInSchool(school);
+        const totalNewTodayInSchool = this.getTotalNewStudentsToday(school);
+        const hasNewToday = totalNewTodayInSchool > 0;
+        const statusIcon = hasNewToday ? '↑' : '=';
+        
+        // Agregar nombre del colegio con totales e icono
+        const schoolInfo = `${school.colegio} | Total estudiantes: ${totalStudentsInSchool} | Nuevos hoy: ${totalNewTodayInSchool} ${statusIcon}`;
+        const schoolTitleRow = detailedSheet.addRow([schoolInfo]);
+        schoolTitleRow.getCell(1).font = { bold: true, size: 14 };
+        schoolTitleRow.getCell(1).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE7E6E6' }
+        };
+        schoolTitleRow.getCell(1).font = { bold: true, size: 14, color: hasNewToday ? { argb: 'FF006100' } : { argb: 'FF808080' } };
+        
+        // Agregar encabezados para este colegio (sin SKU, precio, total estudiantes, nuevos hoy)
+        const headers = [
+          'Curso', 'Nombre Estudiante', 'Apellido Estudiante', 
+          'Tipo Documento', 'Número Documento', 'Fecha Inscripción', 'Nuevo Hoy'
+        ];
+        const headerRow = detailedSheet.addRow(headers);
+        
+        // Estilo para encabezados
+        headerRow.eachCell((cell) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4472C4' }
+          };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.alignment = { horizontal: 'center' };
+        });
+        
+        // Agregar cursos y estudiantes de este colegio
+        school.cursos.forEach(course => {
+          if (course.estudiantes && course.estudiantes.length > 0) {
+            course.estudiantes.forEach(student => {
+              const row = detailedSheet.addRow([
+                course.curso,
+                student.nombre,
+                student.apellido,
+                student.tipo_documento,
+                student.numero_documento,
+                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO') : 'N/A',
+                this.isStudentNewToday(student) ? 'SÍ' : 'NO'
+              ]);
+              
+              // Aplicar color verde a estudiantes nuevos hoy
+              if (this.isStudentNewToday(student)) {
+                row.eachCell((cell) => {
+                  cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFC6EFCE' } // Verde claro
+                  };
+                  cell.font = { color: { argb: 'FF006100' } }; // Verde oscuro para el texto
+                });
+              }
+            });
+          } else {
+            // Si no hay estudiantes, mostrar solo la información del curso
+            detailedSheet.addRow([
+              course.curso,
+              'Sin estudiantes',
+              '',
+              '',
+              '',
+              '',
+              ''
+            ]);
+          }
+        });
+        
+        // Agregar línea vacía entre colegios
+        detailedSheet.addRow(['']);
+      });
+      
+      // Crear una hoja por colegio
+      this.schoolsData.forEach(school => {
+        // Limpiar el nombre del colegio para usarlo como nombre de hoja
+        const sheetName = school.colegio.replace(/[\[\]\*\/\\?:]/g, '').substring(0, 31);
+        const schoolSheet = workbook.addWorksheet(sheetName);
+        
+        // Calcular totales del colegio
+        const totalStudentsInSchool = this.getTotalStudentsInSchool(school);
+        const totalNewTodayInSchool = this.getTotalNewStudentsToday(school);
+        const hasNewToday = totalNewTodayInSchool > 0;
+        const statusIcon = hasNewToday ? '↑' : '=';
+        
+        // Título del colegio con totales e icono
+        const schoolTitle = `COLEGIO: ${school.colegio} | Total estudiantes: ${totalStudentsInSchool} | Nuevos hoy: ${totalNewTodayInSchool} ${statusIcon}`;
+        const titleRow = schoolSheet.addRow([schoolTitle]);
+        titleRow.getCell(1).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF2F5597' }
+        };
+        titleRow.getCell(1).font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+        titleRow.getCell(1).alignment = { horizontal: 'center' };
+        
+        // Línea vacía
+        schoolSheet.addRow(['']);
+        
+        // Encabezados (sin SKU, Total Estudiantes, Nuevos Hoy)
+        const schoolHeaders = [
+          'Curso', 'Precio',
+          'Nombre Estudiante', 'Apellido', 'Tipo Doc', 'Número Doc', 'Fecha Inscripción'
+        ];
+        const schoolHeaderRow = schoolSheet.addRow(schoolHeaders);
+        
+        // Estilo para encabezados
+        schoolHeaderRow.eachCell((cell) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4472C4' }
+          };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.alignment = { horizontal: 'center' };
+        });
+        
+        // Agregar datos de cursos y estudiantes
+        school.cursos.forEach(course => {
+          if (course.estudiantes && course.estudiantes.length > 0) {
+            course.estudiantes.forEach((student, index) => {
+              const row = schoolSheet.addRow([
+                index === 0 ? course.curso : '', // Solo mostrar el nombre del curso en la primera fila
+                index === 0 ? course.precio : '',
+                student.nombre,
+                student.apellido,
+                student.tipo_documento,
+                student.numero_documento,
+                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO') : 'N/A'
+              ]);
+              
+              // Aplicar color verde a estudiantes nuevos hoy
+              if (this.isStudentNewToday(student)) {
+                row.eachCell((cell) => {
+                  cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFC6EFCE' } // Verde claro
+                  };
+                  cell.font = { color: { argb: 'FF006100' } }; // Verde oscuro para el texto
+                });
+              }
+            });
+          } else {
+            schoolSheet.addRow([
+              course.curso,
+              course.precio,
+              'Sin estudiantes inscritos',
+              '',
+              '',
+              '',
+              ''
+            ]);
+          }
+          schoolSheet.addRow(['']); // Línea vacía entre cursos
+        });
+      });
+      
+      // Generar el archivo y descargarlo
+      const fileName = `Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        
+        this.notificationService.showSuccess(
+          'Excel descargado exitosamente', 
+          `El archivo ${fileName} se ha descargado correctamente.`
+        );
+      });
+      
+    } catch (error) {
+      console.error('Error al generar Excel:', error);
+      this.notificationService.showError(
+        'Error al generar Excel', 
+        'No se pudo generar el archivo Excel. Inténtalo nuevamente.'
+      );
+    }
   }
 }

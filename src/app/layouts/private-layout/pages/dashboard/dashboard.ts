@@ -103,22 +103,14 @@ export class Dashboard implements OnInit {
 
     forkJoin({
       students: this.studentService.getStudentsBySchool(this.userColegioId!),
-      accounts: this.accountReceivableService.searchAccountReceivable()
+      accounts: this.accountReceivableService.searchAccountReceivable(undefined, this.userColegioId!)
     }).subscribe({
       next: ({ students, accounts }) => {
         this.students = students.data;
-        const schoolAccounts = accounts.data.filter(account => {
-          if (typeof account.estudiante_id === 'object' && account.estudiante_id !== null) {
-            const colegioId = (account.estudiante_id as any).colegio_id?.id;
-            console.log('Cuenta ID:', account.id, 'Colegio ID:', colegioId, 'Match:', colegioId === this.userColegioId);
-            return colegioId === this.userColegioId;
-          }
-          return false;
-        });
-
-        const accountsToProcess = schoolAccounts.length > 0 ? schoolAccounts : accounts.data;
-
-         this.calculateRectorStats(this.students, accountsToProcess);
+        this.accounts = accounts.data; // Ya vienen filtradas por colegio desde el servicio
+        
+        console.log('Cuentas filtradas por colegio:', accounts.data.length);
+        this.calculateRectorStats(this.students, accounts.data);
         this.isLoading = false;
       },
       error: (error) => {

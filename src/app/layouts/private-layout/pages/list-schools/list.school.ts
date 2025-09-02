@@ -16,6 +16,7 @@ export class ListSchool implements OnInit {
   isLoading = false;
   searchTerm = '';
   currentDate = new Date();
+  isRector = false;
   private searchTimeout: any;
 
   constructor(
@@ -38,6 +39,7 @@ export class ListSchool implements OnInit {
       
       // Si es rector, filtrar por su colegio_id
       if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc' && user.colegio_id) {
+        this.isRector = true;
         this.schoolService.getSchoolById(user.colegio_id).subscribe({
           next: (response) => {
             this.schools = [response.data]; // Mostrar solo su colegio
