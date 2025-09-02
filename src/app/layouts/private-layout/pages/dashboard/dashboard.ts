@@ -181,7 +181,6 @@ export class Dashboard implements OnInit {
         studentsWithPendingStatus++;
       }
 
-      // Contar pines entregados - verificar 'SI' con múltiples variaciones
       const pinValue = account.pin_entregado;
       if (pinValue === 'SI' || pinValue === 'Si' || pinValue === 'si' || pinValue === true || pinValue === 1 || pinValue === '1') {
         pinsDelivered++;
