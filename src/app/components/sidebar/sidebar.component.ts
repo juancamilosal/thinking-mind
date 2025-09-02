@@ -17,10 +17,34 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private userSubscription: Subscription = new Subscription();
   @Output() sidebarClose = new EventEmitter<void>();
 
+  menuItems = [
+    { path: '/private/clients', icon: 'users', label: 'Clientes' },
+    { path: '/private/students', icon: 'student', label: 'Estudiantes' },
+    { path: '/private/schools', icon: 'building', label: 'Colegios' },
+    { path: '/private/rectores', icon: 'academic-cap', label: 'Rectores' },
+    { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
+    { path: '/private/payments', icon: 'payment', label: 'Pagos' },
+    { path: '/private/courses', icon: 'book', label: 'Cursos' },
+    { path: '/private/reports', icon: 'chart-bar', label: 'Reportes' },
+    { path: '/private/list-schools', icon: 'list', label: 'Listado' }
+  ];
+
   constructor(private router: Router, private loginService: LoginService) {}
 
   ngOnInit() {
+    this.checkUserRole();
+  }
 
+  checkUserRole() {
+    const userData = sessionStorage.getItem('current_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+        this.menuItems = [
+          { path: '/private/list-schools', icon: 'list', label: 'Listado' }
+        ];
+      }
+    }
   }
 
   ngOnDestroy() {
@@ -49,15 +73,4 @@ export class SidebarComponent implements OnInit, OnDestroy {
     });
   }
 
-  menuItems = [
-    { path: '/private/clients', icon: 'users', label: 'Clientes' },
-    { path: '/private/students', icon: 'student', label: 'Estudiantes' },
-    { path: '/private/schools', icon: 'building', label: 'Colegios' },
-    { path: '/private/rectores', icon: 'academic-cap', label: 'Rectores' },
-    { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
-    { path: '/private/payments', icon: 'payment', label: 'Pagos' },
-    { path: '/private/courses', icon: 'book', label: 'Cursos' },
-    { path: '/private/reports', icon: 'chart-bar', label: 'Reportes' },
-    { path: '/private/list-schools', icon: 'list', label: 'Listado' }
-  ];
 }

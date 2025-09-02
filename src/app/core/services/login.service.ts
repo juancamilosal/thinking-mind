@@ -36,7 +36,21 @@ export class LoginService {
 
           const userData = response.user || response.data?.user;
           if (userData) {
-            StorageServices.setUserData(userData);
+            const filteredUserData: any = {
+              email: userData.email,
+              id: userData.id,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              role: userData.role
+            };
+            
+            // Si el rol es rector, agregar celular y colegio_id
+            if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+              filteredUserData.celular = userData.celular;
+              filteredUserData.colegio_id = userData.colegio_id;
+            }
+            
+            StorageServices.setUserData(filteredUserData);
           }
         })
       );
@@ -87,7 +101,21 @@ export class LoginService {
 
         const userData = response.user || response.data?.user;
         if (userData) {
-          StorageServices.setUserData(userData);
+          const filteredUserData: any = {
+            email: userData.email,
+            id: userData.id,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            role: userData.role
+          };
+          
+          // Si el rol es rector, agregar celular y colegio_id
+          if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+            filteredUserData.celular = userData.celular;
+            filteredUserData.colegio_id = userData.colegio_id;
+          }
+          
+          StorageServices.setUserData(filteredUserData);
         }
       }),
       catchError((error) => {
@@ -102,13 +130,20 @@ export class LoginService {
       tap((response: any) => {
         const userData = response.data || response;
         if (userData) {
-          const filteredUserData = {
+          const filteredUserData: any = {
             email: userData.email,
             id: userData.id,
             first_name: userData.first_name,
             last_name: userData.last_name,
             role: userData.role
           };
+          
+          // Si el rol es rector, agregar celular y colegio_id
+          if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+            filteredUserData.celular = userData.celular;
+            filteredUserData.colegio_id = userData.colegio_id;
+          }
+          
           StorageServices.setUserData(filteredUserData);
         }
       })

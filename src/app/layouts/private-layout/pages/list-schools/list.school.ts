@@ -30,6 +30,32 @@ export class ListSchool implements OnInit {
 
   loadSchools(): void {
     this.isLoading = true;
+    
+    // Verificar si el usuario es rector
+    const userData = sessionStorage.getItem('current_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      
+      // Si es rector, filtrar por su colegio_id
+      if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc' && user.colegio_id) {
+        this.schoolService.getSchoolById(user.colegio_id).subscribe({
+          next: (response) => {
+            this.schools = [response.data]; // Mostrar solo su colegio
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.notificationService.showError(
+              'Error',
+              'Error al cargar el colegio'
+            );
+            this.isLoading = false;
+          }
+        });
+        return;
+      }
+    }
+    
+    // Para otros usuarios, mostrar todos los colegios
     this.schoolService.getAllSchools().subscribe({
       next: (response) => {
         this.schools = response.data;
