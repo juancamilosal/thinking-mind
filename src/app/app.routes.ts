@@ -13,6 +13,7 @@ import {PaymentRecord} from './layouts/public-layout/pages/payment-record/paymen
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
+import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
 
 export const routes: Routes = [
   {
@@ -37,7 +38,12 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'clients'
+        redirectTo: 'dashboard'
+      },
+      {
+        path: 'dashboard',
+        title: 'Thinking Mind | Dashboard',
+        component: Dashboard
       },
       {
         path: 'clients',

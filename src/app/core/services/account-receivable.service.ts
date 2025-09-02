@@ -54,27 +54,28 @@ export class AccountReceivableService {
   private mapToAccountReceivable(item: any): AccountReceivable {
     return {
       id: item.id,
-      cliente_id: typeof item.cliente_id === 'object' ? item.cliente_id.id : item.cliente_id,
-      estudiante_id: typeof item.estudiante_id === 'object' ? item.estudiante_id.id : item.estudiante_id,
+      cliente_id: (typeof item.cliente_id === 'object' && item.cliente_id !== null) ? item.cliente_id.id : item.cliente_id,
+      estudiante_id: (typeof item.estudiante_id === 'object' && item.estudiante_id !== null) ? item.estudiante_id.id : item.estudiante_id,
       monto: item.monto,
       saldo: item.saldo,
       curso_id: item.curso_id,
       fecha_limite: item.fecha_limite,
       estado: item.estado,
+      pin_entregado: item.pin_entregado,
       pagos: item.pagos || [],
-      clientName: typeof item.cliente_id === 'object'
+      clientName: (typeof item.cliente_id === 'object' && item.cliente_id !== null)
         ? `${item.cliente_id.nombre} ${item.cliente_id.apellido}`
         : item.clientName,
-      clientEmail: typeof item.cliente_id === 'object'
+      clientEmail: (typeof item.cliente_id === 'object' && item.cliente_id !== null)
         ? item.cliente_id.email
         : item.clientEmail,
-      clientPhone: typeof item.cliente_id === 'object'
+      clientPhone: (typeof item.cliente_id === 'object' && item.cliente_id !== null)
         ? item.cliente_id.celular
         : item.clientPhone,
-      studentName: typeof item.estudiante_id === 'object'
+      studentName: (typeof item.estudiante_id === 'object' && item.estudiante_id !== null)
         ? `${item.estudiante_id.nombre} ${item.estudiante_id.apellido}`
         : item.studentName,
-      schoolName: typeof item.estudiante_id === 'object' && item.estudiante_id.colegio_id
+      schoolName: (typeof item.estudiante_id === 'object' && item.estudiante_id !== null && item.estudiante_id.colegio_id)
         ? item.estudiante_id.colegio_id.nombre
         : item.schoolName,
       createdDate: item.createdDate

@@ -1,0 +1,268 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p class="text-gray-600 mt-2">Resumen general del sistema</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Última actualización</p>
+        <p class="text-lg font-semibold text-gray-700">{{ currentDate.toLocaleString('es-ES') }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="flex items-center justify-center min-h-96">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600 text-lg">Cargando datos del dashboard...</p>
+      </div>
+    </div>
+  } @else {
+    <!-- Dashboard específico para Rector -->
+    @if (isRector) {
+      <!-- Stats Cards para Rector -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Estudiantes Inscritos -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-blue-500 hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Estudiantes Inscritos</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">{{ rectorStats.totalStudentsEnrolled }}</p>
+            </div>
+            <div class="bg-blue-100 rounded-full p-3">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estudiantes con Estado Pendiente -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-orange-500 hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Estudiantes con Estado Pendiente</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">{{ rectorStats.totalStudentsWithPendingStatus }}</p>
+            </div>
+            <div class="bg-orange-100 rounded-full p-3">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estudiantes con Estado Pagada -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-green-500 hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Estudiantes con Estado Pagada</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">{{ rectorStats.totalStudentsWithPaidStatus }}</p>
+            </div>
+            <div class="bg-green-100 rounded-full p-3">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pines Entregados -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-purple-500 hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Pines Entregados</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">{{ rectorStats.totalPinsDelivered }}</p>
+            </div>
+            <div class="bg-purple-100 rounded-full p-3">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen para Rector -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Resumen de Pagos -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <div class="flex items-center mb-6">
+            <div class="bg-gradient-to-r from-green-600 to-teal-600 rounded-full p-3 mr-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">Estado de Pagos</h3>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+              <span class="text-gray-600 font-medium">Estudiantes con Estado Pagada:</span>
+              <span class="text-2xl font-bold text-green-600">{{ rectorStats.totalStudentsWithPaidStatus }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-orange-50 rounded-lg">
+              <span class="text-gray-600 font-medium">Estudiantes con Estado Pendiente:</span>
+              <span class="text-2xl font-bold text-orange-600">{{ rectorStats.totalStudentsWithPendingStatus }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de Estudiantes y Pines -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <div class="flex items-center mb-6">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full p-3 mr-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">Resumen General</h3>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+              <span class="text-gray-600 font-medium">Estudiantes Activos:</span>
+              <span class="text-2xl font-bold text-blue-600">{{ rectorStats.totalStudentsEnrolled }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+              <span class="text-gray-600 font-medium">Pines Entregados:</span>
+              <span class="text-2xl font-bold text-purple-600">{{ rectorStats.totalPinsDelivered }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- Dashboard para Administrador (mantener el original) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Pagos del Mes -->
+         <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-green-500 hover:shadow-2xl transition-all duration-300">
+           <div class="flex items-center justify-between">
+             <div>
+               <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Pagos del Mes</p>
+               <p class="text-3xl font-bold text-gray-900 mt-2">{{ formatCurrency(stats.monthlyPayments) }}</p>
+             </div>
+             <div class="bg-green-100 rounded-full p-3">
+               <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+               </svg>
+             </div>
+           </div>
+         </div>
+
+        <!-- Cuentas Vencidas -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-red-500 hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Cuentas Vencidas</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">{{ formatCurrency(stats.overdueAmount) }}</p>
+            </div>
+            <div class="bg-red-100 rounded-full p-3">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estudiantes -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-green-500 hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Estudiantes</p>
+              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalStudents }}</p>
+            </div>
+            <div class="bg-green-100 rounded-full p-3">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cuentas por Cobrar -->
+         <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-red-500 hover:shadow-2xl transition-all duration-300">
+           <div class="flex items-center justify-between">
+             <div>
+               <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Cuentas por Cobrar</p>
+               <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalAccountsReceivable }}</p>
+             </div>
+             <div class="bg-red-100 rounded-full p-3">
+               <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+               </svg>
+             </div>
+           </div>
+         </div>
+      </div>
+ 
+       <!-- Financial Summary para Administrador -->
+       <div *ngIf="!isRector" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Resumen Financiero -->
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex items-center mb-6">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full p-3 mr-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900">Resumen Financiero</h3>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+            <span class="text-gray-600 font-medium">Total por Cobrar:</span>
+            <span class="text-2xl font-bold text-gray-900">{{ formatCurrency(stats.totalAmountReceivable) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+            <span class="text-gray-600 font-medium">Total Pagado:</span>
+            <span class="text-2xl font-bold text-green-600">{{ formatCurrency(stats.totalPaidAmount) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center p-4 bg-red-50 rounded-lg">
+            <span class="text-gray-600 font-medium">Saldo Pendiente:</span>
+            <span class="text-2xl font-bold text-red-600">{{ formatCurrency(stats.totalAmountReceivable - stats.totalPaidAmount) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Chart -->
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex items-center mb-6">
+          <div class="bg-gradient-to-r from-green-600 to-teal-600 rounded-full p-3 mr-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900">Progreso de Pagos</h3>
+        </div>
+        
+        <div class="text-center mb-6">
+          <div class="text-4xl font-bold text-gray-900 mb-2">{{ getPaymentProgress().toFixed(1) }}%</div>
+          <p class="text-gray-600">Pagos completados</p>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+          <div class="bg-gradient-to-r from-green-500 to-teal-500 h-4 rounded-full transition-all duration-500" 
+               [style.width.%]="getPaymentProgress()"></div>
+        </div>
+        
+        <div class="flex justify-between text-sm text-gray-600">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </div>
+    </div>
+    }
+  }
+</div>

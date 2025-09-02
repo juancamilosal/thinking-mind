@@ -18,6 +18,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   @Output() sidebarClose = new EventEmitter<void>();
 
   menuItems = [
+    { path: '/private/dashboard', icon: 'home', label: 'Dashboard' },
     { path: '/private/clients', icon: 'users', label: 'Clientes' },
     { path: '/private/students', icon: 'student', label: 'Estudiantes' },
     { path: '/private/schools', icon: 'building', label: 'Colegios' },
@@ -41,6 +42,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       const user = JSON.parse(userData);
       if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
         this.menuItems = [
+          { path: '/private/dashboard', icon: 'home', label: 'Dashboard' },
           { path: '/private/list-schools', icon: 'list', label: 'Listado' }
         ];
       }

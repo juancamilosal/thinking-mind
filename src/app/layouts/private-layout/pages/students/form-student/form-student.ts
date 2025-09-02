@@ -97,7 +97,7 @@ export class FormStudent implements OnInit, OnChanges {
         documentNumber: this.studentData.numero_documento,
         firstName: this.studentData.nombre,
         lastName: this.studentData.apellido,
-        school: this.studentData.colegio_id
+        school: this.studentData.colegio_id.id
       });
 
       if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
@@ -167,7 +167,7 @@ export class FormStudent implements OnInit, OnChanges {
       numero_documento: this.studentForm.get('documentNumber')?.value,
       nombre: this.studentForm.get('firstName')?.value,
       apellido: this.studentForm.get('lastName')?.value,
-      colegio: this.studentForm.get('school')?.value,
+      colegio_id: this.studentForm.get('school')?.value,
       acudiente: this.guardianId,
     };
 
@@ -212,7 +212,7 @@ export class FormStudent implements OnInit, OnChanges {
         numero_documento: this.studentForm.get('documentNumber')?.value,
         nombre: this.studentForm.get('firstName')?.value,
         apellido: this.studentForm.get('lastName')?.value,
-        colegio: this.studentForm.get('school')?.value,
+        colegio_id: this.studentForm.get('school')?.value,
         acudiente: this.guardianId,
       };
 
