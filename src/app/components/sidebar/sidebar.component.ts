@@ -23,7 +23,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { path: '/private/clients', icon: 'users', label: 'Clientes' },
     { path: '/private/students', icon: 'student', label: 'Estudiantes' },
     { path: '/private/schools', icon: 'building', label: 'Colegios' },
-    { path: '/private/rectores', icon: 'academic-cap', label: 'Rectores' },
+    { path: '/private/users', icon: 'user-group', label: 'Usuarios' },
     { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
     { path: '/private/payments', icon: 'payment', label: 'Pagos' },
     { path: '/private/courses', icon: 'book', label: 'Cursos' },
@@ -41,12 +41,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   checkAuthentication() {
     const accessToken = StorageServices.getAccessToken();
     const currentUser = StorageServices.getCurrentUser();
-    
+
     if (!accessToken || !currentUser) {
       this.router.navigate(['/login']);
       return;
     }
-    
+
     this.currentUser = currentUser;
   }
 

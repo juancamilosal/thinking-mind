@@ -5,7 +5,6 @@ import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
 import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
-import { Rectores } from './layouts/private-layout/pages/rectores/rectores';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
@@ -14,7 +13,9 @@ import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
+import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
+
 
 export const routes: Routes = [
   {
@@ -63,9 +64,9 @@ export const routes: Routes = [
         component: Schools
       },
       {
-        path: 'rectores',
-        title: 'Thinking Mind | Rectores',
-        component: Rectores
+        path: 'users',
+        title: 'Thinking Mind | Users',
+        component: Users
       },
       {
         path: 'courses',

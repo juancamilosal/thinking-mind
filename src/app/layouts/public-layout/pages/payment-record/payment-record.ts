@@ -80,6 +80,7 @@ export class PaymentRecord implements OnInit {
       studentDocumentNumber: ['', [Validators.required, Validators.minLength(6), Validators.pattern(/^[0-9]+$/)]],
       studentFirstName: ['', [Validators.required, Validators.minLength(2)]],
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
+      studentGrado: ['', [Validators.required, Validators.minLength(1)]],
       studentSchool: ['', [Validators.required]],
 
       // Course fields
@@ -130,6 +131,11 @@ export class PaymentRecord implements OnInit {
   onStudentSchoolChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
     this.paymentForm.get('studentSchool')?.setValue(value, { emitEvent: false });
+  }
+
+  onStudentGradoChange(event: any): void {
+    const value = event.target.value.toUpperCase();
+    this.paymentForm.get('studentGrado')?.setValue(value, { emitEvent: false });
   }
 
   onGuardianDocumentTypeChange(event: any): void {
@@ -220,6 +226,7 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.patchValue({
       studentFirstName: student.nombre || '',
       studentLastName: student.apellido || '',
+      studentGrado: student.grado || '',
       studentSchool: student.colegio || '',
     });
   }
@@ -238,6 +245,7 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.patchValue({
       studentFirstName: '',
       studentLastName: '',
+      studentGrado: '',
       studentSchool: '',
     });
   }
@@ -298,6 +306,7 @@ export class PaymentRecord implements OnInit {
       studentDocumentNumber: '',
       studentFirstName: '',
       studentLastName: '',
+      studentGrado: '',
       studentSchool: '',
       selectedCourse: '',
       coursePrice: ''
@@ -427,6 +436,7 @@ export class PaymentRecord implements OnInit {
         numero_documento: this.paymentForm.get('studentDocumentNumber')?.value,
         nombre: this.paymentForm.get('studentFirstName')?.value,
         apellido: this.paymentForm.get('studentLastName')?.value,
+        grado: this.paymentForm.get('studentGrado')?.value,
         colegio: this.paymentForm.get('studentSchool')?.value,
       },
       curso_id: this.paymentForm.get('selectedCourse')?.value,

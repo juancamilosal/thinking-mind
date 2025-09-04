@@ -598,6 +598,38 @@
                 }
               </div>
 
+              <!-- Grado del Estudiante -->
+              <div class="space-y-3">
+                <label for="studentGrado" class="block text-sm font-semibold text-green-700">Grado *</label>
+                <input
+                  type="text"
+                  id="studentGrado"
+                  formControlName="studentGrado"
+                  (input)="onStudentGradoChange($event)"
+                  placeholder="Ingrese el grado"
+                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                @if (paymentForm.get('studentGrado')?.touched && paymentForm.get('studentGrado')?.errors?.['required']) {
+                  <p class="text-red-500 text-sm mt-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"/>
+                    </svg>
+                    El grado es obligatorio
+                  </p>
+                }
+                @if (paymentForm.get('studentGrado')?.touched && paymentForm.get('studentGrado')?.errors?.['minlength']) {
+                  <p class="text-red-500 text-sm mt-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"/>
+                    </svg>
+                    El grado debe tener al menos 1 caracter
+                  </p>
+                }
+              </div>
+
               <!-- Colegio del Estudiante -->
               <div class="space-y-3 md:col-span-2">
                 <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
@@ -850,7 +882,7 @@
 }
 
 <!-- Modal de notificaciones -->
-<app-notification-modal 
+<app-notification-modal
   [isVisible]="showNotification"
   [notification]="notificationData"
   (close)="onNotificationClose()">

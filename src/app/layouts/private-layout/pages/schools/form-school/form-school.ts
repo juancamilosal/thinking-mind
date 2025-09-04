@@ -22,6 +22,7 @@ export class FormSchool implements OnInit, OnChanges {
   @Output() schoolDeleted = new EventEmitter();
   schoolForm!: FormGroup;
   isSubmitting = false;
+  isDeleting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -222,8 +223,10 @@ export class FormSchool implements OnInit, OnChanges {
         schoolName,
         'colegio',
         () => {
+          this.isDeleting = true;
           this.schoolServices.deleteSchool(this.schoolData!.id).subscribe({
             next: (response) => {
+              this.isDeleting = false;
               this.notificationService.showSuccess(
                 'Colegio eliminado',
                 `${schoolName} ha sido eliminado exitosamente.`
@@ -231,6 +234,7 @@ export class FormSchool implements OnInit, OnChanges {
               this.schoolDeleted.emit();
             },
             error: (error) => {
+              this.isDeleting = false;
               // Verificar si es un error 500 que indica relaciones activas
               if (error.status === 500) {
                 this.notificationService.showError(

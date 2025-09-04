@@ -1,0 +1,294 @@
+<div class="p-6min-h-screen">
+  <div class="max-w-6xl mx-auto">
+    <div>
+      <!-- Información del Administrador -->
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-xl border-l-4 border-blue-500 shadow-lg mb-8">
+        <div class="flex items-center mb-6">
+          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full p-3 mr-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-blue-800">Información del Administrador</h3>
+        </div>
+
+        <form [formGroup]="adminForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Nombre -->
+            <div class="space-y-3">
+              <label for="firstName" class="block text-sm font-semibold text-blue-700">Nombre *</label>
+              <input
+                type="text"
+                id="firstName"
+                formControlName="firstName"
+                (input)="onFirstNameChange($event)"
+                placeholder="Ingrese el nombre"
+                class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+              @if(adminForm.get('firstName')?.touched && adminForm.get('firstName')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El nombre es obligatorio
+                </p>
+              }
+            </div>
+
+            <!-- Apellido -->
+            <div class="space-y-3">
+              <label for="lastName" class="block text-sm font-semibold text-blue-700">Apellido *</label>
+              <input
+                type="text"
+                id="lastName"
+                formControlName="lastName"
+                (input)="onLastNameChange($event)"
+                placeholder="Ingrese el apellido"
+                class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+              @if(adminForm.get('lastName')?.touched && adminForm.get('lastName')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El apellido es obligatorio
+                </p>
+              }
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-3">
+              <label for="email" class="block text-sm font-semibold text-blue-700">Email *</label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                placeholder="Ingrese el email"
+                class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+              @if(adminForm.get('email')?.touched && adminForm.get('email')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El email es obligatorio
+                </p>
+              }
+              @if(adminForm.get('email')?.touched && adminForm.get('email')?.errors?.['email']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  Ingrese un email válido
+                </p>
+              }
+            </div>
+
+            <!-- Celular -->
+            <div class="space-y-3">
+              <label for="celular" class="block text-sm font-semibold text-blue-700">Celular *</label>
+              <input
+                type="tel"
+                id="celular"
+                formControlName="celular"
+                placeholder="Ej: 3001234567"
+                class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+              @if(adminForm.get('celular')?.touched && adminForm.get('celular')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El celular es obligatorio
+                </p>
+              }
+              @if(adminForm.get('celular')?.touched && adminForm.get('celular')?.errors?.['pattern']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  El celular debe tener 10 dígitos
+                </p>
+              }
+            </div>
+
+            <!-- Contraseña -->
+            <div class="space-y-3">
+              <label for="password" class="block text-sm font-semibold text-blue-700">
+                Contraseña {{ editMode ? '(opcional)' : '*' }}
+              </label>
+              <div class="relative">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  id="password"
+                  formControlName="password"
+                  placeholder="Ingrese la contraseña"
+                  class="w-full px-6 py-4 pr-12 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-600 hover:text-blue-800">
+                  @if (showPassword) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+              @if(adminForm.get('password')?.touched && adminForm.get('password')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  La contraseña es obligatoria
+                </p>
+              }
+              @if(adminForm.get('password')?.touched && adminForm.get('password')?.errors?.['minlength']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  La contraseña debe tener al menos 6 caracteres
+                </p>
+              }
+            </div>
+
+            <!-- Confirmar Contraseña -->
+            <div class="space-y-3">
+              <label for="confirmPassword" class="block text-sm font-semibold text-blue-700">
+                Confirmar Contraseña {{ editMode ? '(opcional)' : '*' }}
+              </label>
+              <div class="relative">
+                <input
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  placeholder="Confirme la contraseña"
+                  class="w-full px-6 py-4 pr-12 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+                <button
+                  type="button"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-600 hover:text-blue-800">
+                  @if (showConfirmPassword) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+              @if(adminForm.get('confirmPassword')?.touched && adminForm.get('confirmPassword')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  Debe confirmar la contraseña
+                </p>
+              }
+              @if(adminForm.errors?.['passwordMismatch'] && adminForm.get('confirmPassword')?.touched) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  Las contraseñas no coinciden
+                </p>
+              }
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          @if(errorMessage) {
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-red-700">{{ errorMessage }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- Botones -->
+          <div class="pt-8 space-y-4">
+            <button
+              type="submit"
+              [disabled]="adminForm.invalid || isSubmitting"
+              class="w-full px-8 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:scale-105 shadow-lg font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-3">
+              @if (isSubmitting) {
+                <svg class="animate-spin w-6 h-6" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{{ editMode ? 'Actualizando...' : 'Registrando...' }}</span>
+              } @else {
+                @if (editMode) {
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                } @else {
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                }
+                <span>{{ editMode ? 'Actualizar Administrador' : 'Registrar Administrador' }}</span>
+              }
+            </button>
+
+            @if(editMode) {
+              <button
+                type="button"
+                (click)="deleteAdmin()"
+                class="w-full px-8 py-5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all transform hover:scale-105 shadow-lg font-semibold text-lg flex items-center justify-center space-x-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                <span>Eliminar Administrador</span>
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+@if (showDeleteModal) {
+  <div class="fixed inset-0 z-60 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4" (click)="$event.stopPropagation()">
+      <div class="p-6">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Confirmar Eliminación</h3>
+        <p class="text-gray-600 text-center mb-6">
+          ¿Estás seguro de que deseas eliminar al administrador <strong>{{ adminData?.first_name }} {{ adminData?.last_name }}</strong>?
+          Esta acción no se puede deshacer.
+        </p>
+        <div class="flex space-x-3">
+           <button (click)="cancelDelete()" [disabled]="isDeleting" class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+             Cancelar
+           </button>
+           <button (click)="confirmDelete()" [disabled]="isDeleting" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
+             @if (isDeleting) {
+               <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                 <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+               </svg>
+               <span>Eliminando...</span>
+             } @else {
+               <span>Eliminar</span>
+             }
+           </button>
+         </div>
+      </div>
+    </div>
+  </div>
+}
