@@ -10,6 +10,7 @@ import { AccountsReceivable } from './layouts/private-layout/pages/accounts-rece
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
+import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
@@ -87,6 +88,11 @@ export const routes: Routes = [
         path: 'reports',
         title: 'Thinking Mind | Reportes',
         component: Reports
+      },
+      {
+        path: 'presupuesto',
+        title: 'Thinking Mind | Gestión de Presupuesto',
+        component: Presupuesto
       },
       {
         path: 'list-schools',

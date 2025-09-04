@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { REPORT_TYPE } from '../../../../core/const/ReportType';
@@ -62,6 +63,7 @@ export class Reports {
 
   constructor(
     private fb: FormBuilder,
+    private router: Router,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
     private paymentService: PaymentService,
@@ -207,6 +209,10 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.reportGenerated = false;
     this.showDownloadOptions = false;
     this.loadingSchoolsData = false;
+  }
+
+  navigateToPresupuesto(): void {
+    this.router.navigate(['/private/presupuesto']);
   }
 
   loadSchoolsData(): void {
