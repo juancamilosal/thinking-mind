@@ -70,16 +70,14 @@ export class HeaderComponent implements OnInit {
   logout() {
     this.loginService.logout().subscribe({
       next: () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        this.router.navigate(['/login']);
+        StorageServices.clearAllSession();
+        window.location.href = '/login';
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
-        // Incluso si hay error, limpiamos el localStorage y sessionStorage y redirigimos
-        localStorage.clear();
-        sessionStorage.clear();
-        this.router.navigate(['/login']);
+        // Incluso si hay error, limpiamos la sesión y redirigimos
+        StorageServices.clearAllSession();
+        window.location.href = '/login';
       }
     });
   }

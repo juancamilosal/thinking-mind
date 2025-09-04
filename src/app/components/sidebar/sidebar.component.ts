@@ -73,13 +73,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
-        this.router.navigate(['/login']);
+        // Forzar recarga completa de la página para resetear todos los estados
+        window.location.href = '/login';
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
         // Incluso si hay error, limpiamos la sesión y redirigimos
         StorageServices.clearAllSession();
-        this.router.navigate(['/login']);
+        // Forzar recarga completa de la página para resetear todos los estados
+        window.location.href = '/login';
       }
     });
   }

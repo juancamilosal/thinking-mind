@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { UserService } from '../../../../../core/services/user.service';
-import { SchoolService } from '../../../../../core/services/school.service';
-import { School } from '../../../../../core/models/School';
-import { NotificationService } from '../../../../../core/services/notification.service';
-import { ConfirmationService } from '../../../../../core/services/confirmation.service';
-import {User} from '../../../../../core/models/User';
+import { UserService } from '../../../../../../core/services/user.service';
+import { SchoolService } from '../../../../../../core/services/school.service';
+import { School } from '../../../../../../core/models/School';
+import { NotificationService } from '../../../../../../core/services/notification.service';
+import { ConfirmationService } from '../../../../../../core/services/confirmation.service';
+import {User} from '../../../../../../core/models/User';
 
 @Component({
   selector: 'app-form-rector',

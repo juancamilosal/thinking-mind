@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FormRector } from './form-rector/form-rector';
-import { RectorDetail } from './rector-detail/rector-detail';
+import { FormRector } from './rector/form-rector/form-rector';
+import { RectorDetail } from './rector/rector-detail/rector-detail';
 import { FormAdmin } from './admin/form-admin/form-admin';
 import { AdminDetail } from './admin/admin-detail/admin-detail';
 import { UserService } from '../../../../core/services/user.service';
 import { SchoolService } from '../../../../core/services/school.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { User } from '../../../../core/models/User';
-import { School } from '../../../../core/models/School';
+
 
 @Component({
   selector: 'app-users',

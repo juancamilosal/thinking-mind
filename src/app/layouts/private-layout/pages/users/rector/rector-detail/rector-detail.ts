@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {User} from '../../../../../core/models/User';
-import { NotificationService } from '../../../../../core/services/notification.service';
+import {User} from '../../../../../../core/models/User';
+import { NotificationService } from '../../../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-rector-detail',
