@@ -1,3 +1,15 @@
+export interface PaymentRecord {
+  id: string;
+  valor: number;
+  fecha_pago: string;
+  metodo_pago: string;
+  pagador: string;
+  numero_aprobacion: string;
+  estado: string;
+  cuenta_cobrar_id: string;
+  comprobante: string | null;
+}
+
 export class Budget {
   id: string;
   anio: string;
@@ -10,4 +22,7 @@ export class Budget {
   meta_acumulada_sem: number;
   estado_mes: string;
   estado_semana: string;
+  recaudo_mes: number;
+  recaudo_semana: number;
+  listado_pagos: PaymentRecord[];
 }

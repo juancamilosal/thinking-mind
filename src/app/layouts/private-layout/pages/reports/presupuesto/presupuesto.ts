@@ -102,15 +102,14 @@ export class Presupuesto implements OnInit {
     const presupuesto = Number(budget.monto_meta);
     const id = budget.id; // Mantener como string
     
-    console.log('Click en año:', anio, 'Presupuesto:', presupuesto, 'ID:', id);
-    this.budgetService.getBudget(anio, presupuesto, id).subscribe({
-      next: (response) => {
-        console.log('Detalle del presupuesto:', response);
-        this.notificationService.showSuccess('Éxito', `Presupuesto ${budget.anio} cargado correctamente`);
-      },
-      error: (error) => {
-        console.error('Error al obtener detalle del presupuesto:', error);
-        this.notificationService.showError('Error', 'No se pudo cargar el detalle del presupuesto');
+    console.log('Navegando al informe - Año:', anio, 'Presupuesto:', presupuesto, 'ID:', id);
+    
+    // Navegar a la pantalla de informe con los parámetros
+    this.router.navigate(['/private/budget-report'], {
+      queryParams: {
+        anio: anio,
+        presupuesto: presupuesto,
+        id: id
       }
     });
   }

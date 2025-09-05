@@ -1,0 +1,260 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Informe de Presupuesto {{ anio }}</h1>
+        <p class="text-gray-600">Reporte detallado del presupuesto anual, mensual y semanal</p>
+      </div>
+      <button
+        type="button"
+        (click)="onRegresar()"
+        class="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Regresar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="flex justify-center items-center py-20">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-600 text-lg">Cargando informe...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Budget Report Content -->
+  @if (!loading && budgetData) {
+    <div class="space-y-8">
+      <!-- Progress Overview -->
+      <div class="bg-white rounded-xl shadow-lg p-8">
+        <div class="flex items-center mb-6">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full p-3 mr-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-800">Resumen General</h2>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700">Progreso del Presupuesto</span>
+            <span class="text-sm font-medium text-gray-700">{{ getProgressPercentage().toFixed(1) }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4">
+            <div class="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-500" 
+                 [style.width.%]="getProgressPercentage()"></div>
+          </div>
+        </div>
+
+        <!-- Main Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Meta Total -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Meta Total</p>
+                <p class="text-2xl font-bold text-gray-900 mt-2">{{ formatCurrency(budgetData.monto_meta) }}</p>
+              </div>
+              <div class="bg-blue-100 rounded-full p-3">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recaudado -->
+          <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Recaudado</p>
+                <p class="text-2xl font-bold text-green-600 mt-2">{{ formatCurrency(budgetData.recaudado) }}</p>
+              </div>
+              <div class="bg-green-100 rounded-full p-3">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Faltante -->
+          <div class="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Faltante</p>
+                <p class="text-2xl font-bold text-red-600 mt-2">{{ formatCurrency(budgetData.faltante) }}</p>
+              </div>
+              <div class="bg-red-100 rounded-full p-3">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Metrics -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Monthly Metrics -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+          <div class="flex items-center mb-6">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-3 mr-4">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Métricas Mensuales</h3>
+          </div>
+
+          <div class="space-y-6">
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <span class="text-gray-700 font-medium">Meta Mensual:</span>
+              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_mensual) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
+              <span class="text-gray-700 font-medium">Recaudo del Mes:</span>
+              <span class="text-lg font-semibold text-green-600">{{ formatCurrency(budgetData.recaudo_mes) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <span class="text-gray-700 font-medium">Meta Acumulada del Mes:</span>
+              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_acumulada_mes) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <span class="text-gray-700 font-medium">Estado del Mes:</span>
+              <span [class]="getStatusColor(budgetData.estado_mes)">{{ budgetData.estado_mes }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Metrics -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+          <div class="flex items-center mb-6">
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-full p-3 mr-4">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Métricas Semanales</h3>
+          </div>
+
+          <div class="space-y-6">
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <span class="text-gray-700 font-medium">Meta Semanal:</span>
+              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_semanal) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
+              <span class="text-gray-700 font-medium">Recaudo de la Semana:</span>
+              <span class="text-lg font-semibold text-green-600">{{ formatCurrency(budgetData.recaudo_semana) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <span class="text-gray-700 font-medium">Meta Acumulada Semanal:</span>
+              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_acumulada_sem) }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <span class="text-gray-700 font-medium">Estado de la Semana:</span>
+              <span [class]="getStatusColor(budgetData.estado_semana)">{{ budgetData.estado_semana }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payments List Section -->
+      @if (budgetData.listado_pagos && budgetData.listado_pagos.length > 0) {
+        <div class="bg-white rounded-xl shadow-lg p-8 mt-8">
+          <div class="flex items-center mb-6">
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full p-3 mr-4">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Listado de Pagos</h3>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full table-auto">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagador</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta ID</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aprobación</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                @for (pago of budgetData.listado_pagos; track pago.id) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ formatDate(pago.fecha_pago) }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ pago.pagador }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                      {{ formatCurrency(pago.valor) }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ pago.metodo_pago }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                      <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" 
+                            [class]="pago.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                        {{ pago.estado }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-blue-600 font-mono">
+                      <button 
+                        (click)="navigateToAccountDetail(pago.cuenta_cobrar_id)"
+                        class="hover:underline hover:text-blue-800 cursor-pointer transition-colors"
+                        title="Ver detalles de la cuenta por cobrar">
+                        {{ pago.cuenta_cobrar_id }}
+                      </button>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {{ pago.numero_aprobacion }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (!loading && !budgetData) {
+    <div class="flex justify-center items-center py-20">
+      <div class="text-center">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <p class="text-gray-500 text-lg">No se pudieron cargar los datos del informe</p>
+        <button 
+          (click)="onRegresar()"
+          class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Regresar
+        </button>
+      </div>
+    </div>
+  }
+</div>
