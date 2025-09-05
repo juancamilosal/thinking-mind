@@ -27,6 +27,8 @@ interface CourseWithStudents {
   expanded?: boolean;
   totalStudents: number;
   totalAccounts: number;
+  newStudentsToday: number;
+  newStudentNames: string[];
 }
 
 @Component({
@@ -50,6 +52,11 @@ export class StudentsSchool implements OnInit, OnDestroy {
   selectedStudent: Student | null = null;
   showStudentModal = false;
   private searchTimeout: any;
+  
+  // Propiedades para estudiantes nuevos hoy
+  schoolNewStudentsToday: number = 0;
+  schoolNewStudentNames: string[] = [];
+  showSchoolNewStudentAlert: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -111,6 +118,10 @@ export class StudentsSchool implements OnInit, OnDestroy {
   processStudentAccountsReceivable(): void {
     this.studentAccountsReceivable = [];
     const coursesMap = new Map<string, CourseWithStudents>();
+    
+    // Resetear contadores de estudiantes nuevos
+    this.schoolNewStudentsToday = 0;
+    this.schoolNewStudentNames = [];
 
     this.students.forEach(student => {
       if (student.acudiente && typeof student.acudiente === 'object') {
@@ -126,6 +137,9 @@ export class StudentsSchool implements OnInit, OnDestroy {
           if (studentAccounts.length > 0) {
             const totalAmount = studentAccounts.reduce((sum, account) => sum + account.monto, 0);
             const totalPending = studentAccounts.filter(account => account.estado === 'PENDIENTE').length;
+            
+            // Detectar si es estudiante nuevo hoy con pago mayor a 50,000
+            const isNewToday = this.isStudentNewToday(student, studentAccounts);
 
             const studentAccountReceivable = {
               student: student,
@@ -135,6 +149,12 @@ export class StudentsSchool implements OnInit, OnDestroy {
             };
 
             this.studentAccountsReceivable.push(studentAccountReceivable);
+            
+            // Si es estudiante nuevo hoy, agregarlo a los contadores del colegio
+            if (isNewToday) {
+              this.schoolNewStudentsToday++;
+              this.schoolNewStudentNames.push(`${student.nombre} ${student.apellido}`);
+            }
 
             // Agrupar por curso
             studentAccounts.forEach(account => {
@@ -153,7 +173,9 @@ export class StudentsSchool implements OnInit, OnDestroy {
                     students: [],
                     expanded: false,
                     totalStudents: 0,
-                    totalAccounts: 0
+                    totalAccounts: 0,
+                    newStudentsToday: 0,
+                    newStudentNames: []
                   });
                 }
 
@@ -163,6 +185,12 @@ export class StudentsSchool implements OnInit, OnDestroy {
                 if (!existingStudent) {
                   course.students.push(studentAccountReceivable);
                   course.totalStudents++;
+                  
+                  // Si es estudiante nuevo hoy, agregarlo al contador del curso
+                  if (isNewToday) {
+                    course.newStudentsToday++;
+                    course.newStudentNames.push(`${student.nombre} ${student.apellido}`);
+                  }
                 }
                 course.totalAccounts++;
               }
@@ -176,6 +204,32 @@ export class StudentsSchool implements OnInit, OnDestroy {
     this.filteredCourses = [...this.coursesWithStudents];
     this.filteredStudentAccounts = [...this.studentAccountsReceivable];
     this.updateTotalAccountsCount();
+    
+    // Mostrar alerta si hay estudiantes nuevos hoy
+    this.showSchoolNewStudentAlert = this.schoolNewStudentsToday > 0;
+  }
+  
+  isStudentNewToday(student: Student, accounts: AccountReceivable[]): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Verificar si tiene al menos una cuenta creada hoy con pago mayor a 50,000
+    const hasNewAccountToday = accounts.some(account => {
+      if (account.createdDate) {
+        const accountCreatedDate = new Date(account.createdDate);
+        accountCreatedDate.setHours(0, 0, 0, 0);
+        const isCreatedToday = accountCreatedDate.getTime() === today.getTime();
+        const hasHighPayment = account.monto > 50000;
+        return isCreatedToday && hasHighPayment;
+      }
+      return false;
+    });
+    
+    return hasNewAccountToday;
+  }
+  
+  dismissSchoolNewStudentAlert(): void {
+    this.showSchoolNewStudentAlert = false;
   }
 
   onSearchInputChange(event: any): void {

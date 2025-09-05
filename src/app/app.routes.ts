@@ -12,6 +12,7 @@ import {PaymentRecord} from './layouts/public-layout/pages/payment-record/paymen
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
 import { BudgetReport } from './layouts/private-layout/pages/reports/budget-report/budget-report';
+import { CourseEnrollmentReport } from './layouts/private-layout/pages/reports/course-enrollment-report/course-enrollment-report';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
@@ -99,6 +100,11 @@ export const routes: Routes = [
         path: 'budget-report',
         title: 'Thinking Mind | Informe de Presupuesto',
         component: BudgetReport
+      },
+      {
+        path: 'course-enrollment-report',
+        title: 'Thinking Mind | Informe de Cursos Inscritos',
+        component: CourseEnrollmentReport
       },
       {
         path: 'list-schools',

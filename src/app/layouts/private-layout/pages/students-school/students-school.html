@@ -48,6 +48,43 @@
         </div>
       </div>
     }
+    
+    <!-- Alerta de Nuevo Estudiante Hoy a nivel de Colegio -->
+    @if (showSchoolNewStudentAlert && schoolNewStudentsToday > 0) {
+      <div class="bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-500 p-4 mb-6 rounded-r-lg shadow-md">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-green-800">
+                ¡Nuevo{{ schoolNewStudentsToday > 1 ? 's' : '' }} Estudiante{{ schoolNewStudentsToday > 1 ? 's' : '' }} Hoy en el Colegio!
+              </h3>
+              <div class="mt-2 text-sm text-green-700">
+                <p>{{ schoolNewStudentsToday }} estudiante{{ schoolNewStudentsToday > 1 ? 's' : '' }} registrado{{ schoolNewStudentsToday > 1 ? 's' : '' }} hoy con abono mayor a $50,000:</p>
+                <ul class="list-disc list-inside mt-1">
+                  @for (name of schoolNewStudentNames; track name) {
+                    <li>{{ name }}</li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <button
+              (click)="dismissSchoolNewStudentAlert()"
+              class="inline-flex text-green-400 hover:text-green-600 focus:outline-none focus:text-green-600 transition ease-in-out duration-150">
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Cursos del Colegio</h2>
     <p class="text-gray-600">Lista de cursos con sus estudiantes registrados</p>
@@ -256,6 +293,30 @@
                 </div>
               </div>
             </button>
+            
+            <!-- Alerta de Nuevo Estudiante Hoy para este Curso -->
+            @if (course.expanded && course.newStudentsToday > 0) {
+              <div class="bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-500 p-3 mx-6 mt-2 rounded-r-lg shadow-sm">
+                <div class="flex items-center justify-start">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <svg class="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div class="ml-2">
+                      <h4 class="text-xs font-medium text-green-800">
+                        ¡Nuevo{{ course.newStudentsToday > 1 ? 's' : '' }} Estudiante{{ course.newStudentsToday > 1 ? 's' : '' }} Hoy en este Curso!
+                      </h4>
+                      <div class="mt-1 text-xs text-green-700">
+                        <p>{{ course.newStudentsToday }} estudiante{{ course.newStudentsToday > 1 ? 's' : '' }} con abono mayor a $50,000:</p>
+                        <span class="font-medium">{{ course.newStudentNames.join(', ') }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
 
             <!-- Contenido del Curso (Estudiantes) -->
              @if (course.expanded) {
@@ -276,7 +337,9 @@
                       @for(studentAccount of course.students; track studentAccount.student.id) {
                         @for(account of studentAccount.accountsReceivable; track account.id) {
                           @if (account.curso_id && typeof account.curso_id === 'object' && account.curso_id.id === course.id) {
-                             <tr class="bg-indigo-50 hover:bg-indigo-100 transition-colors duration-200">
+                            @let isNewToday = isStudentNewToday(studentAccount.student, studentAccount.accountsReceivable);
+                             <tr class="transition-colors duration-200"
+                                 [class]="isNewToday ? 'bg-green-50 hover:bg-green-100 border-l-4 border-green-400' : 'bg-indigo-50 hover:bg-indigo-100'">
                               <td class="px-6 py-4">
                                 <div class="flex items-center">
                                   <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mr-4">
@@ -286,6 +349,11 @@
                                    </div>
                                   <div>
                                     <div class="text-sm font-medium text-gray-900">{{ studentAccount.student.nombre }} {{ studentAccount.student.apellido }}</div>
+                                    @if (isNewToday) {
+                                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                        ¡NUEVO HOY!
+                                      </span>
+                                    }
                                   </div>
                                 </div>
                               </td>

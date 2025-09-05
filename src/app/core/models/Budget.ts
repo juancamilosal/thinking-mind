@@ -6,7 +6,36 @@ export interface PaymentRecord {
   pagador: string;
   numero_aprobacion: string;
   estado: string;
-  cuenta_cobrar_id: string;
+  cuenta_cobrar_id: {
+    id: string;
+    monto: number;
+    fecha_limite: string;
+    saldo: number;
+    cliente_id: string;
+    estudiante_id: {
+      id: string;
+      nombre: string;
+      apellido: string;
+      tipo_documento: string;
+      numero_documento: string;
+    };
+    estado: string;
+    link_pago: string | null;
+    observaciones: string | null;
+    pin_entregado: string;
+    fecha_creacion: string | null;
+    pagos: string[];
+    curso_id: {
+      id: string;
+      nombre: string;
+      precio: string;
+      img: string;
+      sku: string;
+      precio_inscripcion: number;
+      estudiantes: string[];
+      cuentas_cobrar: string[];
+    };
+  };
   comprobante: string | null;
 }
 

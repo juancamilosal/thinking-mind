@@ -5,6 +5,31 @@ import { BudgetService } from '../../../../../core/services/budget.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { Budget, PaymentRecord } from '../../../../../core/models/Budget';
 
+interface CourseEnrollmentData {
+  courseId: string;
+  courseName: string;
+  coursePrice: string;
+  accountsCount: number;
+  totalEnrolledAmount: number;
+  accounts: {
+    accountId: string;
+    studentName?: string;
+    clientName?: string;
+    amount: number;
+    balance: number;
+    paymentDate: string;
+    paymentMethod: string;
+    approvalNumber: string;
+  }[];
+}
+
+interface EnrollmentSummary {
+  totalCourses: number;
+  totalAccounts: number;
+  totalEnrolledAmount: number;
+  courses: CourseEnrollmentData[];
+}
+
 @Component({
   selector: 'app-budget-report',
   standalone: true,
@@ -13,6 +38,7 @@ import { Budget, PaymentRecord } from '../../../../../core/models/Budget';
 })
 export class BudgetReport implements OnInit {
   budgetData: Budget | null = null;
+  courseEnrollmentData: EnrollmentSummary | null = null;
   loading: boolean = false;
   anio: number = 0;
   presupuesto: number = 0;
@@ -43,6 +69,7 @@ export class BudgetReport implements OnInit {
     this.budgetService.getBudget(this.anio, this.presupuesto, this.id).subscribe({
       next: (response) => {
         this.budgetData = response.data;
+        this.generateCourseEnrollmentData();
         this.loading = false;
         console.log('Datos del informe:', this.budgetData);
       },
@@ -65,13 +92,179 @@ export class BudgetReport implements OnInit {
     });
   }
 
+  generateCourseEnrollmentReport(): void {
+    if (!this.budgetData) {
+      this.notificationService.showError(
+        'Error',
+        'No hay datos de presupuesto disponibles para generar el informe.'
+      );
+      return;
+    }
+
+    // Debug: Mostrar información de los datos
+    console.log('Datos de presupuesto:', this.budgetData);
+    console.log('Listado de pagos:', this.budgetData.listado_pagos);
+
+    // Verificar si hay pagos con estado PAGADA
+    const paidPayments = this.budgetData.listado_pagos?.filter(pago => 
+      pago.estado === 'PAGADA' && 
+      pago.cuenta_cobrar_id && 
+      typeof pago.cuenta_cobrar_id === 'object' &&
+      pago.cuenta_cobrar_id.curso_id &&
+      pago.cuenta_cobrar_id.estado === 'PAGADA'
+    ) || [];
+
+    console.log('Pagos filtrados:', paidPayments);
+    console.log('Cantidad de pagos filtrados:', paidPayments.length);
+
+    if (paidPayments.length === 0) {
+      this.notificationService.showError(
+        'Sin datos',
+        'No se encontraron cursos con cuentas completamente pagadas para generar el informe.'
+      );
+      return;
+    }
+
+    // Navegar al informe de cursos inscritos pasando los datos
+    this.router.navigate(['/private/course-enrollment-report'], {
+      state: { budgetData: this.budgetData }
+    });
+  }
+
+  private generateCourseEnrollmentData(): void {
+    console.log('Budget Data:', this.budgetData);
+    console.log('Listado Pagos:', this.budgetData?.listado_pagos);
+    
+    if (!this.budgetData || !this.budgetData.listado_pagos) {
+      console.log('No hay datos de presupuesto o pagos');
+      this.courseEnrollmentData = null;
+      return;
+    }
+
+    // Filtrar pagos que están completamente pagados
+    const paidPayments = this.budgetData.listado_pagos.filter(pago => 
+      (pago.estado === 'PAGADA' || pago.estado === 'PAGADO') && 
+      pago.cuenta_cobrar_id && 
+      typeof pago.cuenta_cobrar_id === 'object' && 
+      pago.cuenta_cobrar_id.curso_id && 
+      (pago.cuenta_cobrar_id.estado === 'PAGADA' || pago.cuenta_cobrar_id.estado === 'PAGADO')
+    );
+
+    console.log('Paid Payments:', paidPayments);
+    console.log('Paid Payments Length:', paidPayments.length);
+
+    if (paidPayments.length === 0) {
+      console.log('No se encontraron pagos completamente pagados');
+      this.courseEnrollmentData = null;
+      return;
+    }
+
+    // Agrupar por curso y contar cuentas únicas
+    const courseMap = new Map<string, CourseEnrollmentData & { uniqueAccountIds: Set<string> }>();
+    const uniqueAccounts = new Set<string>();
+    let totalEnrolledAmount = 0;
+
+    paidPayments.forEach(pago => {
+      const cuentaCobrar = pago.cuenta_cobrar_id as any;
+      const curso = cuentaCobrar.curso_id;
+      const courseId = curso.id;
+      const accountId = cuentaCobrar.id;
+
+      // Agregar cuenta única al set global
+      uniqueAccounts.add(accountId);
+      totalEnrolledAmount += pago.valor || 0;
+
+      if (!courseMap.has(courseId)) {
+        courseMap.set(courseId, {
+          courseId: courseId,
+          courseName: curso.nombre || 'Curso sin nombre',
+          coursePrice: curso.precio || '0',
+          accountsCount: 0,
+          totalEnrolledAmount: 0,
+          accounts: [],
+          uniqueAccountIds: new Set<string>()
+        });
+      }
+
+      const courseData = courseMap.get(courseId)!;
+      
+      // Solo contar la cuenta si no la hemos visto antes en este curso
+      if (!courseData.uniqueAccountIds.has(accountId)) {
+        courseData.uniqueAccountIds.add(accountId);
+        courseData.accountsCount++;
+        
+        // Agregar información de la cuenta solo una vez
+        courseData.accounts.push({
+          accountId: cuentaCobrar.id,
+          studentName: cuentaCobrar.estudiante_id?.nombre || 'N/A',
+          clientName: typeof cuentaCobrar.cliente_id === 'string' ? cuentaCobrar.cliente_id : 'N/A',
+          amount: cuentaCobrar.monto || 0,
+          balance: cuentaCobrar.saldo || 0,
+          paymentDate: pago.fecha_pago,
+          paymentMethod: pago.metodo_pago,
+          approvalNumber: pago.numero_aprobacion
+        });
+      }
+      
+      // Siempre sumar el valor del pago al total del curso
+      courseData.totalEnrolledAmount += pago.valor || 0;
+    });
+
+    // Convertir el Map a array y limpiar la propiedad temporal
+    const courses = Array.from(courseMap.values()).map(course => {
+      const { uniqueAccountIds, ...cleanCourse } = course;
+      return cleanCourse;
+    });
+
+    this.courseEnrollmentData = {
+      totalCourses: courseMap.size,
+      totalAccounts: uniqueAccounts.size,
+      totalEnrolledAmount: totalEnrolledAmount,
+      courses
+    };
+
+    console.log('Course Enrollment Data:', this.courseEnrollmentData);
+  }
+
+  // Métodos auxiliares para estadísticas
+  getAverageAccountsPerCourse(): number {
+    if (!this.courseEnrollmentData || this.courseEnrollmentData.totalCourses === 0) {
+      return 0;
+    }
+    return Math.round(this.courseEnrollmentData.totalAccounts / this.courseEnrollmentData.totalCourses);
+  }
+
+  getAverageRevenuePerCourse(): number {
+    if (!this.courseEnrollmentData || this.courseEnrollmentData.totalCourses === 0) {
+      return 0;
+    }
+    return Math.round(this.courseEnrollmentData.totalEnrolledAmount / this.courseEnrollmentData.totalCourses);
+  }
+
+  getAverageRevenuePerAccount(): number {
+    if (!this.courseEnrollmentData || this.courseEnrollmentData.totalAccounts === 0) {
+      return 0;
+    }
+    return Math.round(this.courseEnrollmentData.totalEnrolledAmount / this.courseEnrollmentData.totalAccounts);
+  }
+
+  getTopCourse(): CourseEnrollmentData | null {
+    if (!this.courseEnrollmentData || this.courseEnrollmentData.courses.length === 0) {
+      return null;
+    }
+    return this.courseEnrollmentData.courses.reduce((prev, current) => 
+      (prev.accountsCount > current.accountsCount) ? prev : current
+    );
+  }
+
   formatCurrency(amount: number | string): string {
     if (!amount) return '$0';
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(numAmount);
   }
 
@@ -105,5 +298,40 @@ export class BudgetReport implements OnInit {
     const meta = this.budgetData.monto_meta;
     const recaudado = this.budgetData.recaudado;
     return meta > 0 ? (recaudado / meta) * 100 : 0;
+  }
+
+  exportToCSV() {
+    if (!this.courseEnrollmentData) return;
+
+    const csvData = [];
+    csvData.push(['Curso', 'Precio', 'Cuentas', 'Monto Total', 'ID Cuenta', 'Estudiante', 'Cliente', 'Monto Cuenta', 'Saldo', 'Fecha Pago', 'Método Pago', 'Número Aprobación']);
+
+    this.courseEnrollmentData.courses.forEach(course => {
+      course.accounts.forEach(account => {
+        csvData.push([
+          course.courseName,
+          course.coursePrice,
+          course.accountsCount.toString(),
+          course.totalEnrolledAmount.toString(),
+          account.accountId,
+          account.studentName || '',
+          account.clientName || '',
+          account.amount.toString(),
+          account.balance.toString(),
+          account.paymentDate,
+          account.paymentMethod,
+          account.approvalNumber
+        ]);
+      });
+    });
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `informe-cursos-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
