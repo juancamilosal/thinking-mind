@@ -30,6 +30,7 @@ export class FormStudent implements OnInit, OnChanges {
   schools: School[] = [];
   guardianId: string = '';
   isSubmitting = false; // Nueva propiedad
+  isDeleting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -64,6 +65,7 @@ export class FormStudent implements OnInit, OnChanges {
       documentNumber: [null, [Validators.required, Validators.minLength(6)]],
       firstName: [null, [Validators.required, Validators.minLength(2)]],
       lastName: [null, [Validators.required, Validators.minLength(2)]],
+      grado: [null, [Validators.required, Validators.minLength(1)]],
       school: [null, [Validators.required, Validators.minLength(2)]],
       guardianDocumentType: ['CC', [Validators.required]],
       guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
@@ -97,6 +99,7 @@ export class FormStudent implements OnInit, OnChanges {
         documentNumber: this.studentData.numero_documento,
         firstName: this.studentData.nombre,
         lastName: this.studentData.apellido,
+        grado: this.studentData.grado,
         school: this.studentData.colegio_id.id
       });
 
@@ -212,6 +215,7 @@ export class FormStudent implements OnInit, OnChanges {
         numero_documento: this.studentForm.get('documentNumber')?.value,
         nombre: this.studentForm.get('firstName')?.value,
         apellido: this.studentForm.get('lastName')?.value,
+        grado: this.studentForm.get('grado')?.value,
         colegio_id: this.studentForm.get('school')?.value,
         acudiente: this.guardianId,
       };
@@ -240,8 +244,10 @@ export class FormStudent implements OnInit, OnChanges {
         'estudiante',
         () => {
           // Callback de confirmación
+          this.isDeleting = true;
           this.studentService.deleteStudent(this.studentData!.id).subscribe({
             next: (response) => {
+              this.isDeleting = false;
               this.notificationService.showSuccess(
                 'Estudiante eliminado',
                 `${studentName} ha sido eliminado exitosamente.`
@@ -249,6 +255,7 @@ export class FormStudent implements OnInit, OnChanges {
               this.studentUpdated.emit();
             },
             error: (error) => {
+              this.isDeleting = false;
               this.notificationService.showError(
                 'Error al eliminar',
                 'No se pudo eliminar el estudiante. Inténtalo nuevamente.'
@@ -285,6 +292,11 @@ export class FormStudent implements OnInit, OnChanges {
     const value = event.target.value;
     const capitalizedValue = this.capitalizeText(value);
     this.studentForm.get('lastName')?.setValue(capitalizedValue, { emitEvent: false });
+  }
+
+  onGradoChange(event: any): void {
+    const value = event.target.value.toUpperCase();
+    this.studentForm.get('grado')?.setValue(value, { emitEvent: false });
   }
 
   onSchoolChange(event: any): void {

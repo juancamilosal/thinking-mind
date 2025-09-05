@@ -1,26 +1,28 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {User} from '../../../../../core/models/User';
-import { NotificationService } from '../../../../../core/services/notification.service';
+import {User} from '../../../../../../core/models/User';
+import { NotificationService } from '../../../../../../core/services/notification.service';
 
 @Component({
-  selector: 'app-rector-detail',
+  selector: 'app-admin-detail',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './rector-detail.html'
+  templateUrl: './admin-detail.html'
 })
-export class RectorDetail implements OnInit {
-  @Input() rector: User | null = null;
+export class AdminDetail implements OnInit {
+  @Input() admin: User | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() edit = new EventEmitter<User>();
   @Output() delete = new EventEmitter<string>();
+
+  showDeleteModal = false;
 
   constructor(
     private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
-    // No necesitamos cargar colegios para directus_users
+    // No necesitamos cargar datos adicionales para administradores
   }
 
   onClose() {
@@ -28,8 +30,21 @@ export class RectorDetail implements OnInit {
   }
 
   onEdit() {
-    if (this.rector) {
-      this.edit.emit(this.rector);
+    if (this.admin) {
+      this.edit.emit(this.admin);
+    }
+  }
+
+  onDelete() {
+    if (this.admin && this.admin.id) {
+      this.delete.emit(this.admin.id.toString());
+    }
+  }
+
+  confirmDelete() {
+    this.showDeleteModal = false;
+    if (this.admin && this.admin.id) {
+      this.delete.emit(this.admin.id.toString());
     }
   }
 

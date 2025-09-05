@@ -5,16 +5,20 @@ import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
 import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
-import { Rectores } from './layouts/private-layout/pages/rectores/rectores';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
+import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
+import { BudgetReport } from './layouts/private-layout/pages/reports/budget-report/budget-report';
+import { CourseEnrollmentReport } from './layouts/private-layout/pages/reports/course-enrollment-report/course-enrollment-report';
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
+import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
+
 
 export const routes: Routes = [
   {
@@ -63,9 +67,9 @@ export const routes: Routes = [
         component: Schools
       },
       {
-        path: 'rectores',
-        title: 'Thinking Mind | Rectores',
-        component: Rectores
+        path: 'users',
+        title: 'Thinking Mind | Users',
+        component: Users
       },
       {
         path: 'courses',
@@ -86,6 +90,21 @@ export const routes: Routes = [
         path: 'reports',
         title: 'Thinking Mind | Reportes',
         component: Reports
+      },
+      {
+        path: 'presupuesto',
+        title: 'Thinking Mind | Gestión de Presupuesto',
+        component: Presupuesto
+      },
+      {
+        path: 'budget-report',
+        title: 'Thinking Mind | Informe de Presupuesto',
+        component: BudgetReport
+      },
+      {
+        path: 'course-enrollment-report',
+        title: 'Thinking Mind | Informe de Cursos Inscritos',
+        component: CourseEnrollmentReport
       },
       {
         path: 'list-schools',

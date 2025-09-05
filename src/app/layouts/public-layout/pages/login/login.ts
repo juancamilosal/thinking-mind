@@ -28,6 +28,12 @@ export class Login implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Resetear estados al inicializar el componente
+    this.showPassword = false;
+    this.isLoading = false;
+    this.showNotification = false;
+    this.notificationData = null;
+    
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -88,5 +94,16 @@ export class Login implements OnInit {
   onNotificationClose() {
     this.showNotification = false;
     this.notificationData = null;
+  }
+
+  // Método para resetear el estado del componente
+  resetComponentState() {
+    this.showPassword = false;
+    this.isLoading = false;
+    this.showNotification = false;
+    this.notificationData = null;
+    if (this.loginForm) {
+      this.loginForm.reset();
+    }
   }
 }

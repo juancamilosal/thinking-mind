@@ -1,5 +1,6 @@
 import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {ActivatedRoute} from '@angular/router';
 import {AccountReceivableFormComponent} from './account-recevable-form/account-receivable-form';
 import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
 import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
@@ -25,13 +26,22 @@ export class AccountsReceivable implements OnInit {
 
   constructor(
     private accountService: AccountReceivableService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {
   }
 
   ngOnInit(): void {
     this.loadAccounts();
     this.totalAccounts();
+    
+    // Check for cuentaCobrarId query parameter
+    this.route.queryParams.subscribe(params => {
+      const cuentaCobrarId = params['cuentaCobrarId'];
+      if (cuentaCobrarId) {
+        this.loadAndShowAccountDetail(cuentaCobrarId);
+      }
+    });
   }
 
   protected loadAccounts(): void {
@@ -167,5 +177,20 @@ export class AccountsReceivable implements OnInit {
         }
       }
     }, 100);
+  }
+
+  private loadAndShowAccountDetail(accountId: string) {
+    this.accountService.getAccountById(accountId).subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.selectedAccount = response.data;
+          this.showDetail = true;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading account details:', error);
+      }
+    });
   }
 }

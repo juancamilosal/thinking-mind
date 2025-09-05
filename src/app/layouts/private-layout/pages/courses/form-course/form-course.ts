@@ -32,6 +32,7 @@ export class FormCourse implements OnInit, OnChanges {
   showImageSection: boolean = false; // Controla cuándo mostrar la sección de imagen
   courseCreated: boolean = false; // Indica si el curso ya fue creado
   createdCourseId: string | null = null; // ID del curso creado
+  isDeleting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -287,8 +288,10 @@ export class FormCourse implements OnInit, OnChanges {
         this.courseData.nombre,
         'curso',
         () => {
+          this.isDeleting = true;
           this.courseServices.deleteCourse(this.courseData!.id).subscribe({
             next: (response) => {
+              this.isDeleting = false;
               this.notificationService.showSuccess(
                 'Curso eliminado',
                 `${this.courseData?.nombre} ha sido eliminado exitosamente.`
@@ -296,6 +299,7 @@ export class FormCourse implements OnInit, OnChanges {
               this.courseUpdated.emit();
             },
             error: (error) => {
+              this.isDeleting = false;
               this.notificationService.showError(
                 'Error al eliminar',
                 'No se pudo eliminar el curso. Inténtalo nuevamente.'

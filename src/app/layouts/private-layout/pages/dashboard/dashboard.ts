@@ -99,8 +99,6 @@ export class Dashboard implements OnInit {
   }
 
   private loadRectorData(): void {
-    console.log('userColegioId del rector:', this.userColegioId);
-
     forkJoin({
       students: this.studentService.getStudentsBySchool(this.userColegioId!),
       accounts: this.accountReceivableService.searchAccountReceivable(undefined, this.userColegioId!)
@@ -108,8 +106,6 @@ export class Dashboard implements OnInit {
       next: ({ students, accounts }) => {
         this.students = students.data;
         this.accounts = accounts.data; // Ya vienen filtradas por colegio desde el servicio
-        
-        console.log('Cuentas filtradas por colegio:', accounts.data.length);
         this.calculateRectorStats(this.students, accounts.data);
         this.isLoading = false;
       },

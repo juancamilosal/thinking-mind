@@ -297,11 +297,7 @@ export class AccountReceivableDetailComponent implements OnInit {
               estado: newEstado
             }).subscribe({
               next: (updateResponse) => {
-                this.notificationService.showSuccess(
-                  'Pago eliminado',
-                  `El pago ha sido eliminado exitosamente y el saldo ha sido actualizado.`
-                );
-
+                // Eliminación exitosa - solo actualizar datos sin mostrar modal
                 this.account.saldo = newSaldo;
                 this.account.estado = newEstado;
                 this.refreshAccountData();

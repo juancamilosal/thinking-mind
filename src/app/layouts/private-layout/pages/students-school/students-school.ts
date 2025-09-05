@@ -18,6 +18,19 @@ interface StudentAccountReceivable {
   totalPending: number;
 }
 
+interface CourseWithStudents {
+  id: string;
+  nombre: string;
+  precio: string;
+  sku: string;
+  students: StudentAccountReceivable[];
+  expanded?: boolean;
+  totalStudents: number;
+  totalAccounts: number;
+  newStudentsToday: number;
+  newStudentNames: string[];
+}
+
 @Component({
   selector: 'app-students-school',
   standalone: true,
@@ -29,6 +42,8 @@ export class StudentsSchool implements OnInit, OnDestroy {
   school: School | null = null;
   studentAccountsReceivable: StudentAccountReceivable[] = [];
   filteredStudentAccounts: StudentAccountReceivable[] = [];
+  coursesWithStudents: CourseWithStudents[] = [];
+  filteredCourses: CourseWithStudents[] = [];
   totalAccountsCount: number = 0;
   isLoading = false;
   schoolId: string = '';
@@ -37,6 +52,11 @@ export class StudentsSchool implements OnInit, OnDestroy {
   selectedStudent: Student | null = null;
   showStudentModal = false;
   private searchTimeout: any;
+  
+  // Propiedades para estudiantes nuevos hoy
+  schoolNewStudentsToday: number = 0;
+  schoolNewStudentNames: string[] = [];
+  showSchoolNewStudentAlert: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -97,6 +117,11 @@ export class StudentsSchool implements OnInit, OnDestroy {
 
   processStudentAccountsReceivable(): void {
     this.studentAccountsReceivable = [];
+    const coursesMap = new Map<string, CourseWithStudents>();
+    
+    // Resetear contadores de estudiantes nuevos
+    this.schoolNewStudentsToday = 0;
+    this.schoolNewStudentNames = [];
 
     this.students.forEach(student => {
       if (student.acudiente && typeof student.acudiente === 'object') {
@@ -112,20 +137,98 @@ export class StudentsSchool implements OnInit, OnDestroy {
           if (studentAccounts.length > 0) {
             const totalAmount = studentAccounts.reduce((sum, account) => sum + account.monto, 0);
             const totalPending = studentAccounts.filter(account => account.estado === 'PENDIENTE').length;
+            
+            // Detectar si es estudiante nuevo hoy con pago mayor a 50,000
+            const isNewToday = this.isStudentNewToday(student, studentAccounts);
 
-            this.studentAccountsReceivable.push({
+            const studentAccountReceivable = {
               student: student,
               accountsReceivable: studentAccounts,
               totalAmount: totalAmount,
               totalPending: totalPending
+            };
+
+            this.studentAccountsReceivable.push(studentAccountReceivable);
+            
+            // Si es estudiante nuevo hoy, agregarlo a los contadores del colegio
+            if (isNewToday) {
+              this.schoolNewStudentsToday++;
+              this.schoolNewStudentNames.push(`${student.nombre} ${student.apellido}`);
+            }
+
+            // Agrupar por curso
+            studentAccounts.forEach(account => {
+              if (account.curso_id && typeof account.curso_id === 'object') {
+                const courseId = account.curso_id.id;
+                const courseName = account.curso_id.nombre;
+                const coursePrice = account.curso_id.precio || '0';
+                const courseSku = account.curso_id.sku || '';
+
+                if (!coursesMap.has(courseId)) {
+                  coursesMap.set(courseId, {
+                    id: courseId,
+                    nombre: courseName,
+                    precio: coursePrice,
+                    sku: courseSku,
+                    students: [],
+                    expanded: false,
+                    totalStudents: 0,
+                    totalAccounts: 0,
+                    newStudentsToday: 0,
+                    newStudentNames: []
+                  });
+                }
+
+                const course = coursesMap.get(courseId)!;
+                // Verificar si el estudiante ya está en este curso
+                const existingStudent = course.students.find(s => s.student.id === student.id);
+                if (!existingStudent) {
+                  course.students.push(studentAccountReceivable);
+                  course.totalStudents++;
+                  
+                  // Si es estudiante nuevo hoy, agregarlo al contador del curso
+                  if (isNewToday) {
+                    course.newStudentsToday++;
+                    course.newStudentNames.push(`${student.nombre} ${student.apellido}`);
+                  }
+                }
+                course.totalAccounts++;
+              }
             });
           }
         }
       }
     });
 
+    this.coursesWithStudents = Array.from(coursesMap.values());
+    this.filteredCourses = [...this.coursesWithStudents];
     this.filteredStudentAccounts = [...this.studentAccountsReceivable];
     this.updateTotalAccountsCount();
+    
+    // Mostrar alerta si hay estudiantes nuevos hoy
+    this.showSchoolNewStudentAlert = this.schoolNewStudentsToday > 0;
+  }
+  
+  isStudentNewToday(student: Student, accounts: AccountReceivable[]): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Verificar si tiene al menos una cuenta con fecha_inscripcion de hoy
+    const hasNewInscriptionToday = accounts.some(account => {
+      if (account.fecha_inscripcion) {
+        const inscriptionDate = new Date(account.fecha_inscripcion);
+        inscriptionDate.setHours(0, 0, 0, 0);
+        const isInscribedToday = inscriptionDate.getTime() === today.getTime();
+        return isInscribedToday;
+      }
+      return false;
+    });
+    
+    return hasNewInscriptionToday;
+  }
+  
+  dismissSchoolNewStudentAlert(): void {
+    this.showSchoolNewStudentAlert = false;
   }
 
   onSearchInputChange(event: any): void {
@@ -142,22 +245,32 @@ export class StudentsSchool implements OnInit, OnDestroy {
 
   searchStudents(): void {
     if (!this.searchTerm.trim()) {
-      this.filteredStudentAccounts = [...this.studentAccountsReceivable];
+      this.filteredCourses = [...this.coursesWithStudents];
       return;
     }
 
     const term = this.searchTerm.toLowerCase().trim();
-    this.filteredStudentAccounts = this.studentAccountsReceivable.filter(studentAccount => {
-      const student = studentAccount.student;
-      const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
-      const document = `${student.tipo_documento} ${student.numero_documento}`.toLowerCase();
+    this.filteredCourses = this.coursesWithStudents.map(course => {
+      const filteredStudents = course.students.filter(studentAccount => {
+        const student = studentAccount.student;
+        const fullName = `${student.nombre} ${student.apellido}`.toLowerCase();
+        const document = `${student.tipo_documento} ${student.numero_documento}`.toLowerCase();
 
-      return fullName.includes(term) ||
-             document.includes(term) ||
-             student.nombre.toLowerCase().includes(term) ||
-             student.apellido.toLowerCase().includes(term) ||
-             student.numero_documento.includes(term);
-    });
+        return fullName.includes(term) ||
+               document.includes(term) ||
+               student.nombre.toLowerCase().includes(term) ||
+               student.apellido.toLowerCase().includes(term) ||
+               student.numero_documento.includes(term);
+      });
+
+      return {
+        ...course,
+        students: filteredStudents,
+        totalStudents: filteredStudents.length,
+        totalAccounts: filteredStudents.reduce((sum, s) => sum + s.accountsReceivable.length, 0)
+      };
+    }).filter(course => course.students.length > 0 || course.nombre.toLowerCase().includes(term));
+
     this.updateTotalAccountsCount();
   }
 
@@ -213,9 +326,13 @@ export class StudentsSchool implements OnInit, OnDestroy {
   }
 
   updateTotalAccountsCount(): void {
-    this.totalAccountsCount = this.filteredStudentAccounts.reduce((total, studentAccount) => {
-      return total + studentAccount.accountsReceivable.length;
+    this.totalAccountsCount = this.filteredCourses.reduce((total, course) => {
+      return total + course.totalAccounts;
     }, 0);
+  }
+
+  toggleCourse(courseIndex: number): void {
+    this.filteredCourses[courseIndex].expanded = !this.filteredCourses[courseIndex].expanded;
   }
 
   updatePinEntregado(account: any, event: any): void {
