@@ -213,19 +213,18 @@ export class StudentsSchool implements OnInit, OnDestroy {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Verificar si tiene al menos una cuenta creada hoy con pago mayor a 50,000
-    const hasNewAccountToday = accounts.some(account => {
-      if (account.createdDate) {
-        const accountCreatedDate = new Date(account.createdDate);
-        accountCreatedDate.setHours(0, 0, 0, 0);
-        const isCreatedToday = accountCreatedDate.getTime() === today.getTime();
-        const hasHighPayment = account.monto > 50000;
-        return isCreatedToday && hasHighPayment;
+    // Verificar si tiene al menos una cuenta con fecha_inscripcion de hoy
+    const hasNewInscriptionToday = accounts.some(account => {
+      if (account.fecha_inscripcion) {
+        const inscriptionDate = new Date(account.fecha_inscripcion);
+        inscriptionDate.setHours(0, 0, 0, 0);
+        const isInscribedToday = inscriptionDate.getTime() === today.getTime();
+        return isInscribedToday;
       }
       return false;
     });
     
-    return hasNewAccountToday;
+    return hasNewInscriptionToday;
   }
   
   dismissSchoolNewStudentAlert(): void {

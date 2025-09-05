@@ -85,10 +85,9 @@ export class CourseEnrollmentReport implements OnInit {
       const curso = cuenta.curso_id;
       const estudiante = cuenta.estudiante_id;
       
-      // Verificar si el estudiante es nuevo hoy (creado hoy con pago > 50,000)
-      const isNewToday = estudiante && estudiante.created_at && 
-        new Date(estudiante.created_at).toISOString().split('T')[0] === today &&
-        pago.valor > 50000;
+      // Verificar si el estudiante es nuevo hoy (inscrito hoy)
+      const isNewToday = cuenta && cuenta.fecha_inscripcion && 
+        new Date(cuenta.fecha_inscripcion).toISOString().split('T')[0] === today;
       
       if (isNewToday) {
         newStudentsToday.add(estudiante.id);
@@ -201,10 +200,10 @@ export class CourseEnrollmentReport implements OnInit {
       const cuenta = pago.cuenta_cobrar_id;
       const estudiante = cuenta.estudiante_id;
       
-      if (estudiante && estudiante.created_at) {
-        const studentCreatedDate = new Date(estudiante.created_at).toISOString().split('T')[0];
+      if (cuenta && cuenta.fecha_inscripcion) {
+        const inscriptionDate = new Date(cuenta.fecha_inscripcion).toISOString().split('T')[0];
         
-        if (studentCreatedDate === todayString && !newStudentsToday.has(estudiante.id)) {
+        if (inscriptionDate === todayString && !newStudentsToday.has(estudiante.id)) {
           newStudentsToday.add(estudiante.id);
           const studentName = `${estudiante.nombre || 'N/A'} ${estudiante.apellido || ''}`.trim();
           newStudentNames.push(studentName);

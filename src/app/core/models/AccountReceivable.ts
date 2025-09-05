@@ -31,6 +31,7 @@ export class AccountReceivable {
   studentName?: string;
   schoolName?: string;
   createdDate?: string;
+  fecha_inscripcion?: string;
 }
 
 export class TotalAccounts {

@@ -81,7 +81,8 @@ export class AccountReceivableService {
       schoolName: (typeof item.estudiante_id === 'object' && item.estudiante_id !== null && item.estudiante_id.colegio_id)
         ? item.estudiante_id.colegio_id.nombre
         : item.schoolName,
-      createdDate: item.createdDate
+      createdDate: item.createdDate,
+      fecha_inscripcion: item.fecha_inscripcion
     };
   }
 

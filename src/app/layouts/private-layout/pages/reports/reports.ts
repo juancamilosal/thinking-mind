@@ -42,6 +42,8 @@ interface StudentData {
   tipo_documento: string;
   numero_documento: string;
   fecha_creacion: string | null;
+  fecha_inscripcion: string | null;
+  saldo: number;
 }
 
 @Component({
@@ -220,15 +222,41 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.schoolService.getListStudentBySchool().subscribe({
       next: (response: any) => {
         console.log('Response from service:', response);
+        console.log('First school data:', response[0]);
+        if (response[0] && response[0].cursos && response[0].cursos[0] && response[0].cursos[0].estudiantes) {
+          console.log('First student data:', response[0].cursos[0].estudiantes[0]);
+        }
         // El servicio retorna directamente el array, no dentro de una propiedad 'data'
         const schoolsArray = Array.isArray(response) ? response : response.data || [];
         this.schoolsData = schoolsArray.map((school: any) => ({
           ...school,
           expanded: false,
-          cursos: school.cursos.map((curso: any) => ({
-            ...curso,
-            expanded: false
-          }))
+          cursos: school.cursos.map((curso: any) => {
+            // Calcular estudiantes nuevos hoy para este curso
+            const nuevosHoy = curso.estudiantes ? curso.estudiantes.filter((student: any) => {
+              console.log('Checking student for nuevos hoy:', {
+                nombre: student.nombre,
+                fecha_inscripcion: student.fecha_inscripcion,
+                raw_student: student
+              });
+              return this.isStudentNewToday({
+                id: student.id,
+                nombre: student.nombre,
+                apellido: student.apellido,
+                tipo_documento: student.tipo_documento,
+                numero_documento: student.numero_documento,
+                fecha_creacion: student.fecha_creacion,
+                fecha_inscripcion: student.fecha_inscripcion,
+                saldo: student.saldo || 0
+              });
+            }).length : 0;
+            
+            return {
+              ...curso,
+              expanded: false,
+              nuevos_hoy: nuevosHoy
+            };
+          })
         }));
         console.log('Processed schoolsData:', this.schoolsData);
         this.loadingSchoolsData = false;
@@ -284,10 +312,26 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
   // Método para verificar si un estudiante se inscribió hoy
   isStudentNewToday(student: StudentData): boolean {
-    if (!student.fecha_creacion) return false;
+    console.log('Checking if student has fecha_inscripcion:', student.fecha_inscripcion);
+    if (!student.fecha_inscripcion) {
+      return false;
+    }
+    
+    // Usar solo la parte de la fecha (YYYY-MM-DD) para evitar problemas de zona horaria
     const today = new Date();
-    const studentDate = new Date(student.fecha_creacion);
-    return today.toDateString() === studentDate.toDateString();
+    const todayString = today.getFullYear() + '-' + 
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(today.getDate()).padStart(2, '0');
+    
+    const isToday = student.fecha_inscripcion === todayString;
+    
+    console.log(`Checking student: ${student.nombre} ${student.apellido}`, {
+      fecha_inscripcion: student.fecha_inscripcion,
+      todayString: todayString,
+      isToday
+    });
+    
+    return isToday;
   }
 
   // Método para obtener el total de estudiantes en un colegio

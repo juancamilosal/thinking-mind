@@ -228,6 +228,7 @@
                                       }
                                     </div>
                                     <p class="text-sm text-gray-600">{{ student.tipo_documento }}: {{ student.numero_documento }}</p>
+                                    <p class="text-xs" [class]="isStudentNewToday(student) ? 'text-yellow-600 font-medium' : 'text-gray-500'">Saldo: {{ student.saldo | currency:'COP':'symbol':'1.0-0' }}</p>
                                   </div>
                                 </div>
                                 @if(student.fecha_creacion) {
