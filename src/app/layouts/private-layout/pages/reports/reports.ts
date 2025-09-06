@@ -10,6 +10,8 @@ import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
 import * as ExcelJS from 'exceljs';
+import { start } from 'repl';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 interface EnrollReportData {
   schoolName: string;
@@ -79,8 +81,10 @@ export class Reports {
 
   initForm=(): void => {
     this.reportForm = this.fb.group({
-      reportType: ['', [Validators.required]]
-    });
+      reportType: ['', [Validators.required]],
+      startDate: [null],
+      endDate: [null],
+    }, { validators: this.dateRangeValidator });
   }
 
   // Función para generar el reporte basado en el tipo seleccionado
@@ -90,11 +94,11 @@ export class Reports {
     return;
     }
     this.reportGenerated = true;
-    const { reportType } = this.reportForm.value;
+    const { reportType, startDate, endDate } = this.reportForm.value;
 
     switch (reportType) {
     case 'CARTERA':
-      this.generatePaymentsReport();
+      this.generatePaymentsReport(startDate, endDate);
       break;
     case 'INSCRIPCIONES':
       this.loadSchoolsData();
@@ -106,10 +110,19 @@ export class Reports {
   }
 
   // Generar reporte de pagos
-  private  generatePaymentsReport(): void {
+  private  generatePaymentsReport(startDate: string, endDate: string): void {
     this.paymentService.getPayments().subscribe({
       next: (data) => {
-        this.payments = data.data;
+        this.payments = data.data.filter(payment => {
+        const paymentDate = new Date(payment.fecha_pago);
+        const start = new Date(startDate + 'T00:00:00Z');
+        const end = new Date(endDate + 'T23:59:59.999Z');
+
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        return paymentDate >= start && paymentDate <= end;
+      });
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -385,7 +398,8 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.notificationService.showSuccess('Descargando reporte en PDF...','');
   }
 
-  downloadExcel(): void {
+  //Descargar Excel Inscripciones
+  downloadExcelIns(): void {
     try {
       // Crear un nuevo libro de trabajo
       const workbook = new ExcelJS.Workbook();
@@ -627,4 +641,184 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       );
     }
   }
+
+  //Descargar Excel Cartera
+  downloadExcelCart(): void {
+    try{
+      const workBook = new ExcelJS.Workbook();
+      const worksheet = workBook.addWorksheet('Reporte de Cartera');
+
+  // Get date range
+  const startDate = this.formatDate(this.reportForm.value.startDate);
+  const endDate = this.formatDate(this.reportForm.value.endDate);
+
+  // Set up columns with widths
+  worksheet.columns = [
+    { header: 'Pagador', key: 'pagador', width: 30 },
+    { header: 'Valor', key: 'valor', width: 20 },
+    { header: 'Fecha de Pago', key: 'fecha_pago', width: 20 },
+    { header: 'Estado', key: 'estado', width: 15 }
+  ];
+
+  // Add title row
+  worksheet.mergeCells('A1:D1');
+  const titleRow = worksheet.getRow(1);
+  titleRow.values = ['Reporte de Cartera'];
+  titleRow.font = { size: 16, bold: true, color: { argb: 'FF7C3AED' } }; // Purple color
+  titleRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  titleRow.height = 30;
+
+  // Add date range row
+  worksheet.mergeCells('A2:D2');
+  const dateRow = worksheet.getRow(2);
+  dateRow.values = [`Período: ${startDate} - ${endDate}`];
+  dateRow.font = { size: 12, italic: true };
+  dateRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  dateRow.height = 25;
+
+  // Add empty row
+  worksheet.addRow([]);
+
+  // Add header row (row 4)
+  const headerRow = worksheet.getRow(4);
+  headerRow.values = ['Pagador', 'Valor', 'Fecha de Pago', 'Estado'];
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF7C3AED' } // Purple background
+  };
+  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  headerRow.height = 25;
+
+  // Add borders to header
+  headerRow.eachCell((cell) => {
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+
+  // Add payment data
+  let currentRow = 5;
+  this.payments.forEach((payment, index) => {
+    const row = worksheet.getRow(currentRow);
+    row.values = [
+      payment.pagador,
+      payment.valor,
+      this.formatDate(payment.fecha_pago),
+      payment.estado
+    ];
+
+    // Format valor column as currency
+    row.getCell(2).numFmt = '"$"#,##0.00';
+    row.getCell(2).value = payment.valor; // Set as number, not string
+
+    // Style based on status
+    const statusCell = row.getCell(4);
+    if (payment.estado === 'PAGADO') {
+      statusCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD1FAE5' } // Light green
+      };
+      statusCell.font = { color: { argb: 'FF065F46' }, bold: true }; // Dark green
+    } else if (payment.estado === 'PENDIENTE') {
+      statusCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFEF3C7' } // Light yellow
+      };
+      statusCell.font = { color: { argb: 'FF92400E' }, bold: true }; // Dark orange
+    }
+
+    // Add borders to all cells in the row
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      cell.alignment = { vertical: 'middle' };
+    });
+
+    currentRow++;
+  });
+
+  // Add empty row before total
+  worksheet.addRow([]);
+  currentRow++;
+
+  // Add total row
+  const totalRow = worksheet.getRow(currentRow);
+  const total = this.calculateTotal();
+
+  worksheet.mergeCells(`A${currentRow}:C${currentRow}`);
+  totalRow.getCell(1).value = 'Total Recaudado:';
+  totalRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
+  totalRow.getCell(4).value = total;
+  totalRow.getCell(4).numFmt = '"$"#,##0.00';
+
+  totalRow.font = { bold: true, size: 12 };
+  totalRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE5E7EB' } // Gray background
+  };
+  totalRow.height = 25;
+
+  // Add borders to total row
+  totalRow.eachCell((cell) => {
+    cell.border = {
+      top: { style: 'double' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+
+  // Generate Excel file
+  const fileName = `Reporte_Cartera_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+  workBook.xlsx.writeBuffer().then((buffer) => {
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        window.URL.revokeObjectURL(url);
+  this.notificationService.showSuccess(
+          'Excel descargado exitosamente',
+          `El archivo ${fileName} se ha descargado correctamente.`
+        );
+    });
+  } catch (error) {
+      console.error('Error al generar Excel:', error);
+      this.notificationService.showError(
+        'Error al generar Excel',
+        'No se pudo generar el archivo Excel. Inténtalo nuevamente.'
+      );
+    }
+  }
+
+
+  //Validación rango de fechas
+  dateRangeValidator(control: AbstractControl): ValidationErrors | null {
+  const start = control.get('startDate');
+  const end = control.get('endDate');
+
+  if (start?.value && end?.value) {
+    const startDate = new Date(start.value);
+    const endDate = new Date(end.value);
+
+    if (startDate > endDate) {
+      return { dateRange: true };
+    }
+  }
+  return null;
+}
 }

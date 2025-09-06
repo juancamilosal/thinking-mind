@@ -30,7 +30,28 @@
                  }
           </select>
       </div>
-
+      <!-- Filtro Fechas-->
+      @if(reportForm.value.reportType === 'CARTERA') {
+      <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+        <div class="flex flex-col min-w-40 flex-1">
+          <label class="text-[#0d141c] text-base font-medium leading-normal pb-2">Rango de Fechas</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicial</label>
+          <input
+            type="date"
+            id="startDate"
+            formControlName="startDate"
+            class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"/>
+        </div>
+        <div class="flex flex-col min-w-40 flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Final</label>
+          <input
+            type="date"
+            id="endDate"
+            formControlName="endDate"
+            class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal"/>
+        </div>
+      </div>
+    }
         <!-- Botones -->
         <div class="flex gap-4 px-4 py-3 justify-center">
           <button
@@ -66,7 +87,7 @@
         @if(!loadingSchoolsData && schoolsData.length > 0) {
           <button
             type="button"
-            (click)="downloadExcel()"
+            (click)="downloadExcelIns()"
             class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -275,8 +296,19 @@
      <!-- Cartera -->
     @if(reportGenerated && reportForm.valid && reportForm.value.reportType === 'CARTERA') {
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h2 class="text-xl font-semibold text-gray-800">Reporte de Pagos</h2>
+          @if(payments.length > 0) {
+          <button
+            type="button"
+            (click)="downloadExcelCart()"
+            class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span>Descargar Excel</span>
+          </button>
+        }
         </div>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
