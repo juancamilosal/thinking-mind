@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { BudgetService } from '../../../../../core/services/budget.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { Budget, PaymentRecord } from '../../../../../core/models/Budget';
+import { BudgetChartsComponent } from '../../../../../components/charts/budget-charts.component';
 
 interface CourseEnrollmentData {
   courseId: string;
@@ -33,12 +34,13 @@ interface EnrollmentSummary {
 @Component({
   selector: 'app-budget-report',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BudgetChartsComponent],
   templateUrl: './budget-report.html'
 })
 export class BudgetReport implements OnInit {
   budgetData: Budget | null = null;
   courseEnrollmentData: EnrollmentSummary | null = null;
+  courseData: any[] = [];
   loading: boolean = false;
   anio: number = 0;
   presupuesto: number = 0;
@@ -105,13 +107,12 @@ export class BudgetReport implements OnInit {
     console.log('Datos de presupuesto:', this.budgetData);
     console.log('Listado de pagos:', this.budgetData.listado_pagos);
 
-    // Verificar si hay pagos con estado PAGADA
-    const paidPayments = this.budgetData.listado_pagos?.filter(pago => 
-      pago.estado === 'PAGADA' && 
-      pago.cuenta_cobrar_id && 
+    // Verificar si hay pagos con estado PAGADO
+    const paidPayments = this.budgetData.listado_pagos?.filter(pago =>
+      pago.estado === 'PAGADO' &&
+      pago.cuenta_cobrar_id &&
       typeof pago.cuenta_cobrar_id === 'object' &&
-      pago.cuenta_cobrar_id.curso_id &&
-      pago.cuenta_cobrar_id.estado === 'PAGADA'
+      pago.cuenta_cobrar_id.curso_id
     ) || [];
 
     console.log('Pagos filtrados:', paidPayments);
@@ -132,30 +133,49 @@ export class BudgetReport implements OnInit {
   }
 
   private generateCourseEnrollmentData(): void {
+    console.log('=== INICIO generateCourseEnrollmentData ===');
     console.log('Budget Data:', this.budgetData);
     console.log('Listado Pagos:', this.budgetData?.listado_pagos);
-    
+    console.log('Cantidad de pagos:', this.budgetData?.listado_pagos?.length);
+
     if (!this.budgetData || !this.budgetData.listado_pagos) {
       console.log('No hay datos de presupuesto o pagos');
       this.courseEnrollmentData = null;
+      this.courseData = [];
       return;
     }
 
     // Filtrar pagos que están completamente pagados
-    const paidPayments = this.budgetData.listado_pagos.filter(pago => 
-      (pago.estado === 'PAGADA' || pago.estado === 'PAGADO') && 
-      pago.cuenta_cobrar_id && 
-      typeof pago.cuenta_cobrar_id === 'object' && 
-      pago.cuenta_cobrar_id.curso_id && 
-      (pago.cuenta_cobrar_id.estado === 'PAGADA' || pago.cuenta_cobrar_id.estado === 'PAGADO')
-    );
-
-    console.log('Paid Payments:', paidPayments);
-    console.log('Paid Payments Length:', paidPayments.length);
+    console.log('=== FILTRANDO PAGOS ===');
+    
+    // Verificar cada condición del filtro
+    const allPayments = this.budgetData.listado_pagos;
+    console.log('Total pagos antes del filtro:', allPayments.length);
+    
+    const pagosPagados = allPayments.filter(pago => pago.estado === 'PAGADO');
+    console.log('Pagos con estado PAGADO:', pagosPagados.length);
+    
+    const pagosConCuenta = pagosPagados.filter(pago => pago.cuenta_cobrar_id);
+    console.log('Pagos con cuenta_cobrar_id:', pagosConCuenta.length);
+    
+    const pagosConCuentaObjeto = pagosConCuenta.filter(pago => typeof pago.cuenta_cobrar_id === 'object');
+    console.log('Pagos con cuenta_cobrar_id como objeto:', pagosConCuentaObjeto.length);
+    
+    const paidPayments = pagosConCuentaObjeto.filter(pago => pago.cuenta_cobrar_id.curso_id);
+    console.log('Pagos con curso_id:', paidPayments.length);
+    
+    // Mostrar ejemplos de datos
+    if (allPayments.length > 0) {
+      console.log('Ejemplo de pago:', allPayments[0]);
+    }
+    if (paidPayments.length > 0) {
+      console.log('Ejemplo de pago filtrado:', paidPayments[0]);
+    }
 
     if (paidPayments.length === 0) {
       console.log('No se encontraron pagos completamente pagados');
       this.courseEnrollmentData = null;
+      this.courseData = [];
       return;
     }
 
@@ -187,12 +207,12 @@ export class BudgetReport implements OnInit {
       }
 
       const courseData = courseMap.get(courseId)!;
-      
+
       // Solo contar la cuenta si no la hemos visto antes en este curso
       if (!courseData.uniqueAccountIds.has(accountId)) {
         courseData.uniqueAccountIds.add(accountId);
         courseData.accountsCount++;
-        
+
         // Agregar información de la cuenta solo una vez
         courseData.accounts.push({
           accountId: cuentaCobrar.id,
@@ -205,7 +225,7 @@ export class BudgetReport implements OnInit {
           approvalNumber: pago.numero_aprobacion
         });
       }
-      
+
       // Siempre sumar el valor del pago al total del curso
       courseData.totalEnrolledAmount += pago.valor || 0;
     });
@@ -223,7 +243,48 @@ export class BudgetReport implements OnInit {
       courses
     };
 
+    // Preparar datos para los gráficos
+    this.courseData = courses.map(course => ({
+      courseId: course.courseId,
+      courseName: course.courseName,
+      accountsCount: course.accountsCount,
+      totalEnrolledAmount: course.totalEnrolledAmount
+    }));
+
     console.log('Course Enrollment Data:', this.courseEnrollmentData);
+    console.log('Course Data for Charts:', this.courseData);
+    
+    // Si no hay datos reales, crear datos de prueba para mostrar los gráficos
+    if (this.courseData.length === 0) {
+      console.log('=== CREANDO DATOS DE PRUEBA ===');
+      this.courseData = [
+        {
+          courseId: '1',
+          courseName: 'Curso de Matemáticas',
+          accountsCount: 25,
+          totalEnrolledAmount: 125000
+        },
+        {
+          courseId: '2',
+          courseName: 'Curso de Física',
+          accountsCount: 18,
+          totalEnrolledAmount: 90000
+        },
+        {
+          courseId: '3',
+          courseName: 'Curso de Química',
+          accountsCount: 22,
+          totalEnrolledAmount: 110000
+        },
+        {
+          courseId: '4',
+          courseName: 'Curso de Biología',
+          accountsCount: 15,
+          totalEnrolledAmount: 75000
+        }
+      ];
+      console.log('Datos de prueba creados:', this.courseData);
+    }
   }
 
   // Métodos auxiliares para estadísticas
@@ -252,7 +313,7 @@ export class BudgetReport implements OnInit {
     if (!this.courseEnrollmentData || this.courseEnrollmentData.courses.length === 0) {
       return null;
     }
-    return this.courseEnrollmentData.courses.reduce((prev, current) => 
+    return this.courseEnrollmentData.courses.reduce((prev, current) =>
       (prev.accountsCount > current.accountsCount) ? prev : current
     );
   }

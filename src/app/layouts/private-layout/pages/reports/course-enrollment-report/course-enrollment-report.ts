@@ -56,6 +56,15 @@ export class CourseEnrollmentReport implements OnInit {
       this.budgetData = navigation.extras.state['budgetData'];
       this.generateEnrollmentReport();
     }
+    
+    console.log('CourseEnrollmentReport ngOnInit - budgetData:', this.budgetData);
+  }
+  
+  // Método público para recibir datos del servicio
+  loadBudgetReport(data: any): void {
+    console.log('loadBudgetReport called with data:', data);
+    this.budgetData = data;
+    this.generateEnrollmentReport();
   }
 
   private generateEnrollmentReport(): void {
@@ -69,9 +78,11 @@ export class CourseEnrollmentReport implements OnInit {
     const paidPayments = this.budgetData.listado_pagos.filter((pago: any) => 
       pago.estado === 'PAGADO' && 
       pago.cuenta_cobrar_id && 
-      pago.cuenta_cobrar_id.curso_id &&
-      pago.cuenta_cobrar_id.estado === 'PAGADA'
+      pago.cuenta_cobrar_id.curso_id
     );
+    
+    console.log('Budget data:', this.budgetData);
+    console.log('Paid payments after filter:', paidPayments);
 
     // Detectar estudiantes nuevos registrados hoy
     const today = new Date().toISOString().split('T')[0];
@@ -90,7 +101,7 @@ export class CourseEnrollmentReport implements OnInit {
         new Date(cuenta.fecha_inscripcion).toISOString().split('T')[0] === today;
       
       if (isNewToday) {
-        newStudentsToday.add(estudiante.id);
+        newStudentsToday.add(estudiante);
       }
       
       if (!courseMap.has(curso.id)) {
@@ -111,15 +122,16 @@ export class CourseEnrollmentReport implements OnInit {
       courseData.totalEnrolledAmount += pago.valor;
       
       // Si es estudiante nuevo, agregarlo a la lista del curso
-      if (isNewToday && !courseData.newStudentNames.includes(`${estudiante.nombre || 'N/A'} ${estudiante.apellido || ''}`.trim())) {
+      const studentName = typeof estudiante === 'string' ? estudiante : 'N/A';
+      if (isNewToday && !courseData.newStudentNames.includes(studentName)) {
         courseData.newStudentsToday++;
-        courseData.newStudentNames.push(`${estudiante.nombre || 'N/A'} ${estudiante.apellido || ''}`.trim());
+        courseData.newStudentNames.push(studentName);
       }
       
       courseData.accounts.push({
         accountId: cuenta.id,
-        studentName: `${cuenta.estudiante_id?.nombre || 'N/A'} ${cuenta.estudiante_id?.apellido || ''}`.trim(),
-        clientName: `${cuenta.cliente_id?.nombre || 'N/A'} ${cuenta.cliente_id?.apellido || ''}`.trim(),
+        studentName: typeof cuenta.estudiante_id === 'string' ? cuenta.estudiante_id : 'N/A',
+        clientName: typeof cuenta.cliente_id === 'string' ? cuenta.cliente_id : 'N/A',
         amount: cuenta.monto,
         balance: cuenta.saldo,
         paymentDate: pago.fecha_pago,
@@ -136,10 +148,9 @@ export class CourseEnrollmentReport implements OnInit {
     const totalNewStudents = newStudentsToday.size;
     const allNewStudentNames = Array.from(newStudentsToday).map(studentId => {
       // Buscar el nombre del estudiante en los pagos
-      const pago = paidPayments.find(p => p.cuenta_cobrar_id?.estudiante_id?.id === studentId);
+      const pago = paidPayments.find(p => p.cuenta_cobrar_id?.estudiante_id === studentId);
       if (pago && pago.cuenta_cobrar_id?.estudiante_id) {
-        const estudiante = pago.cuenta_cobrar_id.estudiante_id;
-        return `${estudiante.nombre || 'N/A'} ${estudiante.apellido || ''}`.trim();
+        return typeof pago.cuenta_cobrar_id.estudiante_id === 'string' ? pago.cuenta_cobrar_id.estudiante_id : 'N/A';
       }
       return 'N/A';
     });
