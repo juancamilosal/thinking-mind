@@ -233,7 +233,7 @@
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                   </div>
-                                  <div>
+                                  <div class="flex-1">
                                     <div class="flex items-center space-x-2">
                                       <p class="font-medium text-gray-800">{{ student.nombre }} {{ student.apellido }}</p>
                                       @if(isStudentNewToday(student)) {
@@ -249,12 +249,11 @@
                                       }
                                     </div>
                                     <p class="text-sm text-gray-600">{{ student.tipo_documento }}: {{ student.numero_documento }}</p>
-                                    <p class="text-xs" [class]="isStudentNewToday(student) ? 'text-yellow-600 font-medium' : 'text-gray-500'">Saldo: {{ student.saldo | currency:'COP':'symbol':'1.0-0' }}</p>
                                   </div>
                                 </div>
-                                @if(student.fecha_creacion) {
-                                  <div class="text-xs" [class]="isStudentNewToday(student) ? 'text-yellow-600 font-medium' : 'text-gray-500'">
-                                    Inscrito: {{ student.fecha_creacion | date:'dd/MM/yyyy' }}
+                                @if(student.fecha_inscripcion) {
+                                  <div class="text-xs text-right" [class]="isStudentNewToday(student) ? 'text-yellow-600 font-medium' : 'text-gray-500'">
+                                    Inscrito: {{ student.fecha_inscripcion | date:'dd/MM/yyyy' }}
                                   </div>
                                 }
                               </div>
