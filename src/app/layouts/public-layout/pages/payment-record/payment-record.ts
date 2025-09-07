@@ -13,6 +13,7 @@ import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
 import {School} from '../../../../core/models/School';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+declare var WidgetCheckout: any;
 
 @Component({
   selector: 'app-payment-record',
@@ -484,5 +485,48 @@ export class PaymentRecord implements OnInit {
   onNotificationClose() {
     this.showNotification = false;
     this.notificationData = null;
+  }
+
+  async prueba(){
+    const signature = await this.generateIntegrity('AD002901222',2490000,'COP','test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY')
+    var checkout = new WidgetCheckout({
+      currency: 'COP',
+      amountInCents: 2490000,
+      reference: 'AD002901222',
+      publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
+      signature: {integrity : signature},
+      redirectUrl: 'http://localhost:4200/login',
+      taxInCents: { // Opcional
+        vat: 1900,
+        consumption: 800
+      },
+      customerData: { // Opcional
+        email:'lola@gmail.com',
+        fullName: 'Lola Flores',
+        phoneNumber: '3040777777',
+        phoneNumberPrefix: '+57',
+        legalId: '123456789',
+        legalIdType: 'CC'
+      },
+      shippingAddress: { // Opcional
+        addressLine1: "Calle 123 # 4-5",
+        city: "Bogota",
+        phoneNumber: '3019444444',
+        region: "Cundinamarca",
+        country: "CO"
+      }
+    });
+    checkout.open(function (result: any) {
+      console.log('Resultado del pago:', result);
+    });
+  }
+
+  private async generateIntegrity(reference: string, amountInCents: number, currency: string, integritySecret: string): Promise<string> {
+    const data = `${reference}${amountInCents}${currency}${integritySecret}`;
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 }
