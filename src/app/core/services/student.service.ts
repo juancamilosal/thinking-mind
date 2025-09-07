@@ -34,9 +34,9 @@ export class StudentService {
   searchStudentByDocument(documentType: string, documentNumber: string): Observable<ResponseAPI<Student[]>> {
     const params = {
       'filter[tipo_documento][_eq]': documentType,
-      'filter[numero_documento][_eq]': documentNumber
+      'filter[numero_documento][_eq]': documentNumber,
     };
-    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent + '?fields=*,colegio_id.*', { params });
   }
 
   createStudent(student: Student): Observable<ResponseAPI<Student>> {

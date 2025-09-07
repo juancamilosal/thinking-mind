@@ -111,6 +111,7 @@ export class AccountReceivableFormComponent implements OnInit {
       studentDocumentType: ['TI', [Validators.required]],
       studentDocumentNumber: [null, [Validators.required]],
       studentName: [null],
+      grado: [null],
       colegio: [null],
       course: [null, [Validators.required]]
     });
@@ -179,7 +180,7 @@ export class AccountReceivableFormComponent implements OnInit {
           this.studentId = student.id ? student.id.toString() : '';
           this.accountForm.patchValue({
             studentName: `${student.nombre || ''} ${student.apellido || ''}`.trim(),
-            colegio: student.colegio_id || ''
+            colegio: student.colegio_id.nombre || ''
           });
 
         } else {
@@ -228,7 +229,7 @@ export class AccountReceivableFormComponent implements OnInit {
             estudiante_id: this.studentId,
             monto: this.accountForm.get('amount')?.value,
             saldo: this.accountForm.get('amount')?.value,
-            curso_id: this.accountForm.get('course')?.value, // Mantener 'curso' para el modelo local
+            curso_id: this.accountForm.get('course')?.value,
             fecha_limite: this.accountForm.get('deadline')?.value,
             estado: 'pendiente',
             clientName: this.accountForm.get('clientName')?.value,
@@ -318,6 +319,7 @@ export class AccountReceivableFormComponent implements OnInit {
       'studentDocumentType': 'Tipo de documento del estudiante',
       'studentDocumentNumber': 'Número de documento del estudiante',
       'studentName': 'Nombre del estudiante',
+      'grado': 'Grado',
       'colegio': 'Colegio',
       'curso': 'Curso',
       'monto': 'Monto',
