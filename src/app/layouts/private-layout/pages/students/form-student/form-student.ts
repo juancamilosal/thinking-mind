@@ -65,7 +65,7 @@ export class FormStudent implements OnInit, OnChanges {
       documentNumber: [null, [Validators.required, Validators.minLength(6)]],
       firstName: [null, [Validators.required, Validators.minLength(2)]],
       lastName: [null, [Validators.required, Validators.minLength(2)]],
-      grado: [null, [Validators.required, Validators.minLength(1)]],
+      grade: [null, [Validators.required, Validators.minLength(1)]],
       school: [null, [Validators.required, Validators.minLength(2)]],
       guardianDocumentType: ['CC', [Validators.required]],
       guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
@@ -99,7 +99,7 @@ export class FormStudent implements OnInit, OnChanges {
         documentNumber: this.studentData.numero_documento,
         firstName: this.studentData.nombre,
         lastName: this.studentData.apellido,
-        grado: this.studentData.grado,
+        grade: this.studentData.grado,
         school: this.studentData.colegio_id.id
       });
 
@@ -170,6 +170,7 @@ export class FormStudent implements OnInit, OnChanges {
       numero_documento: this.studentForm.get('documentNumber')?.value,
       nombre: this.studentForm.get('firstName')?.value,
       apellido: this.studentForm.get('lastName')?.value,
+      grado: this.studentForm.get('grade')?.value,
       colegio_id: this.studentForm.get('school')?.value,
       acudiente: this.guardianId,
     };
@@ -215,7 +216,7 @@ export class FormStudent implements OnInit, OnChanges {
         numero_documento: this.studentForm.get('documentNumber')?.value,
         nombre: this.studentForm.get('firstName')?.value,
         apellido: this.studentForm.get('lastName')?.value,
-        grado: this.studentForm.get('grado')?.value,
+        grado: this.studentForm.get('grade')?.value,
         colegio_id: this.studentForm.get('school')?.value,
         acudiente: this.guardianId,
       };
