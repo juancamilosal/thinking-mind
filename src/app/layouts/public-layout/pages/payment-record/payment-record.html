@@ -881,6 +881,105 @@
   </div>
 }
 
+<!-- Modal de Pago -->
+@if (showPaymentModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+       style="background-color: rgba(0, 0, 0, 0.5);"
+       (click)="closePaymentModal()">
+    
+    <!-- Contenido del modal -->
+    <div class="relative w-full max-w-2xl transform transition-all duration-300 ease-out"
+         (click)="$event.stopPropagation()">
+      
+      <!-- Card principal -->
+      <div class="relative rounded-2xl shadow-2xl bg-white border border-blue-200">
+        
+        <!-- Header con icono y botón cerrar -->
+        <div class="flex items-start justify-between p-6 pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+          <div class="flex items-center space-x-3">
+            <!-- Icono -->
+            <div class="flex-shrink-0">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- Título -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Realizar Pago</h3>
+              <p class="text-sm text-gray-600">{{ paymentModalData?.studentName }}</p>
+            </div>
+          </div>
+          
+          <!-- Botón cerrar -->
+          <button (click)="closePaymentModal()" 
+                  class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Contenido del modal -->
+        <div class="px-8 py-6 space-y-8">
+          <!-- Información del curso -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="text-sm font-medium text-gray-600 mb-1">Curso:</p>
+            <p class="text-gray-900 font-semibold">{{ paymentModalData?.courseName }}</p>
+          </div>
+          
+          <!-- Campos de pago -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Monto Total a Pagar (readonly) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                Monto Total a Pagar
+              </label>
+              <div class="relative">
+                <input type="text"
+                       [value]="totalAmountToPay | currency:'COP':'symbol':'1.0-0'"
+                       readonly
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm bg-gray-50 cursor-not-allowed text-gray-700">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Monto a Pagar (editable) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                Monto a Pagar
+              </label>
+              <input type="text"
+                      [value]="getFormattedPaymentAmount()"
+                      (input)="onPaymentAmountChange($event)"
+                      placeholder="0"
+                      class="w-full px-4 py-3 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Footer con botones -->
+        <div class="px-8 pb-8 flex justify-end space-x-4">
+          <button (click)="closePaymentModal()"
+                  class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200">
+            Cancelar
+          </button>
+          <button (click)="confirmPayment()"
+                  class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+            Confirmar Pago
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
 <!-- Modal de notificaciones -->
 <app-notification-modal
   [isVisible]="showNotification"

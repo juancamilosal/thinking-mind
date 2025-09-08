@@ -13,6 +13,7 @@ import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
 import {School} from '../../../../core/models/School';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+import {PaymentService} from '../../../../core/services/payment.service';
 declare var WidgetCheckout: any;
 
 @Component({
@@ -45,6 +46,12 @@ export class PaymentRecord implements OnInit {
   selectedAccountData: any = null;
   selectedAccountPayments: any[] = [];
 
+  // Properties for payment modal
+  showPaymentModal = false;
+  paymentModalData: any = null;
+  totalAmountToPay = 0;
+  editablePaymentAmount = 0;
+
   // Variables para el modal de notificaciones
   showNotification: boolean = false;
   notificationData: NotificationData | null = null;
@@ -56,6 +63,7 @@ export class PaymentRecord implements OnInit {
     private clientService: ClientService,
     private studentService: StudentService,
     private schoolService: SchoolService,
+    private paymentService: PaymentService,
   ) {}
 
   ngOnInit(): void {
@@ -275,10 +283,6 @@ export class PaymentRecord implements OnInit {
     }
   }
 
-  onPayCourse(courseData: any): void {
-    console.log('Paying for course:', courseData);
-  }
-
   onViewPayments(courseData: any): void {
 
     const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) =>
@@ -462,23 +466,41 @@ export class PaymentRecord implements OnInit {
     })
   }
 
-  showSuccessNotification() {
-    this.notificationData = {
-      type: 'success',
-      title: 'Curso registrado con éxito',
-      message: 'El curso ha sido registrado exitosamente. Puedes dirigirte a la tabla de Cursos Registrados y realizar el pago.',
-      duration: 5000
-    };
+  showSuccessNotification(type: 'course' | 'payment' = 'course') {
+    if (type === 'payment') {
+      this.notificationData = {
+        type: 'success',
+        title: 'Pago exitoso',
+        message: 'El pago se ha procesado correctamente.',
+        duration: 5000
+      };
+    } else {
+      this.notificationData = {
+        type: 'success',
+        title: 'Curso registrado con éxito',
+        message: 'El curso ha sido registrado exitosamente. Puedes dirigirte a la tabla de Cursos Registrados y realizar el pago.',
+        duration: 5000
+      };
+    }
     this.showNotification = true;
   }
 
-  showErrorNotification() {
-    this.notificationData = {
-      type: 'error',
-      title: 'Error al registrar curso',
-      message: 'No se pudo registrar el curso. Por favor, inténtalo nuevamente.',
-      duration: 5000
-    };
+  showErrorNotification(type: 'course' | 'payment' = 'course') {
+    if (type === 'payment') {
+      this.notificationData = {
+        type: 'error',
+        title: 'Error en el pago',
+        message: 'Hubo un problema al procesar el pago.',
+        duration: 5000
+      };
+    } else {
+      this.notificationData = {
+        type: 'error',
+        title: 'Error al registrar curso',
+        message: 'No se pudo registrar el curso. Por favor, inténtalo nuevamente.',
+        duration: 5000
+      };
+    }
     this.showNotification = true;
   }
 
@@ -487,46 +509,129 @@ export class PaymentRecord implements OnInit {
     this.notificationData = null;
   }
 
-  async prueba(){
-    const signature = await this.generateIntegrity('AD002901222',2490000,'COP','test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY')
-    var checkout = new WidgetCheckout({
-      currency: 'COP',
-      amountInCents: 2490000,
-      reference: 'AD002901222',
-      publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
-      signature: {integrity : signature},
-      redirectUrl: 'http://localhost:4200/login',
-      taxInCents: { // Opcional
-        vat: 1900,
-        consumption: 800
-      },
-      customerData: { // Opcional
-        email:'lola@gmail.com',
-        fullName: 'Lola Flores',
-        phoneNumber: '3040777777',
-        phoneNumberPrefix: '+57',
-        legalId: '123456789',
-        legalIdType: 'CC'
-      },
-      shippingAddress: { // Opcional
-        addressLine1: "Calle 123 # 4-5",
-        city: "Bogota",
-        phoneNumber: '3019444444',
-        region: "Cundinamarca",
-        country: "CO"
-      }
-    });
-    checkout.open(function (result: any) {
-      console.log('Resultado del pago:', result);
-    });
+  onPayCourse(courseData: any): void {
+    const coursePrice = courseData.coursePriceNumber || 0;
+    const balance = this.parseCurrencyToNumber(courseData.balance) || 0;
+    this.totalAmountToPay = coursePrice - balance;
+    this.editablePaymentAmount = this.totalAmountToPay;
+
+    // Configurar los datos del modal con toda la información necesaria
+    this.paymentModalData = {
+      ...courseData,
+      clientName: this.clientData?.nombre + ' ' + this.clientData?.apellido,
+      clientDocumentType: this.paymentForm.get('guardianDocumentType')?.value,
+      clientDocumentNumber: this.paymentForm.get('guardianDocumentNumber')?.value,
+      clientEmail: this.clientData?.email || this.paymentForm.get('guardianEmail')?.value,
+      clientPhone: this.clientData?.celular || this.paymentForm.get('guardianPhoneNumber')?.value,
+      // Información del estudiante
+      studentName: this.paymentForm.get('studentFirstName')?.value + ' ' + this.paymentForm.get('studentLastName')?.value,
+      studentDocumentType: this.paymentForm.get('studentDocumentType')?.value,
+      studentDocumentNumber: this.paymentForm.get('studentDocumentNumber')?.value
+    };
+
+    this.showPaymentModal = true;
   }
 
-  private async generateIntegrity(reference: string, amountInCents: number, currency: string, integritySecret: string): Promise<string> {
-    const data = `${reference}${amountInCents}${currency}${integritySecret}`;
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  closePaymentModal(): void {
+    this.showPaymentModal = false;
+    this.paymentModalData = null;
+    this.totalAmountToPay = 0;
+    this.editablePaymentAmount = 0;
   }
-}
+
+  onPaymentAmountChange(event: any): void {
+    let inputValue = event.target.value.replace(/[^0-9]/g, '');
+
+    if (inputValue === '') {
+      this.editablePaymentAmount = 0;
+      event.target.value = '';
+      return;
+    }
+
+    const numericValue = parseInt(inputValue) || 0;
+    this.editablePaymentAmount = Math.min(numericValue, this.totalAmountToPay);
+    event.target.value = this.getFormattedPaymentAmount();
+  }
+
+  formatNumberWithCommas(value: number): string {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  getFormattedPaymentAmount(): string {
+    if (this.editablePaymentAmount === 0) {
+      return '';
+    }
+    return 'COP   ' + this.formatNumberWithCommas(this.editablePaymentAmount);
+  }
+
+  // Función para generar referencia única usando el ID de la cuenta de cobro
+  private generatePaymentReference(accountReceivableId: string): string {
+    // Fecha de hoy en formato DDMMYYYY
+    const hoy = new Date();
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const año = hoy.getFullYear();
+    const fecha = `${dia}${mes}${año}`;
+
+    // Generar 4 números aleatorios
+    const numerosAleatorios = Math.floor(1000 + Math.random() * 9000);
+
+    // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
+    return `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
+  }Se
+
+  async confirmPayment(): Promise<void> {
+    try {
+      const reference = this.generatePaymentReference(this.paymentModalData?.id);
+      const amountInCents = this.editablePaymentAmount * 100;
+
+      const signature = await this.generateIntegrity(reference, amountInCents, 'COP', 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY');
+
+      const checkout = new (window as any).WidgetCheckout({
+        currency: 'COP',
+        amountInCents: amountInCents,
+        reference: reference,
+        publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
+        signature: { integrity: signature },
+        redirectUrl: 'http://localhost:4200/payment-record',
+        customerData: {
+           email: this.paymentModalData?.clientEmail,
+           fullName: this.paymentModalData?.clientName,
+           phoneNumber: this.paymentModalData?.clientPhone ,
+           phoneNumberPrefix: '+57',
+           legalId: this.paymentModalData?.clientDocumentNumber,
+           legalIdType: this.paymentModalData?.clientDocumentType,
+         },
+      });
+      checkout.open((result: any) => {
+        console.log('Resultado del pago:', result);
+        this.closePaymentModal();
+        // Aquí puedes manejar el resultado del pago
+        if (result.transaction && result.transaction.status === 'APPROVED') {
+          this.showSuccessNotification('payment');
+        } else {
+          this.showErrorNotification('payment');
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al procesar el pago:', error);
+      this.showErrorNotification();
+     }
+   }
+
+   // Función para generar la integridad (debes implementar esta función según tu backend)
+   async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
+     // Esta es una implementación de ejemplo. En producción, esto debería hacerse en el backend
+     const data = `${reference}${amountInCents}${currency}${secretKey}`;
+
+     // Usar crypto API del navegador para generar hash
+     const encoder = new TextEncoder();
+     const dataBuffer = encoder.encode(data);
+     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+     const hashArray = Array.from(new Uint8Array(hashBuffer));
+     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+     return hashHex;
+   }
+ }
