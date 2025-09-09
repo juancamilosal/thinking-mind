@@ -44,4 +44,12 @@ export class PaymentService {
   getDirectusUrl(): string {
     return 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io';
   }
+
+  getPaymentByTransactionNumber(transactionNumber: string): Observable<ResponseAPI<PaymentModel[]>> {
+    const params = {
+      'filter[numero_transaccion][_eq]': transactionNumber,
+      'fields': '*,cuenta_cobrar_id.*,cuenta_cobrar_id.curso_id.*'
+    };
+    return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
+  }
 }

@@ -9,6 +9,7 @@ import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
+import { PaymentStatusComponent } from './layouts/public-layout/pages/payment-record/payment-status/payment-status.component';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
 import { BudgetReport } from './layouts/private-layout/pages/reports/budget-report/budget-report';
@@ -35,6 +36,11 @@ export const routes: Routes = [
     path: 'payment-record',
     title: 'Thinking Mind | Payment Registro de Pago',
     component: PaymentRecord
+  },
+  {
+    path: 'payment-status',
+    title: 'Thinking Mind | Estado de Pago',
+    component: PaymentStatusComponent
   },
   {
     path: 'private',

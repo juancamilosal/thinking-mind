@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
@@ -65,6 +66,7 @@ export class PaymentRecord implements OnInit {
     private studentService: StudentService,
     private schoolService: SchoolService,
     private paymentService: PaymentService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -594,7 +596,7 @@ export class PaymentRecord implements OnInit {
         reference: reference,
         publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
         signature: { integrity: signature },
-        redirectUrl: 'http://localhost:4200/payment-record',
+        redirectUrl: 'http://localhost:4200/payment-status',
         customerData: {
            email: this.paymentModalData?.clientEmail,
            fullName: this.paymentModalData?.clientName,
@@ -605,11 +607,17 @@ export class PaymentRecord implements OnInit {
          },
       });
       checkout.open((result: any) => {
-        console.log('Resultado del pago:', result);
         this.closePaymentModal();
-        // Aquí puedes manejar el resultado del pago
         if (result.transaction && result.transaction.status === 'APPROVED') {
-          this.showSuccessNotification('payment');
+          this.router.navigate(['/payment-status'], {
+            queryParams: {
+              transaction: result.transaction.id || 'N/A',
+              reference: reference,
+              status: 'APROBADA',
+              course: this.paymentModalData?.courseName || 'N/A',
+              amount: this.editablePaymentAmount
+            }
+          });
         } else {
           this.showErrorNotification('payment');
         }

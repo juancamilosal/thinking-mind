@@ -76,7 +76,9 @@ export class AccountReceivableDetailComponent implements OnInit {
   }
 
   getTotalPaid(): number {
-    return this.payments.reduce((total, payment) => total + payment.valor, 0);
+    return this.payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((total, payment) => total + payment.valor, 0);
   }
 
   getRemainingBalance(): number {
@@ -104,7 +106,8 @@ export class AccountReceivableDetailComponent implements OnInit {
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      timeZone: 'America/Bogota'
     });
   }
 

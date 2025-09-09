@@ -98,7 +98,8 @@ export class Payments implements OnInit {
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      timeZone: 'America/Bogota'
     }); // Esto devuelve DD/MM/YYYY
   }
 
@@ -111,6 +112,7 @@ export class Payments implements OnInit {
       case 'Pendiente':
         return 'bg-orange-100 text-orange-800';
       case 'RECHAZADA':
+      case 'RECHAZADO':
       case 'Cancelado':
         return 'bg-red-100 text-red-800';
       default:

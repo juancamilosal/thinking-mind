@@ -334,7 +334,9 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="px-2 py-1 text-xs font-semibold rounded-full"
-                        [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                        [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 
+                                 (payment.estado === 'RECHAZADA' || payment.estado === 'RECHAZADO') ? 'bg-red-100 text-red-800' : 
+                                 'bg-yellow-100 text-yellow-800'">
                     {{ payment.estado }}
                   </span>
                 </td>

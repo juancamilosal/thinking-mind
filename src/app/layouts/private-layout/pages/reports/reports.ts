@@ -357,7 +357,8 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      timeZone: 'America/Bogota'
     }); // Esto devuelve DD/MM/YYYY
   }
 
@@ -370,6 +371,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       case 'Pendiente':
         return 'bg-orange-100 text-orange-800';
       case 'RECHAZADO':
+      case 'RECHAZADA':
       case 'Cancelado':
         return 'bg-red-100 text-red-800';
       default:
@@ -418,7 +420,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
       // Agregar datos de resumen
       summarySheet.addRow(['REPORTE DE INSCRIPCIONES POR COLEGIO Y CURSO']);
-      summarySheet.addRow(['Fecha de generación:', new Date().toLocaleDateString('es-CO')]);
+      summarySheet.addRow(['Fecha de generación:', new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota' })]);
       summarySheet.addRow(['']); // Línea vacía
       summarySheet.addRow(['RESUMEN GENERAL']);
       summarySheet.addRow(['Total de Colegios:', this.schoolsData.length]);
@@ -496,7 +498,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                 student.apellido,
                 student.tipo_documento,
                 student.numero_documento,
-                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO') : 'N/A',
+                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : 'N/A',
                 this.isStudentNewToday(student) ? 'SÍ' : 'NO'
               ]);
 
@@ -585,7 +587,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                 student.apellido,
                 student.tipo_documento,
                 student.numero_documento,
-                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO') : 'N/A'
+                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : 'N/A'
               ]);
 
               // Aplicar color verde a estudiantes nuevos hoy

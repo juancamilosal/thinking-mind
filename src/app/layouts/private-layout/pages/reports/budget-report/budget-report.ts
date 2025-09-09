@@ -319,25 +319,28 @@ export class BudgetReport implements OnInit {
   }
 
   formatCurrency(amount: number | string): string {
-    if (!amount) return '$0';
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const finalAmount = isNaN(numericAmount) ? 0 : numericAmount;
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(numAmount);
+    }).format(finalAmount);
   }
 
   formatDate(dateString: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
+    // Agregar 5 horas
+    date.setHours(date.getHours() + 5);
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Bogota'
     }).format(date);
   }
 
@@ -356,9 +359,8 @@ export class BudgetReport implements OnInit {
 
   getProgressPercentage(): number {
     if (!this.budgetData) return 0;
-    const meta = this.budgetData.monto_meta;
-    const recaudado = this.budgetData.recaudado;
-    return meta > 0 ? (recaudado / meta) * 100 : 0;
+    if (this.budgetData.monto_meta === 0) return 0;
+    return (this.budgetData.recaudado / this.budgetData.monto_meta) * 100;
   }
 
   exportToCSV() {

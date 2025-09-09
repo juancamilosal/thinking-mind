@@ -404,7 +404,9 @@
                           </td>
                           <td class="px-6 py-4 text-center">
                             <span
-                              [class]="courseData.status === 'PAGADA' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' : 'bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold'">
+                              [class]="courseData.status === 'PAGADA' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' : 
+                                       (courseData.status === 'RECHAZADA' || courseData.status === 'RECHAZADO') ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold' : 
+                                       'bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold'">
                               {{ courseData.status }}
                             </span>
                           </td>
