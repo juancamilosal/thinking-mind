@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Loading State -->
+    @if (loading) {
+      <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Cargando información del pago...</p>
+      </div>
+    } @else if (error) {
+      <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div class="text-red-500 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Error</h2>
+        <p class="text-gray-600 mb-6">{{ error }}</p>
+        <button (click)="goBackToPayments()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+          Volver a Pagos
+        </button>
+      </div>
+    } @else {
+      <!-- Header dinámico según estado -->
+      <div [class]="getHeaderClass() + ' rounded-t-2xl p-6 shadow-lg'">
+        <div class="flex items-center justify-center space-x-3">
+          <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" [class]="isPaymentSuccessful() ? 'stroke-white' : 'stroke-red-600'">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getHeaderIcon()"></path>
+          </svg>
+          <div class="text-white">
+            <h1 class="text-3xl font-bold">{{ getHeaderTitle() }}</h1>
+            <p class="text-base">{{ getHeaderSubtitle() }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de la transacción -->
+      <div class="bg-white rounded-b-2xl shadow-xl p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Columna izquierda -->
+          <div class="space-y-6">
+            <div class="pb-4">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalles de la Transacción</h3>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Número de Transacción</label>
+                  <p class="text-lg font-mono bg-gray-50 p-3 rounded-lg border">{{ transactionData.transactionNumber }}</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Referencia</label>
+                  <p class="text-lg font-mono bg-gray-50 p-3 rounded-lg border">{{ transactionData.reference }}</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Método de Pago</label>
+                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.paymentMethod }}</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Pagador</label>
+                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.payerName || 'N/A' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna derecha -->
+          <div class="space-y-6">
+            <div class="pb-4">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Información del Pago</h3>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+                  <div class="text-lg p-3 flex items-center">
+                    <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold"
+                          [class]="getStatusClass()">
+                      {{ transactionData.status }}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Curso</label>
+                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.course }}</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Fecha y Hora</label>
+                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.transactionDate }}</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">{{ getAmountLabel() }}</label>
+                  <p [class]="getAmountClass()">
+                    {{ formatCurrency(transactionData.amount) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-gray-200">
+          <button
+            (click)="printReceipt()"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            <span>Imprimir Comprobante</span>
+          </button>
+
+          <button
+            (click)="goBackToPayments()"
+            class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span>Volver a Pagos</span>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
