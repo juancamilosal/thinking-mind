@@ -4,30 +4,7 @@ import {Course} from './Course';
 
 export class PaymentModel {
   id?: string;
-  cuenta_cobrar_id: {
-    id: string;
-    monto: number;
-    fecha_limite: string | null;
-    saldo: number;
-    cliente_id: string;
-    estudiante_id: string;
-    estado: string;
-    observaciones: string | null;
-    pin_entregado: string;
-    fecha_creacion: string;
-    fecha_inscripcion: string;
-    pagos: string[];
-    curso_id: {
-      id: string;
-      nombre: string;
-      precio: string;
-      sku: string;
-      precio_inscripcion: number;
-      img: string;
-      estudiantes: any[];
-      cuentas_cobrar: string[];
-    };
-  };
+  cuenta_cobrar_id: AccountReceivable;
   valor: number;
   fecha_pago: string;
   metodo_pago: string;
