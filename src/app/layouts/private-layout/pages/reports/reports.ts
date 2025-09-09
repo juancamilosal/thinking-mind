@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { REPORT_TYPE } from '../../../../core/const/ReportType';
-import { PaymentRecord } from '../../../../core/models/AccountReceivable';
+import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
@@ -58,7 +58,7 @@ interface StudentData {
 export class Reports {
   reportForm!: FormGroup;
   REPORT_TYPE = REPORT_TYPE;
-  payments: PaymentRecord[] = [];
+  payments: PaymentModel[] = [];
   enrollReportData: EnrollReportData[] = [];
   reportGenerated: boolean = false;
   showDownloadOptions: boolean = false;
@@ -263,7 +263,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                 saldo: student.saldo || 0
               });
             }).length : 0;
-            
+
             return {
               ...curso,
               expanded: false,
@@ -329,21 +329,21 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     if (!student.fecha_inscripcion) {
       return false;
     }
-    
+
     // Usar solo la parte de la fecha (YYYY-MM-DD) para evitar problemas de zona horaria
     const today = new Date();
-    const todayString = today.getFullYear() + '-' + 
-                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+    const todayString = today.getFullYear() + '-' +
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' +
                        String(today.getDate()).padStart(2, '0');
-    
+
     const isToday = student.fecha_inscripcion === todayString;
-    
+
     console.log(`Checking student: ${student.nombre} ${student.apellido}`, {
       fecha_inscripcion: student.fecha_inscripcion,
       todayString: todayString,
       isToday
     });
-    
+
     return isToday;
   }
 

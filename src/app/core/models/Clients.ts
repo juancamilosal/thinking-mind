@@ -1,5 +1,5 @@
 import {Student} from './Student';
-import {AccountReceivable, PaymentRecord} from './AccountReceivable';
+import {AccountReceivable, PaymentModel} from './AccountReceivable';
 
 export class Client {
   id?: number;

@@ -14,6 +14,7 @@ import {Student} from '../../../../core/models/Student';
 import {School} from '../../../../core/models/School';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import {PaymentService} from '../../../../core/services/payment.service';
+import {PaymentModel} from '../../../../core/models/AccountReceivable';
 declare var WidgetCheckout: any;
 
 @Component({
@@ -44,7 +45,7 @@ export class PaymentRecord implements OnInit {
   // Properties for payments modal
   showPaymentsModal = false;
   selectedAccountData: any = null;
-  selectedAccountPayments: any[] = [];
+  selectedAccountPayments: PaymentModel[] = [];
 
   // Properties for payment modal
   showPaymentModal = false;

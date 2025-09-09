@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PaymentRecord } from '../../../../../core/models/AccountReceivable';
+import { PaymentModel } from '../../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-payment-detail',
@@ -9,7 +9,7 @@ import { PaymentRecord } from '../../../../../core/models/AccountReceivable';
   standalone: true
 })
 export class PaymentDetailComponent {
-  @Input() payment!: PaymentRecord;
+  @Input() payment!: PaymentModel;
   @Output() backToPaymentHistory = new EventEmitter<void>();
 
   onBack() {
