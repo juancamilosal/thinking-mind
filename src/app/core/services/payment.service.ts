@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResponseAPI } from '../models/ResponseAPI';
-import { PaymentRecord } from '../models/AccountReceivable';
+import { PaymentModel } from '../models/AccountReceivable';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -14,23 +14,23 @@ export class PaymentService {
 
   constructor(private http: HttpClient) {}
 
-  getPayments(): Observable<ResponseAPI<PaymentRecord[]>> {
-    return this.http.get<ResponseAPI<PaymentRecord[]>>(this.apiUrl);
+  getPayments(): Observable<ResponseAPI<PaymentModel[]>> {
+    return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl);
   }
 
-  getPaymentsByAccountId(accountId: string): Observable<ResponseAPI<PaymentRecord[]>> {
+  getPaymentsByAccountId(accountId: string): Observable<ResponseAPI<PaymentModel[]>> {
     const params = {
       'filter[cuenta_cobrar_id][_eq]': accountId
     };
-    return this.http.get<ResponseAPI<PaymentRecord[]>>(this.apiUrl, { params });
+    return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
   }
 
-  createPayment(payment: PaymentRecord ): Observable<ResponseAPI<PaymentRecord>> {
-    return this.http.post<ResponseAPI<PaymentRecord>>(this.manualPayment, payment);
+  createPayment(payment: PaymentModel ): Observable<ResponseAPI<PaymentModel>> {
+    return this.http.post<ResponseAPI<PaymentModel>>(this.manualPayment, payment);
   }
 
-  updatePayment(id: string, payment: Partial<PaymentRecord>): Observable<ResponseAPI<PaymentRecord>> {
-    return this.http.patch<ResponseAPI<PaymentRecord>>(`${this.apiUrl}/${id}`, payment);
+  updatePayment(id: string, payment: Partial<PaymentModel>): Observable<ResponseAPI<PaymentModel>> {
+    return this.http.patch<ResponseAPI<PaymentModel>>(`${this.apiUrl}/${id}`, payment);
   }
 
   deletePayment(id: string): Observable<ResponseAPI<any>> {
@@ -43,5 +43,13 @@ export class PaymentService {
 
   getDirectusUrl(): string {
     return 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io';
+  }
+
+  getPaymentByTransactionNumber(transactionNumber: string): Observable<ResponseAPI<PaymentModel[]>> {
+    const params = {
+      'filter[numero_transaccion][_eq]': transactionNumber,
+      'fields': '*,cuenta_cobrar_id.*,cuenta_cobrar_id.curso_id.*'
+    };
+    return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
   }
 }

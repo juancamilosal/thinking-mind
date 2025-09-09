@@ -3,6 +3,12 @@ export class ResponseAPI<T> {
   code?: string;
   message: string;
   data: T;
+  meta?: {
+    total_count?: number;
+    filter_count?: number;
+    page?: number;
+    limit?: number;
+  };
 
   static ERROR: string = 'ERROR';
   static SUCCESS: string = 'SUCCESS';

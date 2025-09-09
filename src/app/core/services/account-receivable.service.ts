@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
-import {AccountReceivable, PaymentReceivable, PaymentRecord, TotalAccounts} from '../models/AccountReceivable';
+import {AccountReceivable, PaymentReceivable, PaymentModel, TotalAccounts} from '../models/AccountReceivable';
 
 @Injectable({
   providedIn: 'root'

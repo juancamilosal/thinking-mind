@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {FormBuilder, FormsModule} from '@angular/forms';
 import {PaymentService} from '../../../../core/services/payment.service';
-import {PaymentRecord} from '../../../../core/models/AccountReceivable';
+import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/payment-detail';
 
 export interface Payment {
@@ -20,13 +20,13 @@ export interface Payment {
   templateUrl: './payments.html'
 })
 export class Payments implements OnInit {
-  payments: PaymentRecord[] = [];
+  payments: PaymentModel[] = [];
   filteredPayments: Payment[] = [];
   searchTerm: string = '';
   isLoading: boolean = false;
-  
+
   // Variables para el detalle del pago
-  selectedPayment: PaymentRecord | null = null;
+  selectedPayment: PaymentModel | null = null;
   showPaymentDetailView = false;
 
   constructor(private paymentService: PaymentService) {
@@ -74,7 +74,7 @@ export class Payments implements OnInit {
   }
 
   // Método para mostrar el detalle del pago
-  viewPaymentDetail(payment: PaymentRecord) {
+  viewPaymentDetail(payment: PaymentModel) {
     this.selectedPayment = payment;
     this.showPaymentDetailView = true;
   }
@@ -98,10 +98,11 @@ export class Payments implements OnInit {
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      timeZone: 'America/Bogota'
     }); // Esto devuelve DD/MM/YYYY
   }
-  
+
   getStatusColor(estado: string): string {
     switch (estado) {
       case 'PAGADO':
@@ -110,6 +111,7 @@ export class Payments implements OnInit {
       case 'PENDIENTE':
       case 'Pendiente':
         return 'bg-orange-100 text-orange-800';
+      case 'RECHAZADA':
       case 'RECHAZADO':
       case 'Cancelado':
         return 'bg-red-100 text-red-800';

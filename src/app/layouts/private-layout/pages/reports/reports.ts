@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { REPORT_TYPE } from '../../../../core/const/ReportType';
-import { PaymentRecord } from '../../../../core/models/AccountReceivable';
+import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
@@ -58,7 +58,7 @@ interface StudentData {
 export class Reports {
   reportForm!: FormGroup;
   REPORT_TYPE = REPORT_TYPE;
-  payments: PaymentRecord[] = [];
+  payments: PaymentModel[] = [];
   enrollReportData: EnrollReportData[] = [];
   reportGenerated: boolean = false;
   showDownloadOptions: boolean = false;
@@ -234,10 +234,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.loadingSchoolsData = true;
     this.schoolService.getListStudentBySchool().subscribe({
       next: (response: any) => {
-        console.log('Response from service:', response);
-        console.log('First school data:', response[0]);
         if (response[0] && response[0].cursos && response[0].cursos[0] && response[0].cursos[0].estudiantes) {
-          console.log('First student data:', response[0].cursos[0].estudiantes[0]);
         }
         // El servicio retorna directamente el array, no dentro de una propiedad 'data'
         const schoolsArray = Array.isArray(response) ? response : response.data || [];
@@ -247,11 +244,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
           cursos: school.cursos.map((curso: any) => {
             // Calcular estudiantes nuevos hoy para este curso
             const nuevosHoy = curso.estudiantes ? curso.estudiantes.filter((student: any) => {
-              console.log('Checking student for nuevos hoy:', {
-                nombre: student.nombre,
-                fecha_inscripcion: student.fecha_inscripcion,
-                raw_student: student
-              });
               return this.isStudentNewToday({
                 id: student.id,
                 nombre: student.nombre,
@@ -263,7 +255,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                 saldo: student.saldo || 0
               });
             }).length : 0;
-            
+
             return {
               ...curso,
               expanded: false,
@@ -271,7 +263,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
             };
           })
         }));
-        console.log('Processed schoolsData:', this.schoolsData);
         this.loadingSchoolsData = false;
       },
       error: (error) => {
@@ -325,25 +316,17 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
   // Método para verificar si un estudiante se inscribió hoy
   isStudentNewToday(student: StudentData): boolean {
-    console.log('Checking if student has fecha_inscripcion:', student.fecha_inscripcion);
     if (!student.fecha_inscripcion) {
       return false;
     }
-    
+
     // Usar solo la parte de la fecha (YYYY-MM-DD) para evitar problemas de zona horaria
     const today = new Date();
-    const todayString = today.getFullYear() + '-' + 
-                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+    const todayString = today.getFullYear() + '-' +
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' +
                        String(today.getDate()).padStart(2, '0');
-    
+
     const isToday = student.fecha_inscripcion === todayString;
-    
-    console.log(`Checking student: ${student.nombre} ${student.apellido}`, {
-      fecha_inscripcion: student.fecha_inscripcion,
-      todayString: todayString,
-      isToday
-    });
-    
     return isToday;
   }
 
@@ -357,7 +340,8 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      timeZone: 'America/Bogota'
     }); // Esto devuelve DD/MM/YYYY
   }
 
@@ -370,6 +354,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       case 'Pendiente':
         return 'bg-orange-100 text-orange-800';
       case 'RECHAZADO':
+      case 'RECHAZADA':
       case 'Cancelado':
         return 'bg-red-100 text-red-800';
       default:
@@ -418,7 +403,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
       // Agregar datos de resumen
       summarySheet.addRow(['REPORTE DE INSCRIPCIONES POR COLEGIO Y CURSO']);
-      summarySheet.addRow(['Fecha de generación:', new Date().toLocaleDateString('es-CO')]);
+      summarySheet.addRow(['Fecha de generación:', new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota' })]);
       summarySheet.addRow(['']); // Línea vacía
       summarySheet.addRow(['RESUMEN GENERAL']);
       summarySheet.addRow(['Total de Colegios:', this.schoolsData.length]);
@@ -496,7 +481,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                 student.apellido,
                 student.tipo_documento,
                 student.numero_documento,
-                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO') : 'N/A',
+                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : 'N/A',
                 this.isStudentNewToday(student) ? 'SÍ' : 'NO'
               ]);
 
@@ -585,7 +570,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                 student.apellido,
                 student.tipo_documento,
                 student.numero_documento,
-                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO') : 'N/A'
+                student.fecha_creacion ? new Date(student.fecha_creacion).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : 'N/A'
               ]);
 
               // Aplicar color verde a estudiantes nuevos hoy
@@ -821,4 +806,11 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
   return null;
 }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
+  }
 }

@@ -404,7 +404,9 @@
                           </td>
                           <td class="px-6 py-4 text-center">
                             <span
-                              [class]="courseData.status === 'PAGADA' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' : 'bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold'">
+                              [class]="courseData.status === 'PAGADA' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' : 
+                                       (courseData.status === 'RECHAZADA' || courseData.status === 'RECHAZADO') ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold' : 
+                                       'bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold'">
                               {{ courseData.status }}
                             </span>
                           </td>
@@ -631,17 +633,70 @@
               </div>
 
               <!-- Colegio del Estudiante -->
-              <div class="space-y-3 md:col-span-2">
+              <div class="space-y-3 md:col-span-2 relative">
                 <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
-                <select
-                  id="studentSchool"
-                  formControlName="studentSchool"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
-                  <option value="" disabled>Seleccione un colegio</option>
-                  @for (school of schools; track school.id) {
-                    <option [value]="school.id">{{ school.nombre }}</option>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="studentSchool"
+                    formControlName="schoolSearchTerm"
+                    (input)="onSchoolSearch($event)"
+                    placeholder="Buscar colegio..."
+                    class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                    autocomplete="off">
+                  @if (paymentForm.get('schoolSearchTerm')?.value) {
+                    <button
+                      type="button"
+                      (click)="clearSchoolSearch()"
+                      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
                   }
-                </select>
+                </div>
+                
+                <!-- Lista desplegable de resultados -->
+                @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
+                  <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <!-- Indicador de carga -->
+                    @if (isLoadingSchools) {
+                      <div class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                          <span class="text-green-600 text-sm">Buscando colegios...</span>
+                        </div>
+                      </div>
+                    }
+                    
+                    <!-- Resultados de búsqueda -->
+                    @if (!isLoadingSchools) {
+                      @for (school of filteredSchools; track school.id) {
+                        <div
+                          (click)="selectSchool(school); $event.stopPropagation()"
+                          class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                          <span class="text-green-800">{{ school.nombre }}</span>
+                          @if (school.ciudad) {
+                            <span class="text-gray-500 text-sm ml-2">- {{ school.ciudad }}</span>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+                
+                <!-- Mensaje cuando no hay resultados -->
+                @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
+                  <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg">
+                    <div class="px-4 py-3 text-gray-500 text-center">
+                      <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      Colegio no encontrado
+                    </div>
+                  </div>
+                }
+                
                 @if (paymentForm.get('studentSchool')?.touched && paymentForm.get('studentSchool')?.errors?.['required']) {
                   <p class="text-red-500 text-sm mt-2 flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -781,6 +836,7 @@
           [paymentForm]="paymentForm"
           [courses]="courses"
           [isSubmitting]="isSubmitting"
+          [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
           (goBack)="goBackToForm()"
           (confirmSubmit)="confirmAndSubmit()">
         </app-payment-confirmation>
@@ -837,15 +893,15 @@
                   </div>
                   <div>
                     <label class="text-sm font-medium text-gray-600">Método de Pago</label>
-                    <p class="text-sm text-gray-900">{{ payment.metodo_pago }}</p>
+                    <p class="text-sm text-gray-900">{{ formatPaymentMethod(payment.metodo_pago) }}</p>
                   </div>
                   <div>
                     <label class="text-sm font-medium text-gray-600">Pagador</label>
                     <p class="text-sm text-gray-900">{{ payment.pagador }}</p>
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-gray-600">Número de Aprobación</label>
-                    <p class="text-sm text-gray-900 font-mono">{{ payment.numero_aprobacion }}</p>
+                    <label class="text-sm font-medium text-gray-600">Número de Transacion</label>
+                    <p class="text-sm text-gray-900 font-mono">{{ payment.numero_transaccion }}</p>
                   </div>
                   <div class="md:col-span-2 lg:col-span-3">
                     <label class="text-sm font-medium text-gray-600">Estado</label>
@@ -876,6 +932,105 @@
           class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
           Cerrar
         </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de Pago -->
+@if (showPaymentModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+       style="background-color: rgba(0, 0, 0, 0.5);"
+       (click)="closePaymentModal()">
+
+    <!-- Contenido del modal -->
+    <div class="relative w-full max-w-2xl transform transition-all duration-300 ease-out"
+         (click)="$event.stopPropagation()">
+
+      <!-- Card principal -->
+      <div class="relative rounded-2xl shadow-2xl bg-white border border-blue-200">
+
+        <!-- Header con icono y botón cerrar -->
+        <div class="flex items-start justify-between p-6 pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+          <div class="flex items-center space-x-3">
+            <!-- Icono -->
+            <div class="flex-shrink-0">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Título -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Realizar Pago</h3>
+              <p class="text-sm text-gray-600">{{ paymentModalData?.studentName }}</p>
+            </div>
+          </div>
+
+          <!-- Botón cerrar -->
+          <button (click)="closePaymentModal()"
+                  class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="px-8 py-6 space-y-8">
+          <!-- Información del curso -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="text-sm font-medium text-gray-600 mb-1">Curso:</p>
+            <p class="text-gray-900 font-semibold">{{ paymentModalData?.courseName }}</p>
+          </div>
+
+          <!-- Campos de pago -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Monto Total a Pagar (readonly) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                Monto Total a Pagar
+              </label>
+              <div class="relative">
+                <input type="text"
+                       [value]="totalAmountToPay | currency:'COP':'symbol':'1.0-0'"
+                       readonly
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm bg-gray-50 cursor-not-allowed text-gray-700">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Monto a Pagar (editable) -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                Monto a Pagar
+              </label>
+              <input type="text"
+                      [value]="getFormattedPaymentAmount()"
+                      (input)="onPaymentAmountChange($event)"
+                      placeholder="0"
+                      class="w-full px-4 py-3 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer con botones -->
+        <div class="px-8 pb-8 flex justify-end space-x-4">
+          <button (click)="closePaymentModal()"
+                  class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200">
+            Cancelar
+          </button>
+          <button (click)="confirmPayment()"
+                  class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+            Confirmar Pago
+          </button>
+        </div>
       </div>
     </div>
   </div>

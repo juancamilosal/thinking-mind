@@ -40,13 +40,15 @@
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Método de Pago:</span>
-            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{{ payment.metodo_pago }}</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">{{ formatPaymentMethod(payment.metodo_pago) }}</span>
           </div>
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Estado:</span>
             <span class="px-3 py-1 rounded-full text-sm font-semibold"
-                  [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                  [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 
+                           (payment.estado === 'RECHAZADA' || payment.estado === 'RECHAZADO') ? 'bg-red-100 text-red-800' : 
+                           'bg-yellow-100 text-yellow-800'">
               {{ payment.estado }}
             </span>
           </div>
@@ -73,7 +75,7 @@
 
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">Número de Aprobación:</span>
-            <span class="text-gray-900 font-semibold">{{ payment.numero_aprobacion }}</span>
+            <span class="text-gray-900 font-semibold">{{ payment.numero_transaccion }}</span>
           </div>
 
           <div class="flex justify-between items-center">

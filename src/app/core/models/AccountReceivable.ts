@@ -2,14 +2,14 @@ import {Client} from './Clients';
 import {Student} from './Student';
 import {Course} from './Course';
 
-export class PaymentRecord {
+export class PaymentModel {
   id?: string;
-  cuenta_cobrar_id: string;
+  cuenta_cobrar_id: AccountReceivable;
   valor: number;
   fecha_pago: string;
   metodo_pago: string;
   pagador: string;
-  numero_aprobacion?: string;
+  numero_transaccion?: string;
   estado: string;
   comprobante?: string;
 }
@@ -24,7 +24,7 @@ export class AccountReceivable {
   fecha_limite: string;
   estado: string;
   pin_entregado?: boolean | string;
-  pagos?: PaymentRecord[];
+  pagos?: PaymentModel[];
   clientName?: string;
   clientEmail?: string;
   clientPhone?: string;

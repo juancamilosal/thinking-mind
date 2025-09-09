@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {AccountReceivable, PaymentRecord} from '../../../../../core/models/AccountReceivable';
+import {AccountReceivable, PaymentModel} from '../../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
 import {PaymentService} from '../../../../../core/services/payment.service';
@@ -24,13 +24,13 @@ export class AccountReceivableDetailComponent implements OnInit {
 
   @Output() backToList = new EventEmitter<void>();
   @Output() llamarFuncion = new EventEmitter<void>();
-  @Output() addPayment = new EventEmitter<PaymentRecord>();
+  @Output() addPayment = new EventEmitter<PaymentModel>();
 
-  get payments(): PaymentRecord[] {
+  get payments(): PaymentModel[] {
     return this.account?.pagos || [];
   }
 
-  selectedPayment: PaymentRecord | null = null;
+  selectedPayment: PaymentModel | null = null;
   showPaymentDetailView = false;
   showAddPaymentForm = false;
   newPaymentAmount: number;
@@ -76,7 +76,9 @@ export class AccountReceivableDetailComponent implements OnInit {
   }
 
   getTotalPaid(): number {
-    return this.payments.reduce((total, payment) => total + payment.valor, 0);
+    return this.payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((total, payment) => total + payment.valor, 0);
   }
 
   getRemainingBalance(): number {
@@ -104,7 +106,8 @@ export class AccountReceivableDetailComponent implements OnInit {
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
+      timeZone: 'America/Bogota'
     });
   }
 
@@ -236,18 +239,18 @@ export class AccountReceivableDetailComponent implements OnInit {
     }
   }
 
-  viewPaymentImage(payment: PaymentRecord) {
+  viewPaymentImage(payment: PaymentModel) {
     if (payment.comprobante) {
       const imageUrl = `${this.paymentService.getDirectusUrl()}/assets/${payment.comprobante}`;
       window.open(imageUrl, '_blank');
     }
   }
 
-  hasPaymentImage(payment: PaymentRecord): boolean {
+  hasPaymentImage(payment: PaymentModel): boolean {
     return payment.comprobante && payment.comprobante.trim() !== '';
   }
 
-  viewPaymentDetail(payment: PaymentRecord) {
+  viewPaymentDetail(payment: PaymentModel) {
     this.selectedPayment = payment;
     this.showPaymentDetailView = true;
   }
@@ -276,7 +279,7 @@ export class AccountReceivableDetailComponent implements OnInit {
   }
 
 
-  deletePayment(payment: PaymentRecord): void {
+  deletePayment(payment: PaymentModel): void {
     const paymentName = `Pago de ${this.formatCurrency(payment.valor)} - ${payment.pagador}`;
 
     this.confirmationService.showDeleteConfirmation(
@@ -375,7 +378,14 @@ export class AccountReceivableDetailComponent implements OnInit {
     }
   }
 
-  canDeletePayment(payment: PaymentRecord): boolean {
+  canDeletePayment(payment: PaymentModel): boolean {
     return payment.metodo_pago !== 'PASARELA DE PAGO';
+  }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
   }
 }

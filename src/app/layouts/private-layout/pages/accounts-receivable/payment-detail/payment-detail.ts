@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PaymentRecord } from '../../../../../core/models/AccountReceivable';
+import { PaymentModel } from '../../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-payment-detail',
@@ -9,7 +9,7 @@ import { PaymentRecord } from '../../../../../core/models/AccountReceivable';
   standalone: true
 })
 export class PaymentDetailComponent {
-  @Input() payment!: PaymentRecord;
+  @Input() payment!: PaymentModel;
   @Output() backToPaymentHistory = new EventEmitter<void>();
 
   onBack() {
@@ -26,12 +26,22 @@ export class PaymentDetailComponent {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
+    // Agregar 5 horas
+    date.setHours(date.getHours() + 5);
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Bogota'
     });
+  }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
   }
 }

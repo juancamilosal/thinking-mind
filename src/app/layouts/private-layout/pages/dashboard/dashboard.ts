@@ -195,20 +195,24 @@ export class Dashboard implements OnInit {
       totalAmount += precio;
 
       if (account.pagos && Array.isArray(account.pagos)) {
-        const paidAmount = account.pagos.reduce((sum: number, pago: any) => {
-          return sum + (parseFloat(pago.valor || pago.monto) || 0);
-        }, 0);
+        const paidAmount = account.pagos
+          .filter((pago: any) => pago.estado === 'PAGADO')
+          .reduce((sum: number, pago: any) => {
+            return sum + (parseFloat(pago.valor || pago.monto) || 0);
+          }, 0);
         totalPaid += paidAmount;
 
-        // Calcular pagos del mes actual
-        account.pagos.forEach((pago: any) => {
-          if (pago.fecha_pago) {
-            const paymentDate = new Date(pago.fecha_pago);
-            if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-              monthlyPayments += parseFloat(pago.valor || pago.monto) || 0;
+        // Calcular pagos del mes actual (solo pagos con estado PAGADO)
+        account.pagos
+          .filter((pago: any) => pago.estado === 'PAGADO')
+          .forEach((pago: any) => {
+            if (pago.fecha_pago) {
+              const paymentDate = new Date(pago.fecha_pago);
+              if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+                monthlyPayments += parseFloat(pago.valor || pago.monto) || 0;
+              }
             }
-          }
-        });
+          });
 
         if (paidAmount < precio) {
           pendingCount++;

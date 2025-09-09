@@ -59,7 +59,6 @@ export class BudgetReport implements OnInit {
       this.anio = Number(params['anio']);
       this.presupuesto = Number(params['presupuesto']);
       this.id = params['id'];
-
       if (this.anio && this.presupuesto && this.id) {
         this.loadBudgetReport();
       }
@@ -70,13 +69,21 @@ export class BudgetReport implements OnInit {
     this.loading = true;
     this.budgetService.getBudget(this.anio, this.presupuesto, this.id).subscribe({
       next: (response) => {
-        this.budgetData = response.data;
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          this.budgetData = response.data[0];
+        } else {
+          this.budgetData = response.data;
+        }
+
         this.generateCourseEnrollmentData();
         this.loading = false;
-        console.log('Datos del informe:', this.budgetData);
       },
       error: (error) => {
-        console.error('Error al cargar el informe:', error);
+        console.error('=== ERROR AL CARGAR INFORME ===');
+        console.error('Error completo:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Error body:', error.error);
         this.notificationService.showError('Error', 'No se pudo cargar el informe del presupuesto');
         this.loading = false;
       }
@@ -103,20 +110,12 @@ export class BudgetReport implements OnInit {
       return;
     }
 
-    // Debug: Mostrar información de los datos
-    console.log('Datos de presupuesto:', this.budgetData);
-    console.log('Listado de pagos:', this.budgetData.listado_pagos);
-
-    // Verificar si hay pagos con estado PAGADO
     const paidPayments = this.budgetData.listado_pagos?.filter(pago =>
       pago.estado === 'PAGADO' &&
       pago.cuenta_cobrar_id &&
       typeof pago.cuenta_cobrar_id === 'object' &&
       pago.cuenta_cobrar_id.curso_id
     ) || [];
-
-    console.log('Pagos filtrados:', paidPayments);
-    console.log('Cantidad de pagos filtrados:', paidPayments.length);
 
     if (paidPayments.length === 0) {
       this.notificationService.showError(
@@ -133,47 +132,20 @@ export class BudgetReport implements OnInit {
   }
 
   private generateCourseEnrollmentData(): void {
-    console.log('=== INICIO generateCourseEnrollmentData ===');
-    console.log('Budget Data:', this.budgetData);
-    console.log('Listado Pagos:', this.budgetData?.listado_pagos);
-    console.log('Cantidad de pagos:', this.budgetData?.listado_pagos?.length);
 
     if (!this.budgetData || !this.budgetData.listado_pagos) {
-      console.log('No hay datos de presupuesto o pagos');
       this.courseEnrollmentData = null;
       this.courseData = [];
       return;
     }
-
-    // Filtrar pagos que están completamente pagados
-    console.log('=== FILTRANDO PAGOS ===');
-    
     // Verificar cada condición del filtro
     const allPayments = this.budgetData.listado_pagos;
-    console.log('Total pagos antes del filtro:', allPayments.length);
-    
     const pagosPagados = allPayments.filter(pago => pago.estado === 'PAGADO');
-    console.log('Pagos con estado PAGADO:', pagosPagados.length);
-    
     const pagosConCuenta = pagosPagados.filter(pago => pago.cuenta_cobrar_id);
-    console.log('Pagos con cuenta_cobrar_id:', pagosConCuenta.length);
-    
     const pagosConCuentaObjeto = pagosConCuenta.filter(pago => typeof pago.cuenta_cobrar_id === 'object');
-    console.log('Pagos con cuenta_cobrar_id como objeto:', pagosConCuentaObjeto.length);
-    
     const paidPayments = pagosConCuentaObjeto.filter(pago => pago.cuenta_cobrar_id.curso_id);
-    console.log('Pagos con curso_id:', paidPayments.length);
-    
-    // Mostrar ejemplos de datos
-    if (allPayments.length > 0) {
-      console.log('Ejemplo de pago:', allPayments[0]);
-    }
-    if (paidPayments.length > 0) {
-      console.log('Ejemplo de pago filtrado:', paidPayments[0]);
-    }
 
     if (paidPayments.length === 0) {
-      console.log('No se encontraron pagos completamente pagados');
       this.courseEnrollmentData = null;
       this.courseData = [];
       return;
@@ -250,13 +222,8 @@ export class BudgetReport implements OnInit {
       accountsCount: course.accountsCount,
       totalEnrolledAmount: course.totalEnrolledAmount
     }));
-
-    console.log('Course Enrollment Data:', this.courseEnrollmentData);
-    console.log('Course Data for Charts:', this.courseData);
-    
     // Si no hay datos reales, crear datos de prueba para mostrar los gráficos
     if (this.courseData.length === 0) {
-      console.log('=== CREANDO DATOS DE PRUEBA ===');
       this.courseData = [
         {
           courseId: '1',
@@ -283,7 +250,6 @@ export class BudgetReport implements OnInit {
           totalEnrolledAmount: 75000
         }
       ];
-      console.log('Datos de prueba creados:', this.courseData);
     }
   }
 
@@ -319,25 +285,28 @@ export class BudgetReport implements OnInit {
   }
 
   formatCurrency(amount: number | string): string {
-    if (!amount) return '$0';
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const finalAmount = isNaN(numericAmount) ? 0 : numericAmount;
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(numAmount);
+    }).format(finalAmount);
   }
 
   formatDate(dateString: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
+    // Agregar 5 horas
+    date.setHours(date.getHours() + 5);
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Bogota'
     }).format(date);
   }
 
@@ -356,9 +325,9 @@ export class BudgetReport implements OnInit {
 
   getProgressPercentage(): number {
     if (!this.budgetData) return 0;
-    const meta = this.budgetData.monto_meta;
-    const recaudado = this.budgetData.recaudado;
-    return meta > 0 ? (recaudado / meta) * 100 : 0;
+    if (this.budgetData.monto_meta === 0 || this.budgetData.monto_meta === null || this.budgetData.monto_meta === undefined) return 0;
+    if (this.budgetData.recaudado === null || this.budgetData.recaudado === undefined) return 0;
+    return (this.budgetData.recaudado / this.budgetData.monto_meta) * 100;
   }
 
   exportToCSV() {
