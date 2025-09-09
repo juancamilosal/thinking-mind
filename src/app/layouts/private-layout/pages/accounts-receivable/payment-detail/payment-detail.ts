@@ -37,4 +37,11 @@ export class PaymentDetailComponent {
       timeZone: 'America/Bogota'
     });
   }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
+  }
 }

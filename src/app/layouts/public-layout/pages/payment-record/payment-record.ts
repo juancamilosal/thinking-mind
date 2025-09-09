@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { CourseService } from '../../../../core/services/course.service';
@@ -21,7 +22,7 @@ declare var WidgetCheckout: any;
 @Component({
   selector: 'app-payment-record',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PaymentConfirmationComponent, NotificationModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })
@@ -31,7 +32,11 @@ export class PaymentRecord implements OnInit {
   isSubmitting = false;
   courses: Course[] = [];
   schools: School[] = [];
+  filteredSchools: School[] = [];
+
   isLoadingCourses = false;
+  isLoadingSchools = false;
+  isSchoolSelected = false;
   showConfirmation = false;
   isSearchingClient = false;
 
@@ -72,7 +77,6 @@ export class PaymentRecord implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
-    this.loadSchools();
   }
 
 
@@ -94,6 +98,7 @@ export class PaymentRecord implements OnInit {
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
       studentGrado: ['', [Validators.required, Validators.minLength(1)]],
       studentSchool: ['', [Validators.required]],
+      schoolSearchTerm: [''],
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
@@ -241,6 +246,20 @@ export class PaymentRecord implements OnInit {
       studentGrado: student.grado || '',
       studentSchool: student.colegio || '',
     });
+
+    // Actualizar el término de búsqueda del colegio
+    if (student.colegio) {
+      this.schoolService.getSchoolById(student.colegio).subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading school name:', error);
+        }
+      });
+    }
   }
 
   private clearGuardianFields(): void {
@@ -259,7 +278,10 @@ export class PaymentRecord implements OnInit {
       studentLastName: '',
       studentGrado: '',
       studentSchool: '',
+      schoolSearchTerm: ''
     });
+    this.filteredSchools = [];
+    this.isSchoolSelected = false;
   }
 
 
@@ -369,15 +391,59 @@ export class PaymentRecord implements OnInit {
     });
   }
 
-  loadSchools(): void {
-    this.schoolService.getAllSchools().subscribe({
+
+
+  private searchTimeout: any;
+
+  onSchoolSearch(event: any): void {
+    const searchTerm = event.target.value;
+    this.paymentForm.get('schoolSearchTerm')?.setValue(searchTerm);
+    this.isSchoolSelected = false; // Reset cuando el usuario empieza a escribir
+
+    // Limpiar el timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Si el término está vacío, limpiar los resultados
+    if (searchTerm.trim() === '') {
+      this.filteredSchools = [];
+      return;
+    }
+
+    // Debounce de 300ms para evitar demasiadas llamadas
+    this.searchTimeout = setTimeout(() => {
+      this.searchSchools(searchTerm);
+    }, 300);
+  }
+
+  searchSchools(searchTerm: string): void {
+    this.isLoadingSchools = true;
+    this.schoolService.searchSchool(searchTerm, 1, 10).subscribe({
       next: (response) => {
-        this.schools = response.data;
+        this.filteredSchools = response.data;
+        this.isLoadingSchools = false;
       },
       error: (error) => {
-        console.error('Error loading schools:', error);
+        console.error('Error searching schools:', error);
+        this.filteredSchools = [];
+        this.isLoadingSchools = false;
       }
     });
+  }
+
+  selectSchool(school: School): void {
+    this.paymentForm.get('studentSchool')?.setValue(school.id);
+    this.paymentForm.get('schoolSearchTerm')?.setValue(school.nombre);
+    this.filteredSchools = [];
+    this.isSchoolSelected = true;
+  }
+
+  clearSchoolSearch(): void {
+    this.paymentForm.get('schoolSearchTerm')?.setValue('');
+    this.filteredSchools = [];
+    this.isSchoolSelected = false;
+    this.paymentForm.get('studentSchool')?.setValue('');
   }
 
   onCourseChange(courseId: string): void {
@@ -624,17 +690,12 @@ export class PaymentRecord implements OnInit {
       });
 
     } catch (error) {
-      console.error('Error al procesar el pago:', error);
       this.showErrorNotification();
      }
    }
 
-   // Función para generar la integridad (debes implementar esta función según tu backend)
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
-     // Esta es una implementación de ejemplo. En producción, esto debería hacerse en el backend
      const data = `${reference}${amountInCents}${currency}${secretKey}`;
-
-     // Usar crypto API del navegador para generar hash
      const encoder = new TextEncoder();
      const dataBuffer = encoder.encode(data);
      const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
@@ -642,5 +703,12 @@ export class PaymentRecord implements OnInit {
      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
      return hashHex;
+   }
+
+   formatPaymentMethod(method: string): string {
+     if (method === 'CARD') {
+       return 'TARJETA';
+     }
+     return method;
    }
  }

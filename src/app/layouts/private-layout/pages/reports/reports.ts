@@ -234,10 +234,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.loadingSchoolsData = true;
     this.schoolService.getListStudentBySchool().subscribe({
       next: (response: any) => {
-        console.log('Response from service:', response);
-        console.log('First school data:', response[0]);
         if (response[0] && response[0].cursos && response[0].cursos[0] && response[0].cursos[0].estudiantes) {
-          console.log('First student data:', response[0].cursos[0].estudiantes[0]);
         }
         // El servicio retorna directamente el array, no dentro de una propiedad 'data'
         const schoolsArray = Array.isArray(response) ? response : response.data || [];
@@ -247,11 +244,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
           cursos: school.cursos.map((curso: any) => {
             // Calcular estudiantes nuevos hoy para este curso
             const nuevosHoy = curso.estudiantes ? curso.estudiantes.filter((student: any) => {
-              console.log('Checking student for nuevos hoy:', {
-                nombre: student.nombre,
-                fecha_inscripcion: student.fecha_inscripcion,
-                raw_student: student
-              });
               return this.isStudentNewToday({
                 id: student.id,
                 nombre: student.nombre,
@@ -271,7 +263,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
             };
           })
         }));
-        console.log('Processed schoolsData:', this.schoolsData);
         this.loadingSchoolsData = false;
       },
       error: (error) => {
@@ -325,7 +316,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
   // Método para verificar si un estudiante se inscribió hoy
   isStudentNewToday(student: StudentData): boolean {
-    console.log('Checking if student has fecha_inscripcion:', student.fecha_inscripcion);
     if (!student.fecha_inscripcion) {
       return false;
     }
@@ -337,13 +327,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
                        String(today.getDate()).padStart(2, '0');
 
     const isToday = student.fecha_inscripcion === todayString;
-
-    console.log(`Checking student: ${student.nombre} ${student.apellido}`, {
-      fecha_inscripcion: student.fecha_inscripcion,
-      todayString: todayString,
-      isToday
-    });
-
     return isToday;
   }
 
@@ -823,4 +806,11 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
   return null;
 }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
+  }
 }

@@ -34,9 +34,9 @@ export class PaymentStatusComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Obtener el parámetro 'id' de la URL que contiene el número de transacción
+    // Obtener el número de transacción de los parámetros 'id' o 'transaction' de la URL
     this.route.queryParams.subscribe(params => {
-      const transactionNumber = params['id'];
+      const transactionNumber = params['id'] || params['transaction'];
       if (transactionNumber) {
         this.loadPaymentByTransactionNumber(transactionNumber);
       } else {
@@ -72,7 +72,7 @@ export class PaymentStatusComponent implements OnInit {
         approved: this.paymentInfo.estado === 'PAGADO',
         transactionNumber: this.paymentInfo.numero_transaccion || '',
         reference: this.paymentInfo.id || '',
-        paymentMethod: this.paymentInfo.metodo_pago || 'PSE',
+        paymentMethod: this.formatPaymentMethod(this.paymentInfo.metodo_pago || 'PSE'),
         status: this.paymentInfo.estado || 'APROBADA',
         course: this.paymentInfo.cuenta_cobrar_id?.curso_id?.nombre || 'Curso no especificado',
         transactionDate: this.formatDate(this.paymentInfo.fecha_pago),
@@ -80,6 +80,13 @@ export class PaymentStatusComponent implements OnInit {
         payerName: this.paymentInfo.pagador || ''
       };
     }
+  }
+
+  private formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
   }
 
   private formatDate(dateString: string): string {

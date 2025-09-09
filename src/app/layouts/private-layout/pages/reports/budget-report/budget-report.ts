@@ -56,62 +56,27 @@ export class BudgetReport implements OnInit {
   ngOnInit(): void {
 
     this.route.queryParams.subscribe(params => {
-      console.log('=== PARÁMETROS DE URL RECIBIDOS ===');
-      console.log('Params completos:', params);
-      console.log('anio (string):', params['anio']);
-      console.log('presupuesto (string):', params['presupuesto']);
-      console.log('id (string):', params['id']);
-      
       this.anio = Number(params['anio']);
       this.presupuesto = Number(params['presupuesto']);
       this.id = params['id'];
-      
-      console.log('Valores convertidos:');
-      console.log('anio (number):', this.anio);
-      console.log('presupuesto (number):', this.presupuesto);
-      console.log('id (string):', this.id);
-      console.log('Condición (anio && presupuesto && id):', !!(this.anio && this.presupuesto && this.id));
-
       if (this.anio && this.presupuesto && this.id) {
-        console.log('✅ Condición cumplida, cargando informe...');
         this.loadBudgetReport();
-      } else {
-        console.log('❌ Condición NO cumplida, no se carga el informe');
-        console.log('Valores falsy:', {
-          anio: !this.anio ? 'falsy' : 'truthy',
-          presupuesto: !this.presupuesto ? 'falsy' : 'truthy',
-          id: !this.id ? 'falsy' : 'truthy'
-        });
       }
     });
   }
 
   loadBudgetReport(): void {
     this.loading = true;
-    console.log('=== INICIANDO CARGA DE INFORME ===');
-    console.log('Parámetros enviados:', { anio: this.anio, presupuesto: this.presupuesto, id: this.id });
-    
     this.budgetService.getBudget(this.anio, this.presupuesto, this.id).subscribe({
       next: (response) => {
-        console.log('=== RESPUESTA COMPLETA DEL SERVICIO ===');
-        console.log('Response completo:', response);
-        console.log('Response.data:', response.data);
-        console.log('Tipo de response.data:', typeof response.data);
-        console.log('Es null response.data?:', response.data === null);
-        console.log('Es undefined response.data?:', response.data === undefined);
-        
-        // El servicio devuelve un array, necesitamos tomar el primer elemento
         if (Array.isArray(response.data) && response.data.length > 0) {
           this.budgetData = response.data[0];
-          console.log('budgetData asignado (primer elemento del array):', this.budgetData);
         } else {
           this.budgetData = response.data;
-          console.log('budgetData asignado (directo):', this.budgetData);
         }
-        
+
         this.generateCourseEnrollmentData();
         this.loading = false;
-        console.log('=== FIN CARGA DE INFORME ===');
       },
       error: (error) => {
         console.error('=== ERROR AL CARGAR INFORME ===');
@@ -145,20 +110,12 @@ export class BudgetReport implements OnInit {
       return;
     }
 
-    // Debug: Mostrar información de los datos
-    console.log('Datos de presupuesto:', this.budgetData);
-    console.log('Listado de pagos:', this.budgetData.listado_pagos);
-
-    // Verificar si hay pagos con estado PAGADO
     const paidPayments = this.budgetData.listado_pagos?.filter(pago =>
       pago.estado === 'PAGADO' &&
       pago.cuenta_cobrar_id &&
       typeof pago.cuenta_cobrar_id === 'object' &&
       pago.cuenta_cobrar_id.curso_id
     ) || [];
-
-    console.log('Pagos filtrados:', paidPayments);
-    console.log('Cantidad de pagos filtrados:', paidPayments.length);
 
     if (paidPayments.length === 0) {
       this.notificationService.showError(
@@ -175,47 +132,20 @@ export class BudgetReport implements OnInit {
   }
 
   private generateCourseEnrollmentData(): void {
-    console.log('=== INICIO generateCourseEnrollmentData ===');
-    console.log('Budget Data:', this.budgetData);
-    console.log('Listado Pagos:', this.budgetData?.listado_pagos);
-    console.log('Cantidad de pagos:', this.budgetData?.listado_pagos?.length);
 
     if (!this.budgetData || !this.budgetData.listado_pagos) {
-      console.log('No hay datos de presupuesto o pagos');
       this.courseEnrollmentData = null;
       this.courseData = [];
       return;
     }
-
-    // Filtrar pagos que están completamente pagados
-    console.log('=== FILTRANDO PAGOS ===');
-    
     // Verificar cada condición del filtro
     const allPayments = this.budgetData.listado_pagos;
-    console.log('Total pagos antes del filtro:', allPayments.length);
-    
     const pagosPagados = allPayments.filter(pago => pago.estado === 'PAGADO');
-    console.log('Pagos con estado PAGADO:', pagosPagados.length);
-    
     const pagosConCuenta = pagosPagados.filter(pago => pago.cuenta_cobrar_id);
-    console.log('Pagos con cuenta_cobrar_id:', pagosConCuenta.length);
-    
     const pagosConCuentaObjeto = pagosConCuenta.filter(pago => typeof pago.cuenta_cobrar_id === 'object');
-    console.log('Pagos con cuenta_cobrar_id como objeto:', pagosConCuentaObjeto.length);
-    
     const paidPayments = pagosConCuentaObjeto.filter(pago => pago.cuenta_cobrar_id.curso_id);
-    console.log('Pagos con curso_id:', paidPayments.length);
-    
-    // Mostrar ejemplos de datos
-    if (allPayments.length > 0) {
-      console.log('Ejemplo de pago:', allPayments[0]);
-    }
-    if (paidPayments.length > 0) {
-      console.log('Ejemplo de pago filtrado:', paidPayments[0]);
-    }
 
     if (paidPayments.length === 0) {
-      console.log('No se encontraron pagos completamente pagados');
       this.courseEnrollmentData = null;
       this.courseData = [];
       return;
@@ -292,13 +222,8 @@ export class BudgetReport implements OnInit {
       accountsCount: course.accountsCount,
       totalEnrolledAmount: course.totalEnrolledAmount
     }));
-
-    console.log('Course Enrollment Data:', this.courseEnrollmentData);
-    console.log('Course Data for Charts:', this.courseData);
-    
     // Si no hay datos reales, crear datos de prueba para mostrar los gráficos
     if (this.courseData.length === 0) {
-      console.log('=== CREANDO DATOS DE PRUEBA ===');
       this.courseData = [
         {
           courseId: '1',
@@ -325,7 +250,6 @@ export class BudgetReport implements OnInit {
           totalEnrolledAmount: 75000
         }
       ];
-      console.log('Datos de prueba creados:', this.courseData);
     }
   }
 

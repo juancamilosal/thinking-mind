@@ -18,7 +18,7 @@ export class Presupuesto implements OnInit {
   loadingBudgets: boolean = false;
 
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     private router: Router,
     private budgetService: BudgetService,
     private notificationService: NotificationService
@@ -31,7 +31,6 @@ export class Presupuesto implements OnInit {
     // Datos de prueba temporales para verificar que la tabla funciona
     setTimeout(() => {
       if (this.budgets.length === 0) {
-        console.log('No se cargaron datos de la API, usando datos de prueba');
         this.budgets = [
           { id: 1, anio: '2024', monto_meta: 50000000 },
           { id: 2, anio: '2023', monto_meta: 45000000 }
@@ -76,13 +75,10 @@ export class Presupuesto implements OnInit {
   }
 
   loadBudgets(): void {
-    console.log('Iniciando carga de presupuestos...');
     this.loadingBudgets = true;
     this.budgetService.getBudgets().subscribe({
       next: (response) => {
-        console.log('Respuesta de la API:', response);
         this.budgets = response.data || [];
-        console.log('Presupuestos cargados:', this.budgets);
         this.loadingBudgets = false;
       },
       error: (error) => {
@@ -101,9 +97,8 @@ export class Presupuesto implements OnInit {
     const anio = Number(budget.anio);
     const presupuesto = Number(budget.monto_meta);
     const id = budget.id; // Mantener como string
-    
-    console.log('Navegando al informe - Año:', anio, 'Presupuesto:', presupuesto, 'ID:', id);
-    
+
+
     // Navegar a la pantalla de informe con los parámetros
     this.router.navigate(['/private/budget-report'], {
       queryParams: {

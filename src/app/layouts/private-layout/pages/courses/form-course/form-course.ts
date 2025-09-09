@@ -263,14 +263,7 @@ export class FormCourse implements OnInit, OnChanges {
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
         if (previousImageId) {
-          this.courseServices.deleteFile(previousImageId).subscribe({
-            next: () => {
-              console.log('Imagen anterior eliminada exitosamente');
-            },
-            error: (error) => {
-              console.warn('No se pudo eliminar la imagen anterior:', error);
-            }
-          });
+          this.courseServices.deleteFile(previousImageId).subscribe();
         }
         this.notificationService.showSuccess('Curso actualizado exitosamente', "");
         this.courseUpdated.emit();

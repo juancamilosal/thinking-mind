@@ -381,4 +381,11 @@ export class AccountReceivableDetailComponent implements OnInit {
   canDeletePayment(payment: PaymentModel): boolean {
     return payment.metodo_pago !== 'PASARELA DE PAGO';
   }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    return method;
+  }
 }

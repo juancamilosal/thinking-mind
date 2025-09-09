@@ -34,7 +34,6 @@ export class SchoolService {
       fields: '*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,rector_id.*',
       'filter[_or][0][nombre][_icontains]': searchTerm,
       'filter[_or][1][ciudad][_icontains]': searchTerm,
-      'filter[_or][2][nombre_rector][_icontains]': searchTerm,
       page: page.toString(),
       limit: limit.toString(),
       meta: 'total_count,filter_count'
