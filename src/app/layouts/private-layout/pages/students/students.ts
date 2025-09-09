@@ -20,6 +20,13 @@ export class Students implements OnInit {
   selectedStudent: Student | null = null;
   isLoading = false;
   searchTerm = '';
+  
+  // Pagination properties
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 0;
+  itemsPerPageOptions = [5, 10, 25, 50];
+  paginatedStudents: Student[] = [];
   private searchTimeout: any;
   
   constructor(private fb: FormBuilder, private studentService: StudentService) {
@@ -38,6 +45,7 @@ export class Students implements OnInit {
     this.studentService.searchStudent(searchTerm).subscribe({
       next: (data) => {
         this.students = data.data;
+        this.updatePagination();
         this.isLoading = false;
       },
       error: (error) => {
@@ -90,4 +98,74 @@ export class Students implements OnInit {
     this.selectedStudent = null;
     this.searchStudent();
   }
+  
+  // Pagination methods
+  updatePagination() {
+    this.totalPages = Math.ceil(this.students.length / this.itemsPerPage);
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+      this.currentPage = this.totalPages;
+    }
+    this.updatePaginatedStudents();
+  }
+  
+  updatePaginatedStudents() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedStudents = this.students.slice(startIndex, endIndex);
+  }
+  
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePaginatedStudents();
+    }
+  }
+  
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePaginatedStudents();
+    }
+  }
+  
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePaginatedStudents();
+    }
+  }
+  
+  onItemsPerPageChange(event: any) {
+    this.itemsPerPage = parseInt(event.target.value);
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+  
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    
+    if (this.totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const halfVisible = Math.floor(maxVisiblePages / 2);
+      let startPage = Math.max(1, this.currentPage - halfVisible);
+      let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
+  }
+  
+  // Utility method for Math functions in template
+  Math = Math;
 }
