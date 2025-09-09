@@ -78,7 +78,13 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Recaudado</p>
-                <p class="text-2xl font-bold text-green-600 mt-2">{{ formatCurrency(budgetData.recaudado) }}</p>
+                <p class="text-2xl font-bold text-green-600 mt-2">
+                  @if (budgetData.recaudado !== null && budgetData.recaudado !== undefined) {
+                    {{ formatCurrency(budgetData.recaudado) }}
+                  } @else {
+                    <span class="text-gray-400">-</span>
+                  }
+                </p>
               </div>
               <div class="bg-green-100 rounded-full p-3">
                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +99,13 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Faltante</p>
-                <p class="text-2xl font-bold text-red-600 mt-2">{{ formatCurrency(budgetData.faltante) }}</p>
+                <p class="text-2xl font-bold text-red-600 mt-2">
+                  @if (budgetData.faltante !== null && budgetData.faltante !== undefined) {
+                    {{ formatCurrency(budgetData.faltante) }}
+                  } @else {
+                    <span class="text-gray-400">-</span>
+                  }
+                </p>
               </div>
               <div class="bg-red-100 rounded-full p-3">
                 <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,22 +133,46 @@
           <div class="space-y-6">
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span class="text-gray-700 font-medium">Meta Mensual:</span>
-              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_mensual) }}</span>
+              <span class="text-lg font-semibold text-gray-900">
+                @if (budgetData.meta_mensual !== null && budgetData.meta_mensual !== undefined) {
+                  {{ formatCurrency(budgetData.meta_mensual) }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
 
             <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
               <span class="text-gray-700 font-medium">Recaudo del Mes:</span>
-              <span class="text-lg font-semibold text-green-600">{{ formatCurrency(budgetData.recaudo_mes) }}</span>
+              <span class="text-lg font-semibold text-green-600">
+                @if (budgetData.recaudo_mes !== null && budgetData.recaudo_mes !== undefined) {
+                  {{ formatCurrency(budgetData.recaudo_mes) }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
 
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span class="text-gray-700 font-medium">Meta Acumulada del Mes:</span>
-              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_acumulada_mes) }}</span>
+              <span class="text-lg font-semibold text-gray-900">
+                @if (budgetData.meta_acumulada_mes !== null && budgetData.meta_acumulada_mes !== undefined) {
+                  {{ formatCurrency(budgetData.meta_acumulada_mes) }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
 
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span class="text-gray-700 font-medium">Estado del Mes:</span>
-              <span [class]="getStatusColor(budgetData.estado_mes)">{{ budgetData.estado_mes }}</span>
+              <span [class]="getStatusColor(budgetData.estado_mes)">
+                @if (budgetData.estado_mes !== null && budgetData.estado_mes !== undefined) {
+                  {{ budgetData.estado_mes }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
           </div>
         </div>
@@ -155,22 +191,46 @@
           <div class="space-y-6">
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span class="text-gray-700 font-medium">Meta Semanal:</span>
-              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_semanal) }}</span>
+              <span class="text-lg font-semibold text-gray-900">
+                @if (budgetData.meta_semanal !== null && budgetData.meta_semanal !== undefined) {
+                  {{ formatCurrency(budgetData.meta_semanal) }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
 
             <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
               <span class="text-gray-700 font-medium">Recaudo de la Semana:</span>
-              <span class="text-lg font-semibold text-green-600">{{ formatCurrency(budgetData.recaudo_semana) }}</span>
+              <span class="text-lg font-semibold text-green-600">
+                @if (budgetData.recaudo_semana !== null && budgetData.recaudo_semana !== undefined) {
+                  {{ formatCurrency(budgetData.recaudo_semana) }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
 
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span class="text-gray-700 font-medium">Meta Acumulada Semanal:</span>
-              <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(budgetData.meta_acumulada_sem) }}</span>
+              <span class="text-lg font-semibold text-gray-900">
+                @if (budgetData.meta_acumulada_sem !== null && budgetData.meta_acumulada_sem !== undefined) {
+                  {{ formatCurrency(budgetData.meta_acumulada_sem) }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
 
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span class="text-gray-700 font-medium">Estado de la Semana:</span>
-              <span [class]="getStatusColor(budgetData.estado_semana)">{{ budgetData.estado_semana }}</span>
+              <span [class]="getStatusColor(budgetData.estado_semana)">
+                @if (budgetData.estado_semana !== null && budgetData.estado_semana !== undefined) {
+                  {{ budgetData.estado_semana }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </span>
             </div>
           </div>
         </div>

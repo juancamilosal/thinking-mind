@@ -56,27 +56,69 @@ export class BudgetReport implements OnInit {
   ngOnInit(): void {
 
     this.route.queryParams.subscribe(params => {
+      console.log('=== PARÁMETROS DE URL RECIBIDOS ===');
+      console.log('Params completos:', params);
+      console.log('anio (string):', params['anio']);
+      console.log('presupuesto (string):', params['presupuesto']);
+      console.log('id (string):', params['id']);
+      
       this.anio = Number(params['anio']);
       this.presupuesto = Number(params['presupuesto']);
       this.id = params['id'];
+      
+      console.log('Valores convertidos:');
+      console.log('anio (number):', this.anio);
+      console.log('presupuesto (number):', this.presupuesto);
+      console.log('id (string):', this.id);
+      console.log('Condición (anio && presupuesto && id):', !!(this.anio && this.presupuesto && this.id));
 
       if (this.anio && this.presupuesto && this.id) {
+        console.log('✅ Condición cumplida, cargando informe...');
         this.loadBudgetReport();
+      } else {
+        console.log('❌ Condición NO cumplida, no se carga el informe');
+        console.log('Valores falsy:', {
+          anio: !this.anio ? 'falsy' : 'truthy',
+          presupuesto: !this.presupuesto ? 'falsy' : 'truthy',
+          id: !this.id ? 'falsy' : 'truthy'
+        });
       }
     });
   }
 
   loadBudgetReport(): void {
     this.loading = true;
+    console.log('=== INICIANDO CARGA DE INFORME ===');
+    console.log('Parámetros enviados:', { anio: this.anio, presupuesto: this.presupuesto, id: this.id });
+    
     this.budgetService.getBudget(this.anio, this.presupuesto, this.id).subscribe({
       next: (response) => {
-        this.budgetData = response.data;
+        console.log('=== RESPUESTA COMPLETA DEL SERVICIO ===');
+        console.log('Response completo:', response);
+        console.log('Response.data:', response.data);
+        console.log('Tipo de response.data:', typeof response.data);
+        console.log('Es null response.data?:', response.data === null);
+        console.log('Es undefined response.data?:', response.data === undefined);
+        
+        // El servicio devuelve un array, necesitamos tomar el primer elemento
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          this.budgetData = response.data[0];
+          console.log('budgetData asignado (primer elemento del array):', this.budgetData);
+        } else {
+          this.budgetData = response.data;
+          console.log('budgetData asignado (directo):', this.budgetData);
+        }
+        
         this.generateCourseEnrollmentData();
         this.loading = false;
-        console.log('Datos del informe:', this.budgetData);
+        console.log('=== FIN CARGA DE INFORME ===');
       },
       error: (error) => {
-        console.error('Error al cargar el informe:', error);
+        console.error('=== ERROR AL CARGAR INFORME ===');
+        console.error('Error completo:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Error body:', error.error);
         this.notificationService.showError('Error', 'No se pudo cargar el informe del presupuesto');
         this.loading = false;
       }
@@ -359,7 +401,8 @@ export class BudgetReport implements OnInit {
 
   getProgressPercentage(): number {
     if (!this.budgetData) return 0;
-    if (this.budgetData.monto_meta === 0) return 0;
+    if (this.budgetData.monto_meta === 0 || this.budgetData.monto_meta === null || this.budgetData.monto_meta === undefined) return 0;
+    if (this.budgetData.recaudado === null || this.budgetData.recaudado === undefined) return 0;
     return (this.budgetData.recaudado / this.budgetData.monto_meta) * 100;
   }
 
