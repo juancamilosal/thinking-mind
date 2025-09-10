@@ -101,6 +101,7 @@ export class Reports {
       this.generatePaymentsReport(startDate, endDate);
       break;
     case 'INSCRIPCIONES':
+      this.generateEnrollReport(startDate, endDate);
       this.loadSchoolsData();
       break;
     default:
@@ -232,57 +233,65 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
   loadSchoolsData(): void {
     this.loadingSchoolsData = true;
-    this.schoolService.getListStudentBySchool().subscribe({
+    const startDate = this.reportForm.get('startDate')?.value;
+    const endDate = this.reportForm.get('endDate')?.value;
+    
+    this.schoolService.getListStudentBySchool(startDate, endDate).subscribe({
       next: (response: any) => {
-        if (response[0] && response[0].cursos && response[0].cursos[0] && response[0].cursos[0].estudiantes) {
-        }
-        // El servicio retorna directamente el array, no dentro de una propiedad 'data'
-        const schoolsArray = Array.isArray(response) ? response : response.data || [];
-        this.schoolsData = schoolsArray.map((school: any) => ({
-          ...school,
-          expanded: false,
-          cursos: school.cursos.map((curso: any) => {
-            // Calcular estudiantes nuevos hoy para este curso
-            const nuevosHoy = curso.estudiantes ? curso.estudiantes.filter((student: any) => {
-              return this.isStudentNewToday({
-                id: student.id,
-                nombre: student.nombre,
-                apellido: student.apellido,
-                tipo_documento: student.tipo_documento,
-                numero_documento: student.numero_documento,
-                fecha_creacion: student.fecha_creacion,
-                fecha_inscripcion: student.fecha_inscripcion,
-                saldo: student.saldo || 0
-              });
-            }).length : 0;
+        // Asegurar que el estado de carga se actualice correctamente
+        setTimeout(() => {
+          if (response[0] && response[0].cursos && response[0].cursos[0] && response[0].cursos[0].estudiantes) {
+          }
+          // El servicio retorna directamente el array, no dentro de una propiedad 'data'
+          const schoolsArray = Array.isArray(response) ? response : response.data || [];
+          this.schoolsData = schoolsArray.map((school: any) => ({
+            ...school,
+            expanded: false,
+            cursos: school.cursos.map((curso: any) => {
+              // Calcular estudiantes nuevos hoy para este curso
+              const nuevosHoy = curso.estudiantes ? curso.estudiantes.filter((student: any) => {
+                return this.isStudentNewToday({
+                  id: student.id,
+                  nombre: student.nombre,
+                  apellido: student.apellido,
+                  tipo_documento: student.tipo_documento,
+                  numero_documento: student.numero_documento,
+                  fecha_creacion: student.fecha_creacion,
+                  fecha_inscripcion: student.fecha_inscripcion,
+                  saldo: student.saldo || 0
+                });
+              }).length : 0;
 
-            return {
-              ...curso,
-              expanded: false,
-              nuevos_hoy: nuevosHoy
-            };
-          })
-        }));
-        this.loadingSchoolsData = false;
+              return {
+                ...curso,
+                expanded: false,
+                nuevos_hoy: nuevosHoy
+              };
+            })
+          }));
+          this.loadingSchoolsData = false;
+        }, 0);
       },
       error: (error) => {
         console.error('Error loading schools data:', error);
-
-        // Si es un error 401, el interceptor ya manejó la renovación del token
-        // y reintentó la petición, así que este error significa que falló definitivamente
-        if (error.status === 401) {
-          this.notificationService.showError(
-            'Sesión expirada',
-            'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
-          );
-        } else {
-          this.notificationService.showError(
-            'Error al cargar datos',
-            'No se pudieron cargar los datos de colegios. Inténtalo nuevamente.'
-          );
-        }
-
-        this.loadingSchoolsData = false;
+        
+        // Asegurar que el estado de carga se actualice correctamente en caso de error
+        setTimeout(() => {
+          // Si es un error 401, el interceptor ya manejó la renovación del token
+          // y reintentó la petición, así que este error significa que falló definitivamente
+          if (error.status === 401) {
+            this.notificationService.showError(
+              'Sesión expirada',
+              'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+            );
+          } else {
+            this.notificationService.showError(
+              'Error al cargar datos',
+              'No se pudieron cargar los datos de colegios. Inténtalo nuevamente.'
+            );
+          }
+          this.loadingSchoolsData = false;
+        }, 0);
       }
     });
   }

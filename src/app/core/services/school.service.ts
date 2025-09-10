@@ -57,7 +57,14 @@ export class SchoolService {
     return this.http.get<ResponseAPI<School>>(`${this.apiSchool}/${id}?fields=*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,estudiante_id.acudiente.cuentas_cobrar.curso_id.*,estudiante_id.curso_id.*`);
   }
 
-  getListStudentBySchool(): Observable<ResponseAPI<School>> {
-    return this.http.get<ResponseAPI<School>>(this.apiStudentSchool);
+  getListStudentBySchool(startDate?: string, endDate?: string): Observable<ResponseAPI<School>> {
+    let params: any = {};
+    
+    if (startDate && endDate) {
+      params['fecha_inicio'] = startDate;
+      params['fecha_final'] = endDate;
+    }
+    
+    return this.http.get<ResponseAPI<School>>(this.apiStudentSchool, { params });
   }
 }

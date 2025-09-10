@@ -31,11 +31,11 @@
           </select>
       </div>
       <!-- Filtro Fechas-->
-      @if(reportForm.value.reportType === 'CARTERA') {
+      @if(reportForm.value.reportType === 'CARTERA' || reportForm.value.reportType === 'INSCRIPCIONES') {
       <div class="flex flex-col md:flex-row md:max-w-[480px] flex-wrap items-end gap-4 px-2 md:px-4 py-3">
         <div class="flex flex-col w-full md:min-w-40 md:flex-1">
           <label class="text-[#0d141c] text-sm md:text-base font-medium leading-normal pb-2">Rango de Fechas</label>
-          <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Fecha Inicial</label>
+          <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
           <input
             type="date"
             id="startDate"

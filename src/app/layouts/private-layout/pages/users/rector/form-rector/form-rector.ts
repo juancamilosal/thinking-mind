@@ -25,7 +25,11 @@ export class FormRector implements OnInit, OnChanges {
   showPassword = false;
   showConfirmPassword = false;
   schools: School[] = [];
+  filteredSchools: School[] = [];
+  isLoadingSchools = false;
+  isSchoolSelected = false;
   isDeleting = false;
+  private searchTimeout: any;
 
   constructor(
     private fb: FormBuilder,
@@ -64,6 +68,7 @@ export class FormRector implements OnInit, OnChanges {
       email: ['', [Validators.required, Validators.email]],
       celular: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       schoolId: ['', Validators.required],
+      schoolSearchTerm: [''],
       password: ['', passwordValidators],
       confirmPassword: ['', confirmPasswordValidators]
     });
@@ -84,9 +89,21 @@ export class FormRector implements OnInit, OnChanges {
 
   loadRectorData(): void {
     if (this.rectorData) {
-      const schoolId = typeof this.rectorData.colegio_id === 'object' && this.rectorData.colegio_id !== null
-        ? this.rectorData.colegio_id.id
-        : this.rectorData.colegio_id;
+      // Obtener el ID y nombre del colegio
+      let schoolId = '';
+      let schoolName = '';
+      
+      if (this.rectorData.colegio_id) {
+        if (typeof this.rectorData.colegio_id === 'object') {
+          schoolId = this.rectorData.colegio_id.id || '';
+          schoolName = this.rectorData.colegio_id.nombre || '';
+        } else {
+          schoolId = this.rectorData.colegio_id;
+          // Si es solo un ID, buscar el nombre en la lista de colegios
+          const school = this.schools.find(s => s.id === schoolId);
+          schoolName = school?.nombre || '';
+        }
+      }
 
       const patchData = {
         firstName: this.rectorData.first_name,
@@ -94,10 +111,24 @@ export class FormRector implements OnInit, OnChanges {
         email: this.rectorData.email,
         celular: this.rectorData.celular,
         schoolId: schoolId,
+        schoolSearchTerm: schoolName,
         password: '',
         confirmPassword: ''
       };
       this.rectorForm.patchValue(patchData);
+
+      // Marcar como seleccionado si hay un colegio
+      if (schoolName) {
+        this.isSchoolSelected = true;
+      }
+
+      // Marcar como válido si estamos en modo edición
+      if (this.editMode) {
+        this.rectorForm.get('password')?.clearValidators();
+        this.rectorForm.get('confirmPassword')?.clearValidators();
+        this.rectorForm.get('password')?.updateValueAndValidity();
+        this.rectorForm.get('confirmPassword')?.updateValueAndValidity();
+      }
     }
   }
 
@@ -264,5 +295,56 @@ export class FormRector implements OnInit, OnChanges {
 
   toggleConfirmPasswordVisibility(): void {
     this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  onSchoolSearch(event: any): void {
+    const searchTerm = event.target.value;
+    this.rectorForm.get('schoolSearchTerm')?.setValue(searchTerm);
+    this.isSchoolSelected = false; // Reset cuando el usuario empieza a escribir
+
+    // Limpiar el timeout anterior
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Si el término está vacío, limpiar los resultados
+    if (searchTerm.trim() === '') {
+      this.filteredSchools = [];
+      return;
+    }
+
+    // Debounce de 300ms para evitar demasiadas llamadas
+    this.searchTimeout = setTimeout(() => {
+      this.searchSchools(searchTerm);
+    }, 300);
+  }
+
+  searchSchools(searchTerm: string): void {
+    this.isLoadingSchools = true;
+    this.schoolService.searchSchool(searchTerm, 1, 10).subscribe({
+      next: (response) => {
+        this.filteredSchools = response.data;
+        this.isLoadingSchools = false;
+      },
+      error: (error) => {
+        console.error('Error searching schools:', error);
+        this.filteredSchools = [];
+        this.isLoadingSchools = false;
+      }
+    });
+  }
+
+  selectSchool(school: School): void {
+    this.rectorForm.get('schoolId')?.setValue(school.id);
+    this.rectorForm.get('schoolSearchTerm')?.setValue(school.nombre);
+    this.filteredSchools = [];
+    this.isSchoolSelected = true;
+  }
+
+  clearSchoolSearch(): void {
+    this.rectorForm.get('schoolSearchTerm')?.setValue('');
+    this.filteredSchools = [];
+    this.isSchoolSelected = false;
+    this.rectorForm.get('schoolId')?.setValue('');
   }
 }

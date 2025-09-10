@@ -112,16 +112,66 @@
 
             <!-- Colegio -->
             <div class="space-y-3">
-              <label for="schoolId" class="block text-sm font-semibold text-purple-700">Colegio *</label>
-              <select
-                id="schoolId"
-                formControlName="schoolId"
-                class="w-full px-6 py-4 rounded-lg border border-purple-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white">
-                <option value="">Seleccione un colegio</option>
-                @for (school of schools; track school.id) {
-                  <option [value]="school.id">{{ school.nombre }}</option>
+              <label for="schoolSearchTerm" class="block text-sm font-semibold text-purple-700">Colegio *</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="schoolSearchTerm"
+                  formControlName="schoolSearchTerm"
+                  (input)="onSchoolSearch($event)"
+                  placeholder="Buscar colegio..."
+                  class="w-full px-6 py-4 rounded-lg border border-purple-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 bg-white"
+                  autocomplete="off">
+                @if (rectorForm.get('schoolSearchTerm')?.value) {
+                  <button
+                    type="button"
+                    (click)="clearSchoolSearch()"
+                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
                 }
-              </select>
+                
+                <!-- Lista desplegable de resultados -->
+                @if (rectorForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
+                  <div class="absolute z-10 w-full bg-white border border-purple-300 rounded-lg shadow-lg max-h-60 overflow-y-auto top-full mt-1">
+                  @if (isLoadingSchools) {
+                    <div class="px-4 py-3 text-purple-600 text-center">
+                      <svg class="animate-spin w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span class="ml-2">Buscando...</span>
+                    </div>
+                  } @else {
+                    @for (school of filteredSchools; track school.id) {
+                      <button
+                        type="button"
+                        (click)="selectSchool(school)"
+                        class="w-full px-4 py-3 text-left hover:bg-purple-50 focus:bg-purple-50 focus:outline-none border-b border-gray-100 last:border-b-0">
+                        <div class="font-medium text-gray-900">{{ school.nombre }}</div>
+                        @if (school.direccion) {
+                          <div class="text-sm text-gray-500">{{ school.direccion }}</div>
+                        }
+                      </button>
+                    }
+                  }
+                </div>
+              }
+              
+              @if (rectorForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
+                <div class="absolute z-10 w-full bg-white border border-purple-300 rounded-lg shadow-lg top-full mt-1">
+                  <div class="px-4 py-3 text-gray-500 text-center">
+                    <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Colegio no encontrado
+                  </div>
+                </div>
+              }
+              </div>
+              
               @if(rectorForm.get('schoolId')?.touched && rectorForm.get('schoolId')?.errors?.['required']) {
                 <p class="text-red-500 text-sm mt-2 flex items-center">
                   <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
