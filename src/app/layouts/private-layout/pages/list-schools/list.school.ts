@@ -18,6 +18,16 @@ export class ListSchool implements OnInit {
   currentDate = new Date();
   isRector = false;
   private searchTimeout: any;
+  
+  // Propiedades de paginación
+  currentPage = 1;
+  itemsPerPage = 15;
+  totalItems = 0;
+  totalPages = 0;
+  itemsPerPageOptions = [10, 15, 25, 50];
+  
+  // Hacer Math disponible en el template
+  Math = Math;
 
   constructor(
     private schoolService: SchoolService,
@@ -58,9 +68,11 @@ export class ListSchool implements OnInit {
     }
     
     // Para otros usuarios, mostrar todos los colegios
-    this.schoolService.getAllSchools().subscribe({
+    this.schoolService.getAllSchools(this.currentPage, this.itemsPerPage).subscribe({
       next: (response) => {
         this.schools = response.data;
+        this.totalItems = response.meta?.total_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.isLoading = false;
       },
       error: (error) => {
@@ -75,6 +87,7 @@ export class ListSchool implements OnInit {
 
   onSearchInputChange(event: any): void {
     this.searchTerm = event.target.value;
+    this.currentPage = 1; // Resetear a la primera página al cambiar búsqueda
 
     // Limpiar el timeout anterior si existe
     if (this.searchTimeout) {
@@ -89,9 +102,11 @@ export class ListSchool implements OnInit {
 
   searchSchools(): void {
     this.isLoading = true;
-    this.schoolService.searchSchool(this.searchTerm).subscribe({
+    this.schoolService.searchSchool(this.searchTerm, this.currentPage, this.itemsPerPage).subscribe({
       next: (response) => {
         this.schools = response.data;
+        this.totalItems = response.meta?.total_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.isLoading = false;
       },
       error: (error) => {
@@ -105,7 +120,61 @@ export class ListSchool implements OnInit {
   }
 
   onSearch(): void {
+    this.currentPage = 1; // Resetear a la primera página al buscar
     this.searchSchools();
+  }
+
+  // Métodos de paginación
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      if (this.searchTerm) {
+        this.searchSchools();
+      } else {
+        this.loadSchools();
+      }
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.currentPage > 1) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    // Ajustar el inicio si estamos cerca del final
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(target.value);
+    this.currentPage = 1;
+    if (this.searchTerm) {
+      this.searchSchools();
+    } else {
+      this.loadSchools();
+    }
   }
 
   navigateToStudents(schoolId: string): void {

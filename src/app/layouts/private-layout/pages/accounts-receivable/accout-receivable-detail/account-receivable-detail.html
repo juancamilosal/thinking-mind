@@ -170,13 +170,23 @@
           Historial de Pagos ({{ payments.length }})
         </h3>
 
-        <button (click)="toggleAddPaymentForm()"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          <span>Agregar Pago</span>
-        </button>
+        <div class="flex space-x-3">
+          <button (click)="toggleAddPaymentForm()"
+                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            <span>Agregar Pago</span>
+          </button>
+          
+          <button (click)="openRefundModal()"
+                  class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+            </svg>
+            <span>Devolución</span>
+          </button>
+        </div>
       </div>
 
       <!-- Formulario para Agregar Pago -->
@@ -190,11 +200,11 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Monto del Pago</label>
               <div class="relative">
                 <span class="absolute left-3 top-3 text-gray-500">$</span>
-                <input type="number"
-                       [(ngModel)]="newPaymentAmount"
+                <input type="text"
+                       [value]="newPaymentAmountDisplay"
+                       (input)="onPaymentAmountChange($event)"
                        class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                       placeholder="0"
-                       step="0.01">
+                       placeholder="0">
               </div>
             </div>
             <div>
@@ -407,5 +417,100 @@
       }
     </div>
   </div>
+
+  <!-- Modal de Devolución -->
+  @if (showRefundModal) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+            <svg class="w-6 h-6 mr-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+            </svg>
+            Devolución
+          </h2>
+          <button (click)="closeRefundModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Monto a Devolver -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Monto a Devolver *</label>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-500">$</span>
+              <input type="text"
+                     [value]="refundAmountDisplay"
+                     (input)="onRefundAmountChange($event)"
+                     class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                     placeholder="0"
+                     [max]="getTotalPaid()">
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Máximo disponible: {{ formatCurrency(getTotalPaid()) }}</p>
+          </div>
+
+          <!-- Anexar Comprobante -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Anexar Comprobante *</label>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors">
+              <input type="file"
+                     (change)="onRefundFileSelected($event)"
+                     accept=".pdf,.jpg,.jpeg,.png"
+                     class="hidden"
+                     #refundFileInput>
+              
+              @if (!refundFile) {
+                <div (click)="refundFileInput.click()" class="cursor-pointer">
+                  <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                  </svg>
+                  <p class="text-gray-600 font-medium">Haz clic para subir archivo</p>
+                  <p class="text-gray-400 text-sm">PDF, JPG, JPEG o PNG (máx. 10MB)</p>
+                </div>
+              } @else {
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="text-sm text-gray-700 font-medium">{{ refundFile.name }}</span>
+                  </div>
+                  <button (click)="removeRefundFile()" class="text-red-500 hover:text-red-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex space-x-3 pt-4">
+            <button (click)="closeRefundModal()"
+                    class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+              Cancelar
+            </button>
+            <button (click)="processRefund()"
+                    [disabled]="!refundAmount || refundAmount <= 0 || !refundFile || isProcessingRefund"
+                    class="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2">
+              @if (isProcessingRefund) {
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Procesando...</span>
+              } @else {
+                <span>Procesar Devolución</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 }
 

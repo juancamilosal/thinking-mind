@@ -1,10 +1,16 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ResponseAPI } from '../models/ResponseAPI';
-import { environment } from '../../../environments/environment';
-import {AccountReceivable, PaymentReceivable, PaymentModel, TotalAccounts} from '../models/AccountReceivable';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {ResponseAPI} from '../models/ResponseAPI';
+import {environment} from '../../../environments/environment';
+import {
+  AccountReceivable,
+  PaymentReceivable,
+  PaymentModel,
+  TotalAccounts,
+   ReturnAccount
+} from '../models/AccountReceivable';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +19,10 @@ export class AccountReceivableService {
   private apiUrl: string = environment.accountsReceivable;
   private apiUrlTotalAccounts = environment.total_accounts
   private apiUrlPaymentReceivable = environment.payment_record;
-  constructor(private http: HttpClient) {}
+  private apiUrlReturn = environment.return;
+
+  constructor(private http: HttpClient) {
+  }
 
 
   getAccountById(id: string): Observable<ResponseAPI<AccountReceivable>> {
@@ -97,15 +106,20 @@ export class AccountReceivableService {
   deleteAccountReceivable(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }
+
   createAccountRecord(paymentReceivable: PaymentReceivable): Observable<ResponseAPI<any>> {
 
-    return this.http.post<ResponseAPI<any>>(this.apiUrlPaymentReceivable , paymentReceivable);
+    return this.http.post<ResponseAPI<any>>(this.apiUrlPaymentReceivable, paymentReceivable);
   }
 
   //Para el reporte de inscripciones
   getAccountsForReport(): Observable<ResponseAPI<AccountReceivable[]>> {
-  return this.http.get<ResponseAPI<any>>(
-    this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*'
-  );
+    return this.http.get<ResponseAPI<any>>(
+      this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*'
+    );
+  }
+
+  returnAccount(returnAccount: ReturnAccount): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(this.apiUrlReturn, returnAccount);
   }
 }

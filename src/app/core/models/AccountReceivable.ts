@@ -47,3 +47,9 @@ export class PaymentReceivable {
   precio: number;
   estado: string;
 }
+
+export class ReturnAccount {
+  id?: string;
+  monto?: number;
+  comprobante?: string;
+}

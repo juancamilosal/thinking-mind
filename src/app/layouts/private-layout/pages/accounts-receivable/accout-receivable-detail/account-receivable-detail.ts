@@ -34,6 +34,7 @@ export class AccountReceivableDetailComponent implements OnInit {
   showPaymentDetailView = false;
   showAddPaymentForm = false;
   newPaymentAmount: number;
+  newPaymentAmountDisplay: string = '';
   newPaymentMethod: string;
   newPaymentReference: string;
   newPayerName: string;
@@ -46,6 +47,13 @@ export class AccountReceivableDetailComponent implements OnInit {
   PAYMENT_METHOD = PAYMENT_METHOD;
   isEditingAmount = false;
   editedAmount: number = 0;
+  
+  // Propiedades para el modal de devolución
+  showRefundModal = false;
+  refundAmount: number = 0;
+  refundAmountDisplay: string = '';
+  refundFile: File | null = null;
+  isProcessingRefund = false;
 
   constructor(
     private paymentService: PaymentService,
@@ -218,6 +226,7 @@ export class AccountReceivableDetailComponent implements OnInit {
 
   private resetPaymentForm() {
     this.newPaymentAmount = 0;
+    this.newPaymentAmountDisplay = '';
     this.newPaymentMethod = '';
     this.newPaymentReference = '';
     this.newPayerName = '';
@@ -387,5 +396,159 @@ export class AccountReceivableDetailComponent implements OnInit {
       return 'TARJETA';
     }
     return method;
+  }
+
+  // Métodos para el modal de devolución
+  openRefundModal(): void {
+    this.showRefundModal = true;
+    this.refundAmount = 0;
+    this.refundFile = null;
+  }
+
+  closeRefundModal(): void {
+    this.showRefundModal = false;
+    this.refundAmount = 0;
+    this.refundAmountDisplay = '';
+    this.refundFile = null;
+    this.isProcessingRefund = false;
+  }
+
+  onRefundAmountChange(event: any): void {
+    const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
+    const numericValue = parseInt(value) || 0;
+    
+    this.refundAmount = numericValue;
+    this.refundAmountDisplay = this.formatNumberWithDots(numericValue);
+    
+    // Actualizar el valor del input
+    event.target.value = this.refundAmountDisplay;
+  }
+
+  private formatNumberWithDots(num: number): string {
+    if (num === 0) return '';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  onPaymentAmountChange(event: any): void {
+    const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
+    const numericValue = parseInt(value) || 0;
+    
+    this.newPaymentAmount = numericValue;
+    this.newPaymentAmountDisplay = this.formatNumberWithDots(numericValue);
+    
+    // Actualizar el valor del input
+    event.target.value = this.newPaymentAmountDisplay;
+  }
+
+  onRefundFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      // Validar tamaño del archivo (máximo 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+      if (file.size > maxSize) {
+        this.notificationService.showError('Error', 'El archivo no puede ser mayor a 10MB');
+        return;
+      }
+
+      // Validar tipo de archivo
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        this.notificationService.showError('Error', 'Solo se permiten archivos PDF, JPG, JPEG o PNG');
+        return;
+      }
+
+      this.refundFile = file;
+    }
+  }
+
+  removeRefundFile(): void {
+    this.refundFile = null;
+  }
+
+  processRefund(): void {
+    if (!this.refundAmount || this.refundAmount <= 0) {
+      this.notificationService.showError('Error', 'Debe ingresar un monto válido para la devolución');
+      return;
+    }
+
+    if (this.refundAmount > this.getTotalPaid()) {
+      this.notificationService.showError('Error', 'El monto de devolución no puede ser mayor al total pagado');
+      return;
+    }
+
+    this.confirmationService.showConfirmation(
+      {
+        title: 'Confirmar Devolución',
+        message: `¿Está seguro de procesar una devolución de ${this.formatCurrency(this.refundAmount)}?`,
+        confirmText: 'Procesar',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      },
+      () => {
+        this.executeRefund();
+      }
+    );
+  }
+
+  private executeRefund(): void {
+    this.isProcessingRefund = true;
+
+    if (this.refundFile) {
+      // Primero subir el archivo
+      const formData = new FormData();
+      formData.append('file', this.refundFile);
+
+      this.paymentService.uploadFile(formData).subscribe({
+        next: (uploadResponse) => {
+          // Una vez subido el archivo, procesar la devolución
+          const returnAccount = {
+            id: this.account.id,
+            monto: this.refundAmount,
+            comprobante: uploadResponse.data.id
+          };
+
+          this.accountService.returnAccount(returnAccount).subscribe({
+            next: (response) => {
+              this.isProcessingRefund = false;
+              this.notificationService.showSuccess('Devolución Procesada', 'La devolución ha sido procesada exitosamente');
+              this.closeRefundModal();
+              
+              // Recargar los datos de la cuenta
+              this.refreshAccountData();
+            },
+            error: (error) => {
+              this.isProcessingRefund = false;
+              this.notificationService.showError('Error', 'Error al procesar la devolución: ' + (error.message || 'Error desconocido'));
+            }
+          });
+        },
+        error: (error) => {
+          this.isProcessingRefund = false;
+          this.notificationService.showError('Error', 'Error al subir el comprobante: ' + (error.message || 'Error desconocido'));
+        }
+      });
+    } else {
+      // Si no hay archivo, procesar sin comprobante
+      const returnAccount = {
+        id: this.account.id,
+        monto: this.refundAmount,
+        comprobante: undefined
+      };
+
+      this.accountService.returnAccount(returnAccount).subscribe({
+        next: (response) => {
+          this.isProcessingRefund = false;
+          this.notificationService.showSuccess('Devolución Procesada', 'La devolución ha sido procesada exitosamente');
+          this.closeRefundModal();
+          
+          // Recargar los datos de la cuenta
+          this.refreshAccountData();
+        },
+        error: (error) => {
+          this.isProcessingRefund = false;
+          this.notificationService.showError('Error', 'Error al procesar la devolución: ' + (error.message || 'Error desconocido'));
+        }
+      });
+    }
   }
 }

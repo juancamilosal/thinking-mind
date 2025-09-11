@@ -26,6 +26,7 @@ export const environment = {
   search_student: apiUrl + 'flows/trigger/08fe708c-06b9-4da1-95f2-448cf5015b10',
   list_student_school: apiUrl + 'flows/trigger/b843f482-7a50-4a5a-8d93-f78a04fc2b80',
   getBudget: apiUrl + 'flows/trigger/7a82a287-639b-42e3-a382-8f5e01d754ad',
-  payment_wompi: apiUrl + 'flows/trigger/0ba476c9-3c23-486f-8b79-f3f7fceab4e4'
+  payment_wompi: apiUrl + 'flows/trigger/0ba476c9-3c23-486f-8b79-f3f7fceab4e4',
+  return: apiUrl + 'flows/trigger/bcb42dd5-5119-4c09-96c6-cbed0e6e106f'
 };
 
