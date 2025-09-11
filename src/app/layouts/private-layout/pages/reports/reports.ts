@@ -102,7 +102,6 @@ export class Reports {
       break;
     case 'INSCRIPCIONES':
       this.generateEnrollReport(startDate, endDate);
-      this.loadSchoolsData();
       break;
     default:
       this.notificationService.showError('Tipo de reporte no válido.');
@@ -151,69 +150,46 @@ export class Reports {
 
 // Generar reporte de inscripciones dentro del rango de fechas
 private generateEnrollReport(startDate: string, endDate: string): void {
-  this.accountReceivableService.getAccountsForReport().subscribe({
-    next: (response: any) => {
-      const rawData = response.data || response;
-      const paidAccounts = rawData.filter((account: any) => {
-        if (!account.estudiante_id || typeof account.estudiante_id === 'string') return false;
-        if (!account.pagos || account.pagos.length === 0) return false;
-
-        return account.pagos.some((payment: any) => {
-          const paymentDate = new Date(payment.fecha_pago);
-          const start = new Date(startDate + 'T00:00:00Z');
-          const end = new Date(endDate + 'T23:59:59.999Z');
-          start.setHours(0, 0, 0, 0);
-          end.setHours(23, 59, 59, 999);
-
-          return payment.estado === 'PAGADO' &&
-                 paymentDate >= start &&
-                 paymentDate <= end;
-        });
-      });
-
-      const aggregationMap = new Map<string, EnrollReportData>();
-
-      for (const account of paidAccounts) {
-        const schoolName = account.estudiante_id?.colegio_id?.nombre ||
-                          account.estudiante_id?.colegio_id?.nombre_colegio ||
-                          'Sin Colegio';
-
-        const courseName = account.curso_id?.nombre || 'Sin Curso';
-
-        const key = `${schoolName}|${courseName}`;
-
-        if (!aggregationMap.has(key)) {
-          aggregationMap.set(key, {
-            schoolName: schoolName,
-            courseName: courseName,
-            studentCount: 0
-          });
-        }
-
-        aggregationMap.get(key)!.studentCount++;
+  this.loadingSchoolsData = true;
+  this.accountReceivableService.getAccountsForReport(startDate, endDate).subscribe({
+    next: (response) => {
+      if (response && response.data && Array.isArray(response.data)) {
+        this.schoolsData = response.data.map((school: any) => ({
+          id: school.colegio, // Usar el nombre del colegio como ID
+          colegio: school.colegio,
+          cursos: school.cursos.map((curso: any) => ({
+            id: curso.id,
+            curso: curso.nombre,
+            precio: curso.precio,
+            sku: curso.id,
+            estudiantes: [{
+              id: curso.estudiante.id,
+              nombre: curso.estudiante.nombre,
+              apellido: curso.estudiante.apellido,
+              tipo_documento: curso.estudiante.tipo_documento,
+              numero_documento: curso.estudiante.numero_documento,
+              fecha_creacion: curso.fecha_inscripcion,
+              fecha_inscripcion: curso.fecha_inscripcion,
+              saldo: curso.saldo
+            }],
+            nuevos_hoy: school.nuevos_hoy || 0,
+            total_estudiantes: school.total_estudiantes || 1,
+            expanded: false
+          })),
+          expanded: false
+        }));
+      } else {
+        console.error('Estructura de datos inesperada:', response);
+        this.schoolsData = [];
       }
 
-      this.enrollReportData = Array.from(aggregationMap.values());
-
-      if (this.enrollReportData.length === 0) {
-        this.notificationService.showWarning('No se encontraron inscripciones en el rango de fechas seleccionadas','');
-      }
+      this.loadingSchoolsData = false;
     },
     error: (error) => {
-        console.error('Error loading enrollments:', error);
-
-        if (error.status === 401) {
-          this.notificationService.showError(
-            'Sesión expirada',
-            'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
-          );
-        } else {
-          this.notificationService.showError(
-            'Error al cargar inscripciones',
-            'No se pudieron cargar los datos de inscripciones. Inténtalo nuevamente.'
-          );
-        }
-      }
+      console.error('Error al cargar datos de colegios:', error);
+      this.notificationService.showError('Error al cargar los datos de inscripciones');
+      this.loadingSchoolsData = false;
+    }
   });
 }
 
@@ -229,71 +205,6 @@ private generateEnrollReport(startDate: string, endDate: string): void {
 
   navigateToPresupuesto(): void {
     this.router.navigate(['/private/presupuesto']);
-  }
-
-  loadSchoolsData(): void {
-    this.loadingSchoolsData = true;
-    const startDate = this.reportForm.get('startDate')?.value;
-    const endDate = this.reportForm.get('endDate')?.value;
-    
-    this.schoolService.getListStudentBySchool(startDate, endDate).subscribe({
-      next: (response: any) => {
-        // Asegurar que el estado de carga se actualice correctamente
-        setTimeout(() => {
-          if (response[0] && response[0].cursos && response[0].cursos[0] && response[0].cursos[0].estudiantes) {
-          }
-          // El servicio retorna directamente el array, no dentro de una propiedad 'data'
-          const schoolsArray = Array.isArray(response) ? response : response.data || [];
-          this.schoolsData = schoolsArray.map((school: any) => ({
-            ...school,
-            expanded: false,
-            cursos: school.cursos.map((curso: any) => {
-              // Calcular estudiantes nuevos hoy para este curso
-              const nuevosHoy = curso.estudiantes ? curso.estudiantes.filter((student: any) => {
-                return this.isStudentNewToday({
-                  id: student.id,
-                  nombre: student.nombre,
-                  apellido: student.apellido,
-                  tipo_documento: student.tipo_documento,
-                  numero_documento: student.numero_documento,
-                  fecha_creacion: student.fecha_creacion,
-                  fecha_inscripcion: student.fecha_inscripcion,
-                  saldo: student.saldo || 0
-                });
-              }).length : 0;
-
-              return {
-                ...curso,
-                expanded: false,
-                nuevos_hoy: nuevosHoy
-              };
-            })
-          }));
-          this.loadingSchoolsData = false;
-        }, 0);
-      },
-      error: (error) => {
-        console.error('Error loading schools data:', error);
-        
-        // Asegurar que el estado de carga se actualice correctamente en caso de error
-        setTimeout(() => {
-          // Si es un error 401, el interceptor ya manejó la renovación del token
-          // y reintentó la petición, así que este error significa que falló definitivamente
-          if (error.status === 401) {
-            this.notificationService.showError(
-              'Sesión expirada',
-              'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
-            );
-          } else {
-            this.notificationService.showError(
-              'Error al cargar datos',
-              'No se pudieron cargar los datos de colegios. Inténtalo nuevamente.'
-            );
-          }
-          this.loadingSchoolsData = false;
-        }, 0);
-      }
-    });
   }
 
   toggleSchool(schoolIndex: number): void {
@@ -321,6 +232,19 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   // Método para obtener el total de estudiantes nuevos hoy en un colegio
   getTotalNewStudentsToday(school: SchoolData): number {
     return school.cursos.reduce((total, curso) => total + curso.nuevos_hoy, 0);
+  }
+
+  // Método para verificar y notificar sobre nuevos estudiantes hoy
+  checkAndNotifyNewStudents(): void {
+    this.schoolsData.forEach(school => {
+      const totalNewStudents = this.getTotalNewStudentsToday(school);
+      if (totalNewStudents > 0) {
+        this.notificationService.showSuccess(
+          `¡Nuevos estudiantes en ${school.colegio}!`,
+          `Se han inscrito ${totalNewStudents} nuevo${totalNewStudents > 1 ? 's' : ''} estudiante${totalNewStudents > 1 ? 's' : ''} hoy.`
+        );
+      }
+    });
   }
 
   // Método para verificar si un estudiante se inscribió hoy

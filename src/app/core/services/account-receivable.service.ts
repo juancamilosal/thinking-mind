@@ -20,6 +20,7 @@ export class AccountReceivableService {
   private apiUrlTotalAccounts = environment.total_accounts
   private apiUrlPaymentReceivable = environment.payment_record;
   private apiUrlReturn = environment.return;
+  private apiUrlListSchool = environment.list_student_school;
 
   constructor(private http: HttpClient) {
   }
@@ -113,9 +114,17 @@ export class AccountReceivableService {
   }
 
   //Para el reporte de inscripciones
-  getAccountsForReport(): Observable<ResponseAPI<AccountReceivable[]>> {
+  getAccountsForReport(startDate?: string, endDate?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    let params: any = {};
+    
+    if (startDate && endDate) {
+      params['fecha_inicio'] = startDate;
+      params['fecha_final'] = endDate;
+    }
+    
     return this.http.get<ResponseAPI<any>>(
-      this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*'
+      this.apiUrlListSchool,
+      { params }
     );
   }
 
