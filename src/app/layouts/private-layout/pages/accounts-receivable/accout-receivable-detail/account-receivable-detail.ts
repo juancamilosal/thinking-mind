@@ -84,9 +84,17 @@ export class AccountReceivableDetailComponent implements OnInit {
   }
 
   getTotalPaid(): number {
-    return this.payments
+    // Calcular total pagado excluyendo devoluciones
+    const totalPagado = this.payments
       .filter(payment => payment.estado === 'PAGADO')
       .reduce((total, payment) => total + payment.valor, 0);
+    
+    // Restar las devoluciones del total pagado
+    const totalDevoluciones = this.payments
+      .filter(payment => payment.estado === 'DEVOLUCION')
+      .reduce((total, payment) => total + payment.valor, 0);
+    
+    return totalPagado - totalDevoluciones;
   }
 
   getRemainingBalance(): number {
@@ -200,6 +208,7 @@ export class AccountReceivableDetailComponent implements OnInit {
       next: (response) => {
         if (response.data) {
           this.account.saldo = response.data.saldo;
+          this.account.estado = response.data.estado; // Actualizar también el estado
           this.account.pagos = response.data.pagos || [];
           this.cdr.detectChanges();
         }
@@ -300,9 +309,23 @@ export class AccountReceivableDetailComponent implements OnInit {
         this.deletingPaymentId = payment.id;
         this.paymentService.deletePayment(payment.id).subscribe({
           next: (response) => {
-            const newSaldo = this.account.saldo - payment.valor;
-
-            const newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+            // Lógica correcta para eliminar pagos según su estado
+            let newSaldo;
+            let newEstado;
+            
+            if (payment.estado === 'DEVOLUCION') {
+              // Si es una devolución, actualizar el saldo: saldo pendiente + valor de la devolución eliminada
+              newSaldo = this.account.saldo + payment.valor;
+              newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+            } else if (payment.estado === 'PAGADO') {
+              // Si es un pago PAGADO, al eliminarlo el saldo pendiente disminuye (se resta)
+              newSaldo = this.account.saldo - payment.valor;
+              newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+            } else {
+              // Para otros tipos de pago, al eliminarlo el saldo aumenta (más deuda)
+              newSaldo = this.account.saldo + payment.valor;
+              newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+            }
 
             this.accountService.updateAccountReceivable(this.account.id, {
               saldo: newSaldo,

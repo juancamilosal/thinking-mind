@@ -64,6 +64,38 @@ export class AccountReceivableService {
     );
   }
 
+  searchAccountReceivableByStatus(status: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    const params = {
+      'filter[estado][_eq]': status
+    };
+    
+    const queryString = new URLSearchParams(params).toString();
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
+  searchAccountReceivableByBalance(balance: number): Observable<ResponseAPI<AccountReceivable[]>> {
+    const params = {
+      'filter[saldo][_eq]': balance.toString()
+    };
+    
+    const queryString = new URLSearchParams(params).toString();
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
   private mapToAccountReceivable(item: any): AccountReceivable {
     return {
       id: item.id,

@@ -143,9 +143,17 @@ export class Reports {
   }
 
   calculateTotal(): number {
-  return this.payments
-    .filter(payment => payment.estado === 'PAGADO')
-    .reduce((total, payment) => total + payment.valor, 0);
+    // Calcular total pagado excluyendo devoluciones
+    const totalPagado = this.payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((total, payment) => total + payment.valor, 0);
+    
+    // Restar las devoluciones del total pagado
+    const totalDevoluciones = this.payments
+      .filter(payment => payment.estado === 'DEVOLUCION')
+      .reduce((total, payment) => total + payment.valor, 0);
+    
+    return totalPagado - totalDevoluciones;
   }
 
 // Generar reporte de inscripciones dentro del rango de fechas
