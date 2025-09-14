@@ -44,7 +44,6 @@ export class Payments implements OnInit {
       },
       error: (error) => {
         console.error('Error loading payments:', error);
-        // Aquí puedes agregar manejo de errores con notificaciones
       },
       complete: () => {
         this.isLoading = false;
@@ -118,5 +117,18 @@ export class Payments implements OnInit {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    if (method === 'BANCOLOMBIA_TRANSFER') {
+      return 'TRANSFERENCIA BANCOLOMBIA';
+    }
+    if (method === 'BANCOLOMBIA_COLLECT') {
+      return 'CORRESPONSAL BANCARIO';
+    }
+    return method;
   }
 }

@@ -709,6 +709,12 @@ export class PaymentRecord implements OnInit {
      if (method === 'CARD') {
        return 'TARJETA';
      }
+     if (method === 'BANCOLOMBIA_TRANSFER') {
+       return 'TRANSFERENCIA BANCOLOMBIA';
+     }
+     if (method === 'BANCOLOMBIA_COLLECT') {
+       return 'CORRESPONSAL BANCARIO';
+     }
      return method;
    }
  }

@@ -143,17 +143,9 @@ export class Reports {
   }
 
   calculateTotal(): number {
-    // Calcular total pagado excluyendo devoluciones
-    const totalPagado = this.payments
-      .filter(payment => payment.estado === 'PAGADO')
-      .reduce((total, payment) => total + payment.valor, 0);
-    
-    // Restar las devoluciones del total pagado
-    const totalDevoluciones = this.payments
-      .filter(payment => payment.estado === 'DEVOLUCION')
-      .reduce((total, payment) => total + payment.valor, 0);
-    
-    return totalPagado - totalDevoluciones;
+  return this.payments
+    .filter(payment => payment.estado === 'PAGADO')
+    .reduce((total, payment) => total + payment.valor, 0);
   }
 
 // Generar reporte de inscripciones dentro del rango de fechas
@@ -751,6 +743,12 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   formatPaymentMethod(method: string): string {
     if (method === 'CARD') {
       return 'TARJETA';
+    }
+    if (method === 'BANCOLOMBIA_TRANSFER') {
+      return 'TRANSFERENCIA BANCOLOMBIA';
+    }
+    if (method === 'BANCOLOMBIA_COLLECT') {
+      return 'CORRESPONSAL BANCARIO';
     }
     return method;
   }
