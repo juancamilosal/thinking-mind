@@ -33,7 +33,7 @@
     </div>
   </div>
 
-  <!-- Table with only status, name, and grade -->
+  <!-- Listado estudiantes -->
   <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
@@ -44,16 +44,16 @@
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-        @for(student of willGoStudents; track student.name){
+        @for(student of willGoStudents; track student.nombre){
           <tr>
-            <td class="px-6 py-4 text-sm text-gray-700">{{ student.status }}</td>
-            <td class="px-6 py-4 text-sm text-gray-700">{{ student.name }}</td>
+            <td class="px-6 py-4 text-sm text-gray-700">Inscrito</td>
+            <td class="px-6 py-4 text-sm text-gray-700">{{ student.nombre }}</td>
             <td class="px-6 py-4 text-sm">
               <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                    [style.background-color]="getGradeColor(student.grade)"
-                    [class.text-white]="getGradeColorName(student.grade) !== 'yellow'"
-                    [class.text-gray-800]="getGradeColorName(student.grade) === 'yellow'">
-                {{ student.grade }}
+                    [style.background-color]="getGradeColor(student.grado)"
+                    [class.text-white]="getGradeColorName(student.grado) !== 'yellow'"
+                    [class.text-gray-800]="getGradeColorName(student.grado) === 'yellow'">
+                {{ student.grado }}
               </span>
             </td>
           </tr>

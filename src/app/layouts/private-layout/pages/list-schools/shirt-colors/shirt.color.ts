@@ -2,13 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SchoolService } from '../../../../../core/services/school.service';
+import { StudentService } from '../../../../../core/services/student.service';
 import { School } from '../../../../../core/models/School';
-
-interface Student {
-  status: string;
-  name: string;
-  grade: number;
-}
+import { Student } from '../../../../../core/models/Student';
 
 interface GradeCategory {
   color: string;
@@ -28,10 +24,11 @@ interface GradeCategory {
 export class ShirtColor implements OnInit {
   willGoStudents: Student[] = [];
   gradeCategories: GradeCategory[] = [];
+  isLoading = true;
 
   constructor(
     private router: Router,
-    private schoolService: SchoolService
+    private studentService: StudentService
   ) {}
 
   ngOnInit(): void {
@@ -40,25 +37,34 @@ export class ShirtColor implements OnInit {
 
   loadWillGoStudents(): void {
     //Lógica para cargar estudiantes will-go
+    this.isLoading = true;
 
-    // Datos prueba temporales
-    this.willGoStudents = [
-      { status: 'Active', name: 'John Doe', grade: 2 },
-      { status: 'Active', name: 'Jane Smith', grade: 5 },
-      { status: 'Inactive', name: 'Bob Johnson', grade: 7 },
-      { status: 'Active', name: 'Alice Brown', grade: 4 },
-      { status: 'Active', name: 'Charlie Davis', grade: 1 },
-      { status: 'Active', name: 'Eva Wilson', grade: 8 },
-      { status: 'Active', name: 'Frank Miller', grade: 3 },
-      { status: 'Active', name: 'Grace Lee', grade: 6 },
-    ];
-
-    this.processWillGoStudents();
+    this.studentService.getStudentsByCourseName('WILL-GO').subscribe({
+      next: (response) => {
+        this.willGoStudents = response.data;
+        this.processWillGoStudents();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching WILL-GO students:', err);
+        this.isLoading = false;
+      }
+    });
   }
 
-    processWillGoStudents(): void {
+  processWillGoStudents(): void {
+    // Parse the grade number from the string
+    const getGradeNumber = (gradeString: string | undefined): number => {
+      if (!gradeString) return 0;
+      const grade = parseInt(gradeString, 10);
+      return isNaN(grade) ? 0 : grade;
+    };
     // Sort students by grade (lowest to highest)
-    this.willGoStudents.sort((a, b) => a.grade - b.grade);
+    this.willGoStudents.sort((a, b) => {
+      const gradeA = getGradeNumber(a.grado);
+      const gradeB = getGradeNumber(b.grado);
+      return gradeA - gradeB;
+    });
 
     // Initialize grade categories
     this.gradeCategories = [
@@ -71,10 +77,13 @@ export class ShirtColor implements OnInit {
 
     // Group students by grade categories
     this.willGoStudents.forEach(student => {
-      const categoryIndex = this.getGradeCategoryIndex(student.grade);
-      if (categoryIndex !== -1) {
-        this.gradeCategories[categoryIndex].students.push(student);
-        this.gradeCategories[categoryIndex].count++;
+      const gradeNumber = getGradeNumber(student.grado);
+      if (gradeNumber > 0) {
+        const categoryIndex = this.getGradeCategoryIndex(gradeNumber);
+        if (categoryIndex !== -1) {
+          this.gradeCategories[categoryIndex].students.push(student);
+          this.gradeCategories[categoryIndex].count++;
+        }
       }
     });
   }
@@ -88,21 +97,23 @@ export class ShirtColor implements OnInit {
     return -1; // Invalid grade
   }
 
-  getGradeColor(grade: number): string {
-    if (grade >= 1 && grade <= 3) return '#FFEB3B'; // Yellow
-    if (grade === 4) return '#FF9800'; // Orange
-    if (grade === 5) return '#4CAF50'; // Green
-    if (grade === 6) return '#F44336'; // Red
-    if (grade >= 7) return '#2196F3'; // Blue
+  getGradeColor(grade: string | undefined): string {
+    const gradeNumber = parseInt(grade || '0', 10);
+    if (gradeNumber >= 1 && gradeNumber <= 3) return '#FFEB3B'; // Yellow
+    if (gradeNumber === 4) return '#FF9800'; // Orange
+    if (gradeNumber === 5) return '#4CAF50'; // Green
+    if (gradeNumber === 6) return '#F44336'; // Red
+    if (gradeNumber >= 7) return '#2196F3'; // Blue
     return '#9E9E9E'; // Gray for unknown
   }
 
-  getGradeColorName(grade: number): string {
-    if (grade >= 1 && grade <= 3) return 'yellow';
-    if (grade === 4) return 'orange';
-    if (grade === 5) return 'green';
-    if (grade === 6) return 'red';
-    if (grade >= 7) return 'blue';
+  getGradeColorName(grade: string | undefined): string {
+    const gradeNumber = parseInt(grade || '0', 10);
+    if (gradeNumber >= 1 && gradeNumber <= 3) return 'yellow';
+    if (gradeNumber === 4) return 'orange';
+    if (gradeNumber === 5) return 'green';
+    if (gradeNumber === 6) return 'red';
+    if (gradeNumber >= 7) return 'blue';
     return 'gray';
   }
 
