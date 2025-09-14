@@ -99,8 +99,8 @@ export class AccountReceivableService {
   private mapToAccountReceivable(item: any): AccountReceivable {
     return {
       id: item.id,
-      cliente_id: (typeof item.cliente_id === 'object' && item.cliente_id !== null) ? item.cliente_id.id : item.cliente_id,
-      estudiante_id: (typeof item.estudiante_id === 'object' && item.estudiante_id !== null) ? item.estudiante_id.id : item.estudiante_id,
+      cliente_id: item.cliente_id, // Preservar el objeto completo
+      estudiante_id: item.estudiante_id, // Preservar el objeto completo
       monto: item.monto,
       saldo: item.saldo,
       curso_id: item.curso_id,
