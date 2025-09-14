@@ -1,0 +1,64 @@
+<div class="m-8">
+  <h1 class="text-3xl font-bold text-gray-800 mb-4">Listado de Camisetas Will-Go!</h1>
+
+  <!-- Resumen por color -->
+  <div class="bg-gray-50 rounded-lg p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Resumen por Color</h2>
+      <button
+        type="button"
+        (click)="onRegresar()"
+        class="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Regresar</span>
+      </button>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      @for(category of gradeCategories; track category.colorName){
+        <div class="bg-white rounded-lg p-4 shadow-sm border-2"
+             [style.border-color]="category.color">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Grado {{ category.gradeRange }}</p>
+              <p class="text-2xl font-bold" [style.color]="category.color">{{ category.count }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-full"
+                 [style.background-color]="category.color"></div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2 capitalize">{{ category.colorName }}</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Table with only status, name, and grade -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grado</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        @for(student of willGoStudents; track student.name){
+          <tr>
+            <td class="px-6 py-4 text-sm text-gray-700">{{ student.status }}</td>
+            <td class="px-6 py-4 text-sm text-gray-700">{{ student.name }}</td>
+            <td class="px-6 py-4 text-sm">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    [style.background-color]="getGradeColor(student.grade)"
+                    [class.text-white]="getGradeColorName(student.grade) !== 'yellow'"
+                    [class.text-gray-800]="getGradeColorName(student.grade) === 'yellow'">
+                {{ student.grade }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

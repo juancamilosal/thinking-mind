@@ -11,6 +11,8 @@ import { NotificationService } from '../../../../core/services/notification.serv
   imports: [CommonModule],
   templateUrl: './list.school.html'
 })
+
+
 export class ListSchool implements OnInit {
   schools: School[] = [];
   isLoading = false;
@@ -18,14 +20,14 @@ export class ListSchool implements OnInit {
   currentDate = new Date();
   isRector = false;
   private searchTimeout: any;
-  
+
   // Propiedades de paginación
   currentPage = 1;
   itemsPerPage = 15;
   totalItems = 0;
   totalPages = 0;
   itemsPerPageOptions = [10, 15, 25, 50];
-  
+
   // Hacer Math disponible en el template
   Math = Math;
 
@@ -41,12 +43,12 @@ export class ListSchool implements OnInit {
 
   loadSchools(): void {
     this.isLoading = true;
-    
+
     // Verificar si el usuario es rector
     const userData = sessionStorage.getItem('current_user');
     if (userData) {
       const user = JSON.parse(userData);
-      
+
       // Si es rector, filtrar por su colegio_id
       if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc' && user.colegio_id) {
         this.isRector = true;
@@ -66,7 +68,7 @@ export class ListSchool implements OnInit {
         return;
       }
     }
-    
+
     // Para otros usuarios, mostrar todos los colegios
     this.schoolService.getAllSchools(this.currentPage, this.itemsPerPage).subscribe({
       next: (response) => {
@@ -153,16 +155,16 @@ export class ListSchool implements OnInit {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     // Ajustar el inicio si estamos cerca del final
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
@@ -181,9 +183,14 @@ export class ListSchool implements OnInit {
     this.router.navigate(['/private/students-school', schoolId]);
   }
 
+  navigateToShirts(): void {
+    this.router.navigate(['/private/shirt-colors']);
+  }
+
   ngOnDestroy(): void {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
   }
+
 }

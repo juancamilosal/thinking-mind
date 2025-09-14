@@ -35,8 +35,17 @@
 
   <!-- Tabla de Colegios -->
   <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
+    <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
       <h2 class="text-xl font-semibold text-gray-800">Listado Completo de Colegios</h2>
+      <button
+        type="button"
+        (click)="navigateToShirts()"
+        class="w-full md:w-auto px-3 md:px-4 py-2 bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 text-white rounded-lg hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center justify-center space-x-2 text-sm md:text-base">
+        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M16 2l-3 1.5L12 3l-1 .5L8 2 4 4v4l2-1v13h12V7l2 1V4l-4-2z"/>
+        </svg>
+        <span>Camisetas</span>
+      </button>
     </div>
 
     <div class="overflow-x-auto">
@@ -136,7 +145,7 @@
         </tbody>
       </table>
     </div>
-    
+
     <!-- Paginator -->
     @if (schools.length > 0) {
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-t border-gray-200 rounded-b-xl shadow-inner">
@@ -144,8 +153,8 @@
       <div class="flex flex-col sm:hidden space-y-4">
         @if (totalPages > 1) {
           <div class="flex justify-between items-center">
-            <button 
-              (click)="goToPreviousPage()" 
+            <button
+              (click)="goToPreviousPage()"
               [disabled]="currentPage === 1"
               class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,8 +162,8 @@
               </svg>
               Anterior
             </button>
-            <button 
-              (click)="goToNextPage()" 
+            <button
+              (click)="goToNextPage()"
               [disabled]="currentPage === totalPages"
               class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
               Siguiente
@@ -164,25 +173,25 @@
             </button>
           </div>
         }
-        
+
         <!-- Results Info -->
         <div class="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200">
           <div class="text-sm text-gray-700 text-center">
-            Mostrando 
+            Mostrando
             <span class="font-semibold text-blue-600">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
-            a 
+            a
             <span class="font-semibold text-blue-600">{{ Math.min(currentPage * itemsPerPage, totalItems > 0 ? totalItems : schools.length) }}</span>
-            de 
+            de
             <span class="font-semibold text-blue-600">{{ totalItems > 0 ? totalItems : schools.length }}</span>
             colegios
           </div>
         </div>
-        
+
         <!-- Items per page -->
         <div class="flex items-center justify-center space-x-3">
           <label class="text-sm font-medium text-gray-700">Mostrar:</label>
-          <select 
-            (change)="onItemsPerPageChange($event)" 
+          <select
+            (change)="onItemsPerPageChange($event)"
             [value]="itemsPerPage"
             class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm font-medium hover:border-blue-400 transition-colors">
             @for (option of itemsPerPageOptions; track option) {
@@ -192,28 +201,28 @@
           <span class="text-sm font-medium text-gray-700">por página</span>
         </div>
       </div>
-      
+
       <!-- Desktop Navigation -->
       <div class="hidden sm:flex sm:items-center sm:justify-between">
         <div class="flex items-center space-x-4">
           <!-- Results Info -->
           <div class="bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
             <div class="text-sm text-gray-700">
-              Mostrando 
+              Mostrando
               <span class="font-semibold text-blue-600">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
-              a 
+              a
               <span class="font-semibold text-blue-600">{{ Math.min(currentPage * itemsPerPage, totalItems > 0 ? totalItems : schools.length) }}</span>
-              de 
+              de
               <span class="font-semibold text-blue-600">{{ totalItems > 0 ? totalItems : schools.length }}</span>
               colegios
             </div>
           </div>
-          
+
           <!-- Items per page -->
           <div class="flex items-center space-x-2">
             <label class="text-sm font-medium text-gray-700">Mostrar:</label>
-            <select 
-              (change)="onItemsPerPageChange($event)" 
+            <select
+              (change)="onItemsPerPageChange($event)"
               [value]="itemsPerPage"
               class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm font-medium hover:border-blue-400 transition-colors">
               @for (option of itemsPerPageOptions; track option) {
@@ -223,12 +232,12 @@
             <span class="text-sm font-medium text-gray-700">por página</span>
           </div>
         </div>
-        
+
         @if (totalPages > 1) {
           <!-- Page Navigation -->
           <div class="flex items-center space-x-2">
-            <button 
-              (click)="goToPreviousPage()" 
+            <button
+              (click)="goToPreviousPage()"
               [disabled]="currentPage === 1"
               class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,21 +245,21 @@
               </svg>
               Anterior
             </button>
-            
+
             <div class="flex items-center space-x-1">
               @for (page of getPageNumbers(); track page) {
-                <button 
+                <button
                   (click)="goToPage(page)"
-                  [class]="page === currentPage ? 
-                    'px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md transform scale-105' : 
+                  [class]="page === currentPage ?
+                    'px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md transform scale-105' :
                     'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md'">
                   {{ page }}
                 </button>
               }
             </div>
-            
-            <button 
-              (click)="goToNextPage()" 
+
+            <button
+              (click)="goToNextPage()"
               [disabled]="currentPage === totalPages"
               class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
               Siguiente
