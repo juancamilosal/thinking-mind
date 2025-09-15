@@ -19,6 +19,7 @@ export class FormRector implements OnInit, OnChanges {
   @Input() rectorData: User | null = null;
   @Output() goBack = new EventEmitter();
   @Output() searchRector = new EventEmitter();
+  @Output() rectorCreated = new EventEmitter<User>();
   @Output() rectorUpdated = new EventEmitter();
   rectorForm!: FormGroup;
   isSubmitting = false;
@@ -163,9 +164,9 @@ export class FormRector implements OnInit, OnChanges {
     };
 
     this.userService.createUser(userData).subscribe({
-      next: (): void => {
+      next: (response): void => {
         this.notificationService.showSuccess('Éxito', 'Usuario creado exitosamente');
-        this.rectorUpdated.emit();
+        this.rectorCreated.emit(response.data);
         this.isSubmitting = false;
       },
       error: (error): void => {

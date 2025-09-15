@@ -54,7 +54,7 @@ export class AccountReceivableService {
     }
 
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -68,7 +68,7 @@ export class AccountReceivableService {
     const params = {
       'filter[estado][_eq]': status
     };
-    
+
     const queryString = new URLSearchParams(params).toString();
     const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
 
@@ -84,7 +84,7 @@ export class AccountReceivableService {
     const params = {
       'filter[saldo][_eq]': balance.toString()
     };
-    
+
     const queryString = new URLSearchParams(params).toString();
     const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
 
@@ -148,12 +148,12 @@ export class AccountReceivableService {
   //Para el reporte de inscripciones
   getAccountsForReport(startDate?: string, endDate?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     let params: any = {};
-    
+
     if (startDate && endDate) {
       params['fecha_inicio'] = startDate;
       params['fecha_final'] = endDate;
     }
-    
+
     return this.http.get<ResponseAPI<any>>(
       this.apiUrlListSchool,
       { params }
