@@ -12,6 +12,11 @@ import {SchoolService} from '../../../../core/services/school.service';
 import * as ExcelJS from 'exceljs';
 import { start } from 'repl';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
+//Para descargas
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 interface EnrollReportData {
   schoolName: string;
@@ -311,12 +316,89 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   downloadPDF(): void {
-    this.showDownloadOptions = false;
-    // TODO: Implement PDF download logic
-    this.notificationService.showSuccess('Descargando reporte en PDF...','');
+  this.showDownloadOptions = false;
+
+  const doc = new jsPDF();
+  const reportType = this.reportForm.value.reportType;
+  const startDate = this.formatDate(this.reportForm.value.startDate);
+  const endDate = this.formatDate(this.reportForm.value.endDate);
+
+  // Add title
+  doc.setFontSize(20);
+  doc.text('Reporte Generado', 14, 22);
+
+  // Add date range
+  doc.setFontSize(12);
+  doc.text(`Período: ${startDate} - ${endDate}`, 14, 35);
+
+  if (reportType === 'CARTERA' && this.payments.length > 0) {
+    // Payment Report PDF
+    const tableData = this.payments.map(payment => [
+      payment.pagador,
+      this.formatCurrency(payment.valor),
+      this.formatDate(payment.fecha_pago),
+      payment.estado
+    ]);
+
+    // Add total row
+    const total = this.calculateTotal();
+    tableData.push(['', '', 'Total Recaudado:', this.formatCurrency(total)]);
+
+    autoTable(doc, {
+      head: [['Pagador', 'Valor', 'Fecha de Pago', 'Estado']],
+      body: tableData,
+      startY: 45,
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [59, 130, 246] }, // Blue color
+      didDrawCell: (data) => {
+        // Style the total row
+        if (data.row.index === tableData.length - 1) {
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+        }
+      }
+    });
+
+    doc.save(`Reporte_Cartera_${new Date().toISOString().split('T')[0]}.pdf`);
+
+  } else if (reportType === 'INSCRIPCIONES' && this.enrollReportData.length > 0) {
+    // Enrollment Report PDF
+    const tableData = this.enrollReportData.map(item => [
+      item.schoolName,
+      item.courseName,
+      item.studentCount.toString()
+    ]);
+
+    // Add total row
+    const totalStudents = this.getTotalEnrolledStudents();
+    tableData.push(['', 'Total de Estudiantes:', totalStudents.toString()]);
+
+    autoTable(doc, {
+      head: [['Colegio', 'Curso', 'Nº de Estudiantes']],
+      body: tableData,
+      startY: 45,
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [139, 92, 246] }, // Purple color
+      didDrawCell: (data) => {
+        // Style the total row
+        if (data.row.index === tableData.length - 1) {
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+        }
+      }
+    });
+
+    doc.save(`Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
-  //Descargar Excel Inscripciones
+  this.notificationService.showSuccess('Reporte PDF descargado exitosamente','');
+  }
+
+  getTotalEnrolledStudents(): number {
+  return this.enrollReportData.reduce((total, item) => total + item.studentCount, 0);
+  }
   downloadExcelIns(): void {
     try {
       // Crear un nuevo libro de trabajo

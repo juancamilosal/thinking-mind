@@ -76,9 +76,6 @@
       </div>
     </form>
   </div>
-
-
-
   <!-- Sección de Inscripciones por Colegio y Curso -->
   @if(reportGenerated && reportForm.value.reportType === 'INSCRIPCIONES') {
     <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 md:mb-8 mx-2 md:mx-0">
@@ -308,8 +305,6 @@
       </div>
     </div>
   }
-
-
     <!-- Resultados del Reporte -->
      <!-- Cartera -->
     @if(reportGenerated && reportForm.valid && reportForm.value.reportType === 'CARTERA') {
@@ -394,7 +389,4 @@
         }
       </div>
     }
-
-
 </div>
-
