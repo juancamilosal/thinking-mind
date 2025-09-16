@@ -86,7 +86,18 @@
       </div>
     }
 
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Cursos del Colegio</h2>
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-2xl font-bold text-gray-800">Cursos del Colegio</h2>
+      <button
+        type="button"
+        (click)="goToShirtColor()"
+        class="w-full md:w-auto px-3 md:px-4 py-2 bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 text-white rounded-lg hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center justify-center space-x-2 text-sm md:text-base">
+        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M16 2l-3 1.5L12 3l-1 .5L8 2 4 4v4l2-1v13h12V7l2 1V4l-4-2z"/>
+        </svg>
+        <span>Camisetas</span>
+      </button>
+    </div>
     <p class="text-gray-600">Lista de cursos con sus estudiantes registrados</p>
   </div>
 
