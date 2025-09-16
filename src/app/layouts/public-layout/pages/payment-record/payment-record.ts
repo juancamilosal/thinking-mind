@@ -18,6 +18,7 @@ import { NotificationModalComponent, NotificationData } from '../../../../compon
 import {PaymentService} from '../../../../core/services/payment.service';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import { environment } from '../../../../../environments/environment';
+import * as CryptoJS from 'crypto-js';
 declare var WidgetCheckout: any;
 
 @Component({
@@ -713,43 +714,29 @@ export class PaymentRecord implements OnInit {
 
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
     const data = `${reference}${amountInCents}${currency}${secretKey}`;
+    
+    console.log('🔧 Datos para generar firma:', {
+      reference,
+      amountInCents,
+      currency,
+      secretKey,
+      concatenatedData: data
+    });
 
-    // Verificar si crypto.subtle está disponible (HTTPS o localhost)
-    if (crypto && crypto.subtle) {
-      try {
-        const encoder = new TextEncoder();
-        const dataBuffer = encoder.encode(data);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        return hashHex;
-      } catch (error) {
-        console.warn('crypto.subtle falló, usando implementación alternativa:', error);
-      }
+    try {
+      // Usar crypto-js para generar SHA-256
+      const hash = CryptoJS.SHA256(data);
+      const signature = hash.toString(CryptoJS.enc.Hex);
+      
+      console.log('✅ Firma SHA-256 generada correctamente:', signature);
+      return signature;
+    } catch (error) {
+      console.error('❌ Error generando firma SHA-256:', error);
+      throw new Error('Error generando la firma de integridad');
     }
+   }
 
-    // Implementación alternativa usando una función hash simple
-    // NOTA: Esta es una implementación básica para desarrollo/testing
-    // En producción real con HTTPS, crypto.subtle debería funcionar
-    return this.simpleHash(data);
-  }
-
-  private simpleHash(str: string): string {
-    let hash = 0;
-    if (str.length === 0) return hash.toString(16);
-
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convertir a 32bit integer
-    }
-
-    // Convertir a hexadecimal y asegurar longitud mínima
-    const hexHash = Math.abs(hash).toString(16);
-    return hexHash.padStart(8, '0').repeat(8).substring(0, 64); // Simular SHA-256 (64 chars)
-  }
-
-   formatPaymentMethod(method: string): string {
+  formatPaymentMethod(method: string): string {
      if (method === 'CARD') {
        return 'TARJETA';
      }
