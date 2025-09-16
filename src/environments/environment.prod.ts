@@ -33,20 +33,20 @@ export const environment = {
   // Configuración de Wompi
   wompi: {
     // Cambiar testMode a false para usar producción real
-    testMode: true, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
-    
+    testMode: false, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
+
     // Llaves de prueba
     test: {
       publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
       integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY'
     },
-    
+
     // Llaves de producción
     prod: {
       publicKey: 'pub_prod_aDinMfCvarfkhNiAQKzdm7cFDy6Szeuy',
       integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
     },
-    
+
     redirectUrl: 'https://tu-dominio.com/payment-status' // Cambia por tu URL de producción
   }
 };
