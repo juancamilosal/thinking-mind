@@ -17,6 +17,7 @@ import {School} from '../../../../core/models/School';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import {PaymentService} from '../../../../core/services/payment.service';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
+import { environment } from '../../../../../environments/environment';
 declare var WidgetCheckout: any;
 
 @Component({
@@ -653,15 +654,18 @@ export class PaymentRecord implements OnInit {
     const reference = this.generatePaymentReference(this.paymentModalData?.id);
     const amountInCents = this.editablePaymentAmount * 100;
 
-    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY');
+    // Seleccionar las llaves según el modo (prueba o producción)
+    const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
+    
+    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
 
     const checkout = new (window as any).WidgetCheckout({
       currency: 'COP',
       amountInCents: amountInCents,
       reference: reference,
-      publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
+      publicKey: wompiConfig.publicKey,
       signature: { integrity: signature },
-      redirectUrl: 'http://localhost:4200/payment-status',
+      redirectUrl: environment.wompi.redirectUrl,
       customerData: {
          email: this.paymentModalData?.clientEmail,
          fullName: this.paymentModalData?.clientName,
