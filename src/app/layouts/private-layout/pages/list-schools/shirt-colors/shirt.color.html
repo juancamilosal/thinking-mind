@@ -44,10 +44,33 @@
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
-        @for(student of willGoStudents; track student.nombre){
+        @if(isLoading) {
           <tr>
-            <td class="px-6 py-4 text-sm text-gray-700">Inscrito</td>
-            <td class="px-6 py-4 text-sm text-gray-700">{{ student.nombre }}</td>
+            <td colspan="3" class="px-6 py-4 text-sm text-gray-500 text-center">
+              Cargando estudiantes...
+            </td>
+          </tr>
+        } @else if(willGoStudents.length === 0) {
+          <tr>
+            <td colspan="3" class="px-6 py-4 text-sm text-gray-500 text-center">
+              No se encontraron estudiantes inscritos en Will-Go
+            </td>
+          </tr>
+        } @else {
+          @for(student of willGoStudents; track student.id){
+          <tr>
+            <td class="px-6 py-4 text-sm">
+              <span class="px-2 py-1 rounded-full text-sm font-medium"
+                    [ngClass]="{
+                      'bg-green-100 text-green-800': getEnrollmentStatus(student) === 'Inscrito',
+                      'bg-yellow-100 text-yellow-800': getEnrollmentStatus(student) === 'Preinscrito',
+                      'bg-red-100 text-red-800': getEnrollmentStatus(student) === 'Pendiente',
+                      'bg-gray-100 text-gray-800': getEnrollmentStatus(student) === 'Sin cuenta' || getEnrollmentStatus(student) === 'Sin estado'
+                    }">
+                {{ getEnrollmentStatus(student) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-700">{{ student.nombre }} {{ student.apellido }}</td>
             <td class="px-6 py-4 text-sm">
               <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                     [style.background-color]="getGradeColor(student.grado)"
@@ -57,6 +80,7 @@
               </span>
             </td>
           </tr>
+        }
         }
       </tbody>
     </table>

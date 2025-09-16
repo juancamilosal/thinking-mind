@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { SchoolService } from '../../../../../core/services/school.service';
 import { StudentService } from '../../../../../core/services/student.service';
-import { School } from '../../../../../core/models/School';
 import { Student } from '../../../../../core/models/Student';
+import { Client } from '../../../../../core/models/Clients';
+import { AccountReceivable, PaymentModel } from '../../../../../core/models/AccountReceivable';
 
 interface GradeCategory {
   color: string;
@@ -36,13 +36,17 @@ export class ShirtColor implements OnInit {
   }
 
   loadWillGoStudents(): void {
-    //Lógica para cargar estudiantes will-go
     this.isLoading = true;
 
     this.studentService.getStudentsByCourseName('WILL-GO').subscribe({
       next: (response) => {
-        this.willGoStudents = response.data;
-        this.processWillGoStudents();
+        if (response.data && Array.isArray(response.data)) {
+          this.willGoStudents = response.data;
+          this.processWillGoStudents();
+        } else {
+          console.error('No students data received or invalid format');
+          this.willGoStudents = [];
+        }
         this.isLoading = false;
       },
       error: (err) => {
@@ -50,6 +54,75 @@ export class ShirtColor implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private statusCache: Map<string, string> = new Map();
+
+  private getAccountCourseId(curso_id: any): string {
+    return typeof curso_id === 'string' ? curso_id : curso_id?.id;
+  }
+
+  private getTotalPaid(pagos: PaymentModel[]): number {
+    return pagos?.reduce((sum, pago) => sum + (pago.valor || 0), 0) || 0;
+  }
+
+  getEnrollmentStatus(student: Student): string {
+    // Check cache first
+    const cacheKey = `${student.id}-${student.curso_id?.id}`;
+    const cachedStatus = this.statusCache.get(cacheKey);
+    if (cachedStatus) {
+      return cachedStatus;
+    }
+
+    // Check if acudiente exists and is a Client object
+    const acudiente = student.acudiente;
+    if (!acudiente || typeof acudiente === 'string') {
+        this.statusCache.set(cacheKey, 'Sin estado');
+        return 'Sin estado';
+    }
+
+    // Type assertion since we know it's a Client object
+    const clientAcudiente = acudiente as Client;
+    if (!clientAcudiente.cuentas_cobrar || !Array.isArray(clientAcudiente.cuentas_cobrar)) {
+        this.statusCache.set(cacheKey, 'Sin estado');
+        return 'Sin estado';
+    }
+
+    // Get the student's current Will-Go course ID
+    const studentCourseId = student.curso_id?.id;
+    if (!studentCourseId) {
+        this.statusCache.set(cacheKey, 'Sin estado');
+        return 'Sin estado';
+    }
+
+    // Find the matching account by comparing both course ID and student ID
+    const account = clientAcudiente.cuentas_cobrar.find((acc: AccountReceivable) => {
+        const accountCourseId = this.getAccountCourseId(acc.curso_id);
+        return accountCourseId === studentCourseId && acc.estudiante_id === student.id;
+    });    if (!account) {
+        this.statusCache.set(cacheKey, 'Sin cuenta');
+        return 'Sin cuenta';
+    }
+
+    // Calculate total paid from pagos array
+    const totalPaid = this.getTotalPaid(account.pagos);
+    const totalAmount = account.monto || 0;
+
+    // Use fecha_inscripcion as the definitive indicator the student is enrolled
+    let status: string;
+    const hasValidFechaInscripcion = typeof account.fecha_inscripcion === 'string' && account.fecha_inscripcion.trim() !== '' && !isNaN(Date.parse(account.fecha_inscripcion));
+    // Only show 'Inscrito' if both fecha_inscripcion is valid and estado is 'PAGADA'
+    if (hasValidFechaInscripcion && account.estado === 'PAGADA') {
+      status = 'Inscrito';
+    } else if (totalPaid >= 50000) {
+      status = 'Preinscrito';
+    } else {
+      status = 'Pendiente';
+    }
+
+    // Cache the result
+    this.statusCache.set(cacheKey, status);
+    return status;
   }
 
   processWillGoStudents(): void {
