@@ -9,7 +9,6 @@ import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
-import * as ExcelJS from 'exceljs';
 import { start } from 'repl';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 
@@ -317,8 +316,11 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   //Descargar Excel Inscripciones
-  downloadExcelIns(): void {
+  async downloadExcelIns(): Promise<void> {
     try {
+      // Lazy load ExcelJS
+      const ExcelJS = await import('exceljs');
+      
       // Crear un nuevo libro de trabajo
       const workbook = new ExcelJS.Workbook();
 
@@ -561,8 +563,11 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   //Descargar Excel Cartera
-  downloadExcelCart(): void {
+  async downloadExcelCart(): Promise<void> {
     try{
+      // Lazy load ExcelJS
+      const ExcelJS = await import('exceljs');
+      
       const workBook = new ExcelJS.Workbook();
       const worksheet = workBook.addWorksheet('Reporte de Cartera');
 
