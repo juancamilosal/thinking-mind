@@ -647,7 +647,10 @@ export class PaymentRecord implements OnInit {
     const numerosAleatorios = Math.floor(1000 + Math.random() * 9000);
 
     // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
-    return `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
+    const reference = `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
+    
+    console.log('📝 Reference generada:', reference);
+    return reference;
   }
 
   async confirmPayment(): Promise<void> {
@@ -657,7 +660,18 @@ export class PaymentRecord implements OnInit {
     // Seleccionar las llaves según el modo (prueba o producción)
     const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
     
+    // Debug: Mostrar qué configuración se está usando
+    console.log('🔧 Wompi Config:', {
+      testMode: environment.wompi.testMode,
+      publicKey: wompiConfig.publicKey,
+      integrityKey: wompiConfig.integrityKey,
+      reference: reference,
+      amountInCents: amountInCents
+    });
+    
     const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+    
+    console.log('🔐 Signature generada:', signature);
 
     const checkout = new (window as any).WidgetCheckout({
       currency: 'COP',
