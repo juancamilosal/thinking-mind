@@ -708,7 +708,16 @@ export class PaymentRecord implements OnInit {
   }
 
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
+    // Formato oficial de Wompi: "<Reference><Amount><Currency><IntegritySecret>"
     const data = `${reference}${amountInCents}${currency}${secretKey}`;
+    
+    console.log('🔐 Datos para firma:', {
+      reference: reference,
+      amountInCents: amountInCents,
+      currency: currency,
+      secretKey: secretKey,
+      concatenated: data
+    });
     
     // Verificar si crypto.subtle está disponible (HTTPS o localhost)
     if (crypto && crypto.subtle) {
@@ -718,16 +727,19 @@ export class PaymentRecord implements OnInit {
         const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        console.log('✅ Firma SHA-256 generada:', hashHex);
         return hashHex;
       } catch (error) {
-        console.warn('crypto.subtle falló, usando implementación alternativa:', error);
+        console.warn('❌ crypto.subtle falló, usando implementación alternativa:', error);
       }
     }
     
-    // Implementación alternativa usando una función hash simple
-    // NOTA: Esta es una implementación básica para desarrollo/testing
-    // En producción real con HTTPS, crypto.subtle debería funcionar
-    return this.simpleHash(data);
+    // Implementación alternativa para sitios HTTP
+    console.warn('⚠️ Usando implementación alternativa (no crypto.subtle)');
+    const alternativeHash = this.simpleHash(data);
+    console.log('🔄 Firma alternativa generada:', alternativeHash);
+    return alternativeHash;
   }
 
   private simpleHash(str: string): string {
