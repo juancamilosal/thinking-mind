@@ -21,6 +21,8 @@ interface SchoolWithAccounts {
   imports: [CommonModule],
   templateUrl: './list.school.html'
 })
+
+
 export class ListSchool implements OnInit {
   schoolsWithAccounts: SchoolWithAccounts[] = [];
   isLoading = false;
@@ -262,9 +264,14 @@ export class ListSchool implements OnInit {
     this.router.navigate(['/private/students-school', schoolId]);
   }
 
+  navigateToShirts(): void {
+    this.router.navigate(['/private/shirt-colors']);
+  }
+
   ngOnDestroy(): void {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
   }
+
 }

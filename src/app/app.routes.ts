@@ -18,6 +18,7 @@ import { StudentsSchool } from './layouts/private-layout/pages/students-school/s
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
 import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
+import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 
 
 export const routes: Routes = [
@@ -115,6 +116,11 @@ export const routes: Routes = [
         path: 'students-school/:schoolId',
         title: 'Thinking Mind | Estudiantes del Colegio',
         component: StudentsSchool
+      },
+      {
+        path: 'shirt-colors',
+        title: 'Thinking Mind | Colores de Camisetas',
+        component: ShirtColor
       },
       {
         path: '**',
