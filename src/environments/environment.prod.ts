@@ -33,7 +33,7 @@ export const environment = {
   // Configuración de Wompi
   wompi: {
     // Cambiar testMode a false para usar producción real
-    testMode: false, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
+    testMode: true, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
 
     // Llaves de prueba
     test: {
