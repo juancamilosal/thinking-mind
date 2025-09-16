@@ -195,33 +195,56 @@ export class Dashboard implements OnInit {
       totalAmount += precio;
 
       if (account.pagos && Array.isArray(account.pagos)) {
+        // Calcular total pagado excluyendo devoluciones
         const paidAmount = account.pagos
           .filter((pago: any) => pago.estado === 'PAGADO')
           .reduce((sum: number, pago: any) => {
             return sum + (parseFloat(pago.valor || pago.monto) || 0);
           }, 0);
-        totalPaid += paidAmount;
+        
+        // Restar las devoluciones del total pagado
+        const refundAmount = account.pagos
+          .filter((pago: any) => pago.estado === 'DEVOLUCION')
+          .reduce((sum: number, pago: any) => {
+            return sum + (parseFloat(pago.valor || pago.monto) || 0);
+          }, 0);
+        
+        const netPaidAmount = paidAmount - refundAmount;
+        totalPaid += netPaidAmount;
 
-        // Calcular pagos del mes actual (solo pagos con estado PAGADO)
-        account.pagos
+        // Calcular pagos del mes actual (pagos - devoluciones)
+        const monthlyPaid = account.pagos
           .filter((pago: any) => pago.estado === 'PAGADO')
-          .forEach((pago: any) => {
+          .filter((pago: any) => {
             if (pago.fecha_pago) {
               const paymentDate = new Date(pago.fecha_pago);
-              if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-                monthlyPayments += parseFloat(pago.valor || pago.monto) || 0;
-              }
+              return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
             }
-          });
+            return false;
+          })
+          .reduce((sum: number, pago: any) => sum + (parseFloat(pago.valor || pago.monto) || 0), 0);
+        
+        const monthlyRefunds = account.pagos
+          .filter((pago: any) => pago.estado === 'DEVOLUCION')
+          .filter((pago: any) => {
+            if (pago.fecha_pago) {
+              const paymentDate = new Date(pago.fecha_pago);
+              return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+            }
+            return false;
+          })
+          .reduce((sum: number, pago: any) => sum + (parseFloat(pago.valor || pago.monto) || 0), 0);
+        
+        monthlyPayments += (monthlyPaid - monthlyRefunds);
 
-        if (paidAmount < precio) {
+        if (netPaidAmount < precio) {
           pendingCount++;
 
           // Verificar si la cuenta está vencida
           if (account.fecha_vencimiento) {
             const dueDate = new Date(account.fecha_vencimiento);
             if (currentDate > dueDate) {
-              overdueAmount += (precio - paidAmount);
+              overdueAmount += (precio - netPaidAmount);
             }
           }
         }

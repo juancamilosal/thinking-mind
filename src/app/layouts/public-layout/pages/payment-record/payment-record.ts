@@ -17,6 +17,8 @@ import {School} from '../../../../core/models/School';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import {PaymentService} from '../../../../core/services/payment.service';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
+import { environment } from '../../../../../environments/environment';
+import * as CryptoJS from 'crypto-js';
 declare var WidgetCheckout: any;
 
 @Component({
@@ -646,68 +648,103 @@ export class PaymentRecord implements OnInit {
     const numerosAleatorios = Math.floor(1000 + Math.random() * 9000);
 
     // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
-    return `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
-  }Se
+    const reference = `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
+
+    console.log('📝 Reference generada:', reference);
+    return reference;
+  }
 
   async confirmPayment(): Promise<void> {
-    try {
-      const reference = this.generatePaymentReference(this.paymentModalData?.id);
-      const amountInCents = this.editablePaymentAmount * 100;
+    const reference = this.generatePaymentReference(this.paymentModalData?.id);
+    const amountInCents = this.editablePaymentAmount * 100;
 
-      const signature = await this.generateIntegrity(reference, amountInCents, 'COP', 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY');
+    // Seleccionar las llaves según el modo (prueba o producción)
+    const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
 
-      const checkout = new (window as any).WidgetCheckout({
-        currency: 'COP',
-        amountInCents: amountInCents,
-        reference: reference,
-        publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
-        signature: { integrity: signature },
-        redirectUrl: 'http://localhost:4200/payment-status',
-        customerData: {
-           email: this.paymentModalData?.clientEmail,
-           fullName: this.paymentModalData?.clientName,
-           phoneNumber: this.paymentModalData?.clientPhone ,
-           phoneNumberPrefix: '+57',
-           legalId: this.paymentModalData?.clientDocumentNumber,
-           legalIdType: this.paymentModalData?.clientDocumentType,
-         },
-      });
-      checkout.open((result: any) => {
-        this.closePaymentModal();
-        if (result.transaction && result.transaction.status === 'APPROVED') {
-          this.router.navigate(['/payment-status'], {
-            queryParams: {
-              transaction: result.transaction.id || 'N/A',
-              reference: reference,
-              status: 'APROBADA',
-              course: this.paymentModalData?.courseName || 'N/A',
-              amount: this.editablePaymentAmount
-            }
-          });
-        } else {
-          this.showErrorNotification('payment');
-        }
-      });
+    // Debug: Mostrar qué configuración se está usando
+    console.log('🔧 Wompi Config:', {
+      testMode: environment.wompi.testMode,
+      publicKey: wompiConfig.publicKey,
+      integrityKey: wompiConfig.integrityKey,
+      reference: reference,
+      amountInCents: amountInCents,
+      environment: environment.production ? 'PRODUCCIÓN' : 'DESARROLLO'
+    });
 
-    } catch (error) {
-      this.showErrorNotification();
-     }
-   }
+    // 🔍 Console.log específico para wompiConfig.integrityKey cuando se hace clic
+    console.log('🔑 IntegrityKey al hacer clic en pagar:', wompiConfig.integrityKey);
+
+    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+
+    console.log('🔐 Signature generada:', signature);
+
+    const checkout = new (window as any).WidgetCheckout({
+      currency: 'COP',
+      amountInCents: amountInCents,
+      reference: reference,
+      publicKey: wompiConfig.publicKey,
+      signature: { integrity: signature },
+      redirectUrl: environment.wompi.redirectUrl,
+      customerData: {
+         email: this.paymentModalData?.clientEmail,
+         fullName: this.paymentModalData?.clientName,
+         phoneNumber: this.paymentModalData?.clientPhone,
+         phoneNumberPrefix: '+57',
+         legalId: this.paymentModalData?.clientDocumentNumber,
+         legalIdType: this.paymentModalData?.clientDocumentType,
+       },
+    });
+    checkout.open((result: any) => {
+      this.closePaymentModal();
+      if (result.transaction && result.transaction.status === 'APPROVED') {
+        this.router.navigate(['/payment-status'], {
+          queryParams: {
+            transaction: result.transaction.id || 'N/A',
+            reference: reference,
+            status: 'APROBADA',
+            course: this.paymentModalData?.courseName || 'N/A',
+            amount: this.editablePaymentAmount
+          }
+        });
+      } else {
+        this.showErrorNotification('payment');
+      }
+    });
+  }
 
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
-     const data = `${reference}${amountInCents}${currency}${secretKey}`;
-     const encoder = new TextEncoder();
-     const dataBuffer = encoder.encode(data);
-     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-     const hashArray = Array.from(new Uint8Array(hashBuffer));
-     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const data = `${reference}${amountInCents}${currency}${secretKey}`;
+    
+    console.log('🔧 Datos para generar firma:', {
+      reference,
+      amountInCents,
+      currency,
+      secretKey,
+      concatenatedData: data
+    });
 
-     return hashHex;
+    try {
+      // Usar crypto-js para generar SHA-256
+      const hash = CryptoJS.SHA256(data);
+      const signature = hash.toString(CryptoJS.enc.Hex);
+      
+      console.log('✅ Firma SHA-256 generada correctamente:', signature);
+      return signature;
+    } catch (error) {
+      console.error('❌ Error generando firma SHA-256:', error);
+      throw new Error('Error generando la firma de integridad');
+    }
    }
 
-   formatPaymentMethod(method: string): string {
+  formatPaymentMethod(method: string): string {
      if (method === 'CARD') {
        return 'TARJETA';
+     }
+     if (method === 'BANCOLOMBIA_TRANSFER') {
+       return 'TRANSFERENCIA BANCOLOMBIA';
+     }
+     if (method === 'BANCOLOMBIA_COLLECT') {
+       return 'CORRESPONSAL BANCARIO';
      }
      return method;
    }

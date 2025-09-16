@@ -174,25 +174,25 @@ export class Users implements OnInit {
   }
 
   onRectorCreated(rector: User) {
-    this.rectores.push(rector);
     this.showForm = false;
     this.selectedRector = null;
+    // Refrescar la tabla de rectores desde el servidor
+    this.loadRectores();
   }
 
   onRectorUpdated(rector: User) {
-    const index = this.rectores.findIndex(r => r.id === rector.id);
-    if (index !== -1) {
-      this.rectores[index] = rector;
-    }
     this.showForm = false;
     this.editMode = false;
     this.selectedRector = null;
+    // Refrescar la tabla de rectores desde el servidor
+    this.loadRectores();
   }
 
   onRectorDeleted(rector: User) {
-    this.rectores = this.rectores.filter(r => r.id !== rector.id);
     this.selectedRector = null;
     this.showForm = false;
+    // Refrescar la tabla de rectores desde el servidor
+    this.loadRectores();
   }
 
   // Métodos para Administradores
@@ -219,27 +219,27 @@ export class Users implements OnInit {
   }
 
   onAdminCreated(admin: User) {
-    this.admins.push(admin);
     this.showForm = false;
     this.selectedAdmin = null;
+    // Refrescar la tabla de administradores desde el servidor
+    this.loadAdministradores();
   }
 
   onAdminUpdated(admin: User) {
-    const index = this.admins.findIndex(a => a.id === admin.id);
-    if (index !== -1) {
-      this.admins[index] = admin;
-    }
     this.showForm = false;
     this.selectedAdmin = null;
     this.editMode = false;
+    // Refrescar la tabla de administradores desde el servidor
+    this.loadAdministradores();
   }
 
   onAdminDeleted(admin: User) {
-    this.admins = this.admins.filter(a => a.id !== admin.id);
     this.selectedAdmin = null;
     this.showForm = false;
     this.showDetail = false;
     this.editMode = false;
+    // Refrescar la tabla de administradores desde el servidor
+    this.loadAdministradores();
   }
 
 

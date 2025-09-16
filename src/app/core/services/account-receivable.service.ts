@@ -20,6 +20,7 @@ export class AccountReceivableService {
   private apiUrlTotalAccounts = environment.total_accounts
   private apiUrlPaymentReceivable = environment.payment_record;
   private apiUrlReturn = environment.return;
+  private apiUrlListSchool = environment.list_student_school;
 
   constructor(private http: HttpClient) {
   }
@@ -53,7 +54,39 @@ export class AccountReceivableService {
     }
 
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
+  searchAccountReceivableByStatus(status: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    const params = {
+      'filter[estado][_eq]': status
+    };
+
+    const queryString = new URLSearchParams(params).toString();
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
+  searchAccountReceivableByBalance(balance: number): Observable<ResponseAPI<AccountReceivable[]>> {
+    const params = {
+      'filter[saldo][_eq]': balance.toString()
+    };
+
+    const queryString = new URLSearchParams(params).toString();
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -66,8 +99,8 @@ export class AccountReceivableService {
   private mapToAccountReceivable(item: any): AccountReceivable {
     return {
       id: item.id,
-      cliente_id: (typeof item.cliente_id === 'object' && item.cliente_id !== null) ? item.cliente_id.id : item.cliente_id,
-      estudiante_id: (typeof item.estudiante_id === 'object' && item.estudiante_id !== null) ? item.estudiante_id.id : item.estudiante_id,
+      cliente_id: item.cliente_id, // Preservar el objeto completo
+      estudiante_id: item.estudiante_id, // Preservar el objeto completo
       monto: item.monto,
       saldo: item.saldo,
       curso_id: item.curso_id,
@@ -113,9 +146,17 @@ export class AccountReceivableService {
   }
 
   //Para el reporte de inscripciones
-  getAccountsForReport(): Observable<ResponseAPI<AccountReceivable[]>> {
+  getAccountsForReport(startDate?: string, endDate?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    let params: any = {};
+
+    if (startDate && endDate) {
+      params['fecha_inicio'] = startDate;
+      params['fecha_final'] = endDate;
+    }
+
     return this.http.get<ResponseAPI<any>>(
-      this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*'
+      this.apiUrlListSchool,
+      { params }
     );
   }
 

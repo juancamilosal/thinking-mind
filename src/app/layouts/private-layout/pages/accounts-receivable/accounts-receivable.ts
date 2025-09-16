@@ -16,12 +16,15 @@ export class AccountsReceivable implements OnInit {
   showForm = false;
   showDetail = false;
   selectedAccount: AccountReceivable | null = null;
-  activeTab: 'pending' | 'paid' = 'pending';
+  activeTab: 'pending' | 'paid' | 'refund' | 'zero' = 'pending';
   accounts: AccountReceivable[] = [];
   isLoading = false;
   isLoadingTotals = false;
+  allAccounts: AccountReceivable[] = []; // Todas las cuentas cargadas una sola vez
   pendingAccounts: AccountReceivable[] = [];
   paidAccounts: AccountReceivable[] = [];
+  refundAccounts: AccountReceivable[] = [];
+  zeroBalanceAccounts: AccountReceivable[] = [];
   total: TotalAccounts;
   
   // Pagination properties
@@ -52,24 +55,58 @@ export class AccountsReceivable implements OnInit {
   }
 
   protected loadAccounts(): void {
+    // Cargar todas las cuentas de una sola vez
     this.isLoading = true;
     this.accountService.searchAccountReceivable().subscribe({
       next: (response) => {
-        if (response.data) {
-          this.pendingAccounts = response.data.filter(account =>
-            account.estado === 'PENDIENTE' || account.estado === 'pendiente'
-          );
-          this.paidAccounts = response.data.filter(account =>
-            account.estado === 'PAGADO' || account.estado === 'pagado' || account.estado === 'PAGADA'
-          );
-          this.updateAccounts();
-        }
+        this.allAccounts = response.data || [];
+        this.filterAccountsByStatus();
         this.isLoading = false;
+        this.updatePagination();
       },
-      error: (error) => {
+      error: () => {
         this.isLoading = false;
       }
     });
+  }
+
+  private filterAccountsByStatus(): void {
+    // Filtrar todas las cuentas por estado en el frontend
+    this.pendingAccounts = this.allAccounts.filter(account => account.estado === 'PENDIENTE');
+    this.paidAccounts = this.allAccounts.filter(account => account.estado === 'PAGADA');
+    this.refundAccounts = this.allAccounts.filter(account => account.estado === 'DEVOLUCION');
+    this.zeroBalanceAccounts = this.allAccounts.filter(account => (account.saldo || 0) === 0);
+    
+    // Actualizar las cuentas mostradas según la pestaña activa
+    this.updateAccountsForActiveTab();
+  }
+
+  private loadAccountsByTab(tab: 'pending' | 'paid' | 'refund' | 'zero'): void {
+    // Si ya tenemos todas las cuentas cargadas, solo filtrar
+    if (this.allAccounts.length > 0) {
+      this.updateAccountsForActiveTab();
+      this.updatePagination();
+    } else {
+      // Si no tenemos las cuentas cargadas, cargarlas primero
+      this.loadAccounts();
+    }
+  }
+
+  private updateAccountsForActiveTab(): void {
+    switch (this.activeTab) {
+      case 'pending':
+        this.accounts = this.pendingAccounts;
+        break;
+      case 'paid':
+        this.accounts = this.paidAccounts;
+        break;
+      case 'refund':
+        this.accounts = this.refundAccounts;
+        break;
+      case 'zero':
+        this.accounts = this.zeroBalanceAccounts;
+        break;
+    }
   }
 
   totalAccounts = (): void => {
@@ -95,35 +132,61 @@ export class AccountsReceivable implements OnInit {
   }
 
   getFilteredAccounts(): AccountReceivable[] {
-    return this.activeTab === 'pending' ? this.pendingAccounts : this.paidAccounts;
+    switch (this.activeTab) {
+      case 'pending':
+        return this.pendingAccounts;
+      case 'paid':
+        return this.paidAccounts;
+      case 'refund':
+        return this.refundAccounts;
+      case 'zero':
+        return this.zeroBalanceAccounts;
+      default:
+        return this.pendingAccounts;
+    }
   }
 
-  onAccountCreated(account: AccountReceivable) {
-    this.loadAccounts();
-    this.totalAccounts();
-    this.closeForm();
-  }
-
-  setActiveTab(tab: 'pending' | 'paid') {
-    this.activeTab = tab;
-    this.updateAccounts();
-  }
-
-  private updateAccounts() {
-    this.accounts = this.activeTab === 'pending' ? this.pendingAccounts : this.paidAccounts;
+  onAccountCreated(newAccount: AccountReceivable): void {
+    // Agregar la nueva cuenta a la lista principal
+    this.allAccounts.unshift(newAccount);
+    
+    // Refiltrar todas las cuentas
+    this.filterAccountsByStatus();
     this.updatePagination();
+    
+    this.showForm = false;
+    this.totalAccounts();
   }
+
+  setActiveTab(tab: 'pending' | 'paid' | 'refund' | 'zero') {
+    this.activeTab = tab;
+    this.loadAccountsByTab(tab);
+  }
+
+
 
 
   getTotalPending(): number {
-    return this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
+    // Sumar cuentas pendientes + cuentas con devolución (ya que las devoluciones se suman al pendiente)
+    const pendingTotal = this.pendingAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
+    const refundTotal = this.refundAccounts.reduce((total, account) => total + (account.saldo || 0), 0);
+    return pendingTotal + refundTotal;
   }
 
   getTotalOverdue(): number {
     const today = new Date().toISOString().split('T')[0];
-    return this.pendingAccounts
+    
+    // Incluir cuentas pendientes vencidas
+    const pendingOverdue = this.pendingAccounts
       .filter(account => account.fecha_limite < today)
       .reduce((total, account) => total + (account.saldo || 0), 0);
+    
+    // Incluir cuentas con devolución vencidas (también forman parte del pendiente)
+    const refundOverdue = this.refundAccounts
+      .filter(account => account.fecha_limite < today)
+      .reduce((total, account) => total + (account.saldo || 0), 0);
+    
+    return pendingOverdue + refundOverdue;
   }
 
   formatCurrency(amount: number): string {
@@ -134,29 +197,51 @@ export class AccountsReceivable implements OnInit {
     }).format(amount);
   }
 
-  markAsPaid(accountId: string) {
-    const accountIndex = this.pendingAccounts.findIndex(acc => acc.id === accountId);
-    if (accountIndex !== -1) {
-      const account = this.pendingAccounts[accountIndex];
-      account.estado = 'PAGADA';
-      account.saldo = 0;
-      this.paidAccounts.push(account);
-      this.pendingAccounts.splice(accountIndex, 1);
-      this.updateAccounts();
+  markAsPaid(accountId: string): void {
+    if (confirm('¿Está seguro de que desea marcar esta cuenta como pagada?')) {
+      const updateData = { estado: 'PAGADA', saldo: 0 };
+      this.accountService.updateAccountReceivable(accountId, updateData).subscribe({
+        next: (response) => {
+          // Actualizar la cuenta en la lista principal
+          const index = this.allAccounts.findIndex(account => account.id === accountId);
+          if (index !== -1) {
+            this.allAccounts[index] = { ...this.allAccounts[index], ...updateData };
+          }
+          
+          // Refiltrar todas las cuentas
+          this.filterAccountsByStatus();
+          this.updatePagination();
+          this.totalAccounts();
+        },
+        error: (error) => {
+          console.error('Error al marcar como pagada:', error);
+        }
+      });
     }
-    this.loadAccounts();
-    this.totalAccounts();
   }
 
-  deleteAccount(accountId: string) {
-    if (this.activeTab === 'pending') {
-      this.pendingAccounts = this.pendingAccounts.filter(acc => acc.id !== accountId);
-    } else {
-      this.paidAccounts = this.paidAccounts.filter(acc => acc.id !== accountId);
+  deleteAccount(accountId: string): void {
+    if (confirm('¿Está seguro de que desea eliminar esta cuenta por cobrar?')) {
+      this.accountService.deleteAccountReceivable(accountId).subscribe({
+        next: () => {
+          // Eliminar la cuenta de la lista principal
+          this.allAccounts = this.allAccounts.filter(account => account.id !== accountId);
+          
+          // Refiltrar todas las cuentas
+          this.filterAccountsByStatus();
+          this.updatePagination();
+          this.totalAccounts();
+          
+          // Si la cuenta eliminada era la seleccionada, cerrar el detalle
+          if (this.selectedAccount && this.selectedAccount.id === accountId) {
+            this.backToList();
+          }
+        },
+        error: (error) => {
+          console.error('Error al eliminar la cuenta:', error);
+        }
+      });
     }
-    this.updateAccounts();
-    this.loadAccounts();
-    this.totalAccounts(); // ← Y aquí
   }
 
   viewDetail(account: AccountReceivable) {
@@ -172,19 +257,38 @@ export class AccountsReceivable implements OnInit {
     this.cdr.detectChanges();
   }
 
-  refreshAccountDetail() {
-    this.loadAccounts();
-    setTimeout(() => {
-      if (this.selectedAccount) {
-        const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
-          .find(account => account.id === this.selectedAccount!.id);
-
-        if (updatedAccount) {
-          this.selectedAccount = updatedAccount;
-          this.cdr.detectChanges();
-        }
+  refreshAccountDetail(updatedAccount?: AccountReceivable) {
+    if (updatedAccount) {
+      // Actualizar la cuenta en la lista principal
+      const index = this.allAccounts.findIndex(account => account.id === updatedAccount.id);
+      if (index !== -1) {
+        this.allAccounts[index] = updatedAccount;
       }
-    }, 100);
+      
+      // Refiltrar todas las cuentas
+      this.filterAccountsByStatus();
+      this.updatePagination();
+      
+      // Actualizar la cuenta seleccionada si coincide
+      if (this.selectedAccount && this.selectedAccount.id === updatedAccount.id) {
+        this.selectedAccount = updatedAccount;
+      }
+      
+      this.cdr.detectChanges();
+    } else {
+      this.loadAccounts();
+      setTimeout(() => {
+        if (this.selectedAccount) {
+          const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
+            .find(account => account.id === this.selectedAccount!.id);
+
+          if (updatedAccount) {
+            this.selectedAccount = updatedAccount;
+            this.cdr.detectChanges();
+          }
+        }
+      }, 100);
+    }
   }
   
   // Pagination methods

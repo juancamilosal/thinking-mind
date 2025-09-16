@@ -344,6 +344,7 @@
             [rectorData]="selectedRector"
             (goBack)="toggleForm()"
             (searchRector)="searchRector()"
+            (rectorCreated)="onRectorCreated($event)"
             (rectorUpdated)="onRectorUpdated($event)">
           </app-form-rector>
         }
