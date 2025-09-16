@@ -670,7 +670,7 @@ export class PaymentRecord implements OnInit {
       environment: environment.production ? 'PRODUCCIÓN' : 'DESARROLLO'
     });
 
-    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V');
 
     console.log('🔐 Signature generada:', signature);
 
