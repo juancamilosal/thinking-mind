@@ -647,52 +647,47 @@ export class PaymentRecord implements OnInit {
 
     // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
     return `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
-  }Se
+  }
 
   async confirmPayment(): Promise<void> {
-    try {
-      const reference = this.generatePaymentReference(this.paymentModalData?.id);
-      const amountInCents = this.editablePaymentAmount * 100;
+    const reference = this.generatePaymentReference(this.paymentModalData?.id);
+    const amountInCents = this.editablePaymentAmount * 100;
 
-      const signature = await this.generateIntegrity(reference, amountInCents, 'COP', 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY');
+    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY');
 
-      const checkout = new (window as any).WidgetCheckout({
-        currency: 'COP',
-        amountInCents: amountInCents,
-        reference: reference,
-        publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
-        signature: { integrity: signature },
-        redirectUrl: 'http://localhost:4200/payment-status',
-        customerData: {
-           email: this.paymentModalData?.clientEmail,
-           fullName: this.paymentModalData?.clientName,
-           phoneNumber: this.paymentModalData?.clientPhone ,
-           phoneNumberPrefix: '+57',
-           legalId: this.paymentModalData?.clientDocumentNumber,
-           legalIdType: this.paymentModalData?.clientDocumentType,
-         },
-      });
-      checkout.open((result: any) => {
-        this.closePaymentModal();
-        if (result.transaction && result.transaction.status === 'APPROVED') {
-          this.router.navigate(['/payment-status'], {
-            queryParams: {
-              transaction: result.transaction.id || 'N/A',
-              reference: reference,
-              status: 'APROBADA',
-              course: this.paymentModalData?.courseName || 'N/A',
-              amount: this.editablePaymentAmount
-            }
-          });
-        } else {
-          this.showErrorNotification('payment');
-        }
-      });
-
-    } catch (error) {
-      this.showErrorNotification();
-     }
-   }
+    const checkout = new (window as any).WidgetCheckout({
+      currency: 'COP',
+      amountInCents: amountInCents,
+      reference: reference,
+      publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
+      signature: { integrity: signature },
+      redirectUrl: 'http://localhost:4200/payment-status',
+      customerData: {
+         email: this.paymentModalData?.clientEmail,
+         fullName: this.paymentModalData?.clientName,
+         phoneNumber: this.paymentModalData?.clientPhone,
+         phoneNumberPrefix: '+57',
+         legalId: this.paymentModalData?.clientDocumentNumber,
+         legalIdType: this.paymentModalData?.clientDocumentType,
+       },
+    });
+    checkout.open((result: any) => {
+      this.closePaymentModal();
+      if (result.transaction && result.transaction.status === 'APPROVED') {
+        this.router.navigate(['/payment-status'], {
+          queryParams: {
+            transaction: result.transaction.id || 'N/A',
+            reference: reference,
+            status: 'APROBADA',
+            course: this.paymentModalData?.courseName || 'N/A',
+            amount: this.editablePaymentAmount
+          }
+        });
+      } else {
+        this.showErrorNotification('payment');
+      }
+    });
+  }
 
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
      const data = `${reference}${amountInCents}${currency}${secretKey}`;
