@@ -1,7 +1,7 @@
 const apiUrl = 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io/';
 
 export const environment = {
-  production: false,
+  production: true,
   clients: apiUrl + 'items/clientes',
   students: apiUrl + 'items/estudiantes',
   schools: apiUrl + 'items/colegios',
@@ -32,8 +32,8 @@ export const environment = {
 
   // Configuración de Wompi
   wompi: {
-    // En desarrollo siempre usar modo de prueba
-    testMode: true,
+    // Cambiar testMode a false para usar producción real
+    testMode: true, // 🔄 CAMBIAR A false PARA PRODUCCIÓN REAL
     
     // Llaves de prueba
     test: {
@@ -41,13 +41,12 @@ export const environment = {
       integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY'
     },
     
-    // Llaves de producción (no se usan en desarrollo)
+    // Llaves de producción
     prod: {
       publicKey: 'pub_prod_aDinMfCvarfkhNiAQKzdm7cFDy6Szeuy',
       integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
     },
     
-    redirectUrl: 'http://localhost:4200/payment-status'
+    redirectUrl: 'https://tu-dominio.com/payment-status' // Cambia por tu URL de producción
   }
 };
-
