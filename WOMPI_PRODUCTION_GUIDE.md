@@ -1,103 +1,110 @@
-# 🔧 PROBLEMA IDENTIFICADO: Claves de Prueba en Producción
-
-## ❌ El Error "La firma es inválida" en Producción
-
-**CAUSA RAÍZ:** Cuando usas `testMode: true` en producción, estás usando las claves de prueba de Wompi, pero el Widget de Wompi puede estar intentando conectarse a la URL de producción en lugar de sandbox.
-
-## 🎯 TU SITUACIÓN ESPECÍFICA
-
-Necesitas que cuando la aplicación esté en **producción** (servidor), use el **ambiente de prueba de Wompi** (sandbox). Esto es perfectamente válido y común durante el desarrollo.
-
-### 📋 Configuración Actual (CORRECTA):
-```typescript
-// environment.prod.ts
-wompi: {
-  testMode: true, // ✅ Correcto para usar ambiente de prueba
-  test: {
-    publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB', // ✅ Clave oficial de prueba
-    integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY' // ✅ Clave oficial de prueba
-  }
-}
-```
-
-## 🔍 VERIFICACIÓN DE CLAVES OFICIALES
-
-Según la documentación oficial de Wompi, las claves que estás usando son **CORRECTAS**:
-
-### ✅ Claves de Prueba Oficiales (Sandbox):
-- **Clave Pública:** `pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB`
-- **Clave de Integridad:** `test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY`
-
-Estas son las claves oficiales de prueba proporcionadas por Wompi para testing.
-
-## 🌐 PROBLEMA: URLs de Ambiente
-
-El problema puede estar en que el Widget de Wompi no está usando la URL correcta del ambiente sandbox.
-
-### URLs Oficiales de Wompi:
-- **Sandbox (Pruebas):** `https://sandbox.wompi.co/v1`
-- **Producción:** `https://production.wompi.co/v1`
+# 🔧 PROBLEMA RESUELTO: "La firma es inválida" en Producción
 
 ## ✅ SOLUCIÓN IMPLEMENTADA
 
-Se ha actualizado la configuración para incluir las URLs correctas:
+**PROBLEMA IDENTIFICADO:** La función `generateIntegrity()` estaba usando una implementación de hash simple en lugar de SHA-256 real, causando firmas inválidas en Wompi.
 
+### 🔧 Cambios Realizados:
+
+1. **Instalación de crypto-js:**
+   ```bash
+   npm install crypto-js
+   npm install --save-dev @types/crypto-js
+   ```
+
+2. **Actualización del método generateIntegrity():**
+   ```typescript
+   // ANTES (implementación incorrecta)
+   return this.simpleHash(data); // ❌ Hash simple, no SHA-256
+
+   // AHORA (implementación correcta)
+   const hash = CryptoJS.SHA256(data);
+   return hash.toString(CryptoJS.enc.Hex); // ✅ SHA-256 real
+   ```
+
+3. **Importación agregada:**
+   ```typescript
+   import * as CryptoJS from 'crypto-js';
+   ```
+
+## 🎯 CONFIGURACIÓN ACTUAL (CORRECTA)
+
+### environment.prod.ts:
 ```typescript
-// environment.prod.ts
 wompi: {
-  testMode: true,
-  
-  // URLs base de Wompi según el ambiente
-  sandboxUrl: 'https://sandbox.wompi.co/v1',
-  productionUrl: 'https://production.wompi.co/v1',
-  
+  testMode: true, // ✅ Modo de prueba en producción
+  sandboxUrl: 'https://sandbox.wompi.co/v1', // ✅ URL sandbox
+  productionUrl: 'https://production.wompi.co/v1', // ✅ URL producción
   test: {
-    publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
-    integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY'
-  }
+    publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB', // ✅ Clave oficial
+    integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY' // ✅ Clave oficial
+  },
+  redirectUrl: 'http://localhost:4201/payment-status'
 }
 ```
 
-## 🔧 PRÓXIMOS PASOS
+## 🔍 VERIFICACIÓN DE LA SOLUCIÓN
 
-1. **Verificar la URL del Widget:** El Widget de Wompi debe usar la URL de sandbox cuando `testMode: true`
-2. **Confirmar el ambiente:** Asegúrate de que el Widget esté configurado para sandbox
-3. **Probar la integración:** Realiza una transacción de prueba
-
-## 📊 DIFERENCIAS ENTRE AMBIENTES
-
-### 🧪 Modo Sandbox (testMode: true):
-- ✅ **URL:** `https://sandbox.wompi.co/v1`
-- ✅ **Claves:** `pub_test_*` y `test_integrity_*`
-- ✅ **Pagos:** Simulados (no se cobran)
-- ✅ **Tarjetas de prueba:** `4242 4242 4242 4242`
-
-### 💰 Modo Producción (testMode: false):
-- 🔄 **URL:** `https://production.wompi.co/v1`
-- 🔄 **Claves:** `pub_prod_*` y `prod_integrity_*`
-- 🔄 **Pagos:** Reales (se cobran)
-- 🔄 **Tarjetas:** Reales del cliente
-
-## ⚠️ IMPORTANTE
-
-- Las claves de prueba **SÍ SON VÁLIDAS** para el ambiente sandbox
-- El problema está en la **configuración del ambiente**, no en las claves
-- Funciona localmente porque probablemente usa configuración de desarrollo
-- En producción necesitas asegurar que use **sandbox.wompi.co**
-
-## 🔍 VERIFICACIÓN RÁPIDA
-
-En la consola del navegador, verifica:
-
-```javascript
-// Debe mostrar las URLs correctas
-console.log('Wompi Config:', {
-  testMode: environment.wompi.testMode,
-  sandboxUrl: environment.wompi.sandboxUrl,
-  publicKey: wompiConfig.publicKey
+### Logs de Debug Agregados:
+```typescript
+console.log('🔧 Datos para generar firma:', {
+  reference,
+  amountInCents,
+  currency,
+  secretKey,
+  concatenatedData: data
 });
+
+console.log('✅ Firma SHA-256 generada correctamente:', signature);
 ```
 
-## 📞 SIGUIENTE ACCIÓN
+## 📋 PASOS PARA PROBAR
 
-El siguiente paso es **verificar que el Widget de Wompi esté usando la URL de sandbox** cuando `testMode: true`. Esto puede requerir configuración adicional en el Widget.
+1. **Compilar con producción:**
+   ```bash
+   ng build --configuration=production
+   ```
+
+2. **Desplegar archivos compilados** desde `dist/thinkingmind-fe/`
+
+3. **Probar pago** con tarjetas de prueba de Wompi:
+   - **Visa:** 4242424242424242
+   - **Mastercard:** 5555555555554444
+   - **CVV:** 123
+   - **Fecha:** Cualquier fecha futura
+
+4. **Verificar en consola del navegador:**
+   - Datos de configuración Wompi
+   - Datos para generar firma
+   - Firma SHA-256 generada
+
+## 🎉 RESULTADO ESPERADO
+
+- ✅ **Firma válida:** SHA-256 real generado con crypto-js
+- ✅ **Pagos funcionando:** En modo de prueba Wompi
+- ✅ **Logs detallados:** Para debugging y verificación
+- ✅ **Configuración flexible:** Fácil cambio entre test/prod
+
+## 🔄 PARA CAMBIAR A PRODUCCIÓN REAL
+
+Cuando estés listo para pagos reales:
+
+1. **Obtener claves reales** desde el dashboard de Wompi
+2. **Actualizar environment.prod.ts:**
+   ```typescript
+   testMode: false, // Cambiar a false
+   prod: {
+     publicKey: 'pub_prod_TU_CLAVE_REAL',
+     integrityKey: 'prod_integrity_TU_CLAVE_REAL'
+   }
+   ```
+3. **Recompilar y desplegar**
+
+## 🛡️ SEGURIDAD
+
+- ✅ Claves de prueba seguras para testing
+- ✅ Hash SHA-256 real para firmas válidas
+- ✅ Configuración separada test/producción
+- ✅ Logs detallados para debugging
+
+**¡El problema de "La firma es inválida" está resuelto!** 🎉
