@@ -648,7 +648,7 @@ export class PaymentRecord implements OnInit {
 
     // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
     const reference = `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
-    
+
     console.log('📝 Reference generada:', reference);
     return reference;
   }
@@ -659,18 +659,19 @@ export class PaymentRecord implements OnInit {
 
     // Seleccionar las llaves según el modo (prueba o producción)
     const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-    
+
     // Debug: Mostrar qué configuración se está usando
     console.log('🔧 Wompi Config:', {
       testMode: environment.wompi.testMode,
       publicKey: wompiConfig.publicKey,
       integrityKey: wompiConfig.integrityKey,
       reference: reference,
-      amountInCents: amountInCents
+      amountInCents: amountInCents,
+      environment: environment.production ? 'PRODUCCIÓN' : 'DESARROLLO'
     });
-    
+
     const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
-    
+
     console.log('🔐 Signature generada:', signature);
 
     const checkout = new (window as any).WidgetCheckout({
@@ -708,17 +709,8 @@ export class PaymentRecord implements OnInit {
   }
 
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
-    // Formato oficial de Wompi: "<Reference><Amount><Currency><IntegritySecret>"
     const data = `${reference}${amountInCents}${currency}${secretKey}`;
-    
-    console.log('🔐 Datos para firma:', {
-      reference: reference,
-      amountInCents: amountInCents,
-      currency: currency,
-      secretKey: secretKey,
-      concatenated: data
-    });
-    
+
     // Verificar si crypto.subtle está disponible (HTTPS o localhost)
     if (crypto && crypto.subtle) {
       try {
@@ -727,31 +719,28 @@ export class PaymentRecord implements OnInit {
         const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        console.log('✅ Firma SHA-256 generada:', hashHex);
         return hashHex;
       } catch (error) {
-        console.warn('❌ crypto.subtle falló, usando implementación alternativa:', error);
+        console.warn('crypto.subtle falló, usando implementación alternativa:', error);
       }
     }
-    
-    // Implementación alternativa para sitios HTTP
-    console.warn('⚠️ Usando implementación alternativa (no crypto.subtle)');
-    const alternativeHash = this.simpleHash(data);
-    console.log('🔄 Firma alternativa generada:', alternativeHash);
-    return alternativeHash;
+
+    // Implementación alternativa usando una función hash simple
+    // NOTA: Esta es una implementación básica para desarrollo/testing
+    // En producción real con HTTPS, crypto.subtle debería funcionar
+    return this.simpleHash(data);
   }
 
   private simpleHash(str: string): string {
     let hash = 0;
     if (str.length === 0) return hash.toString(16);
-    
+
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convertir a 32bit integer
     }
-    
+
     // Convertir a hexadecimal y asegurar longitud mínima
     const hexHash = Math.abs(hash).toString(16);
     return hexHash.padStart(8, '0').repeat(8).substring(0, 64); // Simular SHA-256 (64 chars)
