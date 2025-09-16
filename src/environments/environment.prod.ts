@@ -51,6 +51,6 @@ export const environment = {
       integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
     },
 
-    redirectUrl: 'https://tu-dominio.com/payment-status' // Cambia por tu URL de producción
+    redirectUrl: 'http://oog0sc84844c44oso4ko48k4.77.37.96.16.sslip.io/payment-status'
   }
 };
