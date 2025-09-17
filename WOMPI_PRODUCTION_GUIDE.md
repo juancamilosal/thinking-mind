@@ -45,7 +45,17 @@ wompi: {
 
 ## 🔍 VERIFICACIÓN DE LA SOLUCIÓN
 
+### Logs de Debug Agregados:
 ```typescript
+console.log('🔧 Datos para generar firma:', {
+  reference,
+  amountInCents,
+  currency,
+  secretKey,
+  concatenatedData: data
+});
+
+console.log('✅ Firma SHA-256 generada correctamente:', signature);
 ```
 
 ## 📋 PASOS PARA PROBAR
