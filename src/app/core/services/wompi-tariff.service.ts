@@ -15,7 +15,7 @@ export interface WompiTariff {
   providedIn: 'root'
 })
 export class WompiTariffService {
-  private apiUrl: string = environment.tarifa_wompo;
+  private apiUrl: string = environment.tarifa_wompi;
 
   constructor(private http: HttpClient) {}
 
