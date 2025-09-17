@@ -656,7 +656,33 @@ export class PaymentRecord implements OnInit {
 
     const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
     const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
-    const checkout = new (window as any).WidgetCheckout({
+    
+    // 🔍 LOGS DE DEPURACIÓN PARA WOMPI
+    console.log('🔧 WOMPI DEBUG - Configuración:', {
+      testMode: environment.wompi.testMode,
+      publicKey: wompiConfig.publicKey,
+      integrityKey: wompiConfig.integrityKey.substring(0, 20) + '...',
+      redirectUrl: environment.wompi.redirectUrl
+    });
+    
+    console.log('🔧 WOMPI DEBUG - Datos para firma:', {
+      reference: reference,
+      amountInCents: amountInCents,
+      currency: 'COP',
+      dataString: `${reference}${amountInCents}COP${wompiConfig.integrityKey}`
+    });
+    
+    console.log('🔧 WOMPI DEBUG - Firma generada:', signature);
+    
+    console.log('🔧 WOMPI DEBUG - Datos del cliente:', {
+      email: this.paymentModalData?.clientEmail,
+      fullName: this.paymentModalData?.clientName,
+      phoneNumber: this.paymentModalData?.clientPhone,
+      legalId: this.paymentModalData?.clientDocumentNumber,
+      legalIdType: this.paymentModalData?.clientDocumentType
+    });
+
+    const checkoutConfig = {
       currency: 'COP',
       amountInCents: amountInCents,
       reference: reference,
@@ -671,8 +697,14 @@ export class PaymentRecord implements OnInit {
          legalId: this.paymentModalData?.clientDocumentNumber,
          legalIdType: this.paymentModalData?.clientDocumentType,
        },
-    });
+    };
+    
+    console.log('🔧 WOMPI DEBUG - Configuración completa del checkout:', checkoutConfig);
+    
+    const checkout = new (window as any).WidgetCheckout(checkoutConfig);
     checkout.open((result: any) => {
+      console.log('🔧 WOMPI DEBUG - Resultado del pago:', result);
+      
       this.closePaymentModal();
       if (result.transaction && result.transaction.status === 'APPROVED') {
         this.router.navigate(['/payment-status'], {
@@ -685,6 +717,7 @@ export class PaymentRecord implements OnInit {
           }
         });
       } else {
+        console.error('🔧 WOMPI DEBUG - Error en el pago:', result);
         this.showErrorNotification('payment');
       }
     });
