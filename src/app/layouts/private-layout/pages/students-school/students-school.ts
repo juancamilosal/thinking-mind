@@ -52,7 +52,7 @@ export class StudentsSchool implements OnInit, OnDestroy {
   selectedStudent: Student | null = null;
   showStudentModal = false;
   private searchTimeout: any;
-  
+
   // Propiedades para estudiantes nuevos hoy
   schoolNewStudentsToday: number = 0;
   schoolNewStudentNames: string[] = [];
@@ -66,6 +66,18 @@ export class StudentsSchool implements OnInit, OnDestroy {
     private accountReceivableService: AccountReceivableService,
     private notificationService: NotificationService
   ) {}
+
+  goToShirtColor(): void {
+    if (this.school) {
+      // Pass both id and name for flexibility
+      this.router.navigate(['/private/shirt-colors'], {
+        queryParams: {
+          schoolId: this.school.id,
+          schoolName: this.school.nombre
+        }
+      });
+    }
+  }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -118,7 +130,7 @@ export class StudentsSchool implements OnInit, OnDestroy {
   processStudentAccountsReceivable(): void {
     this.studentAccountsReceivable = [];
     const coursesMap = new Map<string, CourseWithStudents>();
-    
+
     // Resetear contadores de estudiantes nuevos
     this.schoolNewStudentsToday = 0;
     this.schoolNewStudentNames = [];
@@ -137,7 +149,7 @@ export class StudentsSchool implements OnInit, OnDestroy {
           if (studentAccounts.length > 0) {
             const totalAmount = studentAccounts.reduce((sum, account) => sum + account.monto, 0);
             const totalPending = studentAccounts.filter(account => account.estado === 'PENDIENTE').length;
-            
+
             // Detectar si es estudiante nuevo hoy con pago mayor a 50,000
             const isNewToday = this.isStudentNewToday(student, studentAccounts);
 
@@ -149,7 +161,7 @@ export class StudentsSchool implements OnInit, OnDestroy {
             };
 
             this.studentAccountsReceivable.push(studentAccountReceivable);
-            
+
             // Si es estudiante nuevo hoy, agregarlo a los contadores del colegio
             if (isNewToday) {
               this.schoolNewStudentsToday++;
@@ -185,7 +197,7 @@ export class StudentsSchool implements OnInit, OnDestroy {
                 if (!existingStudent) {
                   course.students.push(studentAccountReceivable);
                   course.totalStudents++;
-                  
+
                   // Si es estudiante nuevo hoy, agregarlo al contador del curso
                   if (isNewToday) {
                     course.newStudentsToday++;
@@ -204,15 +216,15 @@ export class StudentsSchool implements OnInit, OnDestroy {
     this.filteredCourses = [...this.coursesWithStudents];
     this.filteredStudentAccounts = [...this.studentAccountsReceivable];
     this.updateTotalAccountsCount();
-    
+
     // Mostrar alerta si hay estudiantes nuevos hoy
     this.showSchoolNewStudentAlert = this.schoolNewStudentsToday > 0;
   }
-  
+
   isStudentNewToday(student: Student, accounts: AccountReceivable[]): boolean {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Verificar si tiene al menos una cuenta con fecha_inscripcion de hoy
     const hasNewInscriptionToday = accounts.some(account => {
       if (account.fecha_inscripcion) {
@@ -223,10 +235,10 @@ export class StudentsSchool implements OnInit, OnDestroy {
       }
       return false;
     });
-    
+
     return hasNewInscriptionToday;
   }
-  
+
   dismissSchoolNewStudentAlert(): void {
     this.showSchoolNewStudentAlert = false;
   }

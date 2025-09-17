@@ -14,7 +14,15 @@ export class PaymentService {
 
   constructor(private http: HttpClient) {}
 
-  getPayments(): Observable<ResponseAPI<PaymentModel[]>> {
+  getPayments(searchTerm?: string): Observable<ResponseAPI<PaymentModel[]>> {
+    if (searchTerm && searchTerm.trim()) {
+      const params = {
+        'filter[_or][0][pagador][_icontains]': searchTerm,
+        'filter[_or][1][numero_transaccion][_icontains]': searchTerm,
+        'filter[_or][2][estado][_icontains]': searchTerm
+      };
+      return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
+    }
     return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl);
   }
 

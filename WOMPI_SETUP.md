@@ -100,11 +100,4 @@ const checkout = new WidgetCheckout({
 - Puedes cambiar entre modos sin modificar código, solo la configuración
 - Siempre prueba primero con `testMode: true` en tu servidor
 
-## Verificación Rápida
-
-```typescript
-// En la consola del navegador puedes verificar:
-console.log('Modo de prueba:', environment.wompi.testMode);
-```
-
 Esta configuración te permite tener **máximo control** sobre cuándo usar pagos reales vs. simulados, incluso en el servidor de producción.

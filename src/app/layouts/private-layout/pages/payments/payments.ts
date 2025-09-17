@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {FormBuilder, FormsModule} from '@angular/forms';
-import {PaymentService} from '../../../../core/services/payment.service';
+import { FormsModule } from '@angular/forms';
+import { PaymentService } from '../../../../core/services/payment.service';
+import { WompiTariffService, WompiTariff } from '../../../../core/services/wompi-tariff.service';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ResponseAPI } from '../../../../core/models/ResponseAPI';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/payment-detail';
 
@@ -17,33 +20,128 @@ export interface Payment {
   selector: 'app-payments',
   standalone: true,
   imports: [CommonModule, FormsModule, PaymentDetailComponent],
-  templateUrl: './payments.html'
+  templateUrl: './payments.html',
+  styleUrl: './payments.scss'
 })
-export class Payments implements OnInit {
+export class Payments implements OnInit, OnDestroy {
   payments: PaymentModel[] = [];
-  filteredPayments: Payment[] = [];
+  filteredPayments: PaymentModel[] = [];
   searchTerm: string = '';
   isLoading: boolean = false;
-
-  // Variables para el detalle del pago
   selectedPayment: PaymentModel | null = null;
-  showPaymentDetailView = false;
+  showPaymentDetail: boolean = false;
 
-  constructor(private paymentService: PaymentService) {
-  }
+  // Propiedades para las tarifas Wompi
+  wompiTariffs: WompiTariff = {
+    tarifa: 0,
+    comision: 0,
+    iva: 0
+  };
+  isLoadingTariffs: boolean = false;
+  isUpdatingTariffs: boolean = false;
+  currentTariffId: number | null = null;
+
+  constructor(
+    private paymentService: PaymentService,
+    private wompiTariffService: WompiTariffService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
-    this.getPayments();
+    this.loadPayments();
+    this.loadWompiTariffs();
   }
 
-  getPayments = () => {
+  loadWompiTariffs(): void {
+    this.isLoadingTariffs = true;
+    this.wompiTariffService.getWompiTariffs().subscribe({
+      next: (response: ResponseAPI<WompiTariff[]>) => {
+        if (response.data && response.data.length > 0) {
+          // Tomar la primera tarifa encontrada
+          const firstTariff = response.data[0];
+          this.wompiTariffs = {
+            tarifa: firstTariff.tarifa,
+            comision: firstTariff.comision,
+            iva: firstTariff.iva
+          };
+          this.currentTariffId = firstTariff.id || null;
+        } else {
+          // Si no hay tarifas, crear una nueva
+          this.createInitialTariff();
+        }
+        this.isLoadingTariffs = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar las tarifas Wompi:', error);
+        this.notificationService.showError('Error al cargar las tarifas de Wompi');
+        this.isLoadingTariffs = false;
+      }
+    });
+  }
+
+  createInitialTariff(): void {
+    const initialTariff = {
+      tarifa: 3.4,
+      comision: 900,
+      iva: 19
+    };
+
+    this.wompiTariffService.createWompiTariff(initialTariff).subscribe({
+      next: (response: ResponseAPI<WompiTariff>) => {
+        if (response.data) {
+          this.wompiTariffs = {
+            tarifa: response.data.tarifa,
+            comision: response.data.comision,
+            iva: response.data.iva
+          };
+          this.currentTariffId = response.data.id || null;
+          this.notificationService.showSuccess('Éxito', 'Tarifas iniciales creadas correctamente');
+        }
+      },
+      error: (error) => {
+        console.error('Error al crear las tarifas iniciales:', error);
+        this.notificationService.showError('Error al crear las tarifas iniciales');
+      }
+    });
+  }
+
+  updateWompiTariffs(): void {
+    if (!this.currentTariffId) {
+      this.notificationService.showError('No se encontró el ID de la tarifa para actualizar');
+      return;
+    }
+
+    this.isUpdatingTariffs = true;
+
+    const updatedTariff = {
+      tarifa: this.wompiTariffs.tarifa,
+      comision: this.wompiTariffs.comision,
+      iva: this.wompiTariffs.iva
+    };
+
+    this.wompiTariffService.updateWompiTariff(this.currentTariffId, updatedTariff).subscribe({
+      next: (response: ResponseAPI<WompiTariff>) => {
+        this.notificationService.showSuccess('Éxito', 'Tarifas de Wompi actualizadas correctamente');
+        this.isUpdatingTariffs = false;
+      },
+      error: (error) => {
+        console.error('Error al actualizar las tarifas Wompi:', error);
+        this.notificationService.showError('Error al actualizar las tarifas de Wompi');
+        this.isUpdatingTariffs = false;
+      }
+    });
+  }
+
+  loadPayments(searchTerm?: string): void {
     this.isLoading = true;
-    this.paymentService.getPayments().subscribe({
-      next: (data) => {
-        this.payments = data.data;
+    this.paymentService.getPayments(searchTerm).subscribe({
+      next: (response: ResponseAPI<PaymentModel[]>) => {
+        this.payments = response.data || [];
+        this.filteredPayments = [...this.payments];
       },
       error: (error) => {
         console.error('Error loading payments:', error);
+        this.notificationService.showError('Error al cargar los pagos');
       },
       complete: () => {
         this.isLoading = false;
@@ -53,34 +151,52 @@ export class Payments implements OnInit {
 
   onSearchInputChange(event: any) {
     this.searchTerm = event.target.value;
-    this.filterPayments();
+    // Realizar búsqueda en tiempo real con debounce
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.performSearch();
+    }, 500); // Esperar 500ms después de que el usuario deje de escribir
   }
 
   onSearch() {
-    this.filterPayments();
+    this.performSearch();
+  }
+
+  private searchTimeout: any;
+
+  performSearch() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.loadPayments(this.searchTerm.trim() || undefined);
   }
 
   filterPayments() {
+    // Este método ya no es necesario ya que la búsqueda se hace en el servidor
+    // Mantenemos la funcionalidad local como respaldo
     if (!this.searchTerm.trim()) {
-      this.payments = this.payments;
+      this.filteredPayments = [...this.payments];
       return;
     }
 
-    this.payments = this.payments.filter(payment =>
-      payment.pagador.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      payment.estado.toLowerCase().includes(this.searchTerm.toLowerCase())
+    this.filteredPayments = this.payments.filter(payment =>
+      payment.pagador?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      payment.numero_transaccion?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      payment.estado?.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
   }
 
   // Método para mostrar el detalle del pago
   viewPaymentDetail(payment: PaymentModel) {
     this.selectedPayment = payment;
-    this.showPaymentDetailView = true;
+    this.showPaymentDetail = true;
   }
 
   // Método para volver al listado de pagos
   backToPaymentHistory() {
-    this.showPaymentDetailView = false;
+    this.showPaymentDetail = false;
     this.selectedPayment = null;
   }
 
@@ -130,5 +246,11 @@ export class Payments implements OnInit {
       return 'CORRESPONSAL BANCARIO';
     }
     return method;
+  }
+
+  ngOnDestroy() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
   }
 }

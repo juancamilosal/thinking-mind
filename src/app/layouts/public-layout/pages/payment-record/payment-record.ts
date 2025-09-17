@@ -361,14 +361,12 @@ export class PaymentRecord implements OnInit {
     const charCode = event.which ? event.which : event.keyCode;
     // Allow: backspace, delete, tab, escape, enter
     if ([46, 8, 9, 27, 13].indexOf(charCode) !== -1 ||
-      // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
       (charCode === 65 && event.ctrlKey === true) ||
       (charCode === 67 && event.ctrlKey === true) ||
       (charCode === 86 && event.ctrlKey === true) ||
       (charCode === 88 && event.ctrlKey === true)) {
       return;
     }
-    // Ensure that it is a number and stop the keypress
     if ((charCode < 48 || charCode > 57)) {
       event.preventDefault();
     }
@@ -649,8 +647,6 @@ export class PaymentRecord implements OnInit {
 
     // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
     const reference = `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
-
-    console.log('📝 Reference generada:', reference);
     return reference;
   }
 
@@ -658,26 +654,8 @@ export class PaymentRecord implements OnInit {
     const reference = this.generatePaymentReference(this.paymentModalData?.id);
     const amountInCents = this.editablePaymentAmount * 100;
 
-    // Seleccionar las llaves según el modo (prueba o producción)
     const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-
-    // Debug: Mostrar qué configuración se está usando
-    console.log('🔧 Wompi Config:', {
-      testMode: environment.wompi.testMode,
-      publicKey: wompiConfig.publicKey,
-      integrityKey: wompiConfig.integrityKey,
-      reference: reference,
-      amountInCents: amountInCents,
-      environment: environment.production ? 'PRODUCCIÓN' : 'DESARROLLO'
-    });
-
-    // 🔍 Console.log específico para wompiConfig.integrityKey cuando se hace clic
-    console.log('🔑 IntegrityKey al hacer clic en pagar:', wompiConfig.integrityKey);
-
     const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
-
-    console.log('🔐 Signature generada:', signature);
-
     const checkout = new (window as any).WidgetCheckout({
       currency: 'COP',
       amountInCents: amountInCents,
@@ -714,24 +692,13 @@ export class PaymentRecord implements OnInit {
 
    async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
     const data = `${reference}${amountInCents}${currency}${secretKey}`;
-    
-    console.log('🔧 Datos para generar firma:', {
-      reference,
-      amountInCents,
-      currency,
-      secretKey,
-      concatenatedData: data
-    });
 
     try {
       // Usar crypto-js para generar SHA-256
       const hash = CryptoJS.SHA256(data);
       const signature = hash.toString(CryptoJS.enc.Hex);
-      
-      console.log('✅ Firma SHA-256 generada correctamente:', signature);
       return signature;
     } catch (error) {
-      console.error('❌ Error generando firma SHA-256:', error);
       throw new Error('Error generando la firma de integridad');
     }
    }

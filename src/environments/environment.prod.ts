@@ -29,6 +29,7 @@ export const environment = {
   getBudget: apiUrl + 'flows/trigger/7a82a287-639b-42e3-a382-8f5e01d754ad',
   payment_wompi: apiUrl + 'flows/trigger/0ba476c9-3c23-486f-8b79-f3f7fceab4e4',
   return: apiUrl + 'flows/trigger/bcb42dd5-5119-4c09-96c6-cbed0e6e106f',
+  tarifa_wompi: apiUrl + 'items/tarifa_wompi',
 
   // Configuración de Wompi
   wompi: {
@@ -51,6 +52,6 @@ export const environment = {
       integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
     },
 
-    redirectUrl: 'https://tu-dominio.com/payment-status' // Cambia por tu URL de producción
+    redirectUrl: 'http://oog0sc84844c44oso4ko48k4.77.37.96.16.sslip.io/payment-status'
   }
 };
