@@ -12,6 +12,10 @@ export class PaymentModel {
   numero_transaccion?: string;
   estado: string;
   comprobante?: string;
+  tarifa?: number;
+  comision?: number;
+  iva?: number;
+  valor_neto?: number;
 }
 
 export class AccountReceivable {
