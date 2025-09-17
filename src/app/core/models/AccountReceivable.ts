@@ -15,6 +15,7 @@ export class PaymentModel {
   tarifa?: number;
   comision?: number;
   iva?: number;
+  valor_neto?:number;
 }
 
 export class AccountReceivable {
