@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../core/services/payment.service';
@@ -23,7 +23,7 @@ export interface Payment {
   templateUrl: './payments.html',
   styleUrl: './payments.scss'
 })
-export class Payments implements OnInit {
+export class Payments implements OnInit, OnDestroy {
   payments: PaymentModel[] = [];
   filteredPayments: PaymentModel[] = [];
   searchTerm: string = '';
@@ -132,11 +132,11 @@ export class Payments implements OnInit {
     });
   }
 
-  loadPayments = () => {
+  loadPayments(searchTerm?: string): void {
     this.isLoading = true;
-    this.paymentService.getPayments().subscribe({
-      next: (data) => {
-        this.payments = data.data;
+    this.paymentService.getPayments(searchTerm).subscribe({
+      next: (response: ResponseAPI<PaymentModel[]>) => {
+        this.payments = response.data || [];
         this.filteredPayments = [...this.payments];
       },
       error: (error) => {
@@ -151,21 +151,40 @@ export class Payments implements OnInit {
 
   onSearchInputChange(event: any) {
     this.searchTerm = event.target.value;
-    this.filterPayments();
+    // Realizar búsqueda en tiempo real con debounce
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.performSearch();
+    }, 500); // Esperar 500ms después de que el usuario deje de escribir
   }
 
   onSearch() {
-    this.filterPayments();
+    this.performSearch();
+  }
+
+  private searchTimeout: any;
+
+  performSearch() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.loadPayments(this.searchTerm.trim() || undefined);
   }
 
   filterPayments() {
+    // Este método ya no es necesario ya que la búsqueda se hace en el servidor
+    // Mantenemos la funcionalidad local como respaldo
     if (!this.searchTerm.trim()) {
       this.filteredPayments = [...this.payments];
       return;
     }
 
     this.filteredPayments = this.payments.filter(payment =>
-      payment.numero_transaccion?.toLowerCase().includes(this.searchTerm.toLowerCase())
+      payment.pagador?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      payment.numero_transaccion?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      payment.estado?.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
   }
 
@@ -227,5 +246,11 @@ export class Payments implements OnInit {
       return 'CORRESPONSAL BANCARIO';
     }
     return method;
+  }
+
+  ngOnDestroy() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
   }
 }
