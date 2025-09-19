@@ -791,6 +791,29 @@ export class PaymentRecord implements OnInit {
 
   onCourseChange(courseId: string): void {
     if (courseId) {
+      // Validación para el curso Will-Go (Segundo Hermano)
+      const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
+      const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
+      
+      if (courseId === willGoSegundoHermanoId) {
+        // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go Estándar
+        if (!this.clientData || !this.clientData.cuentas_cobrar) {
+          this.showValidationNotification();
+          this.resetCourseSelection();
+          return;
+        }
+        
+        const hasWillGoEstandar = this.clientData.cuentas_cobrar.some((cuenta: any) => 
+          cuenta.curso_id && cuenta.curso_id.id === willGoEstandarId
+        );
+        
+        if (!hasWillGoEstandar) {
+          this.showValidationNotification();
+          this.resetCourseSelection();
+          return;
+        }
+      }
+      
       const selectedCourse = this.courses.find(course => course.id === courseId);
       if (selectedCourse) {
         const priceAsNumber = parseFloat(selectedCourse.precio);
@@ -804,6 +827,22 @@ export class PaymentRecord implements OnInit {
         coursePrice: ''
       });
     }
+  }
+
+  private showValidationNotification(): void {
+    this.notificationData = {
+      title: 'Requisito no cumplido',
+      message: 'Para aplicar a este programa, debe haber comprado el programa Will Go Estandar.',
+      type: 'error'
+    };
+    this.showNotification = true;
+  }
+
+  private resetCourseSelection(): void {
+    this.paymentForm.patchValue({
+      course: '',
+      coursePrice: ''
+    });
   }
 
   private formatCurrency(amount: number): string {
