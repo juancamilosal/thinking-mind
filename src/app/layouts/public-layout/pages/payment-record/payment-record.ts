@@ -272,7 +272,7 @@ export class PaymentRecord implements OnInit {
     if (schoolName) {
       this.paymentForm.get('schoolSearchTerm')?.setValue(schoolName);
       this.paymentForm.get('studentSchool')?.setValue(schoolId); // Establecer el ID en el campo requerido
-      this.isSchoolSelected = true;
+      // NO establecer isSchoolSelected = true para permitir cambios
       console.log('🔍 DEBUG - Nombre del colegio establecido:', schoolName);
       console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', schoolId);
     } 
@@ -284,7 +284,7 @@ export class PaymentRecord implements OnInit {
           if (response.data) {
             this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
             this.paymentForm.get('studentSchool')?.setValue(schoolId); // Establecer el ID en el campo requerido
-            this.isSchoolSelected = true;
+            // NO establecer isSchoolSelected = true para permitir cambios
             console.log('🔍 DEBUG - Nombre del colegio obtenido:', response.data.nombre);
             console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', schoolId);
           }
@@ -301,7 +301,7 @@ export class PaymentRecord implements OnInit {
           if (response.data) {
             this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
             this.paymentForm.get('studentSchool')?.setValue(student.colegio); // Establecer el ID en el campo requerido
-            this.isSchoolSelected = true;
+            // NO establecer isSchoolSelected = true para permitir cambios
             console.log('🔍 DEBUG - Nombre del colegio obtenido (campo colegio):', response.data.nombre);
             console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', student.colegio);
           }
@@ -742,6 +742,9 @@ export class PaymentRecord implements OnInit {
     const searchTerm = event.target.value;
     this.paymentForm.get('schoolSearchTerm')?.setValue(searchTerm);
     this.isSchoolSelected = false; // Reset cuando el usuario empieza a escribir
+    
+    // Limpiar el valor del colegio seleccionado cuando el usuario empieza a escribir
+    this.paymentForm.get('studentSchool')?.setValue('');
 
     // Limpiar el timeout anterior
     if (this.searchTimeout) {
