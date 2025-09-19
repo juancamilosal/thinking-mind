@@ -795,10 +795,13 @@ export class PaymentRecord implements OnInit {
       const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
       const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
       
+      // Validación para el curso Will-Go (Tercer Hermano)
+      const willGoTercerHermanoId = 'a218abdb-50e6-4b51-bc51-570e9efdfdc8';
+      
       if (courseId === willGoSegundoHermanoId) {
         // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go Estándar
         if (!this.clientData || !this.clientData.cuentas_cobrar) {
-          this.showValidationNotification();
+          this.showValidationNotification('Will Go Estandar');
           this.resetCourseSelection();
           return;
         }
@@ -810,7 +813,28 @@ export class PaymentRecord implements OnInit {
         );
         
         if (!hasWillGoEstandarPaid) {
-          this.showValidationNotification();
+          this.showValidationNotification('Will Go Estandar');
+          this.resetCourseSelection();
+          return;
+        }
+      }
+      
+      if (courseId === willGoTercerHermanoId) {
+        // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go (Segundo Hermano)
+        if (!this.clientData || !this.clientData.cuentas_cobrar) {
+          this.showValidationNotification('Will Go (Segundo Hermano)');
+          this.resetCourseSelection();
+          return;
+        }
+        
+        const hasWillGoSegundoHermanoPaid = this.clientData.cuentas_cobrar.some((cuenta: any) => 
+          cuenta.curso_id && 
+          cuenta.curso_id.id === willGoSegundoHermanoId && 
+          cuenta.estado === 'PAGADA'
+        );
+        
+        if (!hasWillGoSegundoHermanoPaid) {
+          this.showValidationNotification('Will Go (Segundo Hermano)');
           this.resetCourseSelection();
           return;
         }
@@ -831,10 +855,10 @@ export class PaymentRecord implements OnInit {
     }
   }
 
-  private showValidationNotification(): void {
+  private showValidationNotification(requiredCourse: string): void {
     this.notificationData = {
       title: 'Requisito no cumplido',
-      message: 'Para aplicar a este programa, debe haber comprado y pagado completamente el programa Will Go Estandar.',
+      message: `Para aplicar a este programa, debe haber comprado y pagado completamente el programa ${requiredCourse}.`,
       type: 'error'
     };
     this.showNotification = true;
