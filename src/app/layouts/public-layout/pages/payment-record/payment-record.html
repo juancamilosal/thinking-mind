@@ -382,6 +382,7 @@
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Curso</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
+                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Acción</th>
                     </tr>
@@ -401,6 +402,11 @@
                           <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.coursePrice }}</td>
                           <td
                             class="px-6 py-4 text-sm font-semibold text-gray-900">{{ courseData.balance }}
+                          </td>
+                          <td class="px-6 py-4 text-sm font-semibold">
+                            <span [class]="courseData.pendingBalanceNumber > 0 ? 'text-red-600' : 'text-green-600'">
+                              {{ courseData.pendingBalance }}
+                            </span>
                           </td>
                           <td class="px-6 py-4 text-center">
                             <span
@@ -926,7 +932,15 @@
       </div>
 
       <!-- Footer del Modal -->
-      <div class="bg-gray-50 px-6 py-4 flex justify-end">
+      <div class="bg-gray-50 px-6 py-4 flex justify-between">
+        <button
+          (click)="printPaymentHistory()"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors flex items-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+          </svg>
+          <span>Imprimir Historial de Pagos</span>
+        </button>
         <button
           (click)="closePaymentsModal()"
           class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
