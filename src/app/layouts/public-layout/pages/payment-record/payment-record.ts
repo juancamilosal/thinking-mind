@@ -803,11 +803,13 @@ export class PaymentRecord implements OnInit {
           return;
         }
         
-        const hasWillGoEstandar = this.clientData.cuentas_cobrar.some((cuenta: any) => 
-          cuenta.curso_id && cuenta.curso_id.id === willGoEstandarId
+        const hasWillGoEstandarPaid = this.clientData.cuentas_cobrar.some((cuenta: any) => 
+          cuenta.curso_id && 
+          cuenta.curso_id.id === willGoEstandarId && 
+          cuenta.estado === 'PAGADA'
         );
         
-        if (!hasWillGoEstandar) {
+        if (!hasWillGoEstandarPaid) {
           this.showValidationNotification();
           this.resetCourseSelection();
           return;
@@ -832,7 +834,7 @@ export class PaymentRecord implements OnInit {
   private showValidationNotification(): void {
     this.notificationData = {
       title: 'Requisito no cumplido',
-      message: 'Para aplicar a este programa, debe haber comprado el programa Will Go Estandar.',
+      message: 'Para aplicar a este programa, debe haber comprado y pagado completamente el programa Will Go Estandar.',
       type: 'error'
     };
     this.showNotification = true;
