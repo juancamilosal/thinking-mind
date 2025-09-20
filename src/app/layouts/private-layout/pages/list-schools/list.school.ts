@@ -26,6 +26,35 @@ interface StudentWithAccount {
   account: AccountReceivable;
 }
 
+interface CourseWithStudents {
+  course: any;
+  students: StudentWithAccount[];
+  isExpanded?: boolean;
+}
+
+interface SchoolWithCourses {
+  school: School;
+  courses: CourseWithStudents[];
+  totalStudents: number;
+  totalAmount: number;
+  isExpanded?: boolean;
+}
+
+interface CourseWithSchools {
+  course: any;
+  schools: SchoolInCourse[];
+  totalStudents: number;
+  totalAmount: number;
+  isExpanded?: boolean;
+}
+
+interface SchoolInCourse {
+  school: School;
+  students: StudentWithAccount[];
+  totalStudents: number;
+  totalAmount: number;
+}
+
 @Component({
   selector: 'app-list-schools',
   standalone: true,
@@ -36,6 +65,8 @@ interface StudentWithAccount {
 
 export class ListSchool implements OnInit {
   schoolsWithAccounts: SchoolWithAccounts[] = [];
+  schoolsWithCourses: SchoolWithCourses[] = [];
+  coursesWithSchools: CourseWithSchools[] = [];
   isLoading = false;
   showDetail = false;
   selectedStudent: Student | null = null;
@@ -44,6 +75,9 @@ export class ListSchool implements OnInit {
   currentDate = new Date();
   isRector = false;
   private searchTimeout: any;
+  
+  // Propiedad para controlar el modo de vista: tabla o cursos
+  viewMode: 'table' | 'courses' = 'table';
 
   // Propiedades de paginación
   currentPage = 1;
@@ -169,6 +203,9 @@ export class ListSchool implements OnInit {
     });
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
+    
+    // Procesar datos para vista por cursos
+    this.processCoursesData(accountsWithInscription);
     
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
@@ -329,6 +366,12 @@ export class ListSchool implements OnInit {
     return false;
   }
 
+  isSchoolNewToday(school: School): boolean {
+    // Como el modelo School no tiene created_at, retornamos false por defecto
+    // Esta funcionalidad se puede implementar cuando se agregue la propiedad al modelo
+    return false;
+  }
+
   navigateToShirts(): void {
     this.router.navigate(['/private/shirt-colors']);
   }
@@ -404,6 +447,80 @@ export class ListSchool implements OnInit {
     // Implementar lógica de edición si es necesario
     console.log('Editar estudiante:', student);
     this.closeDetail();
+  }
+
+  toggleViewMode(): void {
+    this.viewMode = this.viewMode === 'table' ? 'courses' : 'table';
+  }
+
+  private processCoursesData(accounts: AccountReceivable[]): void {
+    // Agrupar por colegio y luego por curso
+    const schoolsMap = new Map<string, any>();
+
+    accounts.forEach(account => {
+      if (account.estudiante_id && typeof account.estudiante_id === 'object' && 
+          account.curso_id && typeof account.curso_id === 'object') {
+        const student = account.estudiante_id;
+        const course = account.curso_id;
+
+        if (student.colegio_id && typeof student.colegio_id === 'object') {
+          const school = student.colegio_id;
+          const schoolId = school.id;
+
+          // Crear entrada del colegio si no existe
+          if (!schoolsMap.has(schoolId)) {
+            schoolsMap.set(schoolId, {
+              school: school,
+              courses: new Map<string, any>(),
+              totalStudents: 0,
+              totalAmount: 0
+            });
+          }
+
+          const schoolData = schoolsMap.get(schoolId)!;
+          const courseId = course.id;
+
+          // Crear entrada del curso dentro del colegio si no existe
+          if (!schoolData.courses.has(courseId)) {
+            schoolData.courses.set(courseId, {
+              course: course,
+              students: [],
+              isExpanded: false
+            });
+          }
+
+          const courseData = schoolData.courses.get(courseId)!;
+
+          // Agregar estudiante al curso
+          courseData.students.push({
+            student: student,
+            account: account
+          });
+
+          // Actualizar contadores
+          schoolData.totalStudents++;
+          schoolData.totalAmount += account.monto;
+        }
+      }
+    });
+
+    // Convertir Map a Array y ordenar
+    this.schoolsWithCourses = Array.from(schoolsMap.values()).map(schoolData => ({
+      ...schoolData,
+      courses: Array.from(schoolData.courses.values())
+    }));
+  }
+
+  toggleSchool(schoolIndex: number): void {
+    if (this.schoolsWithCourses[schoolIndex]) {
+      this.schoolsWithCourses[schoolIndex].isExpanded = !this.schoolsWithCourses[schoolIndex].isExpanded;
+    }
+  }
+
+  toggleCourse(schoolIndex: number, courseIndex: number): void {
+    if (this.schoolsWithCourses[schoolIndex] && this.schoolsWithCourses[schoolIndex].courses[courseIndex]) {
+      this.schoolsWithCourses[schoolIndex].courses[courseIndex].isExpanded = !this.schoolsWithCourses[schoolIndex].courses[courseIndex].isExpanded;
+    }
   }
 
   ngOnDestroy(): void {

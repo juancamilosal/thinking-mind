@@ -58,6 +58,9 @@ export class StudentsSchool implements OnInit, OnDestroy {
   schoolNewStudentNames: string[] = [];
   showSchoolNewStudentAlert: boolean = false;
 
+  // Propiedad para controlar el modo de vista
+  viewMode: 'accordion' | 'cards' = 'accordion';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -345,6 +348,11 @@ export class StudentsSchool implements OnInit, OnDestroy {
 
   toggleCourse(courseIndex: number): void {
     this.filteredCourses[courseIndex].expanded = !this.filteredCourses[courseIndex].expanded;
+  }
+
+  // Método para cambiar el modo de vista
+  toggleViewMode(): void {
+    this.viewMode = this.viewMode === 'accordion' ? 'cards' : 'accordion';
   }
 
   updatePinEntregado(account: any, event: any): void {
