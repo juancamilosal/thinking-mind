@@ -101,9 +101,16 @@
             </tr>
           } @else {
             @for(schoolData of schoolsWithAccounts; track schoolData.school.id) {
-              <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="navigateToStudents(schoolData.school.id)">
+              <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="toggleSchoolStudents(schoolData)">
                 <td class="px-6 py-4">
-                  <div class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</div>
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</div>
+                    <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200"
+                         [class.rotate-180]="schoolData.showStudents"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.ciudad }}</td>
                 <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.direccion }}</td>
@@ -140,6 +147,124 @@
                   }
                 </td>
               </tr>
+
+              <!-- Fila expandible con estudiantes -->
+              @if (schoolData.showStudents) {
+                <tr>
+                  <td colspan="6" class="px-0 py-0">
+                    <div class="bg-gray-50 border-t border-gray-200">
+                      @if (schoolData.isLoadingStudents) {
+                        <div class="flex justify-center items-center py-8">
+                          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                          <span class="ml-3 text-gray-600">Cargando estudiantes...</span>
+                        </div>
+                      } @else if (schoolData.students && schoolData.students.length > 0) {
+                        <div class="p-6">
+                          <h4 class="text-lg font-semibold text-gray-900 mb-4">
+                            Estudiantes de {{ schoolData.school.nombre }}
+                          </h4>
+                          <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                              <thead class="bg-gray-100">
+                                <tr>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grado</th>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado de la Cuenta</th>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pin Entregado</th>
+                                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                </tr>
+                              </thead>
+                              <tbody class="bg-white divide-y divide-gray-200">
+                                @for(studentWithAccount of schoolData.students; track $index) {
+                                  @let isNewToday = isStudentNewToday(studentWithAccount.student);
+                                  <tr class="transition-colors duration-200"
+                                      [class]="isNewToday ? 'bg-green-50 hover:bg-green-100 border-l-4 border-green-400' : 'hover:bg-gray-50'">
+                                    <td class="px-6 py-4">
+                                      <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mr-4">
+                                          <span class="text-white font-semibold text-sm">
+                                            {{ (studentWithAccount.student.nombre?.charAt(0) || '') + (studentWithAccount.student.apellido?.charAt(0) || '') }}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <div class="text-sm font-medium text-gray-900">{{ studentWithAccount.student.nombre }} {{ studentWithAccount.student.apellido }}</div>
+                                          @if (isNewToday) {
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                              ¡NUEVO HOY!
+                                            </span>
+                                          }
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                      <div class="flex flex-col">
+                                        <span class="font-medium">{{ studentWithAccount.student.tipo_documento }}: {{ studentWithAccount.student.numero_documento }}</span>
+                                      </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                      <span class="font-medium">{{ studentWithAccount.student.grado || 'No especificado' }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                      @if (studentWithAccount.account.curso_id && typeof studentWithAccount.account.curso_id === 'object') {
+                                        <div class="flex flex-col">
+                                          <span class="font-medium">{{ studentWithAccount.account.curso_id.nombre }}</span>
+                                          <span class="text-xs text-gray-500">{{ studentWithAccount.account.curso_id.sku }}</span>
+                                        </div>
+                                      } @else {
+                                        <span class="text-gray-400">Sin curso asignado</span>
+                                      }
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                            [class]="studentWithAccount.account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (studentWithAccount.account.estado === 'PAGADO' || studentWithAccount.account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                                        {{ studentWithAccount.account.estado }}
+                                      </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <div class="flex items-center">
+                                        <input
+                                          type="checkbox"
+                                          [checked]="isPinEntregado(studentWithAccount.account)"
+                                          [disabled]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                          (change)="updatePinEntregado(studentWithAccount.account, $event)"
+                                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                          [class.opacity-50]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                          [class.cursor-not-allowed]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                        />
+                                        <span class="ml-2 text-sm text-gray-600">
+                                          {{ getPinEntregadoText(studentWithAccount.account) }}
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                      <button
+                                        (click)="viewStudent(studentWithAccount.student, studentWithAccount.account)"
+                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                      >
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Ver
+                                      </button>
+                                    </td>
+                                  </tr>
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="text-center py-8 text-gray-500">
+                          No se encontraron estudiantes para este colegio.
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
             }
           }
         </tbody>
@@ -292,4 +417,14 @@
     </div>
   }
 </div>
+
+<!-- Modal de detalle del estudiante -->
+@if (showDetail) {
+  <app-student-detail
+    [student]="selectedStudent"
+    [clientInfo]="selectedClient"
+    (close)="closeDetail()"
+    (edit)="editStudent($event)">
+  </app-student-detail>
+}
 </div>

@@ -5,7 +5,10 @@ import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { School } from '../../../../core/models/School';
 import { AccountReceivable } from '../../../../core/models/AccountReceivable';
+import { Student } from '../../../../core/models/Student';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { StudentDetail } from '../students/student-detail/student-detail';
+import { Client } from '../../../../core/models/Clients';
 
 interface SchoolWithAccounts {
   school: School;
@@ -13,12 +16,20 @@ interface SchoolWithAccounts {
   studentsCount: number;
   totalAmount: number;
   accounts: AccountReceivable[];
+  showStudents?: boolean;
+  isLoadingStudents?: boolean;
+  students?: StudentWithAccount[];
+}
+
+interface StudentWithAccount {
+  student: Student;
+  account: AccountReceivable;
 }
 
 @Component({
   selector: 'app-list-schools',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StudentDetail],
   templateUrl: './list.school.html'
 })
 
@@ -26,6 +37,9 @@ interface SchoolWithAccounts {
 export class ListSchool implements OnInit {
   schoolsWithAccounts: SchoolWithAccounts[] = [];
   isLoading = false;
+  showDetail = false;
+  selectedStudent: Student | null = null;
+  selectedClient: Client | null = null;
   searchTerm = '';
   currentDate = new Date();
   isRector = false;
@@ -142,15 +156,16 @@ export class ListSchool implements OnInit {
       }
     });
 
-    // Calcular estudiantes únicos por colegio
+    // Calcular total de estudiantes incluyendo duplicados (por cada cuenta/curso)
     schoolsMap.forEach((schoolData, schoolId) => {
-      const uniqueStudents = new Set();
+      // Contar todas las cuentas que tienen estudiante (incluyendo duplicados)
+      let studentsCount = 0;
       schoolData.accounts.forEach(account => {
         if (account.estudiante_id && typeof account.estudiante_id === 'object') {
-          uniqueStudents.add(account.estudiante_id.id);
+          studentsCount++;
         }
       });
-      schoolData.studentsCount = uniqueStudents.size;
+      schoolData.studentsCount = studentsCount;
     });
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
@@ -264,8 +279,131 @@ export class ListSchool implements OnInit {
     this.router.navigate(['/private/students-school', schoolId]);
   }
 
+  toggleSchoolStudents(schoolData: SchoolWithAccounts): void {
+    schoolData.showStudents = !schoolData.showStudents;
+    
+    if (schoolData.showStudents && !schoolData.students) {
+      this.loadSchoolStudents(schoolData);
+    }
+  }
+
+  loadSchoolStudents(schoolData: SchoolWithAccounts): void {
+    schoolData.isLoadingStudents = true;
+    
+    // Crear un array de estudiantes con sus cuentas (permitir duplicados)
+    const studentsWithAccounts: StudentWithAccount[] = [];
+    
+    schoolData.accounts.forEach(account => {
+      if (account.estudiante_id) {
+        const student = typeof account.estudiante_id === 'string' 
+          ? null 
+          : account.estudiante_id;
+        
+        if (student) {
+          studentsWithAccounts.push({
+            student: student,
+            account: account
+          });
+        }
+      }
+    });
+    
+    schoolData.students = studentsWithAccounts;
+    schoolData.isLoadingStudents = false;
+  }
+
+  isStudentNewToday(student: Student): boolean {
+    // Lógica para determinar si el estudiante es nuevo hoy
+    // Como el modelo Student no tiene created_at, usaremos otra lógica
+    // Por ejemplo, basándose en accountInfo o simplemente retornar false por ahora
+    
+    if (student.accountInfo && student.accountInfo.created_at) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const createdDate = new Date(student.accountInfo.created_at);
+      createdDate.setHours(0, 0, 0, 0);
+      return createdDate.getTime() === today.getTime();
+    }
+    
+    return false;
+  }
+
   navigateToShirts(): void {
     this.router.navigate(['/private/shirt-colors']);
+  }
+
+  updatePinEntregado(account: AccountReceivable, event: any): void {
+    const isChecked = event.target.checked;
+    const pinValue = isChecked ? 'SI' : 'NO';
+    
+    // Verificar si el estado es PENDIENTE (protección adicional)
+    if (account.estado === 'PENDIENTE') {
+      event.target.checked = !isChecked; // Revertir el checkbox
+      return;
+    }
+    
+    // Actualizar localmente primero
+    account.pin_entregado = pinValue;
+
+    // Preparar los datos para la actualización
+    const updateData = {
+      pin_entregado: pinValue
+    };
+
+    // Llamar al servicio para actualizar en Directus
+    this.accountReceivableService.updateAccountReceivable(account.id, updateData).subscribe({
+      next: (response) => {
+        // Eliminar el modal/notificación de éxito
+        console.log('PIN actualizado correctamente:', pinValue);
+      },
+      error: (error) => {
+        // Revertir el cambio local si hay error
+        account.pin_entregado = isChecked ? 'NO' : 'SI';
+        event.target.checked = !isChecked;
+        
+        this.notificationService.showError(
+          'Error al actualizar PIN',
+          'No se pudo actualizar el estado del PIN. Intente nuevamente.'
+        );
+        console.error('Error updating pin_entregado:', error);
+      }
+    });
+  }
+
+  isPinEntregado(account: AccountReceivable): boolean {
+    return account.pin_entregado === 'SI';
+  }
+
+  getPinEntregadoText(account: AccountReceivable): string {
+    return account.pin_entregado === 'SI' ? 'Entregado' : 'Pendiente';
+  }
+
+  viewStudent(student: Student, account: AccountReceivable): void {
+    if (account.estudiante_id && typeof account.estudiante_id === 'object') {
+      this.selectedStudent = account.estudiante_id;
+      
+      // Obtener información del acudiente desde cliente_id
+      if (account.cliente_id && typeof account.cliente_id === 'object') {
+        this.selectedClient = account.cliente_id;
+      } else {
+        this.selectedClient = null;
+      }
+      
+      this.showDetail = true;
+    }
+  }
+
+  closeDetail() {
+    this.showDetail = false;
+    this.selectedStudent = null;
+    this.selectedClient = null;
+  }
+
+  editStudent(student: Student) {
+    // Implementar lógica de edición si es necesario
+    console.log('Editar estudiante:', student);
+    this.closeDetail();
   }
 
   ngOnDestroy(): void {
