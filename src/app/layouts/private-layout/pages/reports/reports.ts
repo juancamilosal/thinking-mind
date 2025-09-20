@@ -9,43 +9,7 @@ import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
-import { start } from 'repl';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
-
-interface EnrollReportData {
-  schoolName: string;
-  courseName: string;
-  studentCount: number;
-}
-
-interface SchoolData {
-  id: string;
-  colegio: string;
-  cursos: CourseData[];
-  expanded?: boolean;
-}
-
-interface CourseData {
-  id: string;
-  curso: string;
-  precio: string;
-  sku: string;
-  estudiantes: StudentData[];
-  nuevos_hoy: number;
-  total_estudiantes: number;
-  expanded?: boolean;
-}
-
-interface StudentData {
-  id: string;
-  nombre: string;
-  apellido: string;
-  tipo_documento: string;
-  numero_documento: string;
-  fecha_creacion: string | null;
-  fecha_inscripcion: string | null;
-  saldo: number;
-}
 
 @Component({
   selector: 'app-reports',
@@ -58,20 +22,18 @@ export class Reports {
   reportForm!: FormGroup;
   REPORT_TYPE = REPORT_TYPE;
   payments: PaymentModel[] = [];
-  enrollReportData: EnrollReportData[] = [];
+  enrollReportData: any[] = [];
   reportGenerated: boolean = false;
   showDownloadOptions: boolean = false;
-  schoolsData: SchoolData[] = [];
+  schoolsData: any[] = [];
   loadingSchoolsData: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService,
     private paymentService: PaymentService,
     private accountReceivableService: AccountReceivableService,
-    private schoolService: SchoolService,
   ) {}
 
   ngOnInit(): void {
@@ -153,15 +115,43 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   this.accountReceivableService.getAccountsForReport(startDate, endDate).subscribe({
     next: (response) => {
       if (response && response.data && Array.isArray(response.data)) {
-        this.schoolsData = response.data.map((school: any) => ({
-          id: school.colegio, // Usar el nombre del colegio como ID
-          colegio: school.colegio,
-          cursos: school.cursos.map((curso: any) => ({
-            id: curso.id,
-            curso: curso.nombre,
-            precio: curso.precio,
-            sku: curso.id,
-            estudiantes: [{
+        // Agrupar datos por colegio y curso
+        const schoolsMap = new Map<string, any>();
+
+        response.data.forEach((item: any) => {
+          const schoolName = item.colegio;
+
+          if (!schoolsMap.has(schoolName)) {
+            schoolsMap.set(schoolName, {
+              id: schoolName,
+              colegio: schoolName,
+              cursos: new Map<string, any>(),
+              expanded: false
+            });
+          }
+
+          const school = schoolsMap.get(schoolName);
+
+          item.cursos.forEach((curso: any) => {
+            const courseId = curso.id;
+
+            if (!school.cursos.has(courseId)) {
+              school.cursos.set(courseId, {
+                id: courseId,
+                curso: curso.nombre,
+                precio: curso.precio,
+                sku: courseId,
+                estudiantes: [],
+                nuevos_hoy: 0,
+                total_estudiantes: 0,
+                expanded: false
+              });
+            }
+
+            const courseData = school.cursos.get(courseId);
+
+            // Agregar estudiante al curso
+            const student = {
               id: curso.estudiante.id,
               nombre: curso.estudiante.nombre,
               apellido: curso.estudiante.apellido,
@@ -170,13 +160,32 @@ private generateEnrollReport(startDate: string, endDate: string): void {
               fecha_creacion: curso.fecha_inscripcion,
               fecha_inscripcion: curso.fecha_inscripcion,
               saldo: curso.saldo
-            }],
-            nuevos_hoy: school.nuevos_hoy || 0,
-            total_estudiantes: school.total_estudiantes || 1,
-            expanded: false
-          })),
-          expanded: false
-        }));
+            };
+
+            courseData.estudiantes.push(student);
+            courseData.total_estudiantes = courseData.estudiantes.length;
+
+            // Verificar si es estudiante nuevo hoy
+            if (this.isStudentNewToday(student)) {
+              courseData.nuevos_hoy++;
+            }
+          });
+        });
+
+        // Convertir Map a Array y agrupar cursos WILL-GO
+        this.schoolsData = Array.from(schoolsMap.values()).map(school => {
+          const cursosArray = Array.from(school.cursos.values()) as any[];
+          const cursosAgrupados = this.groupWillGoCourses(cursosArray);
+
+          return {
+            ...school,
+            cursos: cursosAgrupados
+          };
+        });
+
+        // Comentado: No mostrar notificaciones modales
+        // this.checkAndNotifyNewStudentsSimple();
+
       } else {
         console.error('Estructura de datos inesperada:', response);
         this.schoolsData = [];
@@ -206,6 +215,59 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.router.navigate(['/private/presupuesto']);
   }
 
+  // Método para agrupar cursos WILL-GO
+  private groupWillGoCourses(cursos: any[]): any[] {
+    const willGoVariants = ['WILL-GO (Estándar)', 'WILL-GO (Segundo hermano)', 'WILL-GO (Tercer hermano)', 'Will-Go'];
+    const willGoCourses: any[] = [];
+    const otherCourses: any[] = [];
+
+    // Separar cursos WILL-GO de otros cursos
+    cursos.forEach(curso => {
+      const isWillGo = willGoVariants.some(variant =>
+        curso.curso.toLowerCase().includes(variant.toLowerCase()) ||
+        curso.curso.toLowerCase().includes('will-go') ||
+        curso.curso.toLowerCase().includes('will go')
+      );
+
+      if (isWillGo) {
+        willGoCourses.push(curso);
+      } else {
+        otherCourses.push(curso);
+      }
+    });
+
+    // Si hay cursos WILL-GO, agruparlos
+    if (willGoCourses.length > 0) {
+      const groupedWillGo: any = {
+        id: 'will-go-grouped',
+        nombre: 'Will - Go', // Agregado para Course
+        codigo: 'WILL-GO', // Agregado para Course
+        precio: willGoCourses[0].precio, // Usar el precio del primer curso
+        sku: 'will-go-grouped',
+        curso: 'Will - Go',
+        estudiantes: [],
+        nuevos_hoy: 0,
+        total_estudiantes: 0,
+        expanded: false
+      };
+
+      // Combinar todos los estudiantes de los cursos WILL-GO
+      willGoCourses.forEach(curso => {
+        groupedWillGo.estudiantes.push(...curso.estudiantes);
+        groupedWillGo.nuevos_hoy += curso.nuevos_hoy;
+      });
+
+      // Actualizar el total de estudiantes
+      groupedWillGo.total_estudiantes = groupedWillGo.estudiantes.length;
+
+      // Retornar otros cursos + el curso WILL-GO agrupado
+      return [...otherCourses, groupedWillGo];
+    }
+
+    // Si no hay cursos WILL-GO, retornar todos los cursos como estaban
+    return cursos;
+  }
+
   toggleSchool(schoolIndex: number): void {
     this.schoolsData[schoolIndex].expanded = !this.schoolsData[schoolIndex].expanded;
   }
@@ -224,30 +286,30 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   // Método para verificar si hay estudiantes nuevos hoy en un colegio
-  hasNewStudentsToday(school: SchoolData): boolean {
+  hasNewStudentsToday(school: any): boolean {
     return school.cursos.some(curso => curso.nuevos_hoy > 0);
   }
 
   // Método para obtener el total de estudiantes nuevos hoy en un colegio
-  getTotalNewStudentsToday(school: SchoolData): number {
+  getTotalNewStudentsToday(school: any): number {
     return school.cursos.reduce((total, curso) => total + curso.nuevos_hoy, 0);
   }
 
-  // Método para verificar y notificar sobre nuevos estudiantes hoy
-  checkAndNotifyNewStudents(): void {
+  // Método para verificar y notificar sobre nuevos estudiantes hoy (versión simple)
+  checkAndNotifyNewStudentsSimple(): void {
     this.schoolsData.forEach(school => {
-      const totalNewStudents = this.getTotalNewStudentsToday(school);
-      if (totalNewStudents > 0) {
+      const hasNewStudents = this.hasNewStudentsToday(school);
+      if (hasNewStudents) {
         this.notificationService.showSuccess(
           `¡Nuevos estudiantes en ${school.colegio}!`,
-          `Se han inscrito ${totalNewStudents} nuevo${totalNewStudents > 1 ? 's' : ''} estudiante${totalNewStudents > 1 ? 's' : ''} hoy.`
+          `Hay estudiantes nuevos inscritos hoy en este colegio.`
         );
       }
     });
   }
 
   // Método para verificar si un estudiante se inscribió hoy
-  isStudentNewToday(student: StudentData): boolean {
+  isStudentNewToday(student: any): boolean {
     if (!student.fecha_inscripcion) {
       return false;
     }
@@ -263,7 +325,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
   }
 
   // Método para obtener el total de estudiantes en un colegio
-  getTotalStudentsInSchool(school: SchoolData): number {
+  getTotalStudentsInSchool(school: any): number {
     return school.cursos.reduce((total, curso) => total + curso.total_estudiantes, 0);
   }
 
@@ -320,7 +382,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     try {
       // Lazy load ExcelJS
       const ExcelJS = await import('exceljs');
-      
+
       // Crear un nuevo libro de trabajo
       const workbook = new ExcelJS.Workbook();
 
@@ -567,7 +629,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     try{
       // Lazy load ExcelJS
       const ExcelJS = await import('exceljs');
-      
+
       const workBook = new ExcelJS.Workbook();
       const worksheet = workBook.addWorksheet('Reporte de Cartera');
 
