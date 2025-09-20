@@ -73,7 +73,7 @@ export class AccountReceivableFormComponent implements OnInit {
           );
       },
       error: (error) => {
-        this.notificationService.showError('Error', 'Error al cargar los cursos');
+        this.notificationService.showError('Error', 'Error al cargar los programas');
       },
       complete: () => {
         this.isLoadingCourses = false;

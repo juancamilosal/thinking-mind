@@ -79,7 +79,7 @@ export const routes: Routes = [
       },
       {
         path: 'courses',
-        title: 'Thinking Mind | Cursos',
+        title: 'Thinking Mind | Programas',
         component: Courses
       },
       {

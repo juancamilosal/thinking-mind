@@ -404,7 +404,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       summarySheet.addRow(['']); // Línea vacía
       summarySheet.addRow(['RESUMEN GENERAL']);
       summarySheet.addRow(['Total de Colegios:', this.schoolsData.length]);
-      summarySheet.addRow(['Total de Cursos:', totalCourses]);
+      summarySheet.addRow(['Total de Programas:', totalCourses]);
       summarySheet.addRow(['Total de Estudiantes:', totalStudents]);
       summarySheet.addRow(['Nuevos Estudiantes Hoy:', totalNewToday]);
 

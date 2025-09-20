@@ -371,16 +371,16 @@
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800">Cursos Registrados</h3>
+                <h3 class="text-2xl font-bold text-gray-800">Programas Registrados</h3>
               </div>
 
               <div class="overflow-x-auto">
                 <table class="w-full bg-white rounded-lg shadow-sm border ">
                   <thead class="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
                     <tr>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Curso</th>
+                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Programa</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Curso</th>
+                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Programa</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
@@ -449,7 +449,7 @@
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                       </svg>
-                      <span>Registrar Otro Curso</span>
+                      <span>Registrar Otro Programa</span>
                     </span>
                   </button>
                 </div>
@@ -728,13 +728,13 @@
                         d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                 </svg>
               </div>
-              <h3 class="text-2xl font-bold text-violet-800">Selección de Curso</h3>
+              <h3 class="text-2xl font-bold text-violet-800">Selección del Programa</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
               <!-- Selección del Curso -->
               <div class="space-y-3">
-                <label for="selectedCourse" class="block text-sm font-semibold text-violet-700">Curso *</label>
+                <label for="selectedCourse" class="block text-sm font-semibold text-violet-700">Programa *</label>
                 @if (isLoadingCourses) {
                   <div class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm bg-white text-violet-800 flex items-center">
                     <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
@@ -742,7 +742,7 @@
                       <path class="opacity-75" fill="currentColor"
                             d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Cargando cursos...
+                    Cargando programas...
                   </div>
                 } @else {
                   <select
@@ -750,7 +750,7 @@
                     formControlName="selectedCourse"
                     (change)="onCourseChange($any($event.target).value)"
                     class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 bg-white text-violet-800">
-                    <option value="">Seleccione un curso</option>
+                    <option value="">Seleccione un programa</option>
                     @for (course of courses; track course.id) {
                       <option [value]="course.id">{{ course.nombre }}</option>
                     }
@@ -763,7 +763,7 @@
                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                             clip-rule="evenodd"/>
                     </svg>
-                    Debe seleccionar un curso
+                    Debe seleccionar un programa
                   </p>
                 }
               </div>
@@ -771,7 +771,7 @@
               <!-- Precio del Curso -->
                @if (paymentForm.get('coursePrice')?.value) {
                  <div class="space-y-4">
-                   <label class="block text-sm font-semibold text-violet-700">Precio del Curso</label>
+                   <label class="block text-sm font-semibold text-violet-700">Precio del Programa</label>
                    <div class="bg-gradient-to-br from-violet-100 via-purple-50 to-indigo-100 p-6 rounded-xl border-2 border-violet-200 shadow-lg">
                      <div class="flex items-center justify-center space-x-3">
                        <div class="bg-violet-600 p-3 rounded-full shadow-md">
@@ -781,7 +781,7 @@
                          </svg>
                        </div>
                        <div class="text-center">
-                         <p class="text-sm font-medium text-violet-600 uppercase tracking-wide mb-1">Valor del Curso</p>
+                         <p class="text-sm font-medium text-violet-600 uppercase tracking-wide mb-1">Valor del Programa</p>
                          <p class="text-3xl font-bold text-violet-800 leading-tight">{{ paymentForm.get('coursePrice')?.value }}</p>
                        </div>
                      </div>
@@ -870,7 +870,7 @@
         @if (selectedAccountData) {
           <div class="mt-2 text-sm opacity-90">
             <p><strong>Estudiante:</strong> {{ selectedAccountData.studentName }}</p>
-            <p><strong>Curso:</strong> {{ selectedAccountData.courseName }}</p>
+            <p><strong>Programa:</strong> {{ selectedAccountData.courseName }}</p>
             <p><strong>Monto Total:</strong> ${{ selectedAccountData.coursePriceNumber | number }}</p>
             <p><strong>Total Abonado:</strong> {{ selectedAccountData.balance }}</p>
             <p><strong>Estado:</strong> {{ selectedAccountData.status }}</p>
@@ -996,7 +996,7 @@
         <div class="px-8 py-6 space-y-8">
           <!-- Información del curso -->
           <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="text-sm font-medium text-gray-600 mb-1">Curso:</p>
+            <p class="text-sm font-medium text-gray-600 mb-1">Programa:</p>
             <p class="text-gray-900 font-semibold">{{ paymentModalData?.courseName }}</p>
           </div>
 

@@ -87,7 +87,7 @@
     }
 
     <div class="flex items-center justify-between mb-2">
-      <h2 class="text-2xl font-bold text-gray-800">Cursos del Colegio</h2>
+      <h2 class="text-2xl font-bold text-gray-800">Programas del Colegio</h2>
       <button
         type="button"
         (click)="goToShirtColor()"
@@ -98,7 +98,7 @@
         <span>Camisetas</span>
       </button>
     </div>
-    <p class="text-gray-600">Lista de cursos con sus estudiantes registrados</p>
+    <p class="text-gray-600">Lista de programas con sus estudiantes registrados</p>
   </div>
 
   <!-- Barra de Búsqueda -->
@@ -240,7 +240,7 @@
   <div class="bg-white rounded-xl shadow-lg overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
       <div class="flex items-center justify-between">
-        <h3 class="text-xl font-semibold text-gray-800">Lista de Cursos</h3>
+        <h3 class="text-xl font-semibold text-gray-800">Lista de Programas</h3>
         @if (!isLoading && filteredCourses.length > 0) {
           <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
             {{ totalAccountsCount }} cuenta{{ totalAccountsCount !== 1 ? 's' : '' }} por cobrar en {{ filteredCourses.length }} curso{{ filteredCourses.length !== 1 ? 's' : '' }}
@@ -265,8 +265,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
           </svg>
-          <p class="text-lg font-medium text-gray-500">No hay cursos disponibles</p>
-          <p class="text-sm text-gray-400">No se encontraron cursos con estudiantes en este colegio</p>
+          <p class="text-lg font-medium text-gray-500">No hay programas disponibles</p>
+          <p class="text-sm text-gray-400">No se encontraron programas con estudiantes en este colegio</p>
         </div>
       </div>
     } @else {

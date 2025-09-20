@@ -120,7 +120,7 @@ export class BudgetReport implements OnInit {
     if (paidPayments.length === 0) {
       this.notificationService.showError(
         'Sin datos',
-        'No se encontraron cursos con cuentas completamente pagadas para generar el informe.'
+        'No se encontraron programas con cuentas completamente pagadas para generar el informe.'
       );
       return;
     }
@@ -169,7 +169,7 @@ export class BudgetReport implements OnInit {
       if (!courseMap.has(courseId)) {
         courseMap.set(courseId, {
           courseId: courseId,
-          courseName: curso.nombre || 'Curso sin nombre',
+          courseName: curso.nombre || 'Programa sin nombre',
           coursePrice: curso.precio || '0',
           accountsCount: 0,
           totalEnrolledAmount: 0,

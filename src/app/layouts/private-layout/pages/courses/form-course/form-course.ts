@@ -133,11 +133,11 @@ export class FormCourse implements OnInit, OnChanges {
         this.courseCreated = true;
         this.isSubmitting = false;
         this.showImageSection = true;
-        this.notificationService.showSuccess('Curso creado exitosamente', 'Ahora puedes agregar una imagen al curso');
+        this.notificationService.showSuccess('Programa creado exitosamente', 'Ahora puedes agregar una imagen al programa');
       },
       error: (error) => {
         this.isSubmitting = false;
-        this.notificationService.showError('Error al crear el curso', error.error?.message || 'Error desconocido');
+        this.notificationService.showError('Error al crear el programa', error.error?.message || 'Error desconocido');
       }
     });
   }
@@ -188,7 +188,7 @@ export class FormCourse implements OnInit, OnChanges {
 
   private showSuccessModal(): void {
     this.isSubmitting = false;
-    this.notificationService.showSuccess('Curso creado exitosamente', 'El curso ha sido creado correctamente.');
+    this.notificationService.showSuccess('Programa creado exitosamente', 'El programa ha sido creado correctamente.');
     this.cdr.detectChanges();
     this.courseUpdated.emit();
   }
@@ -197,13 +197,13 @@ export class FormCourse implements OnInit, OnChanges {
     this.courseServices.createCourse(course).subscribe({
       next: (response) => {
         this.isSubmitting = false;
-        this.notificationService.showSuccess('Curso creado exitosamente',"");
+        this.notificationService.showSuccess('Programa creado exitosamente',"");
         this.courseUpdated.emit();
         // Remover: this.goBack.emit();
       },
       error: (error) => {
         this.isSubmitting = false;
-        this.notificationService.showError('Error al crear el curso');
+        this.notificationService.showError('Error al crear el programa');
       }
     });
   }
@@ -240,12 +240,12 @@ export class FormCourse implements OnInit, OnChanges {
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
         this.isSubmitting = false;
-        this.notificationService.showSuccess('Curso actualizado exitosamente', "");
+        this.notificationService.showSuccess('Programa actualizado exitosamente', "");
         this.courseUpdated.emit();
       },
       error: (error) => {
         this.isSubmitting = false;
-        this.notificationService.showError('Error al actualizar el curso',"");
+        this.notificationService.showError('Error al actualizar el programa',"");
       }
     });
   }
@@ -265,12 +265,12 @@ export class FormCourse implements OnInit, OnChanges {
         if (previousImageId) {
           this.courseServices.deleteFile(previousImageId).subscribe();
         }
-        this.notificationService.showSuccess('Curso actualizado exitosamente', "");
+        this.notificationService.showSuccess('Programa actualizado exitosamente', "");
         this.courseUpdated.emit();
       },
       error: (error) => {
         console.error('Error updating course:', error);
-        this.notificationService.showError('Error al actualizar el curso');
+        this.notificationService.showError('Error al actualizar el programa');
       }
     });
   }
@@ -279,14 +279,14 @@ export class FormCourse implements OnInit, OnChanges {
     if (this.courseData?.id) {
       this.confirmationService.showDeleteConfirmation(
         this.courseData.nombre,
-        'curso',
+        'programa',
         () => {
           this.isDeleting = true;
           this.courseServices.deleteCourse(this.courseData!.id).subscribe({
             next: (response) => {
               this.isDeleting = false;
               this.notificationService.showSuccess(
-                'Curso eliminado',
+                'Programa eliminado',
                 `${this.courseData?.nombre} ha sido eliminado exitosamente.`
               );
               this.courseUpdated.emit();
@@ -295,7 +295,7 @@ export class FormCourse implements OnInit, OnChanges {
               this.isDeleting = false;
               this.notificationService.showError(
                 'Error al eliminar',
-                'No se pudo eliminar el curso. Inténtalo nuevamente.'
+                'No se pudo eliminar el programa. Inténtalo nuevamente.'
               );
             }
           });

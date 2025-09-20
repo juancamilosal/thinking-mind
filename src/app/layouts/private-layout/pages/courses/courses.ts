@@ -149,13 +149,13 @@ export class Courses {
   }
 
   deleteCourse(course: Course) {
-    if (confirm(`¿Estás seguro de que deseas eliminar el curso "${course.nombre}"?`)) {
+    if (confirm(`¿Estás seguro de que deseas eliminar el programa "${course.nombre}"?`)) {
       this.courseServices.deleteCourse(course.id).subscribe({
         next: (response) => {
           this.searchCourse(); // Recargar la lista de cursos
         },
         error: (error) => {
-          console.error('Error al eliminar el curso:', error);
+          console.error('Error al eliminar el programa:', error);
           // Aquí puedes agregar una notificación de error
         }
       });
