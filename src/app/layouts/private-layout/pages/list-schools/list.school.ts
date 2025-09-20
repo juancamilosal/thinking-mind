@@ -75,18 +75,18 @@ export class ListSchool implements OnInit {
   currentDate = new Date();
   isRector = false;
   private searchTimeout: any;
-  
-  // Propiedad para controlar el modo de vista: tabla o cursos
+
+  // Modo de vista: 'table' para listado completo, 'courses' para vista por cursos
   viewMode: 'table' | 'courses' = 'table';
 
-  // Propiedades de paginación
+  // Paginación
   currentPage = 1;
   itemsPerPage = 15;
   totalItems = 0;
   totalPages = 0;
   itemsPerPageOptions = [10, 15, 25, 50];
 
-  // Hacer Math disponible en el template
+  // Para usar Math en el template
   Math = Math;
 
   constructor(
@@ -95,6 +95,31 @@ export class ListSchool implements OnInit {
     private notificationService: NotificationService,
     private router: Router
   ) {}
+
+  // Método público para usar en el template
+  isWillGoCourse(courseName: string): boolean {
+    if (!courseName) return false;
+    
+    const willGoVariants = [
+      'will-go(estándar)',
+      'will-go(segundo hermano)', 
+      'will-go(tercer hermano)',
+      'will - go(estándar)',
+      'will - go(segundo hermano)',
+      'will - go(tercer hermano)',
+      'will-go (estándar)',
+      'will-go (segundo hermano)',
+      'will-go (tercer hermano)',
+      'will go',
+      'will-go'
+    ];
+    
+    const normalizedName = courseName.toLowerCase().trim();
+    return willGoVariants.some(variant => 
+      normalizedName.includes(variant) || 
+      normalizedName === variant
+    );
+  }
 
   ngOnInit(): void {
     this.loadSchools();
@@ -478,15 +503,23 @@ export class ListSchool implements OnInit {
           }
 
           const schoolData = schoolsMap.get(schoolId)!;
-          const courseId = course.id;
-
+          
+          // Determinar si es un curso Will-Go y usar ID unificado
+          const isWillGoCourse = this.isWillGoCourse(course.nombre);
+          const courseId = isWillGoCourse ? 'will-go-unified' : course.id;
+          
           // Crear entrada del curso dentro del colegio si no existe
           if (!schoolData.courses.has(courseId)) {
-            schoolData.courses.set(courseId, {
-              course: course,
+            const courseData = {
+              course: isWillGoCourse ? {
+                ...course,
+                id: 'will-go-unified',
+                nombre: 'WILL - GO'
+              } : course,
               students: [],
               isExpanded: false
-            });
+            };
+            schoolData.courses.set(courseId, courseData);
           }
 
           const courseData = schoolData.courses.get(courseId)!;
