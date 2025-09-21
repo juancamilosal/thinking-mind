@@ -23,10 +23,14 @@ export class CourseCardComponent {
   @Input() courseImageUrl: string = '';
   @Input() colegiosCursos: any[] = []; // Array de colegios asignados al curso
   
-  // Nuevos outputs para los eventos
+  // Outputs para los eventos existentes
   @Output() editCourse = new EventEmitter<void>();
   @Output() deleteCourse = new EventEmitter<void>();
   @Output() addColegio = new EventEmitter<void>();
+  
+  // Nuevos outputs para editar y eliminar colegios_cursos
+  @Output() editColegioCurso = new EventEmitter<any>();
+  @Output() deleteColegioCurso = new EventEmitter<any>();
 
   onImageError(event: any) {
     // Si hay error al cargar la imagen, ocultar el elemento img
@@ -45,5 +49,13 @@ export class CourseCardComponent {
 
   onAddColegio() {
     this.addColegio.emit();
+  }
+
+  onEditColegioCurso(colegioCurso: any) {
+    this.editColegioCurso.emit(colegioCurso);
+  }
+
+  onDeleteColegioCurso(colegioCurso: any) {
+    this.deleteColegioCurso.emit(colegioCurso);
   }
 }
