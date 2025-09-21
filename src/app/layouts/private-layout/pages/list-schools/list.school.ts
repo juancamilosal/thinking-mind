@@ -402,9 +402,9 @@ export class ListSchool implements OnInit {
   }
 
   navigateToShirtsForSchool(schoolId: string): void {
-    const school = this.schoolsWithAccounts.find(s => s.school.id === schoolId) || 
+    const school = this.schoolsWithAccounts.find(s => s.school.id === schoolId) ||
                   this.schoolsWithCourses.find(s => s.school.id === schoolId);
-    
+
     this.router.navigate(['/private/shirt-colors'], {
       queryParams: {
         schoolId: schoolId,
