@@ -49,7 +49,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
             }
           </svg>
-          <span>{{ viewMode === 'table' ? 'Por Programas' : 'Vista Tabla' }}</span>
+          <span>{{ viewMode === 'table' ? 'Vista Por Programas' : 'Vista Por Estudiantes' }}</span>
         </button>
         <button
           type="button"
@@ -383,7 +383,7 @@
                           @for (courseData of schoolData.courses; track courseData.course.id; let courseIndex = $index) {
                             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                               <!-- Header del curso -->
-                              <button 
+                              <button
                                 (click)="toggleCourse(schoolIndex, courseIndex)"
                                 class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:bg-gray-50 border-b border-gray-200">
                                 <div class="flex items-center justify-between">
@@ -404,7 +404,7 @@
                                     <span class="text-sm text-gray-500">
                                       {{ courseData.isExpanded ? 'Ocultar' : 'Ver' }} estudiantes
                                     </span>
-                                    <svg 
+                                    <svg
                                       class="w-4 h-4 transition-transform duration-200"
                                       [class.rotate-180]="courseData.isExpanded"
                                       fill="none" stroke="currentColor" viewBox="0 0 24 24">

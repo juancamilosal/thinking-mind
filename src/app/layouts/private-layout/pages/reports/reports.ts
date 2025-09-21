@@ -311,11 +311,11 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     if (willGoCourses.length > 0) {
       const groupedWillGo: any = {
         id: 'will-go-grouped',
-        nombre: 'Will - Go', // Agregado para Course
+        nombre: 'WILL - GO', // Agregado para Course
         codigo: 'WILL-GO', // Agregado para Course
         precio: willGoCourses[0].precio, // Usar el precio del primer curso
         sku: 'will-go-grouped',
-        curso: 'Will - Go',
+        curso: 'WILL - GO',
         estudiantes: [],
         nuevos_hoy: 0,
         total_estudiantes: 0,
