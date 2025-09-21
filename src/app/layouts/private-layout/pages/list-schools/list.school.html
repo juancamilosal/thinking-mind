@@ -121,7 +121,9 @@
               <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="toggleSchoolStudents(schoolData)">
                 <td class="px-6 py-4">
                   <div class="flex items-center justify-between">
-                    <div class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</div>
+                    <div class="flex items-center justify-between flex-1">
+                      <div class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</div>
+                    </div>
                     <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200"
                          [class.rotate-180]="schoolData.showStudents"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,9 +179,19 @@
                         </div>
                       } @else if (schoolData.students && schoolData.students.length > 0) {
                         <div class="p-6">
-                          <h4 class="text-lg font-semibold text-gray-900 mb-4">
-                            Estudiantes de {{ schoolData.school.nombre }}
-                          </h4>
+                          <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-900">
+                              Estudiantes de {{ schoolData.school.nombre }}
+                            </h4>
+                            <button
+                              type="button"
+                              (click)="navigateToShirtsForSchool(schoolData.school.id)"
+                              class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md flex items-center justify-center">
+                              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M16 2l-3 1.5L12 3l-1 .5L8 2 4 4v4l2-1v13h12V7l2 1V4l-4-2z"/>
+                              </svg>
+                            </button>
+                          </div>
                           <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                               <thead class="bg-gray-100">
@@ -319,13 +331,15 @@
               <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="toggleSchool(schoolIndex)">
                 <td class="px-6 py-4">
                   <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                      <span class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</span>
-                      @if (isSchoolNewToday(schoolData.school)) {
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
-                          ¡NUEVO!
-                        </span>
-                      }
+                    <div class="flex items-center justify-between flex-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</span>
+                        @if (isSchoolNewToday(schoolData.school)) {
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-pulse">
+                            ¡NUEVO!
+                          </span>
+                        }
+                      </div>
                     </div>
                     <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200"
                          [class.rotate-180]="schoolData.isExpanded"
@@ -333,7 +347,6 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                   </div>
-                </td>
                 <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.ciudad || 'Ciudad no especificada' }}</td>
                 <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.direccion || 'Dirección no especificada' }}</td>
                 <td class="px-6 py-4 text-sm text-gray-700">
@@ -376,9 +389,19 @@
                   <td colspan="6" class="px-0 py-0">
                     <div class="bg-gray-50 border-t border-gray-200">
                       <div class="p-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-4">
-                          Cursos de {{ schoolData.school.nombre }}
-                        </h4>
+                        <div class="flex items-center justify-between mb-4">
+                          <h4 class="text-lg font-semibold text-gray-900">
+                            Cursos de {{ schoolData.school.nombre }}
+                          </h4>
+                          <button
+                            type="button"
+                            (click)="navigateToShirtsForSchool(schoolData.school.id)"
+                            class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path fill="currentColor" d="M16 2l-3 1.5L12 3l-1 .5L8 2 4 4v4l2-1v13h12V7l2 1V4l-4-2z"/>
+                            </svg>
+                          </button>
+                        </div>
                         <div class="space-y-4">
                           @for (courseData of schoolData.courses; track courseData.course.id; let courseIndex = $index) {
                             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
