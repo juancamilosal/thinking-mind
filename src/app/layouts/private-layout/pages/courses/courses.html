@@ -91,6 +91,7 @@
             [coursePrice]="course.precio"
             [courseCode]="course.sku"
             [courseImageUrl]="course.img_url"
+            [colegiosCursos]="course.colegios_cursos || []"
             (editCourse)="editCourse(course)"
             (deleteCourse)="deleteCourse(course)"
             (addColegio)="showColegioFormForCourse(course)"
@@ -164,7 +165,8 @@
         </div>
         <app-form-colegio-cursos
           [selectedCourse]="selectedCourse"
-          (goBack)="closeColegioForm()">
+          (goBack)="closeColegioForm()"
+          (colegioAdded)="onColegioAdded()">
         </app-form-colegio-cursos>
       </div>
     </div>

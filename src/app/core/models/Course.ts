@@ -9,5 +9,5 @@ export class Course {
   precio_inscripcion?: number;
   estudiantes?: any[];
   cuentas_cobrar?: any[];
-  colegios_cursos?: string[]; // Array de IDs de colegios_cursos
+  colegios_cursos?: any[]; // Array de objetos completos con colegio_id expandido
 }

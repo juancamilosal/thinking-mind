@@ -21,6 +21,7 @@ import { ColegioCursosService } from '../../../../../core/services/colegio-curso
 export class ColegioCursosComponent implements OnInit {
   @Input() selectedCourse: Course | null = null;
   @Output() goBack = new EventEmitter<void>();
+  @Output() colegioAdded = new EventEmitter<void>(); // Nuevo evento para notificar que se agregó un colegio
 
   fechaFinalizacionForm!: FormGroup;
   filteredSchools: School[] = [];
@@ -188,6 +189,9 @@ export class ColegioCursosComponent implements OnInit {
           this.isCourseSelected = false;
           this.filteredSchools = [];
           this.filteredCourses = [];
+
+          // Emitir evento para notificar que se agregó un colegio
+          this.colegioAdded.emit();
 
           // Emitir evento para regresar
           this.goBack.emit();

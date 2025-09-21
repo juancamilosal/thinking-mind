@@ -21,6 +21,7 @@ export class CourseCardComponent {
   @Input() coursePrice: string = '299000';
   @Input() courseCode: string = 'ANG-001';
   @Input() courseImageUrl: string = '';
+  @Input() colegiosCursos: any[] = []; // Array de colegios asignados al curso
   
   // Nuevos outputs para los eventos
   @Output() editCourse = new EventEmitter<void>();

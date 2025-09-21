@@ -171,6 +171,12 @@ export class Courses {
     this.selectedCourse = null;
   }
 
+  // Método para manejar cuando se agrega un colegio exitosamente
+  onColegioAdded() {
+    // Recargar los cursos para mostrar los colegios actualizados
+    this.searchCourse();
+  }
+
   deleteCourse(course: Course) {
     if (confirm(`¿Estás seguro de que deseas eliminar el programa "${course.nombre}"?`)) {
       this.courseServices.deleteCourse(course.id).subscribe({

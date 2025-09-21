@@ -19,7 +19,7 @@ export class CourseService {
   }
 
   searchCourse(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
-    // Agregar fields para incluir colegios_cursos en la respuesta
+    // Agregar fields para incluir colegios_cursos con colegio_id expandido
     const baseParams = {
       'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*'
     };
