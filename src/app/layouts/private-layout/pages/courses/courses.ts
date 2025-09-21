@@ -1,24 +1,28 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import {CourseCardComponent} from '../../../../components/course-card/course-card';
-import {CourseInfoComponent} from '../../../../components/course-info/course-info';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
+import { CourseCardComponent } from '../../../../components/course-card/course-card';
+import { CourseInfoComponent } from '../../../../components/course-info/course-info';
 import { FormCourse } from './form-course/form-course';
-import {ColegioCursosComponent} from './form-colegio-cursos/form-colegio-cursos';
+import { ColegioCursosComponent } from './form-colegio-cursos/form-colegio-cursos';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ColegioCursosService } from '../../../../core/services/colegio-cursos.service';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-courses',
+  standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     CourseCardComponent,
     CourseInfoComponent,
     FormCourse,
     ColegioCursosComponent
   ],
-  templateUrl: './courses.html',
-  standalone: true
+  templateUrl: './courses.html'
 })
 
 export class Courses {
@@ -33,13 +37,31 @@ export class Courses {
   isLoading = false;
   searchTerm = '';
   private searchTimeout: any;
+  
+  // Variables para el modal de edición de fecha
+  showEditModal = false;
+  selectedColegioCurso: any = null;
+  editFechaForm!: FormGroup;
 
-  constructor(private fb: FormBuilder, private courseServices: CourseService) {
-    }
+  constructor(
+    private fb: FormBuilder,
+    private courseServices: CourseService,
+    private colegioCursosService: ColegioCursosService,
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
+  ) {
+    this.initEditForm();
+  }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.initForm();
     this.searchCourse();
+  }
+
+  initEditForm(): void {
+    this.editFechaForm = this.fb.group({
+      fecha_finalizacion: ['', Validators.required]
+    });
   }
 
   toggleForm() {
@@ -177,17 +199,96 @@ export class Courses {
     this.searchCourse();
   }
 
-  deleteCourse(course: Course) {
-    if (confirm(`¿Estás seguro de que deseas eliminar el programa "${course.nombre}"?`)) {
-      this.courseServices.deleteCourse(course.id).subscribe({
+  // Nuevos métodos para editar y eliminar colegios_cursos
+  editColegioCurso(colegioCurso: any) {
+    this.selectedColegioCurso = colegioCurso;
+    this.editFechaForm.patchValue({
+      fecha_finalizacion: colegioCurso.fecha_finalizacion || ''
+    });
+    this.showEditModal = true;
+  }
+
+  deleteColegioCurso(colegioCurso: any) {
+    this.confirmationService.showDeleteConfirmation(
+      colegioCurso.colegio_id?.nombre || 'este colegio',
+      'colegio del programa',
+      () => {
+        this.colegioCursosService.deleteColegioCurso(colegioCurso.id).subscribe({
+          next: (response) => {
+            this.notificationService.showSuccess(
+              'Éxito',
+              'Colegio eliminado del programa correctamente'
+            );
+            this.searchCourse(); // Recargar los cursos
+          },
+          error: (error) => {
+            console.error('Error al eliminar colegio_curso:', error);
+            this.notificationService.showError(
+              'Error',
+              'Error al eliminar el colegio del programa'
+            );
+          }
+        });
+      }
+    );
+  }
+
+  // Método para guardar la fecha editada
+  saveEditedFecha() {
+    if (this.editFechaForm.valid && this.selectedColegioCurso) {
+      const updatedData = {
+        fecha_finalizacion: this.editFechaForm.get('fecha_finalizacion')?.value
+      };
+
+      this.colegioCursosService.updateColegioCurso(this.selectedColegioCurso.id, updatedData).subscribe({
         next: (response) => {
-          this.searchCourse(); // Recargar la lista de cursos
+          this.notificationService.showSuccess(
+            'Éxito',
+            'Fecha de finalización actualizada correctamente'
+          );
+          this.closeEditModal();
+          this.searchCourse(); // Recargar los cursos
         },
         error: (error) => {
-          console.error('Error al eliminar el programa:', error);
-          // Aquí puedes agregar una notificación de error
+          console.error('Error al actualizar fecha:', error);
+          this.notificationService.showError(
+            'Error',
+            'Error al actualizar la fecha de finalización'
+          );
         }
       });
     }
+  }
+
+  // Método para cerrar el modal de edición
+  closeEditModal() {
+    this.showEditModal = false;
+    this.selectedColegioCurso = null;
+    this.editFechaForm.reset();
+  }
+
+  deleteCourse(course: Course) {
+    this.confirmationService.showDeleteConfirmation(
+      course.nombre,
+      'programa',
+      () => {
+        this.courseServices.deleteCourse(course.id).subscribe({
+          next: (response) => {
+            this.notificationService.showSuccess(
+              'Programa eliminado',
+              `${course.nombre} ha sido eliminado exitosamente.`
+            );
+            this.searchCourse(); // Recargar la lista de cursos
+          },
+          error: (error) => {
+            console.error('Error al eliminar el programa:', error);
+            this.notificationService.showError(
+              'Error al eliminar',
+              'No se pudo eliminar el programa. Inténtalo nuevamente.'
+            );
+          }
+        });
+      }
+    );
   }
 }

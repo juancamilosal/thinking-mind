@@ -55,9 +55,9 @@ export class AccountsReceivable implements OnInit {
   }
 
   protected loadAccounts(): void {
-    // Cargar todas las cuentas de una sola vez
+    // Cargar todas las cuentas de una sola vez sin filtro de fecha
     this.isLoading = true;
-    this.accountService.searchAccountReceivable().subscribe({
+    this.accountService.getAllAccountsReceivable().subscribe({
       next: (response) => {
         this.allAccounts = response.data || [];
         this.filterAccountsByStatus();

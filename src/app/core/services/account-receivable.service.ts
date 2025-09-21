@@ -53,6 +53,31 @@ export class AccountReceivableService {
       params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
     }
 
+    // Filtro para fecha_finalizacion mayor a la fecha actual
+    const currentDate = new Date().toISOString();
+    params['filter[fecha_finalizacion][_gt]'] = currentDate;
+
+    const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
+  // Método para obtener todas las cuentas sin filtro de fecha (para accounts-receivable)
+  getAllAccountsReceivable(searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    let params: any = {};
+
+    // Filtro por término de búsqueda si se proporciona
+    if (searchTerm) {
+      params['filter[_or][0][descripcion][_icontains]'] = searchTerm;
+      params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
+    }
+
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
     const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
 

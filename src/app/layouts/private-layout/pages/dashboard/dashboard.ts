@@ -16,6 +16,7 @@ interface DashboardStats {
   pendingPayments: number;
   overdueAmount: number;
   monthlyPayments: number;
+  totalPendingAccountsReceivable: number;
 }
 
 interface RectorDashboardStats {
@@ -44,7 +45,8 @@ export class Dashboard implements OnInit {
     totalPaidAmount: 0,
     pendingPayments: 0,
     overdueAmount: 0,
-    monthlyPayments: 0
+    monthlyPayments: 0,
+    totalPendingAccountsReceivable: 0
   };
 
   rectorStats: RectorDashboardStats = {
@@ -192,6 +194,7 @@ export class Dashboard implements OnInit {
     let pendingCount = 0;
     let overdueAmount = 0;
     let monthlyPayments = 0;
+    let totalPendingAccountsReceivable = 0;
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
@@ -218,7 +221,7 @@ export class Dashboard implements OnInit {
         const netPaidAmount = paidAmount - refundAmount;
         totalPaid += netPaidAmount;
 
-        // Calcular pagos del mes actual (pagos - devoluciones)
+        // Calcular pagos del mes actual usando valor_neto
         const monthlyPaid = account.pagos
           .filter((pago: any) => pago.estado === 'PAGADO')
           .filter((pago: any) => {
@@ -228,7 +231,10 @@ export class Dashboard implements OnInit {
             }
             return false;
           })
-          .reduce((sum: number, pago: any) => sum + (parseFloat(pago.valor || pago.monto) || 0), 0);
+          .reduce((sum: number, pago: any) => {
+            const valorNeto = parseFloat(pago.valor_neto?.toString() || '0') || 0;
+            return sum + valorNeto;
+          }, 0);
         
         const monthlyRefunds = account.pagos
           .filter((pago: any) => pago.estado === 'DEVOLUCION')
@@ -239,14 +245,23 @@ export class Dashboard implements OnInit {
             }
             return false;
           })
-          .reduce((sum: number, pago: any) => sum + (parseFloat(pago.valor || pago.monto) || 0), 0);
+          .reduce((sum: number, pago: any) => {
+            const valorNeto = parseFloat(pago.valor_neto?.toString() || '0') || 0;
+            return sum + valorNeto;
+          }, 0);
         
         monthlyPayments += (monthlyPaid - monthlyRefunds);
 
-        if (netPaidAmount < precio) {
-          pendingCount++;
+        // Contar solo cuentas PENDIENTES y vencidas (fecha_finalizacion < fecha actual)
+        if (account.estado === 'PENDIENTE' && account.fecha_finalizacion) {
+          const dueDate = new Date(account.fecha_finalizacion);
+          if (currentDate > dueDate) {
+            pendingCount++;
+          }
+        }
 
-          // Verificar si la cuenta está vencida
+        // Verificar si la cuenta está vencida para calcular monto vencido
+        if (netPaidAmount < precio) {
           if (account.fecha_vencimiento) {
             const dueDate = new Date(account.fecha_vencimiento);
             if (currentDate > dueDate) {
@@ -255,7 +270,13 @@ export class Dashboard implements OnInit {
           }
         }
       } else {
-        pendingCount++;
+        // Contar solo cuentas PENDIENTES y vencidas (fecha_finalizacion < fecha actual)
+        if (account.estado === 'PENDIENTE' && account.fecha_finalizacion) {
+          const dueDate = new Date(account.fecha_finalizacion);
+          if (currentDate > dueDate) {
+            pendingCount++;
+          }
+        }
 
         // Si no hay pagos y hay fecha de vencimiento, verificar si está vencida
         if (account.fecha_vencimiento) {
@@ -265,6 +286,11 @@ export class Dashboard implements OnInit {
           }
         }
       }
+
+      // Contar todas las cuentas pendientes
+      if (account.estado === 'PENDIENTE') {
+        totalPendingAccountsReceivable++;
+      }
     });
 
     this.stats.totalAmountReceivable = totalAmount;
@@ -272,6 +298,7 @@ export class Dashboard implements OnInit {
     this.stats.pendingPayments = pendingCount;
     this.stats.overdueAmount = overdueAmount;
     this.stats.monthlyPayments = monthlyPayments;
+    this.stats.totalPendingAccountsReceivable = totalPendingAccountsReceivable;
   }
 
   formatCurrency(amount: number): string {
