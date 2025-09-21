@@ -30,6 +30,17 @@ export class Payments implements OnInit, OnDestroy {
   isLoading: boolean = false;
   selectedPayment: PaymentModel | null = null;
   showPaymentDetail: boolean = false;
+  
+  // Propiedades de paginación
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  totalPages = 0;
+  paginatedPayments: PaymentModel[] = [];
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
+
+
 
   // Propiedades para las tarifas Wompi
   wompiTariffs: WompiTariff = {
@@ -138,6 +149,8 @@ export class Payments implements OnInit, OnDestroy {
       next: (response: ResponseAPI<PaymentModel[]>) => {
         this.payments = response.data || [];
         this.filteredPayments = [...this.payments];
+        this.totalItems = this.filteredPayments.length;
+        this.updatePagination();
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -178,6 +191,9 @@ export class Payments implements OnInit, OnDestroy {
     // Mantenemos la funcionalidad local como respaldo
     if (!this.searchTerm.trim()) {
       this.filteredPayments = [...this.payments];
+      this.totalItems = this.filteredPayments.length;
+      this.currentPage = 1;
+      this.updatePagination();
       return;
     }
 
@@ -186,6 +202,9 @@ export class Payments implements OnInit, OnDestroy {
       payment.numero_transaccion?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       payment.estado?.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
+    this.totalItems = this.filteredPayments.length;
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
   // Método para mostrar el detalle del pago
@@ -233,6 +252,49 @@ export class Payments implements OnInit, OnDestroy {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  }
+
+  // Métodos de paginación
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    this.updatePaginatedPayments();
+  }
+
+  updatePaginatedPayments(): void {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedPayments = this.filteredPayments.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      this.updatePaginatedPayments();
+    }
+  }
+
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(target.value);
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  getPaginationArray(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   }
 
   formatPaymentMethod(method: string): string {
