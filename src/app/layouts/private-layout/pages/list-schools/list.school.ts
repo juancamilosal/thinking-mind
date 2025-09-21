@@ -401,6 +401,18 @@ export class ListSchool implements OnInit {
     this.router.navigate(['/private/shirt-colors']);
   }
 
+  navigateToShirtsForSchool(schoolId: string): void {
+    const school = this.schoolsWithAccounts.find(s => s.school.id === schoolId) ||
+                  this.schoolsWithCourses.find(s => s.school.id === schoolId);
+
+    this.router.navigate(['/private/shirt-colors'], {
+      queryParams: {
+        schoolId: schoolId,
+        schoolName: school?.school.nombre || ''
+      }
+    });
+  }
+
   updatePinEntregado(account: AccountReceivable, event: any): void {
     const isChecked = event.target.checked;
     const pinValue = isChecked ? 'SI' : 'NO';
