@@ -53,6 +53,10 @@ export class AccountReceivableService {
       params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
     }
 
+    // Filtro para fecha_finalizacion mayor a la fecha actual
+    const currentDate = new Date().toISOString();
+    params['filter[fecha_finalizacion][_gt]'] = currentDate;
+
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
     const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
 
