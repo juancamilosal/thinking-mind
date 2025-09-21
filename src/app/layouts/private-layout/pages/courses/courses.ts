@@ -46,6 +46,10 @@ export class Courses {
     this.showForm = !this.showForm;
     this.editMode = false;
     this.selectedCourse = null;
+    // Scroll al inicio de la página cuando se abre el formulario
+    if (this.showForm) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     // Consultar el servicio para actualizar la lista cuando se regresa del formulario
     if (!this.showForm) {
       this.searchCourse();
@@ -149,12 +153,16 @@ export class Courses {
     this.selectedCourse = course;
     this.editMode = true;
     this.showForm = true;
+    // Scroll al inicio de la página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Nuevo método para mostrar el formulario de colegio
   showColegioFormForCourse(course: Course) {
     this.selectedCourse = course;
     this.showColegioForm = true;
+    // Scroll al inicio de la página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Método para cerrar el formulario de colegio

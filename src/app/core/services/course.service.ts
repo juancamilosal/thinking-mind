@@ -19,12 +19,18 @@ export class CourseService {
   }
 
   searchCourse(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
+    // Agregar fields para incluir colegios_cursos en la respuesta
+    const baseParams = {
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*'
+    };
+
     const request = !searchTerm
-      ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse)
+      ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
       : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
           params: {
+            ...baseParams,
             'filter[_or][0][nombre][_icontains]': searchTerm,
-            'filter[_or][1][sku][_icontains]': searchTerm
+            'filter[_or][1][sku][_icontains]': searchTerm,
           }
         });
 
