@@ -183,7 +183,10 @@ export class Reports {
   calculateTotal(): number {
   return this.payments
     .filter(payment => payment.estado === 'PAGADO')
-    .reduce((total, payment) => total + payment.valor, 0);
+    .reduce((total, payment) => {
+      const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
+      return total + valorNeto;
+    }, 0);
   }
 
 // Generar reporte de inscripciones dentro del rango de fechas
