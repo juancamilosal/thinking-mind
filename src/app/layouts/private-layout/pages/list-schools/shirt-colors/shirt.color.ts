@@ -1,199 +1,357 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription, forkJoin } from 'rxjs';
 import { StudentService } from '../../../../../core/services/student.service';
+import { CourseService } from '../../../../../core/services/course.service';
+import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
 import { Student } from '../../../../../core/models/Student';
+import { Course } from '../../../../../core/models/Course';
 import { Client } from '../../../../../core/models/Clients';
-import { AccountReceivable, PaymentModel } from '../../../../../core/models/AccountReceivable';
-
+import { AccountReceivable } from '../../../../../core/models/AccountReceivable';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 interface GradeCategory {
-  color: string;
-  colorName: string;
   gradeRange: string;
+  colorName: string;
+  color: string;
   count: number;
-  students: Student[];
 }
 
 @Component({
   selector: 'app-shirt-colors',
+  templateUrl: './shirt.color.html',
   standalone: true,
-  imports: [CommonModule],
-
-  templateUrl: './shirt.color.html'
+  imports: [CommonModule]
 })
-export class ShirtColor implements OnInit {
+export class ShirtColor implements OnInit, OnDestroy {
+  private subscriptions: Subscription[] = [];
   willGoStudents: Student[] = [];
+  loading = false;
+  willGoCourses: Course[] = [];
+  statusCache = new Map<string, string>();
+  schoolName: string = '';
   gradeCategories: GradeCategory[] = [];
-  isLoading = true;
-  schoolId: string | null = null;
-  schoolName: string | null = null;
-  private statusCache: Map<string, string> = new Map();
 
   constructor(
-    private router: Router,
+    private studentService: StudentService,
+    private courseService: CourseService,
+    private accountReceivableService: AccountReceivableService,
     private route: ActivatedRoute,
-    private studentService: StudentService
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.schoolId = params['schoolId'] || null;
-      this.schoolName = params['schoolName'] || null;
-      this.loadWillGoStudents();
-    });
+    this.loadStudents();
   }
 
-  loadWillGoStudents(): void {
-    this.isLoading = true;
-    this.studentService.getStudentsByCourseName('WILL-GO').subscribe({
-      next: (response) => {
-        if (response.data && Array.isArray(response.data)) {
-          let students = response.data;
-          // Filter by schoolId if present
-          if (this.schoolId) {
-            const sid = String(this.schoolId);
-            students = students.filter((student: any) => {
-              // Prefer colegio_id as object, then as string, then school_id, then school?.id
-              const colegioObjId = student.colegio_id && typeof student.colegio_id === 'object' ? student.colegio_id.id : undefined;
-              const colegioStrId = student.colegio_id && typeof student.colegio_id === 'string' ? student.colegio_id : undefined;
-              const schoolId = student.school_id;
-              const schoolObjId = student.school && typeof student.school === 'object' ? student.school.id : undefined;
-              return (
-                String(colegioObjId) === sid ||
-                String(colegioStrId) === sid ||
-                String(schoolId) === sid ||
-                String(schoolObjId) === sid
-              );
-            });
-          }
-          this.willGoStudents = students;
-          this.processWillGoStudents();
-        } else {
-          console.error('No students data received or invalid format');
-          this.willGoStudents = [];
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error fetching WILL-GO students:', err);
-        this.isLoading = false;
-      }
-    });
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  private getAccountCourseId(curso_id: any): string {
-    return typeof curso_id === 'string' ? curso_id : curso_id?.id;
-  }
+  private isWillGoCourse(courseName: string): boolean {
+    if (!courseName) {
+      return false;
+    }
 
-  private getTotalPaid(pagos: PaymentModel[]): number {
-    return pagos?.reduce((sum, pago) => sum + (pago.valor || 0), 0) || 0;
-  }
-
-  getEnrollmentStatus(student: Student): string {
-    const cacheKey = `${student.id}-${student.curso_id?.id}`;
-    const cachedStatus = this.statusCache.get(cacheKey);
-    if (cachedStatus) {
-      return cachedStatus;
-    }
-    const acudiente = student.acudiente;
-    if (!acudiente || typeof acudiente === 'string') {
-      this.statusCache.set(cacheKey, 'Sin estado');
-      return 'Sin estado';
-    }
-    const clientAcudiente = acudiente as Client;
-    if (!clientAcudiente.cuentas_cobrar || !Array.isArray(clientAcudiente.cuentas_cobrar)) {
-      this.statusCache.set(cacheKey, 'Sin estado');
-      return 'Sin estado';
-    }
-    const studentCourseId = student.curso_id?.id;
-    if (!studentCourseId) {
-      this.statusCache.set(cacheKey, 'Sin estado');
-      return 'Sin estado';
-    }
-    const account = clientAcudiente.cuentas_cobrar.find((acc: AccountReceivable) => {
-      const accountCourseId = this.getAccountCourseId(acc.curso_id);
-      return accountCourseId === studentCourseId && acc.estudiante_id === student.id;
-    });
-    if (!account) {
-      this.statusCache.set(cacheKey, 'Sin cuenta');
-      return 'Sin cuenta';
-    }
-    const totalPaid = this.getTotalPaid(account.pagos);
-    const totalAmount = account.monto || 0;
-    let status: string;
-    const hasValidFechaInscripcion = typeof account.fecha_inscripcion === 'string' && account.fecha_inscripcion.trim() !== '' && !isNaN(Date.parse(account.fecha_inscripcion));
-    if (hasValidFechaInscripcion && account.estado === 'PAGADA') {
-      status = 'Inscrito';
-    } else if (totalPaid >= 50000) {
-      status = 'Preinscrito';
-    } else {
-      status = 'Pendiente';
-    }
-    this.statusCache.set(cacheKey, status);
-    return status;
-  }
-
-  processWillGoStudents(): void {
-    const getGradeNumber = (gradeString: string | undefined): number => {
-      if (!gradeString) return 0;
-      const grade = parseInt(gradeString, 10);
-      return isNaN(grade) ? 0 : grade;
-    };
-    this.willGoStudents.sort((a, b) => {
-      const gradeA = getGradeNumber(a.grado);
-      const gradeB = getGradeNumber(b.grado);
-      return gradeA - gradeB;
-    });
-    this.gradeCategories = [
-      { color: '#FFEB3B', colorName: 'amarillo', gradeRange: '1-3', count: 0, students: [] },
-      { color: '#FF9800', colorName: 'naranja', gradeRange: '4', count: 0, students: [] },
-      { color: '#4CAF50', colorName: 'verde', gradeRange: '5', count: 0, students: [] },
-      { color: '#F44336', colorName: 'rojo', gradeRange: '6', count: 0, students: [] },
-      { color: '#2196F3', colorName: 'azul', gradeRange: '7+', count: 0, students: [] }
+    const willGoVariants = [
+      'will-go(estándar)',
+      'will-go(segundo hermano)',
+      'will-go(tercer hermano)',
+      'will - go(estándar)',
+      'will - go(segundo hermano)',
+      'will - go(tercer hermano)',
+      'will-go (estándar)',
+      'will-go (segundo hermano)',
+      'will-go (tercer hermano)',
+      'will go',
+      'will-go'
     ];
-    this.willGoStudents.forEach(student => {
-      const gradeNumber = getGradeNumber(student.grado);
-      if (gradeNumber > 0) {
-        const categoryIndex = this.getGradeCategoryIndex(gradeNumber);
-        if (categoryIndex !== -1) {
-          this.gradeCategories[categoryIndex].students.push(student);
-          this.gradeCategories[categoryIndex].count++;
-        }
-      }
-    });
-  }
 
-  getGradeCategoryIndex(grade: number): number {
-    if (grade >= 1 && grade <= 3) return 0;
-    if (grade === 4) return 1;
-    if (grade === 5) return 2;
-    if (grade === 6) return 3;
-    if (grade >= 7) return 4;
-    return -1;
-  }
-
-  getGradeColor(grade: string | undefined): string {
-    const gradeNumber = parseInt(grade || '0', 10);
-    if (gradeNumber >= 1 && gradeNumber <= 3) return '#FFEB3B';
-    if (gradeNumber === 4) return '#FF9800';
-    if (gradeNumber === 5) return '#4CAF50';
-    if (gradeNumber === 6) return '#F44336';
-    if (gradeNumber >= 7) return '#2196F3';
-    return '#9E9E9E';
-  }
-
-  getGradeColorName(grade: string | undefined): string {
-    const gradeNumber = parseInt(grade || '0', 10);
-    if (gradeNumber >= 1 && gradeNumber <= 3) return 'yellow';
-    if (gradeNumber === 4) return 'orange';
-    if (gradeNumber === 5) return 'green';
-    if (gradeNumber === 6) return 'red';
-    if (gradeNumber >= 7) return 'blue';
-    return 'gray';
+    const normalizedName = courseName.toLowerCase().trim();
+    return willGoVariants.some(variant =>
+      normalizedName.includes(variant) ||
+      normalizedName === variant
+    );
   }
 
   onRegresar(): void {
     this.router.navigate(['/private/list-schools']);
+  }
+
+  getGradeColor(grade: string | undefined): string {
+    if (!grade) return '#9E9E9E'; // Gray for undefined or empty grade
+
+    // Extract the numeric part of the grade
+    const numericGrade = parseInt(grade.replace(/[^0-9]/g, ''));
+
+    if (isNaN(numericGrade)) return '#9E9E9E'; // Gray for invalid grade
+
+    // New color scheme based on numeric grade
+    if (numericGrade >= 1 && numericGrade <= 3) {
+      return '#FFD700'; // Yellow for grades 1-3
+    } else if (numericGrade === 4) {
+      return '#FF9800'; // Orange for grade 4
+    } else if (numericGrade === 5) {
+      return '#4CAF50'; // Green for grade 5
+    } else if (numericGrade === 6) {
+      return '#F44336'; // Red for grade 6
+    } else if (numericGrade >= 7) {
+      return '#2196F3'; // Blue for grade 7 and above
+    }
+
+    return '#9E9E9E'; // Gray default
+  }
+
+  getGradeColorName(grade: string | undefined): string {
+    if (!grade) return 'gray';
+
+    // Extract the numeric part of the grade
+    const numericGrade = parseInt(grade.replace(/[^0-9]/g, ''));
+
+    if (isNaN(numericGrade)) return 'gray';
+
+    // Color names based on numeric grade
+    if (numericGrade >= 1 && numericGrade <= 3) {
+      return 'yellow';
+    } else if (numericGrade === 4) {
+      return 'orange';
+    } else if (numericGrade === 5) {
+      return 'green';
+    } else if (numericGrade === 6) {
+      return 'red';
+    } else if (numericGrade >= 7) {
+      return 'blue';
+    }
+
+    return 'gray';
+  }
+
+  private updateGradeCategories(): void {
+    // Map to store counts by numeric grade
+    const gradeCounts = new Map<string, number>();
+
+    // Count students by normalized grade number
+    this.willGoStudents.forEach(student => {
+      const grade = student.grado || 'No asignado';
+      if (grade === 'No asignado') {
+        gradeCounts.set(grade, (gradeCounts.get(grade) || 0) + 1);
+        return;
+      }
+
+      // Extract the numeric part of the grade
+      const match = grade.match(/\d+/);
+      if (match) {
+        const numericGrade = `Grado ${match[0]}`; // Convert to "Grado X" format
+        gradeCounts.set(numericGrade, (gradeCounts.get(numericGrade) || 0) + 1);
+      } else {
+        gradeCounts.set(grade, (gradeCounts.get(grade) || 0) + 1);
+      }
+    });
+
+    // Convert to GradeCategory array
+    this.gradeCategories = Array.from(gradeCounts.entries())
+      .map(([grade, count]) => ({
+        gradeRange: grade,
+        colorName: this.getGradeColorName(grade),
+        color: this.getGradeColor(grade),
+        count
+      }))
+      .sort((a, b) => {
+        // Extract numbers for sorting
+        const aMatch = a.gradeRange.match(/\d+/);
+        const bMatch = b.gradeRange.match(/\d+/);
+
+        // Handle special case for "No asignado"
+        if (a.gradeRange === 'No asignado') return 1;
+        if (b.gradeRange === 'No asignado') return -1;
+
+        // Sort numerically if both have numbers
+        if (aMatch && bMatch) {
+          return parseInt(aMatch[0]) - parseInt(bMatch[0]);
+        }
+        return a.gradeRange.localeCompare(b.gradeRange);
+      });
+  }
+
+  loadStudents(): void {
+    this.loading = true;
+    this.willGoStudents = [];
+    this.willGoCourses = [];
+    this.statusCache.clear();
+    this.gradeCategories = [];
+
+    const accountsSub = this.accountReceivableService.searchAccountReceivable()
+      .subscribe({
+        next: (response) => {
+            if (!response.data) {
+            console.warn('No accounts data in response');
+            this.loading = false;
+            return;
+          }
+
+          // Filter accounts with inscription date
+          const accountsWithInscription = response.data.filter(account =>
+            account.curso_id &&
+            typeof account.curso_id === 'object' &&
+            this.isWillGoCourse(account.curso_id.nombre || '')
+          );
+
+          // Get unique students from accounts
+          const studentsMap = new Map<string, Student>();
+          const courseIds = new Set<string>();
+
+          accountsWithInscription.forEach(account => {
+            if (account.estudiante_id && typeof account.estudiante_id === 'object') {
+              const student = account.estudiante_id;
+              studentsMap.set(student.id.toString(), student);
+            }
+            if (account.curso_id && typeof account.curso_id === 'object') {
+              courseIds.add(account.curso_id.id);
+            }
+          });
+
+          this.willGoStudents = Array.from(studentsMap.values());
+
+          // Process each student
+          this.willGoStudents.forEach(student => {
+
+            // Find all accounts for this student
+            const studentAccounts = accountsWithInscription.filter(acc =>
+              acc.estudiante_id &&
+              typeof acc.estudiante_id === 'object' &&
+              acc.estudiante_id.id === student.id
+            );
+
+            const status = this.calculateStatusFromAccounts(studentAccounts);
+            this.statusCache.set(student.id.toString(), status);
+          });
+
+          // Store courses for reference
+          this.willGoCourses = accountsWithInscription
+            .filter(acc => acc.curso_id && typeof acc.curso_id === 'object')
+            .map(acc => acc.curso_id)
+            .filter((course, index, self) =>
+              index === self.findIndex(c => c.id === course.id)
+            );
+
+          this.updateGradeCategories();
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error fetching accounts:', error);
+          this.loading = false;
+        }
+      });
+
+    this.subscriptions.push(accountsSub);
+  }
+
+  private calculateStatusFromAccounts(accounts: AccountReceivable[]): string {
+    try {
+      if (!accounts || accounts.length === 0) {
+        return 'Sin cuenta';
+      }
+
+      // Check if any account is fully paid with inscription date
+      const hasInscribed = accounts.some(account =>
+        account.estado === 'PAGADA' &&
+        account.fecha_inscripcion?.trim()
+      );
+
+      if (hasInscribed) {
+        return 'Inscrito';
+      }
+
+      // Check if any account has at least 50000 paid
+      const hasPreInscription = accounts.some(account => {
+        const totalPaid = this.getTotalPaid(account.pagos);
+        return totalPaid >= 50000;
+      });
+
+      if (hasPreInscription) {
+        return 'Preinscrito';
+      }
+
+      return 'Pendiente';
+    } catch (error) {
+      console.error('Error calculating status from accounts:', error);
+      return 'Sin estado';
+    }
+  }  calculateEnrollmentStatus(student: Student): string {
+    try {
+
+
+      if (!student.acudiente || typeof student.acudiente === 'string') {
+
+        return 'Sin estado';
+      }
+
+      const acudiente = student.acudiente as Client;
+      if (!acudiente.cuentas_cobrar || !Array.isArray(acudiente.cuentas_cobrar)) {
+
+        return 'Sin estado';
+      }
+
+      // Find all accounts for this student that are Will-Go courses
+      const willGoAccounts = acudiente.cuentas_cobrar.filter(acc => {
+        const matchesStudent = acc.estudiante_id === student.id;
+        const matchesCourse = this.willGoCourses.some(course => course.id === acc.curso_id?.id);
+
+        return matchesStudent && matchesCourse;
+      });
+
+
+      if (willGoAccounts.length === 0) {
+        return 'Sin cuenta';
+      }
+
+      // If there are multiple accounts, use the one with the most favorable status
+      for (const account of willGoAccounts) {
+        // If any account is fully paid and has inscription date, student is enrolled
+        if (account.estado === 'PAGADA' &&
+            typeof account.fecha_inscripcion === 'string' &&
+            account.fecha_inscripcion.trim() !== '') {
+          return 'Inscrito';
+        }
+      }
+
+      // Check if any account has at least 50000 paid
+      for (const account of willGoAccounts) {
+        const totalPaid = this.getTotalPaid(account.pagos);
+        if (totalPaid >= 50000) {
+          return 'Preinscrito';
+        }
+      }
+
+      // If we get here, student has an account but hasn't paid enough
+      return 'Pendiente';
+    } catch (error) {
+      console.error('Error calculating enrollment status:', error);
+      return 'Sin estado';
+    }
+  }
+
+  private getTotalPaid(payments: any[] | undefined): number {
+    if (!payments || !Array.isArray(payments)) {
+      return 0;
+    }
+    return payments.reduce((total, payment) => {
+      const amount = typeof payment.monto === 'number' ? payment.monto : 0;
+      return total + amount;
+    }, 0);
+  }  getStatusClass(student: Student): string {
+    const status = this.statusCache.get(student.id.toString());
+    switch (status) {
+      case 'Inscrito': return 'status-inscrito';
+      case 'Preinscrito': return 'status-preinscrito';
+      case 'Pendiente': return 'status-pendiente';
+      case 'Sin cuenta': return 'status-sin-cuenta';
+      default: return 'status-sin-estado';
+    }
+  }
+
+  getStatus(student: Student): string {
+    return this.statusCache.get(student.id.toString()) || 'Sin estado';
   }
 }
