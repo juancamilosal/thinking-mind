@@ -23,6 +23,7 @@
           <select
             id="reportType"
             formControlName="reportType"
+            (change)="onReportTypeChange($event)"
             class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 bg-[image:--select-button-svg] placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal">
             <option value="">Selecciona el tipo de reporte</option>
             @for(type of REPORT_TYPE; track type.value) {
