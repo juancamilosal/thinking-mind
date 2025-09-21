@@ -81,7 +81,7 @@ export class ListSchool implements OnInit {
 
   // Paginación
   currentPage = 1;
-  itemsPerPage = 15;
+  itemsPerPage = 10;
   totalItems = 0;
   totalPages = 0;
   itemsPerPageOptions = [10, 15, 25, 50];

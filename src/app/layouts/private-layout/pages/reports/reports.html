@@ -252,7 +252,7 @@
                 </td>
               </tr>
               } @else {
-                @for (payment of payments; track payment.id) {
+                @for (payment of paginatedPayments; track payment.id) {
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
@@ -293,6 +293,66 @@
             </tbody>
           </table>
         </div>
+        
+        <!-- Paginador -->
+        @if (payments.length > 0) {
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-t border-gray-200 rounded-b-xl shadow-inner">
+            <!-- Información de paginación y selector de elementos por página -->
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 mb-4">
+              <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-700">
+                  Mostrando {{ Math.min((currentPage - 1) * itemsPerPage + 1, totalItems) }} - 
+                  {{ Math.min(currentPage * itemsPerPage, totalItems) }} de {{ totalItems }} pagos
+                </span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <label class="text-sm text-gray-700">Elementos por página:</label>
+                <select 
+                  (change)="onItemsPerPageChange($event)"
+                  [value]="itemsPerPage"
+                  class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  @for (option of itemsPerPageOptions; track option) {
+                    <option [value]="option" [selected]="option === itemsPerPage">{{ option }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Navegación de páginas -->
+            @if (totalPages > 1) {
+              <nav class="relative z-0 inline-flex rounded-xl shadow-lg bg-white border border-gray-200 overflow-hidden" aria-label="Pagination">
+                <button
+                  (click)="onPageChange(currentPage - 1)"
+                  [disabled]="currentPage === 1"
+                  class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 border-r border-gray-200">
+                  <span class="sr-only">Anterior</span>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                @for (page of getPageNumbers(); track page) {
+                  <button
+                    (click)="onPageChange(page)"
+                    [class]="page === currentPage ? 
+                      'z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white relative inline-flex items-center px-4 py-2 text-sm font-bold shadow-inner border-r border-indigo-400' :
+                      'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 relative inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 border-r border-gray-200'">
+                    {{ page }}
+                  </button>
+                }
+                <button
+                  (click)="onPageChange(currentPage + 1)"
+                  [disabled]="currentPage === totalPages"
+                  class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200">
+                  <span class="sr-only">Siguiente</span>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </nav>
+            }
+          </div>
+        }
+        
         @if (payments.length > 0) {
         <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div class="flex justify-between items-center">

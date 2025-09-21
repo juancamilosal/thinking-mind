@@ -28,6 +28,15 @@ export class Reports {
   schoolsData: any[] = [];
   loadingSchoolsData: boolean = false;
 
+  // Propiedades de paginación para Cartera
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  totalPages = 0;
+  paginatedPayments: PaymentModel[] = [];
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -38,6 +47,8 @@ export class Reports {
 
   ngOnInit(): void {
     this.initForm();
+    // Inicializar paginación
+    this.updatePagination();
   }
 
   initForm=(): void => {
@@ -108,6 +119,8 @@ export class Reports {
       next: (data) => {
         console.log('Payments received from Directus with filters:', data);
         this.payments = data.data;
+        this.totalItems = this.payments.length;
+        this.updatePagination();
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -123,8 +136,48 @@ export class Reports {
             'No se pudieron cargar los datos de pagos. Inténtalo nuevamente.'
           );
         }
+        this.payments = [];
+        this.totalItems = 0;
+        this.updatePagination();
       }
     });
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedPayments = this.payments.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  onItemsPerPageChange(event: any): void {
+    this.itemsPerPage = parseInt(event.target.value);
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   }
 
   calculateTotal(): number {
@@ -235,6 +288,11 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     this.reportGenerated = false;
     this.showDownloadOptions = false;
     this.loadingSchoolsData = false;
+    // Reset pagination
+    this.currentPage = 1;
+    this.totalItems = 0;
+    this.totalPages = 0;
+    this.paginatedPayments = [];
   }
 
   navigateToPresupuesto(): void {
