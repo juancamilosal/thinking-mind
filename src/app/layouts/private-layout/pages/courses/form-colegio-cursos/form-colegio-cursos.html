@@ -1,0 +1,255 @@
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+      <div class="flex items-center space-x-4 mb-6">
+        <div class="flex-shrink-0">
+          <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Colegio Cursos</h1>
+          <p class="text-gray-600 mt-1">Gestiona las fechas de finalización por colegio</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="bg-white rounded-xl shadow-lg p-8">
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Agregar Colegio y Fecha de Finalización</h2>
+        <p class="text-gray-600">Complete la información para asignar el programa a un colegio</p>
+      </div>
+
+      <form [formGroup]="fechaFinalizacionForm" (ngSubmit)="onSubmit()" class="space-y-8">
+        
+        <!-- Campo de Fecha -->
+        <div class="space-y-3">
+          <label for="fecha_finalizacion" class="block text-sm font-semibold text-green-700">
+            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l-.5 8.5A2 2 0 0013.5 21h-3A2 2 0 018.5 15.5L8 7zm8 0V6a2 2 0 00-2-2H10a2 2 0 00-2 2v1m8 0l.5 8.5A2 2 0 0115.5 21h3a2 2 0 001.5-1.5L20 7h-4z"></path>
+            </svg>
+            Fecha de Finalización *
+          </label>
+          <div class="relative">
+            <input
+              type="date"
+              id="fecha_finalizacion"
+              formControlName="fecha_finalizacion"
+              class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+              [class.border-red-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.invalid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched"
+              [class.border-green-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.valid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched">
+            
+            @if (fechaFinalizacionForm.get('fecha_finalizacion')?.valid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched) {
+              <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            }
+          </div>
+          
+          @if (fechaFinalizacionForm.get('fecha_finalizacion')?.touched && fechaFinalizacionForm.get('fecha_finalizacion')?.errors?.['required']) {
+            <p class="text-red-500 text-sm mt-2 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              La fecha de finalización es requerida
+            </p>
+          }
+        </div>
+
+        <!-- Campo de Curso -->
+        <div class="space-y-3 relative">
+          <label for="curso_id" class="block text-sm font-semibold text-blue-700">
+            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            Programa *
+          </label>
+          <div class="relative">
+            <input
+              type="text"
+              id="curso_id"
+              formControlName="courseSearchTerm"
+              (input)="onCourseSearch($event)"
+              placeholder="Buscar programa..."
+              class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 bg-white text-blue-800"
+              [class.border-red-500]="fechaFinalizacionForm.get('curso_id')?.invalid && fechaFinalizacionForm.get('curso_id')?.touched"
+              [class.border-blue-500]="fechaFinalizacionForm.get('curso_id')?.valid && fechaFinalizacionForm.get('curso_id')?.touched"
+              [readonly]="isCourseSelected"
+              autocomplete="off">
+            
+            @if (fechaFinalizacionForm.get('courseSearchTerm')?.value && isCourseSelected) {
+              <button
+                type="button"
+                (click)="clearCourseSearch()"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            }
+          </div>
+
+          <!-- Lista desplegable de resultados de cursos -->
+          @if (fechaFinalizacionForm.get('courseSearchTerm')?.value && !isCourseSelected && (filteredCourses.length > 0 || isLoadingCourses)) {
+            <div class="absolute z-10 w-full bg-white border border-blue-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <!-- Indicador de carga -->
+              @if (isLoadingCourses) {
+                <div class="px-4 py-3 text-center">
+                  <div class="flex items-center justify-center space-x-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span class="text-blue-600 text-sm">Cargando programas...</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Resultados de búsqueda -->
+              @if (!isLoadingCourses) {
+                @for (course of filteredCourses; track course.id) {
+                  <div
+                    (click)="selectCourse(course); $event.stopPropagation()"
+                    class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-200">
+                    <div class="flex justify-between items-center">
+                      <div>
+                        <span class="text-blue-800 font-medium">{{ course.nombre }}</span>
+                        @if (course.sku) {
+                          <span class="text-gray-500 text-sm ml-2">{{ course.sku }}</span>
+                        }
+                      </div>
+                      @if (course.precio) {
+                        <span class="text-green-600 font-semibold">${{ course.precio }}</span>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+
+          <!-- Mensaje cuando no hay resultados de cursos -->
+          @if (fechaFinalizacionForm.get('courseSearchTerm')?.value && !isCourseSelected && !isLoadingCourses && filteredCourses.length === 0) {
+            <div class="absolute z-10 w-full bg-white border border-blue-300 rounded-lg shadow-lg">
+              <div class="px-4 py-3 text-gray-500 text-center">
+                <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                <span class="text-sm">No se encontraron programas</span>
+              </div>
+            </div>
+          }
+          
+          @if (fechaFinalizacionForm.get('curso_id')?.touched && fechaFinalizacionForm.get('curso_id')?.errors?.['required']) {
+            <p class="text-red-500 text-sm mt-2 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              Debe seleccionar un programa
+            </p>
+          }
+        </div>
+
+        <!-- Campo de Colegio -->
+        <div class="space-y-3 relative">
+          <label for="colegio_id" class="block text-sm font-semibold text-green-700">
+            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            Colegio *
+          </label>
+          <div class="relative">
+            <input
+              type="text"
+              id="colegio_id"
+              formControlName="schoolSearchTerm"
+              (input)="onSchoolSearch($event)"
+              placeholder="Buscar colegio..."
+              class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+              [class.border-red-500]="fechaFinalizacionForm.get('colegio_id')?.invalid && fechaFinalizacionForm.get('colegio_id')?.touched"
+              [class.border-green-500]="fechaFinalizacionForm.get('colegio_id')?.valid && fechaFinalizacionForm.get('colegio_id')?.touched"
+              [readonly]="isSchoolSelected"
+              autocomplete="off">
+            
+            @if (fechaFinalizacionForm.get('schoolSearchTerm')?.value && isSchoolSelected) {
+              <button
+                type="button"
+                (click)="clearSchoolSearch()"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            }
+          </div>
+
+          <!-- Lista desplegable de resultados -->
+          @if (fechaFinalizacionForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
+            <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <!-- Indicador de carga -->
+              @if (isLoadingSchools) {
+                <div class="px-4 py-3 text-center">
+                  <div class="flex items-center justify-center space-x-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                    <span class="text-green-600 text-sm">Buscando colegios...</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Resultados de búsqueda -->
+              @if (!isLoadingSchools) {
+                @for (school of filteredSchools; track school.id) {
+                  <div
+                    (click)="selectSchool(school); $event.stopPropagation()"
+                    class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-200">
+                    <span class="text-green-800 font-medium">{{ school.nombre }}</span>
+                    @if (school.ciudad) {
+                      <span class="text-gray-500 text-sm ml-2">- {{ school.ciudad }}</span>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+
+          <!-- Mensaje cuando no hay resultados -->
+          @if (fechaFinalizacionForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
+            <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg">
+              <div class="px-4 py-3 text-gray-500 text-center">
+                <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="text-sm">No se encontraron colegios</span>
+              </div>
+            </div>
+          }
+          
+          @if (fechaFinalizacionForm.get('colegio_id')?.touched && fechaFinalizacionForm.get('colegio_id')?.errors?.['required']) {
+            <p class="text-red-500 text-sm mt-2 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              Debe seleccionar un colegio
+            </p>
+          }
+        </div>
+
+        <!-- Botón de envío -->
+        <div class="flex justify-end pt-6 border-t border-gray-200">
+          <button
+            type="submit"
+            [disabled]="fechaFinalizacionForm.invalid"
+            class="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-blue-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Guardar Fecha de Finalización
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

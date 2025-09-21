@@ -6,6 +6,7 @@ import {CourseInfoComponent} from '../../../../components/course-info/course-inf
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
 import { FormCourse } from './form-course/form-course';
+import {ColegioCursosComponent} from './form-colegio-cursos/form-colegio-cursos';
 
 @Component({
   selector: 'app-courses',
@@ -13,7 +14,8 @@ import { FormCourse } from './form-course/form-course';
     CommonModule,
     CourseCardComponent,
     CourseInfoComponent,
-    FormCourse
+    FormCourse,
+    ColegioCursosComponent
   ],
   templateUrl: './courses.html',
   standalone: true
@@ -24,6 +26,7 @@ export class Courses {
   showForm = false;
   showCourseInfo = false;
   showDetail = false;
+  showColegioForm = false;
   editMode = false;
   selectedCourse: Course | null = null;
   courses: Course[] = [];
@@ -146,6 +149,18 @@ export class Courses {
     this.selectedCourse = course;
     this.editMode = true;
     this.showForm = true;
+  }
+
+  // Nuevo método para mostrar el formulario de colegio
+  showColegioFormForCourse(course: Course) {
+    this.selectedCourse = course;
+    this.showColegioForm = true;
+  }
+
+  // Método para cerrar el formulario de colegio
+  closeColegioForm() {
+    this.showColegioForm = false;
+    this.selectedCourse = null;
   }
 
   deleteCourse(course: Course) {
