@@ -9,6 +9,7 @@ import { FormCourse } from './form-course/form-course';
 import { ColegioCursosComponent } from './form-colegio-cursos/form-colegio-cursos';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ColegioCursosService } from '../../../../core/services/colegio-cursos.service';
+import { ConfirmationService } from '../../../../core/services/confirmation.service';
 
 @Component({
   selector: 'app-courses',
@@ -46,7 +47,8 @@ export class Courses {
     private fb: FormBuilder,
     private courseServices: CourseService,
     private colegioCursosService: ColegioCursosService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {
     this.initEditForm();
   }
@@ -207,24 +209,28 @@ export class Courses {
   }
 
   deleteColegioCurso(colegioCurso: any) {
-    if (confirm(`¿Está seguro de que desea eliminar el colegio "${colegioCurso.colegio_id?.nombre}" del programa?`)) {
-      this.colegioCursosService.deleteColegioCurso(colegioCurso.id).subscribe({
-        next: (response) => {
-          this.notificationService.showSuccess(
-            'Éxito',
-            'Colegio eliminado del programa correctamente'
-          );
-          this.searchCourse(); // Recargar los cursos
-        },
-        error: (error) => {
-          console.error('Error al eliminar colegio_curso:', error);
-          this.notificationService.showError(
-            'Error',
-            'Error al eliminar el colegio del programa'
-          );
-        }
-      });
-    }
+    this.confirmationService.showDeleteConfirmation(
+      colegioCurso.colegio_id?.nombre || 'este colegio',
+      'colegio del programa',
+      () => {
+        this.colegioCursosService.deleteColegioCurso(colegioCurso.id).subscribe({
+          next: (response) => {
+            this.notificationService.showSuccess(
+              'Éxito',
+              'Colegio eliminado del programa correctamente'
+            );
+            this.searchCourse(); // Recargar los cursos
+          },
+          error: (error) => {
+            console.error('Error al eliminar colegio_curso:', error);
+            this.notificationService.showError(
+              'Error',
+              'Error al eliminar el colegio del programa'
+            );
+          }
+        });
+      }
+    );
   }
 
   // Método para guardar la fecha editada
@@ -262,16 +268,27 @@ export class Courses {
   }
 
   deleteCourse(course: Course) {
-    if (confirm(`¿Estás seguro de que deseas eliminar el programa "${course.nombre}"?`)) {
-      this.courseServices.deleteCourse(course.id).subscribe({
-        next: (response) => {
-          this.searchCourse(); // Recargar la lista de cursos
-        },
-        error: (error) => {
-          console.error('Error al eliminar el programa:', error);
-          // Aquí puedes agregar una notificación de error
-        }
-      });
-    }
+    this.confirmationService.showDeleteConfirmation(
+      course.nombre,
+      'programa',
+      () => {
+        this.courseServices.deleteCourse(course.id).subscribe({
+          next: (response) => {
+            this.notificationService.showSuccess(
+              'Programa eliminado',
+              `${course.nombre} ha sido eliminado exitosamente.`
+            );
+            this.searchCourse(); // Recargar la lista de cursos
+          },
+          error: (error) => {
+            console.error('Error al eliminar el programa:', error);
+            this.notificationService.showError(
+              'Error al eliminar',
+              'No se pudo eliminar el programa. Inténtalo nuevamente.'
+            );
+          }
+        });
+      }
+    );
   }
 }
