@@ -322,11 +322,17 @@
                     <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                       <span class="text-blue-600 font-semibold text-sm">{{ i + 1 }}</span>
                     </div>
-                    <span class="text-sm font-medium text-gray-900">Pago {{ i + 1 }}</span>
+                    <span class="text-sm font-medium" 
+                          [class]="payment.estado === 'DEVOLUCION' ? 'text-red-600' : 'text-gray-900'">
+                      {{ payment.estado === 'DEVOLUCION' ? 'Devolución' : 'Pago ' + (i + 1) }}
+                    </span>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
-                  <span class="text-lg font-bold text-green-600">{{ formatCurrency(payment.valor) }}</span>
+                  <span class="text-lg font-bold" 
+                        [class]="payment.estado === 'DEVOLUCION' ? 'text-red-600' : 'text-green-600'">
+                    {{ formatCurrency(payment.valor) }}
+                  </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="text-sm text-gray-900">{{ formatDate(payment.fecha_pago) }}</span>
@@ -370,7 +376,7 @@
                           [class]="canDeletePayment(payment) && !isDeletingPayment ?
                             'text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors duration-200 cursor-pointer' :
                             'text-gray-400 p-2 rounded-lg cursor-not-allowed'"
-                          [title]="!canDeletePayment(payment) ? 'Solo se pueden eliminar pagos con método EFECTIVO, TRANSFERENCIA, DATÁFONO o CHEQUE' :
+                          [title]="!canDeletePayment(payment) ? 'Solo se pueden eliminar pagos con método EFECTIVO, TRANSFERENCIA, DATÁFONO, CHEQUE o TRANSACCIÓN con estado DEVOLUCION' :
                                    isDeletingPayment && deletingPaymentId === payment.id ? 'Eliminando pago...' :
                                    isDeletingPayment ? 'Espera a que termine la eliminación actual' : 'Eliminar pago'">
                     @if (isDeletingPayment && deletingPaymentId === payment.id) {
@@ -447,9 +453,9 @@
                      (input)="onRefundAmountChange($event)"
                      class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                      placeholder="0"
-                     [max]="getTotalPaid()">
+                     [max]="getMaxRefundAvailable()">
             </div>
-            <p class="text-xs text-gray-500 mt-1">Máximo disponible: {{ formatCurrency(getTotalPaid()) }}</p>
+            <p class="text-xs text-gray-500 mt-1">Máximo disponible: {{ formatCurrency(getMaxRefundAvailable()) }}</p>
           </div>
 
           <!-- Anexar Comprobante -->

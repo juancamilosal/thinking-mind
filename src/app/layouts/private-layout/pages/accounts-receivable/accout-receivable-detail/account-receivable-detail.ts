@@ -97,6 +97,25 @@ export class AccountReceivableDetailComponent implements OnInit {
     return totalPagado - totalDevoluciones;
   }
 
+  // Nuevo método para calcular el máximo disponible para devolución basado en valor_neto
+  getMaxRefundAvailable(): number {
+    // Calcular total de valor_neto de pagos PAGADOS
+    const totalValorNeto = this.payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((total, payment) => {
+        // Convertir valor_neto de string a number, manejando casos null/undefined
+        const valorNeto = payment.valor_neto ? parseFloat(payment.valor_neto.toString()) : 0;
+        return total + valorNeto;
+      }, 0);
+    
+    // Restar las devoluciones ya realizadas
+    const totalDevoluciones = this.payments
+      .filter(payment => payment.estado === 'DEVOLUCION')
+      .reduce((total, payment) => total + payment.valor, 0);
+    
+    return totalValorNeto - totalDevoluciones;
+  }
+
   getRemainingBalance(): number {
     return this.account.monto - this.getTotalPaid();
   }
@@ -412,7 +431,10 @@ export class AccountReceivableDetailComponent implements OnInit {
 
   canDeletePayment(payment: PaymentModel): boolean {
     const allowedMethods = ['EFECTIVO', 'TRANSFERENCIA', 'DATÁFONO', 'CHEQUE'];
-    return allowedMethods.includes(payment.metodo_pago);
+    
+    // Permitir eliminar si es un método permitido O si es TRANSACCIÓN y estado DEVOLUCION
+    return allowedMethods.includes(payment.metodo_pago) || 
+           (payment.metodo_pago === 'TRANSACCIÓN' && payment.estado === 'DEVOLUCION');
   }
 
   formatPaymentMethod(method: string): string {
@@ -446,6 +468,19 @@ export class AccountReceivableDetailComponent implements OnInit {
   onRefundAmountChange(event: any): void {
     const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
     const numericValue = parseInt(value) || 0;
+    const maxRefundAvailable = this.getMaxRefundAvailable();
+    
+    // Validar que no exceda el máximo disponible
+    if (numericValue > maxRefundAvailable) {
+      this.refundAmount = maxRefundAvailable;
+      this.refundAmountDisplay = this.formatNumberWithDots(maxRefundAvailable);
+      event.target.value = this.refundAmountDisplay;
+      
+      // Mostrar notificación de advertencia
+      this.notificationService.showWarning('Advertencia', 
+        `El monto no puede ser mayor al máximo disponible: ${this.formatCurrency(maxRefundAvailable)}`);
+      return;
+    }
     
     this.refundAmount = numericValue;
     this.refundAmountDisplay = this.formatNumberWithDots(numericValue);
@@ -501,8 +536,9 @@ export class AccountReceivableDetailComponent implements OnInit {
       return;
     }
 
-    if (this.refundAmount > this.getTotalPaid()) {
-      this.notificationService.showError('Error', 'El monto de devolución no puede ser mayor al total pagado');
+    const maxRefundAvailable = this.getMaxRefundAvailable();
+    if (this.refundAmount > maxRefundAvailable) {
+      this.notificationService.showError('Error', `El monto de devolución no puede ser mayor al máximo disponible: ${this.formatCurrency(maxRefundAvailable)}`);
       return;
     }
 
