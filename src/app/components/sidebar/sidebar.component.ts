@@ -26,7 +26,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { path: '/private/users', icon: 'user-group', label: 'Usuarios' },
     { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
     { path: '/private/payments', icon: 'payment', label: 'Pagos' },
-    { path: '/private/courses', icon: 'book', label: 'Cursos' },
+    { path: '/private/courses', icon: 'book', label: 'Programas' },
     { path: '/private/reports', icon: 'chart-bar', label: 'Reportes' },
     { path: '/private/list-schools', icon: 'list', label: 'Listado' }
   ];

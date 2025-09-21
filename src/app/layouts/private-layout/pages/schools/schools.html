@@ -164,7 +164,7 @@
                   (change)="onItemsPerPageChange($event)"
                   class="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm hover:border-indigo-300 transition-all duration-200">
                   @for (option of itemsPerPageOptions; track option) {
-                    <option [value]="option">{{ option }}</option>
+                    <option [value]="option" [selected]="option === itemsPerPage">{{ option }}</option>
                   }
                 </select>
               </div>

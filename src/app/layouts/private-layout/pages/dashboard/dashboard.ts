@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SchoolService } from '../../../../core/services/school.service';
-import { StudentService } from '../../../../core/services/student.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { CourseService } from '../../../../core/services/course.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -22,8 +21,8 @@ interface DashboardStats {
 interface RectorDashboardStats {
   totalStudentsEnrolled: number;
   totalStudentsWithPendingStatus: number;
-  totalStudentsWithPaidStatus: number;
   totalPinsDelivered: number;
+  totalStudentsWithPaidStatus: number;
 }
 
 interface CourseWithStudents {
@@ -51,8 +50,8 @@ export class Dashboard implements OnInit {
   rectorStats: RectorDashboardStats = {
     totalStudentsEnrolled: 0,
     totalStudentsWithPendingStatus: 0,
-    totalStudentsWithPaidStatus: 0,
-    totalPinsDelivered: 0
+    totalPinsDelivered: 0,
+    totalStudentsWithPaidStatus: 0
   };
 
   isLoading = true;
@@ -67,7 +66,6 @@ export class Dashboard implements OnInit {
 
   constructor(
     private schoolService: SchoolService,
-    private studentService: StudentService,
     private accountReceivableService: AccountReceivableService,
     private courseService: CourseService,
     private notificationService: NotificationService
@@ -99,14 +97,10 @@ export class Dashboard implements OnInit {
   }
 
   private loadRectorData(): void {
-    forkJoin({
-      students: this.studentService.getStudentsBySchool(this.userColegioId!),
-      accounts: this.accountReceivableService.searchAccountReceivable(undefined, this.userColegioId!)
-    }).subscribe({
-      next: ({ students, accounts }) => {
-        this.students = students.data;
+    this.accountReceivableService.searchAccountReceivable(undefined, this.userColegioId!).subscribe({
+      next: (accounts) => {
         this.accounts = accounts.data; // Ya vienen filtradas por colegio desde el servicio
-        this.calculateRectorStats(this.students, accounts.data);
+        this.calculateRectorStats(accounts.data);
         this.isLoading = false;
       },
       error: (error) => {
@@ -118,16 +112,14 @@ export class Dashboard implements OnInit {
   private loadAdminData(): void {
     forkJoin({
         courses: this.courseService.searchCourse(),
-        students: this.studentService.searchStudent(),
         accounts: this.accountReceivableService.searchAccountReceivable()
       }).subscribe({
-      next: ({ courses, students, accounts }) => {
+      next: ({ courses, accounts }) => {
         this.courses = courses.data;
-        this.students = students.data;
         this.accounts = accounts.data;
 
         this.calculateCoursesWithStudents();
-        this.calculateStats(this.courses, this.students, this.accounts);
+        this.calculateStats(this.courses, this.accounts);
         this.isLoading = false;
       },
       error: (error) => {
@@ -138,47 +130,61 @@ export class Dashboard implements OnInit {
 
   private calculateCoursesWithStudents(): void {
     this.coursesWithStudents = this.courses.map(course => {
-      const studentCount = this.students.filter(student => {
-        return student.curso_id === course.id ||
-               (student.cursos && student.cursos.some((c: any) => c.id === course.id));
-      }).length;
+      // Contar estudiantes únicos por curso usando las cuentas por cobrar
+      const uniqueStudentIds = new Set();
+      this.accounts.forEach(account => {
+        if (account.curso_id && account.curso_id.id === course.id && account.estudiante_id && account.estudiante_id.id) {
+          uniqueStudentIds.add(account.estudiante_id.id);
+        }
+      });
 
       return {
         course,
-        studentCount
+        studentCount: uniqueStudentIds.size
       };
     });
   }
 
-  private calculateRectorStats(students: any[], accounts: any[]): void {
-    // Total de estudiantes inscritos en el colegio
-    this.rectorStats.totalStudentsEnrolled = students.length;
-
-    let studentsWithPaidStatus = 0;
-    let studentsWithPendingStatus = 0;
-    let pinsDelivered = 0;
+  private calculateRectorStats(accounts: any[]) {
+    // Calcular estudiantes inscritos: solo contar cuentas que tienen fecha_inscripcion
+    this.rectorStats.totalStudentsEnrolled = accounts.filter(account => 
+      account.fecha_inscripcion && account.fecha_inscripcion !== null
+    ).length;
+    
+    // Calcular estudiantes con estado pendiente: solo contar estudiantes únicos que tienen fecha_inscripcion y estado PENDIENTE
+    const studentsWithPendingStatus = new Set<number>();
 
     accounts.forEach(account => {
-      // Contar según el estado de la cuenta
-      if (account.estado === 'PAGADA') {
-        studentsWithPaidStatus++;
-      } else if (account.estado === 'PENDIENTE') {
-        studentsWithPendingStatus++;
-      }
-
-      const pinValue = account.pin_entregado;
-      if (pinValue === 'SI' || pinValue === 'Si' || pinValue === 'si' || pinValue === true || pinValue === 1 || pinValue === '1') {
-        pinsDelivered++;
+      if (account.estado === 'PENDIENTE' && account.fecha_inscripcion && account.fecha_inscripcion !== null) {
+        studentsWithPendingStatus.add(account.estudiante_id.id);
       }
     });
 
-    this.rectorStats.totalStudentsWithPaidStatus = studentsWithPaidStatus;
-    this.rectorStats.totalStudentsWithPendingStatus = studentsWithPendingStatus;
-    this.rectorStats.totalPinsDelivered = pinsDelivered;
+    this.rectorStats.totalStudentsWithPendingStatus = studentsWithPendingStatus.size;
+    
+    // Calcular cuentas con estado PAGADA: contar todas las cuentas con estado "PAGADA"
+    this.rectorStats.totalStudentsWithPaidStatus = accounts.filter(account => 
+      account.estado === 'PAGADA'
+    ).length;
+    
+    // Calcular pines entregados: contar cuentas donde pin_entregado es "SI"
+    this.rectorStats.totalPinsDelivered = accounts.filter(account => 
+      account.pin_entregado === 'SI' || 
+      account.pin_entregado === 'Si' || 
+      account.pin_entregado === 'si'
+    ).length;
   }
 
-  private calculateStats(courses: Course[], students: any[], accounts: any[]): void {
-    this.stats.totalStudents = students.length;
+  private calculateStats(courses: Course[], accounts: any[]): void {
+    // Contar estudiantes únicos basándose en las cuentas por cobrar
+    const uniqueStudentIds = new Set();
+    accounts.forEach(account => {
+      if (account.estudiante_id && account.estudiante_id.id) {
+        uniqueStudentIds.add(account.estudiante_id.id);
+      }
+    });
+
+    this.stats.totalStudents = uniqueStudentIds.size;
     this.stats.totalAccountsReceivable = accounts.length;
 
     let totalAmount = 0;

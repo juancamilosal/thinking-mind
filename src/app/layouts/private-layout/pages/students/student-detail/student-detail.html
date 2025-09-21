@@ -55,35 +55,35 @@
               </svg>
               Información del Acudiente
             </h3>
-            @if (student.acudiente && typeof student.acudiente === 'object') {
+            @if (acudienteInfo) {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-600">Nombre Completo</label>
-                  <p class="text-gray-900 font-medium">{{ student.acudiente.nombre }} {{ student.acudiente.apellido }}</p>
+                  <p class="text-gray-900 font-medium">{{ acudienteInfo.nombre }} {{ acudienteInfo.apellido }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-600">Tipo de Documento</label>
-                  <p class="text-gray-900">{{ student.acudiente.tipo_documento }}</p>
+                  <p class="text-gray-900">{{ acudienteInfo.tipo_documento }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-600">Número de Documento</label>
-                  <p class="text-gray-900">{{ student.acudiente.numero_documento }}</p>
+                  <p class="text-gray-900">{{ acudienteInfo.numero_documento }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-600">Email</label>
-                  <p class="text-gray-900">{{ student.acudiente.email }}</p>
+                  <p class="text-gray-900">{{ acudienteInfo.email }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-600">Celular</label>
-                  <p class="text-gray-900">{{ student.acudiente.celular }}</p>
+                  <p class="text-gray-900">{{ acudienteInfo.celular }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-600">Dirección</label>
-                  <p class="text-gray-900">{{ student.acudiente.direccion }}</p>
+                  <p class="text-gray-900">{{ acudienteInfo.direccion }}</p>
                 </div>
               </div>
             } @else {
-              <p class="text-gray-600">{{ student.acudiente }}</p>
+              <p class="text-gray-600">No hay información del acudiente disponible</p>
             }
           </div>
         </div>

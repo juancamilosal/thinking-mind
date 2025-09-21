@@ -243,7 +243,7 @@ export class PaymentRecord implements OnInit {
 
   private fillStudentFields(student: any): void {
     console.log('🔍 DEBUG - Datos del estudiante recibidos:', student);
-    
+
     this.paymentForm.patchValue({
       studentFirstName: student.nombre || '',
       studentLastName: student.apellido || '',
@@ -254,7 +254,7 @@ export class PaymentRecord implements OnInit {
     // Verificar si el colegio viene como objeto o como ID
     let schoolId = null;
     let schoolName = '';
-    
+
     if (student.colegio_id) {
       if (typeof student.colegio_id === 'object' && student.colegio_id.id) {
         // El colegio viene como objeto completo
@@ -275,7 +275,7 @@ export class PaymentRecord implements OnInit {
       // NO establecer isSchoolSelected = true para permitir cambios
       console.log('🔍 DEBUG - Nombre del colegio establecido:', schoolName);
       console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', schoolId);
-    } 
+    }
     // Si solo tenemos el ID, buscar el nombre
     else if (schoolId) {
       console.log('🔍 DEBUG - Buscando nombre del colegio por ID:', schoolId);
@@ -341,12 +341,12 @@ export class PaymentRecord implements OnInit {
     if (client.cuentas_cobrar && client.estudiantes) {
       client.cuentas_cobrar.forEach((cuenta: any, index: number) => {
         const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
-        
+
         // Calcular el saldo pendiente (Precio del Curso - Total Abonado)
         const coursePriceNumber = cuenta.monto || 0;
         const totalPaidNumber = cuenta.saldo || 0;
         const pendingBalanceNumber = coursePriceNumber - totalPaidNumber;
-        
+
         const courseData = {
           id: cuenta.id,
           courseName: cuenta.curso_id?.nombre || 'N/A',
@@ -397,14 +397,14 @@ export class PaymentRecord implements OnInit {
 
     // Crear el contenido HTML para imprimir
     const printContent = this.generatePrintContent();
-    
+
     // Crear una nueva ventana para imprimir
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
+
     if (printWindow) {
       printWindow.document.write(printContent);
       printWindow.document.close();
-      
+
       // Esperar a que se cargue el contenido y luego imprimir
       printWindow.onload = () => {
         printWindow.print();
@@ -422,7 +422,7 @@ export class PaymentRecord implements OnInit {
     });
 
     let paymentsHtml = '';
-    
+
     if (this.selectedAccountPayments && this.selectedAccountPayments.length > 0) {
       this.selectedAccountPayments.forEach((payment, index) => {
         paymentsHtml += `
@@ -434,8 +434,8 @@ export class PaymentRecord implements OnInit {
             <td style="padding: 12px;">${payment.pagador || 'N/A'}</td>
             <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 12px;">${payment.numero_transaccion || 'N/A'}</td>
             <td style="padding: 12px; text-align: center;">
-              <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; 
-                           background-color: ${payment.estado === 'PAGADO' ? '#d1fae5' : '#fee2e2'}; 
+              <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;
+                           background-color: ${payment.estado === 'PAGADO' ? '#d1fae5' : '#fee2e2'};
                            color: ${payment.estado === 'PAGADO' ? '#065f46' : '#991b1b'};">
                 ${payment.estado}
               </span>
@@ -447,7 +447,7 @@ export class PaymentRecord implements OnInit {
       paymentsHtml = `
         <tr>
           <td colspan="7" style="padding: 20px; text-align: center; color: #6b7280;">
-            No hay pagos registrados para este curso
+            No hay pagos registrados para este programa
           </td>
         </tr>
       `;
@@ -593,7 +593,7 @@ export class PaymentRecord implements OnInit {
                 <span class="info-value">${this.selectedAccountData.studentName}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">Curso:</span>
+                <span class="info-label">Programa:</span>
                 <span class="info-value">${this.selectedAccountData.courseName}</span>
               </div>
               <div class="info-item">
@@ -603,7 +603,7 @@ export class PaymentRecord implements OnInit {
             </div>
             <div>
               <div class="info-item">
-                <span class="info-label">Precio del Curso:</span>
+                <span class="info-label">Precio del Programa:</span>
                 <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
               </div>
               <div class="info-item">
@@ -638,7 +638,7 @@ export class PaymentRecord implements OnInit {
         <div class="summary">
           <div class="summary-grid">
             <div class="summary-item">
-              <div class="summary-label">Precio del Curso</div>
+              <div class="summary-label">Precio del Program</div>
               <div class="summary-value total-course">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || '0'}</div>
             </div>
             <div class="summary-item">
@@ -663,7 +663,7 @@ export class PaymentRecord implements OnInit {
 
   private formatDateForPrint(dateString: string): string {
     if (!dateString) return 'N/A';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString('es-CO', {
       year: 'numeric',
@@ -724,6 +724,23 @@ export class PaymentRecord implements OnInit {
           this.courses = response.data.sort((a, b) =>
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
+
+          // Log para verificar que los cursos vienen con colegios_cursos
+          console.log('🔍 DEBUG - Cursos cargados desde Directus:', this.courses);
+          this.courses.forEach((course, index) => {
+            console.log(`🔍 DEBUG - Curso ${index}: ${course.nombre}`);
+            console.log(`🔍 DEBUG - Colegios_cursos para ${course.nombre}:`, course.colegios_cursos);
+            if (course.colegios_cursos && course.colegios_cursos.length > 0) {
+              course.colegios_cursos.forEach((cc, ccIndex) => {
+                console.log(`🔍 DEBUG - Colegio_curso ${ccIndex}:`, {
+                  id: cc.id,
+                  fecha_finalizacion: cc.fecha_finalizacion,
+                  colegio_id: cc.colegio_id,
+                  curso_id: cc.curso_id
+                });
+              });
+            }
+          });
         }
         this.isLoadingCourses = false;
       },
@@ -742,7 +759,7 @@ export class PaymentRecord implements OnInit {
     const searchTerm = event.target.value;
     this.paymentForm.get('schoolSearchTerm')?.setValue(searchTerm);
     this.isSchoolSelected = false; // Reset cuando el usuario empieza a escribir
-    
+
     // Limpiar el valor del colegio seleccionado cuando el usuario empieza a escribir
     this.paymentForm.get('studentSchool')?.setValue('');
 
@@ -797,10 +814,10 @@ export class PaymentRecord implements OnInit {
       // Validación para el curso Will-Go (Segundo Hermano)
       const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
       const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
-      
+
       // Validación para el curso Will-Go (Tercer Hermano)
       const willGoTercerHermanoId = 'a218abdb-50e6-4b51-bc51-570e9efdfdc8';
-      
+
       if (courseId === willGoSegundoHermanoId) {
         // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go Estándar
         if (!this.clientData || !this.clientData.cuentas_cobrar) {
@@ -808,20 +825,20 @@ export class PaymentRecord implements OnInit {
           this.resetCourseSelection();
           return;
         }
-        
-        const hasWillGoEstandarPaid = this.clientData.cuentas_cobrar.some((cuenta: any) => 
-          cuenta.curso_id && 
-          cuenta.curso_id.id === willGoEstandarId && 
+
+        const hasWillGoEstandarPaid = this.clientData.cuentas_cobrar.some((cuenta: any) =>
+          cuenta.curso_id &&
+          cuenta.curso_id.id === willGoEstandarId &&
           cuenta.estado === 'PAGADA'
         );
-        
+
         if (!hasWillGoEstandarPaid) {
           this.showValidationNotification('Will Go Estandar');
           this.resetCourseSelection();
           return;
         }
       }
-      
+
       if (courseId === willGoTercerHermanoId) {
         // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go (Segundo Hermano)
         if (!this.clientData || !this.clientData.cuentas_cobrar) {
@@ -829,20 +846,20 @@ export class PaymentRecord implements OnInit {
           this.resetCourseSelection();
           return;
         }
-        
-        const hasWillGoSegundoHermanoPaid = this.clientData.cuentas_cobrar.some((cuenta: any) => 
-          cuenta.curso_id && 
-          cuenta.curso_id.id === willGoSegundoHermanoId && 
+
+        const hasWillGoSegundoHermanoPaid = this.clientData.cuentas_cobrar.some((cuenta: any) =>
+          cuenta.curso_id &&
+          cuenta.curso_id.id === willGoSegundoHermanoId &&
           cuenta.estado === 'PAGADA'
         );
-        
+
         if (!hasWillGoSegundoHermanoPaid) {
           this.showValidationNotification('Will Go (Segundo Hermano)');
           this.resetCourseSelection();
           return;
         }
       }
-      
+
       const selectedCourse = this.courses.find(course => course.id === courseId);
       if (selectedCourse) {
         const priceAsNumber = parseFloat(selectedCourse.precio);
@@ -905,6 +922,25 @@ export class PaymentRecord implements OnInit {
   createAccountRecord= ()=> {
     const coursePriceString = this.paymentForm.get('coursePrice')?.value;
     const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
+    const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
+
+    // Buscar el curso seleccionado para obtener su array completo de colegios_cursos
+    const selectedCourse = this.courses.find(course => course.id === selectedCourseId);
+    let colegiosCursos = [];
+    
+    if (selectedCourse && selectedCourse.colegios_cursos) {
+      // Enviar el array completo de colegios_cursos del curso seleccionado
+      colegiosCursos = selectedCourse.colegios_cursos;
+      
+      console.log('📤 ENVIANDO FORMULARIO - Información del curso:', {
+        curso_id: selectedCourseId,
+        curso_nombre: selectedCourse.nombre,
+        colegios_cursos_count: colegiosCursos.length,
+        colegios_cursos: colegiosCursos
+      });
+    } else {
+      console.log('⚠️ ADVERTENCIA: El curso seleccionado no tiene colegios_cursos');
+    }
 
     const paymentForm = {
       cliente: {
@@ -924,14 +960,31 @@ export class PaymentRecord implements OnInit {
         grado: this.paymentForm.get('studentGrado')?.value,
         colegio: this.paymentForm.get('studentSchool')?.value,
       },
-      curso_id: this.paymentForm.get('selectedCourse')?.value,
+      curso_id: selectedCourseId,
+      colegios_cursos: colegiosCursos,
       precio: coursePriceNumber,
       estado: 'PENDIENTE',
       fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
     };
 
+    console.log('📤 FORMULARIO COMPLETO A ENVIAR:', paymentForm);
+
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
+        console.log('📥 RESPUESTA DEL SERVIDOR:', response);
+        
+        // Verificar si la respuesta tiene status ERROR
+        if (response && response.status === 'ERROR') {
+          console.log('❌ ERROR DEL SERVIDOR:', response.data);
+          this.isSubmitting = false;
+          this.showConfirmation = false;
+          
+          // Mostrar notificación de error específica del servidor
+          this.showServerErrorNotification(response.data);
+          return;
+        }
+        
+        // Si no hay error, proceder normalmente
         this.isSubmitting = false;
         this.showConfirmation = false;
         // Mostrar notificación de éxito
@@ -940,6 +993,7 @@ export class PaymentRecord implements OnInit {
         this.searchClientIfReady();
       },
       error: (error) => {
+        console.log('❌ ERROR DE CONEXIÓN:', error);
         this.isSubmitting = false;
         this.showErrorNotification();
       }
@@ -957,8 +1011,8 @@ export class PaymentRecord implements OnInit {
     } else {
       this.notificationData = {
         type: 'success',
-        title: 'Curso registrado con éxito',
-        message: 'El curso ha sido registrado exitosamente. Puedes dirigirte a la tabla de Cursos Registrados y realizar el pago.',
+        title: 'Programa registrado con éxito',
+        message: 'El programa ha sido registrado exitosamente. Puedes dirigirte a la tabla de Programas Registrados y realizar el pago.',
         duration: 5000
       };
     }
@@ -981,6 +1035,16 @@ export class PaymentRecord implements OnInit {
         duration: 5000
       };
     }
+    this.showNotification = true;
+  }
+
+  showServerErrorNotification(errorMessage: string) {
+    this.notificationData = {
+      type: 'error',
+      title: 'Error del servidor',
+      message: errorMessage || 'Ha ocurrido un error en el servidor. Por favor, inténtalo nuevamente.',
+      duration: 7000
+    };
     this.showNotification = true;
   }
 

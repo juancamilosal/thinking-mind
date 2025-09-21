@@ -25,7 +25,7 @@ export class Schools implements OnInit {
   
   // Propiedades de paginación
   currentPage = 1;
-  itemsPerPage = 15;
+  itemsPerPage = 10;
   totalItems = 0;
   totalPages = 0;
   itemsPerPageOptions = [5, 10, 15, 20, 50];

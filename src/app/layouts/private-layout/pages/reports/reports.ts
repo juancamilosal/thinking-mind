@@ -28,6 +28,15 @@ export class Reports {
   schoolsData: any[] = [];
   loadingSchoolsData: boolean = false;
 
+  // Propiedades de paginación para Cartera
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  totalPages = 0;
+  paginatedPayments: PaymentModel[] = [];
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -38,6 +47,8 @@ export class Reports {
 
   ngOnInit(): void {
     this.initForm();
+    // Inicializar paginación
+    this.updatePagination();
   }
 
   initForm=(): void => {
@@ -48,42 +59,68 @@ export class Reports {
     }, { validators: this.dateRangeValidator });
   }
 
+  onReportTypeChange(event: any) {
+    const reportType = event.target.value;
+    console.log('Report type changed to:', reportType);
+    
+    if (reportType === 'INSCRIPCIONES') {
+      console.log('Consuming service for INSCRIPCIONES...');
+      this.reportGenerated = true; // Mostrar la sección de resultados
+      this.generateEnrollReport();
+    } else if (reportType === 'CARTERA') {
+      console.log('Consuming service for CARTERA...');
+      this.reportGenerated = true; // Mostrar la sección de resultados
+      this.generatePaymentsReport(); // Sin fechas, trae todos los datos
+    } else {
+      this.reportGenerated = false; // Ocultar la sección de resultados si no es INSCRIPCIONES o CARTERA
+      this.schoolsData = []; // Limpiar datos anteriores
+      this.payments = []; // Limpiar datos de pagos
+    }
+  }
+
   // Función para generar el reporte basado en el tipo seleccionado
   generateReport(): void {
-     if (this.reportForm.invalid) {
-    this.notificationService.showWarning('Por favor, selecciona un tipo de reporte.', '');
-    return;
+    const reportType = this.reportForm.get('reportType')?.value;
+    
+    console.log('Tipo de reporte seleccionado:', reportType);
+    
+    if (!reportType) {
+      this.notificationService.showWarning('Por favor, selecciona un tipo de reporte.', '');
+      return;
     }
+    
     this.reportGenerated = true;
-    const { reportType, startDate, endDate } = this.reportForm.value;
+    const { startDate, endDate } = this.reportForm.value;
+
+    console.log('Ejecutando switch con reportType:', reportType);
 
     switch (reportType) {
     case 'CARTERA':
+      console.log('Ejecutando generatePaymentsReport');
       this.generatePaymentsReport(startDate, endDate);
       break;
     case 'INSCRIPCIONES':
+      console.log('Ejecutando generateEnrollReport');
       this.generateEnrollReport(startDate, endDate);
       break;
     default:
+      console.log('Tipo de reporte no válido:', reportType);
       this.notificationService.showError('Tipo de reporte no válido.');
       this.reportGenerated = false;
     }
   }
 
   // Generar reporte de pagos
-  private  generatePaymentsReport(startDate: string, endDate: string): void {
-    this.paymentService.getPayments().subscribe({
+  private generatePaymentsReport(startDate?: string, endDate?: string): void {
+    console.log('generatePaymentsReport called with:', { startDate, endDate });
+    
+    // Usar el servicio con filtros de Directus
+    this.paymentService.getPayments(undefined, startDate, endDate).subscribe({
       next: (data) => {
-        this.payments = data.data.filter(payment => {
-        const paymentDate = new Date(payment.fecha_pago);
-        const start = new Date(startDate + 'T00:00:00Z');
-        const end = new Date(endDate + 'T23:59:59.999Z');
-
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-
-        return paymentDate >= start && paymentDate <= end;
-      });
+        console.log('Payments received from Directus with filters:', data);
+        this.payments = data.data;
+        this.totalItems = this.payments.length;
+        this.updatePagination();
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -99,8 +136,48 @@ export class Reports {
             'No se pudieron cargar los datos de pagos. Inténtalo nuevamente.'
           );
         }
+        this.payments = [];
+        this.totalItems = 0;
+        this.updatePagination();
       }
     });
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedPayments = this.payments.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  onItemsPerPageChange(event: any): void {
+    this.itemsPerPage = parseInt(event.target.value);
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   }
 
   calculateTotal(): number {
@@ -110,10 +187,12 @@ export class Reports {
   }
 
 // Generar reporte de inscripciones dentro del rango de fechas
-private generateEnrollReport(startDate: string, endDate: string): void {
+private generateEnrollReport(startDate?: string, endDate?: string): void {
+  console.log('Iniciando generateEnrollReport con fechas:', startDate, endDate);
   this.loadingSchoolsData = true;
   this.accountReceivableService.getAccountsForReport(startDate, endDate).subscribe({
     next: (response) => {
+      console.log('Respuesta del servicio getAccountsForReport:', response);
       if (response && response.data && Array.isArray(response.data)) {
         // Agrupar datos por colegio y curso
         const schoolsMap = new Map<string, any>();
@@ -209,6 +288,11 @@ private generateEnrollReport(startDate: string, endDate: string): void {
     this.reportGenerated = false;
     this.showDownloadOptions = false;
     this.loadingSchoolsData = false;
+    // Reset pagination
+    this.currentPage = 1;
+    this.totalItems = 0;
+    this.totalPages = 0;
+    this.paginatedPayments = [];
   }
 
   navigateToPresupuesto(): void {
@@ -404,7 +488,7 @@ private generateEnrollReport(startDate: string, endDate: string): void {
       summarySheet.addRow(['']); // Línea vacía
       summarySheet.addRow(['RESUMEN GENERAL']);
       summarySheet.addRow(['Total de Colegios:', this.schoolsData.length]);
-      summarySheet.addRow(['Total de Cursos:', totalCourses]);
+      summarySheet.addRow(['Total de Programas:', totalCourses]);
       summarySheet.addRow(['Total de Estudiantes:', totalStudents]);
       summarySheet.addRow(['Nuevos Estudiantes Hoy:', totalNewToday]);
 

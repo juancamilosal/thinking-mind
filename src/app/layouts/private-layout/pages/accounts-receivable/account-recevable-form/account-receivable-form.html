@@ -218,7 +218,7 @@
                     class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
                     [class.border-red-500]="accountForm.get('course')?.invalid && accountForm.get('course')?.touched"
                     [class.border-green-500]="accountForm.get('course')?.valid && accountForm.get('course')?.touched">
-              <option value="">{{ isLoadingCourses ? 'Cargando cursos...' : 'Seleccione un curso' }}</option>
+              <option value="">{{ isLoadingCourses ? 'Cargando programas...' : 'Seleccione un curso' }}</option>
               @for ( course of courses; track course.id) {
                 <option [value]="course.id">
                   {{ course.nombre }}

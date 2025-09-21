@@ -6,6 +6,7 @@ import {CourseInfoComponent} from '../../../../components/course-info/course-inf
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
 import { FormCourse } from './form-course/form-course';
+import {ColegioCursosComponent} from './form-colegio-cursos/form-colegio-cursos';
 
 @Component({
   selector: 'app-courses',
@@ -13,7 +14,8 @@ import { FormCourse } from './form-course/form-course';
     CommonModule,
     CourseCardComponent,
     CourseInfoComponent,
-    FormCourse
+    FormCourse,
+    ColegioCursosComponent
   ],
   templateUrl: './courses.html',
   standalone: true
@@ -24,6 +26,7 @@ export class Courses {
   showForm = false;
   showCourseInfo = false;
   showDetail = false;
+  showColegioForm = false;
   editMode = false;
   selectedCourse: Course | null = null;
   courses: Course[] = [];
@@ -43,6 +46,10 @@ export class Courses {
     this.showForm = !this.showForm;
     this.editMode = false;
     this.selectedCourse = null;
+    // Scroll al inicio de la página cuando se abre el formulario
+    if (this.showForm) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     // Consultar el servicio para actualizar la lista cuando se regresa del formulario
     if (!this.showForm) {
       this.searchCourse();
@@ -146,16 +153,38 @@ export class Courses {
     this.selectedCourse = course;
     this.editMode = true;
     this.showForm = true;
+    // Scroll al inicio de la página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Nuevo método para mostrar el formulario de colegio
+  showColegioFormForCourse(course: Course) {
+    this.selectedCourse = course;
+    this.showColegioForm = true;
+    // Scroll al inicio de la página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Método para cerrar el formulario de colegio
+  closeColegioForm() {
+    this.showColegioForm = false;
+    this.selectedCourse = null;
+  }
+
+  // Método para manejar cuando se agrega un colegio exitosamente
+  onColegioAdded() {
+    // Recargar los cursos para mostrar los colegios actualizados
+    this.searchCourse();
   }
 
   deleteCourse(course: Course) {
-    if (confirm(`¿Estás seguro de que deseas eliminar el curso "${course.nombre}"?`)) {
+    if (confirm(`¿Estás seguro de que deseas eliminar el programa "${course.nombre}"?`)) {
       this.courseServices.deleteCourse(course.id).subscribe({
         next: (response) => {
           this.searchCourse(); // Recargar la lista de cursos
         },
         error: (error) => {
-          console.error('Error al eliminar el curso:', error);
+          console.error('Error al eliminar el programa:', error);
           // Aquí puedes agregar una notificación de error
         }
       });

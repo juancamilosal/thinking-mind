@@ -74,7 +74,7 @@ export class PaymentStatusComponent implements OnInit {
         reference: this.paymentInfo.id || '',
         paymentMethod: this.formatPaymentMethod(this.paymentInfo.metodo_pago || 'PSE'),
         status: this.paymentInfo.estado || 'APROBADA',
-        course: this.paymentInfo.cuenta_cobrar_id?.curso_id?.nombre || 'Curso no especificado',
+        course: this.paymentInfo.cuenta_cobrar_id?.curso_id?.nombre || 'Programa no especificado',
         transactionDate: this.formatDate(this.paymentInfo.fecha_pago),
         amount: this.paymentInfo.valor || 0,
         payerName: this.paymentInfo.pagador || ''

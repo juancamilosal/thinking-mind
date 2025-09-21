@@ -102,8 +102,8 @@ export class NotificationService {
 
   showCourseCreated(courseName: string): void {
     this.showSuccess(
-      'Curso Creado',
-      `El curso ${courseName} ha sido creado exitosamente.`,
+      'Programa Creado',
+      `El programa ${courseName} ha sido creado exitosamente.`,
       3000
     );
   }

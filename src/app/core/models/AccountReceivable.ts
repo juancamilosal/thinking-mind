@@ -16,6 +16,7 @@ export class PaymentModel {
   comision?: number;
   iva?: number;
   valor_neto?:number;
+  retencion_fuente?: number;
 }
 
 export class AccountReceivable {

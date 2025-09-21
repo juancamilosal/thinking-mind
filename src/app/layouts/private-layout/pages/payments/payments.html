@@ -113,13 +113,33 @@
             <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
           </div>
         </div>
+
+        <!-- Retención en la Fuente -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Retención en la Fuente (%)
+          </label>
+          <div class="relative">
+            <input
+              type="number"
+              [(ngModel)]="wompiTariffs.retencion_fuente"
+              step="0.01"
+              min="0"
+              max="100"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+              placeholder="0.00"
+            >
+            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
+          </div>
+        </div>
       </div>
     }
   </div>
 
-  <!-- Barra de Búsqueda -->
+  <!-- Barra de Búsqueda y Filtros -->
   <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-    <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+    <!-- Barra de búsqueda -->
+    <div class="flex gap-4 flex-wrap sm:flex-nowrap mb-4">
       <input
         type="text"
         placeholder="Buscar por pagador, número de transacción o estado..."
@@ -132,6 +152,47 @@
         class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
         Buscar
       </button>
+    </div>
+    
+    <!-- Filtros por fecha -->
+    <div class="border-t border-gray-200 pt-4">
+      <h3 class="text-sm font-medium text-gray-700 mb-3">Filtrar por fecha</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Fecha Inicial -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Fecha Inicial
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="startDate"
+            (change)="onDateFilterChange()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+        </div>
+        
+        <!-- Fecha Final -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Fecha Final
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="endDate"
+            (change)="onDateFilterChange()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+        </div>
+        
+        <!-- Botón limpiar filtros -->
+        <div class="flex items-end">
+          <button
+            (click)="clearDateFilters()"
+            class="w-full px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all font-medium">
+            Limpiar Filtros
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -151,9 +212,6 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Pago</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarifa</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comisión</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IVA</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
             </tr>
           </thead>
@@ -175,15 +233,6 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="h-4 bg-gray-200 rounded w-16"></div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-4 bg-gray-200 rounded w-16"></div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-4 bg-gray-200 rounded w-16"></div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-4 bg-gray-200 rounded w-16"></div>
-                </td>
               </tr>
             }
           </tbody>
@@ -197,10 +246,6 @@
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pagador</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarifa</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comisión</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IVA</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Neto</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Pago</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método de Pago</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
@@ -210,7 +255,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             @if (filteredPayments.length === 0) {
               <tr>
-                <td colspan="9" class="px-6 py-16">
+                <td colspan="6" class="px-6 py-16">
                   <div class="flex flex-col items-center justify-center space-y-4 text-center">
                     <div class="bg-gray-100 rounded-full p-6">
                       <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,25 +283,13 @@
                 </td>
               </tr>
             } @else {
-              @for (payment of filteredPayments; track payment.id) {
+              @for (payment of paginatedPayments; track payment.id) {
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(payment.valor) }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-normal">{{ formatCurrency(payment.tarifa) }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-normal">{{ formatCurrency(payment.comision) }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-normal">{{ formatCurrency(payment.iva) }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-normal">{{ formatCurrency(payment.valor_neto) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ formatDate(payment.fecha_pago) }}</div>
@@ -286,6 +319,68 @@
           </tbody>
         </table>
       </div>
+      
+      <!-- Paginador -->
+      @if (filteredPayments.length > 0) {
+        <div class="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between rounded-b-xl">
+          <div class="flex items-center">
+            <p class="text-sm text-gray-700">
+              Mostrando
+              <span class="font-bold text-indigo-600 mx-1">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+              a
+              <span class="font-bold text-indigo-600 mx-1">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
+              de
+              <span class="font-bold text-purple-600 mx-1">{{ totalItems }}</span>
+              resultados
+            </p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <label for="itemsPerPage" class="text-sm font-medium text-gray-700">Mostrar:</label>
+            <select
+              id="itemsPerPage"
+              [value]="itemsPerPage"
+              (change)="onItemsPerPageChange($event)"
+              class="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm hover:border-indigo-300 transition-all duration-200">
+              @for (option of itemsPerPageOptions; track option) {
+                <option [value]="option" [selected]="option === itemsPerPage">{{ option }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        @if (totalPages > 1) {
+          <div class="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-center rounded-b-xl">
+            <nav class="relative z-0 inline-flex rounded-xl shadow-lg bg-white border border-gray-200 overflow-hidden" aria-label="Pagination">
+              <button
+                (click)="onPageChange(currentPage - 1)"
+                [disabled]="currentPage === 1"
+                class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 border-r border-gray-200">
+                <span class="sr-only">Anterior</span>
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              @for (page of getPaginationArray(); track page) {
+                <button
+                  (click)="onPageChange(page)"
+                  [class]="page === currentPage ? 
+                    'z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white relative inline-flex items-center px-4 py-2 text-sm font-bold shadow-inner border-r border-indigo-400' :
+                    'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 relative inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 border-r border-gray-200'">
+                  {{ page }}
+                </button>
+              }
+              <button
+                (click)="onPageChange(currentPage + 1)"
+                [disabled]="currentPage === totalPages"
+                class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200">
+                <span class="sr-only">Siguiente</span>
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </nav>
+          </div>
+        }
+      }
     }
   </div>
 </div>
