@@ -43,7 +43,7 @@ export class ColegioCursosComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
-    
+
     // Si hay un curso seleccionado, pre-llenarlo
     if (this.selectedCourse) {
       this.fechaFinalizacionForm.get('curso_id')?.setValue(this.selectedCourse.id);
@@ -166,14 +166,9 @@ export class ColegioCursosComponent implements OnInit {
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value
       };
-
-      console.log('Datos del formulario:', formData);
-
       // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
-          console.log('Colegio-Curso creado exitosamente:', response);
-          
           // Obtener nombres para mostrar en la notificación
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
           const colegioNombre = this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
@@ -205,7 +200,6 @@ export class ColegioCursosComponent implements OnInit {
         }
       });
     } else {
-      console.log('Formulario inválido');
       this.markFormGroupTouched();
     }
   }

@@ -61,14 +61,10 @@ export class Reports {
 
   onReportTypeChange(event: any) {
     const reportType = event.target.value;
-    console.log('Report type changed to:', reportType);
-    
     if (reportType === 'INSCRIPCIONES') {
-      console.log('Consuming service for INSCRIPCIONES...');
       this.reportGenerated = true; // Mostrar la sección de resultados
       this.generateEnrollReport();
     } else if (reportType === 'CARTERA') {
-      console.log('Consuming service for CARTERA...');
       this.reportGenerated = true; // Mostrar la sección de resultados
       this.generatePaymentsReport(); // Sin fechas, trae todos los datos
     } else {
@@ -81,30 +77,23 @@ export class Reports {
   // Función para generar el reporte basado en el tipo seleccionado
   generateReport(): void {
     const reportType = this.reportForm.get('reportType')?.value;
-    
-    console.log('Tipo de reporte seleccionado:', reportType);
-    
+
     if (!reportType) {
       this.notificationService.showWarning('Por favor, selecciona un tipo de reporte.', '');
       return;
     }
-    
+
     this.reportGenerated = true;
     const { startDate, endDate } = this.reportForm.value;
 
-    console.log('Ejecutando switch con reportType:', reportType);
-
     switch (reportType) {
     case 'CARTERA':
-      console.log('Ejecutando generatePaymentsReport');
       this.generatePaymentsReport(startDate, endDate);
       break;
     case 'INSCRIPCIONES':
-      console.log('Ejecutando generateEnrollReport');
       this.generateEnrollReport(startDate, endDate);
       break;
     default:
-      console.log('Tipo de reporte no válido:', reportType);
       this.notificationService.showError('Tipo de reporte no válido.');
       this.reportGenerated = false;
     }
@@ -112,12 +101,9 @@ export class Reports {
 
   // Generar reporte de pagos
   private generatePaymentsReport(startDate?: string, endDate?: string): void {
-    console.log('generatePaymentsReport called with:', { startDate, endDate });
-    
     // Usar el servicio con filtros de Directus
     this.paymentService.getPayments(undefined, startDate, endDate).subscribe({
       next: (data) => {
-        console.log('Payments received from Directus with filters:', data);
         this.payments = data.data;
         this.totalItems = this.payments.length;
         this.updatePagination();
@@ -168,15 +154,15 @@ export class Reports {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
@@ -191,11 +177,9 @@ export class Reports {
 
 // Generar reporte de inscripciones dentro del rango de fechas
 private generateEnrollReport(startDate?: string, endDate?: string): void {
-  console.log('Iniciando generateEnrollReport con fechas:', startDate, endDate);
   this.loadingSchoolsData = true;
   this.accountReceivableService.getAccountsForReport(startDate, endDate).subscribe({
     next: (response) => {
-      console.log('Respuesta del servicio getAccountsForReport:', response);
       if (response && response.data && Array.isArray(response.data)) {
         // Agrupar datos por colegio y curso
         const schoolsMap = new Map<string, any>();

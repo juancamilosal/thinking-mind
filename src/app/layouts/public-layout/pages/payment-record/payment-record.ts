@@ -1,24 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
-import { CourseService } from '../../../../core/services/course.service';
-import { Course } from '../../../../core/models/Course';
+import {Component, OnInit} from '@angular/core';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {Router} from '@angular/router';
+import {DOCUMENT_TYPE} from '../../../../core/const/DocumentTypeConst';
+import {CourseService} from '../../../../core/services/course.service';
+import {Course} from '../../../../core/models/Course';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
-import { ClientService } from '../../../../core/services/client.service';
-import { SchoolService } from '../../../../core/services/school.service';
-import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
+import {ClientService} from '../../../../core/services/client.service';
+import {SchoolService} from '../../../../core/services/school.service';
+import {PaymentConfirmationComponent} from './payment-confirmation/payment-confirmation.component';
 import {Client} from '../../../../core/models/Clients';
 import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
 import {School} from '../../../../core/models/School';
-import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+import {
+  NotificationModalComponent,
+  NotificationData
+} from '../../../../components/notification-modal/notification-modal';
 import {PaymentService} from '../../../../core/services/payment.service';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
-import { environment } from '../../../../../environments/environment';
+import {environment} from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
+
 declare var WidgetCheckout: any;
 
 @Component({
@@ -74,7 +78,8 @@ export class PaymentRecord implements OnInit {
     private schoolService: SchoolService,
     private paymentService: PaymentService,
     private router: Router,
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     this.initForm();
@@ -104,7 +109,7 @@ export class PaymentRecord implements OnInit {
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
-      coursePrice: [{ value: '', disabled: true }, [Validators.required]],
+      coursePrice: [{value: '', disabled: true}, [Validators.required]],
     });
   }
 
@@ -129,32 +134,32 @@ export class PaymentRecord implements OnInit {
 
   onGuardianFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('guardianFirstName')?.setValue(value, { emitEvent: false });
+    this.paymentForm.get('guardianFirstName')?.setValue(value, {emitEvent: false});
   }
 
   onGuardianLastNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('guardianLastName')?.setValue(value, { emitEvent: false });
+    this.paymentForm.get('guardianLastName')?.setValue(value, {emitEvent: false});
   }
 
   onStudentFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentFirstName')?.setValue(value, { emitEvent: false });
+    this.paymentForm.get('studentFirstName')?.setValue(value, {emitEvent: false});
   }
 
   onStudentLastNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentLastName')?.setValue(value, { emitEvent: false });
+    this.paymentForm.get('studentLastName')?.setValue(value, {emitEvent: false});
   }
 
   onStudentSchoolChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentSchool')?.setValue(value, { emitEvent: false });
+    this.paymentForm.get('studentSchool')?.setValue(value, {emitEvent: false});
   }
 
   onStudentGradoChange(event: any): void {
     const value = event.target.value.toUpperCase();
-    this.paymentForm.get('studentGrado')?.setValue(value, { emitEvent: false });
+    this.paymentForm.get('studentGrado')?.setValue(value, {emitEvent: false});
   }
 
   onGuardianDocumentTypeChange(event: any): void {
@@ -198,7 +203,7 @@ export class PaymentRecord implements OnInit {
     this.clientService.searchClientPayment(documentType, documentNumber).subscribe(data => {
       this.isSearchingClient = false;
       this.cliente = data.data;
-      if(data.data.length > 0){
+      if (data.data.length > 0) {
         const client = data.data[0];
         this.clientData = client;
         this.fillGuardianFields(client);
@@ -220,15 +225,15 @@ export class PaymentRecord implements OnInit {
 
   private searchStudentPayment(documentType: string, documentNumber: string): void {
 
-      this.studentService.searchStudentPayment(documentType, documentNumber).subscribe(data => {
-        this.student = data.data;
+    this.studentService.searchStudentPayment(documentType, documentNumber).subscribe(data => {
+      this.student = data.data;
 
-        if(data.data.length > 0){
-          this.fillStudentFields(this.student[0]);
-        } else {
-          this.clearStudentFields();
-        }
-      })
+      if (data.data.length > 0) {
+        this.fillStudentFields(this.student[0]);
+      } else {
+        this.clearStudentFields();
+      }
+    })
   }
 
   private fillGuardianFields(client: any): void {
@@ -242,8 +247,6 @@ export class PaymentRecord implements OnInit {
   }
 
   private fillStudentFields(student: any): void {
-    console.log('🔍 DEBUG - Datos del estudiante recibidos:', student);
-
     this.paymentForm.patchValue({
       studentFirstName: student.nombre || '',
       studentLastName: student.apellido || '',
@@ -260,11 +263,9 @@ export class PaymentRecord implements OnInit {
         // El colegio viene como objeto completo
         schoolId = student.colegio_id.id;
         schoolName = student.colegio_id.nombre || '';
-        console.log('🔍 DEBUG - Colegio como objeto:', student.colegio_id);
       } else if (typeof student.colegio_id === 'string') {
         // El colegio viene como ID string
         schoolId = student.colegio_id;
-        console.log('🔍 DEBUG - Colegio como ID:', schoolId);
       }
     }
 
@@ -273,20 +274,15 @@ export class PaymentRecord implements OnInit {
       this.paymentForm.get('schoolSearchTerm')?.setValue(schoolName);
       this.paymentForm.get('studentSchool')?.setValue(schoolId); // Establecer el ID en el campo requerido
       // NO establecer isSchoolSelected = true para permitir cambios
-      console.log('🔍 DEBUG - Nombre del colegio establecido:', schoolName);
-      console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', schoolId);
     }
     // Si solo tenemos el ID, buscar el nombre
     else if (schoolId) {
-      console.log('🔍 DEBUG - Buscando nombre del colegio por ID:', schoolId);
       this.schoolService.getSchoolById(schoolId).subscribe({
         next: (response) => {
           if (response.data) {
             this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
             this.paymentForm.get('studentSchool')?.setValue(schoolId); // Establecer el ID en el campo requerido
             // NO establecer isSchoolSelected = true para permitir cambios
-            console.log('🔍 DEBUG - Nombre del colegio obtenido:', response.data.nombre);
-            console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', schoolId);
           }
         },
         error: (error) => {
@@ -302,9 +298,7 @@ export class PaymentRecord implements OnInit {
             this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
             this.paymentForm.get('studentSchool')?.setValue(student.colegio); // Establecer el ID en el campo requerido
             // NO establecer isSchoolSelected = true para permitir cambios
-            console.log('🔍 DEBUG - Nombre del colegio obtenido (campo colegio):', response.data.nombre);
-            console.log('🔍 DEBUG - ID del colegio establecido en studentSchool:', student.colegio);
-          }
+        }
         },
         error: (error) => {
           console.error('❌ Error loading school name from colegio field:', error);
@@ -724,20 +718,9 @@ export class PaymentRecord implements OnInit {
           this.courses = response.data.sort((a, b) =>
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
-
-          // Log para verificar que los cursos vienen con colegios_cursos
-          console.log('🔍 DEBUG - Cursos cargados desde Directus:', this.courses);
           this.courses.forEach((course, index) => {
-            console.log(`🔍 DEBUG - Curso ${index}: ${course.nombre}`);
-            console.log(`🔍 DEBUG - Colegios_cursos para ${course.nombre}:`, course.colegios_cursos);
-            if (course.colegios_cursos && course.colegios_cursos.length > 0) {
+           if (course.colegios_cursos && course.colegios_cursos.length > 0) {
               course.colegios_cursos.forEach((cc, ccIndex) => {
-                console.log(`🔍 DEBUG - Colegio_curso ${ccIndex}:`, {
-                  id: cc.id,
-                  fecha_finalizacion: cc.fecha_finalizacion,
-                  colegio_id: cc.colegio_id,
-                  curso_id: cc.curso_id
-                });
               });
             }
           });
@@ -750,7 +733,6 @@ export class PaymentRecord implements OnInit {
       }
     });
   }
-
 
 
   private searchTimeout: any;
@@ -914,12 +896,12 @@ export class PaymentRecord implements OnInit {
     this.showAddCourseForm = false;
     const documentType = this.paymentForm.get('guardianDocumentType')?.value;
     const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
-    setTimeout(()=>{
+    setTimeout(() => {
       this.searchClientPayment(documentType, documentNumber);
-    },500)
+    }, 500)
   }
 
-  createAccountRecord= ()=> {
+  createAccountRecord = () => {
     const coursePriceString = this.paymentForm.get('coursePrice')?.value;
     const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
     const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
@@ -927,21 +909,11 @@ export class PaymentRecord implements OnInit {
     // Buscar el curso seleccionado para obtener su array completo de colegios_cursos
     const selectedCourse = this.courses.find(course => course.id === selectedCourseId);
     let colegiosCursos = [];
-    
+
     if (selectedCourse && selectedCourse.colegios_cursos) {
       // Enviar el array completo de colegios_cursos del curso seleccionado
       colegiosCursos = selectedCourse.colegios_cursos;
-      
-      console.log('📤 ENVIANDO FORMULARIO - Información del curso:', {
-        curso_id: selectedCourseId,
-        curso_nombre: selectedCourse.nombre,
-        colegios_cursos_count: colegiosCursos.length,
-        colegios_cursos: colegiosCursos
-      });
-    } else {
-      console.log('⚠️ ADVERTENCIA: El curso seleccionado no tiene colegios_cursos');
     }
-
     const paymentForm = {
       cliente: {
         tipo_documento: this.paymentForm.get('guardianDocumentType')?.value,
@@ -964,26 +936,20 @@ export class PaymentRecord implements OnInit {
       colegios_cursos: colegiosCursos,
       precio: coursePriceNumber,
       estado: 'PENDIENTE',
-      fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
+      fecha_creacion: new Date().toLocaleString('sv-SE', {timeZone: 'America/Bogota'})
     };
-
-    console.log('📤 FORMULARIO COMPLETO A ENVIAR:', paymentForm);
-
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
-        console.log('📥 RESPUESTA DEL SERVIDOR:', response);
-        
         // Verificar si la respuesta tiene status ERROR
         if (response && response.status === 'ERROR') {
-          console.log('❌ ERROR DEL SERVIDOR:', response.data);
           this.isSubmitting = false;
           this.showConfirmation = false;
-          
+
           // Mostrar notificación de error específica del servidor
           this.showServerErrorNotification(response.data);
           return;
         }
-        
+
         // Si no hay error, proceder normalmente
         this.isSubmitting = false;
         this.showConfirmation = false;
@@ -993,7 +959,6 @@ export class PaymentRecord implements OnInit {
         this.searchClientIfReady();
       },
       error: (error) => {
-        console.log('❌ ERROR DE CONEXIÓN:', error);
         this.isSubmitting = false;
         this.showErrorNotification();
       }
@@ -1136,16 +1101,16 @@ export class PaymentRecord implements OnInit {
       amountInCents: amountInCents,
       reference: reference,
       publicKey: wompiConfig.publicKey,
-      signature: { integrity: signature },
+      signature: {integrity: signature},
       redirectUrl: environment.wompi.redirectUrl,
       customerData: {
-         email: this.paymentModalData?.clientEmail,
-         fullName: this.paymentModalData?.clientName,
-         phoneNumber: this.paymentModalData?.clientPhone,
-         phoneNumberPrefix: '+57',
-         legalId: this.paymentModalData?.clientDocumentNumber,
-         legalIdType: this.paymentModalData?.clientDocumentType,
-       },
+        email: this.paymentModalData?.clientEmail,
+        fullName: this.paymentModalData?.clientName,
+        phoneNumber: this.paymentModalData?.clientPhone,
+        phoneNumberPrefix: '+57',
+        legalId: this.paymentModalData?.clientDocumentNumber,
+        legalIdType: this.paymentModalData?.clientDocumentType,
+      },
     });
     checkout.open((result: any) => {
       this.closePaymentModal();
@@ -1165,7 +1130,7 @@ export class PaymentRecord implements OnInit {
     });
   }
 
-   async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
+  async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
     const data = `${reference}${amountInCents}${currency}${secretKey}`;
 
     try {
@@ -1176,18 +1141,18 @@ export class PaymentRecord implements OnInit {
     } catch (error) {
       throw new Error('Error generando la firma de integridad');
     }
-   }
+  }
 
   formatPaymentMethod(method: string): string {
-     if (method === 'CARD') {
-       return 'TARJETA';
-     }
-     if (method === 'BANCOLOMBIA_TRANSFER') {
-       return 'TRANSFERENCIA BANCOLOMBIA';
-     }
-     if (method === 'BANCOLOMBIA_COLLECT') {
-       return 'CORRESPONSAL BANCARIO';
-     }
-     return method;
-   }
- }
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    if (method === 'BANCOLOMBIA_TRANSFER') {
+      return 'TRANSFERENCIA BANCOLOMBIA';
+    }
+    if (method === 'BANCOLOMBIA_COLLECT') {
+      return 'CORRESPONSAL BANCARIO';
+    }
+    return method;
+  }
+}

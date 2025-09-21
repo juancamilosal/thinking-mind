@@ -99,10 +99,10 @@ export class ListSchool implements OnInit {
   // Método público para usar en el template
   isWillGoCourse(courseName: string): boolean {
     if (!courseName) return false;
-    
+
     const willGoVariants = [
       'will-go(estándar)',
-      'will-go(segundo hermano)', 
+      'will-go(segundo hermano)',
       'will-go(tercer hermano)',
       'will - go(estándar)',
       'will - go(segundo hermano)',
@@ -113,10 +113,10 @@ export class ListSchool implements OnInit {
       'will go',
       'will-go'
     ];
-    
+
     const normalizedName = courseName.toLowerCase().trim();
-    return willGoVariants.some(variant => 
-      normalizedName.includes(variant) || 
+    return willGoVariants.some(variant =>
+      normalizedName.includes(variant) ||
       normalizedName === variant
     );
   }
@@ -191,7 +191,7 @@ export class ListSchool implements OnInit {
       // Verificar que el account tenga la estructura esperada
       if (account.estudiante_id && typeof account.estudiante_id === 'object') {
         const student = account.estudiante_id;
-        
+
         // Verificar que el estudiante tenga colegio_id
         if (student.colegio_id && typeof student.colegio_id === 'object') {
           const school = student.colegio_id;
@@ -228,10 +228,10 @@ export class ListSchool implements OnInit {
     });
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
-    
+
     // Procesar datos para vista por cursos
     this.processCoursesData(accountsWithInscription);
-    
+
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
   }
@@ -343,7 +343,7 @@ export class ListSchool implements OnInit {
 
   toggleSchoolStudents(schoolData: SchoolWithAccounts): void {
     schoolData.showStudents = !schoolData.showStudents;
-    
+
     if (schoolData.showStudents && !schoolData.students) {
       this.loadSchoolStudents(schoolData);
     }
@@ -351,16 +351,16 @@ export class ListSchool implements OnInit {
 
   loadSchoolStudents(schoolData: SchoolWithAccounts): void {
     schoolData.isLoadingStudents = true;
-    
+
     // Crear un array de estudiantes con sus cuentas (permitir duplicados)
     const studentsWithAccounts: StudentWithAccount[] = [];
-    
+
     schoolData.accounts.forEach(account => {
       if (account.estudiante_id) {
-        const student = typeof account.estudiante_id === 'string' 
-          ? null 
+        const student = typeof account.estudiante_id === 'string'
+          ? null
           : account.estudiante_id;
-        
+
         if (student) {
           studentsWithAccounts.push({
             student: student,
@@ -369,7 +369,7 @@ export class ListSchool implements OnInit {
         }
       }
     });
-    
+
     schoolData.students = studentsWithAccounts;
     schoolData.isLoadingStudents = false;
   }
@@ -378,16 +378,16 @@ export class ListSchool implements OnInit {
     // Lógica para determinar si el estudiante es nuevo hoy
     // Como el modelo Student no tiene created_at, usaremos otra lógica
     // Por ejemplo, basándose en accountInfo o simplemente retornar false por ahora
-    
+
     if (student.accountInfo && student.accountInfo.created_at) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const createdDate = new Date(student.accountInfo.created_at);
       createdDate.setHours(0, 0, 0, 0);
       return createdDate.getTime() === today.getTime();
     }
-    
+
     return false;
   }
 
@@ -404,13 +404,13 @@ export class ListSchool implements OnInit {
   updatePinEntregado(account: AccountReceivable, event: any): void {
     const isChecked = event.target.checked;
     const pinValue = isChecked ? 'SI' : 'NO';
-    
+
     // Verificar si el estado es PENDIENTE (protección adicional)
     if (account.estado === 'PENDIENTE') {
       event.target.checked = !isChecked; // Revertir el checkbox
       return;
     }
-    
+
     // Actualizar localmente primero
     account.pin_entregado = pinValue;
 
@@ -423,13 +423,12 @@ export class ListSchool implements OnInit {
     this.accountReceivableService.updateAccountReceivable(account.id, updateData).subscribe({
       next: (response) => {
         // Eliminar el modal/notificación de éxito
-        console.log('PIN actualizado correctamente:', pinValue);
       },
       error: (error) => {
         // Revertir el cambio local si hay error
         account.pin_entregado = isChecked ? 'NO' : 'SI';
         event.target.checked = !isChecked;
-        
+
         this.notificationService.showError(
           'Error al actualizar PIN',
           'No se pudo actualizar el estado del PIN. Intente nuevamente.'
@@ -450,14 +449,14 @@ export class ListSchool implements OnInit {
   viewStudent(student: Student, account: AccountReceivable): void {
     if (account.estudiante_id && typeof account.estudiante_id === 'object') {
       this.selectedStudent = account.estudiante_id;
-      
+
       // Obtener información del acudiente desde cliente_id
       if (account.cliente_id && typeof account.cliente_id === 'object') {
         this.selectedClient = account.cliente_id;
       } else {
         this.selectedClient = null;
       }
-      
+
       this.showDetail = true;
     }
   }
@@ -470,7 +469,6 @@ export class ListSchool implements OnInit {
 
   editStudent(student: Student) {
     // Implementar lógica de edición si es necesario
-    console.log('Editar estudiante:', student);
     this.closeDetail();
   }
 
@@ -483,7 +481,7 @@ export class ListSchool implements OnInit {
     const schoolsMap = new Map<string, any>();
 
     accounts.forEach(account => {
-      if (account.estudiante_id && typeof account.estudiante_id === 'object' && 
+      if (account.estudiante_id && typeof account.estudiante_id === 'object' &&
           account.curso_id && typeof account.curso_id === 'object') {
         const student = account.estudiante_id;
         const course = account.curso_id;
@@ -503,11 +501,11 @@ export class ListSchool implements OnInit {
           }
 
           const schoolData = schoolsMap.get(schoolId)!;
-          
+
           // Determinar si es un curso Will-Go y usar ID unificado
           const isWillGoCourse = this.isWillGoCourse(course.nombre);
           const courseId = isWillGoCourse ? 'will-go-unified' : course.id;
-          
+
           // Crear entrada del curso dentro del colegio si no existe
           if (!schoolData.courses.has(courseId)) {
             const courseData = {
