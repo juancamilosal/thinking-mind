@@ -9,6 +9,7 @@ export interface WompiTariff {
   tarifa: number;
   comision: number;
   iva: number;
+  retencion_fuente: number;
 }
 
 @Injectable({

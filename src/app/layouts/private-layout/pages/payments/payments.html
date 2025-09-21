@@ -113,13 +113,33 @@
             <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
           </div>
         </div>
+
+        <!-- Retención en la Fuente -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Retención en la Fuente (%)
+          </label>
+          <div class="relative">
+            <input
+              type="number"
+              [(ngModel)]="wompiTariffs.retencion_fuente"
+              step="0.01"
+              min="0"
+              max="100"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+              placeholder="0.00"
+            >
+            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
+          </div>
+        </div>
       </div>
     }
   </div>
 
-  <!-- Barra de Búsqueda -->
+  <!-- Barra de Búsqueda y Filtros -->
   <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-    <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+    <!-- Barra de búsqueda -->
+    <div class="flex gap-4 flex-wrap sm:flex-nowrap mb-4">
       <input
         type="text"
         placeholder="Buscar por pagador, número de transacción o estado..."
@@ -132,6 +152,47 @@
         class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
         Buscar
       </button>
+    </div>
+    
+    <!-- Filtros por fecha -->
+    <div class="border-t border-gray-200 pt-4">
+      <h3 class="text-sm font-medium text-gray-700 mb-3">Filtrar por fecha</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Fecha Inicial -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Fecha Inicial
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="startDate"
+            (change)="onDateFilterChange()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+        </div>
+        
+        <!-- Fecha Final -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Fecha Final
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="endDate"
+            (change)="onDateFilterChange()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+        </div>
+        
+        <!-- Botón limpiar filtros -->
+        <div class="flex items-end">
+          <button
+            (click)="clearDateFilters()"
+            class="w-full px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all font-medium">
+            Limpiar Filtros
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

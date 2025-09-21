@@ -31,6 +31,10 @@ export class Payments implements OnInit, OnDestroy {
   selectedPayment: PaymentModel | null = null;
   showPaymentDetail: boolean = false;
   
+  // Propiedades para filtros de fecha
+  startDate: string = '';
+  endDate: string = '';
+  
   // Propiedades de paginación
   currentPage = 1;
   itemsPerPage = 10;
@@ -46,7 +50,8 @@ export class Payments implements OnInit, OnDestroy {
   wompiTariffs: WompiTariff = {
     tarifa: 0,
     comision: 0,
-    iva: 0
+    iva: 0,
+    retencion_fuente: 0
   };
   isLoadingTariffs: boolean = false;
   isUpdatingTariffs: boolean = false;
@@ -73,7 +78,8 @@ export class Payments implements OnInit, OnDestroy {
           this.wompiTariffs = {
             tarifa: firstTariff.tarifa,
             comision: firstTariff.comision,
-            iva: firstTariff.iva
+            iva: firstTariff.iva,
+            retencion_fuente: firstTariff.retencion_fuente
           };
           this.currentTariffId = firstTariff.id || null;
         } else {
@@ -94,7 +100,8 @@ export class Payments implements OnInit, OnDestroy {
     const initialTariff = {
       tarifa: 3.4,
       comision: 900,
-      iva: 19
+      iva: 19,
+      retencion_fuente: 1.5
     };
 
     this.wompiTariffService.createWompiTariff(initialTariff).subscribe({
@@ -103,7 +110,8 @@ export class Payments implements OnInit, OnDestroy {
           this.wompiTariffs = {
             tarifa: response.data.tarifa,
             comision: response.data.comision,
-            iva: response.data.iva
+            iva: response.data.iva,
+            retencion_fuente: response.data.retencion_fuente
           };
           this.currentTariffId = response.data.id || null;
           this.notificationService.showSuccess('Éxito', 'Tarifas iniciales creadas correctamente');
@@ -127,7 +135,8 @@ export class Payments implements OnInit, OnDestroy {
     const updatedTariff = {
       tarifa: this.wompiTariffs.tarifa,
       comision: this.wompiTariffs.comision,
-      iva: this.wompiTariffs.iva
+      iva: this.wompiTariffs.iva,
+      retencion_fuente: this.wompiTariffs.retencion_fuente
     };
 
     this.wompiTariffService.updateWompiTariff(this.currentTariffId, updatedTariff).subscribe({
@@ -145,7 +154,7 @@ export class Payments implements OnInit, OnDestroy {
 
   loadPayments(searchTerm?: string): void {
     this.isLoading = true;
-    this.paymentService.getPayments(searchTerm).subscribe({
+    this.paymentService.getPayments(searchTerm, this.startDate, this.endDate).subscribe({
       next: (response: ResponseAPI<PaymentModel[]>) => {
         this.payments = response.data || [];
         this.filteredPayments = [...this.payments];
@@ -184,27 +193,6 @@ export class Payments implements OnInit, OnDestroy {
       clearTimeout(this.searchTimeout);
     }
     this.loadPayments(this.searchTerm.trim() || undefined);
-  }
-
-  filterPayments() {
-    // Este método ya no es necesario ya que la búsqueda se hace en el servidor
-    // Mantenemos la funcionalidad local como respaldo
-    if (!this.searchTerm.trim()) {
-      this.filteredPayments = [...this.payments];
-      this.totalItems = this.filteredPayments.length;
-      this.currentPage = 1;
-      this.updatePagination();
-      return;
-    }
-
-    this.filteredPayments = this.payments.filter(payment =>
-      payment.pagador?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      payment.numero_transaccion?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      payment.estado?.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
-    this.totalItems = this.filteredPayments.length;
-    this.currentPage = 1;
-    this.updatePagination();
   }
 
   // Método para mostrar el detalle del pago
@@ -295,6 +283,17 @@ export class Payments implements OnInit, OnDestroy {
     }
     
     return pages;
+  }
+
+  // Métodos para filtros de fecha
+  onDateFilterChange(): void {
+    this.loadPayments(this.searchTerm.trim() || undefined);
+  }
+
+  clearDateFilters(): void {
+    this.startDate = '';
+    this.endDate = '';
+    this.loadPayments(this.searchTerm.trim() || undefined);
   }
 
   formatPaymentMethod(method: string): string {

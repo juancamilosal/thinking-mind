@@ -14,16 +14,33 @@ export class PaymentService {
 
   constructor(private http: HttpClient) {}
 
-  getPayments(searchTerm?: string): Observable<ResponseAPI<PaymentModel[]>> {
+  getPayments(searchTerm?: string, startDate?: string, endDate?: string): Observable<ResponseAPI<PaymentModel[]>> {
+    let params: any = {};
+
+    // Filtro por término de búsqueda
     if (searchTerm && searchTerm.trim()) {
-      const params = {
-        'filter[_or][0][pagador][_icontains]': searchTerm,
-        'filter[_or][1][numero_transaccion][_icontains]': searchTerm,
-        'filter[_or][2][estado][_icontains]': searchTerm
-      };
-      return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
+      params['filter[_or][0][pagador][_icontains]'] = searchTerm;
+      params['filter[_or][1][numero_transaccion][_icontains]'] = searchTerm;
+      params['filter[_or][2][estado][_icontains]'] = searchTerm;
     }
-    return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl);
+
+    // Filtro por fecha inicial
+    if (startDate) {
+      params['filter[fecha_pago][_gte]'] = startDate;
+    }
+
+    // Filtro por fecha final
+    if (endDate) {
+      // Agregar 23:59:59 al final del día para incluir todo el día
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      params['filter[fecha_pago][_lte]'] = endDateTime.toISOString().split('T')[0] + 'T23:59:59';
+    }
+
+    // Ordenar por fecha de pago descendente (más reciente primero)
+    params['sort'] = '-fecha_pago';
+
+    return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
   }
 
   getPaymentsByAccountId(accountId: string): Observable<ResponseAPI<PaymentModel[]>> {
