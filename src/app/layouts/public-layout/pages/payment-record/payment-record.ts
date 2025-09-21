@@ -724,6 +724,23 @@ export class PaymentRecord implements OnInit {
           this.courses = response.data.sort((a, b) =>
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
+
+          // Log para verificar que los cursos vienen con colegios_cursos
+          console.log('🔍 DEBUG - Cursos cargados desde Directus:', this.courses);
+          this.courses.forEach((course, index) => {
+            console.log(`🔍 DEBUG - Curso ${index}: ${course.nombre}`);
+            console.log(`🔍 DEBUG - Colegios_cursos para ${course.nombre}:`, course.colegios_cursos);
+            if (course.colegios_cursos && course.colegios_cursos.length > 0) {
+              course.colegios_cursos.forEach((cc, ccIndex) => {
+                console.log(`🔍 DEBUG - Colegio_curso ${ccIndex}:`, {
+                  id: cc.id,
+                  fecha_finalizacion: cc.fecha_finalizacion,
+                  colegio_id: cc.colegio_id,
+                  curso_id: cc.curso_id
+                });
+              });
+            }
+          });
         }
         this.isLoadingCourses = false;
       },
@@ -905,6 +922,25 @@ export class PaymentRecord implements OnInit {
   createAccountRecord= ()=> {
     const coursePriceString = this.paymentForm.get('coursePrice')?.value;
     const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
+    const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
+
+    // Buscar el curso seleccionado para obtener su array completo de colegios_cursos
+    const selectedCourse = this.courses.find(course => course.id === selectedCourseId);
+    let colegiosCursos = [];
+    
+    if (selectedCourse && selectedCourse.colegios_cursos) {
+      // Enviar el array completo de colegios_cursos del curso seleccionado
+      colegiosCursos = selectedCourse.colegios_cursos;
+      
+      console.log('📤 ENVIANDO FORMULARIO - Información del curso:', {
+        curso_id: selectedCourseId,
+        curso_nombre: selectedCourse.nombre,
+        colegios_cursos_count: colegiosCursos.length,
+        colegios_cursos: colegiosCursos
+      });
+    } else {
+      console.log('⚠️ ADVERTENCIA: El curso seleccionado no tiene colegios_cursos');
+    }
 
     const paymentForm = {
       cliente: {
@@ -924,14 +960,31 @@ export class PaymentRecord implements OnInit {
         grado: this.paymentForm.get('studentGrado')?.value,
         colegio: this.paymentForm.get('studentSchool')?.value,
       },
-      curso_id: this.paymentForm.get('selectedCourse')?.value,
+      curso_id: selectedCourseId,
+      colegios_cursos: colegiosCursos,
       precio: coursePriceNumber,
       estado: 'PENDIENTE',
       fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
     };
 
+    console.log('📤 FORMULARIO COMPLETO A ENVIAR:', paymentForm);
+
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
+        console.log('📥 RESPUESTA DEL SERVIDOR:', response);
+        
+        // Verificar si la respuesta tiene status ERROR
+        if (response && response.status === 'ERROR') {
+          console.log('❌ ERROR DEL SERVIDOR:', response.data);
+          this.isSubmitting = false;
+          this.showConfirmation = false;
+          
+          // Mostrar notificación de error específica del servidor
+          this.showServerErrorNotification(response.data);
+          return;
+        }
+        
+        // Si no hay error, proceder normalmente
         this.isSubmitting = false;
         this.showConfirmation = false;
         // Mostrar notificación de éxito
@@ -940,6 +993,7 @@ export class PaymentRecord implements OnInit {
         this.searchClientIfReady();
       },
       error: (error) => {
+        console.log('❌ ERROR DE CONEXIÓN:', error);
         this.isSubmitting = false;
         this.showErrorNotification();
       }
@@ -981,6 +1035,16 @@ export class PaymentRecord implements OnInit {
         duration: 5000
       };
     }
+    this.showNotification = true;
+  }
+
+  showServerErrorNotification(errorMessage: string) {
+    this.notificationData = {
+      type: 'error',
+      title: 'Error del servidor',
+      message: errorMessage || 'Ha ocurrido un error en el servidor. Por favor, inténtalo nuevamente.',
+      duration: 7000
+    };
     this.showNotification = true;
   }
 
