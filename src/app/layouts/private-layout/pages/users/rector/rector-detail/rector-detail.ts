@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {User} from '../../../../../../core/models/User';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-rector-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './rector-detail.html'
 })
 export class RectorDetail implements OnInit {

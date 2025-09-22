@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '../../../../../core/services/payment.service';
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
@@ -7,7 +7,7 @@ import { PaymentModel } from '../../../../../core/models/AccountReceivable';
 @Component({
   selector: 'app-payment-status',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './payment-status.component.html',
   styleUrl: './payment-status.component.css'
 })

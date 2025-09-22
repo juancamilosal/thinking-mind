@@ -7,34 +7,12 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { School } from '../../../../core/models/School';
 import { Course } from '../../../../core/models/Course';
 import { forkJoin } from 'rxjs';
-
-interface DashboardStats {
-  totalStudents: number;
-  totalAccountsReceivable: number;
-  totalAmountReceivable: number;
-  totalPaidAmount: number;
-  pendingPayments: number;
-  overdueAmount: number;
-  monthlyPayments: number;
-  totalPendingAccountsReceivable: number;
-}
-
-interface RectorDashboardStats {
-  totalStudentsEnrolled: number;
-  totalStudentsWithPendingStatus: number;
-  totalPinsDelivered: number;
-  totalStudentsWithPaidStatus: number;
-}
-
-interface CourseWithStudents {
-  course: Course;
-  studentCount: number;
-}
+import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './dashboard.html'
 })
 export class Dashboard implements OnInit {
@@ -149,10 +127,10 @@ export class Dashboard implements OnInit {
 
   private calculateRectorStats(accounts: any[]) {
     // Calcular estudiantes inscritos: solo contar cuentas que tienen fecha_inscripcion
-    this.rectorStats.totalStudentsEnrolled = accounts.filter(account => 
+    this.rectorStats.totalStudentsEnrolled = accounts.filter(account =>
       account.fecha_inscripcion && account.fecha_inscripcion !== null
     ).length;
-    
+
     // Calcular estudiantes con estado pendiente: solo contar estudiantes únicos que tienen fecha_inscripcion y estado PENDIENTE
     const studentsWithPendingStatus = new Set<number>();
 
@@ -163,16 +141,16 @@ export class Dashboard implements OnInit {
     });
 
     this.rectorStats.totalStudentsWithPendingStatus = studentsWithPendingStatus.size;
-    
+
     // Calcular cuentas con estado PAGADA: contar todas las cuentas con estado "PAGADA"
-    this.rectorStats.totalStudentsWithPaidStatus = accounts.filter(account => 
+    this.rectorStats.totalStudentsWithPaidStatus = accounts.filter(account =>
       account.estado === 'PAGADA'
     ).length;
-    
+
     // Calcular pines entregados: contar cuentas donde pin_entregado es "SI"
-    this.rectorStats.totalPinsDelivered = accounts.filter(account => 
-      account.pin_entregado === 'SI' || 
-      account.pin_entregado === 'Si' || 
+    this.rectorStats.totalPinsDelivered = accounts.filter(account =>
+      account.pin_entregado === 'SI' ||
+      account.pin_entregado === 'Si' ||
       account.pin_entregado === 'si'
     ).length;
   }
@@ -210,14 +188,14 @@ export class Dashboard implements OnInit {
           .reduce((sum: number, pago: any) => {
             return sum + (parseFloat(pago.valor || pago.monto) || 0);
           }, 0);
-        
+
         // Restar las devoluciones del total pagado
         const refundAmount = account.pagos
           .filter((pago: any) => pago.estado === 'DEVOLUCION')
           .reduce((sum: number, pago: any) => {
             return sum + (parseFloat(pago.valor || pago.monto) || 0);
           }, 0);
-        
+
         const netPaidAmount = paidAmount - refundAmount;
         totalPaid += netPaidAmount;
 
@@ -235,7 +213,7 @@ export class Dashboard implements OnInit {
             const valorNeto = parseFloat(pago.valor_neto?.toString() || '0') || 0;
             return sum + valorNeto;
           }, 0);
-        
+
         const monthlyRefunds = account.pagos
           .filter((pago: any) => pago.estado === 'DEVOLUCION')
           .filter((pago: any) => {
@@ -249,7 +227,7 @@ export class Dashboard implements OnInit {
             const valorNeto = parseFloat(pago.valor_neto?.toString() || '0') || 0;
             return sum + valorNeto;
           }, 0);
-        
+
         monthlyPayments += (monthlyPaid - monthlyRefunds);
 
         // Contar solo cuentas PENDIENTES y vencidas (fecha_finalizacion < fecha actual)

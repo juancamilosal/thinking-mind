@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { UserService } from '../../../../../../core/services/user.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
@@ -8,7 +8,7 @@ import { User } from '../../../../../../core/models/User';
 @Component({
   selector: 'app-form-admin',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './form-admin.html'
 })
 export class FormAdmin implements OnInit {

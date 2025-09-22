@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators, ReactiveFormsModule} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+
 import {ClientService} from '../../../../core/services/client.service';
 import {Client} from '../../../../core/models/Clients';
 import {FormClient} from './form-client/form-client';
@@ -10,7 +10,7 @@ import {NotificationService} from '../../../../core/services/notification.servic
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormClient, ClientDetail],
+  imports: [ReactiveFormsModule, FormClient, ClientDetail],
   templateUrl: './clients.html'
 })
 export class Clients implements OnInit {

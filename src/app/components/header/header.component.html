@@ -6,60 +6,62 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
-    
+
     <!-- Espacio vacío para centrar el contenido -->
     <div class="md:flex-1"></div>
-    
+
     <!-- Información del usuario -->
     <div class="flex items-center ml-auto relative">
-    @if (currentUser) {
-      <div class="relative" data-user-menu>
-        <button (click)="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg border border-blue-500 hover:bg-gray-700 hover:border-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
-          <!-- Avatar con iniciales -->
-          <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
-            <span class="text-white font-semibold text-sm">
-              {{ getInitials() }}
-            </span>
-          </div>
-          
-          <!-- Información del usuario -->
-          <div class="flex flex-col text-left">
-            <span class="text-sm font-semibold text-white">
-              {{ currentUser.first_name }} {{ currentUser.last_name }}
-            </span>
-            <span class="text-xs text-gray-300">
-              {{ currentUser.email }}
-            </span>
-          </div>
-          
-          <!-- Icono de flecha -->
-          <svg class="w-4 h-4 text-gray-300 transition-transform duration-200" [class.rotate-180]="isUserMenuOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </button>
-        
-        <!-- Menú desplegable -->
-        <div *ngIf="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-          <button (click)="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
-            <div class="flex items-center space-x-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-              </svg>
-              <span>Cerrar Sesión</span>
+      @if (currentUser) {
+        <div class="relative" data-user-menu>
+          <button (click)="toggleUserMenu()" class="flex items-center space-x-3 p-2 rounded-lg border border-blue-500 hover:bg-gray-700 hover:border-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
+            <!-- Avatar con iniciales -->
+            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+              <span class="text-white font-semibold text-sm">
+                {{ getInitials() }}
+              </span>
             </div>
+
+            <!-- Información del usuario -->
+            <div class="flex flex-col text-left">
+              <span class="text-sm font-semibold text-white">
+                {{ currentUser.first_name }} {{ currentUser.last_name }}
+              </span>
+              <span class="text-xs text-gray-300">
+                {{ currentUser.email }}
+              </span>
+            </div>
+
+            <!-- Icono de flecha -->
+            <svg class="w-4 h-4 text-gray-300 transition-transform duration-200" [class.rotate-180]="isUserMenuOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
           </button>
+
+          <!-- Menú desplegable -->
+          @if (isUserMenuOpen) {
+            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+              <button (click)="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                <div class="flex items-center space-x-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                  </svg>
+                  <span>Cerrar Sesión</span>
+                </div>
+              </button>
+            </div>
+          }
         </div>
-      </div>
-    } @else {
-      <!-- Skeleton loader cuando no hay usuario -->
-      <div class="flex items-center space-x-3 animate-pulse">
-        <div class="w-10 h-10 rounded-full bg-gray-600"></div>
-        <div class="flex flex-col space-y-1">
-          <div class="h-4 bg-gray-600 rounded w-24"></div>
-          <div class="h-3 bg-gray-600 rounded w-32"></div>
+      } @else {
+        <!-- Skeleton loader cuando no hay usuario -->
+        <div class="flex items-center space-x-3 animate-pulse">
+          <div class="w-10 h-10 rounded-full bg-gray-600"></div>
+          <div class="flex flex-col space-y-1">
+            <div class="h-4 bg-gray-600 rounded w-24"></div>
+            <div class="h-3 bg-gray-600 rounded w-32"></div>
+          </div>
         </div>
-      </div>
-    }
+      }
     </div>
   </div>
 </header>

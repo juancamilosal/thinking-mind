@@ -1,10 +1,10 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
 
 @Component({
   selector: 'app-payment-detail',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './payment-detail.html',
   standalone: true
 })

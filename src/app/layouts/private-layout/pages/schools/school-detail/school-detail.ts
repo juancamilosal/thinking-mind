@@ -1,11 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { School } from '../../../../../core/models/School';
 
 @Component({
   selector: 'app-school-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './school-detail.html'
 })
 export class SchoolDetail {

@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Student } from '../../../../../core/models/Student';
 import { Client } from '../../../../../core/models/Clients';
 
 @Component({
   selector: 'app-student-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './student-detail.html'
 })
 export class StudentDetail {

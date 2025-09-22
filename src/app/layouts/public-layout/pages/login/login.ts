@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import {Router} from '@angular/router';
 import {LoginService} from '../../../../core/services/login.service';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
@@ -8,7 +8,7 @@ import { NotificationModalComponent, NotificationData } from '../../../../compon
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, NotificationModalComponent],
+  imports: [ReactiveFormsModule, NotificationModalComponent],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })

@@ -9,56 +9,19 @@ import { Student } from '../../../../core/models/Student';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { StudentDetail } from '../students/student-detail/student-detail';
 import { Client } from '../../../../core/models/Clients';
-
-interface SchoolWithAccounts {
-  school: School;
-  accountsCount: number;
-  studentsCount: number;
-  totalAmount: number;
-  accounts: AccountReceivable[];
-  showStudents?: boolean;
-  isLoadingStudents?: boolean;
-  students?: StudentWithAccount[];
-}
-
-interface StudentWithAccount {
-  student: Student;
-  account: AccountReceivable;
-}
-
-interface CourseWithStudents {
-  course: any;
-  students: StudentWithAccount[];
-  isExpanded?: boolean;
-}
-
-interface SchoolWithCourses {
-  school: School;
-  courses: CourseWithStudents[];
-  totalStudents: number;
-  totalAmount: number;
-  isExpanded?: boolean;
-}
-
-interface CourseWithSchools {
-  course: any;
-  schools: SchoolInCourse[];
-  totalStudents: number;
-  totalAmount: number;
-  isExpanded?: boolean;
-}
-
-interface SchoolInCourse {
-  school: School;
-  students: StudentWithAccount[];
-  totalStudents: number;
-  totalAmount: number;
-}
+import { 
+  SchoolWithAccounts, 
+  StudentWithAccount, 
+  CourseWithStudentsAlternative, 
+  SchoolWithCourses, 
+  CourseWithSchools, 
+  SchoolInCourse 
+} from '../../../../core/models/SchoolModels';
 
 @Component({
   selector: 'app-list-schools',
   standalone: true,
-  imports: [CommonModule, StudentDetail],
+  imports: [StudentDetail],
   templateUrl: './list.school.html'
 })
 

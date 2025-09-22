@@ -1,6 +1,6 @@
 import {Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { School } from '../../../../core/models/School';
 import {SchoolService} from '../../../../core/services/school.service';
 import {FormSchool} from './form-school/form-school';
@@ -9,7 +9,7 @@ import {SchoolDetail} from './school-detail/school-detail';
 @Component({
   selector: 'app-schools',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormSchool, SchoolDetail],
+  imports: [ReactiveFormsModule, FormSchool, SchoolDetail],
   templateUrl: './schools.html'
 })
 export class Schools implements OnInit {

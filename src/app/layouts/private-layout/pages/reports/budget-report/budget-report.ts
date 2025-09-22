@@ -5,36 +5,12 @@ import { BudgetService } from '../../../../../core/services/budget.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { Budget, PaymentRecord } from '../../../../../core/models/Budget';
 import { BudgetChartsComponent } from '../../../../../components/charts/budget-charts.component';
-
-interface CourseEnrollmentData {
-  courseId: string;
-  courseName: string;
-  coursePrice: string;
-  accountsCount: number;
-  totalEnrolledAmount: number;
-  accounts: {
-    accountId: string;
-    studentName?: string;
-    clientName?: string;
-    amount: number;
-    balance: number;
-    paymentDate: string;
-    paymentMethod: string;
-    approvalNumber: string;
-  }[];
-}
-
-interface EnrollmentSummary {
-  totalCourses: number;
-  totalAccounts: number;
-  totalEnrolledAmount: number;
-  courses: CourseEnrollmentData[];
-}
+import { CourseEnrollmentData, EnrollmentSummary } from '../../../../../core/models/ReportModels';
 
 @Component({
   selector: 'app-budget-report',
   standalone: true,
-  imports: [CommonModule, BudgetChartsComponent],
+  imports: [BudgetChartsComponent],
   templateUrl: './budget-report.html'
 })
 export class BudgetReport implements OnInit {

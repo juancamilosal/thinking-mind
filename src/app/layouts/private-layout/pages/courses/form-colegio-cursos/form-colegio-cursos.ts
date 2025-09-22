@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { CourseService } from '../../../../../core/services/course.service';
 import { Course } from '../../../../../core/models/Course';
 import { SchoolService } from '../../../../../core/services/school.service';
@@ -12,9 +12,8 @@ import { ColegioCursosService } from '../../../../../core/services/colegio-curso
   selector: 'app-form-colegio-cursos',
   standalone: true,
   imports: [
-    ReactiveFormsModule,
-    CommonModule
-  ],
+    ReactiveFormsModule
+],
   templateUrl: './form-colegio-cursos.html',
   styleUrl: './form-colegio-cursos.css'
 })

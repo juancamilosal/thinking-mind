@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
 
-export interface ColegioCurso {
+export class ColegioCurso {
   id?: number;
   fecha_finalizacion: string;
   curso_id: number;

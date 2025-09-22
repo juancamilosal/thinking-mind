@@ -1,10 +1,10 @@
 import { Component, OnInit, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
 
-interface CurrentUser {
+class CurrentUser {
   email: string;
   first_name: string;
   id: string;
@@ -15,7 +15,7 @@ interface CurrentUser {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
