@@ -1,4 +1,4 @@
-const apiUrl = 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io/';
+const apiUrl = 'https://api.appthinkingmind.com/';
 
 export const environment = {
   production: true,
@@ -35,7 +35,7 @@ export const environment = {
   // Configuración de Wompi
   wompi: {
     // ⚠️ IMPORTANTE: Cambiar testMode a false SOLO cuando tengas las claves de producción REALES
-    testMode: true, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
+    testMode: false, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
 
     // URLs base de Wompi según el ambiente
     sandboxUrl: 'https://sandbox.wompi.co/v1',
@@ -53,6 +53,6 @@ export const environment = {
       integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
     },
 
-    redirectUrl: 'http://oog0sc84844c44oso4ko48k4.77.37.96.16.sslip.io/payment-status'
+    redirectUrl: 'http://appthinkingmind.com/payment-status'
   }
 };
