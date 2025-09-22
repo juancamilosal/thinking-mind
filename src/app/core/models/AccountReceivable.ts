@@ -26,7 +26,7 @@ export class AccountReceivable {
   monto: number;
   saldo?: number;
   curso_id: Course | null;
-  fecha_limite: string;
+  fecha_limite?: string;
   estado: string;
   pin_entregado?: boolean | string;
   pagos?: PaymentModel[];
@@ -37,6 +37,7 @@ export class AccountReceivable {
   schoolName?: string;
   createdDate?: string;
   fecha_inscripcion?: string;
+  fecha_finalizacion?: string;
 }
 
 export class TotalAccounts {

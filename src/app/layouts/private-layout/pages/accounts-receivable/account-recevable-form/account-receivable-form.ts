@@ -210,7 +210,7 @@ export class AccountReceivableFormComponent implements OnInit {
         estudiante_id: this.studentId, // Mantener como string UUID
         monto: this.accountForm.get('amount')?.value,
         curso_id: this.accountForm.get('course')?.value, // Cambio de 'curso' a 'curso_id'
-        fecha_limite: this.accountForm.get('deadline')?.value,
+        fecha_finalizacion: this.accountForm.get('deadline')?.value,
         observaciones: this.accountForm.get('description')?.value,
         estado: 'PENDIENTE'
       };
@@ -230,7 +230,7 @@ export class AccountReceivableFormComponent implements OnInit {
             monto: this.accountForm.get('amount')?.value,
             saldo: this.accountForm.get('amount')?.value,
             curso_id: this.accountForm.get('course')?.value,
-            fecha_limite: this.accountForm.get('deadline')?.value,
+            fecha_finalizacion: this.accountForm.get('deadline')?.value,
             estado: 'pendiente',
             clientName: this.accountForm.get('clientName')?.value,
             clientEmail: this.accountForm.get('clientEmail')?.value,
