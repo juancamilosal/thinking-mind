@@ -6,7 +6,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { Budget, PaymentRecord } from '../../../../../core/models/Budget';
 import { BudgetChartsComponent } from '../../../../../components/charts/budget-charts.component';
 
-interface CourseEnrollmentData {
+class CourseEnrollmentData {
   courseId: string;
   courseName: string;
   coursePrice: string;
@@ -24,7 +24,7 @@ interface CourseEnrollmentData {
   }[];
 }
 
-interface EnrollmentSummary {
+class EnrollmentSummary {
   totalCourses: number;
   totalAccounts: number;
   totalEnrolledAmount: number;

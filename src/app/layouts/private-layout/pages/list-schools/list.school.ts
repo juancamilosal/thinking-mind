@@ -10,7 +10,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { StudentDetail } from '../students/student-detail/student-detail';
 import { Client } from '../../../../core/models/Clients';
 
-interface SchoolWithAccounts {
+class SchoolWithAccounts {
   school: School;
   accountsCount: number;
   studentsCount: number;
@@ -21,18 +21,18 @@ interface SchoolWithAccounts {
   students?: StudentWithAccount[];
 }
 
-interface StudentWithAccount {
+class StudentWithAccount {
   student: Student;
   account: AccountReceivable;
 }
 
-interface CourseWithStudents {
+class CourseWithStudents {
   course: any;
   students: StudentWithAccount[];
   isExpanded?: boolean;
 }
 
-interface SchoolWithCourses {
+class SchoolWithCourses {
   school: School;
   courses: CourseWithStudents[];
   totalStudents: number;
@@ -40,7 +40,7 @@ interface SchoolWithCourses {
   isExpanded?: boolean;
 }
 
-interface CourseWithSchools {
+class CourseWithSchools {
   course: any;
   schools: SchoolInCourse[];
   totalStudents: number;
@@ -48,7 +48,7 @@ interface CourseWithSchools {
   isExpanded?: boolean;
 }
 
-interface SchoolInCourse {
+class SchoolInCourse {
   school: School;
   students: StudentWithAccount[];
   totalStudents: number;

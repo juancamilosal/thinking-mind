@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
 
-export interface WompiTariff {
+export class WompiTariff {
   id?: number;
   tarifa: number;
   comision: number;

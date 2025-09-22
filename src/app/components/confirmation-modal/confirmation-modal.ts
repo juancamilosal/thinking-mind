@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export interface ConfirmationData {
+export class ConfirmationData {
   title: string;
   message: string;
   confirmText?: string;

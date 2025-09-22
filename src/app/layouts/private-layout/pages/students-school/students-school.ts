@@ -11,14 +11,14 @@ import { Client } from '../../../../core/models/Clients';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { StudentDetail } from '../students/student-detail/student-detail';
 
-interface StudentAccountReceivable {
+class StudentAccountReceivable {
   student: Student;
   accountsReceivable: AccountReceivable[];
   totalAmount: number;
   totalPending: number;
 }
 
-interface CourseWithStudents {
+class CourseWithStudents {
   id: string;
   nombre: string;
   precio: string;

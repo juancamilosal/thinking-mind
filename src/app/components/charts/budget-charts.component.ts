@@ -4,7 +4,7 @@ import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-interface BudgetData {
+class BudgetData {
   monto_meta: number;
   recaudado: number;
   faltante: number;
@@ -14,7 +14,6 @@ interface BudgetData {
   recaudo_semana: number;
   anio: string;
 }
-
 
 
 @Component({

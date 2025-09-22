@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export interface Course {
+export class Course {
   id: string;
   name: string;
   price: string;
@@ -22,12 +22,12 @@ export class CourseCardComponent {
   @Input() courseCode: string = 'ANG-001';
   @Input() courseImageUrl: string = '';
   @Input() colegiosCursos: any[] = []; // Array de colegios asignados al curso
-  
+
   // Outputs para los eventos existentes
   @Output() editCourse = new EventEmitter<void>();
   @Output() deleteCourse = new EventEmitter<void>();
   @Output() addColegio = new EventEmitter<void>();
-  
+
   // Nuevos outputs para editar y eliminar colegios_cursos
   @Output() editColegioCurso = new EventEmitter<any>();
   @Output() deleteColegioCurso = new EventEmitter<any>();
@@ -38,11 +38,11 @@ export class CourseCardComponent {
     // El SVG se mostrará automáticamente porque courseImageUrl será falsy
     this.courseImageUrl = '';
   }
-  
+
   onEdit() {
     this.editCourse.emit();
   }
-  
+
   onDelete() {
     this.deleteCourse.emit();
   }

@@ -8,7 +8,7 @@ import { ResponseAPI } from '../../../../core/models/ResponseAPI';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/payment-detail';
 
-export interface Payment {
+export class Payment {
   id: string;
   pagador: string;
   valor: number;
@@ -30,11 +30,11 @@ export class Payments implements OnInit, OnDestroy {
   isLoading: boolean = false;
   selectedPayment: PaymentModel | null = null;
   showPaymentDetail: boolean = false;
-  
+
   // Propiedades para filtros de fecha
   startDate: string = '';
   endDate: string = '';
-  
+
   // Propiedades de paginación
   currentPage = 1;
   itemsPerPage = 10;
@@ -273,15 +273,15 @@ export class Payments implements OnInit, OnDestroy {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 

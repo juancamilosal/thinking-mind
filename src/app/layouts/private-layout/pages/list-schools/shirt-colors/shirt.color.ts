@@ -7,7 +7,7 @@ import { PaymentModel } from '../../../../../core/models/AccountReceivable';
 import { map } from 'rxjs/operators';
 import { ResponseAPI } from '../../../../../core/models/ResponseAPI';
 
-interface GradeCategory {
+class GradeCategory {
   color: string;
   colorName: string;
   gradeRange: string;

@@ -1,4 +1,4 @@
-export interface PaymentRecord {
+export class PaymentRecord {
   id: string;
   valor: number;
   fecha_pago: string;

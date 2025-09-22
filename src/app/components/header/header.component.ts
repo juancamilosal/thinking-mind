@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
 
-interface CurrentUser {
+class CurrentUser {
   email: string;
   first_name: string;
   id: string;
