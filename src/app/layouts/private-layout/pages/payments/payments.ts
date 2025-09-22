@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { WompiTariffService, WompiTariff } from '../../../../core/services/wompi-tariff.service';
@@ -7,14 +7,6 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ResponseAPI } from '../../../../core/models/ResponseAPI';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/payment-detail';
-
-export class Payment {
-  id: string;
-  pagador: string;
-  valor: number;
-  fechaPago: string;
-  estado: 'Completado' | 'Pendiente' | 'Cancelado';
-}
 
 @Component({
   selector: 'app-payments',

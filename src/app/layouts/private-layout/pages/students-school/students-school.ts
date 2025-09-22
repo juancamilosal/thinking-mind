@@ -10,26 +10,7 @@ import { AccountReceivable } from '../../../../core/models/AccountReceivable';
 import { Client } from '../../../../core/models/Clients';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { StudentDetail } from '../students/student-detail/student-detail';
-
-class StudentAccountReceivable {
-  student: Student;
-  accountsReceivable: AccountReceivable[];
-  totalAmount: number;
-  totalPending: number;
-}
-
-class CourseWithStudents {
-  id: string;
-  nombre: string;
-  precio: string;
-  sku: string;
-  students: StudentAccountReceivable[];
-  expanded?: boolean;
-  totalStudents: number;
-  totalAccounts: number;
-  newStudentsToday: number;
-  newStudentNames: string[];
-}
+import { StudentAccountReceivable, CourseWithStudents } from '../../../../core/models/SchoolModels';
 
 @Component({
   selector: 'app-students-school',

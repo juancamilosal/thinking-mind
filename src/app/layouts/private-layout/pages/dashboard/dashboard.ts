@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { CourseService } from '../../../../core/services/course.service';
@@ -7,29 +7,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { School } from '../../../../core/models/School';
 import { Course } from '../../../../core/models/Course';
 import { forkJoin } from 'rxjs';
-
-class DashboardStats {
-  totalStudents: number;
-  totalAccountsReceivable: number;
-  totalAmountReceivable: number;
-  totalPaidAmount: number;
-  pendingPayments: number;
-  overdueAmount: number;
-  monthlyPayments: number;
-  totalPendingAccountsReceivable: number;
-}
-
-class RectorDashboardStats {
-  totalStudentsEnrolled: number;
-  totalStudentsWithPendingStatus: number;
-  totalPinsDelivered: number;
-  totalStudentsWithPaidStatus: number;
-}
-
-class CourseWithStudents {
-  course: Course;
-  studentCount: number;
-}
+import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
 
 @Component({
   selector: 'app-dashboard',
