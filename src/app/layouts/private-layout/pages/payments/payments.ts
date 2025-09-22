@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { WompiTariffService, WompiTariff } from '../../../../core/services/wompi-tariff.service';
@@ -19,7 +19,7 @@ export class Payment {
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaymentDetailComponent],
+  imports: [FormsModule, PaymentDetailComponent],
   templateUrl: './payments.html',
   styleUrl: './payments.scss'
 })

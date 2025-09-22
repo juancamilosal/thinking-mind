@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges, ChangeDetectorRef} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+
 import { Router } from '@angular/router';
 import { CourseService } from '../../../../../core/services/course.service';
 import { Course } from '../../../../../core/models/Course';
@@ -10,9 +10,8 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
 @Component({
   selector: 'app-form-course',
   imports: [
-    ReactiveFormsModule,
-    CommonModule
-  ],
+    ReactiveFormsModule
+],
   templateUrl: './form-course.html'
 })
 export class FormCourse implements OnInit, OnChanges {

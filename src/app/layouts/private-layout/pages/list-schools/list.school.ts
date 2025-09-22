@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
@@ -58,7 +58,7 @@ class SchoolInCourse {
 @Component({
   selector: 'app-list-schools',
   standalone: true,
-  imports: [CommonModule, StudentDetail],
+  imports: [StudentDetail],
   templateUrl: './list.school.html'
 })
 

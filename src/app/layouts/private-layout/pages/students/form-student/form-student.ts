@@ -1,6 +1,6 @@
 import {Component, EventEmitter, OnInit, Output, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+
 import {StudentService} from '../../../../../core/services/student.service';
 import {ClientService} from '../../../../../core/services/client.service';
 import {SchoolService} from '../../../../../core/services/school.service';
@@ -13,9 +13,8 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
 @Component({
   selector: 'app-form-student',
   imports: [
-    ReactiveFormsModule,
-    CommonModule
-  ],
+    ReactiveFormsModule
+],
   templateUrl: './form-student.html',
   styleUrl: './form-student.css'
 })

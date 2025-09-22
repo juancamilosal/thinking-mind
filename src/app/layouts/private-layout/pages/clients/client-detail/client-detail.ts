@@ -1,11 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Client } from '../../../../../core/models/Clients';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './client-detail.html'
 })
 export class ClientDetail {

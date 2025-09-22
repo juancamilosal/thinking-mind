@@ -51,179 +51,207 @@
               [class.border-red-500]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
               [class.border-green-500]="loginForm.get('email')?.valid && loginForm.get('email')?.touched"
               placeholder="nombre@thinkingmind.co">
-            <div class="absolute inset-y-0 right-0 flex items-center pr-4 space-x-2">
-              <!-- Success Icon -->
-              <svg *ngIf="loginForm.get('email')?.valid && loginForm.get('email')?.touched"
-                   class="w-5 h-5 text-green-500 transition-all duration-300"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <!-- Error Icon -->
-              <svg *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-                   class="w-5 h-5 text-red-500 transition-all duration-300"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-              <div class="w-2 h-2 bg-teal-500 rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+              <div class="absolute inset-y-0 right-0 flex items-center pr-4 space-x-2">
+                <!-- Success Icon -->
+                @if (loginForm.get('email')?.valid && loginForm.get('email')?.touched) {
+                  <svg
+                    class="w-5 h-5 text-green-500 transition-all duration-300"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                }
+                <!-- Error Icon -->
+                @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                  <svg
+                    class="w-5 h-5 text-red-500 transition-all duration-300"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                }
+                <div class="w-2 h-2 bg-teal-500 rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+              </div>
             </div>
+            <!-- Email Validation Messages -->
+            @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+              <div class="text-red-500 text-sm mt-1 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                @if (loginForm.get('email')?.errors?.['required']) {
+                  <span>El correo electrónico es requerido</span>
+                }
+                @if (loginForm.get('email')?.errors?.['email']) {
+                  <span>Ingresa un correo electrónico válido</span>
+                }
+              </div>
+            }
           </div>
-          <!-- Email Validation Messages -->
-          <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-red-500 text-sm mt-1 flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span *ngIf="loginForm.get('email')?.errors?.['required']">El correo electrónico es requerido</span>
-            <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingresa un correo electrónico válido</span>
-          </div>
-        </div>
 
-        <!-- Password Field -->
-        <div class="space-y-2">
-          <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-            <span class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-              Contraseña
-            </span>
-          </label>
-          <div class="relative group">
-            <input
-              [type]="showPassword ? 'text' : 'password'"
-              name="password"
-              id="password"
-              formControlName="password"
-              class="w-full px-6 py-4 pr-20 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 group-hover:border-gray-300 text-gray-800 placeholder-gray-400"
-              [class.border-red-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-              [class.border-green-500]="loginForm.get('password')?.valid && loginForm.get('password')?.touched"
-              placeholder="••••••••••••">
-            <div class="absolute inset-y-0 right-0 flex items-center pr-4 space-x-2">
-              <!-- Password Toggle Button -->
-              <button
-                type="button"
-                (click)="togglePasswordVisibility()"
-                class="relative p-1 text-gray-400 hover:text-blue-500 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-md group">
-                
-                <!-- Eye Open Icon (when password is hidden) -->
-                <svg *ngIf="!showPassword" 
-                     class="w-5 h-5 transition-all duration-300 transform group-hover:scale-110" 
-                     fill="none" 
-                     stroke="currentColor" 
-                     viewBox="0 0 24 24">
-                  <!-- Eye outline -->
-                  <path stroke-linecap="round" 
-                        stroke-linejoin="round" 
-                        stroke-width="2" 
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                  </path>
-                  <!-- Eye pupil -->
-                  <circle cx="12" 
-                          cy="12" 
-                          r="3" 
-                          stroke-linecap="round" 
-                          stroke-linejoin="round" 
+          <!-- Password Field -->
+          <div class="space-y-2">
+            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+              <span class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                Contraseña
+              </span>
+            </label>
+            <div class="relative group">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                name="password"
+                id="password"
+                formControlName="password"
+                class="w-full px-6 py-4 pr-20 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 group-hover:border-gray-300 text-gray-800 placeholder-gray-400"
+                [class.border-red-500]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                [class.border-green-500]="loginForm.get('password')?.valid && loginForm.get('password')?.touched"
+                placeholder="••••••••••••">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-4 space-x-2">
+                  <!-- Password Toggle Button -->
+                  <button
+                    type="button"
+                    (click)="togglePasswordVisibility()"
+                    class="relative p-1 text-gray-400 hover:text-blue-500 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-md group">
+
+                    <!-- Eye Open Icon (when password is hidden) -->
+                    @if (!showPassword) {
+                      <svg
+                        class="w-5 h-5 transition-all duration-300 transform group-hover:scale-110"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <!-- Eye outline -->
+                        <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                        </path>
+                        <!-- Eye pupil -->
+                        <circle cx="12"
+                          cy="12"
+                          r="3"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
                           stroke-width="2">
-                  </circle>
-                  <!-- Eye highlight -->
-                  <circle cx="12" 
-                          cy="12" 
-                          r="1" 
-                          fill="currentColor" 
+                        </circle>
+                        <!-- Eye highlight -->
+                        <circle cx="12"
+                          cy="12"
+                          r="1"
+                          fill="currentColor"
                           class="animate-pulse">
-                  </circle>
-                </svg>
-                
-                <!-- Eye Closed Icon (when password is visible) -->
-                <svg *ngIf="showPassword" 
-                     class="w-5 h-5 transition-all duration-300 transform group-hover:scale-110" 
-                     fill="none" 
-                     stroke="currentColor" 
-                     viewBox="0 0 24 24">
-                  <!-- Crossed out eye -->
-                  <path stroke-linecap="round" 
-                        stroke-linejoin="round" 
-                        stroke-width="2" 
-                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242">
-                  </path>
-                  <!-- Diagonal line through eye -->
-                  <path stroke-linecap="round" 
-                        stroke-linejoin="round" 
-                        stroke-width="2.5" 
-                        d="M3 3l18 18" 
-                        class="text-red-500">
-                  </path>
-                </svg>
-                
-                <!-- Tooltip -->
-                <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-                  {{ showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña' }}
+                        </circle>
+                      </svg>
+                    }
+
+                    <!-- Eye Closed Icon (when password is visible) -->
+                    @if (showPassword) {
+                      <svg
+                        class="w-5 h-5 transition-all duration-300 transform group-hover:scale-110"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <!-- Crossed out eye -->
+                        <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242">
+                        </path>
+                        <!-- Diagonal line through eye -->
+                        <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2.5"
+                          d="M3 3l18 18"
+                          class="text-red-500">
+                        </path>
+                      </svg>
+                    }
+
+                    <!-- Tooltip -->
+                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                      {{ showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña' }}
+                    </div>
+                  </button>
+                  <!-- Success Icon -->
+                  @if (loginForm.get('password')?.valid && loginForm.get('password')?.touched) {
+                    <svg
+                      class="w-5 h-5 text-green-500 transition-all duration-300"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  }
+                  <!-- Error Icon -->
+                  @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                    <svg
+                      class="w-5 h-5 text-red-500 transition-all duration-300"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  }
+                  <div class="w-2 h-2 bg-blue-500 rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              </div>
+              <!-- Password Validation Messages -->
+              @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                <div class="text-red-500 text-sm mt-1 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  @if (loginForm.get('password')?.errors?.['required']) {
+                    <span>La contraseña es requerida</span>
+                  }
+                  @if (loginForm.get('password')?.errors?.['minlength']) {
+                    <span>La contraseña debe tener al menos 6 caracteres</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+              <!-- Busca el botón de submit en tu HTML y reemplázalo con esto: -->
+              <button
+                type="submit"
+                [disabled]="loginForm.invalid || isLoading"
+                class="w-full py-4 px-6 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                [class]="isLoading ? 'bg-gray-400' : 'bg-gradient-to-r from-teal-600 via-blue-600 to-red-600 hover:from-teal-700 hover:via-blue-700 hover:to-red-700'">
+
+                <!-- Contenido del botón -->
+                <div class="flex items-center justify-center space-x-2">
+                  <!-- Spinner de carga -->
+                  @if (isLoading) {
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  }
+
+                  <!-- Icono de login (cuando no está cargando) -->
+                  @if (!isLoading) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                  }
+
+                  <!-- Texto del botón -->
+                  <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
                 </div>
               </button>
-              <!-- Success Icon -->
-              <svg *ngIf="loginForm.get('password')?.valid && loginForm.get('password')?.touched"
-                   class="w-5 h-5 text-green-500 transition-all duration-300"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <!-- Error Icon -->
-              <svg *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-                   class="w-5 h-5 text-red-500 transition-all duration-300"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-              <div class="w-2 h-2 bg-blue-500 rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+
             </div>
-          </div>
-          <!-- Password Validation Messages -->
-          <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-red-500 text-sm mt-1 flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida</span>
-            <span *ngIf="loginForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</span>
-          </div>
+          </form>
         </div>
 
-        <!-- Submit Button -->
-        <div class="pt-4">
-          <!-- Busca el botón de submit en tu HTML y reemplázalo con esto: -->
-          <button 
-            type="submit" 
-            [disabled]="loginForm.invalid || isLoading"
-            class="w-full py-4 px-6 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            [class]="isLoading ? 'bg-gray-400' : 'bg-gradient-to-r from-teal-600 via-blue-600 to-red-600 hover:from-teal-700 hover:via-blue-700 hover:to-red-700'">
-            
-            <!-- Contenido del botón -->
-            <div class="flex items-center justify-center space-x-2">
-              <!-- Spinner de carga -->
-              <div *ngIf="isLoading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              
-              <!-- Icono de login (cuando no está cargando) -->
-              <svg *ngIf="!isLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-              </svg>
-              
-              <!-- Texto del botón -->
-              <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
-            </div>
-          </button>
-          
+        <!-- Copyright -->
+        <div class="text-center mt-8">
+          <p class="text-sm text-white/80">
+            © 2025 Thinking Mind. Todos los derechos reservados.
+          </p>
         </div>
-      </form>
-    </div>
+      </div>
+    </section>
 
-    <!-- Copyright -->
-    <div class="text-center mt-8">
-      <p class="text-sm text-white/80">
-        © 2025 Thinking Mind. Todos los derechos reservados.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- Modal de notificaciones -->
-<app-notification-modal 
-  [isVisible]="showNotification"
-  [notification]="notificationData"
-  (close)="onNotificationClose()">
-</app-notification-modal>
+    <!-- Modal de notificaciones -->
+    <app-notification-modal
+      [isVisible]="showNotification"
+      [notification]="notificationData"
+      (close)="onNotificationClose()">
+    </app-notification-modal>

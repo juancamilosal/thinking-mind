@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
@@ -15,13 +15,12 @@ import { ConfirmationService } from '../../../../core/services/confirmation.serv
   selector: 'app-courses',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     CourseCardComponent,
     CourseInfoComponent,
     FormCourse,
     ColegioCursosComponent
-  ],
+],
   templateUrl: './courses.html'
 })
 

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router, ActivatedRoute } from '@angular/router';
 import { BudgetService } from '../../../../../core/services/budget.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
@@ -34,7 +34,7 @@ class EnrollmentSummary {
 @Component({
   selector: 'app-budget-report',
   standalone: true,
-  imports: [CommonModule, BudgetChartsComponent],
+  imports: [BudgetChartsComponent],
   templateUrl: './budget-report.html'
 })
 export class BudgetReport implements OnInit {

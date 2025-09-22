@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {FormBuilder} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+
 import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
 import {FormStudent} from './form-student/form-student';
@@ -9,7 +9,7 @@ import {StudentDetail} from './student-detail/student-detail';
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [CommonModule, FormStudent, StudentDetail],
+  imports: [FormStudent, StudentDetail],
   templateUrl: './students.html'
 })
 export class Students implements OnInit {

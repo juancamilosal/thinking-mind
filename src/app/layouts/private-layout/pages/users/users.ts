@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { FormRector } from './rector/form-rector/form-rector';
 import { RectorDetail } from './rector/rector-detail/rector-detail';
@@ -14,7 +14,7 @@ import { User } from '../../../../core/models/User';
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail],
+  imports: [FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail],
   templateUrl: './users.html'
 })
 export class Users implements OnInit {
