@@ -130,6 +130,7 @@ export class AccountReceivableService {
       saldo: item.saldo,
       curso_id: item.curso_id,
       fecha_limite: item.fecha_limite,
+      fecha_finalizacion: item.fecha_finalizacion, // Agregar mapeo de fecha_finalizacion
       estado: item.estado,
       pin_entregado: item.pin_entregado,
       pagos: item.pagos || [],

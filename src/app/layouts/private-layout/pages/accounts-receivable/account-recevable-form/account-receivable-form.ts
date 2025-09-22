@@ -231,7 +231,7 @@ export class AccountReceivableFormComponent implements OnInit {
             saldo: this.accountForm.get('amount')?.value,
             curso_id: this.accountForm.get('course')?.value,
             fecha_finalizacion: this.accountForm.get('deadline')?.value,
-            estado: 'pendiente',
+            estado: 'PENDIENTE', // Cambiar de 'pendiente' a 'PENDIENTE' para que coincida con el filtro
             clientName: this.accountForm.get('clientName')?.value,
             clientEmail: this.accountForm.get('clientEmail')?.value,
             clientPhone: this.accountForm.get('clientPhone')?.value,
@@ -324,7 +324,7 @@ export class AccountReceivableFormComponent implements OnInit {
       'curso': 'Curso',
       'monto': 'Monto',
       'saldo': 'Saldo',
-      'fecha_limite': 'Fecha límite'
+      'fecha_finalizacion': 'Fecha finalización'
     };
     return fieldNames[fieldName] || fieldName;
   }

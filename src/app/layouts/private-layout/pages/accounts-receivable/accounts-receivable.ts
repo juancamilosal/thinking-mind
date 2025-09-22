@@ -178,12 +178,12 @@ export class AccountsReceivable implements OnInit {
     
     // Incluir cuentas pendientes vencidas
     const pendingOverdue = this.pendingAccounts
-      .filter(account => account.fecha_limite < today)
+      .filter(account => account.fecha_finalizacion && account.fecha_finalizacion < today)
       .reduce((total, account) => total + (account.saldo || 0), 0);
     
     // Incluir cuentas con devolución vencidas (también forman parte del pendiente)
     const refundOverdue = this.refundAccounts
-      .filter(account => account.fecha_limite < today)
+      .filter(account => account.fecha_finalizacion && account.fecha_finalizacion < today)
       .reduce((total, account) => total + (account.saldo || 0), 0);
     
     return pendingOverdue + refundOverdue;
