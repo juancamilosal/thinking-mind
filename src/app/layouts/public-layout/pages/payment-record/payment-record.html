@@ -853,12 +853,12 @@
 
 <!-- Modal para Ver Pagos -->
 @if (showPaymentsModal) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
       <!-- Header del Modal -->
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-4">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 sm:px-6 py-4 flex-shrink-0">
         <div class="flex justify-between items-center">
-          <h3 class="text-xl font-semibold">Historial de Pagos</h3>
+          <h3 class="text-lg sm:text-xl font-semibold">Historial de Pagos</h3>
           <button
             (click)="closePaymentsModal()"
             class="text-white hover:text-gray-200 transition-colors">
@@ -868,7 +868,7 @@
           </button>
         </div>
         @if (selectedAccountData) {
-          <div class="mt-2 text-sm opacity-90">
+          <div class="mt-2 text-xs sm:text-sm opacity-90">
             <p><strong>Estudiante:</strong> {{ selectedAccountData.studentName }}</p>
             <p><strong>Programa:</strong> {{ selectedAccountData.courseName }}</p>
             <p><strong>Monto Total:</strong> ${{ selectedAccountData.coursePriceNumber | number }}</p>
@@ -879,7 +879,7 @@
       </div>
 
       <!-- Contenido del Modal -->
-      <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1">
         @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
           <div class="space-y-4">
             @for (payment of selectedAccountPayments; track payment.id) {
@@ -932,19 +932,19 @@
       </div>
 
       <!-- Footer del Modal -->
-      <div class="bg-gray-50 px-6 py-4 flex justify-between">
+      <div class="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 sm:justify-between flex-shrink-0">
         <button
           (click)="printPaymentHistory()"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors flex items-center space-x-2">
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 sm:py-2 sm:px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
           </svg>
-          <span>Imprimir Historial de Pagos</span>
+          <span class="text-sm sm:text-base">Imprimir Historial de Pagos</span>
         </button>
         <button
           (click)="closePaymentsModal()"
-          class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
-          Cerrar
+          class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 sm:py-2 sm:px-6 rounded-lg transition-colors w-full sm:w-auto">
+          <span class="text-sm sm:text-base">Cerrar</span>
         </button>
       </div>
     </div>

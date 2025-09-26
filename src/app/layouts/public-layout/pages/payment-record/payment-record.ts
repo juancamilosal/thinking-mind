@@ -447,7 +447,17 @@ export class PaymentRecord implements OnInit {
       `;
     }
 
-    const totalPaid = this.selectedAccountPayments?.reduce((sum, payment) => sum + (payment.valor || 0), 0) || 0;
+    const totalPaid = this.selectedAccountPayments?.reduce((sum, payment) => {
+      // Solo sumar pagos con estado PAGADO
+      if (payment.estado === 'PAGADO') {
+        return sum + (payment.valor || 0);
+      }
+      // Restar pagos con estado DEVOLUCION
+      if (payment.estado === 'DEVOLUCION') {
+        return sum - (payment.valor || 0);
+      }
+      return sum;
+    }, 0) || 0;
     const pendingBalance = (this.selectedAccountData.coursePriceNumber || 0) - totalPaid;
 
     return `
