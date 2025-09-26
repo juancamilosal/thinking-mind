@@ -12,7 +12,7 @@ import {map} from 'rxjs/operators';
 
 export class CourseService {
   apiCourse: string = environment.courses;
-  private apiUrl = 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io/';
+  private apiUrlAssets = environment.assets;
   apiFile: string = environment.files;
 
   constructor(private http: HttpClient) {
@@ -39,7 +39,7 @@ export class CourseService {
         if (response.data) {
           response.data = response.data.map(course => ({
             ...course,
-            img_url: course.img ? `${this.apiUrl}assets/${course.img}` : undefined
+            img_url: course.img ? `${this.apiUrlAssets}/${course.img}` : undefined
           }));
         }
         return response;

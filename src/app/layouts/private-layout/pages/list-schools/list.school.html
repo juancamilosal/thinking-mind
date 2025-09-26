@@ -256,13 +256,14 @@
                                         <input
                                           type="checkbox"
                                           [checked]="isPinEntregado(studentWithAccount.account)"
-                                          [disabled]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                          [disabled]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                           (change)="updatePinEntregado(studentWithAccount.account, $event)"
                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                          [class.opacity-50]="studentWithAccount.account.estado === 'PENDIENTE'"
-                                          [class.cursor-not-allowed]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                          [class.opacity-50]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
+                                          [class.cursor-not-allowed]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                         />
-                                        <span class="ml-2 text-sm text-gray-600">
+                                        <span class="ml-2 text-sm text-gray-600"
+                                              [class.text-gray-400]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'">
                                           {{ getPinEntregadoText(studentWithAccount.account) }}
                                         </span>
                                       </div>
@@ -493,12 +494,13 @@
                                                 <input
                                                   type="checkbox"
                                                   [checked]="isPinEntregado(studentWithAccount.account)"
-                                                  [disabled]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                                  [disabled]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                                   (change)="updatePinEntregado(studentWithAccount.account, $event)"
                                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                                  [class.opacity-50]="studentWithAccount.account.estado === 'PENDIENTE'"
+                                                  [class.opacity-50]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                                 />
-                                                <span class="ml-2 text-sm" [class.text-gray-400]="studentWithAccount.account.estado === 'PENDIENTE'">
+                                                <span class="ml-2 text-sm" 
+                                                      [class.text-gray-400]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'">
                                                   {{ getPinEntregadoText(studentWithAccount.account) }}
                                                 </span>
                                               </div>
