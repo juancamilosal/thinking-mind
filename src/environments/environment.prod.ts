@@ -12,6 +12,7 @@ export const environment = {
   budget: apiUrl + 'items/presupuesto',
   files: apiUrl + 'files',
   users: apiUrl + 'users',
+  assets: apiUrl + 'assets',
   colegio_cursos: apiUrl + 'items/colegios_cursos',
   security: {
     login: apiUrl + 'auth/login',
