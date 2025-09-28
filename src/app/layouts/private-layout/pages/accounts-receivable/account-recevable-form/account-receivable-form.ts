@@ -1,6 +1,6 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-
+import { CommonModule } from '@angular/common';
 import {AccountReceivable} from '../../../../../core/models/AccountReceivable';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {ClientService} from '../../../../../core/services/client.service';
@@ -11,10 +11,9 @@ import {CourseService} from '../../../../../core/services/course.service';
 import {Course} from '../../../../../core/models/Course';
 import {ResponseAPI} from '../../../../../core/models/ResponseAPI';
 
-
 @Component({
   selector: 'app-account-receivable-form',
-  imports: [ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './account-receivable-form.html',
   standalone: true
 })
@@ -28,7 +27,7 @@ export class AccountReceivableFormComponent implements OnInit {
   studentId: string = '';
   courses: Course[] = [];
   isLoadingCourses = false;
-
+  
   constructor(
     private fb: FormBuilder,
     private clientService: ClientService,
@@ -67,7 +66,6 @@ export class AccountReceivableFormComponent implements OnInit {
     this.isLoadingCourses = true;
     this.courseService.searchCourse().subscribe({
       next: (response) => {
-          // Ordenar los cursos alfabéticamente por nombre
           this.courses = response.data.sort((a, b) =>
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
@@ -96,24 +94,25 @@ export class AccountReceivableFormComponent implements OnInit {
     }
   }
 
-  initForm=(): void => {
+  initForm(): void {
     this.accountForm = this.fb.group({
-      client_id: [null,],
-      student_id: [null],
-      amount: [null, [Validators.required, Validators.min(0.01)]],
-      deadline: [null, [Validators.required]],
-      description: [null],
-      clientDocumentType: ['CC', [Validators.required]],
-      clientDocumentNumber: [null, [Validators.required]],
-      clientName: [null],
-      clientEmail: [null],
-      clientPhone: [null],
-      studentDocumentType: ['TI', [Validators.required]],
-      studentDocumentNumber: [null, [Validators.required]],
-      studentName: [null],
-      grado: [null],
-      colegio: [null],
-      course: [null, [Validators.required]]
+      client_id: ['', Validators.required],
+      student_id: ['', Validators.required],
+      amount: ['', [Validators.required, Validators.min(0.01)]],
+      deadline: ['', Validators.required],
+      description: [''],
+      course: ['', Validators.required],
+      clientDocumentType: ['CC', Validators.required],
+      clientDocumentNumber: ['', Validators.required],
+      clientName: ['', Validators.required],
+      clientEmail: ['', [Validators.required, Validators.email]],
+      clientPhone: ['', Validators.required],
+      studentDocumentType: ['TI', Validators.required],
+      studentDocumentNumber: ['', Validators.required],
+      studentName: ['', Validators.required],
+      studentBirthDate: ['', Validators.required],
+      studentGender: ['', Validators.required],
+      studentSchool: ['', Validators.required]
     });
   }
 
@@ -140,7 +139,6 @@ export class AccountReceivableFormComponent implements OnInit {
             clientEmail: client.email || '',
             clientPhone: client.celular || ''
           });
-
         } else {
           this.clientId = '';
           this.accountForm.patchValue({
@@ -182,7 +180,6 @@ export class AccountReceivableFormComponent implements OnInit {
             studentName: `${student.nombre || ''} ${student.apellido || ''}`.trim(),
             colegio: student.colegio_id.nombre || ''
           });
-
         } else {
           this.studentId = '';
           this.accountForm.patchValue({
@@ -201,78 +198,66 @@ export class AccountReceivableFormComponent implements OnInit {
     });
   }
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.accountForm.valid && !this.isSubmitting && this.clientId && this.studentId) {
       this.isSubmitting = true;
 
+      const formValue = this.accountForm.value;
       const accountReceivableData = {
-        cliente_id: this.clientId, // Mantener como string UUID
-        estudiante_id: this.studentId, // Mantener como string UUID
-        monto: this.accountForm.get('amount')?.value,
-        curso_id: this.accountForm.get('course')?.value, // Cambio de 'curso' a 'curso_id'
-        fecha_finalizacion: this.accountForm.get('deadline')?.value,
-        observaciones: this.accountForm.get('description')?.value,
-        estado: 'PENDIENTE'
+        cliente_id: this.clientId,
+        estudiante_id: this.studentId,
+        monto: formValue.amount,
+        fecha_finalizacion: formValue.deadline,
+        descripcion: formValue.description,
+        curso_id: formValue.course
       };
 
       this.accountReceivableService.createAccountReceivable(accountReceivableData).subscribe({
         next: (response) => {
+          if (response.data) {
+            const formData = {
+              id: response.data.id,
+              clientName: formValue.clientName,
+              clientEmail: formValue.clientEmail,
+              clientPhone: formValue.clientPhone,
+              studentName: formValue.studentName,
+              schoolName: formValue.colegio,
+              courseName: this.courses.find(c => c.id === formValue.course)?.nombre || '',
+              monto: formValue.amount,
+              saldo: formValue.amount,
+              fecha_finalizacion: formValue.deadline,
+              descripcion: formValue.description,
+              estado: 'PENDIENTE',
+              pagos: [],
+              cliente_id: this.clientId,
+              estudiante_id: this.studentId,
+              curso_id: formValue.course
+            };
+
+            this.accountCreated.emit(formData);
+            this.resetForm();
+            this.notificationService.showSuccess('Éxito', 'Cuenta por cobrar creada correctamente');
+          }
           this.isSubmitting = false;
-          this.notificationService.showSuccess(
-            'Cuenta por cobrar creada',
-            'La cuenta por cobrar ha sido registrada exitosamente.'
-          );
-
-          const formData: AccountReceivable = {
-            id: response.data.id,
-            cliente_id: this.clientId,
-            estudiante_id: this.studentId,
-            monto: this.accountForm.get('amount')?.value,
-            saldo: this.accountForm.get('amount')?.value,
-            curso_id: this.accountForm.get('course')?.value,
-            fecha_finalizacion: this.accountForm.get('deadline')?.value,
-            estado: 'PENDIENTE', // Cambiar de 'pendiente' a 'PENDIENTE' para que coincida con el filtro
-            clientName: this.accountForm.get('clientName')?.value,
-            clientEmail: this.accountForm.get('clientEmail')?.value,
-            clientPhone: this.accountForm.get('clientPhone')?.value,
-            studentName: this.accountForm.get('studentName')?.value,
-            createdDate: new Date().toISOString().split('T')[0]
-          };
-
-          this.accountCreated.emit(formData);
-          this.accountForm.reset();
-          this.clientId = '';
-          this.studentId = '';
         },
         error: (error) => {
+          console.error('Error creating account:', error);
+          this.notificationService.showError('Error', 'Error al crear la cuenta por cobrar');
           this.isSubmitting = false;
-          if (error.status >= 500) {
-            this.notificationService.showServerError();
-          } else {
-            this.notificationService.showError(
-              'Error',
-              'No se pudo crear la cuenta por cobrar. Inténtalo nuevamente.'
-            );
-          }
         }
       });
-    } else {
-      // Mostrar qué validaciones faltan
-      if (!this.clientId) {
-        this.notificationService.showError('Error', 'Debe seleccionar un cliente válido.');
-      } else if (!this.studentId) {
-        this.notificationService.showError('Error', 'Debe seleccionar un estudiante válido.');
-      } else {
-        this.markFormGroupTouched();
-      }
     }
   }
 
   onCancel() {
+    this.formClosed.emit();
+  }
+
+  resetForm(): void {
     this.accountForm.reset();
     this.clientId = '';
     this.studentId = '';
-    this.formClosed.emit();
+    this.initForm();
   }
 
   private markFormGroupTouched(): void {

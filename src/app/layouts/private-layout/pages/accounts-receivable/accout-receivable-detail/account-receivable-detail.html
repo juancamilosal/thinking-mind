@@ -81,14 +81,24 @@
           </div>
 
           <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600 font-medium">Valor Total de la Cuenta:</span>
+            <div class="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <span class="text-gray-600 font-medium">
+                @if (discountPercentage > 0) {
+                  Monto Original:
+                } @else {
+                  Valor Total de la Cuenta:
+                }
+              </span>
               @if (!isEditingAmount) {
                 <div class="flex items-center space-x-2">
-                  <span class="text-2xl font-bold text-blue-600 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded"
+                  <span class="text-xl font-bold text-blue-600 cursor-pointer hover:bg-blue-100 px-2 py-1 rounded"
                         (click)="startEditingAmount()"
                         title="Clic para editar">
-                    {{ formatCurrency(account.monto) }}
+                    @if (discountPercentage > 0) {
+                      {{ formatCurrency(originalAmount) }}
+                    } @else {
+                      {{ formatCurrency(account.monto) }}
+                    }
                   </span>
                   <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
@@ -118,6 +128,61 @@
               }
             </div>
 
+            <!-- Campo de Descuento -->
+            <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <span class="text-gray-600 font-medium">Descuento (%):</span>
+              @if (!isEditingDiscount) {
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg font-bold text-orange-600 cursor-pointer hover:bg-orange-50 px-2 py-1 rounded"
+                        (click)="startEditingDiscount()"
+                        title="Clic para aplicar descuento">
+                    {{ discountPercentage }}%
+                  </span>
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                  </svg>
+                </div>
+              } @else {
+                <div class="flex items-center space-x-2">
+                  <div class="relative">
+                    <input type="number"
+                           [(ngModel)]="discountPercentage"
+                           (ngModelChange)="onDiscountPercentageChange()"
+                           class="w-24 px-3 py-2 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-lg font-bold text-orange-600"
+                           step="0.1"
+                           min="0"
+                           max="100"
+                           (keyup.enter)="saveDiscount()"
+                           (keyup.escape)="cancelEditingDiscount()">
+                    <span class="absolute right-3 top-2 text-gray-500">%</span>
+                  </div>
+                  <button (click)="saveDiscount()"
+                          class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+                    ✓
+                  </button>
+                  <button (click)="cancelEditingDiscount()"
+                          class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Mostrar monto del descuento si hay descuento aplicado -->
+            @if (discountPercentage > 0) {
+              <div class="flex justify-between items-center bg-orange-50 p-3 rounded-lg border border-orange-200">
+                <span class="text-gray-600 font-medium">Monto del Descuento:</span>
+                <span class="text-lg font-bold text-orange-600">-{{ formatCurrency(getDiscountAmount()) }}</span>
+              </div>
+            }
+
+            <!-- Mostrar valor final si hay descuento aplicado -->
+            @if (discountPercentage > 0) {
+              <div class="flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-200">
+                <span class="text-gray-600 font-medium">Valor Final con Descuento:</span>
+                <span class="text-xl font-bold text-green-600">{{ formatCurrency(finalAmount) }}</span>
+              </div>
+            }
             <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Total Pagado:</span>
               <span class="text-xl font-semibold text-green-600">{{ formatCurrency(account.saldo) }}</span>
@@ -387,7 +452,7 @@
                     } @else {
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                       </svg>
                     }
                   </button>
