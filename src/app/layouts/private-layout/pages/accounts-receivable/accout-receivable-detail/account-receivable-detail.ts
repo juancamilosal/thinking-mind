@@ -19,7 +19,7 @@ export class AccountReceivableDetailComponent implements OnInit {
   @Input() account!: AccountReceivable;
 
   ngOnInit() {
-
+    this.initializeDiscountValues();
   }
 
   @Output() backToList = new EventEmitter<void>();
@@ -47,6 +47,12 @@ export class AccountReceivableDetailComponent implements OnInit {
   PAYMENT_METHOD = PAYMENT_METHOD;
   isEditingAmount = false;
   editedAmount: number = 0;
+  
+  // Propiedades para el descuento
+  discountPercentage: number = 0;
+  originalAmount: number = 0;
+  finalAmount: number = 0;
+  isEditingDiscount = false;
   
   // Propiedades para el modal de devolución
   showRefundModal = false;
@@ -584,7 +590,7 @@ export class AccountReceivableDetailComponent implements OnInit {
             },
             error: (error) => {
               this.isProcessingRefund = false;
-              this.notificationService.showError('Error', 'Error al procesar la devolución: ' + (error.message || 'Error desconocido'));
+              this.notificationService.showError('Error', 'Error al subir el comprobante: ' + (error.message || 'Error desconocido'));
             }
           });
         },
@@ -616,5 +622,77 @@ export class AccountReceivableDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Métodos para manejar el descuento
+  initializeDiscountValues(): void {
+    this.originalAmount = this.account.monto;
+    this.discountPercentage = this.account.descuento || 0;
+    
+    // Si hay un descuento guardado, calcular el monto final basado en el descuento
+    if (this.discountPercentage > 0) {
+      // El monto actual ya incluye el descuento, así que necesitamos calcular el monto original
+      this.originalAmount = this.account.monto / (1 - this.discountPercentage / 100);
+      this.finalAmount = this.account.monto;
+    } else {
+      this.finalAmount = this.account.monto;
+    }
+  }
+
+  startEditingDiscount(): void {
+    this.isEditingDiscount = true;
+  }
+
+  cancelEditingDiscount(): void {
+    this.isEditingDiscount = false;
+    // Restaurar el descuento original
+    this.discountPercentage = this.account.descuento || 0;
+    this.calculateDiscount();
+  }
+
+  saveDiscount(): void {
+    if (this.discountPercentage >= 0 && this.discountPercentage <= 100) {
+      this.calculateDiscount();
+      this.updateAccountAmount();
+      this.isEditingDiscount = false;
+    }
+  }
+
+  calculateDiscount(): void {
+    const discountAmount = (this.originalAmount * this.discountPercentage) / 100;
+    this.finalAmount = this.originalAmount - discountAmount;
+  }
+
+  onDiscountPercentageChange(): void {
+    if (this.discountPercentage < 0) {
+      this.discountPercentage = 0;
+    } else if (this.discountPercentage > 100) {
+      this.discountPercentage = 100;
+    }
+    this.calculateDiscount();
+  }
+
+  private updateAccountAmount(): void {
+    const updateData = {
+      monto: this.finalAmount,
+      descuento: this.discountPercentage
+    };
+
+    this.accountService.updateAccountReceivable(this.account.id, updateData).subscribe({
+      next: (response) => {
+        this.account.monto = this.finalAmount;
+        this.account.descuento = this.discountPercentage;
+        this.notificationService.showSuccess('Éxito', 'Descuento aplicado correctamente');
+        this.llamarFuncion.emit();
+      },
+      error: (error) => {
+        console.error('Error al aplicar descuento:', error);
+        this.notificationService.showError('Error', 'Error al aplicar el descuento');
+      }
+    });
+  }
+
+  getDiscountAmount(): number {
+    return this.originalAmount - this.finalAmount;
   }
 }

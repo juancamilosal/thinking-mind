@@ -134,6 +134,7 @@ export class AccountReceivableService {
       estado: item.estado,
       pin_entregado: item.pin_entregado,
       pagos: item.pagos || [],
+      descuento: item.descuento || 0, // Mapear el campo descuento
       clientName: (typeof item.cliente_id === 'object' && item.cliente_id !== null)
         ? `${item.cliente_id.nombre} ${item.cliente_id.apellido}`
         : item.clientName,

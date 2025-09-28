@@ -38,6 +38,7 @@ export class AccountReceivable {
   createdDate?: string;
   fecha_inscripcion?: string;
   fecha_finalizacion?: string;
+  descuento?: number;
 }
 
 export class TotalAccounts {
