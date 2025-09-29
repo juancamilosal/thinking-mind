@@ -43,6 +43,18 @@
     -webkit-print-color-adjust: exact;
     color-adjust: exact;
   }
+  
+  .bg-red-500 {
+    background: #ef4444 !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
+
+/* Forzar estilos para pagos rechazados */
+.payment-rejected-header {
+  background: linear-gradient(to right, #ef4444, #dc2626) !important;
+  color: white !important;
 }
 
 /* Animación para el ícono de éxito */
