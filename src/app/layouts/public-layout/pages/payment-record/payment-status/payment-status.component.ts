@@ -139,7 +139,7 @@ export class PaymentStatusComponent implements OnInit {
     if (this.isPaymentSuccessful()) {
       return 'bg-gradient-to-r from-green-500 to-emerald-600 text-white';
     }
-    return 'bg-red-400 text-white';
+    return 'payment-rejected-header bg-gradient-to-r from-red-500 to-red-600 text-white';
   }
 
   getHeaderTitle(): string {

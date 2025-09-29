@@ -24,7 +24,7 @@
       <!-- Header dinámico según estado -->
       <div [class]="getHeaderClass() + ' rounded-t-2xl p-6 shadow-lg'">
         <div class="flex items-center justify-center space-x-3">
-          <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" [class]="isPaymentSuccessful() ? 'stroke-white' : 'stroke-red-600'">
+          <svg class="w-12 h-12 stroke-white" fill="none" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getHeaderIcon()"></path>
           </svg>
           <div class="text-white">
