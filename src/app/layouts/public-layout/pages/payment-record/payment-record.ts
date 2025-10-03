@@ -19,6 +19,7 @@ import {
   NotificationData
 } from '../../../../components/notification-modal/notification-modal';
 import {PaymentService} from '../../../../core/services/payment.service';
+import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import {environment} from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
@@ -68,6 +69,9 @@ export class PaymentRecord implements OnInit {
   // Variables para el modal de notificaciones
   showNotification: boolean = false;
   notificationData: NotificationData | null = null;
+  // Exchange rates (consumidas sin mostrar)
+  usdToCop: number | null = null;
+  eurToCop: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -77,6 +81,7 @@ export class PaymentRecord implements OnInit {
     private studentService: StudentService,
     private schoolService: SchoolService,
     private paymentService: PaymentService,
+    private exchangeRateService: ExchangeRateService,
     private router: Router,
   ) {
   }
@@ -84,6 +89,7 @@ export class PaymentRecord implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
+    this.loadExchangeRates();
   }
 
 
@@ -113,6 +119,7 @@ export class PaymentRecord implements OnInit {
       courseInscriptionPrice: [{value: '', disabled: true}],
     });
   }
+
 
   onSubmit(): void {
     if (this.paymentForm.valid) {
@@ -1199,5 +1206,16 @@ export class PaymentRecord implements OnInit {
       return 'CORRESPONSAL BANCARIO';
     }
     return method;
+  }
+  
+  private loadExchangeRates(): void {
+    this.exchangeRateService.getUsdToCop().subscribe({
+      next: (rate) => this.usdToCop = rate,
+      error: () => this.usdToCop = null
+    });
+    this.exchangeRateService.getEurToCop().subscribe({
+      next: (rate) => this.eurToCop = rate,
+      error: () => this.eurToCop = null
+    });
   }
 }
