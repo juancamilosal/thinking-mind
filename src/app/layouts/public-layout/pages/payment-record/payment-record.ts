@@ -72,6 +72,9 @@ export class PaymentRecord implements OnInit {
   // Exchange rates (consumidas sin mostrar)
   usdToCop: number | null = null;
   eurToCop: number | null = null;
+  // Flags para control de visibilidad y moneda de tasa de cambio
+  hasInscription: boolean = false;
+  isEuroCourse: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -359,6 +362,7 @@ export class PaymentRecord implements OnInit {
           coursePrice: this.formatCurrency(coursePriceNumber), // Precio del curso
           coursePriceNumber: coursePriceNumber, // Valor numérico del precio
           courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
+          courseInscriptionCurrency: ((cuenta.curso_id?.nombre || '').toUpperCase() === '12F' || (cuenta.curso_id?.codigo || '').toUpperCase() === '12F') ? 'EUR' : 'USD',
           balance: this.formatCurrency(totalPaidNumber), // Total abonado
           balanceNumber: totalPaidNumber, // Valor numérico del total abonado
           pendingBalance: this.formatCurrency(pendingBalanceNumber), // Saldo pendiente
@@ -891,20 +895,34 @@ export class PaymentRecord implements OnInit {
           ? parseFloat(inscriptionRaw)
           : Number(inscriptionRaw || 0);
 
+        // Determinar si el curso usa EUR (12F) o USD (resto)
+        const courseName = (selectedCourse.nombre || '').trim().toUpperCase();
+        const courseCode = (selectedCourse.codigo || '').trim().toUpperCase();
+        this.isEuroCourse = courseName === '12F' || courseCode === '12F';
+
+        // Formatear inscripción para mostrar código de moneda en vez del símbolo COP
         const inscriptionFormatted = inscriptionNumber > 0
-          ? this.formatCurrency(inscriptionNumber)
+          ? `${this.isEuroCourse ? 'EUR' : 'USD'} ${new Intl.NumberFormat('es-CO', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(inscriptionNumber)}`
           : '';
 
         this.paymentForm.patchValue({
           coursePrice: formattedPrice,
           courseInscriptionPrice: inscriptionFormatted
         });
+
+        // Actualizar banderas para mostrar tasa de cambio
+        this.hasInscription = inscriptionNumber > 0;
       }
     } else {
       this.paymentForm.patchValue({
         coursePrice: '',
         courseInscriptionPrice: ''
       });
+      this.hasInscription = false;
+      this.isEuroCourse = false;
     }
   }
 

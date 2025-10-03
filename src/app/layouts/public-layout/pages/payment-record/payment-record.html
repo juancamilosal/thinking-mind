@@ -406,7 +406,7 @@
                             </div>
                           </td>
                           <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.coursePrice }}</td>
-                          <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.courseInscriptionPriceNumber > 0 ? ('$' + (courseData.courseInscriptionPriceNumber | number)) : 'N/A' }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.courseInscriptionPriceNumber > 0 ? (courseData.courseInscriptionCurrency + ' ' + (courseData.courseInscriptionPriceNumber | number)) : 'N/A' }}</td>
                           <td
                             class="px-6 py-4 text-sm font-semibold text-gray-900">{{ courseData.balance }}
                           </td>
@@ -814,26 +814,35 @@
                        </div>
                      </div>
                    }
-                   @if (paymentForm.get('selectedCourse')?.value) {
+                   @if (paymentForm.get('selectedCourse')?.value && hasInscription) {
                      <div class="space-y-4 mt-6">
                        <label class="block text-sm font-semibold text-indigo-700">Tasa de Cambio (referencia)</label>
-                       @if (usdToCop && eurToCop) {
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div class="bg-gradient-to-br from-indigo-50 via-blue-50 to-violet-50 p-4 rounded-xl border border-indigo-200 shadow">
-                             <div class="flex items-center justify-center space-x-2">
-                               <span class="text-sm font-medium text-indigo-700">1 USD ≈</span>
-                               <span class="text-xl font-bold text-indigo-900">{{ usdToCop | number:'1.0-0' }} COP</span>
+                       @if (isEuroCourse) {
+                         @if (eurToCop) {
+                           <div class="grid grid-cols-1 gap-4">
+                             <div class="bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-4 rounded-xl border border-violet-200 shadow">
+                               <div class="flex items-center justify-center space-x-2">
+                                 <span class="text-sm font-medium text-violet-700">1 EUR ≈</span>
+                                 <span class="text-xl font-bold text-violet-900">{{ eurToCop | number:'1.0-0' }} COP</span>
+                               </div>
                              </div>
                            </div>
-                           <div class="bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-4 rounded-xl border border-violet-200 shadow">
-                             <div class="flex items-center justify-center space-x-2">
-                               <span class="text-sm font-medium text-violet-700">1 EUR ≈</span>
-                               <span class="text-xl font-bold text-violet-900">{{ eurToCop | number:'1.0-0' }} COP</span>
-                             </div>
-                           </div>
-                         </div>
+                         } @else {
+                           <p class="text-sm text-gray-600">Cargando tasa de cambio...</p>
+                         }
                        } @else {
-                         <p class="text-sm text-gray-600">Cargando tasas de cambio...</p>
+                         @if (usdToCop) {
+                           <div class="grid grid-cols-1 gap-4">
+                             <div class="bg-gradient-to-br from-indigo-50 via-blue-50 to-violet-50 p-4 rounded-xl border border-indigo-200 shadow">
+                               <div class="flex items-center justify-center space-x-2">
+                                 <span class="text-sm font-medium text-indigo-700">1 USD ≈</span>
+                                 <span class="text-xl font-bold text-indigo-900">{{ usdToCop | number:'1.0-0' }} COP</span>
+                               </div>
+                             </div>
+                           </div>
+                         } @else {
+                           <p class="text-sm text-gray-600">Cargando tasa de cambio...</p>
+                         }
                        }
                      </div>
                    }
