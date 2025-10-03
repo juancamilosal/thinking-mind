@@ -808,7 +808,12 @@
                            </div>
                            <div class="text-center">
                              <p class="text-sm font-medium text-emerald-600 uppercase tracking-wide mb-1">Valor de Inscripción</p>
-                             <p class="text-3xl font-bold text-emerald-800 leading-tight">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
+            <p class="text-3xl font-bold text-emerald-800 leading-tight">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
+            @if (selectedInscriptionConvertedCop) {
+              <p class="mt-2 text-2xl font-semibold text-emerald-700">≈ {{ selectedInscriptionConvertedCop | number:'1.0-0' }} COP</p>
+            } @else {
+              <p class="mt-2 text-sm text-gray-500">(esperando tasa de cambio)</p>
+            }
                            </div>
                          </div>
                        </div>

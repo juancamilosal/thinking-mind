@@ -75,6 +75,8 @@ export class PaymentRecord implements OnInit {
   // Flags para control de visibilidad y moneda de tasa de cambio
   hasInscription: boolean = false;
   isEuroCourse: boolean = false;
+  selectedInscriptionAmount: number = 0;
+  selectedInscriptionConvertedCop: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -891,7 +893,7 @@ export class PaymentRecord implements OnInit {
         const formattedPrice = this.formatCurrency(priceAsNumber);
         // Manejo del precio de inscripción si aplica
         const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
-        const inscriptionNumber: number = typeof inscriptionRaw === 'string'
+      const inscriptionNumber: number = typeof inscriptionRaw === 'string'
           ? parseFloat(inscriptionRaw)
           : Number(inscriptionRaw || 0);
 
@@ -915,6 +917,9 @@ export class PaymentRecord implements OnInit {
 
         // Actualizar banderas para mostrar tasa de cambio
         this.hasInscription = inscriptionNumber > 0;
+        // Guardar monto de inscripción y calcular conversión
+        this.selectedInscriptionAmount = inscriptionNumber;
+        this.updateInscriptionConversion();
       }
     } else {
       this.paymentForm.patchValue({
@@ -923,6 +928,8 @@ export class PaymentRecord implements OnInit {
       });
       this.hasInscription = false;
       this.isEuroCourse = false;
+      this.selectedInscriptionAmount = 0;
+      this.selectedInscriptionConvertedCop = null;
     }
   }
 
@@ -954,6 +961,20 @@ export class PaymentRecord implements OnInit {
 
   private parseCurrencyToNumber(currencyString: string): number {
     return parseFloat(currencyString.replace(/[^\d]/g, ''));
+  }
+
+  private updateInscriptionConversion(): void {
+    const amount = this.selectedInscriptionAmount;
+    if (!amount || amount <= 0) {
+      this.selectedInscriptionConvertedCop = null;
+      return;
+    }
+    const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+    if (typeof rate === 'number' && rate > 0) {
+      this.selectedInscriptionConvertedCop = Math.round(amount * rate);
+    } else {
+      this.selectedInscriptionConvertedCop = null;
+    }
   }
 
   goBackToForm(): void {
@@ -1235,5 +1256,7 @@ export class PaymentRecord implements OnInit {
       next: (rate) => this.eurToCop = rate,
       error: () => this.eurToCop = null
     });
+    // Intentar actualizar conversión cuando se tengan tasas
+    setTimeout(() => this.updateInscriptionConversion(), 0);
   }
 }

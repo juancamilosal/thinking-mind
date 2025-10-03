@@ -33,6 +33,14 @@ export const environment = {
   return: apiUrl + 'flows/trigger/bcb42dd5-5119-4c09-96c6-cbed0e6e106f',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
 
+  // Configuración de tasas de cambio
+  exchangeRates: {
+    // Proveedor de tasas: 'exchangerate_host' (gratis), 'alphavantage' (requiere API key), 'erapi' (anterior)
+    provider: 'erapi',
+    alphavantageApiKey: '',
+    currencylayerApiKey: ''
+  },
+
   // Configuración de Wompi
   wompi: {
     // ⚠️ IMPORTANTE: Cambiar testMode a false SOLO cuando tengas las claves de producción REALES
