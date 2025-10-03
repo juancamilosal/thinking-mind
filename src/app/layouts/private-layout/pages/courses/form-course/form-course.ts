@@ -60,6 +60,7 @@ export class FormCourse implements OnInit, OnChanges {
     this.courseForm = this.fb.group({
       nombre: [null, Validators.required],
       precio: [null, Validators.required],
+      precio_inscripcion: [null],
       codigo: [null, [Validators.required]],
       img: [null] // Campo para el ID de la imagen en Directus
     });
@@ -74,6 +75,7 @@ export class FormCourse implements OnInit, OnChanges {
       this.courseForm.patchValue({
         nombre: this.courseData.nombre,
         precio: this.courseData.precio,
+        precio_inscripcion: this.courseData.precio_inscripcion ?? null,
         codigo: this.courseData.codigo || this.courseData.sku || '', // Usar sku como fallback si codigo no existe
         img: this.courseData.img || null
       });
@@ -122,6 +124,7 @@ export class FormCourse implements OnInit, OnChanges {
     const course = {
       nombre: this.courseForm.value.nombre,
       precio: this.courseForm.value.precio,
+      precio_inscripcion: this.courseForm.value.precio_inscripcion,
       sku: this.courseForm.value.codigo,
       codigo: this.courseForm.value.codigo
     };
@@ -233,6 +236,7 @@ export class FormCourse implements OnInit, OnChanges {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
       precio: this.courseForm.value.precio,
+      precio_inscripcion: this.courseForm.value.precio_inscripcion,
       sku: this.courseForm.value.codigo
     };
 
@@ -253,6 +257,7 @@ export class FormCourse implements OnInit, OnChanges {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
       precio: this.courseForm.value.precio,
+      precio_inscripcion: this.courseForm.value.precio_inscripcion,
       sku: this.courseForm.value.codigo,
       img: this.uploadedImageId
     };
