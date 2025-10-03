@@ -386,6 +386,7 @@
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Programa</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Programa</th>
+                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio de Inscripción</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
@@ -405,6 +406,7 @@
                             </div>
                           </td>
                           <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.coursePrice }}</td>
+                          <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.courseInscriptionPriceNumber > 0 ? ('$' + (courseData.courseInscriptionPriceNumber | number)) : 'N/A' }}</td>
                           <td
                             class="px-6 py-4 text-sm font-semibold text-gray-900">{{ courseData.balance }}
                           </td>
@@ -761,7 +763,7 @@
                     }
                   </select>
                 }
-                @if (paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
+               @if (paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
                   <p class="text-red-500 text-sm mt-2 flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd"
@@ -770,7 +772,7 @@
                     </svg>
                     Debe seleccionar un programa
                   </p>
-                }
+               }
               </div>
 
               <!-- Precio del Curso -->
@@ -791,6 +793,25 @@
                        </div>
                      </div>
                    </div>
+
+                   @if (paymentForm.get('courseInscriptionPrice')?.value) {
+                     <div class="space-y-4 mt-4">
+                       <label class="block text-sm font-semibold text-emerald-700">Precio de Inscripción</label>
+                       <div class="bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100 p-6 rounded-xl border-2 border-emerald-200 shadow-lg">
+                         <div class="flex items-center justify-center space-x-3">
+                           <div class="bg-emerald-600 p-3 rounded-full shadow-md">
+                             <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151a4.535 4.535 0 011.676-.662A1 1 0 1011 3v.092a4.535 4.535 0 00-1.676.662C8.602 4.234 8 5.009 8 6c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151z" clip-rule="evenodd" />
+                             </svg>
+                           </div>
+                           <div class="text-center">
+                             <p class="text-sm font-medium text-emerald-600 uppercase tracking-wide mb-1">Valor de Inscripción</p>
+                             <p class="text-3xl font-bold text-emerald-800 leading-tight">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   }
                  </div>
                }
             </div>

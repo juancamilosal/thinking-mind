@@ -110,6 +110,7 @@ export class PaymentRecord implements OnInit {
       // Course fields
       selectedCourse: ['', [Validators.required]],
       coursePrice: [{value: '', disabled: true}, [Validators.required]],
+      courseInscriptionPrice: [{value: '', disabled: true}],
     });
   }
 
@@ -338,6 +339,7 @@ export class PaymentRecord implements OnInit {
 
         // Calcular el saldo pendiente (Precio del Curso - Total Abonado)
         const coursePriceNumber = cuenta.monto || 0;
+        const courseInscriptionPriceNumber = cuenta.curso_id?.precio_inscripcion || 0;
         const totalPaidNumber = cuenta.saldo || 0;
         const pendingBalanceNumber = coursePriceNumber - totalPaidNumber;
 
@@ -349,6 +351,7 @@ export class PaymentRecord implements OnInit {
           studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
           coursePrice: this.formatCurrency(coursePriceNumber), // Precio del curso
           coursePriceNumber: coursePriceNumber, // Valor numérico del precio
+          courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
           balance: this.formatCurrency(totalPaidNumber), // Total abonado
           balanceNumber: totalPaidNumber, // Valor numérico del total abonado
           pendingBalance: this.formatCurrency(pendingBalanceNumber), // Saldo pendiente
@@ -606,10 +609,19 @@ export class PaymentRecord implements OnInit {
               </div>
             </div>
             <div>
+          <div class="info-item">
+            <span class="info-label">Precio del Programa:</span>
+            <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
+          </div>
+          ${(() => {
+            const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
+            return inscription && inscription > 0 ? `
               <div class="info-item">
-                <span class="info-label">Precio del Programa:</span>
-                <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
+                <span class="info-label">Precio de Inscripción:</span>
+                <span class="info-value">$${inscription.toLocaleString('es-CO')}</span>
               </div>
+            ` : '';
+          })()}
               <div class="info-item">
                 <span class="info-label">Total Abonado:</span>
                 <span class="info-value">${this.selectedAccountData.balance}</span>
@@ -645,6 +657,15 @@ export class PaymentRecord implements OnInit {
               <div class="summary-label">Precio del Program</div>
               <div class="summary-value total-course">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || '0'}</div>
             </div>
+            ${(() => {
+              const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
+              return inscription && inscription > 0 ? `
+                <div class="summary-item">
+                  <div class="summary-label">Inscripción</div>
+                  <div class="summary-value">$${inscription.toLocaleString('es-CO')}</div>
+                </div>
+              ` : '';
+            })()}
             <div class="summary-item">
               <div class="summary-label">Total Pagado</div>
               <div class="summary-value total-paid">$${totalPaid.toLocaleString('es-CO')}</div>
@@ -688,7 +709,8 @@ export class PaymentRecord implements OnInit {
       studentGrado: '',
       studentSchool: '',
       selectedCourse: '',
-      coursePrice: ''
+      coursePrice: '',
+      courseInscriptionPrice: ''
     });
   }
 
@@ -856,13 +878,25 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         const priceAsNumber = parseFloat(selectedCourse.precio);
         const formattedPrice = this.formatCurrency(priceAsNumber);
+        // Manejo del precio de inscripción si aplica
+        const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
+        const inscriptionNumber: number = typeof inscriptionRaw === 'string'
+          ? parseFloat(inscriptionRaw)
+          : Number(inscriptionRaw || 0);
+
+        const inscriptionFormatted = inscriptionNumber > 0
+          ? this.formatCurrency(inscriptionNumber)
+          : '';
+
         this.paymentForm.patchValue({
-          coursePrice: formattedPrice
+          coursePrice: formattedPrice,
+          courseInscriptionPrice: inscriptionFormatted
         });
       }
     } else {
       this.paymentForm.patchValue({
-        coursePrice: ''
+        coursePrice: '',
+        courseInscriptionPrice: ''
       });
     }
   }
@@ -879,7 +913,8 @@ export class PaymentRecord implements OnInit {
   private resetCourseSelection(): void {
     this.paymentForm.patchValue({
       course: '',
-      coursePrice: ''
+      coursePrice: '',
+      courseInscriptionPrice: ''
     });
   }
 
