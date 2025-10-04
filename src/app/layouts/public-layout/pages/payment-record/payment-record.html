@@ -396,7 +396,7 @@
                     @for (courseData of registeredCourses; track courseData.id) {
                         <tr class="transition-colors duration-200">
                           <td
-                            class="px-6 py-4 text-sm font-medium text-gray-900">{{ courseData.courseName }}
+                            class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{ courseData.isInscription ? ('INSCRIPCIÓN - ' + courseData.courseName) : courseData.courseName }}
                           </td>
                           <td class="px-6 py-4 text-sm text-gray-900">
                             <div class="flex flex-col">
@@ -754,14 +754,23 @@
                     id="selectedCourse"
                     formControlName="selectedCourse"
                     (change)="onCourseChange($any($event.target).value)"
+                    [disabled]="!isStudentInfoComplete()"
                     class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 bg-white text-violet-800">
                     <option value="">Seleccione un programa</option>
                     @for (course of courses; track course.id) {
                       <option [value]="course.id">{{ course.nombre }}</option>
                     }
                   </select>
+                  @if (!isStudentInfoComplete()) {
+                    <p class="text-violet-700 text-sm mt-2 flex items-center">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      Complete la Información del Estudiante para habilitar la selección del programa.
+                    </p>
+                  }
                 }
-                @if (paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
+               @if (isStudentInfoComplete() && paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
                   <p class="text-red-500 text-sm mt-2 flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd"
@@ -770,8 +779,10 @@
                     </svg>
                     Debe seleccionar un programa
                   </p>
-                }
+               }
               </div>
+
+
 
               <!-- Precio del Curso -->
                @if (paymentForm.get('coursePrice')?.value) {
@@ -791,11 +802,68 @@
                        </div>
                      </div>
                    </div>
+
+                   @if (paymentForm.get('courseInscriptionPrice')?.value) {
+                     <div class="space-y-4 mt-4">
+                       <label class="block text-sm font-semibold text-emerald-700">Precio de Inscripción</label>
+                       <div class="bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100 p-6 rounded-xl border-2 border-emerald-200 shadow-lg">
+                         <div class="flex items-center justify-center space-x-3">
+                           <div class="bg-emerald-600 p-3 rounded-full shadow-md">
+                             <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151a4.535 4.535 0 011.676-.662A1 1 0 1011 3v.092a4.535 4.535 0 00-1.676.662C8.602 4.234 8 5.009 8 6c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151z" clip-rule="evenodd" />
+                             </svg>
+                           </div>
+                           <div class="text-center">
+                             <p class="text-sm font-medium text-emerald-600 uppercase tracking-wide mb-1">Valor de Inscripción</p>
+            <p class="text-3xl font-bold text-emerald-800 leading-tight">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
+            @if (selectedInscriptionConvertedCop) {
+              <p class="mt-2 text-2xl font-semibold text-emerald-700">≈ {{ selectedInscriptionConvertedCop | number:'1.0-0' }} COP</p>
+            } @else {
+              <p class="mt-2 text-sm text-gray-500">(esperando tasa de cambio)</p>
+            }
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   }
+                   @if (paymentForm.get('selectedCourse')?.value && hasInscription) {
+                     <div class="space-y-4 mt-6">
+                       <label class="block text-sm font-semibold text-indigo-700">Tasa de Cambio (referencia)</label>
+                       @if (isEuroCourse) {
+                         @if (eurToCop) {
+                           <div class="grid grid-cols-1 gap-4">
+                             <div class="bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-4 rounded-xl border border-violet-200 shadow">
+                               <div class="flex items-center justify-center space-x-2">
+                                 <span class="text-sm font-medium text-violet-700">1 EUR ≈</span>
+                                 <span class="text-xl font-bold text-violet-900">{{ eurToCop | number:'1.0-0' }} COP</span>
+                               </div>
+                             </div>
+                           </div>
+                         } @else {
+                           <p class="text-sm text-gray-600">Cargando tasa de cambio...</p>
+                         }
+                       } @else {
+                         @if (usdToCop) {
+                           <div class="grid grid-cols-1 gap-4">
+                             <div class="bg-gradient-to-br from-indigo-50 via-blue-50 to-violet-50 p-4 rounded-xl border border-indigo-200 shadow">
+                               <div class="flex items-center justify-center space-x-2">
+                                 <span class="text-sm font-medium text-indigo-700">1 USD ≈</span>
+                                 <span class="text-xl font-bold text-indigo-900">{{ usdToCop | number:'1.0-0' }} COP</span>
+                               </div>
+                             </div>
+                           </div>
+                         } @else {
+                           <p class="text-sm text-gray-600">Cargando tasa de cambio...</p>
+                         }
+                       }
+                     </div>
+                   }
                  </div>
                }
             </div>
           </div>
           }
+
 
           <!-- Botones de Acción -->
           @if (!showRegisteredCourses || showAddCourseForm) {

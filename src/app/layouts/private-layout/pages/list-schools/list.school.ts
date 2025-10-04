@@ -142,15 +142,10 @@ export class ListSchool implements OnInit {
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
-    // Filtrar solo las cuentas que tengan fecha de inscripción
-    const accountsWithInscription = accounts.filter(account =>
-      account.fecha_inscripcion && account.fecha_inscripcion.trim() !== ''
-    );
-
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
 
-    accountsWithInscription.forEach(account => {
+    accounts.forEach(account => {
       // Verificar que el account tenga la estructura esperada
       if (account.estudiante_id && typeof account.estudiante_id === 'object') {
         const student = account.estudiante_id;
@@ -192,8 +187,8 @@ export class ListSchool implements OnInit {
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
 
-    // Procesar datos para vista por cursos
-    this.processCoursesData(accountsWithInscription);
+    // Procesar datos para vista por cursos con las cuentas actuales
+    this.processCoursesData(accounts);
 
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);

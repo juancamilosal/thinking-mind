@@ -56,6 +56,7 @@ export class ColegioCursosComponent implements OnInit {
       fecha_finalizacion: ['', Validators.required],
       curso_id: ['', Validators.required],
       colegio_id: ['', Validators.required],
+      precio_curso: ['', Validators.required],
       courseSearchTerm: [''],
       schoolSearchTerm: ['']
     });
@@ -163,7 +164,9 @@ export class ColegioCursosComponent implements OnInit {
       const formData = {
         fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
-        colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value
+        colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
+        // Enviar el precio desformateado (sin puntos) como número
+        precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value)
       };
       // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({
@@ -201,6 +204,25 @@ export class ColegioCursosComponent implements OnInit {
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  onPriceInput(event: any): void {
+    const inputEl = event.target as HTMLInputElement;
+    // Mantener solo dígitos, luego formatear con puntos cada 3
+    const digitsOnly = (inputEl.value || '').replace(/\D/g, '');
+    const formatted = this.formatPrice(digitsOnly);
+    this.fechaFinalizacionForm.get('precio_curso')?.setValue(formatted, { emitEvent: false });
+  }
+
+  private formatPrice(value: string): string {
+    if (!value) return '';
+    // Insertar puntos como separadores de miles
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  private unformatPrice(value: string | null | undefined): number {
+    const numericStr = (value || '').replace(/\./g, '');
+    return numericStr ? parseInt(numericStr, 10) : 0;
   }
 
   private markFormGroupTouched(): void {

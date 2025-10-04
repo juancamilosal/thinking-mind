@@ -9,6 +9,7 @@ export class ColegioCurso {
   fecha_finalizacion: string;
   curso_id: number;
   colegio_id: number;
+  precio_curso?: number;
 }
 
 @Injectable({
