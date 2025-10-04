@@ -53,12 +53,20 @@ export class AccountReceivableService {
       params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
     }
 
-    // Filtro para fecha_finalizacion mayor a la fecha actual
-    const currentDate = new Date().toISOString();
-    params['filter[fecha_finalizacion][_gt]'] = currentDate;
+    // Solo cuentas de curso (no inscripción) y que tengan una inscripción asociada
+    params['filter[es_inscripcion][_eq]'] = 'FALSE';
+    params['filter[id_inscripcion][_nnull]'] = 'true';
+
+    // Excluir cuentas con saldo = 0
+    params['filter[saldo][_gt]'] = '0';
+
+    // Excluir cuentas con fecha_finalizacion menor a la fecha actual (solo fecha, sin hora)
+    const today = new Date().toISOString().split('T')[0];
+    params['filter[fecha_finalizacion][_gte]'] = today;
 
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*' + queryString;
+    const baseFields = 'id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*';
+    const url = this.apiUrl + `?fields=${baseFields}` + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
