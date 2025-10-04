@@ -355,9 +355,18 @@ export class PaymentRecord implements OnInit {
         const totalPaidNumber = cuenta.saldo || 0;
         const pendingBalanceNumber = coursePriceNumber - totalPaidNumber;
 
+        const isInscription = (() => {
+          const val = cuenta.es_inscripcion;
+          if (typeof val === 'string') {
+            return val.trim().toUpperCase() === 'TRUE';
+          }
+          return !!val;
+        })();
+
         const courseData = {
           id: cuenta.id,
           courseName: cuenta.curso_id?.nombre || 'N/A',
+          isInscription: isInscription,
           studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
           studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
           studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
@@ -1124,6 +1133,37 @@ export class PaymentRecord implements OnInit {
   }
 
   onPayCourse(courseData: any): void {
+    // Buscar la cuenta original por ID para validar si tiene inscripción pendiente
+    const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) => cuenta.id === courseData.id);
+    if (account) {
+      let hasPendingInscription = false;
+      // Caso 1: la inscripción viene expandida en id_inscripcion
+      if (account.id_inscripcion && typeof account.id_inscripcion === 'object') {
+        hasPendingInscription = (account.id_inscripcion.estado === 'PENDIENTE');
+      } else {
+        // Caso 2: buscar una cuenta marcada como inscripción para el mismo curso y estudiante
+        const pendingInscription = (this.clientData?.cuentas_cobrar || []).find((c: any) =>
+          (c.es_inscripcion === 'TRUE') &&
+          (c.estado === 'PENDIENTE') &&
+          ((c.curso_id?.id || c.curso_id) === (account.curso_id?.id || account.curso_id)) &&
+          ((c.estudiante_id?.id || c.estudiante_id) === (account.estudiante_id?.id || account.estudiante_id))
+        );
+        hasPendingInscription = !!pendingInscription;
+      }
+
+      // Si la cuenta actual no es de inscripción y tiene inscripción pendiente, bloquear y avisar
+      if (hasPendingInscription && account.es_inscripcion !== 'TRUE') {
+        this.notificationData = {
+          type: 'error',
+          title: 'Inscripción pendiente',
+          message: 'Para poder realizar el pago del programa, debe primero pagar la Inscripción',
+          duration: 6000
+        };
+        this.showNotification = true;
+        return;
+      }
+    }
+
     const coursePrice = courseData.coursePriceNumber || 0;
     const balance = this.parseCurrencyToNumber(courseData.balance) || 0;
     this.totalAmountToPay = coursePrice - balance;
@@ -1260,7 +1300,7 @@ export class PaymentRecord implements OnInit {
     }
     return method;
   }
-  
+
   private loadExchangeRates(): void {
     this.exchangeRateService.getUsdToCop().subscribe({
       next: (rate) => this.usdToCop = rate,

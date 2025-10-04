@@ -396,7 +396,7 @@
                     @for (courseData of registeredCourses; track courseData.id) {
                         <tr class="transition-colors duration-200">
                           <td
-                            class="px-6 py-4 text-sm font-medium text-gray-900">{{ courseData.courseName }}
+                            class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{ courseData.isInscription ? ('INSCRIPCIÓN - ' + courseData.courseName) : courseData.courseName }}
                           </td>
                           <td class="px-6 py-4 text-sm text-gray-900">
                             <div class="flex flex-col">
