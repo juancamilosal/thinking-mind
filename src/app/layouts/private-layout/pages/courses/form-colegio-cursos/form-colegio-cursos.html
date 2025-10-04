@@ -25,7 +25,7 @@
       </div>
 
       <form [formGroup]="fechaFinalizacionForm" (ngSubmit)="onSubmit()" class="space-y-8">
-        
+
         <!-- Campo de Fecha -->
         <div class="space-y-3">
           <label for="fecha_finalizacion" class="block text-sm font-semibold text-green-700">
@@ -42,7 +42,7 @@
               class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
               [class.border-red-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.invalid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched"
               [class.border-green-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.valid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched">
-            
+
             @if (fechaFinalizacionForm.get('fecha_finalizacion')?.valid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched) {
               <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@
               </div>
             }
           </div>
-          
+
           @if (fechaFinalizacionForm.get('fecha_finalizacion')?.touched && fechaFinalizacionForm.get('fecha_finalizacion')?.errors?.['required']) {
             <p class="text-red-500 text-sm mt-2 flex items-center">
               <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -82,7 +82,7 @@
               [class.border-blue-500]="fechaFinalizacionForm.get('curso_id')?.valid && fechaFinalizacionForm.get('curso_id')?.touched"
               [readonly]="isCourseSelected"
               autocomplete="off">
-            
+
             @if (fechaFinalizacionForm.get('courseSearchTerm')?.value && isCourseSelected) {
               <button
                 type="button"
@@ -142,7 +142,7 @@
               </div>
             </div>
           }
-          
+
           @if (fechaFinalizacionForm.get('curso_id')?.touched && fechaFinalizacionForm.get('curso_id')?.errors?.['required']) {
             <p class="text-red-500 text-sm mt-2 flex items-center">
               <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -173,7 +173,7 @@
               [class.border-green-500]="fechaFinalizacionForm.get('colegio_id')?.valid && fechaFinalizacionForm.get('colegio_id')?.touched"
               [readonly]="isSchoolSelected"
               autocomplete="off">
-            
+
             @if (fechaFinalizacionForm.get('schoolSearchTerm')?.value && isSchoolSelected) {
               <button
                 type="button"
@@ -226,13 +226,50 @@
               </div>
             </div>
           }
-          
+
           @if (fechaFinalizacionForm.get('colegio_id')?.touched && fechaFinalizacionForm.get('colegio_id')?.errors?.['required']) {
             <p class="text-red-500 text-sm mt-2 flex items-center">
               <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
               </svg>
               Debe seleccionar un colegio
+            </p>
+          }
+        </div>
+
+        <!-- Campo de Precio del Programa -->
+        <div class="space-y-3">
+          <label for="precio_curso" class="block text-sm font-semibold text-green-700">
+            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v22M16 5a4 4 0 00-4-4 4 4 0 00-4 4c0 2.21 1.79 4 4 4s4 1.79 4 4a4 4 0 01-4 4 4 4 0 01-4-4" />
+            </svg>
+            Precio del Programa *
+          </label>
+          <div class="relative">
+            <input
+              type="text"
+              id="precio_curso"
+              formControlName="precio_curso"
+              (input)="onPriceInput($event)"
+              placeholder="Ej: 1.000"
+              inputmode="numeric"
+              class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+              [class.border-red-500]="fechaFinalizacionForm.get('precio_curso')?.invalid && fechaFinalizacionForm.get('precio_curso')?.touched"
+              [class.border-green-500]="fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched">
+            @if (fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched) {
+              <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            }
+          </div>
+          @if (fechaFinalizacionForm.get('precio_curso')?.touched && fechaFinalizacionForm.get('precio_curso')?.errors?.['required']) {
+            <p class="text-red-500 text-sm mt-2 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              El precio del programa es requerido
             </p>
           }
         </div>

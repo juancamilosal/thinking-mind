@@ -59,7 +59,8 @@ export class Courses {
 
   initEditForm(): void {
     this.editFechaForm = this.fb.group({
-      fecha_finalizacion: ['', Validators.required]
+      fecha_finalizacion: ['', Validators.required],
+      precio_curso: ['']
     });
   }
 
@@ -202,7 +203,10 @@ export class Courses {
   editColegioCurso(colegioCurso: any) {
     this.selectedColegioCurso = colegioCurso;
     this.editFechaForm.patchValue({
-      fecha_finalizacion: colegioCurso.fecha_finalizacion || ''
+      fecha_finalizacion: this.formatDateForInput(colegioCurso.fecha_finalizacion),
+      precio_curso: (colegioCurso.precio_curso !== null && colegioCurso.precio_curso !== undefined)
+        ? this.formatPrice(colegioCurso.precio_curso)
+        : ''
     });
     this.showEditModal = true;
   }
@@ -235,9 +239,16 @@ export class Courses {
   // Método para guardar la fecha editada
   saveEditedFecha() {
     if (this.editFechaForm.valid && this.selectedColegioCurso) {
-      const updatedData = {
-        fecha_finalizacion: this.editFechaForm.get('fecha_finalizacion')?.value
+      const updatedData: any = {
+        // Convertimos a ISO compatible con el backend (YYYY-MM-DDT00:00:00)
+        fecha_finalizacion: this.toIsoDateString(this.editFechaForm.get('fecha_finalizacion')?.value)
       };
+
+      const rawPrice = this.editFechaForm.get('precio_curso')?.value;
+      const unformattedPrice = this.unformatPrice(rawPrice);
+      if (rawPrice !== null && rawPrice !== undefined && String(rawPrice).trim() !== '') {
+        updatedData.precio_curso = unformattedPrice as number;
+      }
 
       this.colegioCursosService.updateColegioCurso(this.selectedColegioCurso.id, updatedData).subscribe({
         next: (response) => {
@@ -257,6 +268,59 @@ export class Courses {
         }
       });
     }
+  }
+
+  // Formateo del precio para visualización en el input del modal
+  onEditPriceInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const formatted = this.formatPrice(input.value);
+    this.editFechaForm.get('precio_curso')?.setValue(formatted, { emitEvent: false });
+  }
+
+  private formatPrice(value: any): string {
+    if (value === null || value === undefined) return '';
+    const numericString = String(value).replace(/[^0-9]/g, '');
+    if (!numericString) return '';
+    return numericString.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  private unformatPrice(value: any): number | null {
+    if (value === null || value === undefined) return null;
+    const numericString = String(value).replace(/\./g, '').trim();
+    if (!numericString) return null;
+    const num = Number(numericString);
+    return isNaN(num) ? null : num;
+  }
+
+  // Formatea una fecha (string/Date) a 'YYYY-MM-DD' para input type="date"
+  private formatDateForInput(value: any): string {
+    if (!value) return '';
+    // Si viene como string ISO, tomamos los primeros 10 caracteres
+    const str = String(value);
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      return str.substring(0, 10);
+    }
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Convierte 'YYYY-MM-DD' a 'YYYY-MM-DDT00:00:00' para el backend
+  private toIsoDateString(value: any): string | null {
+    if (!value) return null;
+    const str = String(value).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return null;
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}T00:00:00`;
+    }
+    return `${str}T00:00:00`;
   }
 
   // Método para cerrar el modal de edición
