@@ -23,16 +23,6 @@
 
     <!-- Overlay gradient sutil -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0"></div>
-    <!-- Badge de precio flotante -->
-    <div class="absolute top-3 right-3">
-      @if (coursePrice) {
-        <span class="px-3 py-1 rounded-full text-white text-xs font-semibold bg-gradient-to-r from-green-500 to-teal-500 shadow-lg">
-          ${{ coursePrice | number:'1.0-0' }}
-        </span>
-      } @else {
-        <span class="px-3 py-1 rounded-full text-white text-xs font-semibold bg-gray-400 shadow-lg">Sin precio</span>
-      }
-    </div>
   </div>
 
   <!-- Contenido de la tarjeta -->
@@ -103,7 +93,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
-                    
+
                     <!-- Botón Eliminar -->
                     <button
                       (click)="onDeleteColegioCurso(colegioCurso)"

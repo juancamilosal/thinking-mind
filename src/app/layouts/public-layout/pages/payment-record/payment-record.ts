@@ -836,6 +836,21 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.get('schoolSearchTerm')?.setValue(school.nombre);
     this.filteredSchools = [];
     this.isSchoolSelected = true;
+    // Validar precio del programa seleccionado con el colegio recién seleccionado
+    const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
+    if (selectedCourseId) {
+      const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
+      if (selectedCourse) {
+        const price = this.computeCoursePrice(selectedCourse);
+        if (price !== null) {
+          this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
+        } else {
+          // Si no existe precio para el colegio, notificar y reiniciar programa
+          this.showCourseSchoolNotFoundNotification();
+          this.resetCourseSelection();
+        }
+      }
+    }
   }
 
   clearSchoolSearch(): void {
@@ -843,10 +858,23 @@ export class PaymentRecord implements OnInit {
     this.filteredSchools = [];
     this.isSchoolSelected = false;
     this.paymentForm.get('studentSchool')?.setValue('');
+    // Al limpiar el colegio, reiniciar también la selección de programa y sus precios
+    this.resetCourseSelection();
   }
 
   onCourseChange(courseId: string): void {
     if (courseId) {
+      // Bloquear selección si la Información del Estudiante no está completa
+      if (!this.isStudentInfoComplete()) {
+        this.notificationData = {
+          title: 'Información del Estudiante incompleta',
+          message: 'Debe diligenciar completamente la Información del Estudiante antes de seleccionar un programa.',
+          type: 'warning'
+        };
+        this.showNotification = true;
+        this.resetCourseSelection();
+        return;
+      }
       // Validación para el curso Will-Go (Segundo Hermano)
       const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
       const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
@@ -898,8 +926,9 @@ export class PaymentRecord implements OnInit {
 
       const selectedCourse = this.courses.find(course => course.id === courseId);
       if (selectedCourse) {
-        const priceAsNumber = parseFloat(selectedCourse.precio);
-        const formattedPrice = this.formatCurrency(priceAsNumber);
+        // Determinar precio según el colegio seleccionado; si no existe para el colegio, notificar y limpiar precio
+        const priceAsNumber = this.computeCoursePrice(selectedCourse);
+        const formattedPrice = priceAsNumber !== null ? this.formatCurrency(priceAsNumber) : '';
         // Manejo del precio de inscripción si aplica
         const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
       const inscriptionNumber: number = typeof inscriptionRaw === 'string'
@@ -924,6 +953,11 @@ export class PaymentRecord implements OnInit {
           courseInscriptionPrice: inscriptionFormatted
         });
 
+        // Si no se encontró el precio específico para el colegio seleccionado, mostrar notificación
+        if (priceAsNumber === null && this.paymentForm.get('studentSchool')?.value) {
+          this.showCourseSchoolNotFoundNotification();
+        }
+
         // Actualizar banderas para mostrar tasa de cambio
         this.hasInscription = inscriptionNumber > 0;
         // Guardar monto de inscripción y calcular conversión
@@ -942,6 +976,71 @@ export class PaymentRecord implements OnInit {
     }
   }
 
+  // Obtiene el precio del curso específico del colegio seleccionado (si existe)
+  private getSchoolSpecificPrice(course: Course, schoolId: string | null): number | null {
+    try {
+      if (!course || !Array.isArray((course as any).colegios_cursos) || !schoolId) return null;
+      const match = (course as any).colegios_cursos.find((cc: any) => {
+        const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+        return ccSchoolId && ccSchoolId === schoolId;
+      });
+      if (!match) return null;
+      const raw = match.precio_curso;
+      const num = typeof raw === 'string' ? parseFloat(raw) : Number(raw);
+      return isNaN(num) ? null : num;
+    } catch {
+      return null;
+    }
+  }
+
+  // Calcula el precio a mostrar priorizando el precio por colegio
+  private computeCoursePrice(course: Course): number | null {
+    const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
+    const schoolPrice = this.getSchoolSpecificPrice(course, schoolId);
+    if (schoolId) {
+      // Con colegio seleccionado, solo mostrar el precio específico del colegio; si no existe, retornamos null
+      if (schoolPrice !== null && schoolPrice !== undefined) {
+        return schoolPrice;
+      }
+      return null;
+    }
+    // Sin colegio seleccionado, usar el precio general del curso
+    const raw = (course as any).precio;
+    const num = typeof raw === 'string' ? parseFloat(raw) : Number(raw || 0);
+    return isNaN(num) ? 0 : num;
+  }
+
+  // Recalcula y actualiza el precio del curso en el formulario si hay curso seleccionado
+  private updateSelectedCoursePriceIfAny(): void {
+    const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
+    if (!selectedCourseId) return;
+    const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
+    if (!selectedCourse) return;
+    const price = this.computeCoursePrice(selectedCourse);
+    if (price !== null) {
+      this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
+    } else {
+      // Solo limpiar precio si no existe para el colegio; la notificación se muestra al seleccionar programa
+      this.paymentForm.patchValue({ coursePrice: '' });
+    }
+  }
+
+  // Verifica si la sección de Información del Estudiante está diligenciada completamente
+  isStudentInfoComplete(): boolean {
+    const keys = [
+      'studentDocumentType',
+      'studentDocumentNumber',
+      'studentFirstName',
+      'studentLastName',
+      'studentGrado',
+      'studentSchool'
+    ];
+    return keys.every(key => {
+      const control = this.paymentForm.get(key);
+      return !!control && control.valid && !!control.value;
+    });
+  }
+
   private showValidationNotification(requiredCourse: string): void {
     this.notificationData = {
       title: 'Requisito no cumplido',
@@ -951,12 +1050,30 @@ export class PaymentRecord implements OnInit {
     this.showNotification = true;
   }
 
+  private showCourseSchoolNotFoundNotification(): void {
+    this.notificationData = {
+      title: 'Programa no encontrado',
+      message: 'No se encontró el programa para el colegio. Comuniquese con la persona encargada',
+      type: 'error'
+    };
+    this.showNotification = true;
+  }
+
   private resetCourseSelection(): void {
     this.paymentForm.patchValue({
-      course: '',
+      selectedCourse: '',
       coursePrice: '',
       courseInscriptionPrice: ''
     });
+    // Reiniciar flags y valores asociados al programa
+    this.hasInscription = false;
+    this.isEuroCourse = false;
+    this.selectedInscriptionAmount = 0;
+    this.selectedInscriptionConvertedCop = null;
+    // Limpiar estado de validación del control de curso
+    const courseControl = this.paymentForm.get('selectedCourse');
+    courseControl?.markAsPristine();
+    courseControl?.markAsUntouched();
   }
 
   private formatCurrency(amount: number): string {
