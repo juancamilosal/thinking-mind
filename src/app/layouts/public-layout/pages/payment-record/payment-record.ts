@@ -1005,6 +1005,18 @@ export class PaymentRecord implements OnInit {
       // Enviar el array completo de colegios_cursos del curso seleccionado
       colegiosCursos = selectedCourse.colegios_cursos;
     }
+    // Obtener el precio de inscripción del curso (si aplica) como número
+    const inscriptionRaw: any = (selectedCourse as any)?.precio_inscripcion;
+    const inscriptionNumber: number = typeof inscriptionRaw === 'string'
+      ? parseFloat(inscriptionRaw)
+      : Number(inscriptionRaw || 0);
+    // Convertir inscripción a COP usando tasa correspondiente (EUR o USD)
+    let inscriptionConvertedCop: number = 0;
+    if (inscriptionNumber && inscriptionNumber > 0) {
+      const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+      // Si aún no se cargó la tasa, mantener valor 0 para evitar NaN
+      inscriptionConvertedCop = rate ? Math.round(inscriptionNumber * rate) : 0;
+    }
     const paymentForm = {
       cliente: {
         tipo_documento: this.paymentForm.get('guardianDocumentType')?.value,
@@ -1026,6 +1038,8 @@ export class PaymentRecord implements OnInit {
       curso_id: selectedCourseId,
       colegios_cursos: colegiosCursos,
       precio: coursePriceNumber,
+      // Enviar la inscripción ya convertida a COP
+      precio_inscripcion: inscriptionConvertedCop,
       estado: 'PENDIENTE',
       fecha_creacion: new Date().toLocaleString('sv-SE', {timeZone: 'America/Bogota'})
     };

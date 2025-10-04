@@ -386,7 +386,6 @@
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Programa</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Programa</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio de Inscripción</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
@@ -406,7 +405,6 @@
                             </div>
                           </td>
                           <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.coursePrice }}</td>
-            <td class="px-6 py-4 text-sm text-gray-900">{{ courseData.courseInscriptionPriceNumber > 0 ? (courseData.courseInscriptionCurrency + ' ' + (courseData.courseInscriptionPriceNumber | number)) : 'N/A' }}</td>
                           <td
                             class="px-6 py-4 text-sm font-semibold text-gray-900">{{ courseData.balance }}
                           </td>
@@ -775,7 +773,7 @@
                }
               </div>
 
-              
+
 
               <!-- Precio del Curso -->
                @if (paymentForm.get('coursePrice')?.value) {

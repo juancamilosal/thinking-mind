@@ -52,6 +52,7 @@ export class PaymentReceivable {
   estudiante: Student | string;
   curso_id: string;
   precio: number;
+  precio_inscripcion?: number;
   estado: string;
 }
 
