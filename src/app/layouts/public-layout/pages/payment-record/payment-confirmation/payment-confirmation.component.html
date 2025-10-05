@@ -134,11 +134,25 @@
           @if (selectedInscriptionConvertedCop) {
             <div class="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
               <span class="font-medium text-gray-600">Precio de Inscripción (COP):</span>
-              <span class="text-2xl font-bold text-emerald-700">{{ selectedInscriptionConvertedCop | number:'1.0-0' }}</span>
+              <span class="text-2xl font-bold text-emerald-700">$ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</span>
             </div>
           }
         </div>
       </div>
+
+      <!-- Imagen del Programa (sección decorativa debajo de Programa/Precio) -->
+      @if (selectedCourseImageUrl) {
+        <div class="mt-8">
+          <div class="rounded-2xl p-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500 shadow-xl max-w-sm mx-auto">
+            <div class="bg-white rounded-2xl p-2">
+              <img
+                [src]="selectedCourseImageUrl"
+                alt="Imagen del Programa"
+                class="w-full rounded-xl shadow-md" />
+            </div>
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Botones de Acción -->

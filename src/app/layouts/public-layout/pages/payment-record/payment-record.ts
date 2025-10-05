@@ -77,6 +77,7 @@ export class PaymentRecord implements OnInit {
   isEuroCourse: boolean = false;
   selectedInscriptionAmount: number = 0;
   selectedInscriptionConvertedCop: number | null = null;
+  selectedCourseImageUrl: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -926,6 +927,8 @@ export class PaymentRecord implements OnInit {
 
       const selectedCourse = this.courses.find(course => course.id === courseId);
       if (selectedCourse) {
+        // Actualizar imagen del curso seleccionado si existe
+        this.selectedCourseImageUrl = selectedCourse.img_url || null;
         // Determinar precio según el colegio seleccionado; si no existe para el colegio, notificar y limpiar precio
         const priceAsNumber = this.computeCoursePrice(selectedCourse);
         const formattedPrice = priceAsNumber !== null ? this.formatCurrency(priceAsNumber) : '';
@@ -953,9 +956,10 @@ export class PaymentRecord implements OnInit {
           courseInscriptionPrice: inscriptionFormatted
         });
 
-        // Si no se encontró el precio específico para el colegio seleccionado, mostrar notificación
+        // Si no se encontró el precio específico para el colegio seleccionado, mostrar notificación y ocultar imagen
         if (priceAsNumber === null && this.paymentForm.get('studentSchool')?.value) {
           this.showCourseSchoolNotFoundNotification();
+          this.selectedCourseImageUrl = null;
         }
 
         // Actualizar banderas para mostrar tasa de cambio
@@ -973,6 +977,7 @@ export class PaymentRecord implements OnInit {
       this.isEuroCourse = false;
       this.selectedInscriptionAmount = 0;
       this.selectedInscriptionConvertedCop = null;
+      this.selectedCourseImageUrl = null;
     }
   }
 
@@ -1070,6 +1075,7 @@ export class PaymentRecord implements OnInit {
     this.isEuroCourse = false;
     this.selectedInscriptionAmount = 0;
     this.selectedInscriptionConvertedCop = null;
+    this.selectedCourseImageUrl = null;
     // Limpiar estado de validación del control de curso
     const courseControl = this.paymentForm.get('selectedCourse');
     courseControl?.markAsPristine();

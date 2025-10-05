@@ -780,6 +780,18 @@
                     Debe seleccionar un programa
                   </p>
                }
+               @if (paymentForm.get('selectedCourse')?.value && selectedCourseImageUrl) {
+                 <div class="mt-4">
+                   <div class="rounded-2xl p-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500 shadow-xl max-w-sm mx-auto">
+                     <div class="bg-white rounded-2xl p-2">
+                       <img
+                         [src]="selectedCourseImageUrl"
+                         alt="Imagen del Programa"
+                         class="w-full rounded-xl shadow-md" />
+                     </div>
+                   </div>
+                 </div>
+               }
               </div>
 
 
@@ -917,6 +929,7 @@
           [isSubmitting]="isSubmitting"
           [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
           [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
+          [selectedCourseImageUrl]="selectedCourseImageUrl"
           (goBack)="goBackToForm()"
           (confirmSubmit)="confirmAndSubmit()">
         </app-payment-confirmation>

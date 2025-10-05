@@ -17,6 +17,7 @@ export class PaymentConfirmationComponent {
   @Input() isSubmitting: boolean = false;
   @Input() schoolSearchTerm: string = '';
   @Input() selectedInscriptionConvertedCop: number | null = null;
+  @Input() selectedCourseImageUrl: string | null = null;
 
   @Output() goBack = new EventEmitter<void>();
   @Output() confirmSubmit = new EventEmitter<void>();
