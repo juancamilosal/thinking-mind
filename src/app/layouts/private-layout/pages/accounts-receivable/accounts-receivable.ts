@@ -26,6 +26,8 @@ export class AccountsReceivable implements OnInit {
   refundAccounts: AccountReceivable[] = [];
   zeroBalanceAccounts: AccountReceivable[] = [];
   total: TotalAccounts;
+  // Search
+  searchTerm: string = '';
   
   // Pagination properties
   currentPage = 1;
@@ -93,19 +95,28 @@ export class AccountsReceivable implements OnInit {
   }
 
   private updateAccountsForActiveTab(): void {
+    let base: AccountReceivable[] = [];
     switch (this.activeTab) {
       case 'pending':
-        this.accounts = this.pendingAccounts;
+        base = this.pendingAccounts;
         break;
       case 'paid':
-        this.accounts = this.paidAccounts;
+        base = this.paidAccounts;
         break;
       case 'refund':
-        this.accounts = this.refundAccounts;
+        base = this.refundAccounts;
         break;
       case 'zero':
-        this.accounts = this.zeroBalanceAccounts;
+        base = this.zeroBalanceAccounts;
         break;
+    }
+    const term = this.searchTerm?.trim().toLowerCase();
+    if (term) {
+      // Ignorar pestaña activa: buscar en todos los estados
+      const searchBase = this.allAccounts || [];
+      this.accounts = searchBase.filter(acc => this.matchesSearch(acc, term));
+    } else {
+      this.accounts = base;
     }
   }
 
@@ -163,6 +174,17 @@ export class AccountsReceivable implements OnInit {
     this.loadAccountsByTab(tab);
   }
 
+  onSearchChange(term: string) {
+    this.searchTerm = term;
+    // Búsqueda en Directus al escribir (como schools con debounce opcional)
+    this.fetchServerSearch();
+  }
+
+  onSearch(): void {
+    this.currentPage = 1;
+    this.fetchServerSearch();
+  }
+
 
 
 
@@ -195,6 +217,22 @@ export class AccountsReceivable implements OnInit {
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(amount);
+  }
+
+  private fetchServerSearch(): void {
+    this.isLoading = true;
+    this.accountService.getAllAccountsReceivable(this.searchTerm).subscribe({
+      next: (response) => {
+        // Reemplazar allAccounts con resultados del servidor para reflejar búsqueda
+        this.allAccounts = response.data || [];
+        this.filterAccountsByStatus();
+        this.isLoading = false;
+        this.updatePagination();
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
   }
 
   markAsPaid(accountId: string): void {
@@ -360,6 +398,41 @@ export class AccountsReceivable implements OnInit {
   
   // Utility method for Math functions in template
   Math = Math;
+
+  private matchesSearch(account: AccountReceivable, term: string): boolean {
+    const t = term || '';
+    const clientName = (account.clientName || '').toLowerCase();
+    const studentName = (account.studentName || '').toLowerCase();
+
+    let clientDoc = '';
+    let clientNombre = '';
+    let clientApellido = '';
+    let studentNombre = '';
+    let studentApellido = '';
+
+    const clienteObj: any = account.cliente_id as any;
+    if (clienteObj && typeof clienteObj === 'object') {
+      clientDoc = (clienteObj.numero_documento || '').toLowerCase();
+      clientNombre = (clienteObj.nombre || '').toLowerCase();
+      clientApellido = (clienteObj.apellido || '').toLowerCase();
+    }
+
+    const estudianteObj: any = account.estudiante_id as any;
+    if (estudianteObj && typeof estudianteObj === 'object') {
+      studentNombre = (estudianteObj.nombre || '').toLowerCase();
+      studentApellido = (estudianteObj.apellido || '').toLowerCase();
+    }
+
+    return (
+      clientName.includes(t) ||
+      studentName.includes(t) ||
+      clientDoc.includes(t) ||
+      clientNombre.includes(t) ||
+      clientApellido.includes(t) ||
+      studentNombre.includes(t) ||
+      studentApellido.includes(t)
+    );
+  }
 
   private loadAndShowAccountDetail(accountId: string) {
     this.accountService.getAccountById(accountId).subscribe({

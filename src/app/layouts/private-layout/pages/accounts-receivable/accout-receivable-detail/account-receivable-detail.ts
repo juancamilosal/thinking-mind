@@ -307,6 +307,29 @@ export class AccountReceivableDetailComponent implements OnInit {
     this.selectedPayment = null;
   }
 
+  // Construye el texto para la sección Curso, incluyendo prefijo "Inscripción -" si aplica
+  getCourseLabel(): string {
+    const nombre = ((this.account?.curso_id as any)?.nombre || '').toString().trim();
+    const isInscripcion = this.isInscripcion();
+
+    const base = nombre || 'Sin curso';
+    return isInscripcion ? `Inscripción - ${base}`.trim() : base;
+  }
+
+  // Devuelve etiqueta del tipo de cuenta: "Inscripción" o "Curso"
+  getAccountTypeLabel(): string {
+    return this.isInscripcion() ? 'Inscripción' : 'Curso';
+  }
+
+  // Normaliza distintos formatos del backend para el flag de inscripción
+  private isInscripcion(): boolean {
+    const flag: any = this.account?.es_inscripcion;
+    if (typeof flag === 'boolean') return flag;
+    if (typeof flag === 'number') return flag === 1;
+    const normalized = (flag ?? '').toString().trim().toUpperCase();
+    return normalized === 'TRUE' || normalized === 'SI' || normalized === 'YES' || normalized === 'Y' || normalized === '1';
+  }
+
   getStatusColor(): string {
     const progress = this.getPaymentProgress();
     if (progress >= 100) return 'text-green-600';
