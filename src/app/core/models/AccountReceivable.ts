@@ -29,6 +29,7 @@ export class AccountReceivable {
   fecha_limite?: string;
   estado: string;
   pin_entregado?: boolean | string;
+  es_inscripcion?: string; // 'TRUE' | 'FALSE' u otro formato del backend
   pagos?: PaymentModel[];
   clientName?: string;
   clientEmail?: string;
@@ -39,6 +40,7 @@ export class AccountReceivable {
   fecha_inscripcion?: string;
   fecha_finalizacion?: string;
   descuento?: number;
+  id_inscripcion?: string | null;
 }
 
 export class TotalAccounts {

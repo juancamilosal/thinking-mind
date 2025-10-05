@@ -151,6 +151,7 @@ export class AccountReceivableService {
       fecha_finalizacion: item.fecha_finalizacion, // Agregar mapeo de fecha_finalizacion
       estado: item.estado,
       pin_entregado: item.pin_entregado,
+      es_inscripcion: item.es_inscripcion,
       pagos: item.pagos || [],
       descuento: item.descuento || 0, // Mapear el campo descuento
       clientName: (typeof item.cliente_id === 'object' && item.cliente_id !== null)
@@ -169,7 +170,8 @@ export class AccountReceivableService {
         ? item.estudiante_id.colegio_id.nombre
         : item.schoolName,
       createdDate: item.createdDate,
-      fecha_inscripcion: item.fecha_inscripcion
+      fecha_inscripcion: item.fecha_inscripcion,
+      id_inscripcion: item.id_inscripcion ?? null
     };
   }
 

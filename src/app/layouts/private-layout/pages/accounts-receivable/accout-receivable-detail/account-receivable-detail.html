@@ -62,8 +62,13 @@
             </div>
 
             <div class="flex justify-between items-center">
+              <span class="text-gray-600 font-medium">Tipo de Cuenta:</span>
+              <span class="text-gray-900 font-semibold">{{ getAccountTypeLabel() }}</span>
+            </div>
+
+            <div class="flex justify-between items-center">
               <span class="text-gray-600 font-medium">Curso:</span>
-              <span class="text-gray-900 font-semibold">{{ account.curso_id?.nombre }}</span>
+              <span class="text-gray-900 font-semibold">{{ getCourseLabel() }}</span>
             </div>
           </div>
         </div>
