@@ -49,8 +49,13 @@ export class AccountReceivableService {
 
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
-      params['filter[_or][0][descripcion][_icontains]'] = searchTerm;
-      params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
+      // Búsqueda por cliente (nombre, apellido, documento)
+      params['filter[_or][0][cliente_id][nombre][_icontains]'] = searchTerm;
+      params['filter[_or][1][cliente_id][apellido][_icontains]'] = searchTerm;
+      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = searchTerm;
+      // Búsqueda por estudiante (nombre, apellido)
+      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = searchTerm;
+      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
     }
 
     // Solo cuentas de curso (no inscripción) y que tengan una inscripción asociada
@@ -82,8 +87,13 @@ export class AccountReceivableService {
 
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
-      params['filter[_or][0][descripcion][_icontains]'] = searchTerm;
-      params['filter[_or][1][numero_factura][_icontains]'] = searchTerm;
+      // Búsqueda por cliente (nombre, apellido, documento)
+      params['filter[_or][0][cliente_id][nombre][_icontains]'] = searchTerm;
+      params['filter[_or][1][cliente_id][apellido][_icontains]'] = searchTerm;
+      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = searchTerm;
+      // Búsqueda por estudiante (nombre, apellido)
+      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = searchTerm;
+      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
     }
 
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
