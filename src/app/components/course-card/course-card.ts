@@ -74,8 +74,14 @@ export class CourseCardComponent {
       return false;
     };
 
-    const items = (this.colegiosCursos || []).filter(cc => normalizeVisible(cc?.visible));
-    return items.sort((a: any, b: any) => {
+    const items = this.colegiosCursos || [];
+    // Si existe el campo 'visible' en al menos un elemento, respetamos ese filtro.
+    // Si no existe en ninguno, mostramos todos por defecto.
+    const hasVisibleField = items.some(cc => cc && cc.hasOwnProperty('visible'));
+    const filteredByVisible = hasVisibleField ? items.filter(cc => normalizeVisible(cc?.visible)) : items;
+    const filtered = (hasVisibleField && filteredByVisible.length > 0) ? filteredByVisible : items;
+
+    return filtered.sort((a: any, b: any) => {
       const nameA = (a?.colegio_id?.nombre ?? '').toString().trim();
       const nameB = (b?.colegio_id?.nombre ?? '').toString().trim();
       if (!nameA && !nameB) return 0;
