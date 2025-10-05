@@ -113,6 +113,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Columna 1: Programa Seleccionado -->
         <div class="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
           <span class="font-medium text-gray-600">Programa Seleccionado:</span>
           <span class="text-gray-800 font-semibold">
@@ -123,9 +124,19 @@
             }
           </span>
         </div>
-        <div class="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-          <span class="font-medium text-gray-600">Precio:</span>
-          <span class="text-2xl font-bold text-green-700">{{ paymentForm.get('coursePrice')?.value }}</span>
+
+        <!-- Columna 2: Precio y Precio de Inscripción (COP) apilados -->
+        <div class="flex flex-col gap-6">
+          <div class="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+            <span class="font-medium text-gray-600">Precio:</span>
+            <span class="text-2xl font-bold text-green-700">{{ paymentForm.get('coursePrice')?.value }}</span>
+          </div>
+          @if (selectedInscriptionConvertedCop) {
+            <div class="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
+              <span class="font-medium text-gray-600">Precio de Inscripción (COP):</span>
+              <span class="text-2xl font-bold text-emerald-700">{{ selectedInscriptionConvertedCop | number:'1.0-0' }}</span>
+            </div>
+          }
         </div>
       </div>
     </div>

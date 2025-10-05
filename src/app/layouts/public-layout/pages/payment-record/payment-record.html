@@ -916,6 +916,7 @@
           [courses]="courses"
           [isSubmitting]="isSubmitting"
           [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
+          [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
           (goBack)="goBackToForm()"
           (confirmSubmit)="confirmAndSubmit()">
         </app-payment-confirmation>
