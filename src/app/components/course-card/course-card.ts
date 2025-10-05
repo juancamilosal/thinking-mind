@@ -58,4 +58,30 @@ export class CourseCardComponent {
   onDeleteColegioCurso(colegioCurso: any) {
     this.deleteColegioCurso.emit(colegioCurso);
   }
+
+  // Lista de colegios visibles ordenados alfabéticamente por nombre
+  get visibleSortedColegiosCursos(): any[] {
+    const normalizeVisible = (val: any): boolean => {
+      if (typeof val === 'string') {
+        return val.trim().toUpperCase() === 'TRUE';
+      }
+      if (typeof val === 'boolean') {
+        return val === true;
+      }
+      if (typeof val === 'number') {
+        return val === 1;
+      }
+      return false;
+    };
+
+    const items = (this.colegiosCursos || []).filter(cc => normalizeVisible(cc?.visible));
+    return items.sort((a: any, b: any) => {
+      const nameA = (a?.colegio_id?.nombre ?? '').toString().trim();
+      const nameB = (b?.colegio_id?.nombre ?? '').toString().trim();
+      if (!nameA && !nameB) return 0;
+      if (!nameA) return 1; // Sin nombre al final
+      if (!nameB) return -1;
+      return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+    });
+  }
 }
