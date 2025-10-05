@@ -385,6 +385,8 @@ export class PaymentRecord implements OnInit {
         };
         this.registeredCourses.push(courseData);
       });
+      // Ordenar para que las inscripciones aparezcan primero
+      this.registeredCourses.sort((a: any, b: any) => Number(b.isInscription) - Number(a.isInscription));
     }
   }
 
