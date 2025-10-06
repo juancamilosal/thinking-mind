@@ -65,10 +65,25 @@
 
     <!-- Vista de Historial de Programas -->
     @if (showHistory) {
-      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-gray-800">Historial de Programas</h2>
-          <span class="text-sm text-gray-600">Total: {{ historialItems.length }} registro(s)</span>
+      <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex flex-col gap-3 mb-4">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <h2 class="text-2xl font-bold text-amber-800">Historial de Programas</h2>
+            <span class="text-sm text-amber-700">Total: {{ historialTotalCount }} registro(s)</span>
+          </div>
+          <div class="flex flex-col md:flex-row md:items-center gap-2">
+            <input type="text" class="border rounded-lg px-3 py-2 w-full" placeholder="Buscar Programa" [value]="historialSearchTerm" (input)="onHistorialSearchInputChange($event)" />
+            <button 
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto flex items-center justify-center" 
+              (click)="onHistorialSearch()"
+              aria-label="Buscar Programa"
+              title="Buscar Programa">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </button>
+            <button class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 w-full md:w-auto" (click)="clearHistorialSearch()">Limpiar</button>
+          </div>
         </div>
 
         @if (isLoadingHistorial) {
@@ -83,22 +98,22 @@
           } @else {
             <div class="space-y-4">
               @for (item of historialItems; track item.id) {
-                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                <div class="bg-white border border-amber-200 border-l-4 border-l-amber-400 rounded-lg p-4 hover:bg-amber-50 transition shadow-sm">
                   <div class="flex items-start justify-between">
                     <div>
-                      <div class="text-gray-900 font-semibold">
+                      <div class="text-amber-900 font-semibold">
                         {{ (item.colegio_id?.nombre || '') }}
-                        <span class="text-gray-500 font-normal">• {{ item.colegio_id?.ciudad }}</span>
+                        <span class="text-amber-700 font-normal">• {{ item.colegio_id?.ciudad }}</span>
                       </div>
-                      <div class="text-sm text-gray-600">
+                      <div class="text-sm text-amber-800">
                         Programa: <span class="font-medium">{{ item.curso_id?.nombre || item.curso_id }}</span>
                       </div>
-                      <div class="text-sm text-gray-600">
+                      <div class="text-sm text-amber-800">
                         Finalización: <span class="font-medium">{{ formatDatePretty(item.fecha_finalizacion) }}</span>
                       </div>
                     </div>
                     <div class="text-right">
-                      <div class="text-sm text-gray-500">Precio</div>
+                      <div class="text-sm text-amber-700">Precio</div>
                       <div class="text-lg font-semibold text-green-600">{{ formatCurrency(item.precio_curso) }}</div>
                     </div>
                   </div>
@@ -106,8 +121,134 @@
                 </div>
               }
             </div>
-          }
-        }
+            <!-- Paginador (estilo clientes) -->
+            @if (historialItems.length > 0) {
+              <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-t border-gray-200 rounded-b-xl shadow-inner mt-4">
+                <!-- Navegación Mobile -->
+                <div class="flex flex-col sm:hidden space-y-4">
+                  @if (historialTotalPages > 1) {
+                    <div class="flex justify-between items-center">
+                      <button 
+                        (click)="previousHistorialPage()" 
+                        [disabled]="historialCurrentPage === 1"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Anterior
+                      </button>
+                      <button 
+                        (click)="nextHistorialPage()" 
+                        [disabled]="historialCurrentPage === historialTotalPages"
+                        class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
+                        Siguiente
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    </div>
+                  }
+                  <!-- Info de resultados -->
+                  <div class="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200">
+                    <div class="text-sm text-gray-700 text-center">
+                      Mostrando 
+                      <span class="font-semibold text-blue-600">{{ (historialCurrentPage - 1) * historialItemsPerPage + 1 }}</span>
+                      a 
+                      <span class="font-semibold text-blue-600">{{ Math.min(historialCurrentPage * historialItemsPerPage, historialTotalCount) }}</span>
+                      de 
+                      <span class="font-semibold text-blue-600">{{ historialTotalCount }}</span>
+                      programas
+                    </div>
+                  </div>
+                  <!-- Items por página -->
+                  <div class="flex items-center justify-center space-x-3">
+                    <label class="text-sm font-medium text-gray-700">Mostrar:</label>
+                    <select 
+                      (change)="onHistorialItemsPerPageChange($event)" 
+                      [value]="historialItemsPerPage"
+                      class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm font-medium hover:border-blue-400 transition-colors">
+                      <option [value]="5" [selected]="historialItemsPerPage === 5">5</option>
+                      <option [value]="10" [selected]="historialItemsPerPage === 10">10</option>
+                      <option [value]="15" [selected]="historialItemsPerPage === 15">15</option>
+                      <option [value]="20" [selected]="historialItemsPerPage === 20">20</option>
+                    </select>
+                    <span class="text-sm font-medium text-gray-700">por página</span>
+                  </div>
+                </div>
+
+                <!-- Navegación Desktop -->
+                <div class="hidden sm:flex sm:items-center sm:justify-between">
+                  <div class="flex items-center space-x-4">
+                    <!-- Info de resultados -->
+                    <div class="bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
+                      <div class="text-sm text-gray-700">
+                        Mostrando 
+                        <span class="font-semibold text-blue-600">{{ (historialCurrentPage - 1) * historialItemsPerPage + 1 }}</span>
+                        a 
+                        <span class="font-semibold text-blue-600">{{ Math.min(historialCurrentPage * historialItemsPerPage, historialTotalCount) }}</span>
+                        de 
+                        <span class="font-semibold text-blue-600">{{ historialTotalCount }}</span>
+                        programas
+                      </div>
+                    </div>
+
+                    <!-- Items por página -->
+                    <div class="flex items-center space-x-2">
+                      <label class="text-sm font-medium text-gray-700">Mostrar:</label>
+                      <select 
+                        (change)="onHistorialItemsPerPageChange($event)" 
+                        [value]="historialItemsPerPage"
+                        class="px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm font-medium hover:border-blue-400 transition-colors">
+                        <option [value]="5" [selected]="historialItemsPerPage === 5">5</option>
+                        <option [value]="10" [selected]="historialItemsPerPage === 10">10</option>
+                        <option [value]="15" [selected]="historialItemsPerPage === 15">15</option>
+                        <option [value]="20" [selected]="historialItemsPerPage === 20">20</option>
+                      </select>
+                      <span class="text-sm font-medium text-gray-700">por página</span>
+                    </div>
+                  </div>
+
+                  @if (historialTotalPages > 1) {
+                    <!-- Navegación de páginas -->
+                    <div class="flex items-center space-x-2">
+                      <button 
+                        (click)="previousHistorialPage()" 
+                        [disabled]="historialCurrentPage === 1"
+                        class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Anterior
+                      </button>
+
+                      <div class="flex items-center space-x-1">
+                        @for (page of getHistorialPageNumbers(); track page) {
+                          <button 
+                            (click)="goToHistorialPage(page)"
+                            [class]="page === historialCurrentPage ? 
+                              'px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md transform scale-105' : 
+                              'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md'">
+                            {{ page }}
+                          </button>
+                        }
+                      </div>
+
+                      <button 
+                        (click)="nextHistorialPage()" 
+                        [disabled]="historialCurrentPage === historialTotalPages"
+                        class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
+                        Siguiente
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+         }
+       }
       </div>
     }
 

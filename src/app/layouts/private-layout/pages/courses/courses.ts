@@ -42,6 +42,14 @@ export class Courses {
   showHistory = false;
   isLoadingHistorial = false;
   historialItems: any[] = [];
+  // Búsqueda y paginación para Historial
+  historialSearchTerm: string = '';
+  historialCurrentPage: number = 1;
+  historialItemsPerPage: number = 10;
+  historialTotalCount: number = 0;
+  historialTotalPages: number = 1;
+  // Utility method for Math functions in template
+  Math = Math;
   
   // Variables para el modal de edición de fecha
   showEditModal = false;
@@ -149,11 +157,18 @@ export class Courses {
     }
   }
 
-  loadHistorialProgramas() {
+  loadHistorialProgramas(page: number = this.historialCurrentPage) {
     this.isLoadingHistorial = true;
-    this.historialService.getHistorialProgramas().subscribe({
+    const limit = this.historialItemsPerPage;
+    const search = this.historialSearchTerm?.trim() || undefined;
+    this.historialService.getHistorialProgramas(search, page, limit).subscribe({
       next: (response) => {
         const allItems = response.data || [];
+        // meta puede traer total_count del paginador de Directus
+        const totalCount = response.meta?.total_count ?? allItems.length;
+        this.historialTotalCount = totalCount;
+        this.historialTotalPages = Math.max(1, Math.ceil(totalCount / this.historialItemsPerPage));
+        this.historialCurrentPage = page;
         const invalidItems = allItems.filter((item: any) => {
           const rel = item?.id_colegios_cursos;
           return Array.isArray(rel) ? rel.length === 0 : !rel;
@@ -211,6 +226,65 @@ export class Courses {
         // el estado se maneja según las eliminaciones
       }
     });
+  }
+
+  // Acciones de búsqueda en historial
+  onHistorialSearchInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.historialSearchTerm = target.value;
+    // Debounce simple
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.historialCurrentPage = 1;
+      this.loadHistorialProgramas(1);
+    }, 300);
+  }
+
+  onHistorialSearch() {
+    this.historialCurrentPage = 1;
+    this.loadHistorialProgramas(1);
+  }
+
+  clearHistorialSearch() {
+    this.historialSearchTerm = '';
+    this.historialCurrentPage = 1;
+    this.loadHistorialProgramas(1);
+  }
+
+  // Paginación historial
+  goToHistorialPage(page: number) {
+    if (page >= 1 && page <= this.historialTotalPages) {
+      this.historialCurrentPage = page;
+      this.loadHistorialProgramas(page);
+    }
+  }
+
+  previousHistorialPage() {
+    this.goToHistorialPage(this.historialCurrentPage - 1);
+  }
+
+  nextHistorialPage() {
+    this.goToHistorialPage(this.historialCurrentPage + 1);
+  }
+
+  onHistorialItemsPerPageChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const newLimit = parseInt(target.value);
+    this.historialItemsPerPage = isNaN(newLimit) ? 10 : newLimit;
+    this.historialCurrentPage = 1;
+    this.loadHistorialProgramas(1);
+  }
+
+  getHistorialPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.historialCurrentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.historialTotalPages, startPage + maxVisiblePages - 1);
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    for (let i = startPage; i <= endPage; i++) pages.push(i);
+    return pages;
   }
 
   openCourseInfo(course: Course) {
