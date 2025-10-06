@@ -65,11 +65,11 @@
 
     <!-- Vista de Historial de Programas -->
     @if (showHistory) {
-      <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-lg p-6 mb-8">
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
         <div class="flex flex-col gap-3 mb-4">
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-            <h2 class="text-2xl font-bold text-amber-800">Historial de Programas</h2>
-            <span class="text-sm text-amber-700">Total: {{ historialTotalCount }} registro(s)</span>
+            <h2 class="text-2xl font-bold text-gray-800">Historial de Programas</h2>
+            <span class="text-sm text-gray-600">Total: {{ historialTotalCount }} registro(s)</span>
           </div>
           <div class="flex flex-col md:flex-row md:items-center gap-2">
             <input type="text" class="border rounded-lg px-3 py-2 w-full" placeholder="Buscar Programa" [value]="historialSearchTerm" (input)="onHistorialSearchInputChange($event)" />
@@ -98,22 +98,22 @@
           } @else {
             <div class="space-y-4">
               @for (item of historialItems; track item.id) {
-                <div class="bg-white border border-amber-200 border-l-4 border-l-amber-400 rounded-lg p-4 hover:bg-amber-50 transition shadow-sm">
+                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
                   <div class="flex items-start justify-between">
                     <div>
-                      <div class="text-amber-900 font-semibold">
+                      <div class="text-gray-900 font-semibold">
                         {{ (item.colegio_id?.nombre || '') }}
-                        <span class="text-amber-700 font-normal">• {{ item.colegio_id?.ciudad }}</span>
+                        <span class="text-gray-500 font-normal">• {{ item.colegio_id?.ciudad }}</span>
                       </div>
-                      <div class="text-sm text-amber-800">
+                      <div class="text-sm text-gray-600">
                         Programa: <span class="font-medium">{{ item.curso_id?.nombre || item.curso_id }}</span>
                       </div>
-                      <div class="text-sm text-amber-800">
+                      <div class="text-sm text-gray-600">
                         Finalización: <span class="font-medium">{{ formatDatePretty(item.fecha_finalizacion) }}</span>
                       </div>
                     </div>
                     <div class="text-right">
-                      <div class="text-sm text-amber-700">Precio</div>
+                      <div class="text-sm text-gray-500">Precio</div>
                       <div class="text-lg font-semibold text-green-600">{{ formatCurrency(item.precio_curso) }}</div>
                     </div>
                   </div>
