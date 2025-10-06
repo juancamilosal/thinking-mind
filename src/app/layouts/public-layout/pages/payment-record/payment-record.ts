@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, HostListener, ElementRef, ViewChild} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
@@ -46,6 +46,9 @@ export class PaymentRecord implements OnInit {
   isSchoolSelected = false;
   showConfirmation = false;
   isSearchingClient = false;
+
+  // Referencia al input de búsqueda de colegio para manejar el scroll en mobile
+  @ViewChild('schoolSearchInput') schoolSearchInputRef?: ElementRef<HTMLInputElement>;
 
   // New properties for registered courses table
   showRegisteredCourses = false;
@@ -98,12 +101,50 @@ export class PaymentRecord implements OnInit {
     this.loadExchangeRates();
   }
 
+  // Al enfocar el input de colegio en mobile, desplazar la pantalla para que quede al inicio
+  onSchoolSearchFocus(): void {
+    try {
+      const isMobileViewport = window.innerWidth <= 768;
+      if (!isMobileViewport) return;
+      // Usar un pequeño retraso para permitir que el teclado se muestre y evitar saltos
+      setTimeout(() => {
+        const el = this.schoolSearchInputRef?.nativeElement;
+        if (!el) return;
+        const offset = 16; // margen superior para que no quede pegado al borde
+        const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }, 150);
+    } catch (e) {
+      // Fallback simple
+      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   // Al tocar la lista de resultados, cerrar el teclado para permitir scroll en mobile
   onResultsTouchStart(): void {
     try {
       const active = document.activeElement as HTMLElement | null;
       if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
         active.blur();
+      }
+    } catch (e) {
+      // Ignorar errores de acceso al DOM
+    }
+  }
+
+  // Al tocar/click en cualquier otro lado que no sea un campo editable, cerrar el teclado
+  @HostListener('document:click', ['$event'])
+  @HostListener('document:touchstart', ['$event'])
+  handleDocumentInteraction(event: Event): void {
+    try {
+      const target = event.target as HTMLElement | null;
+      const tag = (target?.tagName || '').toUpperCase();
+      const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (target?.isContentEditable ?? false);
+      if (!isEditable) {
+        const active = document.activeElement as HTMLElement | null;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+          active.blur();
+        }
       }
     } catch (e) {
       // Ignorar errores de acceso al DOM
@@ -851,6 +892,15 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.get('schoolSearchTerm')?.setValue(school.nombre);
     this.filteredSchools = [];
     this.isSchoolSelected = true;
+    // Al seleccionar colegio, cerrar el teclado del input de búsqueda en móvil
+    try {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+        active.blur();
+      }
+    } catch (e) {
+      // Ignorar errores de acceso al DOM
+    }
     // Validar precio del programa seleccionado con el colegio recién seleccionado
     const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
     if (selectedCourseId) {
