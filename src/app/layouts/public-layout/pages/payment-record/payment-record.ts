@@ -84,6 +84,7 @@ export class PaymentRecord implements OnInit {
   // Flags para evitar notificar repetidamente por falla de tasa de cambio
   usdRateErrorNotified: boolean = false;
   eurRateErrorNotified: boolean = false;
+  isExchangeRateError: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -1143,6 +1144,7 @@ export class PaymentRecord implements OnInit {
     this.selectedInscriptionAmount = 0;
     this.selectedInscriptionConvertedCop = null;
     this.selectedCourseImageUrl = null;
+    this.isExchangeRateError = false;
     // Limpiar estado de validación del control de curso
     const courseControl = this.paymentForm.get('selectedCourse');
     courseControl?.markAsPristine();
@@ -1166,13 +1168,16 @@ export class PaymentRecord implements OnInit {
     const amount = this.selectedInscriptionAmount;
     if (!amount || amount <= 0) {
       this.selectedInscriptionConvertedCop = null;
+      this.isExchangeRateError = false;
       return;
     }
     const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
     if (typeof rate === 'number' && rate > 0) {
       this.selectedInscriptionConvertedCop = Math.round(amount * rate);
+      this.isExchangeRateError = false;
     } else {
       this.selectedInscriptionConvertedCop = null;
+      this.isExchangeRateError = true;
       // Notificar cuando la tasa de conversión no esté disponible para inscripciones en EUR/USD
       if (this.hasInscription) {
         const currency = this.isEuroCourse ? 'EUR' : 'USD';
@@ -1511,11 +1516,11 @@ export class PaymentRecord implements OnInit {
 
   private loadExchangeRates(): void {
     this.exchangeRateService.getUsdToCop().subscribe({
-      next: (rate) => { this.usdToCop = rate; this.usdRateErrorNotified = false; },
+      next: (rate) => { this.usdToCop = rate; this.usdRateErrorNotified = false; this.isExchangeRateError = false; },
       error: () => this.usdToCop = null
     });
     this.exchangeRateService.getEurToCop().subscribe({
-      next: (rate) => { this.eurToCop = rate; this.eurRateErrorNotified = false; },
+      next: (rate) => { this.eurToCop = rate; this.eurRateErrorNotified = false; this.isExchangeRateError = false; },
       error: () => this.eurToCop = null
     });
     // Intentar actualizar conversión cuando se tengan tasas

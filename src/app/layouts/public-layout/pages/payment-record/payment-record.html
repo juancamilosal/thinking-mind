@@ -913,7 +913,7 @@
             <!-- Botón de Envío -->
             <button
               type="submit"
-              [disabled]="paymentForm.invalid || isSubmitting"
+              [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError"
               class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-10 rounded-2xl min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl disabled:transform-none disabled:opacity-50 enabled:shadow-emerald-500/25">
               <span class="flex items-center justify-center space-x-2">
                 @if (isSubmitting) {
