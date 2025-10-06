@@ -222,14 +222,14 @@
   <div class="p-6 bg-gray-50 min-h-screen">
     <div class="max-w-4xl mx-auto">
       <div class="bg-white rounded-xl shadow-lg p-8">
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4 sm:gap-0">
           <div>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ editMode ? 'Editar Colegio' : 'Registro de Colegio' }}</h1>
             <p class="text-gray-600">{{ editMode ? 'Actualiza la información del colegio' : 'Completa la información del colegio' }}</p>
           </div>
           <button
             (click)="toggleForm()"
-            class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+            class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center justify-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
