@@ -10,6 +10,7 @@ import { ColegioCursosComponent } from './form-colegio-cursos/form-colegio-curso
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ColegioCursosService } from '../../../../core/services/colegio-cursos.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
+import { HistorialProgramasService } from '../../../../core/services/historial-programas.service';
 
 @Component({
   selector: 'app-courses',
@@ -37,6 +38,11 @@ export class Courses {
   searchTerm = '';
   private searchTimeout: any;
   
+  // Historial de Programas
+  showHistory = false;
+  isLoadingHistorial = false;
+  historialItems: any[] = [];
+  
   // Variables para el modal de edición de fecha
   showEditModal = false;
   selectedColegioCurso: any = null;
@@ -47,7 +53,8 @@ export class Courses {
     private courseServices: CourseService,
     private colegioCursosService: ColegioCursosService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private historialService: HistorialProgramasService
   ) {
     this.initEditForm();
   }
@@ -132,6 +139,78 @@ export class Courses {
   clearSearch() {
     this.searchTerm = '';
     this.searchCourse();
+  }
+
+  // Toggle Historial de Programas
+  toggleHistory() {
+    this.showHistory = !this.showHistory;
+    if (this.showHistory) {
+      this.loadHistorialProgramas();
+    }
+  }
+
+  loadHistorialProgramas() {
+    this.isLoadingHistorial = true;
+    this.historialService.getHistorialProgramas().subscribe({
+      next: (response) => {
+        const allItems = response.data || [];
+        const invalidItems = allItems.filter((item: any) => {
+          const rel = item?.id_colegios_cursos;
+          return Array.isArray(rel) ? rel.length === 0 : !rel;
+        });
+        const validItems = allItems.filter((item: any) => {
+          const rel = item?.id_colegios_cursos;
+          return Array.isArray(rel) ? rel.length > 0 : !!rel;
+        });
+
+        if (invalidItems.length > 0) {
+          // Mantener el spinner activo durante las eliminaciones
+          this.isLoadingHistorial = true;
+          let completed = 0;
+          invalidItems.forEach((item: any) => {
+            this.historialService.deleteHistorialProgramas(item.id).subscribe({
+              next: () => {
+                completed++;
+                if (completed === invalidItems.length) {
+                  this.historialItems = validItems.sort((a: any, b: any) => {
+                    const nameA = (a?.curso_id?.nombre ?? a?.nombre ?? '').toString().toLowerCase();
+                    const nameB = (b?.curso_id?.nombre ?? b?.nombre ?? '').toString().toLowerCase();
+                    return nameA.localeCompare(nameB);
+                  });
+                  this.isLoadingHistorial = false;
+                }
+              },
+              error: () => {
+                completed++;
+                if (completed === invalidItems.length) {
+                  this.historialItems = validItems.sort((a: any, b: any) => {
+                    const nameA = (a?.curso_id?.nombre ?? a?.nombre ?? '').toString().toLowerCase();
+                    const nameB = (b?.curso_id?.nombre ?? b?.nombre ?? '').toString().toLowerCase();
+                    return nameA.localeCompare(nameB);
+                  });
+                  this.isLoadingHistorial = false;
+                }
+              }
+            });
+          });
+        } else {
+          // Ordenar por fecha_finalizacion descendente si existe
+          this.historialItems = validItems.sort((a: any, b: any) => {
+            const nameA = (a?.curso_id?.nombre ?? a?.nombre ?? '').toString().toLowerCase();
+            const nameB = (b?.curso_id?.nombre ?? b?.nombre ?? '').toString().toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+          this.isLoadingHistorial = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error cargando historial_programas:', error);
+        this.notificationService.showError('Error', 'No se pudo cargar el historial de programas');
+      },
+      complete: () => {
+        // el estado se maneja según las eliminaciones
+      }
+    });
   }
 
   openCourseInfo(course: Course) {
@@ -353,5 +432,22 @@ export class Courses {
         });
       }
     );
+  }
+  // Helpers de formato para historial
+  formatCurrency(value: any): string {
+    const num = typeof value === 'number' ? value : Number(value);
+    if (!isFinite(num)) return '';
+    try {
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
+    } catch (_) {
+      return num.toLocaleString('es-CO');
+    }
+  }
+
+  formatDatePretty(value: any): string {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: '2-digit' });
   }
 }
