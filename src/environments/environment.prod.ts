@@ -14,6 +14,7 @@ export const environment = {
   users: apiUrl + 'users',
   assets: apiUrl + 'assets',
   colegio_cursos: apiUrl + 'items/colegios_cursos',
+  historial_programas: apiUrl + 'items/historial_programas',
   security: {
     login: apiUrl + 'auth/login',
     logout: apiUrl + 'auth/logout',
