@@ -818,9 +818,9 @@
                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
                          </svg>
                        </div>
-                       <div class="text-center">
+                       <div class="text-center w-full">
                          <p class="text-sm font-medium text-violet-600 uppercase tracking-wide mb-1">Valor del Programa</p>
-                         <p class="text-3xl font-bold text-violet-800 leading-tight">{{ paymentForm.get('coursePrice')?.value }}</p>
+                         <p class="text-2xl sm:text-3xl font-bold text-violet-800 leading-tight truncate">{{ paymentForm.get('coursePrice')?.value }}</p>
                        </div>
                      </div>
                    </div>
@@ -835,14 +835,14 @@
                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151a4.535 4.535 0 011.676-.662A1 1 0 1011 3v.092a4.535 4.535 0 00-1.676.662C8.602 4.234 8 5.009 8 6c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151z" clip-rule="evenodd" />
                              </svg>
                            </div>
-                           <div class="text-center">
+                           <div class="text-center w-full">
                              <p class="text-sm font-medium text-emerald-600 uppercase tracking-wide mb-1">Valor de Inscripción</p>
-            <p class="text-3xl font-bold text-emerald-800 leading-tight">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
-            @if (selectedInscriptionConvertedCop) {
-              <p class="mt-2 text-2xl font-semibold text-emerald-700">≈ {{ selectedInscriptionConvertedCop | number:'1.0-0' }} COP</p>
-            } @else {
-              <p class="mt-2 text-sm text-gray-500">(esperando tasa de cambio)</p>
-            }
+                             <p class="text-2xl sm:text-3xl font-bold text-emerald-800 leading-tight truncate">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
+                             @if (selectedInscriptionConvertedCop) {
+                               <p class="mt-2 text-xl sm:text-2xl font-semibold text-emerald-700 whitespace-nowrap">≈ $ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</p>
+                             } @else {
+                               <p class="mt-2 text-sm text-gray-500">(esperando tasa de cambio)</p>
+                             }
                            </div>
                          </div>
                        </div>
@@ -889,13 +889,13 @@
 
           <!-- Botones de Acción -->
           @if (!showRegisteredCourses || showAddCourseForm) {
-          <div class="flex justify-center space-x-4">
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
             <!-- Botón Volver (solo cuando showAddCourseForm es true) -->
             @if (showAddCourseForm) {
               <button
                 type="button"
                 (click)="backToTableView()"
-                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                 <span class="flex items-center justify-center space-x-2">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
@@ -909,7 +909,7 @@
             <button
               type="submit"
               [disabled]="paymentForm.invalid || isSubmitting"
-              class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-10 rounded-2xl min-w-[250px] shadow-lg hover:shadow-xl disabled:transform-none disabled:opacity-50 enabled:shadow-emerald-500/25">
+              class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-10 rounded-2xl min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl disabled:transform-none disabled:opacity-50 enabled:shadow-emerald-500/25">
               <span class="flex items-center justify-center space-x-2">
                 @if (isSubmitting) {
                   <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
