@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, OnInit, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { HeaderComponent } from '../../components/header/header.component';
@@ -11,15 +11,16 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent],
+  imports: [RouterOutlet, SidebarComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent, NgClass],
   templateUrl: './private-layout.html'
 })
-export class PrivateLayout implements OnInit {
+export class PrivateLayout implements OnInit, AfterViewInit {
 
   isSidebarOpen = false;
   windowWidth = 0;
   isBrowser = false;
   isMobileSidebarOpen = false;
+  hasInitialized = false;
 
   // Propiedades para el modal de notificaciones
   isNotificationVisible = false;
@@ -32,7 +33,8 @@ export class PrivateLayout implements OnInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private cdr: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -62,6 +64,15 @@ export class PrivateLayout implements OnInit {
     });
   }
 
+  ngAfterViewInit() {
+    // Evita transiciones en el primer render para que no parezca
+    // que el sidebar "se cierra" al abrir la aplicación
+    this.hasInitialized = true;
+    if (this.isBrowser) {
+      this.cdr.detectChanges();
+    }
+  }
+
   onNotificationClose() {
     this.notificationService.hideNotification();
   }
@@ -76,6 +87,10 @@ export class PrivateLayout implements OnInit {
 
   onToggleSidebar() {
     this.isMobileSidebarOpen = !this.isMobileSidebarOpen;
+    // Forzar detección de cambios para asegurar que el estado se refleje inmediatamente en mobile
+    if (this.isBrowser) {
+      this.cdr.detectChanges();
+    }
   }
 
   @HostListener('window:resize')
@@ -83,6 +98,8 @@ export class PrivateLayout implements OnInit {
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
       this.isSidebarOpen = this.windowWidth >= 640;
+      // Actualizar vista en cambios de tamaño de ventana
+      this.cdr.detectChanges();
     }
   }
 }

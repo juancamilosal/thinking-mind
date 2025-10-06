@@ -98,6 +98,18 @@ export class PaymentRecord implements OnInit {
     this.loadExchangeRates();
   }
 
+  // Al tocar la lista de resultados, cerrar el teclado para permitir scroll en mobile
+  onResultsTouchStart(): void {
+    try {
+      const active = document.activeElement as HTMLElement | null;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+        active.blur();
+      }
+    } catch (e) {
+      // Ignorar errores de acceso al DOM
+    }
+  }
+
 
   initForm(): void {
     this.paymentForm = this.fb.group({

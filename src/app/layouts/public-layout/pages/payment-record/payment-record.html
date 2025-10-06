@@ -659,6 +659,7 @@
                     id="studentSchool"
                     formControlName="schoolSearchTerm"
                     (input)="onSchoolSearch($event)"
+                    #schoolSearchInput
                     placeholder="Buscar colegio..."
                     class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
                     autocomplete="off">
@@ -676,7 +677,9 @@
 
                 <!-- Lista desplegable de resultados -->
                 @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
-                  <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                       (touchstart)="onResultsTouchStart()" (mousedown)="onResultsTouchStart()"
+                       [ngStyle]="{ '-webkit-overflow-scrolling': 'touch' }">
                     <!-- Indicador de carga -->
                     @if (isLoadingSchools) {
                       <div class="px-4 py-3 text-center">
