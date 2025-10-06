@@ -81,6 +81,9 @@ export class PaymentRecord implements OnInit {
   selectedInscriptionAmount: number = 0;
   selectedInscriptionConvertedCop: number | null = null;
   selectedCourseImageUrl: string | null = null;
+  // Flags para evitar notificar repetidamente por falla de tasa de cambio
+  usdRateErrorNotified: boolean = false;
+  eurRateErrorNotified: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -1170,6 +1173,24 @@ export class PaymentRecord implements OnInit {
       this.selectedInscriptionConvertedCop = Math.round(amount * rate);
     } else {
       this.selectedInscriptionConvertedCop = null;
+      // Notificar cuando la tasa de conversión no esté disponible para inscripciones en EUR/USD
+      if (this.hasInscription) {
+        const currency = this.isEuroCourse ? 'EUR' : 'USD';
+        const alreadyNotified = this.isEuroCourse ? this.eurRateErrorNotified : this.usdRateErrorNotified;
+        if (!alreadyNotified) {
+          this.notificationData = {
+            title: 'Tasa de conversión no disponible',
+            message: `La tasa de conversión de ${currency} a COP no está disponible en este momento. Intente más tarde.`,
+            type: 'warning'
+          };
+          this.showNotification = true;
+          if (this.isEuroCourse) {
+            this.eurRateErrorNotified = true;
+          } else {
+            this.usdRateErrorNotified = true;
+          }
+        }
+      }
     }
   }
 
@@ -1490,11 +1511,11 @@ export class PaymentRecord implements OnInit {
 
   private loadExchangeRates(): void {
     this.exchangeRateService.getUsdToCop().subscribe({
-      next: (rate) => this.usdToCop = rate,
+      next: (rate) => { this.usdToCop = rate; this.usdRateErrorNotified = false; },
       error: () => this.usdToCop = null
     });
     this.exchangeRateService.getEurToCop().subscribe({
-      next: (rate) => this.eurToCop = rate,
+      next: (rate) => { this.eurToCop = rate; this.eurRateErrorNotified = false; },
       error: () => this.eurToCop = null
     });
     // Intentar actualizar conversión cuando se tengan tasas
