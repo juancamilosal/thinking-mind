@@ -32,33 +32,33 @@
         </div>
 
         <div class="space-y-4">
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Tipo de Documento:</span>
-            <span class="text-gray-800">{{ paymentForm.get('guardianDocumentType')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('guardianDocumentType')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Número de Documento:</span>
-            <span class="text-gray-800">{{ paymentForm.get('guardianDocumentNumber')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('guardianDocumentNumber')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Nombres:</span>
-            <span class="text-gray-800">{{ paymentForm.get('guardianFirstName')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('guardianFirstName')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Apellidos:</span>
-            <span class="text-gray-800">{{ paymentForm.get('guardianLastName')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('guardianLastName')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Teléfono:</span>
-            <span class="text-gray-800">{{ paymentForm.get('guardianPhoneNumber')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('guardianPhoneNumber')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Correo Electrónico:</span>
-            <span class="text-gray-800">{{ paymentForm.get('guardianEmail')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('guardianEmail')?.value }}</span>
           </div>
-          <div class="flex justify-between items-start py-2">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2">
             <span class="font-medium text-gray-600">Dirección:</span>
-            <span class="text-gray-800 text-right max-w-xs">{{ paymentForm.get('guardianAddress')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:text-right">{{ paymentForm.get('guardianAddress')?.value }}</span>
           </div>
         </div>
       </div>
@@ -76,25 +76,25 @@
         </div>
 
         <div class="space-y-4">
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Tipo de Documento:</span>
-            <span class="text-gray-800">{{ paymentForm.get('studentDocumentType')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentDocumentType')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Número de Documento:</span>
-            <span class="text-gray-800">{{ paymentForm.get('studentDocumentNumber')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentDocumentNumber')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Nombres:</span>
-            <span class="text-gray-800">{{ paymentForm.get('studentFirstName')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentFirstName')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Apellidos:</span>
-            <span class="text-gray-800">{{ paymentForm.get('studentLastName')?.value }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentLastName')?.value }}</span>
           </div>
-          <div class="flex justify-between items-center py-2">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
             <span class="font-medium text-gray-600">Colegio:</span>
-            <span class="text-gray-800">{{ schoolSearchTerm || 'No seleccionado' }}</span>
+            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ schoolSearchTerm || 'No seleccionado' }}</span>
           </div>
         </div>
       </div>
@@ -114,9 +114,9 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Columna 1: Programa Seleccionado -->
-        <div class="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gray-50 rounded-lg">
           <span class="font-medium text-gray-600">Programa Seleccionado:</span>
-          <span class="text-gray-800 font-semibold">
+          <span class="text-gray-800 font-semibold mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">
             @for (course of courses; track course.id || course.codigo) {
               @if (course.id === paymentForm.get('selectedCourse')?.value) {
                 {{ course.nombre }}
@@ -127,14 +127,14 @@
 
         <!-- Columna 2: Precio y Precio de Inscripción (COP) apilados -->
         <div class="flex flex-col gap-6">
-          <div class="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <span class="font-medium text-gray-600">Precio:</span>
-            <span class="text-2xl font-bold text-green-700">{{ paymentForm.get('coursePrice')?.value }}</span>
+            <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">{{ paymentForm.get('coursePrice')?.value }}</span>
           </div>
           @if (selectedInscriptionConvertedCop) {
-            <div class="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
               <span class="font-medium text-gray-600">Precio de Inscripción (COP):</span>
-              <span class="text-2xl font-bold text-emerald-700">$ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</span>
+              <span class="text-2xl font-bold text-emerald-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</span>
             </div>
           }
         </div>
