@@ -49,16 +49,31 @@ export class ColegioCursosComponent implements OnInit {
       this.fechaFinalizacionForm.get('courseSearchTerm')?.setValue(this.selectedCourse.nombre);
       this.isCourseSelected = true;
     }
+
+    const specialLaunchCtrl = this.fechaFinalizacionForm.get('precio_especial_lanzamiento');
+    const specialPriceCtrl = this.fechaFinalizacionForm.get('precio_especial');
+    specialLaunchCtrl?.valueChanges.subscribe((checked: boolean) => {
+      if (checked) {
+        specialPriceCtrl?.addValidators(Validators.required);
+      } else {
+        specialPriceCtrl?.clearValidators();
+        // Limpiar el campo cuando se desmarca
+        specialPriceCtrl?.setValue('');
+      }
+      specialPriceCtrl?.updateValueAndValidity();
+    });
   }
 
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
-      fecha_finalizacion: ['', Validators.required],
-      curso_id: ['', Validators.required],
-      colegio_id: ['', Validators.required],
-      precio_curso: ['', Validators.required],
-      courseSearchTerm: [''],
-      schoolSearchTerm: ['']
+      fecha_finalizacion: [null, Validators.required],
+      curso_id: [null, Validators.required],
+      colegio_id: [null, Validators.required],
+      precio_curso: [null, Validators.required],
+      precio_especial_lanzamiento: [false],
+      precio_especial: [null],
+      courseSearchTerm: [null],
+      schoolSearchTerm: [null]
     });
   }
 
@@ -161,12 +176,20 @@ export class ColegioCursosComponent implements OnInit {
 
   onSubmit(): void {
     if (this.fechaFinalizacionForm.valid) {
+      const precioEspecialLanzamiento = !!this.fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value;
+      const precioEspecialValor = precioEspecialLanzamiento
+        ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
+        : null;
+
       const formData = {
         fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
         // Enviar el precio desformateado (sin puntos) como número
-        precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value)
+        precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
+        // Nuevo: precio especial para Directus
+        tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
+        precio_especial: precioEspecialValor
       };
       // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({
@@ -212,6 +235,13 @@ export class ColegioCursosComponent implements OnInit {
     const digitsOnly = (inputEl.value || '').replace(/\D/g, '');
     const formatted = this.formatPrice(digitsOnly);
     this.fechaFinalizacionForm.get('precio_curso')?.setValue(formatted, { emitEvent: false });
+  }
+
+  onSpecialPriceInput(event: any): void {
+    const inputEl = event.target as HTMLInputElement;
+    const digitsOnly = (inputEl.value || '').replace(/\D/g, '');
+    const formatted = this.formatPrice(digitsOnly);
+    this.fechaFinalizacionForm.get('precio_especial')?.setValue(formatted, { emitEvent: false });
   }
 
   private formatPrice(value: string): string {

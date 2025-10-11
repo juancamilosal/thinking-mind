@@ -75,7 +75,22 @@ export class Courses {
   initEditForm(): void {
     this.editFechaForm = this.fb.group({
       fecha_finalizacion: ['', Validators.required],
-      precio_curso: ['']
+      precio_curso: [''],
+      precio_especial_lanzamiento: [false],
+      precio_especial: ['']
+    });
+
+    // Validación dinámica del precio especial
+    const specialFlagCtrl = this.editFechaForm.get('precio_especial_lanzamiento');
+    const specialPriceCtrl = this.editFechaForm.get('precio_especial');
+    specialFlagCtrl?.valueChanges.subscribe((flag: boolean) => {
+      if (flag) {
+        specialPriceCtrl?.addValidators([Validators.required]);
+      } else {
+        specialPriceCtrl?.clearValidators();
+        specialPriceCtrl?.setValue('', { emitEvent: false });
+      }
+      specialPriceCtrl?.updateValueAndValidity();
     });
   }
 
@@ -359,6 +374,10 @@ export class Courses {
       fecha_finalizacion: this.formatDateForInput(colegioCurso.fecha_finalizacion),
       precio_curso: (colegioCurso.precio_curso !== null && colegioCurso.precio_curso !== undefined)
         ? this.formatPrice(colegioCurso.precio_curso)
+        : '',
+      precio_especial_lanzamiento: this.isTruthyFlag(colegioCurso.tiene_precio_especial),
+      precio_especial: (colegioCurso.precio_especial !== null && colegioCurso.precio_especial !== undefined)
+        ? this.formatPrice(colegioCurso.precio_especial)
         : ''
     });
     this.showEditModal = true;
@@ -403,6 +422,21 @@ export class Courses {
         updatedData.precio_curso = unformattedPrice as number;
       }
 
+      // Precio especial de lanzamiento
+      const specialFlag = !!this.editFechaForm.get('precio_especial_lanzamiento')?.value;
+      updatedData.tiene_precio_especial = specialFlag ? 'TRUE' : 'FALSE';
+      if (specialFlag) {
+        const rawSpecial = this.editFechaForm.get('precio_especial')?.value;
+        const unformattedSpecial = this.unformatPrice(rawSpecial);
+        if (rawSpecial !== null && rawSpecial !== undefined && String(rawSpecial).trim() !== '') {
+          updatedData.precio_especial = unformattedSpecial as number;
+        } else {
+          updatedData.precio_especial = null;
+        }
+      } else {
+        updatedData.precio_especial = null;
+      }
+
       this.colegioCursosService.updateColegioCurso(this.selectedColegioCurso.id, updatedData).subscribe({
         next: (response) => {
           this.notificationService.showSuccess(
@@ -430,6 +464,14 @@ export class Courses {
     this.editFechaForm.get('precio_curso')?.setValue(formatted, { emitEvent: false });
   }
 
+  // Formateo del precio especial en el modal
+  onEditSpecialPriceInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = String(input.value || '').replace(/\D/g, '');
+    const formatted = this.formatPrice(digitsOnly);
+    this.editFechaForm.get('precio_especial')?.setValue(formatted, { emitEvent: false });
+  }
+
   private formatPrice(value: any): string {
     if (value === null || value === undefined) return '';
     const numericString = String(value).replace(/[^0-9]/g, '');
@@ -443,6 +485,10 @@ export class Courses {
     if (!numericString) return null;
     const num = Number(numericString);
     return isNaN(num) ? null : num;
+  }
+
+  private isTruthyFlag(flag: any): boolean {
+    return flag === true || flag === 'TRUE' || flag === 1 || flag === '1' || flag === 'true';
   }
 
   // Formatea una fecha (string/Date) a 'YYYY-MM-DD' para input type="date"

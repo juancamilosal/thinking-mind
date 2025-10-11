@@ -81,6 +81,10 @@ export class PaymentRecord implements OnInit {
   selectedInscriptionAmount: number = 0;
   selectedInscriptionConvertedCop: number | null = null;
   selectedCourseImageUrl: string | null = null;
+  // Flags para evitar notificar repetidamente por falla de tasa de cambio
+  usdRateErrorNotified: boolean = false;
+  eurRateErrorNotified: boolean = false;
+  isExchangeRateError: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -1054,8 +1058,20 @@ export class PaymentRecord implements OnInit {
         return ccSchoolId && ccSchoolId === schoolId;
       });
       if (!match) return null;
-      const raw = match.precio_curso;
-      const num = typeof raw === 'string' ? parseFloat(raw) : Number(raw);
+      // Normalizar flag de precio especial: acepta 'TRUE' | true | 1
+      const hasSpecial = (() => {
+        const val = match?.tiene_precio_especial;
+        if (typeof val === 'string') return val.trim().toUpperCase() === 'TRUE';
+        if (typeof val === 'boolean') return val === true;
+        if (typeof val === 'number') return val === 1;
+        return false;
+      })();
+
+      // Elegir precio según flag; si no aplica o no existe, usar precio_curso
+      const rawSpecial = hasSpecial ? match?.precio_especial : undefined;
+      const rawRegular = match?.precio_curso;
+      const selectedRaw = rawSpecial ?? rawRegular;
+      const num = typeof selectedRaw === 'string' ? parseFloat(selectedRaw) : Number(selectedRaw);
       return isNaN(num) ? null : num;
     } catch {
       return null;
@@ -1140,6 +1156,7 @@ export class PaymentRecord implements OnInit {
     this.selectedInscriptionAmount = 0;
     this.selectedInscriptionConvertedCop = null;
     this.selectedCourseImageUrl = null;
+    this.isExchangeRateError = false;
     // Limpiar estado de validación del control de curso
     const courseControl = this.paymentForm.get('selectedCourse');
     courseControl?.markAsPristine();
@@ -1163,13 +1180,34 @@ export class PaymentRecord implements OnInit {
     const amount = this.selectedInscriptionAmount;
     if (!amount || amount <= 0) {
       this.selectedInscriptionConvertedCop = null;
+      this.isExchangeRateError = false;
       return;
     }
     const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
     if (typeof rate === 'number' && rate > 0) {
       this.selectedInscriptionConvertedCop = Math.round(amount * rate);
+      this.isExchangeRateError = false;
     } else {
       this.selectedInscriptionConvertedCop = null;
+      this.isExchangeRateError = true;
+      // Notificar cuando la tasa de conversión no esté disponible para inscripciones en EUR/USD
+      if (this.hasInscription) {
+        const currency = this.isEuroCourse ? 'EUR' : 'USD';
+        const alreadyNotified = this.isEuroCourse ? this.eurRateErrorNotified : this.usdRateErrorNotified;
+        if (!alreadyNotified) {
+          this.notificationData = {
+            title: 'Tasa de conversión no disponible',
+            message: `La tasa de conversión de ${currency} a COP no está disponible en este momento. Intente más tarde.`,
+            type: 'warning'
+          };
+          this.showNotification = true;
+          if (this.isEuroCourse) {
+            this.eurRateErrorNotified = true;
+          } else {
+            this.usdRateErrorNotified = true;
+          }
+        }
+      }
     }
   }
 
@@ -1490,11 +1528,11 @@ export class PaymentRecord implements OnInit {
 
   private loadExchangeRates(): void {
     this.exchangeRateService.getUsdToCop().subscribe({
-      next: (rate) => this.usdToCop = rate,
+      next: (rate) => { this.usdToCop = rate; this.usdRateErrorNotified = false; this.isExchangeRateError = false; },
       error: () => this.usdToCop = null
     });
     this.exchangeRateService.getEurToCop().subscribe({
-      next: (rate) => this.eurToCop = rate,
+      next: (rate) => { this.eurToCop = rate; this.eurRateErrorNotified = false; this.isExchangeRateError = false; },
       error: () => this.eurToCop = null
     });
     // Intentar actualizar conversión cuando se tengan tasas

@@ -90,4 +90,18 @@ export class CourseCardComponent {
       return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
     });
   }
+
+  // Normaliza flags provenientes de Directus tipo 'TRUE' | boolean | number
+  isTruthyFlag(val: any): boolean {
+    if (typeof val === 'string') {
+      return val.trim().toUpperCase() === 'TRUE';
+    }
+    if (typeof val === 'boolean') {
+      return val === true;
+    }
+    if (typeof val === 'number') {
+      return val === 1;
+    }
+    return false;
+  }
 }
