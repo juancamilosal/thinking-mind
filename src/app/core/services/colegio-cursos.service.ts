@@ -10,6 +10,8 @@ export class ColegioCurso {
   curso_id: number;
   colegio_id: number;
   precio_curso?: number;
+  tiene_precio_especial?: string; // "TRUE" | "FALSE"
+  precio_especial?: number | null;
 }
 
 @Injectable({
