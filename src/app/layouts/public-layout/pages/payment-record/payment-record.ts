@@ -1058,8 +1058,20 @@ export class PaymentRecord implements OnInit {
         return ccSchoolId && ccSchoolId === schoolId;
       });
       if (!match) return null;
-      const raw = match.precio_curso;
-      const num = typeof raw === 'string' ? parseFloat(raw) : Number(raw);
+      // Normalizar flag de precio especial: acepta 'TRUE' | true | 1
+      const hasSpecial = (() => {
+        const val = match?.tiene_precio_especial;
+        if (typeof val === 'string') return val.trim().toUpperCase() === 'TRUE';
+        if (typeof val === 'boolean') return val === true;
+        if (typeof val === 'number') return val === 1;
+        return false;
+      })();
+
+      // Elegir precio según flag; si no aplica o no existe, usar precio_curso
+      const rawSpecial = hasSpecial ? match?.precio_especial : undefined;
+      const rawRegular = match?.precio_curso;
+      const selectedRaw = rawSpecial ?? rawRegular;
+      const num = typeof selectedRaw === 'string' ? parseFloat(selectedRaw) : Number(selectedRaw);
       return isNaN(num) ? null : num;
     } catch {
       return null;
