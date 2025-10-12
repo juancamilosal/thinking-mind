@@ -1,4 +1,4 @@
-import {Component, OnInit, HostListener, ElementRef, ViewChild} from '@angular/core';
+import {Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
@@ -44,6 +44,7 @@ export class PaymentRecord implements OnInit {
   isLoadingCourses = false;
   isLoadingSchools = false;
   isSchoolSelected = false;
+  private schoolSearchDebounce: any; // deprecated, no longer used
   showConfirmation = false;
   isSearchingClient = false;
 
@@ -96,6 +97,7 @@ export class PaymentRecord implements OnInit {
     private paymentService: PaymentService,
     private exchangeRateService: ExchangeRateService,
     private router: Router,
+    private cdRef: ChangeDetectorRef,
   ) {
   }
 
@@ -849,46 +851,79 @@ export class PaymentRecord implements OnInit {
   }
 
 
-  private searchTimeout: any;
-
   onSchoolSearch(event: any): void {
-    const searchTerm = event.target.value;
+    const searchTerm = (event.target.value || '').toString();
     this.paymentForm.get('schoolSearchTerm')?.setValue(searchTerm);
     this.isSchoolSelected = false; // Reset cuando el usuario empieza a escribir
 
     // Limpiar el valor del colegio seleccionado cuando el usuario empieza a escribir
     this.paymentForm.get('studentSchool')?.setValue('');
 
-    // Limpiar el timeout anterior
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
-
-    // Si el término está vacío, limpiar los resultados
-    if (searchTerm.trim() === '') {
+    const trimmed = searchTerm.trim();
+    if (!trimmed || trimmed.length < 2) {
       this.filteredSchools = [];
+      this.isLoadingSchools = false;
+      this.cdRef.detectChanges();
       return;
     }
 
-    // Debounce de 300ms para evitar demasiadas llamadas
-    this.searchTimeout = setTimeout(() => {
-      this.searchSchools(searchTerm);
-    }, 300);
+    // Buscar inmediatamente para evitar demoras por throttling de timers en móviles
+    this.searchSchools(trimmed);
   }
 
   searchSchools(searchTerm: string): void {
     this.isLoadingSchools = true;
-    this.schoolService.searchSchool(searchTerm, 1, 10).subscribe({
+    this.cdRef.detectChanges();
+    this.schoolService.searchSchool(searchTerm, 1, 15).subscribe({
       next: (response) => {
-        this.filteredSchools = response.data;
-        this.isLoadingSchools = false;
+        const data = response.data || [];
+        const normalizedTerm = this.normalize(searchTerm);
+        const accentMatches = data.filter(s => {
+          const name = this.normalize(s.nombre || '');
+          const city = this.normalize(s.ciudad || '');
+          return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+        });
+
+        if (accentMatches.length > 0) {
+          this.filteredSchools = accentMatches.slice(0, 10);
+          this.isLoadingSchools = false;
+          this.cdRef.detectChanges();
+          return;
+        }
+
+        // Fallback: ampliar búsqueda y filtrar localmente sin acentos
+        this.schoolService.getAllSchools(1, 100).subscribe({
+          next: (allResp) => {
+            const all = allResp.data || [];
+            this.filteredSchools = all.filter(s => {
+              const name = this.normalize(s.nombre || '');
+              const city = this.normalize(s.ciudad || '');
+              return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+            }).slice(0, 10);
+            this.isLoadingSchools = false;
+            this.cdRef.detectChanges();
+          },
+          error: () => {
+            this.filteredSchools = [];
+            this.isLoadingSchools = false;
+            this.cdRef.detectChanges();
+          }
+        });
       },
       error: (error) => {
         console.error('Error searching schools:', error);
         this.filteredSchools = [];
         this.isLoadingSchools = false;
+        this.cdRef.detectChanges();
       }
     });
+  }
+
+  private normalize(value: string): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
   }
 
   selectSchool(school: School): void {
@@ -896,6 +931,7 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.get('schoolSearchTerm')?.setValue(school.nombre);
     this.filteredSchools = [];
     this.isSchoolSelected = true;
+    this.cdRef.detectChanges();
     // Al seleccionar colegio, cerrar el teclado del input de búsqueda en móvil
     try {
       const active = document.activeElement as HTMLElement | null;
@@ -929,6 +965,7 @@ export class PaymentRecord implements OnInit {
     this.paymentForm.get('studentSchool')?.setValue('');
     // Al limpiar el colegio, reiniciar también la selección de programa y sus precios
     this.resetCourseSelection();
+    this.cdRef.detectChanges();
   }
 
   onCourseChange(courseId: string): void {

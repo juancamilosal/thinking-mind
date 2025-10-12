@@ -1,4 +1,4 @@
-import {Component, EventEmitter, OnInit, Output, Input, OnChanges, SimpleChanges} from '@angular/core';
+import {Component, EventEmitter, OnInit, Output, Input, OnChanges, SimpleChanges, ChangeDetectorRef} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 
 import {StudentService} from '../../../../../core/services/student.service';
@@ -26,7 +26,10 @@ export class FormStudent implements OnInit, OnChanges {
   @Output() studentUpdated = new EventEmitter();
   studentForm!: FormGroup;
   DOCUMENT_TYPE = DOCUMENT_TYPE;
-  schools: School[] = [];
+  filteredSchools: School[] = [];
+  isSchoolSelected: boolean = false;
+  isLoadingSchools: boolean = false;
+  private searchTimeout: any;
   guardianId: string = '';
   isSubmitting = false; // Nueva propiedad
   isDeleting = false;
@@ -37,13 +40,13 @@ export class FormStudent implements OnInit, OnChanges {
     private clientService: ClientService,
     private schoolService: SchoolService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private cdRef: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
 
     this.initForm();
-    this.loadSchools();
     this.studentForm.get('guardianDocumentType')?.valueChanges.subscribe(() => {
       this.searchGuardianInfo();
     });
@@ -65,7 +68,8 @@ export class FormStudent implements OnInit, OnChanges {
       firstName: [null, [Validators.required, Validators.minLength(2)]],
       lastName: [null, [Validators.required, Validators.minLength(2)]],
       grade: [null, [Validators.required, Validators.minLength(1)]],
-      school: [null, [Validators.required, Validators.minLength(2)]],
+      school: [null, [Validators.required]],
+      schoolSearchTerm: [''],
       guardianDocumentType: ['CC', [Validators.required]],
       guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
       guardianFirstName: [null, [Validators.required, Validators.minLength(2)]],
@@ -77,18 +81,6 @@ export class FormStudent implements OnInit, OnChanges {
     if (changes['studentData'] && this.studentData && this.studentForm) {
       this.loadStudentData();
     }
-  }
-
-  loadSchools(): void {
-    this.schoolService.getAllSchools().subscribe({
-      next: (response) => {
-        this.schools = response.data;
-      },
-      error: (error) => {
-        console.error('Error loading schools:', error);
-        this.notificationService.showError('Error al cargar los colegios');
-      }
-    });
   }
 
   loadStudentData(): void {
@@ -206,6 +198,99 @@ export class FormStudent implements OnInit, OnChanges {
         }
       }
     });
+  }
+
+  // Autocomplete de colegio (búsqueda local con acentos ignorados)
+  onSchoolSearch(event: any): void {
+    const searchTerm = (event.target.value || '').toString();
+    this.studentForm.get('schoolSearchTerm')?.setValue(searchTerm);
+    this.isSchoolSelected = false;
+    // Limpiar el valor de colegio seleccionado mientras escribe
+    this.studentForm.get('school')?.setValue(null);
+
+    const trimmed = searchTerm.trim();
+    if (!trimmed || trimmed.length < 2) {
+      this.filteredSchools = [];
+      this.isLoadingSchools = false;
+      this.cdRef.detectChanges();
+      return;
+    }
+
+    // Buscar inmediatamente para evitar demoras por timers en móviles
+    this.searchSchools(trimmed);
+  }
+
+  private searchSchools(searchTerm: string): void {
+    this.isLoadingSchools = true;
+    this.cdRef.detectChanges();
+    this.schoolService.searchSchool(searchTerm, 1, 15).subscribe({
+      next: (response) => {
+        const data = response.data || [];
+        const normalizedTerm = this.normalize(searchTerm);
+
+        // Filtrar resultados remotos ignorando acentos
+        const accentMatches = data.filter(s => {
+          const name = this.normalize(s.nombre || '');
+          const city = this.normalize(s.ciudad || '');
+          return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+        });
+
+        if (accentMatches.length > 0) {
+          this.filteredSchools = accentMatches.slice(0, 10);
+          this.isLoadingSchools = false;
+          this.cdRef.detectChanges();
+          return;
+        }
+
+        // Fallback: si los resultados remotos no incluyen coincidencias por acentos, hacer una búsqueda amplia local
+        this.schoolService.getAllSchools(1, 100).subscribe({
+          next: (allResp) => {
+            const all = allResp.data || [];
+            this.filteredSchools = all.filter(s => {
+              const name = this.normalize(s.nombre || '');
+              const city = this.normalize(s.ciudad || '');
+              return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+            }).slice(0, 10);
+            this.isLoadingSchools = false;
+            this.cdRef.detectChanges();
+          },
+          error: () => {
+            this.filteredSchools = [];
+            this.isLoadingSchools = false;
+            this.cdRef.detectChanges();
+          }
+        });
+      },
+      error: () => {
+        this.filteredSchools = [];
+        this.isLoadingSchools = false;
+        this.cdRef.detectChanges();
+      }
+    });
+  }
+
+  selectSchool(school: School): void {
+    this.studentForm.get('school')?.setValue(school.id);
+    this.studentForm.get('schoolSearchTerm')?.setValue(school.nombre || '');
+    this.filteredSchools = [];
+    this.isSchoolSelected = true;
+    this.cdRef.detectChanges();
+  }
+
+  clearSchoolSearch(): void {
+    this.studentForm.get('schoolSearchTerm')?.setValue('');
+    this.filteredSchools = [];
+    this.isSchoolSelected = false;
+    this.studentForm.get('school')?.setValue(null);
+    this.cdRef.detectChanges();
+  }
+
+  private normalize(value: string): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   updateStudent() {
