@@ -147,18 +147,58 @@
               }
             </div>
 
-            <!-- Colegio -->
-            <div class="space-y-3">
-              <label for="school" class="block text-sm font-semibold text-green-700">Colegio *</label>
-              <select
-                id="school"
-                formControlName="school"
-                class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-white">
-                <option value="" disabled>Seleccione un colegio</option>
-                @for (school of schools; track school.id) {
-                  <option [value]="school.id">{{ school.nombre }}</option>
+            <!-- Colegio (Autocomplete) -->
+            <div class="space-y-3 md:col-span-2 relative">
+              <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="studentSchool"
+                  formControlName="schoolSearchTerm"
+                  (input)="onSchoolSearch($event)"
+                  placeholder="Buscar colegio..."
+                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                  autocomplete="off">
+                @if (studentForm.get('schoolSearchTerm')?.value) {
+                  <button
+                    type="button"
+                    (click)="clearSchoolSearch()"
+                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
                 }
-              </select>
+              </div>
+
+              <!-- Lista desplegable de resultados -->
+              @if (studentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && filteredSchools.length > 0) {
+                <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  @for (school of filteredSchools; track school.id) {
+                    <div
+                      (click)="selectSchool(school); $event.stopPropagation()"
+                      class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                      <span class="text-green-800">{{ school.nombre }}</span>
+                      @if (school.ciudad) {
+                        <span class="text-gray-500 text-sm ml-2">- {{ school.ciudad }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Mensaje cuando no hay resultados -->
+              @if (studentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && filteredSchools.length === 0) {
+                <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg">
+                  <div class="px-4 py-3 text-gray-500 text-center">
+                    <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Colegio no encontrado
+                  </div>
+                </div>
+              }
+
               @if(studentForm.get('school')?.touched && studentForm.get('school')?.errors?.['required']) {
                 <p class="text-red-500 text-sm mt-2 flex items-center">
                   <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
