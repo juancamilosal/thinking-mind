@@ -58,16 +58,13 @@ export class AccountReceivableService {
       params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
     }
 
-    // Solo cuentas de curso (no inscripción) y que tengan una inscripción asociada
+    // Solo cuentas de curso (no inscripción)
     params['filter[es_inscripcion][_eq]'] = 'FALSE';
-    params['filter[id_inscripcion][_nnull]'] = 'true';
 
-    // Excluir cuentas con saldo = 0
-    params['filter[saldo][_gt]'] = '0';
-
-    // Excluir cuentas con fecha_finalizacion menor a la fecha actual (solo fecha, sin hora)
-    const today = new Date().toISOString().split('T')[0];
-    params['filter[fecha_finalizacion][_gte]'] = today;
+    // Comentamos los filtros restrictivos que estaban excluyendo datos válidos:
+    // params['filter[id_inscripcion][_nnull]'] = 'true'; // Este excluía cuentas con id_inscripcion null
+    // params['filter[saldo][_gt]'] = '0'; // Este excluía cuentas con saldo 0
+    // params['filter[fecha_finalizacion][_gte]'] = today; // Este excluía cuentas vencidas
 
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
     const baseFields = 'id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*';

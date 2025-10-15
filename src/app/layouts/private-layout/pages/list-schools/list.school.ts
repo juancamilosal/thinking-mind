@@ -142,37 +142,66 @@ export class ListSchool implements OnInit {
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
+    console.log('🔍 Procesando cuentas por cobrar:', accounts);
+    console.log('📊 Total de cuentas recibidas:', accounts.length);
+    
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
 
-    accounts.forEach(account => {
+    accounts.forEach((account, index) => {
+      console.log(`📋 Procesando cuenta ${index + 1}:`, account);
+      
       // Verificar que el account tenga la estructura esperada
-      if (account.estudiante_id && typeof account.estudiante_id === 'object') {
-        const student = account.estudiante_id;
+      if (account.estudiante_id) {
+        console.log('👤 Estudiante encontrado:', account.estudiante_id);
+        console.log('🔍 Tipo de estudiante_id:', typeof account.estudiante_id);
+        
+        if (typeof account.estudiante_id === 'object') {
+          const student = account.estudiante_id;
+          console.log('🎓 Datos del estudiante:', student);
 
-        // Verificar que el estudiante tenga colegio_id
-        if (student.colegio_id && typeof student.colegio_id === 'object') {
-          const school = student.colegio_id;
-          const schoolId = school.id;
+          // Verificar que el estudiante tenga colegio_id
+          if (student.colegio_id) {
+            console.log('🏫 Colegio encontrado:', student.colegio_id);
+            console.log('🔍 Tipo de colegio_id:', typeof student.colegio_id);
+            
+            if (typeof student.colegio_id === 'object') {
+              const school = student.colegio_id;
+              const schoolId = school.id;
+              console.log('✅ Procesando colegio:', school.nombre, 'ID:', schoolId);
 
-          if (!schoolsMap.has(schoolId)) {
-            schoolsMap.set(schoolId, {
-              school: school,
-              accountsCount: 0,
-              studentsCount: 0,
-              totalAmount: 0,
-              accounts: []
-            });
+              if (!schoolsMap.has(schoolId)) {
+                schoolsMap.set(schoolId, {
+                  school: school,
+                  accountsCount: 0,
+                  studentsCount: 0,
+                  totalAmount: 0,
+                  accounts: []
+                });
+                console.log('🆕 Nuevo colegio agregado:', school.nombre);
+              }
+
+              const schoolData = schoolsMap.get(schoolId)!;
+              schoolData.accounts.push(account);
+              schoolData.accountsCount++;
+              schoolData.totalAmount += account.monto;
+              console.log('📈 Cuenta agregada al colegio:', school.nombre, 'Total cuentas:', schoolData.accountsCount);
+            } else {
+              console.warn('⚠️ colegio_id no es un objeto:', student.colegio_id);
+            }
+          } else {
+            console.warn('⚠️ Estudiante sin colegio_id:', student);
           }
-
-          const schoolData = schoolsMap.get(schoolId)!;
-          schoolData.accounts.push(account);
-          schoolData.accountsCount++;
-          schoolData.totalAmount += account.monto;
+        } else {
+          console.warn('⚠️ estudiante_id no es un objeto:', account.estudiante_id);
         }
+      } else {
+        console.warn('⚠️ Cuenta sin estudiante_id:', account);
       }
     });
 
+    console.log('🏫 Colegios procesados:', schoolsMap.size);
+    
     // Calcular total de estudiantes incluyendo duplicados (por cada cuenta/curso)
     schoolsMap.forEach((schoolData, schoolId) => {
       // Contar todas las cuentas que tienen estudiante (incluyendo duplicados)
@@ -183,15 +212,19 @@ export class ListSchool implements OnInit {
         }
       });
       schoolData.studentsCount = studentsCount;
+      console.log(`📊 Colegio ${schoolData.school.nombre}: ${studentsCount} estudiantes, ${schoolData.accountsCount} cuentas`);
     });
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
+    console.log('📋 Resultado final - schoolsWithAccounts:', this.schoolsWithAccounts);
 
     // Procesar datos para vista por cursos con las cuentas actuales
     this.processCoursesData(accounts);
 
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    
+    console.log('✅ Procesamiento completado. Total colegios:', this.totalItems);
   }
 
   onSearchInputChange(event: any): void {
