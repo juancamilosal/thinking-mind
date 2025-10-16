@@ -174,7 +174,8 @@ export class PaymentRecord implements OnInit {
       studentDocumentNumber: ['', [Validators.required, Validators.minLength(6), Validators.pattern(/^[0-9]+$/)]],
       studentFirstName: ['', [Validators.required, Validators.minLength(2)]],
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
-      studentGrado: ['', [Validators.required, Validators.minLength(1)]],
+      studentGrado: ['', [Validators.required]],
+      studentGrupo: [''],
       studentSchool: ['', [Validators.required]],
       schoolSearchTerm: [''],
 
@@ -233,6 +234,31 @@ export class PaymentRecord implements OnInit {
   onStudentGradoChange(event: any): void {
     const value = event.target.value.toUpperCase();
     this.paymentForm.get('studentGrado')?.setValue(value, {emitEvent: false});
+  }
+
+  onStudentGrupoChange(event: any): void {
+    // Validar que solo se permita una letra de A-Z
+    const value = event.target.value.toUpperCase();
+    const validLetter = /^[A-Z]?$/.test(value);
+    
+    if (!validLetter) {
+      // Si no es válido, mantener solo la primera letra válida o vacío
+      const lastValidChar = value.match(/[A-Z]/);
+      event.target.value = lastValidChar ? lastValidChar[0] : '';
+      this.paymentForm.get('studentGrupo')?.setValue(event.target.value);
+    } else {
+      this.paymentForm.get('studentGrupo')?.setValue(value);
+    }
+  }
+
+  getCombinedGrado(): string {
+    const grado = this.paymentForm.get('studentGrado')?.value || '';
+    const grupo = this.paymentForm.get('studentGrupo')?.value || '';
+    
+    if (grado && grupo) {
+      return `${grado} ${grupo}`;
+    }
+    return grado;
   }
 
   onGuardianDocumentTypeChange(event: any): void {
@@ -791,6 +817,7 @@ export class PaymentRecord implements OnInit {
       studentFirstName: '',
       studentLastName: '',
       studentGrado: '',
+      studentGrupo: '',
       studentSchool: '',
       selectedCourse: '',
       coursePrice: '',
@@ -1303,7 +1330,7 @@ export class PaymentRecord implements OnInit {
         numero_documento: this.paymentForm.get('studentDocumentNumber')?.value,
         nombre: this.paymentForm.get('studentFirstName')?.value,
         apellido: this.paymentForm.get('studentLastName')?.value,
-        grado: this.paymentForm.get('studentGrado')?.value,
+        grado: this.getCombinedGrado(),
         colegio: this.paymentForm.get('studentSchool')?.value,
       },
       curso_id: selectedCourseId,
