@@ -67,7 +67,7 @@ export class AccountReceivableService {
     // params['filter[fecha_finalizacion][_gte]'] = today; // Este excluía cuentas vencidas
 
     const queryString = Object.keys(params).length > 0 ? '&' + new URLSearchParams(params).toString() : '';
-    const baseFields = 'id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*';
+    const baseFields = 'id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*';
     const url = this.apiUrl + `?fields=${baseFields}` + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
