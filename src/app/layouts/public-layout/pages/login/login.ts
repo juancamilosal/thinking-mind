@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import {Router} from '@angular/router';
 import {LoginService} from '../../../../core/services/login.service';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+import { TokenRefreshService } from '../../../../core/services/token-refresh.service';
 
 @Component({
   selector: 'app-login',
@@ -25,6 +26,7 @@ export class Login implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private loginServices: LoginService,
+    private tokenRefreshService: TokenRefreshService
   ) {}
 
   ngOnInit(): void {
@@ -56,6 +58,8 @@ export class Login implements OnInit {
         this.loginServices.me().subscribe({
           next: (userResponse) => {
             this.isLoading = false;
+            // Iniciar el servicio de renovación automática de tokens después del login exitoso
+            this.tokenRefreshService.startTokenRefreshService();
             this.router.navigateByUrl('/private');
           },
           error: (userError) => {

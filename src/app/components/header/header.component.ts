@@ -3,6 +3,7 @@ import { Component, OnInit, Output, EventEmitter, HostListener, ElementRef } fro
 import { Router } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
+import { TokenRefreshService } from '../../core/services/token-refresh.service';
 
 class CurrentUser {
   email: string;
@@ -23,7 +24,12 @@ export class HeaderComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
   isUserMenuOpen = false;
 
-  constructor(private elementRef: ElementRef, private router: Router, private loginService: LoginService) {}
+  constructor(
+    private elementRef: ElementRef, 
+    private router: Router, 
+    private loginService: LoginService,
+    private tokenRefreshService: TokenRefreshService
+  ) {}
 
   ngOnInit() {
     this.loadUserFromSessionStorage();
@@ -68,6 +74,9 @@ export class HeaderComponent implements OnInit {
   }
 
   logout() {
+    // Detener el servicio de renovación de tokens antes del logout
+    this.tokenRefreshService.stopTokenRefreshService();
+    
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
