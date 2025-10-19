@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { CourseService } from '../../../../core/services/course.service';
+import { PaymentService } from '../../../../core/services/payment.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { School } from '../../../../core/models/School';
 import { Course } from '../../../../core/models/Course';
+import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
 import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
 
@@ -48,6 +50,7 @@ export class Dashboard implements OnInit {
     private schoolService: SchoolService,
     private accountReceivableService: AccountReceivableService,
     private courseService: CourseService,
+    private paymentService: PaymentService,
     private notificationService: NotificationService
   ) {}
 
@@ -90,16 +93,26 @@ export class Dashboard implements OnInit {
   }
 
   private loadAdminData(): void {
+    // Obtener fechas del mes actual
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    
+    const startDate = firstDayOfMonth.toISOString().split('T')[0];
+    const endDate = lastDayOfMonth.toISOString().split('T')[0];
+
     forkJoin({
         courses: this.courseService.searchCourse(),
-        accounts: this.accountReceivableService.searchAccountReceivable()
+        accounts: this.accountReceivableService.searchAccountReceivable(1, 1000), // Aumentar el límite para obtener todas las cuentas
+        monthlyPayments: this.paymentService.getPayments(1, 1000, undefined, startDate, endDate)
       }).subscribe({
-      next: ({ courses, accounts }) => {
+      next: ({ courses, accounts, monthlyPayments }) => {
         this.courses = courses.data;
         this.accounts = accounts.data;
 
         this.calculateCoursesWithStudents();
         this.calculateStats(this.courses, this.accounts);
+        this.calculateMonthlyPayments(monthlyPayments.data || []);
         this.isLoading = false;
       },
       error: (error) => {
@@ -165,7 +178,7 @@ export class Dashboard implements OnInit {
     });
 
     this.stats.totalStudents = uniqueStudentIds.size;
-    this.stats.totalAccountsReceivable = accounts.length;
+    this.stats.totalAccountsReceivable = accounts.filter(account => account.estado === 'PENDIENTE').length;
 
     let totalAmount = 0;
     let totalPaid = 0;
@@ -179,7 +192,11 @@ export class Dashboard implements OnInit {
 
     accounts.forEach(account => {
       const precio = parseFloat(account.monto || account.precio) || 0;
-      totalAmount += precio;
+      
+      // Solo sumar al total por cobrar si el estado es PENDIENTE
+      if (account.estado === 'PENDIENTE') {
+        totalAmount += precio;
+      }
 
       if (account.pagos && Array.isArray(account.pagos)) {
         // Calcular total pagado excluyendo devoluciones
@@ -277,6 +294,19 @@ export class Dashboard implements OnInit {
     this.stats.overdueAmount = overdueAmount;
     this.stats.monthlyPayments = monthlyPayments;
     this.stats.totalPendingAccountsReceivable = totalPendingAccountsReceivable;
+  }
+
+  private calculateMonthlyPayments(payments: PaymentModel[]): void {
+    // Calcular la suma de pagos del mes actual usando solo valor_neto
+    const monthlyTotal = payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((sum, payment) => {
+        const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
+        return sum + valorNeto;
+      }, 0);
+
+    // Actualizar el valor en las estadísticas
+    this.stats.monthlyPayments = monthlyTotal;
   }
 
   formatCurrency(amount: number): string {

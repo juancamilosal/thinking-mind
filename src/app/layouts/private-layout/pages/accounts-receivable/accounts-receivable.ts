@@ -45,7 +45,8 @@ export class AccountsReceivable implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadAccountsPage();
+    // Cargar cuentas pendientes por defecto al inicializar
+    this.loadAccountsByStatus(this.activeTab);
     this.totalAccounts();
     
     // Check for cuentaCobrarId query parameter
@@ -57,8 +58,9 @@ export class AccountsReceivable implements OnInit {
     });
   }
 
+  // Métodos de paginación
   onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
       this.loadAccountsByStatus(this.activeTab);
     }
@@ -438,31 +440,6 @@ export class AccountsReceivable implements OnInit {
       this.currentPage++;
       this.loadAccountsByStatus(this.activeTab);
     }
-  }
-
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    
-    if (this.totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= this.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const halfVisible = Math.floor(maxVisiblePages / 2);
-      let startPage = Math.max(1, this.currentPage - halfVisible);
-      let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-      
-      if (endPage - startPage < maxVisiblePages - 1) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-      }
-      
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-    }
-    
-    return pages;
   }
 
   // Removed duplicate Math = Math; declaration
