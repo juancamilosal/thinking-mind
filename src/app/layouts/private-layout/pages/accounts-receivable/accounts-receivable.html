@@ -20,7 +20,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span>CxC Pendientes ({{ pendingAccounts.length }})</span>
+            <span>CxC Pendientes @if (activeTab === 'pending') { ({{ totalItems }}) }</span>
           </div>
         </button>
         <button (click)="setActiveTab('paid')"
@@ -32,7 +32,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span>CxC Pagadas ({{ paidAccounts.length }})</span>
+            <span>CxC Pagadas @if (activeTab === 'paid') { ({{ totalItems }}) }</span>
           </div>
         </button>
         <button (click)="setActiveTab('refund')"
@@ -44,7 +44,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
             </svg>
-            <span>CxC Devolución ({{ refundAccounts.length }})</span>
+            <span>CxC Devolución @if (activeTab === 'refund') { ({{ totalItems }}) }</span>
           </div>
         </button>
         <button (click)="setActiveTab('zero')"
@@ -56,7 +56,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span>CxC Saldo 0 ({{ zeroBalanceAccounts.length }})</span>
+            <span>CxC Saldo 0 @if (activeTab === 'zero') { ({{ totalItems }}) }</span>
           </div>
         </button>
       </div>

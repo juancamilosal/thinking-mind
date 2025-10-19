@@ -60,7 +60,7 @@ export class AccountsReceivable implements OnInit {
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadAccountsPage();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
 
@@ -68,7 +68,7 @@ export class AccountsReceivable implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.itemsPerPage = parseInt(target.value);
     this.currentPage = 1;
-    this.loadAccountsPage();
+    this.loadAccountsByStatus(this.activeTab);
   }
 
   loadAccountsPage(): void {
@@ -107,25 +107,38 @@ export class AccountsReceivable implements OnInit {
   }
 
   private filterAccountsByStatus(): void {
-    // Filtrar todas las cuentas por estado en el frontend
-    this.pendingAccounts = this.allAccounts.filter(account => account.estado === 'PENDIENTE');
-    this.paidAccounts = this.allAccounts.filter(account => account.estado === 'PAGADA');
-    this.refundAccounts = this.allAccounts.filter(account => account.estado === 'DEVOLUCION');
-    this.zeroBalanceAccounts = this.allAccounts.filter(account => (account.saldo || 0) === 0);
+    this.pendingAccounts = this.allAccounts.filter(account => account.estado === 'pending');
+    this.paidAccounts = this.allAccounts.filter(account => account.estado === 'paid');
+    this.refundAccounts = this.allAccounts.filter(account => account.estado === 'refund');
+    this.zeroBalanceAccounts = this.allAccounts.filter(account => account.saldo === 0);
     
     // Actualizar las cuentas mostradas según la pestaña activa
     this.updateAccountsForActiveTab();
   }
 
   private loadAccountsByTab(tab: 'pending' | 'paid' | 'refund' | 'zero'): void {
-    // Si ya tenemos todas las cuentas cargadas, solo filtrar
-    if (this.allAccounts.length > 0) {
-      this.updateAccountsForActiveTab();
-      this.updatePagination();
-    } else {
-      // Si no tenemos las cuentas cargadas, cargarlas primero
-      this.loadAccountsPage();
-    }
+    // Cargar cuentas filtradas por estado desde el servidor
+    this.loadAccountsByStatus(tab);
+  }
+
+  setActiveTab(tab: 'pending' | 'paid' | 'refund' | 'zero') {
+    this.activeTab = tab;
+    this.currentPage = 1; // Resetear a la primera página
+    this.loadAccountsByTab(tab);
+  }
+
+  totalAccounts = (): void => {
+    this.isLoadingTotals = true;
+    this.accountService.totalAccounts().subscribe({
+      next: (data) => {
+        this.total = data.data;
+        this.isLoadingTotals = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar totales:', error);
+        this.isLoadingTotals = false;
+      }
+    });
   }
 
   private updateAccountsForActiveTab(): void {
@@ -152,20 +165,6 @@ export class AccountsReceivable implements OnInit {
     } else {
       this.accounts = base;
     }
-  }
-
-  totalAccounts = (): void => {
-    this.isLoadingTotals = true;
-    this.accountService.totalAccounts().subscribe({
-      next: (data) => {
-        this.total = data.data;
-        this.isLoadingTotals = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar totales:', error);
-        this.isLoadingTotals = false;
-      }
-    });
   }
 
   openForm() {
@@ -203,24 +202,73 @@ export class AccountsReceivable implements OnInit {
     this.totalAccounts();
   }
 
-  setActiveTab(tab: 'pending' | 'paid' | 'refund' | 'zero') {
-    this.activeTab = tab;
-    this.loadAccountsByTab(tab);
+  private loadAccountsByStatus(status: 'pending' | 'paid' | 'refund' | 'zero'): void {
+    this.isLoading = true;
+    
+    this.accountService.searchAccountReceivableByStatusWithPagination(
+      status,
+      this.currentPage,
+      this.itemsPerPage,
+      this.searchTerm || undefined
+    ).subscribe({
+      next: (response) => {
+        console.log('Response from server:', response);
+        console.log('Data length:', response.data.length);
+        console.log('Meta filter_count:', response.meta?.filter_count);
+        console.log('Current status:', status);
+        
+        this.accounts = response.data;
+        this.totalItems = response.meta?.filter_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        
+        console.log('Calculated totalPages:', this.totalPages);
+        console.log('Current page:', this.currentPage);
+        
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading accounts by status:', error);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onSearchChange(term: string) {
     this.searchTerm = term;
-    // Búsqueda en Directus al escribir (como schools con debounce opcional)
-    this.fetchServerSearch();
+    // Búsqueda en Directus al escribir con el filtro de estado activo
+    this.fetchServerSearchByStatus();
   }
 
   onSearch(): void {
     this.currentPage = 1;
-    this.loadAccountsPage();
+    this.loadAccountsByStatus(this.activeTab);
   }
 
-
-
+  private fetchServerSearchByStatus(): void {
+    this.isLoading = true;
+    this.accountService.searchAccountReceivableByStatusWithPagination(
+      this.activeTab,
+      1,
+      10,
+      this.searchTerm || undefined
+    ).subscribe({
+      next: (response) => {
+        this.accounts = response.data;
+        this.totalItems = response.meta?.filter_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        this.currentPage = 1;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error searching accounts by status:', error);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   getTotalPending(): number {
     // Sumar cuentas pendientes + cuentas con devolución (ya que las devoluciones se suman al pendiente)
@@ -382,21 +430,21 @@ export class AccountsReceivable implements OnInit {
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadAccountsPage();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
-  
+
   previousPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.loadAccountsPage();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
-  
+
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.loadAccountsPage();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
 

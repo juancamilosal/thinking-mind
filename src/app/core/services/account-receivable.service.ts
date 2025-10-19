@@ -43,7 +43,7 @@ export class AccountReceivableService {
     let params: any = {
       page: page.toString(),
       limit: limit.toString(),
-      meta: 'total_count,filter_count'
+      meta: 'filter_count'
     };
 
     // Filtro por término de búsqueda si se proporciona
@@ -113,6 +113,66 @@ export class AccountReceivableService {
 
     const queryString = new URLSearchParams(params).toString();
     const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
+  searchAccountReceivableByStatusWithPagination(
+    status: string, 
+    page: number = 1, 
+    limit: number = 10, 
+    searchTerm?: string, 
+    colegioId?: string
+  ): Observable<ResponseAPI<AccountReceivable[]>> {
+    let params: any = {
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'total_count,filter_count'
+    };
+
+    // Filtro por estado
+    if (status === 'zero') {
+      params['filter[saldo][_eq]'] = '0';
+    } else {
+      // Mapear los estados del frontend a los valores de la base de datos
+      let dbStatus = status;
+      switch (status) {
+        case 'pending':
+          dbStatus = 'PENDIENTE';
+          break;
+        case 'paid':
+          dbStatus = 'PAGADA';
+          break;
+        case 'refund':
+          dbStatus = 'DEVOLUCION';
+          break;
+      }
+      params['filter[estado][_eq]'] = dbStatus;
+    }
+
+    // Filtro por colegio si se proporciona
+    if (colegioId) {
+      params['filter[estudiante_id][colegio_id][_eq]'] = colegioId;
+    }
+
+    // Filtro por término de búsqueda si se proporciona
+    if (searchTerm) {
+      // Búsqueda por cliente (nombre, apellido, documento)
+      params['filter[_or][0][cliente_id][nombre][_icontains]'] = searchTerm;
+      params['filter[_or][1][cliente_id][apellido][_icontains]'] = searchTerm;
+      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = searchTerm;
+      // Búsqueda por estudiante (nombre, apellido)
+      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = searchTerm;
+      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
+    }
+
+    const queryString = new URLSearchParams(params).toString();
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
