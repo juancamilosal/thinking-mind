@@ -252,7 +252,7 @@
                 </td>
               </tr>
               } @else {
-                @for (payment of paginatedPayments; track payment.id) {
+                @for (payment of payments; track payment.id) {
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
@@ -330,7 +330,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                   </svg>
                 </button>
-                @for (page of getPageNumbers(); track page) {
+                @for (page of getPaginationArray(); track page) {
                   <button
                     (click)="onPageChange(page)"
                     [class]="page === currentPage ? 

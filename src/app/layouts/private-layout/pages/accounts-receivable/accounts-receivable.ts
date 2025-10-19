@@ -32,9 +32,10 @@ export class AccountsReceivable implements OnInit {
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
+  totalItems = 0;
   totalPages = 0;
-  itemsPerPageOptions = [5, 10, 25, 50];
-  paginatedAccounts: AccountReceivable[] = [];
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
 
   constructor(
     private accountService: AccountReceivableService,
@@ -44,7 +45,7 @@ export class AccountsReceivable implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadAccounts();
+    this.loadAccountsPage();
     this.totalAccounts();
     
     // Check for cuentaCobrarId query parameter
@@ -56,20 +57,53 @@ export class AccountsReceivable implements OnInit {
     });
   }
 
-  protected loadAccounts(): void {
-    // Cargar todas las cuentas de una sola vez sin filtro de fecha
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadAccountsPage();
+    }
+  }
+
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(target.value);
+    this.currentPage = 1;
+    this.loadAccountsPage();
+  }
+
+  loadAccountsPage(): void {
     this.isLoading = true;
-    this.accountService.getAllAccountsReceivable().subscribe({
+    const serviceCall = this.searchTerm.trim() 
+      ? this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage, this.searchTerm.trim())
+      : this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage);
+
+    serviceCall.subscribe({
       next: (response) => {
-        this.allAccounts = response.data || [];
-        this.filterAccountsByStatus();
+        this.accounts = response.data || [];
+        this.totalItems = response.meta?.total_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.isLoading = false;
-        this.updatePagination();
       },
       error: () => {
         this.isLoading = false;
       }
     });
+  }
+
+  getPaginationArray(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 
   private filterAccountsByStatus(): void {
@@ -90,7 +124,7 @@ export class AccountsReceivable implements OnInit {
       this.updatePagination();
     } else {
       // Si no tenemos las cuentas cargadas, cargarlas primero
-      this.loadAccounts();
+      this.loadAccountsPage();
     }
   }
 
@@ -182,7 +216,7 @@ export class AccountsReceivable implements OnInit {
 
   onSearch(): void {
     this.currentPage = 1;
-    this.fetchServerSearch();
+    this.loadAccountsPage();
   }
 
 
@@ -221,7 +255,7 @@ export class AccountsReceivable implements OnInit {
 
   private fetchServerSearch(): void {
     this.isLoading = true;
-    this.accountService.getAllAccountsReceivable(this.searchTerm).subscribe({
+    this.accountService.getAllAccountsReceivable(1, 10, this.searchTerm).subscribe({
       next: (response) => {
         // Reemplazar allAccounts con resultados del servidor para reflejar búsqueda
         this.allAccounts = response.data || [];
@@ -290,7 +324,7 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
-    this.loadAccounts();
+    this.loadAccountsPage();
     this.totalAccounts();
     this.cdr.detectChanges();
   }
@@ -314,7 +348,7 @@ export class AccountsReceivable implements OnInit {
       
       this.cdr.detectChanges();
     } else {
-      this.loadAccounts();
+      this.loadAccountsPage();
       setTimeout(() => {
         if (this.selectedAccount) {
           const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
@@ -341,36 +375,31 @@ export class AccountsReceivable implements OnInit {
   updatePaginatedAccounts() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedAccounts = this.accounts.slice(startIndex, endIndex);
+    // Fixed: Changed paginatedAccounts to accounts since we're using server-side pagination
+    // this.paginatedAccounts = this.accounts.slice(startIndex, endIndex);
   }
   
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.updatePaginatedAccounts();
+      this.loadAccountsPage();
     }
   }
   
   previousPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.updatePaginatedAccounts();
+      this.loadAccountsPage();
     }
   }
   
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.updatePaginatedAccounts();
+      this.loadAccountsPage();
     }
   }
-  
-  onItemsPerPageChange(event: any) {
-    this.itemsPerPage = parseInt(event.target.value);
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-  
+
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
@@ -395,9 +424,8 @@ export class AccountsReceivable implements OnInit {
     
     return pages;
   }
-  
-  // Utility method for Math functions in template
-  Math = Math;
+
+  // Removed duplicate Math = Math; declaration
 
   private matchesSearch(account: AccountReceivable, term: string): boolean {
     const t = term || '';

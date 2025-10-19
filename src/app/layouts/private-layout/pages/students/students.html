@@ -92,7 +92,7 @@
                 </td>
               </tr>
             } @else {
-              @for(student of paginatedStudents; track student.numero_documento) {
+              @for(student of students; track student.numero_documento) {
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ student.nombre }} {{ student.apellido }}</div>
@@ -152,7 +152,7 @@
             @if (totalPages > 1) {
               <div class="flex justify-between items-center">
                 <button 
-                  (click)="previousPage()" 
+                  (click)="onPageChange(currentPage - 1)" 
                   [disabled]="currentPage === 1"
                   class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +161,7 @@
                   Anterior
                 </button>
                 <button 
-                  (click)="nextPage()" 
+                  (click)="onPageChange(currentPage + 1)" 
                   [disabled]="currentPage === totalPages"
                   class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
                   Siguiente
@@ -178,9 +178,9 @@
                 Mostrando 
                 <span class="font-semibold text-blue-600">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
                 a 
-                <span class="font-semibold text-blue-600">{{ Math.min(currentPage * itemsPerPage, students.length) }}</span>
+                <span class="font-semibold text-blue-600">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
                 de 
-                <span class="font-semibold text-blue-600">{{ students.length }}</span>
+                <span class="font-semibold text-blue-600">{{ totalItems }}</span>
                 estudiantes
               </div>
             </div>
@@ -209,9 +209,9 @@
                   Mostrando 
                   <span class="font-semibold text-blue-600">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
                   a 
-                  <span class="font-semibold text-blue-600">{{ Math.min(currentPage * itemsPerPage, students.length) }}</span>
+                  <span class="font-semibold text-blue-600">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
                   de 
-                  <span class="font-semibold text-blue-600">{{ students.length }}</span>
+                  <span class="font-semibold text-blue-600">{{ totalItems }}</span>
                   estudiantes
                 </div>
               </div>
@@ -235,7 +235,7 @@
               <!-- Page Navigation -->
               <div class="flex items-center space-x-2">
                 <button 
-                  (click)="previousPage()" 
+                  (click)="onPageChange(currentPage - 1)" 
                   [disabled]="currentPage === 1"
                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,9 +245,9 @@
                 </button>
                 
                 <div class="flex items-center space-x-1">
-                  @for (page of getPageNumbers(); track page) {
+                  @for (page of getPaginationArray(); track page) {
                     <button 
-                      (click)="goToPage(page)"
+                      (click)="onPageChange(page)"
                       [class]="page === currentPage ? 
                         'px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md transform scale-105' : 
                         'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md'">
@@ -257,7 +257,7 @@
                 </div>
                 
                 <button 
-                  (click)="nextPage()" 
+                  (click)="onPageChange(currentPage + 1)" 
                   [disabled]="currentPage === totalPages"
                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
                   Siguiente
@@ -308,7 +308,7 @@
           [editMode]="editMode"
           [studentData]="selectedStudent"
           (goBack)="toggleForm()"
-          (searchStudent)="searchStudent()"
+          (searchStudent)="loadStudentsPage()"
           (studentUpdated)="onStudentUpdated()"/>
       </div>
     </div>

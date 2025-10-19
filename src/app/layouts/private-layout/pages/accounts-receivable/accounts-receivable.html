@@ -221,7 +221,7 @@
                   </td>
                 </tr>
               } @else {
-                @for (account of paginatedAccounts; track account.id) {
+                @for (account of accounts; track account.id) {
                   <tr class="hover:bg-gray-50 cursor-pointer" (click)="viewDetail(account)">
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm font-medium text-gray-900">{{ account.clientName }}</div>

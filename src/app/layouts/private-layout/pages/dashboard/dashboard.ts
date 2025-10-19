@@ -77,7 +77,7 @@ export class Dashboard implements OnInit {
   }
 
   private loadRectorData(): void {
-    this.accountReceivableService.searchAccountReceivable(undefined, this.userColegioId!).subscribe({
+    this.accountReceivableService.searchAccountReceivable(1, 10, undefined, this.userColegioId!).subscribe({
       next: (accounts) => {
         this.accounts = accounts.data; // Ya vienen filtradas por colegio desde el servicio
         this.calculateRectorStats(accounts.data);

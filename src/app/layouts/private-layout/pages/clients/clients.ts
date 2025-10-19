@@ -26,9 +26,10 @@ export class Clients implements OnInit {
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
-  totalPages = 1;
-  paginatedClients: Client[] = [];
-  itemsPerPageOptions = [10, 25, 50, 100];
+  totalItems = 0;
+  totalPages = 0;
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
   
   constructor(
     private fb: FormBuilder, 
@@ -37,47 +38,45 @@ export class Clients implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.searchClient();
+    this.loadClientsPage();
   }
 
-  // Pagination methods
-  updatePagination(): void {
-    this.totalPages = Math.ceil(this.clients.length / this.itemsPerPage);
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = 1;
-    }
-    this.updatePaginatedClients();
-  }
-
-  updatePaginatedClients(): void {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedClients = this.clients.slice(startIndex, endIndex);
-  }
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
+  // Métodos de paginación
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
-      this.updatePaginatedClients();
+      this.loadClientsPage();
     }
-  }
-
-  previousPage(): void {
-    this.goToPage(this.currentPage - 1);
-  }
-
-  nextPage(): void {
-    this.goToPage(this.currentPage + 1);
   }
 
   onItemsPerPageChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     this.itemsPerPage = parseInt(target.value);
     this.currentPage = 1;
-    this.updatePagination();
+    this.loadClientsPage();
   }
 
-  getPageNumbers(): number[] {
+  loadClientsPage(): void {
+    this.isLoading = true;
+    const searchMethod = this.searchTerm.trim() ? 
+      this.clientServices.searchClient(this.searchTerm, this.currentPage, this.itemsPerPage) :
+      this.clientServices.getAllClients(this.currentPage, this.itemsPerPage);
+    
+    searchMethod.subscribe({
+      next: (response) => {
+        this.clients = response.data;
+        this.totalItems = response.meta?.filter_count || response.data.length;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar los clientes:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  getPaginationArray(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
@@ -93,45 +92,28 @@ export class Clients implements OnInit {
     return pages;
   }
 
-  toggleForm() {
-    this.showForm = !this.showForm;
-    this.editMode = false;
-    this.selectedClient = null;
-  }
-
-  searchClient(searchTerm?: string) {
-    this.isLoading = true;
-    this.clientServices.searchClient(searchTerm).subscribe({
-      next: (data) => {
-        this.clients = data.data;
-        this.currentPage = 1;
-        this.updatePagination();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading clients:', error);
-        this.isLoading = false;
-      }
-    });
+  searchClient() {
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 1;
+      this.loadClientsPage();
+    }, 300);
   }
 
   onSearch() {
-    this.searchClient(this.searchTerm.trim() || undefined);
+    this.searchClient();
   }
 
   onSearchInputChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.searchTerm = target.value;
-    
-    // Limpiar timeout anterior
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
-    
-    // Establecer nuevo timeout para búsqueda automática
-    this.searchTimeout = setTimeout(() => {
-      this.searchClient(this.searchTerm.trim() || undefined);
-    }, 500); // 500ms de delay
+    this.searchClient();
+  }
+
+  toggleForm() {
+    this.showForm = !this.showForm;
+    this.editMode = false;
+    this.selectedClient = null;
   }
 
   viewClient(client: Client) {
@@ -152,7 +134,7 @@ export class Clients implements OnInit {
   }
 
   onClientUpdated() {
-    this.searchClient();
+    this.loadClientsPage();
     this.toggleForm();
   }
 
@@ -163,7 +145,5 @@ export class Clients implements OnInit {
       minimumFractionDigits: 0
     }).format(amount);
   }
-  
-  // Utility method for Math functions in template
-  Math = Math;
+
 }

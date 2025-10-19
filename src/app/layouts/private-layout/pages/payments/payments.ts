@@ -17,7 +17,6 @@ import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/pa
 })
 export class Payments implements OnInit, OnDestroy {
   payments: PaymentModel[] = [];
-  filteredPayments: PaymentModel[] = [];
   searchTerm: string = '';
   isLoading: boolean = false;
   selectedPayment: PaymentModel | null = null;
@@ -27,12 +26,11 @@ export class Payments implements OnInit, OnDestroy {
   startDate: string = '';
   endDate: string = '';
 
-  // Propiedades de paginación
+  // Propiedades de paginación Directus
   currentPage = 1;
   itemsPerPage = 10;
   totalItems = 0;
   totalPages = 0;
-  paginatedPayments: PaymentModel[] = [];
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
 
@@ -56,7 +54,7 @@ export class Payments implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.loadPayments();
+    this.loadPaymentsPage();
     this.loadWompiTariffs();
   }
 
@@ -144,14 +142,19 @@ export class Payments implements OnInit, OnDestroy {
     });
   }
 
-  loadPayments(searchTerm?: string): void {
+  loadPaymentsPage(): void {
     this.isLoading = true;
-    this.paymentService.getPayments(searchTerm, this.startDate, this.endDate).subscribe({
+    this.paymentService.getPayments(
+      this.currentPage,
+      this.itemsPerPage,
+      this.searchTerm.trim() || undefined,
+      this.startDate || undefined,
+      this.endDate || undefined
+    ).subscribe({
       next: (response: ResponseAPI<PaymentModel[]>) => {
         this.payments = response.data || [];
-        this.filteredPayments = [...this.payments];
-        this.totalItems = this.filteredPayments.length;
-        this.updatePagination();
+        this.totalItems = response.meta?.total_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -161,6 +164,37 @@ export class Payments implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      this.loadPaymentsPage();
+    }
+  }
+
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(target.value);
+    this.currentPage = 1;
+    this.loadPaymentsPage();
+  }
+
+  getPaginationArray(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   }
 
   onSearchInputChange(event: any) {
@@ -175,7 +209,8 @@ export class Payments implements OnInit, OnDestroy {
   }
 
   onSearch() {
-    this.performSearch();
+    this.currentPage = 1;
+    this.loadPaymentsPage();
   }
 
   private searchTimeout: any;
@@ -184,7 +219,8 @@ export class Payments implements OnInit, OnDestroy {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    this.loadPayments(this.searchTerm.trim() || undefined);
+    this.currentPage = 1;
+    this.loadPaymentsPage();
   }
 
   // Método para mostrar el detalle del pago
@@ -234,58 +270,17 @@ export class Payments implements OnInit, OnDestroy {
     }
   }
 
-  // Métodos de paginación
-  updatePagination(): void {
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    this.updatePaginatedPayments();
-  }
-
-  updatePaginatedPayments(): void {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedPayments = this.filteredPayments.slice(startIndex, endIndex);
-  }
-
-  onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      this.currentPage = page;
-      this.updatePaginatedPayments();
-    }
-  }
-
-  onItemsPerPageChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.itemsPerPage = parseInt(target.value);
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-
-  getPaginationArray(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  }
-
   // Métodos para filtros de fecha
   onDateFilterChange(): void {
-    this.loadPayments(this.searchTerm.trim() || undefined);
+    this.currentPage = 1;
+    this.loadPaymentsPage();
   }
 
   clearDateFilters(): void {
     this.startDate = '';
     this.endDate = '';
-    this.loadPayments(this.searchTerm.trim() || undefined);
+    this.currentPage = 1;
+    this.loadPaymentsPage();
   }
 
   formatPaymentMethod(method: string): string {
