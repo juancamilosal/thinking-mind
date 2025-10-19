@@ -16,16 +16,29 @@ export class ClientService {
   constructor(private http: HttpClient) {
   }
 
-  searchClient(searchTerm?: string): Observable<ResponseAPI<Client[]>> {
+  getAllClients(page: number = 1, limit: number = 15): Observable<ResponseAPI<Client[]>> {
+    const params = {
+      fields: '*,estudiantes.*,estudiantes.colegio_id.*',
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'total_count,filter_count'
+    };
+    return this.http.get<ResponseAPI<Client[]>>(this.apiCliente, { params });
+  }
+
+  searchClient(searchTerm?: string, page: number = 1, limit: number = 15): Observable<ResponseAPI<Client[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<Client[]>>(this.apiCliente + '?fields=*,estudiantes.*,estudiantes.colegio_id.*');
+      return this.getAllClients(page, limit);
     }
 
-    const params = {
+    const params: any = {
+      fields: '*,estudiantes.*,estudiantes.colegio_id.*',
       'filter[_or][0][nombre][_icontains]': searchTerm,
       'filter[_or][1][apellido][_icontains]': searchTerm,
       'filter[_or][2][numero_documento][_icontains]': searchTerm,
-      'fields': '*,estudiantes.*'
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'total_count,filter_count'
     };
 
     return this.http.get<ResponseAPI<Client[]>>(this.apiCliente, { params });

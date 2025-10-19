@@ -126,7 +126,7 @@ export class ListSchool implements OnInit {
   }
 
   private loadAccountsForSchool(schoolId: string): void {
-    this.accountReceivableService.searchAccountReceivable('', schoolId).subscribe({
+    this.accountReceivableService.searchAccountReceivable(1, 10, '', schoolId).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -254,7 +254,7 @@ export class ListSchool implements OnInit {
       }
     } else {
       // Para otros usuarios, buscar en todas las cuentas por cobrar
-      this.accountReceivableService.searchAccountReceivable(this.searchTerm).subscribe({
+      this.accountReceivableService.searchAccountReceivable(1, 10, this.searchTerm).subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
           this.isLoading = false;

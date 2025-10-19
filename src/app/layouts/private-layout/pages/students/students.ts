@@ -24,54 +24,90 @@ export class Students implements OnInit {
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
+  totalItems = 0;
   totalPages = 0;
-  itemsPerPageOptions = [5, 10, 25, 50];
-  paginatedStudents: Student[] = [];
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
   private searchTimeout: any;
   
   constructor(private fb: FormBuilder, private studentService: StudentService) {
   }
 
   ngOnInit(): void {
-    this.searchStudent();
+    this.loadStudentsPage();
   }
 
-  toggleForm() {
-    this.showForm = !this.showForm;
+  // Métodos de paginación
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      this.loadStudentsPage();
+    }
   }
 
-  searchStudent(searchTerm?: string) {
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(target.value);
+    this.currentPage = 1;
+    this.loadStudentsPage();
+  }
+
+  loadStudentsPage(): void {
     this.isLoading = true;
-    this.studentService.searchStudent(searchTerm).subscribe({
-      next: (data) => {
-        this.students = data.data;
-        this.updatePagination();
+    const searchMethod = this.searchTerm.trim() ? 
+      this.studentService.searchStudent(this.searchTerm, this.currentPage, this.itemsPerPage) :
+      this.studentService.getAllStudents(this.currentPage, this.itemsPerPage);
+    
+    searchMethod.subscribe({
+      next: (response) => {
+        this.students = response.data;
+        this.totalItems = response.meta?.filter_count || response.data.length;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading students:', error);
+        console.error('Error al cargar los estudiantes:', error);
         this.isLoading = false;
       }
     });
   }
 
+  getPaginationArray(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  searchStudent() {
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 1;
+      this.loadStudentsPage();
+    }, 300);
+  }
+
   onSearch() {
-    this.searchStudent(this.searchTerm.trim() || undefined);
+    this.searchStudent();
   }
 
   onSearchInputChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.searchTerm = target.value;
-    
-    // Limpiar timeout anterior
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
-    
-    // Establecer nuevo timeout para búsqueda automática
-    this.searchTimeout = setTimeout(() => {
-      this.searchStudent(this.searchTerm.trim() || undefined);
-    }, 500); // 500ms de delay
+    this.searchStudent();
+  }
+
+  toggleForm() {
+    this.showForm = !this.showForm;
   }
 
   viewStudent(student: Student) {
@@ -96,76 +132,6 @@ export class Students implements OnInit {
     this.showForm = false;
     this.editMode = false;
     this.selectedStudent = null;
-    this.searchStudent();
+    this.loadStudentsPage();
   }
-  
-  // Pagination methods
-  updatePagination() {
-    this.totalPages = Math.ceil(this.students.length / this.itemsPerPage);
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this.currentPage = this.totalPages;
-    }
-    this.updatePaginatedStudents();
-  }
-  
-  updatePaginatedStudents() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedStudents = this.students.slice(startIndex, endIndex);
-  }
-  
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.updatePaginatedStudents();
-    }
-  }
-  
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.updatePaginatedStudents();
-    }
-  }
-  
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.updatePaginatedStudents();
-    }
-  }
-  
-  onItemsPerPageChange(event: any) {
-    this.itemsPerPage = parseInt(event.target.value);
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-  
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    
-    if (this.totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= this.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const halfVisible = Math.floor(maxVisiblePages / 2);
-      let startPage = Math.max(1, this.currentPage - halfVisible);
-      let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-      
-      if (endPage - startPage < maxVisiblePages - 1) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-      }
-      
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-    }
-    
-    return pages;
-  }
-  
-  // Utility method for Math functions in template
-  Math = Math;
 }

@@ -5,6 +5,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginService } from '../services/login.service';
 import { StorageServices } from '../services/storage.services';
+import { TokenRefreshService } from '../services/token-refresh.service';
 
 // Variables globales para el estado del refresh
 let isRefreshing = false;
@@ -13,6 +14,7 @@ let refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 export const AuthInterceptor: HttpInterceptorFn = (request: HttpRequest<any>, next: HttpHandlerFn): Observable<HttpEvent<any>> => {
   const router = inject(Router);
   const loginService = inject(LoginService);
+  const tokenRefreshService = inject(TokenRefreshService);
   
   // No interceptar las peticiones de login y refresh
   if (shouldSkipInterceptor(request)) {
@@ -28,7 +30,7 @@ export const AuthInterceptor: HttpInterceptorFn = (request: HttpRequest<any>, ne
   return next(request).pipe(
      catchError((error: HttpErrorResponse) => {
        if (error.status === 401) {
-         return handle401Error(request, next, router, loginService);
+         return handle401Error(request, next, router, loginService, tokenRefreshService);
        }
        return throwError(() => error);
      })
@@ -48,7 +50,7 @@ function addTokenToRequest(request: HttpRequest<any>, token: string): HttpReques
   });
 }
 
-function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: Router, loginService: LoginService): Observable<HttpEvent<any>> {
+function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: Router, loginService: LoginService, tokenRefreshService: TokenRefreshService): Observable<HttpEvent<any>> {
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
@@ -62,6 +64,8 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
             StorageServices.setAccessToken(newAccessToken);
             // Notificar a todas las peticiones en espera que el token está listo
             refreshTokenSubject.next(newAccessToken);
+            // Reprogramar la renovación automática con el nuevo token
+            tokenRefreshService.startTokenRefreshService();
             // Reintentar la petición original con el nuevo token
             const retryRequest = addTokenToRequest(request, newAccessToken);
             // Resetear el estado después de un pequeño delay para permitir que otras peticiones se procesen
@@ -71,16 +75,16 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
             return next(retryRequest);
           }
           isRefreshing = false;
-          return redirectToLogin(router);
+          return redirectToLogin(router, tokenRefreshService);
         }),
         catchError((error) => {
           isRefreshing = false;
           refreshTokenSubject.next(null);
-          return redirectToLogin(router);
+          return redirectToLogin(router, tokenRefreshService);
         })
       );
     } else {
-       return redirectToLogin(router);
+       return redirectToLogin(router, tokenRefreshService);
      }
   } else {
     // Si ya se está refrescando el token, esperar a que termine
@@ -96,8 +100,10 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
   }
 }
 
-function redirectToLogin(router: Router): Observable<never> {
+function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshService): Observable<never> {
   isRefreshing = false;
+  // Detener el servicio de renovación de tokens
+  tokenRefreshService.stopTokenRefreshService();
   // Limpiar tokens usando StorageServices
   StorageServices.clearTokens();
   router.navigate(['/login']);

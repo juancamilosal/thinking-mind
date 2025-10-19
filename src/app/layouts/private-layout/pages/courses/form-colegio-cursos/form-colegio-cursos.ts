@@ -181,6 +181,11 @@ export class ColegioCursosComponent implements OnInit {
         ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
         : null;
 
+      // Obtener la fecha actual sin hora (solo fecha)
+      const fechaCreacion = new Date();
+      fechaCreacion.setHours(0, 0, 0, 0); // Establecer hora a 00:00:00
+      const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
       const formData = {
         fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
@@ -189,7 +194,9 @@ export class ColegioCursosComponent implements OnInit {
         precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
         // Nuevo: precio especial para Directus
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
-        precio_especial: precioEspecialValor
+        precio_especial: precioEspecialValor,
+        // Nueva fecha de creación
+        fecha_creacion: fechaCreacionISO
       };
       // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({

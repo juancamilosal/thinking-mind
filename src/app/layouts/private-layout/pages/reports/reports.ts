@@ -33,7 +33,6 @@ export class Reports {
   itemsPerPage = 10;
   totalItems = 0;
   totalPages = 0;
-  paginatedPayments: PaymentModel[] = [];
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
 
@@ -47,8 +46,6 @@ export class Reports {
 
   ngOnInit(): void {
     this.initForm();
-    // Inicializar paginación
-    this.updatePagination();
   }
 
   initForm=(): void => {
@@ -101,12 +98,16 @@ export class Reports {
 
   // Generar reporte de pagos
   private generatePaymentsReport(startDate?: string, endDate?: string): void {
-    // Usar el servicio con filtros de Directus
-    this.paymentService.getPayments(undefined, startDate, endDate).subscribe({
-      next: (data) => {
-        this.payments = data.data;
-        this.totalItems = this.payments.length;
-        this.updatePagination();
+    this.loadPaymentsPage(startDate, endDate);
+  }
+
+  private loadPaymentsPage(startDate?: string, endDate?: string): void {
+    // Usar el servicio con filtros de Directus y paginación
+    this.paymentService.getPayments(this.currentPage, this.itemsPerPage, undefined, startDate, endDate).subscribe({
+      next: (response) => {
+        this.payments = response.data;
+        this.totalItems = response.meta?.filter_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -124,32 +125,27 @@ export class Reports {
         }
         this.payments = [];
         this.totalItems = 0;
-        this.updatePagination();
+        this.totalPages = 0;
       }
     });
   }
 
-  updatePagination(): void {
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedPayments = this.payments.slice(startIndex, endIndex);
-  }
+
 
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.updatePagination();
+      this.loadPaymentsPage();
     }
   }
 
   onItemsPerPageChange(event: any): void {
     this.itemsPerPage = parseInt(event.target.value);
     this.currentPage = 1;
-    this.updatePagination();
+    this.loadPaymentsPage();
   }
 
-  getPageNumbers(): number[] {
+  getPaginationArray(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
@@ -279,7 +275,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     this.currentPage = 1;
     this.totalItems = 0;
     this.totalPages = 0;
-    this.paginatedPayments = [];
   }
 
   navigateToPresupuesto(): void {

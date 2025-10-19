@@ -175,6 +175,7 @@ export class PaymentRecord implements OnInit {
       studentFirstName: ['', [Validators.required, Validators.minLength(2)]],
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
       studentGrado: ['', [Validators.required]],
+      grupoType: ['', [Validators.required]],
       studentGrupo: [''],
       studentSchool: ['', [Validators.required]],
       schoolSearchTerm: [''],
@@ -237,17 +238,39 @@ export class PaymentRecord implements OnInit {
   }
 
   onStudentGrupoChange(event: any): void {
-    // Validar que solo se permita una letra de A-Z
-    const value = event.target.value.toUpperCase();
-    const validLetter = /^[A-Z]?$/.test(value);
+    const grupoType = this.paymentForm.get('grupoType')?.value;
     
-    if (!validLetter) {
-      // Si no es válido, mantener solo la primera letra válida o vacío
-      const lastValidChar = value.match(/[A-Z]/);
-      event.target.value = lastValidChar ? lastValidChar[0] : '';
+    if (grupoType === 'letra') {
+      // Validar que solo se permita una letra de A-Z
+      const value = event.target.value.toUpperCase();
+      const validLetter = /^[A-Z]?$/.test(value);
+      
+      if (!validLetter) {
+        // Si no es válido, mantener solo la primera letra válida o vacío
+        const lastValidChar = value.match(/[A-Z]/);
+        event.target.value = lastValidChar ? lastValidChar[0] : '';
+        this.paymentForm.get('studentGrupo')?.setValue(event.target.value);
+      } else {
+        this.paymentForm.get('studentGrupo')?.setValue(value);
+      }
+    } else if (grupoType === 'numero') {
+      // Para números, el valor se maneja en el select
       this.paymentForm.get('studentGrupo')?.setValue(event.target.value);
+    }
+  }
+
+  onGrupoTypeChange(event: any): void {
+    const grupoType = event.target.value;
+    this.paymentForm.get('grupoType')?.setValue(grupoType);
+    
+    // Limpiar el campo grupo cuando cambie el tipo
+    this.paymentForm.get('studentGrupo')?.setValue('');
+    
+    // Si es "No aplica", deshabilitar el campo grupo
+    if (grupoType === 'no-aplica') {
+      this.paymentForm.get('studentGrupo')?.disable();
     } else {
-      this.paymentForm.get('studentGrupo')?.setValue(value);
+      this.paymentForm.get('studentGrupo')?.enable();
     }
   }
 
@@ -817,6 +840,7 @@ export class PaymentRecord implements OnInit {
       studentFirstName: '',
       studentLastName: '',
       studentGrado: '',
+      grupoType: '',
       studentGrupo: '',
       studentSchool: '',
       selectedCourse: '',

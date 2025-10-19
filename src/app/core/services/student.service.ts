@@ -16,19 +16,31 @@ export class StudentService {
   constructor(private http: HttpClient) {
   }
 
-  searchStudent(searchTerm?: string): Observable<ResponseAPI<Student[]>> {
-    const baseUrl = this.apiStudent + '?fields=*,acudiente.*,colegio_id.*';
+  getAllStudents(page: number = 1, limit: number = 15): Observable<ResponseAPI<Student[]>> {
+    const params = {
+      fields: '*,acudiente.*,colegio_id.*',
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'total_count,filter_count'
+    };
+    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+  }
 
+  searchStudent(searchTerm?: string, page: number = 1, limit: number = 15): Observable<ResponseAPI<Student[]>> {
     if (!searchTerm) {
-      return this.http.get<ResponseAPI<Student[]>>(baseUrl);
+      return this.getAllStudents(page, limit);
     }
 
-    const params = {
+    const params: any = {
+      fields: '*,acudiente.*,colegio_id.*',
       'filter[_or][0][nombre][_icontains]': searchTerm,
       'filter[_or][1][apellido][_icontains]': searchTerm,
-      'filter[_or][2][numero_documento][_icontains]': searchTerm
+      'filter[_or][2][numero_documento][_icontains]': searchTerm,
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'total_count,filter_count'
     };
-    return this.http.get<ResponseAPI<Student[]>>(baseUrl, { params });
+    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
   }
 
   searchStudentByDocument(documentType: string, documentNumber: string): Observable<ResponseAPI<Student[]>> {

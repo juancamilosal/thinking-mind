@@ -32,6 +32,9 @@ export class CourseCardComponent {
   @Output() editColegioCurso = new EventEmitter<any>();
   @Output() deleteColegioCurso = new EventEmitter<any>();
 
+  // Nueva propiedad para controlar el modal
+  showColegiosModal = false;
+
   onImageError(event: any) {
     // Si hay error al cargar la imagen, ocultar el elemento img
     event.target.style.display = 'none';
@@ -57,6 +60,16 @@ export class CourseCardComponent {
 
   onDeleteColegioCurso(colegioCurso: any) {
     this.deleteColegioCurso.emit(colegioCurso);
+  }
+
+  // Método para abrir el modal
+  openColegiosModal() {
+    this.showColegiosModal = true;
+  }
+
+  // Método para cerrar el modal
+  closeColegiosModal() {
+    this.showColegiosModal = false;
   }
 
   // Lista de colegios visibles ordenados alfabéticamente por nombre
@@ -91,16 +104,26 @@ export class CourseCardComponent {
     });
   }
 
+  // Método para obtener solo los primeros 2 colegios
+  get displayedColegios(): any[] {
+    return this.visibleSortedColegiosCursos.slice(0, 2);
+  }
+
+  // Método para verificar si hay más de 2 colegios
+  get hasMoreColegios(): boolean {
+    return this.visibleSortedColegiosCursos.length > 2;
+  }
+
   // Normaliza flags provenientes de Directus tipo 'TRUE' | boolean | number
-  isTruthyFlag(val: any): boolean {
-    if (typeof val === 'string') {
-      return val.trim().toUpperCase() === 'TRUE';
+  isTruthyFlag(value: any): boolean {
+    if (typeof value === 'string') {
+      return value.trim().toUpperCase() === 'TRUE';
     }
-    if (typeof val === 'boolean') {
-      return val === true;
+    if (typeof value === 'boolean') {
+      return value === true;
     }
-    if (typeof val === 'number') {
-      return val === 1;
+    if (typeof value === 'number') {
+      return value === 1;
     }
     return false;
   }

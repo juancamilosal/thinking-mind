@@ -32,9 +32,10 @@ export class AccountsReceivable implements OnInit {
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
+  totalItems = 0;
   totalPages = 0;
-  itemsPerPageOptions = [5, 10, 25, 50];
-  paginatedAccounts: AccountReceivable[] = [];
+  itemsPerPageOptions = [5, 10, 15, 20, 50];
+  Math = Math; // Para usar Math.min en el template
 
   constructor(
     private accountService: AccountReceivableService,
@@ -44,7 +45,8 @@ export class AccountsReceivable implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadAccounts();
+    // Cargar cuentas pendientes por defecto al inicializar
+    this.loadAccountsByStatus(this.activeTab);
     this.totalAccounts();
     
     // Check for cuentaCobrarId query parameter
@@ -56,15 +58,33 @@ export class AccountsReceivable implements OnInit {
     });
   }
 
-  protected loadAccounts(): void {
-    // Cargar todas las cuentas de una sola vez sin filtro de fecha
+  // Métodos de paginación
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.currentPage = page;
+      this.loadAccountsByStatus(this.activeTab);
+    }
+  }
+
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.itemsPerPage = parseInt(target.value);
+    this.currentPage = 1;
+    this.loadAccountsByStatus(this.activeTab);
+  }
+
+  loadAccountsPage(): void {
     this.isLoading = true;
-    this.accountService.getAllAccountsReceivable().subscribe({
+    const serviceCall = this.searchTerm.trim() 
+      ? this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage, this.searchTerm.trim())
+      : this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage);
+
+    serviceCall.subscribe({
       next: (response) => {
-        this.allAccounts = response.data || [];
-        this.filterAccountsByStatus();
+        this.accounts = response.data || [];
+        this.totalItems = response.meta?.total_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.isLoading = false;
-        this.updatePagination();
       },
       error: () => {
         this.isLoading = false;
@@ -72,26 +92,55 @@ export class AccountsReceivable implements OnInit {
     });
   }
 
+  getPaginationArray(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
   private filterAccountsByStatus(): void {
-    // Filtrar todas las cuentas por estado en el frontend
-    this.pendingAccounts = this.allAccounts.filter(account => account.estado === 'PENDIENTE');
-    this.paidAccounts = this.allAccounts.filter(account => account.estado === 'PAGADA');
-    this.refundAccounts = this.allAccounts.filter(account => account.estado === 'DEVOLUCION');
-    this.zeroBalanceAccounts = this.allAccounts.filter(account => (account.saldo || 0) === 0);
+    this.pendingAccounts = this.allAccounts.filter(account => account.estado === 'pending');
+    this.paidAccounts = this.allAccounts.filter(account => account.estado === 'paid');
+    this.refundAccounts = this.allAccounts.filter(account => account.estado === 'refund');
+    this.zeroBalanceAccounts = this.allAccounts.filter(account => account.saldo === 0);
     
     // Actualizar las cuentas mostradas según la pestaña activa
     this.updateAccountsForActiveTab();
   }
 
   private loadAccountsByTab(tab: 'pending' | 'paid' | 'refund' | 'zero'): void {
-    // Si ya tenemos todas las cuentas cargadas, solo filtrar
-    if (this.allAccounts.length > 0) {
-      this.updateAccountsForActiveTab();
-      this.updatePagination();
-    } else {
-      // Si no tenemos las cuentas cargadas, cargarlas primero
-      this.loadAccounts();
-    }
+    // Cargar cuentas filtradas por estado desde el servidor
+    this.loadAccountsByStatus(tab);
+  }
+
+  setActiveTab(tab: 'pending' | 'paid' | 'refund' | 'zero') {
+    this.activeTab = tab;
+    this.currentPage = 1; // Resetear a la primera página
+    this.loadAccountsByTab(tab);
+  }
+
+  totalAccounts = (): void => {
+    this.isLoadingTotals = true;
+    this.accountService.totalAccounts().subscribe({
+      next: (data) => {
+        this.total = data.data;
+        this.isLoadingTotals = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar totales:', error);
+        this.isLoadingTotals = false;
+      }
+    });
   }
 
   private updateAccountsForActiveTab(): void {
@@ -118,20 +167,6 @@ export class AccountsReceivable implements OnInit {
     } else {
       this.accounts = base;
     }
-  }
-
-  totalAccounts = (): void => {
-    this.isLoadingTotals = true;
-    this.accountService.totalAccounts().subscribe({
-      next: (data) => {
-        this.total = data.data;
-        this.isLoadingTotals = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar totales:', error);
-        this.isLoadingTotals = false;
-      }
-    });
   }
 
   openForm() {
@@ -169,24 +204,65 @@ export class AccountsReceivable implements OnInit {
     this.totalAccounts();
   }
 
-  setActiveTab(tab: 'pending' | 'paid' | 'refund' | 'zero') {
-    this.activeTab = tab;
-    this.loadAccountsByTab(tab);
+  private loadAccountsByStatus(status: 'pending' | 'paid' | 'refund' | 'zero'): void {
+    this.isLoading = true;
+    
+    this.accountService.searchAccountReceivableByStatusWithPagination(
+      status,
+      this.currentPage,
+      this.itemsPerPage,
+      this.searchTerm || undefined
+    ).subscribe({
+      next: (response) => {
+        this.accounts = response.data;
+        this.totalItems = response.meta?.filter_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading accounts by status:', error);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onSearchChange(term: string) {
     this.searchTerm = term;
-    // Búsqueda en Directus al escribir (como schools con debounce opcional)
-    this.fetchServerSearch();
+    // Búsqueda en Directus al escribir con el filtro de estado activo
+    this.fetchServerSearchByStatus();
   }
 
   onSearch(): void {
     this.currentPage = 1;
-    this.fetchServerSearch();
+    this.loadAccountsByStatus(this.activeTab);
   }
 
-
-
+  private fetchServerSearchByStatus(): void {
+    this.isLoading = true;
+    this.accountService.searchAccountReceivableByStatusWithPagination(
+      this.activeTab,
+      1,
+      10,
+      this.searchTerm || undefined
+    ).subscribe({
+      next: (response) => {
+        this.accounts = response.data;
+        this.totalItems = response.meta?.filter_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        this.currentPage = 1;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error searching accounts by status:', error);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   getTotalPending(): number {
     // Sumar cuentas pendientes + cuentas con devolución (ya que las devoluciones se suman al pendiente)
@@ -221,7 +297,7 @@ export class AccountsReceivable implements OnInit {
 
   private fetchServerSearch(): void {
     this.isLoading = true;
-    this.accountService.getAllAccountsReceivable(this.searchTerm).subscribe({
+    this.accountService.getAllAccountsReceivable(1, 10, this.searchTerm).subscribe({
       next: (response) => {
         // Reemplazar allAccounts con resultados del servidor para reflejar búsqueda
         this.allAccounts = response.data || [];
@@ -290,7 +366,7 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
-    this.loadAccounts();
+    this.loadAccountsPage();
     this.totalAccounts();
     this.cdr.detectChanges();
   }
@@ -314,7 +390,7 @@ export class AccountsReceivable implements OnInit {
       
       this.cdr.detectChanges();
     } else {
-      this.loadAccounts();
+      this.loadAccountsPage();
       setTimeout(() => {
         if (this.selectedAccount) {
           const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
@@ -341,63 +417,32 @@ export class AccountsReceivable implements OnInit {
   updatePaginatedAccounts() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedAccounts = this.accounts.slice(startIndex, endIndex);
+    // Fixed: Changed paginatedAccounts to accounts since we're using server-side pagination
+    // this.paginatedAccounts = this.accounts.slice(startIndex, endIndex);
   }
   
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.updatePaginatedAccounts();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
-  
+
   previousPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.updatePaginatedAccounts();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
-  
+
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.updatePaginatedAccounts();
+      this.loadAccountsByStatus(this.activeTab);
     }
   }
-  
-  onItemsPerPageChange(event: any) {
-    this.itemsPerPage = parseInt(event.target.value);
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-  
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    
-    if (this.totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= this.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const halfVisible = Math.floor(maxVisiblePages / 2);
-      let startPage = Math.max(1, this.currentPage - halfVisible);
-      let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-      
-      if (endPage - startPage < maxVisiblePages - 1) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-      }
-      
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-    }
-    
-    return pages;
-  }
-  
-  // Utility method for Math functions in template
-  Math = Math;
+
+  // Removed duplicate Math = Math; declaration
 
   private matchesSearch(account: AccountReceivable, term: string): boolean {
     const t = term || '';

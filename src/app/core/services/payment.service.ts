@@ -14,8 +14,12 @@ export class PaymentService {
 
   constructor(private http: HttpClient) {}
 
-  getPayments(searchTerm?: string, startDate?: string, endDate?: string): Observable<ResponseAPI<PaymentModel[]>> {
-    let params: any = {};
+  getPayments(page: number = 1, limit: number = 10, searchTerm?: string, startDate?: string, endDate?: string): Observable<ResponseAPI<PaymentModel[]>> {
+    let params: any = {
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'total_count,filter_count'
+    };
 
     // Filtro por término de búsqueda
     if (searchTerm && searchTerm.trim()) {
