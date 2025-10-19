@@ -212,17 +212,9 @@ export class AccountsReceivable implements OnInit {
       this.searchTerm || undefined
     ).subscribe({
       next: (response) => {
-        console.log('Response from server:', response);
-        console.log('Data length:', response.data.length);
-        console.log('Meta filter_count:', response.meta?.filter_count);
-        console.log('Current status:', status);
-        
         this.accounts = response.data;
         this.totalItems = response.meta?.filter_count || 0;
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        
-        console.log('Calculated totalPages:', this.totalPages);
-        console.log('Current page:', this.currentPage);
         
         this.isLoading = false;
         this.cdr.detectChanges();
