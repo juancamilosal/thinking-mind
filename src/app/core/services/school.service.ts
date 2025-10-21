@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {ResponseAPI} from '../models/ResponseAPI';
-import {School} from '../models/School';
+import {Grupo, School} from '../models/School';
 import {environment} from '../../../environments/environment';
 
 @Injectable({
@@ -11,7 +11,7 @@ import {environment} from '../../../environments/environment';
 
 export class SchoolService {
   apiSchool: string = environment.schools;
-  apiStudentSchool: string = environment.list_student_school;
+  list_group: string = environment.list_group;
   constructor(private http: HttpClient) {
   }
 
@@ -55,5 +55,9 @@ export class SchoolService {
 
   getSchoolById(id: string): Observable<ResponseAPI<School>> {
     return this.http.get<ResponseAPI<School>>(`${this.apiSchool}/${id}?fields=*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,estudiante_id.acudiente.cuentas_cobrar.curso_id.*,estudiante_id.curso_id.*`);
+  }
+
+  getGroup(): Observable<ResponseAPI<Grupo[]>> {
+    return this.http.get<ResponseAPI<Grupo[]>>(this.list_group);
   }
 }

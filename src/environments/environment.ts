@@ -32,6 +32,7 @@ export const environment = {
   getBudget: apiUrl + 'flows/trigger/7a82a287-639b-42e3-a382-8f5e01d754ad',
   payment_wompi: apiUrl + 'flows/trigger/0ba476c9-3c23-486f-8b79-f3f7fceab4e4',
   return: apiUrl + 'flows/trigger/bcb42dd5-5119-4c09-96c6-cbed0e6e106f',
+  list_group: apiUrl + 'flows/trigger/cc098cc1-5ab6-46c4-8d83-59e76dfdd7a0',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
 
   // Configuración de tasas de cambio

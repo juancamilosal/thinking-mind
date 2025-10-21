@@ -11,3 +11,8 @@ export class School {
   estudiante_id?: Student[];
   colegios_cursos?: any[]; // Array de colegios_cursos asignados al colegio
 }
+
+export class Grupo {
+  id: string;
+  grupo: string
+}

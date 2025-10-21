@@ -21,6 +21,7 @@ import {
 import {PaymentService} from '../../../../core/services/payment.service';
 import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
+import {Grupo} from '../../../../core/models/School';
 import {environment} from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
 
@@ -40,6 +41,7 @@ export class PaymentRecord implements OnInit {
   courses: Course[] = [];
   schools: School[] = [];
   filteredSchools: School[] = [];
+  grado: Grupo[] = []; // Nueva propiedad para los grupos
 
   isLoadingCourses = false;
   isLoadingSchools = false;
@@ -105,6 +107,7 @@ export class PaymentRecord implements OnInit {
     this.initForm();
     this.loadCourses();
     this.loadExchangeRates();
+    this.loadGrupos(); // Cargar los grupos del servicio
   }
 
   // Al enfocar el input de colegio en mobile, desplazar la pantalla para que quede al inicio
@@ -118,11 +121,11 @@ export class PaymentRecord implements OnInit {
         if (!el) return;
         const offset = 16; // margen superior para que no quede pegado al borde
         const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
-        window.scrollTo({ top, behavior: 'smooth' });
+        window.scrollTo({top, behavior: 'smooth'});
       }, 150);
     } catch (e) {
       // Fallback simple
-      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({behavior: 'smooth', block: 'start'});
     }
   }
 
@@ -175,8 +178,7 @@ export class PaymentRecord implements OnInit {
       studentFirstName: ['', [Validators.required, Validators.minLength(2)]],
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
       studentGrado: ['', [Validators.required]],
-      grupoType: ['', [Validators.required]],
-      studentGrupo: [''],
+      studentGrupo: ['', [Validators.required]],
       studentSchool: ['', [Validators.required]],
       schoolSearchTerm: [''],
 
@@ -238,46 +240,14 @@ export class PaymentRecord implements OnInit {
   }
 
   onStudentGrupoChange(event: any): void {
-    const grupoType = this.paymentForm.get('grupoType')?.value;
-    
-    if (grupoType === 'letra') {
-      // Validar que solo se permita una letra de A-Z
-      const value = event.target.value.toUpperCase();
-      const validLetter = /^[A-Z]?$/.test(value);
-      
-      if (!validLetter) {
-        // Si no es válido, mantener solo la primera letra válida o vacío
-        const lastValidChar = value.match(/[A-Z]/);
-        event.target.value = lastValidChar ? lastValidChar[0] : '';
-        this.paymentForm.get('studentGrupo')?.setValue(event.target.value);
-      } else {
-        this.paymentForm.get('studentGrupo')?.setValue(value);
-      }
-    } else if (grupoType === 'numero') {
-      // Para números, el valor se maneja en el select
-      this.paymentForm.get('studentGrupo')?.setValue(event.target.value);
-    }
-  }
-
-  onGrupoTypeChange(event: any): void {
-    const grupoType = event.target.value;
-    this.paymentForm.get('grupoType')?.setValue(grupoType);
-    
-    // Limpiar el campo grupo cuando cambie el tipo
-    this.paymentForm.get('studentGrupo')?.setValue('');
-    
-    // Si es "No aplica", deshabilitar el campo grupo
-    if (grupoType === 'no-aplica') {
-      this.paymentForm.get('studentGrupo')?.disable();
-    } else {
-      this.paymentForm.get('studentGrupo')?.enable();
-    }
+    // Simplemente actualizar el valor del formulario
+    this.paymentForm.get('studentGrupo')?.setValue(event.target.value);
   }
 
   getCombinedGrado(): string {
     const grado = this.paymentForm.get('studentGrado')?.value || '';
     const grupo = this.paymentForm.get('studentGrupo')?.value || '';
-    
+
     if (grado && grupo) {
       return `${grado} ${grupo}`;
     }
@@ -420,7 +390,7 @@ export class PaymentRecord implements OnInit {
             this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
             this.paymentForm.get('studentSchool')?.setValue(student.colegio); // Establecer el ID en el campo requerido
             // NO establecer isSchoolSelected = true para permitir cambios
-        }
+          }
         },
         error: (error) => {
           console.error('❌ Error loading school name from colegio field:', error);
@@ -444,6 +414,7 @@ export class PaymentRecord implements OnInit {
       studentFirstName: '',
       studentLastName: '',
       studentGrado: '',
+      studentGrupo: '',
       studentSchool: '',
       schoolSearchTerm: ''
     });
@@ -747,14 +718,14 @@ export class PaymentRecord implements OnInit {
             <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
           </div>
           ${(() => {
-            const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-            return inscription && inscription > 0 ? `
+      const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
+      return inscription && inscription > 0 ? `
               <div class="info-item">
                 <span class="info-label">Precio de Inscripción:</span>
                 <span class="info-value">$${inscription.toLocaleString('es-CO')}</span>
               </div>
             ` : '';
-          })()}
+    })()}
               <div class="info-item">
                 <span class="info-label">Total Abonado:</span>
                 <span class="info-value">${this.selectedAccountData.balance}</span>
@@ -791,14 +762,14 @@ export class PaymentRecord implements OnInit {
               <div class="summary-value total-course">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || '0'}</div>
             </div>
             ${(() => {
-              const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-              return inscription && inscription > 0 ? `
+      const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
+      return inscription && inscription > 0 ? `
                 <div class="summary-item">
                   <div class="summary-label">Inscripción</div>
                   <div class="summary-value">$${inscription.toLocaleString('es-CO')}</div>
                 </div>
               ` : '';
-            })()}
+    })()}
             <div class="summary-item">
               <div class="summary-label">Total Pagado</div>
               <div class="summary-value total-paid">$${totalPaid.toLocaleString('es-CO')}</div>
@@ -840,7 +811,6 @@ export class PaymentRecord implements OnInit {
       studentFirstName: '',
       studentLastName: '',
       studentGrado: '',
-      grupoType: '',
       studentGrupo: '',
       studentSchool: '',
       selectedCourse: '',
@@ -886,7 +856,7 @@ export class PaymentRecord implements OnInit {
             a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
           );
           this.courses.forEach((course, index) => {
-           if (course.colegios_cursos && course.colegios_cursos.length > 0) {
+            if (course.colegios_cursos && course.colegios_cursos.length > 0) {
               course.colegios_cursos.forEach((cc, ccIndex) => {
               });
             }
@@ -999,7 +969,7 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         const price = this.computeCoursePrice(selectedCourse);
         if (price !== null) {
-          this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
+          this.paymentForm.patchValue({coursePrice: this.formatCurrency(price)});
         } else {
           // Si no existe precio para el colegio, notificar y reiniciar programa
           this.showCourseSchoolNotFoundNotification();
@@ -1090,7 +1060,7 @@ export class PaymentRecord implements OnInit {
         const formattedPrice = priceAsNumber !== null ? this.formatCurrency(priceAsNumber) : '';
         // Manejo del precio de inscripción si aplica
         const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
-      const inscriptionNumber: number = typeof inscriptionRaw === 'string'
+        const inscriptionNumber: number = typeof inscriptionRaw === 'string'
           ? parseFloat(inscriptionRaw)
           : Number(inscriptionRaw || 0);
 
@@ -1191,10 +1161,10 @@ export class PaymentRecord implements OnInit {
     if (!selectedCourse) return;
     const price = this.computeCoursePrice(selectedCourse);
     if (price !== null) {
-      this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
+      this.paymentForm.patchValue({coursePrice: this.formatCurrency(price)});
     } else {
       // Solo limpiar precio si no existe para el colegio; la notificación se muestra al seleccionar programa
-      this.paymentForm.patchValue({ coursePrice: '' });
+      this.paymentForm.patchValue({coursePrice: ''});
     }
   }
 
@@ -1616,14 +1586,53 @@ export class PaymentRecord implements OnInit {
 
   private loadExchangeRates(): void {
     this.exchangeRateService.getUsdToCop().subscribe({
-      next: (rate) => { this.usdToCop = rate; this.usdRateErrorNotified = false; this.isExchangeRateError = false; },
+      next: (rate) => {
+        this.usdToCop = rate;
+        this.usdRateErrorNotified = false;
+        this.isExchangeRateError = false;
+      },
       error: () => this.usdToCop = null
     });
     this.exchangeRateService.getEurToCop().subscribe({
-      next: (rate) => { this.eurToCop = rate; this.eurRateErrorNotified = false; this.isExchangeRateError = false; },
+      next: (rate) => {
+        this.eurToCop = rate;
+        this.eurRateErrorNotified = false;
+        this.isExchangeRateError = false;
+      },
       error: () => this.eurToCop = null
     });
     // Intentar actualizar conversión cuando se tengan tasas
     setTimeout(() => this.updateInscriptionConversion(), 0);
+  }
+
+  private loadGrupos(): void {
+    this.schoolService.getGroup().subscribe(data => {
+      this.grado = data.data;
+      // Ordenar primero alfabéticamente, luego numéricamente
+      this.grado.sort((a, b) => {
+        const grupoA = a.grupo.toString();
+        const grupoB = b.grupo.toString();
+
+        // Verificar si son números
+        const isNumberA = !isNaN(Number(grupoA));
+        const isNumberB = !isNaN(Number(grupoB));
+
+        // Si ambos son letras, ordenar alfabéticamente
+        if (!isNumberA && !isNumberB) {
+          return grupoA.localeCompare(grupoB);
+        }
+
+        // Si uno es letra y otro número, las letras van primero
+        if (!isNumberA && isNumberB) {
+          return -1;
+        }
+        if (isNumberA && !isNumberB) {
+          return 1;
+        }
+
+        // Si ambos son números, ordenar numéricamente
+        return Number(grupoA) - Number(grupoB);
+      });
+    });
   }
 }
