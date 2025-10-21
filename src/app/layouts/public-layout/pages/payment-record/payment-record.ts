@@ -453,7 +453,7 @@ export class PaymentRecord implements OnInit {
           coursePrice: this.formatCurrency(coursePriceNumber), // Precio del curso
           coursePriceNumber: coursePriceNumber, // Valor numérico del precio
           courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
-          courseInscriptionCurrency: ((cuenta.curso_id?.nombre || '').toUpperCase() === '12F' || (cuenta.curso_id?.codigo || '').toUpperCase() === '12F') ? 'EUR' : 'USD',
+          courseInscriptionCurrency: cuenta.curso_id?.moneda || null,
           balance: this.formatCurrency(totalPaidNumber), // Total abonado
           balanceNumber: totalPaidNumber, // Valor numérico del total abonado
           pendingBalance: this.formatCurrency(pendingBalanceNumber), // Saldo pendiente
@@ -1064,10 +1064,9 @@ export class PaymentRecord implements OnInit {
           ? parseFloat(inscriptionRaw)
           : Number(inscriptionRaw || 0);
 
-        // Determinar si el curso usa EUR (12F) o USD (resto)
-        const courseName = (selectedCourse.nombre || '').trim().toUpperCase();
-        const courseCode = (selectedCourse.codigo || '').trim().toUpperCase();
-        this.isEuroCourse = courseName === '12F' || courseCode === '12F';
+        // Determinar si el curso usa EUR o USD basándose en el atributo moneda del curso
+        const courseCurrency = selectedCourse.moneda; // Puede ser 'USD', 'EUR' o null/undefined
+        this.isEuroCourse = courseCurrency === 'EUR';
 
         // Formatear inscripción para mostrar código de moneda en vez del símbolo COP
         const inscriptionFormatted = inscriptionNumber > 0
