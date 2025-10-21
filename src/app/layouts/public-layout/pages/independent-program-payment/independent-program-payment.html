@@ -159,6 +159,7 @@
                     pattern="[0-9]*"
                     inputmode="numeric"
                     autocomplete="off"
+                    (input)="onlyNumbers($event)"
                     (blur)="onGuardianDocumentNumberChange($event)"
                     class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
                   @if (isSearchingClient) {
@@ -209,6 +210,7 @@
                   type="text"
                   id="guardianFirstName"
                   formControlName="guardianFirstName"
+                  (input)="onGuardianFirstNameChange($event)"
                   placeholder="Ingrese el nombre"
                   class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
                 @if (paymentForm.get('guardianFirstName')?.touched && paymentForm.get('guardianFirstName')?.errors?.['required']) {
@@ -240,6 +242,7 @@
                   type="text"
                   id="guardianLastName"
                   formControlName="guardianLastName"
+                  (input)="onGuardianLastNameChange($event)"
                   placeholder="Ingrese el apellido"
                   class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
                 @if (paymentForm.get('guardianLastName')?.touched && paymentForm.get('guardianLastName')?.errors?.['required']) {
@@ -272,6 +275,9 @@
                   id="guardianPhoneNumber"
                   formControlName="guardianPhoneNumber"
                   placeholder="Ingrese el número de celular"
+                  pattern="[0-9]*"
+                  inputmode="numeric"
+                  (input)="onlyNumbers($event)"
                   class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
                 @if (paymentForm.get('guardianPhoneNumber')?.touched && paymentForm.get('guardianPhoneNumber')?.errors?.['required']) {
                   <p class="text-red-500 text-sm mt-2 flex items-center">
@@ -511,6 +517,7 @@
                   pattern="[0-9]*"
                   inputmode="numeric"
                   autocomplete="off"
+                  (input)="onlyNumbers($event)"
                   (blur)="onStudentDocumentNumberChange($event)"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                 @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['required']) {
@@ -552,6 +559,7 @@
                   type="text"
                   id="studentFirstName"
                   formControlName="studentFirstName"
+                  (input)="onStudentFirstNameChange($event)"
                   placeholder="Ingrese el nombre"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                 @if (paymentForm.get('studentFirstName')?.touched && paymentForm.get('studentFirstName')?.errors?.['required']) {
@@ -583,6 +591,7 @@
                   type="text"
                   id="studentLastName"
                   formControlName="studentLastName"
+                  (input)="onStudentLastNameChange($event)"
                   placeholder="Ingrese el apellido"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                 @if (paymentForm.get('studentLastName')?.touched && paymentForm.get('studentLastName')?.errors?.['required']) {
@@ -647,7 +656,7 @@
                   formControlName="studentGrupo"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                   <option value="">Seleccione un grupo</option>
-                  <option value="">No Aplica</option>
+                  <option value="null">No Aplica</option>
                   @for (grupo of grado; track grupo.id) {
                     <option [value]="grupo.grupo">{{ grupo.grupo }}</option>
                   }

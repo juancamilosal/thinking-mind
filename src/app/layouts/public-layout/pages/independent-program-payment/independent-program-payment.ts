@@ -90,16 +90,16 @@ export class IndependentProgramPayment implements OnInit {
   // Exchange rate properties
   exchangeRates: any = {};
   selectedCourseConvertedCop = 0;
-  
+
   // Exchange rates (consumidas sin mostrar)
   usdToCop: number | null = null;
   eurToCop: number | null = null;
-  
+
   // Flags para control de visibilidad y moneda de tasa de cambio
   hasInscription: boolean = false;
   isEuroCourse: boolean = false;
   selectedInscriptionAmount: number = 0;
-  
+
   // Flags para evitar notificar repetidamente por falla de tasa de cambio
   eurRateErrorNotified: boolean = false;
   usdRateErrorNotified: boolean = false;
@@ -262,13 +262,11 @@ export class IndependentProgramPayment implements OnInit {
         courseInscriptionPrice: inscriptionPrice
       });
 
-      // Determinar si es curso EUR (12F) o USD
-      const courseName = (selectedCourse.nombre || '').toUpperCase().trim();
-      const courseCode = (selectedCourse.codigo || '').toUpperCase().trim();
-      const courseSku = (selectedCourse.sku || '').toUpperCase();
-      
-      // El curso 12F es en EUR, identificado por nombre, código o SKU que contenga "12F"
-      this.isEuroCourse = courseName.includes('12F') || courseCode.includes('12F') || courseSku.includes('12F');
+      // Determinar si es curso EUR o USD basándose en el atributo moneda del curso
+      const courseCurrency = selectedCourse.moneda; // Puede ser 'USD', 'EUR' o null/undefined
+
+      // Usar el atributo moneda del curso directamente, por defecto USD si es null
+      this.isEuroCourse = courseCurrency === 'EUR';
 
       // Actualizar banderas para mostrar tasa de cambio
       this.hasInscription = inscriptionPrice > 0;
@@ -297,7 +295,7 @@ export class IndependentProgramPayment implements OnInit {
 
     // Usar la tasa correspondiente según el tipo de curso (EUR o USD)
     const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
-    
+
     if (rate) {
       this.selectedCourseConvertedCop = Math.round(coursePriceNumber * rate);
       this.selectedInscriptionConvertedCop = Math.round(inscriptionPrice * rate);
@@ -374,8 +372,8 @@ export class IndependentProgramPayment implements OnInit {
             studentFirstName: student.nombre || '',
             studentLastName: student.apellido || '',
             studentGrado: student.grado || '',
-            studentGrupo: '', // Removido student.grupo ya que no existe en el modelo
-            studentSchool: student.colegio_id || ''
+            studentGrupo: '',
+
           });
         }
       },
@@ -399,6 +397,45 @@ export class IndependentProgramPayment implements OnInit {
     });
   }
 
+  // Métodos para capitalización automática de nombres
+  onGuardianFirstNameChange(event: any): void {
+    const value = this.capitalizeText(event.target.value);
+    this.paymentForm.get('guardianFirstName')?.setValue(value, {emitEvent: false});
+  }
+
+  onGuardianLastNameChange(event: any): void {
+    const value = this.capitalizeText(event.target.value);
+    this.paymentForm.get('guardianLastName')?.setValue(value, {emitEvent: false});
+  }
+
+  onStudentFirstNameChange(event: any): void {
+    const value = this.capitalizeText(event.target.value);
+    this.paymentForm.get('studentFirstName')?.setValue(value, {emitEvent: false});
+  }
+
+  onStudentLastNameChange(event: any): void {
+    const capitalizedValue = this.capitalizeText(event.target.value);
+    this.paymentForm.patchValue({ studentLastName: capitalizedValue });
+  }
+
+  onlyNumbers(event: any): void {
+    const input = event.target;
+    const value = input.value;
+    // Remover cualquier carácter que no sea número
+    const numbersOnly = value.replace(/[^0-9]/g, '');
+    input.value = numbersOnly;
+    // Actualizar el valor del formulario
+    this.paymentForm.patchValue({ [input.getAttribute('formControlName')]: numbersOnly });
+  }
+
+  private capitalizeText(text: string): string {
+    if (!text) return '';
+    return text.toLowerCase().split(' ').map(word => {
+      if (word.length === 0) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+  }
+
   goBackToForm(): void {
     this.showConfirmation = false;
   }
@@ -420,8 +457,8 @@ export class IndependentProgramPayment implements OnInit {
 
     // Obtener el precio del curso como número
     const coursePriceRaw: any = selectedCourse?.precio;
-    const coursePriceNumber: number = typeof coursePriceRaw === 'string' 
-      ? parseFloat(coursePriceRaw) 
+    const coursePriceNumber: number = typeof coursePriceRaw === 'string'
+      ? parseFloat(coursePriceRaw)
       : Number(coursePriceRaw || 0);
 
     // Obtener el precio de inscripción del curso (si aplica) como número
@@ -491,7 +528,7 @@ export class IndependentProgramPayment implements OnInit {
       },
       error: (error) => {
         console.error('Error creating account receivable:', error);
-        
+
         // Verificar si el error contiene un mensaje específico del servidor
         let errorMessage = 'Error al crear el registro del programa independiente';
         if (error?.error?.message) {
@@ -502,7 +539,7 @@ export class IndependentProgramPayment implements OnInit {
             errorMessage = error.error.message;
           }
         }
-        
+
         this.showNotificationMessage('Error', errorMessage, 'error');
         this.isSubmitting = false;
       }
@@ -513,8 +550,8 @@ export class IndependentProgramPayment implements OnInit {
     const grado = this.paymentForm.get('studentGrado')?.value || '';
     const grupo = this.paymentForm.get('studentGrupo')?.value || '';
 
-    // Si grupo está vacío (No Aplica), solo devolver el grado
-    if (grado && grupo && grupo.trim() !== '') {
+    // Si grupo está vacío, es "null" o es "No Aplica", solo devolver el grado
+    if (grado && grupo && grupo.trim() !== '' && grupo !== 'null') {
       return `${grado} ${grupo}`;
     }
     return grado;
@@ -526,7 +563,7 @@ export class IndependentProgramPayment implements OnInit {
     if (errorMessage && (errorMessage.includes('programa') && errorMessage.includes('colegio'))) {
       filteredMessage = 'Error al procesar la solicitud. Intente nuevamente.';
     }
-    
+
     this.notificationData = {
       type: 'error',
       title: 'Error del servidor',
@@ -634,7 +671,7 @@ export class IndependentProgramPayment implements OnInit {
           coursePrice: this.formatCurrency(coursePriceNumber), // Precio del curso
           coursePriceNumber: coursePriceNumber, // Valor numérico del precio
           courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
-          courseInscriptionCurrency: ((cuenta.curso_id?.nombre || '').toUpperCase() === '12F' || (cuenta.curso_id?.codigo || '').toUpperCase() === '12F') ? 'EUR' : 'USD',
+          courseInscriptionCurrency: cuenta.curso_id?.moneda || null,
           balance: this.formatCurrency(totalPaidNumber), // Total abonado
           balanceNumber: totalPaidNumber, // Valor numérico del total abonado
           pendingBalance: this.formatCurrency(pendingBalanceNumber), // Saldo pendiente
@@ -670,7 +707,7 @@ export class IndependentProgramPayment implements OnInit {
     const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) => cuenta.id === courseData.id);
     if (account) {
       let hasPendingInscription = false;
-      
+
       // Caso 1: la inscripción viene expandida en id_inscripcion
       if (account.id_inscripcion && typeof account.id_inscripcion === 'object') {
         hasPendingInscription = (account.id_inscripcion.estado === 'PENDIENTE');
@@ -718,7 +755,7 @@ export class IndependentProgramPayment implements OnInit {
 
   onViewPayments(courseData: any): void {
     this.selectedCourseForPayments = courseData;
-    
+
     const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) =>
       cuenta.id === courseData.id
     );
@@ -795,7 +832,7 @@ export class IndependentProgramPayment implements OnInit {
   private initializeWompiPayment(): void {
     const reference = this.generatePaymentReference(this.paymentModalData.accountId);
     const amountInCents = Math.round(this.editablePaymentAmount * 100);
-    
+
     // Configuración de Wompi
     const wompiConfig = environment.wompi;
     const publicKey = wompiConfig.testMode ? wompiConfig.test.publicKey : wompiConfig.prod.publicKey;
@@ -872,7 +909,7 @@ export class IndependentProgramPayment implements OnInit {
   // Método para manejar pago exitoso
   private handleSuccessfulPayment(result: any, reference: string): void {
     console.log('Pago exitoso:', result);
-    
+
     // Redirigir a la página de estado de pago con los parámetros
     this.router.navigate(['/payment-status'], {
       queryParams: {
