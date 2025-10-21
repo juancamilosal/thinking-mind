@@ -757,7 +757,7 @@ export class IndependentProgramPayment implements OnInit {
   }
 
   private initializeWompiPayment(): void {
-    const reference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const reference = this.generatePaymentReference(this.paymentModalData.accountId);
     const amountInCents = Math.round(this.editablePaymentAmount * 100);
     
     // Configuración de Wompi
@@ -851,5 +851,22 @@ export class IndependentProgramPayment implements OnInit {
   private handleFailedPayment(result: any): void {
     console.log('Pago fallido:', result);
     this.showNotificationMessage('Error', 'El pago no pudo ser procesado. Por favor intente nuevamente.', 'error');
+  }
+
+  // Función para generar referencia única usando el ID de la cuenta de cobro
+  private generatePaymentReference(accountReceivableId: string): string {
+    // Fecha de hoy en formato DDMMYYYY
+    const hoy = new Date();
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const año = hoy.getFullYear();
+    const fecha = `${dia}${mes}${año}`;
+
+    // Generar 4 números aleatorios
+    const numerosAleatorios = Math.floor(1000 + Math.random() * 9000);
+
+    // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
+    const reference = `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
+    return reference;
   }
 }
