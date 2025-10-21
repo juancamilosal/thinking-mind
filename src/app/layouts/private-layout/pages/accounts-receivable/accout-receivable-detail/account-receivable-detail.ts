@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {AccountReceivable, PaymentModel} from '../../../../../core/models/AccountReceivable';
@@ -15,11 +15,21 @@ import { NotificationService } from '../../../../../core/services/notification.s
   templateUrl: './account-receivable-detail.html',
   standalone: true
 })
-export class AccountReceivableDetailComponent implements OnInit {
+export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   @Input() account!: AccountReceivable;
 
   ngOnInit() {
-    this.initializeDiscountValues();
+    if (this.account) {
+      this.initializeDiscountValues();
+    }
+    this.cdr.detectChanges();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['account'] && changes['account'].currentValue) {
+      this.initializeDiscountValues();
+      this.cdr.detectChanges();
+    }
   }
 
   @Output() backToList = new EventEmitter<void>();
@@ -649,6 +659,8 @@ export class AccountReceivableDetailComponent implements OnInit {
 
   // Métodos para manejar el descuento
   initializeDiscountValues(): void {
+    if (!this.account) return;
+    
     this.originalAmount = this.account.monto;
     this.discountPercentage = this.account.descuento || 0;
     

@@ -361,12 +361,14 @@ export class AccountsReceivable implements OnInit {
   viewDetail(account: AccountReceivable) {
     this.selectedAccount = account;
     this.showDetail = true;
+    this.cdr.detectChanges();
   }
 
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
-    this.loadAccountsPage();
+    // Mantener la pestaña activa al regresar
+    this.loadAccountsByStatus(this.activeTab);
     this.totalAccounts();
     this.cdr.detectChanges();
   }
@@ -390,7 +392,8 @@ export class AccountsReceivable implements OnInit {
       
       this.cdr.detectChanges();
     } else {
-      this.loadAccountsPage();
+      // Mantener la pestaña activa al refrescar
+      this.loadAccountsByStatus(this.activeTab);
       setTimeout(() => {
         if (this.selectedAccount) {
           const updatedAccount = [...this.pendingAccounts, ...this.paidAccounts]
