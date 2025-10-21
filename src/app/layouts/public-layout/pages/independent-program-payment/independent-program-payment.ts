@@ -730,8 +730,16 @@ export class IndependentProgramPayment implements OnInit {
   }
 
   onPaymentAmountChange(event: any): void {
-    const value = parseFloat(event.target.value) || 0;
+    const inputValue = event.target.value;
+    // Remover todo excepto números
+    const numericValue = inputValue.replace(/[^\d]/g, '');
+    const value = parseFloat(numericValue) || 0;
     this.editablePaymentAmount = Math.min(value, this.totalAmountToPay);
+  }
+
+  formatNumberInput(value: number): string {
+    if (!value || value === 0) return '';
+    return value.toLocaleString('es-CO');
   }
 
   processPayment(): void {

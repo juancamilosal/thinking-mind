@@ -904,11 +904,10 @@
           <div class="relative">
             <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
             <input
-              type="number"
-              [(ngModel)]="editablePaymentAmount"
+              type="text"
+              [value]="formatNumberInput(editablePaymentAmount)"
+              (input)="onPaymentAmountChange($event)"
               class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-medium"
-              [max]="totalAmountToPay"
-              min="1"
               placeholder="0"
             />
           </div>
