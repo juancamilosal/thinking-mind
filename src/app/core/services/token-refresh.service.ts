@@ -17,7 +17,7 @@ interface JwtPayload {
 export class TokenRefreshService implements OnDestroy {
   private refreshTimer: any;
   private destroy$ = new Subject<void>();
-  
+
   // Tiempo en minutos antes de la expiración para renovar el token
   private readonly REFRESH_BEFORE_EXPIRY_MINUTES = 2;
 
@@ -48,17 +48,11 @@ export class TokenRefreshService implements OnDestroy {
    */
   private scheduleTokenRefresh(): void {
     const token = StorageServices.getAccessToken();
-    
-    if (!token) {
-      console.log('No hay token disponible para programar renovación');
-      return;
-    }
-
     try {
       const decodedToken: JwtPayload = jwtDecode(token);
       const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
       const expirationTime = decodedToken.exp;
-      
+
       if (!expirationTime) {
         console.warn('El token no tiene tiempo de expiración definido');
         return;
@@ -67,13 +61,8 @@ export class TokenRefreshService implements OnDestroy {
       // Calcular cuándo renovar el token (X minutos antes de la expiración)
       const refreshTime = expirationTime - (this.REFRESH_BEFORE_EXPIRY_MINUTES * 60);
       const timeUntilRefresh = (refreshTime - currentTime) * 1000; // Convertir a milisegundos
-
-      console.log(`Token expira en: ${Math.floor((expirationTime - currentTime) / 60)} minutos`);
-      console.log(`Renovación programada en: ${Math.floor(timeUntilRefresh / 1000 / 60)} minutos`);
-
       // Si el token ya debería haberse renovado, hacerlo inmediatamente
       if (timeUntilRefresh <= 0) {
-        console.log('El token necesita renovación inmediata');
         this.refreshToken();
         return;
       }
@@ -94,14 +83,10 @@ export class TokenRefreshService implements OnDestroy {
    * Ejecuta la renovación del token
    */
   private refreshToken(): void {
-    console.log('Iniciando renovación automática del token...');
-    
     this.loginService.refreshToken()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          console.log('Token renovado exitosamente');
-          // Programar la próxima renovación con el nuevo token
           this.scheduleTokenRefresh();
         },
         error: (error) => {
@@ -116,7 +101,6 @@ export class TokenRefreshService implements OnDestroy {
    * Maneja errores en la renovación del token
    */
   private handleRefreshError(): void {
-    console.log('Renovación fallida, cerrando sesión...');
     StorageServices.clearSession();
     this.router.navigate(['/login']);
   }
@@ -126,7 +110,7 @@ export class TokenRefreshService implements OnDestroy {
    */
   isTokenNearExpiry(): boolean {
     const token = StorageServices.getAccessToken();
-    
+
     if (!token) {
       return true;
     }
@@ -135,14 +119,14 @@ export class TokenRefreshService implements OnDestroy {
       const decodedToken: JwtPayload = jwtDecode(token);
       const currentTime = Math.floor(Date.now() / 1000);
       const expirationTime = decodedToken.exp;
-      
+
       if (!expirationTime) {
         return true;
       }
 
       const timeUntilExpiry = expirationTime - currentTime;
       const refreshThreshold = this.REFRESH_BEFORE_EXPIRY_MINUTES * 60;
-      
+
       return timeUntilExpiry <= refreshThreshold;
     } catch (error) {
       console.error('Error al verificar expiración del token:', error);
@@ -155,7 +139,7 @@ export class TokenRefreshService implements OnDestroy {
    */
   getTimeUntilExpiry(): number {
     const token = StorageServices.getAccessToken();
-    
+
     if (!token) {
       return 0;
     }
@@ -164,7 +148,7 @@ export class TokenRefreshService implements OnDestroy {
       const decodedToken: JwtPayload = jwtDecode(token);
       const currentTime = Math.floor(Date.now() / 1000);
       const expirationTime = decodedToken.exp;
-      
+
       if (!expirationTime) {
         return 0;
       }

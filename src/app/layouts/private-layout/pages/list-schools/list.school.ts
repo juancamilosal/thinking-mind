@@ -9,13 +9,13 @@ import { Student } from '../../../../core/models/Student';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { StudentDetail } from '../students/student-detail/student-detail';
 import { Client } from '../../../../core/models/Clients';
-import { 
-  SchoolWithAccounts, 
-  StudentWithAccount, 
-  CourseWithStudentsAlternative, 
-  SchoolWithCourses, 
-  CourseWithSchools, 
-  SchoolInCourse 
+import {
+  SchoolWithAccounts,
+  StudentWithAccount,
+  CourseWithStudentsAlternative,
+  SchoolWithCourses,
+  CourseWithSchools,
+  SchoolInCourse
 } from '../../../../core/models/SchoolModels';
 
 @Component({
@@ -109,7 +109,7 @@ export class ListSchool implements OnInit {
   }
 
   private loadAllAccountsReceivable(): void {
-    this.accountReceivableService.searchAccountReceivable().subscribe({
+    this.accountReceivableService.searchAccountReceivable(1, 1000).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -126,7 +126,7 @@ export class ListSchool implements OnInit {
   }
 
   private loadAccountsForSchool(schoolId: string): void {
-    this.accountReceivableService.searchAccountReceivable(1, 10, '', schoolId).subscribe({
+    this.accountReceivableService.searchAccountReceivable(1, 1000, '', schoolId).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -142,34 +142,18 @@ export class ListSchool implements OnInit {
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
-    console.log('🔍 Procesando cuentas por cobrar:', accounts);
-    console.log('📊 Total de cuentas recibidas:', accounts.length);
-    
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
-
     accounts.forEach((account, index) => {
-      console.log(`📋 Procesando cuenta ${index + 1}:`, account);
-      
       // Verificar que el account tenga la estructura esperada
       if (account.estudiante_id) {
-        console.log('👤 Estudiante encontrado:', account.estudiante_id);
-        console.log('🔍 Tipo de estudiante_id:', typeof account.estudiante_id);
-        
         if (typeof account.estudiante_id === 'object') {
           const student = account.estudiante_id;
-          console.log('🎓 Datos del estudiante:', student);
-
           // Verificar que el estudiante tenga colegio_id
           if (student.colegio_id) {
-            console.log('🏫 Colegio encontrado:', student.colegio_id);
-            console.log('🔍 Tipo de colegio_id:', typeof student.colegio_id);
-            
             if (typeof student.colegio_id === 'object') {
               const school = student.colegio_id;
               const schoolId = school.id;
-              console.log('✅ Procesando colegio:', school.nombre, 'ID:', schoolId);
-
               if (!schoolsMap.has(schoolId)) {
                 schoolsMap.set(schoolId, {
                   school: school,
@@ -178,14 +162,12 @@ export class ListSchool implements OnInit {
                   totalAmount: 0,
                   accounts: []
                 });
-                console.log('🆕 Nuevo colegio agregado:', school.nombre);
               }
 
               const schoolData = schoolsMap.get(schoolId)!;
               schoolData.accounts.push(account);
               schoolData.accountsCount++;
               schoolData.totalAmount += account.monto;
-              console.log('📈 Cuenta agregada al colegio:', school.nombre, 'Total cuentas:', schoolData.accountsCount);
             } else {
               console.warn('⚠️ colegio_id no es un objeto:', student.colegio_id);
             }
@@ -199,9 +181,6 @@ export class ListSchool implements OnInit {
         console.warn('⚠️ Cuenta sin estudiante_id:', account);
       }
     });
-
-    console.log('🏫 Colegios procesados:', schoolsMap.size);
-    
     // Calcular total de estudiantes incluyendo duplicados (por cada cuenta/curso)
     schoolsMap.forEach((schoolData, schoolId) => {
       // Contar todas las cuentas que tienen estudiante (incluyendo duplicados)
@@ -212,19 +191,14 @@ export class ListSchool implements OnInit {
         }
       });
       schoolData.studentsCount = studentsCount;
-      console.log(`📊 Colegio ${schoolData.school.nombre}: ${studentsCount} estudiantes, ${schoolData.accountsCount} cuentas`);
     });
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
-    console.log('📋 Resultado final - schoolsWithAccounts:', this.schoolsWithAccounts);
-
     // Procesar datos para vista por cursos con las cuentas actuales
     this.processCoursesData(accounts);
 
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    
-    console.log('✅ Procesamiento completado. Total colegios:', this.totalItems);
   }
 
   onSearchInputChange(event: any): void {
@@ -253,8 +227,8 @@ export class ListSchool implements OnInit {
         this.loadAccountsForSchool(user.colegio_id);
       }
     } else {
-      // Para otros usuarios, buscar en todas las cuentas por cobrar
-      this.accountReceivableService.searchAccountReceivable(1, 10, this.searchTerm).subscribe({
+      // Para otros usuarios, buscar en todas las cuentas por cobrar con límite aumentado
+      this.accountReceivableService.searchAccountReceivable(1, 1000, this.searchTerm).subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
           this.isLoading = false;
