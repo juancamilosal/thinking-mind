@@ -134,9 +134,6 @@ export class FormCourse implements OnInit, OnChanges {
       codigo: this.courseForm.value.codigo,
       moneda: this.courseForm.value.moneda // Agregar campo moneda
     };
-
-    console.log('Datos del curso a crear:', course); // Para verificar los valores
-
     this.courseServices.createCourse(course).subscribe({
       next: (response) => {
         this.createdCourseId = response.data.id;
@@ -249,9 +246,6 @@ export class FormCourse implements OnInit, OnChanges {
       sku: this.courseForm.value.codigo,
       moneda: this.courseForm.value.moneda // Agregar campo moneda
     };
-
-    console.log('Datos del curso a actualizar:', courseToUpdate); // Para verificar los valores
-
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
         this.isSubmitting = false;
@@ -275,11 +269,7 @@ export class FormCourse implements OnInit, OnChanges {
       img: this.uploadedImageId,
       moneda: this.courseForm.value.moneda // Agregar campo moneda
     };
-
-    console.log('Datos del curso a actualizar con nueva imagen:', courseToUpdate); // Para verificar los valores
-
     const previousImageId = this.courseData?.img;
-
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
         if (previousImageId) {

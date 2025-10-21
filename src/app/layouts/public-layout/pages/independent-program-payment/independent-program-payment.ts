@@ -177,8 +177,6 @@ export class IndependentProgramPayment implements OnInit {
     this.isLoadingCourses = true;
     this.courseService.searchCourse().subscribe({
       next: (response) => {
-        console.log('Respuesta completa del servicio de cursos:', response);
-
         if (response && response.data) {
           // Filtrar solo cursos con programa_independiente = true
           this.independentCourses = response.data.filter((course: Course) => {
@@ -502,9 +500,6 @@ export class IndependentProgramPayment implements OnInit {
       estado: 'PENDIENTE',
       fecha_creacion: new Date().toLocaleString('sv-SE', {timeZone: 'America/Bogota'})
     };
-
-    console.log('Datos de cuenta por cobrar para programa independiente:', paymentForm);
-
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
         // Verificar si la respuesta tiene status ERROR
@@ -517,14 +512,9 @@ export class IndependentProgramPayment implements OnInit {
           return;
         }
 
-        // Si no hay error, proceder normalmente
-        console.log('Cuenta por cobrar creada:', response);
         this.showNotificationMessage('Éxito', 'Registro de programa independiente creado exitosamente', 'success');
         this.isSubmitting = false;
         this.showConfirmation = false;
-        // Opcional: resetear el formulario o redirigir
-        // this.paymentForm.reset();
-        // this.initForm();
       },
       error: (error) => {
         console.error('Error creating account receivable:', error);
@@ -908,8 +898,6 @@ export class IndependentProgramPayment implements OnInit {
 
   // Método para manejar pago exitoso
   private handleSuccessfulPayment(result: any, reference: string): void {
-    console.log('Pago exitoso:', result);
-
     // Redirigir a la página de estado de pago con los parámetros
     this.router.navigate(['/payment-status'], {
       queryParams: {
@@ -922,7 +910,6 @@ export class IndependentProgramPayment implements OnInit {
 
   // Método para manejar pago fallido
   private handleFailedPayment(result: any): void {
-    console.log('Pago fallido:', result);
     this.showNotificationMessage('Error', 'El pago no pudo ser procesado. Por favor intente nuevamente.', 'error');
   }
 
