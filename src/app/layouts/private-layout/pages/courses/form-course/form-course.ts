@@ -60,6 +60,8 @@ export class FormCourse implements OnInit, OnChanges {
     this.courseForm = this.fb.group({
       nombre: [null, Validators.required],
       precio_inscripcion: [null],
+      precio: [null, Validators.required], // Nuevo campo precio
+      programa_independiente: [false], // Nuevo campo checkbox
       codigo: [null, [Validators.required]],
       img: [null] // Campo para el ID de la imagen en Directus
     });
@@ -74,6 +76,8 @@ export class FormCourse implements OnInit, OnChanges {
       this.courseForm.patchValue({
         nombre: this.courseData.nombre,
         precio_inscripcion: this.courseData.precio_inscripcion ?? null,
+        precio: this.courseData.precio ?? null, // Cargar precio
+        programa_independiente: this.courseData.programa_independiente ?? false, // Cargar programa independiente
         codigo: this.courseData.codigo || this.courseData.sku || '', // Usar sku como fallback si codigo no existe
         img: this.courseData.img || null
       });
@@ -122,9 +126,13 @@ export class FormCourse implements OnInit, OnChanges {
     const course = {
       nombre: this.courseForm.value.nombre,
       precio_inscripcion: this.courseForm.value.precio_inscripcion,
+      precio: this.courseForm.value.precio, // Nuevo campo precio
+      programa_independiente: this.courseForm.value.programa_independiente, // Nuevo campo checkbox
       sku: this.courseForm.value.codigo,
       codigo: this.courseForm.value.codigo
     };
+
+    console.log('Datos del curso a crear:', course); // Para verificar los valores
 
     this.courseServices.createCourse(course).subscribe({
       next: (response) => {
@@ -233,8 +241,12 @@ export class FormCourse implements OnInit, OnChanges {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
       precio_inscripcion: this.courseForm.value.precio_inscripcion,
+      precio: this.courseForm.value.precio, // Nuevo campo precio
+      programa_independiente: this.courseForm.value.programa_independiente, // Nuevo campo checkbox
       sku: this.courseForm.value.codigo
     };
+
+    console.log('Datos del curso a actualizar:', courseToUpdate); // Para verificar los valores
 
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
@@ -253,9 +265,13 @@ export class FormCourse implements OnInit, OnChanges {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
       precio_inscripcion: this.courseForm.value.precio_inscripcion,
+      precio: this.courseForm.value.precio, // Nuevo campo precio
+      programa_independiente: this.courseForm.value.programa_independiente, // Nuevo campo checkbox
       sku: this.courseForm.value.codigo,
       img: this.uploadedImageId
     };
+
+    console.log('Datos del curso a actualizar con nueva imagen:', courseToUpdate); // Para verificar los valores
 
     const previousImageId = this.courseData?.img;
 

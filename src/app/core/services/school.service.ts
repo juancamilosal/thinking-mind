@@ -11,7 +11,7 @@ import {environment} from '../../../environments/environment';
 
 export class SchoolService {
   apiSchool: string = environment.schools;
-  list_group: string = environment.list_group;
+  list_group: string = environment.listaGrupo;
   constructor(private http: HttpClient) {
   }
 
