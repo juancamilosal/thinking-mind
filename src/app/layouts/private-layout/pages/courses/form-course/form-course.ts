@@ -63,6 +63,7 @@ export class FormCourse implements OnInit, OnChanges {
       precio: [null, Validators.required], // Nuevo campo precio
       programa_independiente: [false], // Nuevo campo checkbox
       codigo: [null, [Validators.required]],
+      moneda: ['USD', Validators.required], // Nuevo campo moneda
       img: [null] // Campo para el ID de la imagen en Directus
     });
 
@@ -79,6 +80,7 @@ export class FormCourse implements OnInit, OnChanges {
         precio: this.courseData.precio ?? null, // Cargar precio
         programa_independiente: this.courseData.programa_independiente ?? false, // Cargar programa independiente
         codigo: this.courseData.codigo || this.courseData.sku || '', // Usar sku como fallback si codigo no existe
+        moneda: this.courseData.moneda || 'USD', // Cargar moneda
         img: this.courseData.img || null
       });
 
