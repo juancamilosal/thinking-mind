@@ -1,35 +1,38 @@
-import {Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
-import {DOCUMENT_TYPE} from '../../../../core/const/DocumentTypeConst';
-import {CourseService} from '../../../../core/services/course.service';
-import {Course} from '../../../../core/models/Course';
-import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
-import {ClientService} from '../../../../core/services/client.service';
-import {SchoolService} from '../../../../core/services/school.service';
-import {PaymentConfirmationComponent} from '../payment-record/payment-confirmation/payment-confirmation.component';
-import {Client} from '../../../../core/models/Clients';
-import {StudentService} from '../../../../core/services/student.service';
-import {Student} from '../../../../core/models/Student';
-import {
-  NotificationModalComponent,
-  NotificationData
-} from '../../../../components/notification-modal/notification-modal';
-import {PaymentService} from '../../../../core/services/payment.service';
+import { Component, OnInit, ViewChild, ChangeDetectorRef, ElementRef } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { Course } from '../../../../core/models/Course';
+import { Grupo } from '../../../../core/models/School';
+import { Client } from '../../../../core/models/Clients';
+import { Student } from '../../../../core/models/Student';
+import { PaymentModel } from '../../../../core/models/AccountReceivable';
+import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
+import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+
+import { CourseService } from '../../../../core/services/course.service';
+import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { ClientService } from '../../../../core/services/client.service';
+import { StudentService } from '../../../../core/services/student.service';
+import { SchoolService } from '../../../../core/services/school.service';
+import { PaymentService } from '../../../../core/services/payment.service';
 import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
-import {PaymentModel} from '../../../../core/models/AccountReceivable';
-import {Grupo} from '../../../../core/models/School';
-import {environment} from '../../../../../environments/environment';
+import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
+
+declare var WidgetCheckout: any;
 
 declare var WidgetCheckout: any;
 
 @Component({
   selector: 'app-independent-program-payment',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    NotificationModalComponent
+  ],
   templateUrl: './independent-program-payment.html',
   styleUrl: './independent-program-payment.css'
 })
@@ -95,11 +98,6 @@ export class IndependentProgramPayment implements OnInit {
   hasInscription: boolean = false;
   isEuroCourse: boolean = false;
   selectedInscriptionAmount: number = 0;
-  
-  // Flags para evitar notificar repetidamente por falla de tasa de cambio
-  usdRateErrorNotified: boolean = false;
-  eurRateErrorNotified: boolean = false;
-  isExchangeRateError: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -111,7 +109,7 @@ export class IndependentProgramPayment implements OnInit {
     private paymentService: PaymentService,
     private exchangeRateService: ExchangeRateService,
     private router: Router,
-    private cdRef: ChangeDetectorRef,
+    private cdRef: ChangeDetectorRef
   ) {
     this.cliente = [];
     this.student = [];
@@ -626,9 +624,60 @@ export class IndependentProgramPayment implements OnInit {
   }
 
   onPayCourse(courseData: any): void {
-    // Implementar lógica de pago similar a payment-record
-    console.log('Pagar curso:', courseData);
-    // Aquí se puede abrir un modal de pago o redirigir a una página de pago
+    // Verificar si el saldo pendiente es mayor a 0
+    if (courseData.pendingBalanceNumber <= 0) {
+      this.showNotificationMessage('Información', 'Este curso ya está completamente pagado', 'warning');
+      return;
+    }
+
+    // Validación de inscripción pendiente (igual que en payment-record)
+    const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) => cuenta.id === courseData.id);
+    if (account) {
+      let hasPendingInscription = false;
+      
+      // Caso 1: la inscripción viene expandida en id_inscripcion
+      if (account.id_inscripcion && typeof account.id_inscripcion === 'object') {
+        hasPendingInscription = (account.id_inscripcion.estado === 'PENDIENTE');
+      } else {
+        // Caso 2: buscar una cuenta marcada como inscripción para el mismo curso y estudiante
+        const pendingInscription = (this.clientData?.cuentas_cobrar || []).find((c: any) =>
+          (c.es_inscripcion === 'TRUE') &&
+          (c.estado === 'PENDIENTE') &&
+          ((c.curso_id?.id || c.curso_id) === (account.curso_id?.id || account.curso_id)) &&
+          ((c.estudiante_id?.id || c.estudiante_id) === (account.estudiante_id?.id || account.estudiante_id))
+        );
+        hasPendingInscription = !!pendingInscription;
+      }
+
+      // Si la cuenta actual no es de inscripción y tiene inscripción pendiente, bloquear y avisar
+      if (hasPendingInscription && account.es_inscripcion !== 'TRUE') {
+        this.notificationData = {
+          type: 'error',
+          title: 'Inscripción pendiente',
+          message: 'Para poder realizar el pago del programa, debe primero pagar la Inscripción',
+          duration: 6000
+        };
+        this.showNotification = true;
+        return;
+      }
+    }
+
+    // Configurar datos para el modal de pago
+    this.paymentModalData = {
+      courseName: courseData.courseName,
+      studentName: courseData.studentName,
+      pendingBalance: courseData.pendingBalanceNumber,
+      accountId: courseData.id,
+      isInscription: courseData.isInscription,
+      courseInscriptionCurrency: courseData.courseInscriptionCurrency,
+      coursePriceNumber: courseData.coursePriceNumber,
+      balance: courseData.balance,
+      clientName: this.clientData?.nombre + ' ' + this.clientData?.apellido
+    };
+
+    this.totalAmountToPay = courseData.pendingBalanceNumber;
+    this.editablePaymentAmount = courseData.pendingBalanceNumber;
+    this.showPaymentModal = true;
   }
 
   onViewPayments(courseData: any): void {
@@ -671,5 +720,128 @@ export class IndependentProgramPayment implements OnInit {
   parseCurrencyToNumber(currencyString: string): number {
     if (!currencyString) return 0;
     return parseFloat(currencyString.replace(/[^0-9.-]+/g, '')) || 0;
+  }
+
+  closePaymentModal(): void {
+    this.showPaymentModal = false;
+    this.paymentModalData = null;
+    this.totalAmountToPay = 0;
+    this.editablePaymentAmount = 0;
+  }
+
+  onPaymentAmountChange(event: any): void {
+    const value = parseFloat(event.target.value) || 0;
+    this.editablePaymentAmount = Math.min(value, this.totalAmountToPay);
+  }
+
+  processPayment(): void {
+    if (!this.editablePaymentAmount || this.editablePaymentAmount <= 0) {
+      this.showNotificationMessage('Error', 'El monto a pagar debe ser mayor a 0', 'error');
+      return;
+    }
+
+    if (this.editablePaymentAmount > this.totalAmountToPay) {
+      this.showNotificationMessage('Error', 'El monto a pagar no puede ser mayor al saldo pendiente', 'error');
+      return;
+    }
+
+    this.initializeWompiPayment();
+  }
+
+  private initializeWompiPayment(): void {
+    const reference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const amountInCents = Math.round(this.editablePaymentAmount * 100);
+    
+    // Configuración de Wompi
+    const wompiConfig = environment.wompi;
+    const publicKey = wompiConfig.testMode ? wompiConfig.test.publicKey : wompiConfig.prod.publicKey;
+    const integrityKey = wompiConfig.testMode ? wompiConfig.test.integrityKey : wompiConfig.prod.integrityKey;
+
+    // Generar firma de integridad
+    const integritySignature = this.generateIntegritySignature(reference, amountInCents, 'COP', integrityKey);
+
+    // Datos del cliente
+    const customerData = {
+      email: this.clientData?.email || '',
+      fullName: `${this.clientData?.nombre || ''} ${this.clientData?.apellido || ''}`.trim(),
+      phoneNumber: this.clientData?.celular || '',
+      phoneNumberPrefix: '+57',
+      legalId: this.clientData?.numero_documento || '',
+      legalIdType: this.clientData?.tipo_documento || ''
+    };
+
+    // Configuración del checkout
+    const checkoutConfig = {
+      currency: 'COP',
+      amountInCents: amountInCents,
+      reference: reference,
+      publicKey: publicKey,
+      redirectUrl: wompiConfig.redirectUrl,
+      customerData: customerData,
+      shippingAddress: {
+        addressLine1: this.clientData?.direccion || '',
+        country: 'CO',
+        region: 'Bogotá',
+        city: 'Bogotá',
+        phoneNumber: this.clientData?.celular || ''
+      },
+      integritySignature: integritySignature
+    };
+
+    // Crear el pago en la base de datos
+    const paymentData: PaymentModel = {
+      cuenta_cobrar_id: this.paymentModalData.accountId,
+      valor: this.editablePaymentAmount,
+      fecha_pago: new Date().toISOString(),
+      metodo_pago: 'TRANSACCIÓN',
+      pagador: customerData.fullName,
+      estado: 'PENDIENTE'
+    };
+
+    this.paymentService.createPayment(paymentData).subscribe({
+      next: (response) => {
+        // Inicializar Wompi Checkout
+         const checkout = new (window as any).WidgetCheckout(checkoutConfig);
+
+        checkout.open((result: any) => {
+           if (result.transaction?.status === 'APPROVED') {
+             this.handleSuccessfulPayment(result, reference);
+           } else {
+             this.handleFailedPayment(result);
+           }
+         });
+
+        this.closePaymentModal();
+      },
+      error: (error) => {
+        console.error('Error creating payment:', error);
+        this.showNotificationMessage('Error', 'Error al procesar el pago', 'error');
+      }
+    });
+  }
+
+  private generateIntegritySignature(reference: string, amountInCents: number, currency: string, integrityKey: string): string {
+    const concatenatedString = `${reference}${amountInCents}${currency}test`;
+    return CryptoJS.SHA256(concatenatedString + integrityKey).toString();
+  }
+
+  // Método para manejar pago exitoso
+  private handleSuccessfulPayment(result: any, reference: string): void {
+    console.log('Pago exitoso:', result);
+    
+    // Redirigir a la página de estado de pago con los parámetros
+    this.router.navigate(['/payment-status'], {
+      queryParams: {
+        id: result.transaction?.id,
+        reference: reference,
+        status: 'APPROVED'
+      }
+    });
+  }
+
+  // Método para manejar pago fallido
+  private handleFailedPayment(result: any): void {
+    console.log('Pago fallido:', result);
+    this.showNotificationMessage('Error', 'El pago no pudo ser procesado. Por favor intente nuevamente.', 'error');
   }
 }

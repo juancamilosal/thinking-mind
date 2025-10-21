@@ -793,17 +793,16 @@
         </form>
       </div>
       } @else {
-        <!-- Confirmación de datos -->
-        <app-payment-confirmation
-          [paymentForm]="paymentForm"
-          [courses]="independentCourses"
-          [isSubmitting]="isSubmitting"
-          [schoolSearchTerm]="paymentForm.get('studentSchool')?.value || ''"
-          [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
-          [selectedCourseImageUrl]="selectedCourseImageUrl"
-          (goBack)="goBackToForm()"
-          (confirmSubmit)="confirmAndSubmit()">
-        </app-payment-confirmation>
+        <!-- Confirmación de datos - Componente removido temporalmente -->
+        <div class="text-center p-8">
+          <p class="text-gray-600">Funcionalidad de confirmación en desarrollo</p>
+          <button 
+            type="button" 
+            (click)="goBackToForm()" 
+            class="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+            Volver al formulario
+          </button>
+        </div>
       }
     </div>
   </div>
@@ -816,6 +815,128 @@
     [notification]="notificationData"
     (close)="closeNotification()">
   </app-notification-modal>
+}
+
+<!-- Modal de Pago -->
+@if (showPaymentModal) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <!-- Header del Modal -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900">Procesar Pago</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closePaymentModal()"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="p-6">
+        <!-- Información del Curso -->
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 mb-6">
+          <div class="flex items-start space-x-4">
+            @if (paymentModalData?.courseImageUrl) {
+              <img 
+                [src]="paymentModalData.courseImageUrl" 
+                [alt]="paymentModalData.courseName"
+                class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+              />
+            } @else {
+              <div class="w-16 h-16 bg-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+              </div>
+            }
+            <div class="flex-1 min-w-0">
+              <h4 class="text-lg font-semibold text-gray-900 truncate">{{ paymentModalData?.courseName }}</h4>
+              <p class="text-sm text-gray-600 mt-1">{{ paymentModalData?.studentName }}</p>
+              @if (paymentModalData?.clientName) {
+                <p class="text-sm text-gray-500">Acudiente: {{ paymentModalData.clientName }}</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de Pago -->
+        <div class="bg-gray-50 rounded-xl p-4 mb-6">
+          <h5 class="text-sm font-semibold text-gray-700 mb-3">Resumen del Pago</h5>
+          
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Valor del programa:</span>
+              <span class="text-sm font-medium text-gray-900">${{ (paymentModalData?.coursePriceNumber || 0) | number:'1.0-0' }}</span>
+            </div>
+            
+            @if ((paymentModalData?.balance || 0) > 0) {
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Pagos realizados:</span>
+                <span class="text-sm font-medium text-green-600">-${{ (paymentModalData?.balance || 0) | number:'1.0-0' }}</span>
+              </div>
+            }
+            
+            <div class="border-t border-gray-200 pt-2 mt-2">
+              <div class="flex justify-between items-center">
+                <span class="text-base font-semibold text-gray-900">Total a pagar:</span>
+                <span class="text-lg font-bold text-emerald-600">${{ totalAmountToPay | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input de Monto del Pago -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Monto del pago
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
+            <input
+              type="number"
+              [(ngModel)]="editablePaymentAmount"
+              class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-medium"
+              [max]="totalAmountToPay"
+              min="1"
+              placeholder="0"
+            />
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            Máximo: ${{ totalAmountToPay | number:'1.0-0' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+        <button
+          type="button"
+          (click)="closePaymentModal()"
+          class="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors font-medium"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="processPayment()"
+          class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors font-medium shadow-lg"
+        >
+          Confirmar Pago
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- Modal de Pagos -->
