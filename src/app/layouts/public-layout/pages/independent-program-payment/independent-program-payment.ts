@@ -59,6 +59,8 @@ export class IndependentProgramPayment implements OnInit {
 
   // Properties for payments modal
   showPaymentsModal = false;
+  selectedCourseForPayments: any = null;
+  coursePayments: any[] = [];
   selectedAccountData: any = null;
   selectedAccountPayments: PaymentModel[] = [];
 
@@ -117,9 +119,26 @@ export class IndependentProgramPayment implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadIndependentCourses(); // Cargar solo cursos independientes
-    this.loadGrupos();
+    this.loadIndependentCourses();
     this.loadExchangeRates();
+
+    // Agregar listeners para buscar cursos registrados cuando se ingrese documento del acudiente
+    this.paymentForm.get('guardianDocumentType')?.valueChanges.subscribe(() => {
+      this.searchClientPaymentIfReady();
+    });
+
+    this.paymentForm.get('guardianDocumentNumber')?.valueChanges.subscribe(() => {
+      this.searchClientPaymentIfReady();
+    });
+
+    // Existing listeners
+    this.paymentForm.get('studentDocumentType')?.valueChanges.subscribe(() => {
+      this.searchStudentIfReady();
+    });
+
+    this.paymentForm.get('studentDocumentNumber')?.valueChanges.subscribe(() => {
+      this.searchStudentIfReady();
+    });
   }
 
   initForm(): void {
@@ -483,9 +502,156 @@ export class IndependentProgramPayment implements OnInit {
     this.showNotification = true;
   }
 
-  searchClientPayment(documentType: string, documentNumber: string): void {
-    // Implementar búsqueda de pagos del cliente si es necesario
-    console.log('Buscando pagos para:', documentType, documentNumber);
+  searchClientPaymentIfReady(): void {
+    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+
+    if (documentType && documentNumber && documentNumber.length >= 6) {
+      this.searchClientPayment(documentType, documentNumber);
+    } else {
+      // Limpiar datos si no hay suficiente información
+      this.showRegisteredCourses = false;
+      this.clientData = null;
+      this.registeredCourses = [];
+    }
+  }
+
+  private searchClientPayment(documentType: string, documentNumber: string): void {
+    this.isSearchingClient = true;
+    this.clientService.searchClientPayment(documentType, documentNumber).subscribe({
+      next: (data) => {
+        this.isSearchingClient = false;
+        this.cliente = data.data;
+        if (data.data.length > 0) {
+          const client = data.data[0];
+          this.clientData = client;
+          this.fillGuardianFields(client);
+          if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
+            this.prepareRegisteredCoursesTable(client);
+            this.showRegisteredCourses = true;
+          } else {
+            this.registeredCourses = [];
+            this.showRegisteredCourses = false;
+          }
+        } else {
+          this.clearGuardianFields();
+          this.showRegisteredCourses = false;
+          this.clientData = null;
+          this.registeredCourses = [];
+        }
+      },
+      error: (error) => {
+        this.isSearchingClient = false;
+        console.error('Error searching client payment:', error);
+        this.showRegisteredCourses = false;
+        this.clientData = null;
+        this.registeredCourses = [];
+      }
+    });
+  }
+
+  private fillGuardianFields(client: any): void {
+    this.paymentForm.patchValue({
+      guardianFirstName: client.nombre || '',
+      guardianLastName: client.apellido || '',
+      guardianPhoneNumber: client.celular || '',
+      guardianEmail: client.email || '',
+      guardianAddress: client.direccion || ''
+    });
+  }
+
+  private clearGuardianFields(): void {
+    this.paymentForm.patchValue({
+      guardianFirstName: '',
+      guardianLastName: '',
+      guardianPhoneNumber: '',
+      guardianEmail: '',
+      guardianAddress: ''
+    });
+  }
+
+  private prepareRegisteredCoursesTable(client: any): void {
+    this.registeredCourses = [];
+    if (client.cuentas_cobrar && client.estudiantes) {
+      client.cuentas_cobrar.forEach((cuenta: any, index: number) => {
+        const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
+
+        // Calcular el saldo pendiente (Precio del Curso - Total Abonado)
+        const coursePriceNumber = cuenta.monto || 0;
+        const courseInscriptionPriceNumber = cuenta.curso_id?.precio_inscripcion || 0;
+        const totalPaidNumber = cuenta.saldo || 0;
+        const pendingBalanceNumber = coursePriceNumber - totalPaidNumber;
+
+        const isInscription = (() => {
+          const val = cuenta.es_inscripcion;
+          if (typeof val === 'string') {
+            return val.trim().toUpperCase() === 'TRUE';
+          }
+          return !!val;
+        })();
+
+        const courseData = {
+          id: cuenta.id,
+          courseName: cuenta.curso_id?.nombre || 'N/A',
+          isInscription: isInscription,
+          studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
+          studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
+          studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
+          coursePrice: this.formatCurrency(coursePriceNumber), // Precio del curso
+          coursePriceNumber: coursePriceNumber, // Valor numérico del precio
+          courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
+          courseInscriptionCurrency: ((cuenta.curso_id?.nombre || '').toUpperCase() === '12F' || (cuenta.curso_id?.codigo || '').toUpperCase() === '12F') ? 'EUR' : 'USD',
+          balance: this.formatCurrency(totalPaidNumber), // Total abonado
+          balanceNumber: totalPaidNumber, // Valor numérico del total abonado
+          pendingBalance: this.formatCurrency(pendingBalanceNumber), // Saldo pendiente
+          pendingBalanceNumber: pendingBalanceNumber, // Valor numérico del saldo pendiente
+          status: cuenta.estado,
+          courseId: cuenta.curso_id?.id,
+          date: cuenta.created_at,
+        };
+        this.registeredCourses.push(courseData);
+      });
+      // Ordenar para que las inscripciones aparezcan primero
+      this.registeredCourses.sort((a: any, b: any) => Number(b.isInscription) - Number(a.isInscription));
+    }
+  }
+
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
+
+  onPayCourse(courseData: any): void {
+    // Implementar lógica de pago similar a payment-record
+    console.log('Pagar curso:', courseData);
+    // Aquí se puede abrir un modal de pago o redirigir a una página de pago
+  }
+
+  onViewPayments(courseData: any): void {
+    this.selectedCourseForPayments = courseData;
+    
+    const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) =>
+      cuenta.id === courseData.id
+    );
+
+    if (account) {
+      this.coursePayments = account.pagos || [];
+      this.showPaymentsModal = true;
+    } else {
+      console.error('No se encontró la cuenta para mostrar los pagos');
+      this.coursePayments = [];
+      this.showPaymentsModal = true;
+    }
+  }
+
+  closePaymentsModal(): void {
+    this.showPaymentsModal = false;
+    this.selectedCourseForPayments = null;
+    this.coursePayments = [];
   }
 
   showNotificationMessage(title: string, message: string, type: 'success' | 'error' | 'warning' = 'success'): void {
@@ -500,15 +666,6 @@ export class IndependentProgramPayment implements OnInit {
 
   closeNotification(): void {
     this.showNotification = false;
-  }
-
-  // Métodos adicionales que pueden ser necesarios
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(amount);
   }
 
   parseCurrencyToNumber(currencyString: string): number {
