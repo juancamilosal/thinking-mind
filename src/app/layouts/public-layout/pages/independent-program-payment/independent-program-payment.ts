@@ -9,6 +9,7 @@ import { Student } from '../../../../core/models/Student';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+import { IndependentProgramConfirmationComponent } from './independent-program-confirmation/independent-program-confirmation.component';
 
 import { CourseService } from '../../../../core/services/course.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
@@ -30,11 +31,11 @@ declare var WidgetCheckout: any;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
-    NotificationModalComponent
+    NotificationModalComponent,
+    IndependentProgramConfirmationComponent
   ],
   templateUrl: './independent-program-payment.html',
-  styleUrl: './independent-program-payment.css'
+  styleUrls: ['./independent-program-payment.css']
 })
 export class IndependentProgramPayment implements OnInit {
   paymentForm!: FormGroup;
@@ -98,6 +99,11 @@ export class IndependentProgramPayment implements OnInit {
   hasInscription: boolean = false;
   isEuroCourse: boolean = false;
   selectedInscriptionAmount: number = 0;
+  
+  // Flags para evitar notificar repetidamente por falla de tasa de cambio
+  eurRateErrorNotified: boolean = false;
+  usdRateErrorNotified: boolean = false;
+  isExchangeRateError: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -118,6 +124,7 @@ export class IndependentProgramPayment implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadIndependentCourses();
+    this.loadGrupos(); // Agregar la carga de grupos
     this.loadExchangeRates();
 
     // Agregar listeners para buscar cursos registrados cuando se ingrese documento del acudiente
@@ -223,14 +230,20 @@ export class IndependentProgramPayment implements OnInit {
     this.exchangeRateService.getUsdToCop().subscribe({
       next: (rate) => {
         this.exchangeRates.USD = rate;
+        this.usdToCop = rate; // Asignar también a la propiedad para mostrar tasa
       },
       error: (error) => {
+        console.error('Error loading USD rate:', error);
       }
     });
 
     this.exchangeRateService.getEurToCop().subscribe({
       next: (rate) => {
         this.exchangeRates.EUR = rate;
+        this.eurToCop = rate; // Asignar también a la propiedad para mostrar tasa
+      },
+      error: (error) => {
+        console.error('Error loading EUR rate:', error);
       }
     });
   }
@@ -240,8 +253,6 @@ export class IndependentProgramPayment implements OnInit {
     const selectedCourse = this.independentCourses.find(course => course.id === courseId);
 
     if (selectedCourse) {
-
-
       // Configurar precios
       const coursePrice = selectedCourse.precio || '0';
       const inscriptionPrice = selectedCourse.precio_inscripcion || 0;
@@ -251,6 +262,19 @@ export class IndependentProgramPayment implements OnInit {
         courseInscriptionPrice: inscriptionPrice
       });
 
+      // Determinar si es curso EUR (12F) o USD
+      const courseName = (selectedCourse.nombre || '').toUpperCase().trim();
+      const courseCode = (selectedCourse.codigo || '').toUpperCase().trim();
+      const courseSku = (selectedCourse.sku || '').toUpperCase();
+      
+      // El curso 12F es en EUR, identificado por nombre, código o SKU que contenga "12F"
+      this.isEuroCourse = courseName.includes('12F') || courseCode.includes('12F') || courseSku.includes('12F');
+
+      // Actualizar banderas para mostrar tasa de cambio
+      this.hasInscription = inscriptionPrice > 0;
+      this.selectedInscriptionAmount = inscriptionPrice;
+      this.updateInscriptionConversion();
+
       // Convertir precios si es necesario
       this.convertCoursePrices(coursePrice, inscriptionPrice);
 
@@ -258,16 +282,27 @@ export class IndependentProgramPayment implements OnInit {
       if (selectedCourse.img_url) {
         this.selectedCourseImageUrl = selectedCourse.img_url;
       }
+    } else {
+      // Reset cuando no hay curso seleccionado
+      this.hasInscription = false;
+      this.isEuroCourse = false;
+      this.selectedInscriptionAmount = 0;
+      this.selectedInscriptionConvertedCop = null;
+      this.selectedCourseImageUrl = null;
     }
   }
 
   convertCoursePrices(coursePrice: string, inscriptionPrice: number): void {
     const coursePriceNumber = parseFloat(coursePrice) || 0;
 
-    if (this.exchangeRates && this.exchangeRates.USD_TO_COP) {
-      this.selectedCourseConvertedCop = coursePriceNumber * this.exchangeRates.USD_TO_COP;
-      this.selectedInscriptionConvertedCop = inscriptionPrice * this.exchangeRates.USD_TO_COP;
+    // Usar la tasa correspondiente según el tipo de curso (EUR o USD)
+    const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+    
+    if (rate) {
+      this.selectedCourseConvertedCop = Math.round(coursePriceNumber * rate);
+      this.selectedInscriptionConvertedCop = Math.round(inscriptionPrice * rate);
     } else {
+      // Si no hay tasa disponible, mostrar valores originales
       this.selectedCourseConvertedCop = coursePriceNumber;
       this.selectedInscriptionConvertedCop = inscriptionPrice;
     }
@@ -420,7 +455,7 @@ export class IndependentProgramPayment implements OnInit {
         nombre: formData.studentFirstName,
         apellido: formData.studentLastName,
         grado: this.getCombinedGrado(),
-        colegio: formData.studentSchool,
+        colegio: 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7', // ID fijo del colegio
       },
       curso_id: selectedCourse?.id,
       colegios_cursos: [], // Array vacío para programas independientes
@@ -478,7 +513,8 @@ export class IndependentProgramPayment implements OnInit {
     const grado = this.paymentForm.get('studentGrado')?.value || '';
     const grupo = this.paymentForm.get('studentGrupo')?.value || '';
 
-    if (grado && grupo) {
+    // Si grupo está vacío (No Aplica), solo devolver el grado
+    if (grado && grupo && grupo.trim() !== '') {
       return `${grado} ${grupo}`;
     }
     return grado;
@@ -868,5 +904,35 @@ export class IndependentProgramPayment implements OnInit {
     // Crear la referencia final: id_cuenta_cobrar-fecha-numeros_aleatorios
     const reference = `${accountReceivableId}-${fecha}-${numerosAleatorios}`;
     return reference;
+  }
+
+  private updateInscriptionConversion(): void {
+    const amount = this.selectedInscriptionAmount;
+    if (!amount || amount <= 0) {
+      this.selectedInscriptionConvertedCop = null;
+      this.isExchangeRateError = false;
+      return;
+    }
+    const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+    if (typeof rate === 'number' && rate > 0) {
+      this.selectedInscriptionConvertedCop = Math.round(amount * rate);
+      this.isExchangeRateError = false;
+    } else {
+      this.selectedInscriptionConvertedCop = null;
+      this.isExchangeRateError = true;
+      // Notificar cuando la tasa de conversión no esté disponible para inscripciones en EUR/USD
+      if (this.hasInscription) {
+        const currency = this.isEuroCourse ? 'EUR' : 'USD';
+        const alreadyNotified = this.isEuroCourse ? this.eurRateErrorNotified : this.usdRateErrorNotified;
+        if (!alreadyNotified) {
+          this.showNotificationMessage('Advertencia', `La tasa de conversión de ${currency} a COP no está disponible en este momento. Intente más tarde.`, 'warning');
+          if (this.isEuroCourse) {
+            this.eurRateErrorNotified = true;
+          } else {
+            this.usdRateErrorNotified = true;
+          }
+        }
+      }
+    }
   }
 }
