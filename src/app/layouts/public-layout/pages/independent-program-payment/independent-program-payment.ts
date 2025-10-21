@@ -83,6 +83,26 @@ export class IndependentProgramPayment implements OnInit {
     return parseFloat(String(value)) || 0;
   }
 
+  showAddCourseFormView(): void {
+    this.showAddCourseForm = true;
+    // Limpiar los campos del formulario para el nuevo programa
+    this.paymentForm.patchValue({
+      studentDocumentType: 'TI',
+      studentDocumentNumber: '',
+      studentFirstName: '',
+      studentLastName: '',
+      studentGrado: '',
+      studentGrupo: '',
+      selectedCourse: '',
+      coursePrice: '',
+      courseInscriptionPrice: ''
+    });
+  }
+
+  backToTableView(): void {
+    this.showAddCourseForm = false;
+  }
+
   // Notification properties
   showNotification = false;
   notificationData: NotificationData | null = null;

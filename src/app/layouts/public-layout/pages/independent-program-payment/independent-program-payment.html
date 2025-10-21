@@ -465,10 +465,28 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Botón Registrar Otro Programa -->
+              @if (!showAddCourseForm) {
+                <div class="flex justify-center mt-6">
+                  <button
+                    type="button"
+                    (click)="showAddCourseFormView()"
+                    class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-2xl min-w-[250px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <span class="flex items-center justify-center space-x-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                      </svg>
+                      <span>Registrar Otro Programa</span>
+                    </span>
+                  </button>
+                </div>
+              }
             </div>
           }
 
           <!-- Información del Estudiante -->
+          @if (!showRegisteredCourses || showAddCourseForm) {
           <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl shadow-xl p-8 border border-green-200">
             <div class="flex items-center mb-6">
               <div class="bg-gradient-to-r from-green-600 to-emerald-700 rounded-full p-3 mr-4">
@@ -695,8 +713,10 @@
               </div>
             </div>
           </div>
+          }
 
           <!-- Selección del Programa Independiente -->
+          @if (!showRegisteredCourses || showAddCourseForm) {
           <div class="bg-gradient-to-br from-purple-50 to-violet-100 rounded-2xl shadow-xl p-8 border border-purple-200">
             <div class="flex items-center mb-6">
               <div class="bg-gradient-to-r from-purple-600 to-violet-700 rounded-full p-3 mr-4">
@@ -800,12 +820,28 @@
             }
           </div>
 
-          <!-- Botón de Envío -->
-          <div class="flex justify-center pt-8">
+          <!-- Botones de Acción -->
+          <div class="flex flex-col sm:flex-row justify-center gap-4 pt-8">
+            <!-- Botón Volver (solo cuando showAddCourseForm es true) -->
+            @if (showAddCourseForm) {
+              <button
+                type="button"
+                (click)="backToTableView()"
+                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <span class="flex items-center justify-center space-x-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                  </svg>
+                  <span>Volver</span>
+                </span>
+              </button>
+            }
+
+            <!-- Botón de Envío -->
             <button
               type="submit"
               [disabled]="!paymentForm.valid || isSubmitting"
-              class="bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-700 hover:to-violet-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-12 rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center space-x-3">
+              class="bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-700 hover:to-violet-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-12 rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center space-x-3 min-w-[250px] w-full sm:w-auto">
               @if (isSubmitting) {
                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -820,6 +856,7 @@
               }
             </button>
           </div>
+          }
         </form>
       </div>
       } @else {
