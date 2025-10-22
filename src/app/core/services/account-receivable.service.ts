@@ -95,7 +95,7 @@ export class AccountReceivableService {
     params['filter[es_inscripcion][_eq]'] = 'FALSE';
 
     const queryString = new URLSearchParams(params).toString();
-    const baseFields = 'id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*';
+    const baseFields = '*,id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*';
     const url = this.apiUrl + `?fields=${baseFields}&` + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
@@ -123,10 +123,10 @@ export class AccountReceivableService {
   }
 
   searchAccountReceivableByStatusWithPagination(
-    status: string, 
-    page: number = 1, 
-    limit: number = 10, 
-    searchTerm?: string, 
+    status: string,
+    page: number = 1,
+    limit: number = 10,
+    searchTerm?: string,
     colegioId?: string
   ): Observable<ResponseAPI<AccountReceivable[]>> {
     let params: any = {
