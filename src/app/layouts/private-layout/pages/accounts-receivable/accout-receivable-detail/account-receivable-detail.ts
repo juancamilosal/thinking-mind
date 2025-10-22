@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {AccountReceivable, PaymentModel} from '../../../../../core/models/AccountReceivable';
@@ -13,7 +13,8 @@ import { NotificationService } from '../../../../../core/services/notification.s
   selector: 'app-account-receivable-detail',
   imports: [CommonModule, FormsModule, PaymentDetailComponent],
   templateUrl: './account-receivable-detail.html',
-  standalone: true
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   @Input() account!: AccountReceivable;
@@ -22,12 +23,15 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (this.account) {
       this.initializeDiscountValues();
     }
+    // Inicializar explícitamente las propiedades del componente
+    this.initializeComponentProperties();
     this.cdr.detectChanges();
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['account'] && changes['account'].currentValue) {
       this.initializeDiscountValues();
+      this.initializeComponentProperties();
       this.cdr.detectChanges();
     }
   }
@@ -167,6 +171,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (!this.showAddPaymentForm) {
       this.resetPaymentForm();
     }
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   addNewPayment() {
@@ -278,6 +284,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.newBank = '';
     this.newPaymentImage = null;
     this.isSubmittingPayment = false;
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   onImageSelected(event: any) {
@@ -494,6 +502,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.showRefundModal = true;
     this.refundAmount = 0;
     this.refundFile = null;
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   closeRefundModal(): void {
@@ -502,6 +512,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.refundAmountDisplay = '';
     this.refundFile = null;
     this.isProcessingRefund = false;
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   onRefundAmountChange(event: any): void {
@@ -672,6 +684,36 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     } else {
       this.finalAmount = this.account.monto;
     }
+  }
+
+  // Método para inicializar explícitamente las propiedades del componente
+  private initializeComponentProperties(): void {
+    // Asegurar que todas las propiedades booleanas estén inicializadas
+    this.showRefundModal = false;
+    this.showAddPaymentForm = false;
+    this.showPaymentDetailView = false;
+    this.isSubmittingPayment = false;
+    this.isDeletingPayment = false;
+    this.isProcessingRefund = false;
+    this.isEditingAmount = false;
+    this.isEditingDiscount = false;
+    
+    // Inicializar propiedades de formulario
+    this.newPaymentAmountDisplay = '';
+    this.refundAmountDisplay = '';
+    this.selectedPayment = null;
+    this.deletingPaymentId = null;
+    this.newPaymentImage = null;
+    this.refundFile = null;
+    
+    // Forzar detección de cambios múltiple
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+    
+    // Usar setTimeout para asegurar que los cambios se apliquen en el próximo ciclo
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   startEditingDiscount(): void {
