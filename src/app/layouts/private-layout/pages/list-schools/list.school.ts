@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { SchoolWithPaymentsService } from '../../../../core/services/school-with-payments.service';
 import { School } from '../../../../core/models/School';
 import { AccountReceivable } from '../../../../core/models/AccountReceivable';
 import { Student } from '../../../../core/models/Student';
@@ -55,6 +56,7 @@ export class ListSchool implements OnInit {
   constructor(
     private schoolService: SchoolService,
     private accountReceivableService: AccountReceivableService,
+    private schoolWithPaymentsService: SchoolWithPaymentsService,
     private notificationService: NotificationService,
     private router: Router
   ) {}
@@ -109,7 +111,8 @@ export class ListSchool implements OnInit {
   }
 
   private loadAllAccountsReceivable(): void {
-    this.accountReceivableService.searchAccountReceivable(1, 1000).subscribe({
+    // Usar el nuevo servicio que solo trae cuentas con pagos
+    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -126,7 +129,8 @@ export class ListSchool implements OnInit {
   }
 
   private loadAccountsForSchool(schoolId: string): void {
-    this.accountReceivableService.searchAccountReceivable(1, 1000, '', schoolId).subscribe({
+    // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
+    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -220,15 +224,27 @@ export class ListSchool implements OnInit {
     this.isLoading = true;
 
     if (this.isRector) {
-      // Si es rector, buscar solo en su colegio
+      // Si es rector, buscar solo en su colegio usando el nuevo servicio
       const userData = sessionStorage.getItem('current_user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.loadAccountsForSchool(user.colegio_id);
+        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000).subscribe({
+          next: (response) => {
+            this.processAccountsReceivable(response.data);
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.notificationService.showError(
+              'Error',
+              'Error al buscar cuentas del colegio'
+            );
+            this.isLoading = false;
+          }
+        });
       }
     } else {
-      // Para otros usuarios, buscar en todas las cuentas por cobrar con límite aumentado
-      this.accountReceivableService.searchAccountReceivable(1, 1000, this.searchTerm).subscribe({
+      // Para otros usuarios, buscar en todas las cuentas con pagos
+      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm).subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
           this.isLoading = false;
