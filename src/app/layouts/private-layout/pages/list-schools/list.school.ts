@@ -36,6 +36,7 @@ export class ListSchool implements OnInit {
   selectedStudent: Student | null = null;
   selectedClient: Client | null = null;
   searchTerm = '';
+  yearFilter = ''; // Nueva propiedad para el filtro por año
   currentDate = new Date();
   isRector = false;
   private searchTimeout: any;
@@ -112,7 +113,7 @@ export class ListSchool implements OnInit {
 
   private loadAllAccountsReceivable(): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos
-    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000).subscribe({
+    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -130,7 +131,7 @@ export class ListSchool implements OnInit {
 
   private loadAccountsForSchool(schoolId: string): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
-    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000).subscribe({
+    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -220,6 +221,21 @@ export class ListSchool implements OnInit {
     }, 500); // Esperar 500ms después de que el usuario deje de escribir
   }
 
+  onYearFilterChange(event: any): void {
+    this.yearFilter = event.target.value;
+    this.currentPage = 1; // Resetear a la primera página al cambiar filtro
+
+    // Limpiar el timeout anterior si existe
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Establecer un nuevo timeout para la búsqueda
+    this.searchTimeout = setTimeout(() => {
+      this.searchSchools();
+    }, 500); // Esperar 500ms después de que el usuario deje de escribir
+  }
+
   searchSchools(): void {
     this.isLoading = true;
 
@@ -228,7 +244,7 @@ export class ListSchool implements OnInit {
       const userData = sessionStorage.getItem('current_user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000).subscribe({
+        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, this.yearFilter).subscribe({
           next: (response) => {
             this.processAccountsReceivable(response.data);
             this.isLoading = false;
@@ -244,7 +260,7 @@ export class ListSchool implements OnInit {
       }
     } else {
       // Para otros usuarios, buscar en todas las cuentas con pagos
-      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm).subscribe({
+      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter).subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
           this.isLoading = false;

@@ -14,7 +14,7 @@ export class SchoolWithPaymentsService {
 
   constructor(private http: HttpClient) {}
 
-  getAccountsWithPayments(page: number = 1, limit: number = 1000, searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+  getAccountsWithPayments(page: number = 1, limit: number = 1000, searchTerm?: string, yearFilter?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     const params: any = {
       fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,cliente_id.*,curso_id.*,pagos.*',
       page: page.toString(),
@@ -23,6 +23,13 @@ export class SchoolWithPaymentsService {
       // Filtrar por saldo mayor a 0 directamente en Directus
       'filter[saldo][_gt]': '0'
     };
+
+    // Si hay filtro por año, usar rangos de fecha con formato ISO
+    if (yearFilter && yearFilter.trim()) {
+      const year = yearFilter.trim();
+      params['filter[fecha_finalizacion][_gte]'] = `${year}-01-01T00:00:00`;
+      params['filter[fecha_finalizacion][_lt]'] = `${parseInt(year) + 1}-01-01T00:00:00`;
+    }
 
     // Si hay término de búsqueda, agregarlo a los parámetros
     if (searchTerm && searchTerm.trim()) {
@@ -34,7 +41,7 @@ export class SchoolWithPaymentsService {
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
-        console.log('🔍 Datos del servidor (ya filtrados por saldo > 0):', response.data.length);
+        console.log('🔍 Datos del servidor (filtrados por saldo > 0 y año):', response.data.length);
         
         // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
         return {
@@ -46,8 +53,8 @@ export class SchoolWithPaymentsService {
   }
 
 
-  getAccountsWithPaymentsBySchool(schoolId: string, page: number = 1, limit: number = 1000): Observable<ResponseAPI<AccountReceivable[]>> {
-    const params = {
+  getAccountsWithPaymentsBySchool(schoolId: string, page: number = 1, limit: number = 1000, yearFilter?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    const params: any = {
       fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,cliente_id.*,curso_id.*,pagos.*',
       'filter[estudiante_id][colegio_id][_eq]': schoolId,
       // Filtrar por saldo mayor a 0 directamente en Directus
@@ -57,9 +64,16 @@ export class SchoolWithPaymentsService {
       meta: 'total_count,filter_count'
     };
 
+    // Si hay filtro por año, usar rangos de fecha con formato ISO
+    if (yearFilter && yearFilter.trim()) {
+      const year = yearFilter.trim();
+      params['filter[fecha_finalizacion][_gte]'] = `${year}-01-01T00:00:00`;
+      params['filter[fecha_finalizacion][_lt]'] = `${parseInt(year) + 1}-01-01T00:00:00`;
+    }
+
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
-        console.log('🔍 Datos del servidor por escuela (ya filtrados por saldo > 0):', response.data.length);
+        console.log('🔍 Datos del servidor por escuela (filtrados por saldo > 0 y año):', response.data.length);
         
         // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
         return {

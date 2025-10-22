@@ -142,10 +142,7 @@
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <span class="font-medium text-gray-600">Precio del Programa:</span>
             <div class="flex flex-col sm:items-end">
-              <span class="text-lg font-semibold text-green-600 mt-1 sm:mt-0">{{ paymentForm.get('coursePrice')?.value }}</span>
-              @if (selectedCourseConvertedCop) {
-                <span class="text-2xl font-bold text-green-700 mt-1">$ {{ selectedCourseConvertedCop | number:'1.0-0' }} COP</span>
-              }
+              <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0">$ {{ paymentForm.get('coursePrice')?.value | number:'1.0-0' }} COP</span>
             </div>
           </div>
           @if (selectedInscriptionConvertedCop) {

@@ -309,18 +309,24 @@ export class IndependentProgramPayment implements OnInit {
   }
 
   convertCoursePrices(coursePrice: string, inscriptionPrice: number): void {
-    const coursePriceNumber = parseFloat(coursePrice) || 0;
+    // Solo convertir precio de inscripción si hay inscripción y el curso está en moneda extranjera
+    const courseCurrency = this.paymentForm.get('selectedCourse')?.value ? 
+      this.independentCourses.find(course => course.id === this.paymentForm.get('selectedCourse')?.value)?.moneda : null;
 
-    // Usar la tasa correspondiente según el tipo de curso (EUR o USD)
-    const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+    // El precio del curso nunca se convierte, siempre se muestra el original
+    this.selectedCourseConvertedCop = null;
 
-    if (rate) {
-      this.selectedCourseConvertedCop = Math.round(coursePriceNumber * rate);
-      this.selectedInscriptionConvertedCop = Math.round(inscriptionPrice * rate);
+    // Solo convertir precio de inscripción si hay inscripción y está en moneda extranjera
+    if (this.hasInscription && inscriptionPrice > 0 && (courseCurrency === 'EUR' || courseCurrency === 'USD')) {
+      const rate = courseCurrency === 'EUR' ? this.eurToCop : this.usdToCop;
+      
+      if (rate) {
+        this.selectedInscriptionConvertedCop = Math.round(inscriptionPrice * rate);
+      } else {
+        this.selectedInscriptionConvertedCop = null;
+      }
     } else {
-      // Si no hay tasa disponible, mostrar valores originales
-      this.selectedCourseConvertedCop = coursePriceNumber;
-      this.selectedInscriptionConvertedCop = inscriptionPrice;
+      this.selectedInscriptionConvertedCop = null;
     }
   }
 
