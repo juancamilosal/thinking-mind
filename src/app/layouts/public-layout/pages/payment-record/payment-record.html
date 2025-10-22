@@ -663,7 +663,7 @@
                   formControlName="studentGrupo"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                   <option value="">Seleccione un grupo</option>
-                  <option [value]="">No Aplica</option>
+                  <option [value]="' '">No Aplica</option>
                   @for (grado of grado; track grado.id) {
                     <option [value]="grado.grupo">{{ grado.grupo }}</option>
                   }
