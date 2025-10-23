@@ -42,4 +42,11 @@ export class UserService {
   deleteUser(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }
+
+  getAllUsers(): Observable<ResponseAPI<User[]>> {
+    const params = {
+      'fields': 'id,first_name,last_name,email,role,celular,colegio_id.*'
+    };
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
 }

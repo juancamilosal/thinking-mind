@@ -157,7 +157,7 @@ export class AccountReceivableService {
 
     // Filtro por colegio si se proporciona
     if (colegioId) {
-      params['filter[estudiante_id][colegio_id][_eq]'] = colegioId;
+      params['filter[estudiante_id][colegio_id][id][_eq]'] = colegioId;
     }
 
     // Filtro por término de búsqueda si se proporciona
@@ -346,8 +346,17 @@ export class AccountReceivableService {
     };
   }
 
-  totalAccounts(): Observable<ResponseAPI<TotalAccounts>> {
-    return this.http.get<ResponseAPI<TotalAccounts>>(this.apiUrlTotalAccounts)
+  totalAccounts(colegioId?: string): Observable<ResponseAPI<TotalAccounts>> {
+    let url = this.apiUrlTotalAccounts;
+    
+    if (colegioId) {
+      const params = new URLSearchParams({
+        'filter[estudiante_id][colegio_id][_eq]': colegioId
+      });
+      url += '?' + params.toString();
+    }
+    
+    return this.http.get<ResponseAPI<TotalAccounts>>(url);
   }
 
   updateAccountReceivable(id: string, accountReceivable: any): Observable<ResponseAPI<any>> {
