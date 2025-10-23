@@ -52,16 +52,22 @@ export class FormUser implements OnInit {
   }
 
   private initializeForm(): void {
+    // Definir validadores según el modo
+    const requiredValidators = this.editMode ? [] : [Validators.required];
+    const emailValidators = this.editMode ? [Validators.email] : [Validators.required, Validators.email];
+    const phoneValidators = this.editMode ? [Validators.pattern(/^[0-9]{10}$/)] : [Validators.required, Validators.pattern(/^[0-9]{10}$/)];
+    const passwordValidators = this.editMode ? [Validators.minLength(6)] : [Validators.required, Validators.minLength(6)];
+
     this.userForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      celular: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      firstName: ['', requiredValidators],
+      lastName: ['', requiredValidators],
+      email: ['', emailValidators],
+      phone: ['', phoneValidators],
       schoolId: [''],
       schoolSearchTerm: [''],
-      password: ['', this.editMode ? [] : [Validators.required, Validators.minLength(6)]],
+      password: ['', passwordValidators],
       confirmPassword: ['', this.editMode ? [] : [Validators.required]]
-    }, { validators: this.passwordMatchValidator });
+    }, { validators: this.createPasswordMatchValidator() });
 
     // Hacer el campo de colegio requerido solo para ciertos roles
     this.updateSchoolValidation();
@@ -128,13 +134,34 @@ export class FormUser implements OnInit {
     this.filteredSchools = this.schools;
   }
 
+  private createPasswordMatchValidator() {
+    return (control: AbstractControl): { [key: string]: any } | null => {
+      const password = control.get('password');
+      const confirmPassword = control.get('confirmPassword');
+      
+      // Solo validar si ambos campos tienen valores
+      if (password?.value && confirmPassword?.value && password.value !== confirmPassword.value) {
+        return { passwordMismatch: true };
+      }
+      
+      // En modo edición, si solo uno de los campos tiene valor, es un error
+      if (this.editMode && ((password?.value && !confirmPassword?.value) || (!password?.value && confirmPassword?.value))) {
+        return { passwordMismatch: true };
+      }
+      
+      return null;
+    };
+  }
+
   private passwordMatchValidator(control: AbstractControl): { [key: string]: any } | null {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
     
-    if (password && confirmPassword && password.value !== confirmPassword.value) {
+    // Solo validar si ambos campos tienen valores
+    if (password?.value && confirmPassword?.value && password.value !== confirmPassword.value) {
       return { passwordMismatch: true };
     }
+    
     return null;
   }
 
@@ -144,7 +171,7 @@ export class FormUser implements OnInit {
         firstName: this.userData.first_name,
         lastName: this.userData.last_name,
         email: this.userData.email,
-        celular: this.userData.celular
+        phone: this.userData.celular
       });
 
       if (this.userData.colegio_id) {
@@ -157,15 +184,20 @@ export class FormUser implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.userForm.valid) {
-      this.isSubmitting = true;
-      this.errorMessage = '';
+    // En modo edición, permitir envío incluso si el formulario no es válido
+    // En modo creación, requerir que el formulario sea válido
+    if (!this.editMode && this.userForm.invalid) {
+      this.errorMessage = 'Por favor, complete todos los campos requeridos.';
+      return;
+    }
 
-      if (this.editMode) {
-        this.updateUser();
-      } else {
-        this.createUser();
-      }
+    this.isSubmitting = true;
+    this.errorMessage = '';
+
+    if (this.editMode) {
+      this.updateUser();
+    } else {
+      this.createUser();
     }
   }
 
@@ -174,7 +206,7 @@ export class FormUser implements OnInit {
       first_name: this.userForm.get('firstName')?.value,
       last_name: this.userForm.get('lastName')?.value,
       email: this.userForm.get('email')?.value,
-      celular: this.userForm.get('celular')?.value,
+      celular: this.userForm.get('phone')?.value,
       password: this.userForm.get('password')?.value,
       role: this.selectedRole?.id
     };
@@ -204,12 +236,28 @@ export class FormUser implements OnInit {
   private updateUser(): void {
     if (!this.userData?.id) return;
 
-    const userData: any = {
-      first_name: this.userForm.get('firstName')?.value,
-      last_name: this.userForm.get('lastName')?.value,
-      email: this.userForm.get('email')?.value,
-      celular: this.userForm.get('celular')?.value
-    };
+    const userData: any = {};
+
+    // Solo agregar campos que tengan valores
+    const firstName = this.userForm.get('firstName')?.value?.trim();
+    if (firstName) {
+      userData.first_name = firstName;
+    }
+
+    const lastName = this.userForm.get('lastName')?.value?.trim();
+    if (lastName) {
+      userData.last_name = lastName;
+    }
+
+    const email = this.userForm.get('email')?.value?.trim();
+    if (email) {
+      userData.email = email;
+    }
+
+    const phone = this.userForm.get('phone')?.value?.trim();
+    if (phone) {
+      userData.celular = phone;
+    }
 
     // Solo agregar colegio_id si se seleccionó uno
     const schoolId = this.userForm.get('schoolId')?.value;
@@ -218,9 +266,17 @@ export class FormUser implements OnInit {
     }
 
     // Solo agregar password si se proporcionó
-    const password = this.userForm.get('password')?.value;
+    const password = this.userForm.get('password')?.value?.trim();
     if (password) {
       userData.password = password;
+    }
+
+    // Verificar que al menos un campo tenga valor
+    if (Object.keys(userData).length === 0) {
+      this.errorMessage = 'Debe proporcionar al menos un campo para actualizar.';
+      this.notificationService.showError('Error', this.errorMessage);
+      this.isSubmitting = false;
+      return;
     }
 
     this.userService.updateUser(this.userData.id, userData).subscribe({
@@ -290,7 +346,7 @@ export class FormUser implements OnInit {
   get firstName() { return this.userForm.get('firstName'); }
   get lastName() { return this.userForm.get('lastName'); }
   get email() { return this.userForm.get('email'); }
-  get celular() { return this.userForm.get('celular'); }
+  get phone() { return this.userForm.get('phone'); }
   get schoolId() { return this.userForm.get('schoolId'); }
   get password() { return this.userForm.get('password'); }
   get confirmPassword() { return this.userForm.get('confirmPassword'); }

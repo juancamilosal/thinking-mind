@@ -416,10 +416,18 @@
         <div class="flex justify-between items-center mb-8">
           <div>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">
-              {{ selectedRole === 'rector' ? (editMode ? 'Editar Información Rector' : 'Registro de Rector') : (editMode ? 'Editar Información Administrador' : 'Registro de Administrador') }}
+              @if (selectedRole === 'rector' || selectedRole === 'administrador') {
+                {{ selectedRole === 'rector' ? (editMode ? 'Editar Información Rector' : 'Registro de Rector') : (editMode ? 'Editar Información Administrador' : 'Registro de Administrador') }}
+              } @else {
+                {{ editMode ? 'Editar Información ' + getRoleName(selectedRole) : 'Registro de ' + getRoleName(selectedRole) }}
+              }
             </h1>
             <p class="text-gray-600">
-              {{ selectedRole === 'rector' ? (editMode ? 'Actualiza la información del rector' : 'Completa la información del rector') : (editMode ? 'Actualiza la información del administrador' : 'Completa la información del administrador') }}
+              @if (selectedRole === 'rector' || selectedRole === 'administrador') {
+                {{ selectedRole === 'rector' ? (editMode ? 'Actualiza la información del rector' : 'Completa la información del rector') : (editMode ? 'Actualiza la información del administrador' : 'Completa la información del administrador') }}
+              } @else {
+                {{ editMode ? 'Actualiza la información del ' + getRoleName(selectedRole).toLowerCase() : 'Completa la información del ' + getRoleName(selectedRole).toLowerCase() }}
+              }
             </p>
           </div>
           <button

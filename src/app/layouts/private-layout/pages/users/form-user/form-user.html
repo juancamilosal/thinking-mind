@@ -8,7 +8,7 @@
         </svg>
         Información Personal
       </h3>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Nombre -->
         <div>
@@ -62,7 +62,7 @@
         </svg>
         Información de Contacto
       </h3>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Email -->
         <div>
@@ -89,21 +89,21 @@
 
         <!-- Teléfono -->
         <div>
-          <label for="celular" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
             Teléfono Celular <span class="text-red-500">*</span>
           </label>
           <input
             type="tel"
-            id="celular"
-            formControlName="celular"
+            id="phone"
+            formControlName="phone"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             placeholder="3001234567"
-            [class.border-red-500]="celular?.invalid && celular?.touched">
-          @if (celular?.invalid && celular?.touched) {
+            [class.border-red-500]="phone?.invalid && phone?.touched">
+          @if (phone?.invalid && phone?.touched) {
             <p class="mt-1 text-sm text-red-600">
-              @if (celular?.errors?.['required']) {
+              @if (phone?.errors?.['required']) {
                 El teléfono celular es requerido
-              } @else if (celular?.errors?.['pattern']) {
+              } @else if (phone?.errors?.['pattern']) {
                 El teléfono debe tener 10 dígitos
               }
             </p>
@@ -121,12 +121,12 @@
           </svg>
           Información del Colegio
         </h3>
-        
+
         <div class="relative">
           <label for="schoolSearchTerm" class="block text-sm font-medium text-gray-700 mb-2">
             Colegio <span class="text-red-500">*</span>
           </label>
-          
+
           @if (!isSchoolSelected) {
             <input
               type="text"
@@ -175,97 +175,95 @@
     }
 
     <!-- Información de Seguridad -->
-    @if (!editMode || (editMode && userForm.get('password')?.value)) {
-      <div class="bg-gray-50 rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
-          Información de Seguridad
-          @if (editMode) {
-            <span class="text-sm font-normal text-gray-500 ml-2">(Opcional - Solo si deseas cambiar la contraseña)</span>
-          }
-        </h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Contraseña -->
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-              Contraseña @if (!editMode) { <span class="text-red-500">*</span> }
-            </label>
-            <div class="relative">
-              <input
-                [type]="showPassword ? 'text' : 'password'"
-                id="password"
-                formControlName="password"
-                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Ingresa la contraseña"
-                [class.border-red-500]="password?.invalid && password?.touched">
-              <button
-                type="button"
-                (click)="togglePasswordVisibility()"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  @if (showPassword) {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
-                  } @else {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  }
-                </svg>
-              </button>
-            </div>
-            @if (password?.invalid && password?.touched) {
-              <p class="mt-1 text-sm text-red-600">
-                @if (password?.errors?.['required']) {
-                  La contraseña es requerida
-                } @else if (password?.errors?.['minlength']) {
-                  La contraseña debe tener al menos 6 caracteres
-                }
-              </p>
-            }
-          </div>
+    <div class="bg-gray-50 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        Información de Seguridad
+        @if (editMode) {
+          <span class="text-sm font-normal text-gray-500 ml-2">(Opcional - Solo si deseas cambiar la contraseña)</span>
+        }
+      </h3>
 
-          <!-- Confirmar Contraseña -->
-          <div>
-            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
-              Confirmar Contraseña @if (!editMode) { <span class="text-red-500">*</span> }
-            </label>
-            <div class="relative">
-              <input
-                [type]="showConfirmPassword ? 'text' : 'password'"
-                id="confirmPassword"
-                formControlName="confirmPassword"
-                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Confirma la contraseña"
-                [class.border-red-500]="confirmPassword?.invalid && confirmPassword?.touched || userForm.errors?.['passwordMismatch'] && confirmPassword?.touched">
-              <button
-                type="button"
-                (click)="toggleConfirmPasswordVisibility()"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  @if (showConfirmPassword) {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
-                  } @else {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  }
-                </svg>
-              </button>
-            </div>
-            @if ((confirmPassword?.invalid && confirmPassword?.touched) || (userForm.errors?.['passwordMismatch'] && confirmPassword?.touched)) {
-              <p class="mt-1 text-sm text-red-600">
-                @if (confirmPassword?.errors?.['required']) {
-                  Debes confirmar la contraseña
-                } @else if (userForm.errors?.['passwordMismatch']) {
-                  Las contraseñas no coinciden
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Contraseña -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            Contraseña <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Ingresa la contraseña"
+              [class.border-red-500]="password?.invalid && password?.touched">
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                @if (showPassword) {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                } @else {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 }
-              </p>
-            }
+              </svg>
+            </button>
           </div>
+          @if (password?.invalid && password?.touched) {
+            <p class="mt-1 text-sm text-red-600">
+              @if (password?.errors?.['required']) {
+                La contraseña es requerida
+              } @else if (password?.errors?.['minlength']) {
+                La contraseña debe tener al menos 6 caracteres
+              }
+            </p>
+          }
+        </div>
+
+        <!-- Confirmar Contraseña -->
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+            Confirmar Contraseña <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Confirma la contraseña"
+              [class.border-red-500]="confirmPassword?.invalid && confirmPassword?.touched || userForm.errors?.['passwordMismatch'] && confirmPassword?.touched">
+            <button
+              type="button"
+              (click)="toggleConfirmPasswordVisibility()"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                @if (showConfirmPassword) {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                } @else {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                }
+              </svg>
+            </button>
+          </div>
+          @if ((confirmPassword?.invalid && confirmPassword?.touched) || (userForm.errors?.['passwordMismatch'] && confirmPassword?.touched)) {
+            <p class="mt-1 text-sm text-red-600">
+              @if (confirmPassword?.errors?.['required']) {
+                Debes confirmar la contraseña
+              } @else if (userForm.errors?.['passwordMismatch']) {
+                Las contraseñas no coinciden
+              }
+            </p>
+          }
         </div>
       </div>
-    }
+    </div>
 
     <!-- Mensaje de Error -->
     @if (errorMessage) {
@@ -283,7 +281,7 @@
     <div class="flex flex-col sm:flex-row gap-4 pt-6">
       <button
         type="submit"
-        [disabled]="userForm.invalid || isSubmitting"
+        [disabled]="isSubmitting"
         class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center justify-center space-x-2">
         @if (isSubmitting) {
           <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
@@ -334,12 +332,12 @@
         </svg>
         <h3 class="text-lg font-semibold text-gray-900">Confirmar Eliminación</h3>
       </div>
-      
+
       <p class="text-gray-600 mb-6">
-        ¿Estás seguro de que deseas eliminar a {{ userData?.first_name }} {{ userData?.last_name }}? 
+        ¿Estás seguro de que deseas eliminar a {{ userData?.first_name }} {{ userData?.last_name }}?
         Esta acción no se puede deshacer.
       </p>
-      
+
       <div class="flex gap-4">
         <button
           (click)="confirmDelete()"
@@ -355,7 +353,7 @@
             Eliminar
           }
         </button>
-        
+
         <button
           (click)="cancelDelete()"
           [disabled]="isDeleting"
