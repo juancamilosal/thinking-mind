@@ -48,13 +48,29 @@ export class AccountReceivableService {
 
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
-      // Búsqueda por cliente (nombre, apellido, documento)
-      params['filter[_or][0][cliente_id][nombre][_icontains]'] = searchTerm;
-      params['filter[_or][1][cliente_id][apellido][_icontains]'] = searchTerm;
-      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = searchTerm;
-      // Búsqueda por estudiante (nombre, apellido)
-      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = searchTerm;
-      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
+      const searchTerms = searchTerm.trim().split(/\s+/);
+      
+      if (searchTerms.length === 1) {
+        // Búsqueda de una sola palabra - usar OR entre campos
+        const term = searchTerms[0];
+        params['filter[_or][0][cliente_id][nombre][_icontains]'] = term;
+        params['filter[_or][1][cliente_id][apellido][_icontains]'] = term;
+        params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = term;
+        params['filter[_or][3][estudiante_id][nombre][_icontains]'] = term;
+        params['filter[_or][4][estudiante_id][apellido][_icontains]'] = term;
+      } else {
+        // Búsqueda de múltiples palabras - cada palabra debe estar presente
+        searchTerms.forEach((term: string, index: number) => {
+          if (term.length > 0) {
+            // Cada término debe aparecer en al menos uno de los campos (OR entre campos, AND entre términos)
+            params[`filter[_and][${index}][_or][0][cliente_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][1][cliente_id][apellido][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][2][cliente_id][numero_documento][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][3][estudiante_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][4][estudiante_id][apellido][_icontains]`] = term;
+          }
+        });
+      }
     }
 
     const queryString = new URLSearchParams(params).toString();
@@ -77,11 +93,29 @@ export class AccountReceivableService {
 
     // Filtro por búsqueda general (nombre, apellido, documento)
     if (filterParams.search) {
-      params['filter[_or][0][cliente_id][nombre][_icontains]'] = filterParams.search;
-      params['filter[_or][1][cliente_id][apellido][_icontains]'] = filterParams.search;
-      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = filterParams.search;
-      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = filterParams.search;
-      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = filterParams.search;
+      const searchTerms = filterParams.search.trim().split(/\s+/);
+      
+      if (searchTerms.length === 1) {
+        // Búsqueda de una sola palabra - usar OR entre campos
+        const term = searchTerms[0];
+        params['filter[_or][0][cliente_id][nombre][_icontains]'] = term;
+        params['filter[_or][1][cliente_id][apellido][_icontains]'] = term;
+        params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = term;
+        params['filter[_or][3][estudiante_id][nombre][_icontains]'] = term;
+        params['filter[_or][4][estudiante_id][apellido][_icontains]'] = term;
+      } else {
+        // Búsqueda de múltiples palabras - cada palabra debe estar presente
+        searchTerms.forEach((term: string, index: number) => {
+          if (term.length > 0) {
+            // Cada término debe aparecer en al menos uno de los campos (OR entre campos, AND entre términos)
+            params[`filter[_and][${index}][_or][0][cliente_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][1][cliente_id][apellido][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][2][cliente_id][numero_documento][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][3][estudiante_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][4][estudiante_id][apellido][_icontains]`] = term;
+          }
+        });
+      }
     }
 
     // Filtro por colegio
@@ -128,13 +162,29 @@ export class AccountReceivableService {
 
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
-      // Búsqueda por cliente (nombre, apellido, documento)
-      params['filter[_or][0][cliente_id][nombre][_icontains]'] = searchTerm;
-      params['filter[_or][1][cliente_id][apellido][_icontains]'] = searchTerm;
-      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = searchTerm;
-      // Búsqueda por estudiante (nombre, apellido)
-      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = searchTerm;
-      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
+      const searchTerms = searchTerm.trim().split(/\s+/);
+      
+      if (searchTerms.length === 1) {
+        // Búsqueda de una sola palabra - usar OR entre campos
+        const term = searchTerms[0];
+        params['filter[_or][0][cliente_id][nombre][_icontains]'] = term;
+        params['filter[_or][1][cliente_id][apellido][_icontains]'] = term;
+        params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = term;
+        params['filter[_or][3][estudiante_id][nombre][_icontains]'] = term;
+        params['filter[_or][4][estudiante_id][apellido][_icontains]'] = term;
+      } else {
+        // Búsqueda de múltiples palabras - cada palabra debe estar presente
+        searchTerms.forEach((term: string, index: number) => {
+          if (term.length > 0) {
+            // Cada término debe aparecer en al menos uno de los campos (OR entre campos, AND entre términos)
+            params[`filter[_and][${index}][_or][0][cliente_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][1][cliente_id][apellido][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][2][cliente_id][numero_documento][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][3][estudiante_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][4][estudiante_id][apellido][_icontains]`] = term;
+          }
+        });
+      }
     }
 
     // Solo cuentas de curso (no inscripción)
@@ -208,13 +258,29 @@ export class AccountReceivableService {
 
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
-      // Búsqueda por cliente (nombre, apellido, documento)
-      params['filter[_or][0][cliente_id][nombre][_icontains]'] = searchTerm;
-      params['filter[_or][1][cliente_id][apellido][_icontains]'] = searchTerm;
-      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = searchTerm;
-      // Búsqueda por estudiante (nombre, apellido)
-      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = searchTerm;
-      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = searchTerm;
+      const searchTerms = searchTerm.trim().split(/\s+/);
+      
+      if (searchTerms.length === 1) {
+        // Búsqueda de una sola palabra - usar OR entre campos
+        const term = searchTerms[0];
+        params['filter[_or][0][cliente_id][nombre][_icontains]'] = term;
+        params['filter[_or][1][cliente_id][apellido][_icontains]'] = term;
+        params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = term;
+        params['filter[_or][3][estudiante_id][nombre][_icontains]'] = term;
+        params['filter[_or][4][estudiante_id][apellido][_icontains]'] = term;
+      } else {
+        // Búsqueda de múltiples palabras - cada palabra debe estar presente
+        searchTerms.forEach((term: string, index: number) => {
+          if (term.length > 0) {
+            // Cada término debe aparecer en al menos uno de los campos (OR entre campos, AND entre términos)
+            params[`filter[_and][${index}][_or][0][cliente_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][1][cliente_id][apellido][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][2][cliente_id][numero_documento][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][3][estudiante_id][nombre][_icontains]`] = term;
+            params[`filter[_and][${index}][_or][4][estudiante_id][apellido][_icontains]`] = term;
+          }
+        });
+      }
     }
 
     const queryString = new URLSearchParams(params).toString();
