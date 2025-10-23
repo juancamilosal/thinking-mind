@@ -190,7 +190,6 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm font-medium text-gray-900">{{ account.schoolName || 'N/A' }}</div>
-                      <div class="text-sm text-gray-500">{{ account.ciudad || 'N/A' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <span [class]="getEstadoClass(account.estado)" class="px-2 py-1 text-xs font-semibold rounded-full">
@@ -207,7 +206,7 @@
                       <div class="text-sm text-gray-900">{{ account.fecha_finalizacion | date:'dd/MM/yyyy' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button (click)="viewDetail(account)" 
+                      <button (click)="viewDetail(account)"
                               class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 transform hover:scale-105">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -290,7 +289,7 @@
                      @for (page of getPaginationArray(); track page) {
                        <button
                          (click)="onPageChange(page)"
-                         [class]="page === currentPage ? 
+                         [class]="page === currentPage ?
                            'z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white relative inline-flex items-center px-4 py-2 text-sm font-bold shadow-inner border-r border-indigo-400' :
                            'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 relative inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 border-r border-gray-200'">
                          {{ page }}
