@@ -157,7 +157,7 @@ export class AccountReceivableService {
 
     // Filtro por colegio si se proporciona
     if (colegioId) {
-      params['filter[estudiante_id][colegio_id][_eq]'] = colegioId;
+      params['filter[estudiante_id][colegio_id][id][_eq]'] = colegioId;
     }
 
     // Filtro por término de búsqueda si se proporciona

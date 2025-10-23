@@ -5,8 +5,10 @@ import { AccountReceivableService } from '../../../../core/services/account-rece
 import { CourseService } from '../../../../core/services/course.service';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { DashboardService } from '../../../../core/services/dashboard.service';
 import { School } from '../../../../core/models/School';
 import { Course } from '../../../../core/models/Course';
+import { Student } from '../../../../core/models/Student';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
 import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
@@ -51,7 +53,8 @@ export class Dashboard implements OnInit {
     private accountReceivableService: AccountReceivableService,
     private courseService: CourseService,
     private paymentService: PaymentService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private dashboardService: DashboardService
   ) {}
 
   ngOnInit(): void {
@@ -80,14 +83,15 @@ export class Dashboard implements OnInit {
   }
 
   private loadRectorData(): void {
-    // Cargar TODAS las cuentas por cobrar sin filtrar por colegio
-    this.accountReceivableService.searchAccountReceivable(1, 1000).subscribe({
+    // Usar el nuevo servicio de dashboard rector
+    this.dashboardService.dashboardRector().subscribe({
       next: (accounts) => {
-        this.accounts = accounts.data; // Todas las cuentas sin filtro
-        this.calculateRectorStats(accounts.data);
+        this.accounts = accounts; // Datos ya filtrados por el API
+        this.calculateRectorStats(accounts);
         this.isLoading = false;
       },
       error: (error) => {
+        console.error('Error loading rector dashboard data:', error);
         this.isLoading = false;
       }
     });
@@ -140,21 +144,13 @@ export class Dashboard implements OnInit {
   }
 
   private calculateRectorStats(accounts: any[]) {
-    // Calcular estudiantes inscritos: solo contar cuentas que tienen fecha_inscripcion
-    this.rectorStats.totalStudentsEnrolled = accounts.filter(account =>
-      account.fecha_inscripcion && account.fecha_inscripcion !== null
+    // Estudiantes Inscritos: total de cuentas del colegio filtrado
+    this.rectorStats.totalStudentsEnrolled = accounts.length;
+
+    // Estudiantes con Estado Pendiente: contar cuentas con estado PENDIENTE
+    this.rectorStats.totalStudentsWithPendingStatus = accounts.filter(account =>
+      account.estado === 'PENDIENTE'
     ).length;
-
-    // Calcular estudiantes con estado pendiente: solo contar estudiantes únicos que tienen fecha_inscripcion y estado PENDIENTE
-    const studentsWithPendingStatus = new Set<number>();
-
-    accounts.forEach(account => {
-      if (account.estado === 'PENDIENTE' && account.fecha_inscripcion && account.fecha_inscripcion !== null) {
-        studentsWithPendingStatus.add(account.estudiante_id.id);
-      }
-    });
-
-    this.rectorStats.totalStudentsWithPendingStatus = studentsWithPendingStatus.size;
 
     // Calcular cuentas con estado PAGADA: contar todas las cuentas con estado "PAGADA"
     this.rectorStats.totalStudentsWithPaidStatus = accounts.filter(account =>
