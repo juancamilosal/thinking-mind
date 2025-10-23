@@ -1,5 +1,6 @@
 import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import {AccountReceivableFormComponent} from './account-recevable-form/account-receivable-form';
 import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
@@ -8,7 +9,7 @@ import {AccountReceivableService} from '../../../../core/services/account-receiv
 
 @Component({
   selector: 'app-accounts-receivable',
-  imports: [CommonModule, AccountReceivableFormComponent, AccountReceivableDetailComponent],
+  imports: [CommonModule, FormsModule, AccountReceivableFormComponent, AccountReceivableDetailComponent],
   templateUrl: './accounts-receivable.html',
   standalone: true
 })
@@ -29,6 +30,13 @@ export class AccountsReceivable implements OnInit {
   // Search
   searchTerm: string = '';
   
+  // Filtros
+  filters = {
+    colegio: '',
+    fechaFinalizacion: '',
+    estado: ''
+  };
+  
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
@@ -45,8 +53,9 @@ export class AccountsReceivable implements OnInit {
   }
 
   ngOnInit(): void {
-    // Cargar cuentas pendientes por defecto al inicializar
-    this.loadAccountsByStatus(this.activeTab);
+    // Aplicar filtros iniciales (que incluye "Todos los estados" por defecto)
+    // Esto cargará todas las cuentas con paginación y contador correcto
+    this.applyFilters();
     this.totalAccounts();
     
     // Check for cuentaCobrarId query parameter
@@ -58,11 +67,183 @@ export class AccountsReceivable implements OnInit {
     });
   }
 
+  // Método para cargar todas las cuentas
+  private loadAllAccounts(): void {
+    this.isLoading = true;
+    this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage).subscribe({
+      next: (response) => {
+        this.accounts = response.data || [];
+        this.totalItems = response.meta?.total_count || 0;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Método para manejar cambios en los filtros
+  onFilterChange(): void {
+    this.currentPage = 1; // Resetear a la primera página cuando se aplican filtros
+    this.applyFilters();
+  }
+
+  // Método para aplicar filtros
+  private applyFilters(): void {
+    this.isLoading = true;
+    
+    // Construir parámetros de filtro
+    const filterParams: any = {
+      page: this.currentPage,
+      limit: this.itemsPerPage
+    };
+
+    // Incluir el término de búsqueda si existe
+    if (this.searchTerm.trim()) {
+      filterParams.search = this.searchTerm.trim();
+    }
+
+    if (this.filters.colegio.trim()) {
+      filterParams.colegio = this.filters.colegio.trim();
+    }
+
+    if (this.filters.fechaFinalizacion) {
+      filterParams.fecha_finalizacion = this.filters.fechaFinalizacion;
+    }
+
+    if (this.filters.estado) {
+      filterParams.estado = this.filters.estado;
+    }
+
+    // Llamar al servicio con los filtros
+    this.accountService.getFilteredAccountsReceivable(filterParams).subscribe({
+      next: (response) => {
+        this.accounts = response.data || [];
+        
+        // Si hay filtros aplicados y no hay resultados, mostrar 0
+        // Si hay filtros aplicados y hay resultados, usar filter_count
+        // Si no hay filtros aplicados, usar total_count
+        if (this.hasActiveFilters()) {
+          // Cuando hay filtros aplicados, usar filter_count o el length de los datos
+          this.totalItems = response.meta?.filter_count || this.accounts.length;
+        } else {
+          // Cuando no hay filtros, usar total_count
+          this.totalItems = response.meta?.total_count || 0;
+        }
+        
+        // Calcular totalPages correctamente
+        this.totalPages = this.totalItems > 0 ? Math.ceil(this.totalItems / this.itemsPerPage) : 0;
+        
+        // Si no hay resultados, resetear a página 1
+        if (this.totalItems === 0) {
+          this.currentPage = 1;
+        }
+        // Si la página actual es mayor que el total de páginas disponibles, ir a la primera página
+        else if (this.currentPage > this.totalPages && this.totalPages > 0) {
+          this.currentPage = 1;
+          // Recargar con la página corregida
+          setTimeout(() => {
+            this.applyFilters();
+          }, 0);
+          return;
+        }
+        
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Método para limpiar filtros
+  clearFilters(): void {
+    this.filters = {
+      colegio: '',
+      fechaFinalizacion: '',
+      estado: ''
+    };
+    this.searchTerm = ''; // También limpiar el término de búsqueda
+    this.currentPage = 1;
+    // Usar applyFilters para mantener consistencia (ahora mostrará "Todos los estados")
+    this.applyFilters();
+  }
+
+  // Método para obtener la clase CSS del estado
+  getEstadoClass(estado: string): string {
+    switch (estado?.toUpperCase()) {
+      case 'PENDIENTE':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'PAGADA':
+        return 'bg-green-100 text-green-800';
+      case 'DEVOLUCION':
+        return 'bg-purple-100 text-purple-800';
+      case 'SALDO_0':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  // Método para obtener el texto del estado
+  getEstadoText(estado: string): string {
+    switch (estado?.toUpperCase()) {
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'PAGADA':
+        return 'Pagada';
+      case 'DEVOLUCION':
+        return 'Devolución';
+      case 'SALDO_0':
+        return 'Saldo 0';
+      default:
+        return estado || 'N/A';
+    }
+  }
+
+  // Métodos auxiliares para obtener información de objetos anidados
+  getClientDocument(account: AccountReceivable): string {
+    if (account.cliente_id && typeof account.cliente_id === 'object') {
+      return (account.cliente_id as any).numero_documento || '';
+    }
+    return '';
+  }
+
+  getClientDocumentType(account: AccountReceivable): string {
+    if (account.cliente_id && typeof account.cliente_id === 'object') {
+      return (account.cliente_id as any).tipo_documento || '';
+    }
+    return '';
+  }
+
+  getStudentLastName(account: AccountReceivable): string {
+    if (account.estudiante_id && typeof account.estudiante_id === 'object') {
+      return (account.estudiante_id as any).apellido || '';
+    }
+    return '';
+  }
+
+  getStudentDocument(account: AccountReceivable): string {
+    if (account.estudiante_id && typeof account.estudiante_id === 'object') {
+      return (account.estudiante_id as any).numero_documento || '';
+    }
+    return '';
+  }
+
+  getStudentDocumentType(account: AccountReceivable): string {
+    if (account.estudiante_id && typeof account.estudiante_id === 'object') {
+      return (account.estudiante_id as any).tipo_documento || '';
+    }
+    return '';
+  }
+
   // Métodos de paginación
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
-      this.loadAccountsByStatus(this.activeTab);
+      // Siempre usar applyFilters para mantener consistencia en la paginación
+      this.applyFilters();
     }
   }
 
@@ -70,7 +251,14 @@ export class AccountsReceivable implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.itemsPerPage = parseInt(target.value);
     this.currentPage = 1;
-    this.loadAccountsByStatus(this.activeTab);
+    // Siempre usar applyFilters para mantener consistencia
+    this.applyFilters();
+  }
+
+  // Método para verificar si hay filtros activos (incluyendo búsqueda)
+  // Nota: El filtro de estado vacío significa "Todos los estados" y NO cuenta como filtro activo
+  private hasActiveFilters(): boolean {
+    return !!(this.filters.colegio.trim() || this.filters.fechaFinalizacion || this.filters.estado.trim() || this.searchTerm.trim());
   }
 
   loadAccountsPage(): void {
@@ -231,13 +419,19 @@ export class AccountsReceivable implements OnInit {
 
   onSearchChange(term: string) {
     this.searchTerm = term;
-    // Búsqueda en Directus al escribir con el filtro de estado activo
-    this.fetchServerSearchByStatus();
+    this.currentPage = 1; // Resetear a la primera página cuando se busca
+    // Si hay filtros aplicados o término de búsqueda, usar applyFilters
+    if (this.hasActiveFilters()) {
+      this.applyFilters();
+    } else {
+      this.loadAllAccounts();
+    }
   }
 
   onSearch(): void {
-    this.currentPage = 1;
-    this.loadAccountsByStatus(this.activeTab);
+    this.currentPage = 1; // Resetear a la primera página
+    // Siempre usar applyFilters para mantener consistencia
+    this.applyFilters();
   }
 
   private fetchServerSearchByStatus(): void {
@@ -444,8 +638,6 @@ export class AccountsReceivable implements OnInit {
       this.loadAccountsByStatus(this.activeTab);
     }
   }
-
-  // Removed duplicate Math = Math; declaration
 
   private matchesSearch(account: AccountReceivable, term: string): boolean {
     const t = term || '';

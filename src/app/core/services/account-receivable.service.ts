@@ -68,6 +68,52 @@ export class AccountReceivableService {
     );
   }
 
+  getFilteredAccountsReceivable(filterParams: any): Observable<ResponseAPI<AccountReceivable[]>> {
+    let params: any = {
+      page: filterParams.page?.toString() || '1',
+      limit: filterParams.limit?.toString() || '10',
+      meta: 'total_count,filter_count'
+    };
+
+    // Filtro por búsqueda general (nombre, apellido, documento)
+    if (filterParams.search) {
+      params['filter[_or][0][cliente_id][nombre][_icontains]'] = filterParams.search;
+      params['filter[_or][1][cliente_id][apellido][_icontains]'] = filterParams.search;
+      params['filter[_or][2][cliente_id][numero_documento][_icontains]'] = filterParams.search;
+      params['filter[_or][3][estudiante_id][nombre][_icontains]'] = filterParams.search;
+      params['filter[_or][4][estudiante_id][apellido][_icontains]'] = filterParams.search;
+    }
+
+    // Filtro por colegio
+    if (filterParams.colegio) {
+      params['filter[estudiante_id][colegio_id][nombre][_icontains]'] = filterParams.colegio;
+    }
+
+    // Filtro por fecha de finalización
+    if (filterParams.fecha_finalizacion) {
+      params['filter[fecha_finalizacion][_eq]'] = filterParams.fecha_finalizacion;
+    }
+
+    // Filtro por estado
+    if (filterParams.estado) {
+      if (filterParams.estado === 'SALDO_0') {
+        params['filter[saldo][_eq]'] = '0';
+      } else {
+        params['filter[estado][_eq]'] = filterParams.estado;
+      }
+    }
+
+    const queryString = new URLSearchParams(params).toString();
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
+      map(response => ({
+        ...response,
+        data: response.data?.map(item => this.mapToAccountReceivable(item)) || []
+      }))
+    );
+  }
+
   searchAccountReceivable(page: number = 1, limit: number = 10, searchTerm?: string, colegioId?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     let params: any = {
       page: page.toString(),
