@@ -1,20 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FormRector } from './rector/form-rector/form-rector';
 import { RectorDetail } from './rector/rector-detail/rector-detail';
 import { FormAdmin } from './admin/form-admin/form-admin';
 import { AdminDetail } from './admin/admin-detail/admin-detail';
+import { FormUser } from './form-user/form-user';
 import { UserService } from '../../../../core/services/user.service';
 import { SchoolService } from '../../../../core/services/school.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { RoleService, Role } from '../../../../core/services/role.service';
 import { User } from '../../../../core/models/User';
 
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail],
+  imports: [CommonModule, FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail, FormUser],
   templateUrl: './users.html'
 })
 export class Users implements OnInit {
@@ -24,8 +26,12 @@ export class Users implements OnInit {
   editMode = false;
   selectedRector: User | null = null;
   selectedAdmin: User | null = null;
+  selectedUser: User | null = null;
   rectores: User[] = [];
   admins: User[] = [];
+  allUsers: User[] = [];
+  roles: Role[] = [];
+  filteredUsers: User[] = [];
   isLoading = false;
   searchTerm = '';
   schools: { [key: number]: string } = {};
@@ -34,11 +40,14 @@ export class Users implements OnInit {
   constructor(
     private userService: UserService,
     private schoolService: SchoolService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private roleService: RoleService
   ) {}
 
   ngOnInit(): void {
     this.loadSchools();
+    this.loadRoles();
+    this.loadAllUsers();
     // Cargar datos iniciales si hay un rol seleccionado
     if (this.selectedRole === 'rector') {
       this.loadRectores();
@@ -61,8 +70,18 @@ export class Users implements OnInit {
     });
   }
 
-  getSchoolName(schoolId: number): string {
-    return this.schools[schoolId] || 'N/A';
+  getSchoolName(schoolId: number | string): string {
+    const id = typeof schoolId === 'string' ? parseInt(schoolId, 10) : schoolId;
+    return this.schools[id] || 'N/A';
+  }
+
+  getRoleName(roleId: string): string {
+    const role = this.roles.find(r => r.id === roleId);
+    return role ? role.name : 'Usuario';
+  }
+
+  getSelectedRole(): Role | null {
+    return this.roles.find(r => r.id === this.selectedRole) || null;
   }
 
   onRoleChange(): void {
@@ -72,7 +91,14 @@ export class Users implements OnInit {
     this.selectedRector = null;
     this.selectedAdmin = null;
 
-    // Cargar datos según el rol seleccionado
+    // Filtrar usuarios según el rol seleccionado
+    if (this.selectedRole) {
+      this.filteredUsers = this.allUsers.filter(user => user.role === this.selectedRole);
+    } else {
+      this.filteredUsers = [];
+    }
+
+    // Mantener compatibilidad con el código existente
     if (this.selectedRole === 'rector') {
       this.loadRectores();
     } else if (this.selectedRole === 'administrador') {
@@ -117,6 +143,7 @@ export class Users implements OnInit {
     this.editMode = false;
     this.selectedRector = null;
     this.selectedAdmin = null;
+    this.selectedUser = null;
   }
 
   searchRector(searchTerm?: string, showErrorNotification: boolean = true) {
@@ -171,6 +198,7 @@ export class Users implements OnInit {
     this.showDetail = false;
     this.selectedRector = null;
     this.selectedAdmin = null;
+    this.selectedUser = null;
   }
 
   onRectorCreated(rector: User) {
@@ -249,5 +277,67 @@ export class Users implements OnInit {
     this.editMode = false;
     this.selectedRector = null;
     this.selectedAdmin = null;
+    this.selectedUser = null;
+  }
+
+  loadRoles(): void {
+    this.roleService.getAllRoles().subscribe({
+      next: (response) => {
+        this.roles = response.data;
+      },
+      error: (error) => {
+        console.error('Error loading roles:', error);
+        this.notificationService.showError(
+          'Error al cargar roles',
+          'No se pudieron cargar los roles. Inténtalo nuevamente.'
+        );
+      }
+    });
+  }
+
+  loadAllUsers(): void {
+    this.isLoading = true;
+    this.userService.getAllUsers().subscribe({
+      next: (response) => {
+        this.allUsers = response.data || [];
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading all users:', error);
+        this.notificationService.showError('Error', 'No se pudieron cargar todos los usuarios');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Métodos para el formulario genérico de usuarios
+  onUserCreated(user: User): void {
+    this.showForm = false;
+    this.selectedUser = null;
+    // Recargar la lista de usuarios filtrados
+    this.onRoleChange();
+  }
+
+  onUserUpdated(user: User): void {
+    this.showForm = false;
+    this.editMode = false;
+    this.selectedUser = null;
+    // Recargar la lista de usuarios filtrados
+    this.onRoleChange();
+  }
+
+  onUserDeleted(user: User): void {
+    this.selectedUser = null;
+    this.showForm = false;
+    // Recargar la lista de usuarios filtrados
+    this.onRoleChange();
+  }
+
+  // Métodos para editar usuarios de la tabla filtrada
+  editUser(user: User): void {
+    this.selectedUser = user;
+    this.editMode = true;
+    this.showForm = true;
+    this.showDetail = false;
   }
 }

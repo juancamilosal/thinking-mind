@@ -24,9 +24,10 @@
           [(ngModel)]="selectedRole"
           (change)="onRoleChange()"
           class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-14 bg-[image:--select-button-svg] placeholder:text-[#49739c] p-[15px] text-base font-normal leading-normal">
-          <option value="">Selecciona un rol</option>
-          <option value="rector">Rector</option>
-          <option value="administrador">Administrador</option>
+          <option value="">Seleccionar Rol</option>
+          @for (role of roles; track role.id) {
+            <option [value]="role.id">{{ role.name }}</option>
+          }
         </select>
       </div>
 
@@ -38,7 +39,7 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
-            <span>Ingresar {{ selectedRole === 'rector' ? 'Rector' : 'Administrador' }}</span>
+            <span>Ingresar {{ getRoleName(selectedRole) }}</span>
           </button>
         </div>
       }
@@ -66,6 +67,99 @@
   }
 
   <!-- Contenido basado en el rol seleccionado -->
+  @if (selectedRole && selectedRole !== 'rector' && selectedRole !== 'administrador' && !showForm) {
+    <!-- Tabla de usuarios filtrados por rol -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800">Usuarios con rol: {{ getRoleName(selectedRole) }}</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @if (isLoading) {
+              @for (item of [1,2,3,4,5]; track $index) {
+                <tr class="animate-pulse">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-32"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-40"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-40"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-8 bg-gray-200 rounded w-16"></div>
+                  </td>
+                </tr>
+              }
+            } @else if (filteredUsers.length === 0) {
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                  <div class="flex flex-col items-center justify-center space-y-3">
+                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-500">No hay usuarios con este rol</p>
+                    <p class="text-sm text-gray-400">No se encontraron usuarios para el rol seleccionado</p>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for(user of filteredUsers; track user.id) {
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ user.first_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ user.last_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ user.email }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ user.celular || 'N/A' }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ user.colegio_id ? getSchoolName(user.colegio_id.id || '') : 'N/A' }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button (click)="editUser(user)" class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 hover:text-green-700 transition-all duration-200 transform hover:scale-105">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Editar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
   @if (selectedRole === 'rector' && !showForm) {
     <!-- Barra de Búsqueda -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -347,9 +441,7 @@
             (rectorCreated)="onRectorCreated($event)"
             (rectorUpdated)="onRectorUpdated($event)">
           </app-form-rector>
-        }
-
-        @if (selectedRole === 'administrador') {
+        } @else if (selectedRole === 'administrador') {
           <app-form-admin
             [editMode]="editMode"
             [adminData]="selectedAdmin"
@@ -358,6 +450,16 @@
             (adminDeleted)="onAdminDeleted($event)"
             (cancel)="closeForm()">
           </app-form-admin>
+        } @else {
+          <app-form-user
+            [editMode]="editMode"
+            [userData]="selectedUser"
+            [selectedRole]="getSelectedRole()"
+            (userCreated)="onUserCreated($event)"
+            (userUpdated)="onUserUpdated($event)"
+            (userDeleted)="onUserDeleted($event)"
+            (cancel)="closeForm()">
+          </app-form-user>
         }
       </div>
     </div>
