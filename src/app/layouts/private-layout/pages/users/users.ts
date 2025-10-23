@@ -45,16 +45,34 @@ export class Users implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadSchools();
+    // Solo cargar roles al inicio
     this.loadRoles();
-    this.loadAllUsers();
-    // Cargar datos iniciales si hay un rol seleccionado
-    if (this.selectedRole === 'rector') {
-      this.loadRectores();
-    } else if (this.selectedRole === 'administrador') {
-      this.loadAdministradores();
-    }
-    this.searchRector(undefined, false);
+  }
+
+  // Nuevo método para cargar usuarios por rol
+  loadUsersByRole(): void {
+    if (!this.selectedRole) return;
+    
+    this.isLoading = true;
+    this.userService.getUsersByRole(this.selectedRole).subscribe({
+      next: (response) => {
+        this.filteredUsers = response.data || [];
+        
+        // Mantener compatibilidad con arrays específicos
+        if (this.selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') { // rector
+          this.rectores = this.filteredUsers;
+        } else if (this.selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') { // administrador
+          this.admins = this.filteredUsers;
+        }
+        
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading users by role:', error);
+        this.notificationService.showError('Error', 'No se pudieron cargar los usuarios');
+        this.isLoading = false;
+      }
+    });
   }
 
   loadSchools(): void {
@@ -75,6 +93,23 @@ export class Users implements OnInit {
     return this.schools[id] || 'N/A';
   }
 
+  getCollegeName(colegio_id: any): string {
+    if (!colegio_id) return 'N/A';
+    
+    // Si colegio_id es un objeto con la propiedad nombre
+    if (typeof colegio_id === 'object' && colegio_id.nombre) {
+      return colegio_id.nombre;
+    }
+    
+    // Si colegio_id es solo un ID, buscar en el array de schools
+    if (typeof colegio_id === 'string' || typeof colegio_id === 'number') {
+      const id = typeof colegio_id === 'string' ? parseInt(colegio_id, 10) : colegio_id;
+      return this.schools[id] || 'N/A';
+    }
+    
+    return 'N/A';
+  }
+
   getRoleName(roleId: string): string {
     const role = this.roles.find(r => r.id === roleId);
     return role ? role.name : 'Usuario';
@@ -90,19 +125,16 @@ export class Users implements OnInit {
     this.editMode = false;
     this.selectedRector = null;
     this.selectedAdmin = null;
+    this.selectedUser = null;
 
-    // Filtrar usuarios según el rol seleccionado
+    // Limpiar datos anteriores
+    this.filteredUsers = [];
+    this.rectores = [];
+    this.admins = [];
+
+    // Solo cargar usuarios cuando se selecciona un rol
     if (this.selectedRole) {
-      this.filteredUsers = this.allUsers.filter(user => user.role === this.selectedRole);
-    } else {
-      this.filteredUsers = [];
-    }
-
-    // Mantener compatibilidad con el código existente
-    if (this.selectedRole === 'rector') {
-      this.loadRectores();
-    } else if (this.selectedRole === 'administrador') {
-      this.loadAdministradores();
+      this.loadUsersByRole();
     }
   }
 
@@ -140,10 +172,16 @@ export class Users implements OnInit {
 
   toggleForm() {
     this.showForm = !this.showForm;
+    this.showDetail = false;
     this.editMode = false;
     this.selectedRector = null;
     this.selectedAdmin = null;
     this.selectedUser = null;
+    
+    // Cargar colegios solo cuando se abre el formulario Y el rol seleccionado es rector
+    if (this.showForm && this.selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+      this.loadSchools();
+    }
   }
 
   searchRector(searchTerm?: string, showErrorNotification: boolean = true) {
@@ -192,6 +230,9 @@ export class Users implements OnInit {
     this.editMode = true;
     this.showForm = true;
     this.showDetail = false;
+    
+    // Cargar colegios cuando se va a editar
+    this.loadSchools();
   }
 
   closeDetail() {
@@ -203,24 +244,30 @@ export class Users implements OnInit {
 
   onRectorCreated(rector: User) {
     this.showForm = false;
+    this.editMode = false;
     this.selectedRector = null;
-    // Refrescar la tabla de rectores desde el servidor
-    this.loadRectores();
+    this.notificationService.showSuccess('Rector creado', 'El rector ha sido creado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   onRectorUpdated(rector: User) {
     this.showForm = false;
     this.editMode = false;
     this.selectedRector = null;
-    // Refrescar la tabla de rectores desde el servidor
-    this.loadRectores();
+    this.notificationService.showSuccess('Rector actualizado', 'El rector ha sido actualizado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   onRectorDeleted(rector: User) {
-    this.selectedRector = null;
     this.showForm = false;
-    // Refrescar la tabla de rectores desde el servidor
-    this.loadRectores();
+    this.showDetail = false;
+    this.editMode = false;
+    this.selectedRector = null;
+    this.notificationService.showSuccess('Rector eliminado', 'El rector ha sido eliminado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   // Métodos para Administradores
@@ -238,36 +285,47 @@ export class Users implements OnInit {
     this.editMode = true;
     this.showForm = true;
     this.showDetail = false;
+    
+    // No cargar colegios para administradores
+    // this.loadSchools();
   }
 
   createAdmin() {
     this.selectedAdmin = null;
     this.editMode = false;
     this.showForm = true;
+    this.showDetail = false;
+    
+    // No cargar colegios para administradores
+    // this.loadSchools();
   }
 
   onAdminCreated(admin: User) {
     this.showForm = false;
+    this.editMode = false;
     this.selectedAdmin = null;
-    // Refrescar la tabla de administradores desde el servidor
-    this.loadAdministradores();
+    this.notificationService.showSuccess('Administrador creado', 'El administrador ha sido creado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   onAdminUpdated(admin: User) {
     this.showForm = false;
-    this.selectedAdmin = null;
     this.editMode = false;
-    // Refrescar la tabla de administradores desde el servidor
-    this.loadAdministradores();
+    this.selectedAdmin = null;
+    this.notificationService.showSuccess('Administrador actualizado', 'El administrador ha sido actualizado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   onAdminDeleted(admin: User) {
-    this.selectedAdmin = null;
     this.showForm = false;
     this.showDetail = false;
     this.editMode = false;
-    // Refrescar la tabla de administradores desde el servidor
-    this.loadAdministradores();
+    this.selectedAdmin = null;
+    this.notificationService.showSuccess('Administrador eliminado', 'El administrador ha sido eliminado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
 
@@ -300,6 +358,10 @@ export class Users implements OnInit {
     this.userService.getAllUsers().subscribe({
       next: (response) => {
         this.allUsers = response.data || [];
+        // Actualizar la lista filtrada después de cargar todos los usuarios
+        if (this.selectedRole) {
+          this.filteredUsers = this.allUsers.filter(user => user.role === this.selectedRole);
+        }
         this.isLoading = false;
       },
       error: (error) => {
@@ -313,24 +375,30 @@ export class Users implements OnInit {
   // Métodos para el formulario genérico de usuarios
   onUserCreated(user: User): void {
     this.showForm = false;
+    this.editMode = false;
     this.selectedUser = null;
-    // Recargar la lista de usuarios filtrados
-    this.onRoleChange();
+    this.notificationService.showSuccess('Usuario creado', 'El usuario ha sido creado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   onUserUpdated(user: User): void {
     this.showForm = false;
     this.editMode = false;
     this.selectedUser = null;
-    // Recargar la lista de usuarios filtrados
-    this.onRoleChange();
+    this.notificationService.showSuccess('Usuario actualizado', 'El usuario ha sido actualizado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   onUserDeleted(user: User): void {
-    this.selectedUser = null;
     this.showForm = false;
-    // Recargar la lista de usuarios filtrados
-    this.onRoleChange();
+    this.showDetail = false;
+    this.editMode = false;
+    this.selectedUser = null;
+    this.notificationService.showSuccess('Usuario eliminado', 'El usuario ha sido eliminado exitosamente');
+    // Recargar usuarios del rol actual
+    this.loadUsersByRole();
   }
 
   // Métodos para editar usuarios de la tabla filtrada
@@ -339,5 +407,10 @@ export class Users implements OnInit {
     this.editMode = true;
     this.showForm = true;
     this.showDetail = false;
+    
+    // Cargar colegios solo si el usuario es rector
+    if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+      this.loadSchools();
+    }
   }
 }

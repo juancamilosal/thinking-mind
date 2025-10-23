@@ -19,9 +19,21 @@ export class RoleService {
   constructor(private http: HttpClient) {}
 
   getAllRoles(): Observable<ResponseAPI<Role[]>> {
-    const params = {
+    const allowedRoleIds = [
+      'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02', // Administrador
+      'a4ed6390-5421-46d1-b81e-5cad06115abc', // Rector
+      'b40cfe25-bd79-4d62-818b-6cf96674fc12'  // Ventas
+    ];
+    
+    const params: any = {
       'fields': 'id,name,description'
     };
+    
+    // Agregar filtros para cada rol permitido
+    allowedRoleIds.forEach((roleId, index) => {
+      params[`filter[_or][${index}][id][_eq]`] = roleId;
+    });
+    
     return this.http.get<ResponseAPI<Role[]>>(this.apiUrl, { params });
   }
 }

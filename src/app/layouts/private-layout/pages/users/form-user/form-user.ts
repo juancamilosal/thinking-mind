@@ -85,35 +85,41 @@ export class FormUser implements OnInit {
   }
 
   private loadSchools(): void {
-    this.isLoadingSchools = true;
-    this.schoolService.getAllSchools().subscribe({
-      next: (response) => {
-        this.schools = response.data || [];
-        this.filteredSchools = this.schools;
-        this.isLoadingSchools = false;
-      },
-      error: (error) => {
-        console.error('Error loading schools:', error);
-        this.isLoadingSchools = false;
-      }
-    });
+    // Ya no necesitamos cargar todos los colegios al inicio
+    // La búsqueda se hará dinámicamente cuando el usuario escriba
+    this.isLoadingSchools = false;
   }
 
   onSchoolSearch(): void {
-    const searchTerm = this.userForm.get('schoolSearchTerm')?.value?.toLowerCase() || '';
-    
-    if (searchTerm.trim() === '') {
-      this.filteredSchools = this.schools;
+    const searchTerm = this.userForm.get('schoolSearchTerm')?.value || '';
+    this.isSchoolSelected = false;
+    // Limpiar el valor de colegio seleccionado mientras escribe
+    this.userForm.get('schoolId')?.setValue('');
+
+    const trimmed = searchTerm.trim();
+    if (!trimmed || trimmed.length < 2) {
+      this.filteredSchools = [];
+      this.isLoadingSchools = false;
       return;
     }
 
-    clearTimeout(this.searchTimeout);
-    this.searchTimeout = setTimeout(() => {
-      this.filteredSchools = this.schools.filter(school =>
-        school.nombre.toLowerCase().includes(searchTerm) ||
-        school.ciudad.toLowerCase().includes(searchTerm)
-      );
-    }, 300);
+    // Buscar inmediatamente para evitar demoras por timers
+    this.searchSchools(trimmed);
+  }
+
+  private searchSchools(searchTerm: string): void {
+    this.isLoadingSchools = true;
+    this.schoolService.searchSchool(searchTerm, 1, 10).subscribe({
+      next: (response) => {
+        this.filteredSchools = response.data || [];
+        this.isLoadingSchools = false;
+      },
+      error: (error) => {
+        console.error('Error searching schools:', error);
+        this.filteredSchools = [];
+        this.isLoadingSchools = false;
+      }
+    });
   }
 
   selectSchool(school: School): void {
@@ -131,7 +137,7 @@ export class FormUser implements OnInit {
       schoolSearchTerm: ''
     });
     this.isSchoolSelected = false;
-    this.filteredSchools = this.schools;
+    this.filteredSchools = [];
   }
 
   private createPasswordMatchValidator() {
@@ -333,6 +339,33 @@ export class FormUser implements OnInit {
 
   toggleConfirmPasswordVisibility(): void {
     this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  onFirstNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const capitalizedValue = this.capitalizeWords(input.value);
+    this.userForm.get('firstName')?.setValue(capitalizedValue, { emitEvent: false });
+    input.value = capitalizedValue;
+  }
+
+  onLastNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const capitalizedValue = this.capitalizeWords(input.value);
+    this.userForm.get('lastName')?.setValue(capitalizedValue, { emitEvent: false });
+    input.value = capitalizedValue;
+  }
+
+  private capitalizeWords(text: string): string {
+    if (!text) return text;
+    
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => {
+        if (word.length === 0) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   }
 
   private resetForm(): void {
