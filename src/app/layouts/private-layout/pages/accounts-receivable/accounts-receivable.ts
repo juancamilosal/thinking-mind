@@ -30,6 +30,11 @@ export class AccountsReceivable implements OnInit {
   // Search
   searchTerm: string = '';
   
+  // User role and colegio info
+  userRole: string = '';
+  userColegioId: string = '';
+  isRector: boolean = false;
+  
   // Filtros
   filters = {
     colegio: '',
@@ -53,9 +58,23 @@ export class AccountsReceivable implements OnInit {
   }
 
   ngOnInit(): void {
-    // Aplicar filtros iniciales (que incluye "Todos los estados" por defecto)
-    // Esto cargará todas las cuentas con paginación y contador correcto
-    this.applyFilters();
+    // Obtener información del usuario desde sessionStorage
+    const userData = sessionStorage.getItem('current_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      this.userRole = user.role;
+      this.userColegioId = user.colegio_id;
+      this.isRector = user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc';
+    }
+
+    // Si es rector, cargar solo las cuentas de su colegio
+    if (this.isRector && this.userColegioId) {
+      this.loadRectorAccounts();
+    } else {
+      // Para otros usuarios, aplicar filtros normales
+      this.applyFilters();
+    }
+    
     this.totalAccounts();
     
     // Check for cuentaCobrarId query parameter
@@ -91,6 +110,12 @@ export class AccountsReceivable implements OnInit {
 
   // Método para aplicar filtros
   private applyFilters(): void {
+    // Si es rector, usar su método específico
+    if (this.isRector && this.userColegioId) {
+      this.loadRectorAccounts();
+      return;
+    }
+    
     this.isLoading = true;
     
     // Construir parámetros de filtro
@@ -157,6 +182,43 @@ export class AccountsReceivable implements OnInit {
     });
   }
 
+  // Método específico para cargar cuentas de rector (similar a list-schools)
+  private loadRectorAccounts(): void {
+    this.isLoading = true;
+    
+    // Usar searchAccountReceivable con el colegioId del rector
+    this.accountService.searchAccountReceivable(
+      this.currentPage,
+      this.itemsPerPage,
+      this.searchTerm || undefined,
+      this.userColegioId
+    ).subscribe({
+      next: (response) => {
+        this.accounts = response.data || [];
+        this.totalItems = response.meta?.filter_count || this.accounts.length;
+        this.totalPages = this.totalItems > 0 ? Math.ceil(this.totalItems / this.itemsPerPage) : 0;
+        
+        // Si no hay resultados, resetear a página 1
+        if (this.totalItems === 0) {
+          this.currentPage = 1;
+        }
+        // Si la página actual es mayor que el total de páginas disponibles, ir a la primera página
+        else if (this.currentPage > this.totalPages && this.totalPages > 0) {
+          this.currentPage = 1;
+          // Recargar con la página corregida
+          setTimeout(() => {
+            this.loadRectorAccounts();
+          }, 0);
+          return;
+        }
+        
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
   // Método para limpiar filtros
   clearFilters(): void {
     this.filters = {
@@ -164,10 +226,15 @@ export class AccountsReceivable implements OnInit {
       fechaFinalizacion: '',
       estado: ''
     };
-    this.searchTerm = ''; // También limpiar el término de búsqueda
+    this.searchTerm = '';
     this.currentPage = 1;
-    // Usar applyFilters para mantener consistencia (ahora mostrará "Todos los estados")
-    this.applyFilters();
+    
+    // Si es rector, usar su método específico
+    if (this.isRector && this.userColegioId) {
+      this.loadRectorAccounts();
+    } else {
+      this.applyFilters();
+    }
   }
 
   // Método para obtener la clase CSS del estado
@@ -249,10 +316,15 @@ export class AccountsReceivable implements OnInit {
 
   onItemsPerPageChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    this.itemsPerPage = parseInt(target.value);
-    this.currentPage = 1;
-    // Siempre usar applyFilters para mantener consistencia
-    this.applyFilters();
+    this.itemsPerPage = parseInt(target.value, 10);
+    this.currentPage = 1; // Reset to first page when changing items per page
+    
+    // Si es rector, usar su método específico
+    if (this.isRector && this.userColegioId) {
+      this.loadRectorAccounts();
+    } else {
+      this.applyFilters();
+    }
   }
 
   // Método para verificar si hay filtros activos (incluyendo búsqueda)
@@ -319,16 +391,31 @@ export class AccountsReceivable implements OnInit {
 
   totalAccounts = (): void => {
     this.isLoadingTotals = true;
-    this.accountService.totalAccounts().subscribe({
-      next: (data) => {
-        this.total = data.data;
-        this.isLoadingTotals = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar totales:', error);
-        this.isLoadingTotals = false;
-      }
-    });
+    
+    // Si es rector, filtrar totales por su colegio
+    if (this.isRector && this.userColegioId) {
+      this.accountService.totalAccounts(this.userColegioId).subscribe({
+        next: (data) => {
+          this.total = data.data;
+          this.isLoadingTotals = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar totales:', error);
+          this.isLoadingTotals = false;
+        }
+      });
+    } else {
+      this.accountService.totalAccounts().subscribe({
+        next: (data) => {
+          this.total = data.data;
+          this.isLoadingTotals = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar totales:', error);
+          this.isLoadingTotals = false;
+        }
+      });
+    }
   }
 
   private updateAccountsForActiveTab(): void {
@@ -395,11 +482,15 @@ export class AccountsReceivable implements OnInit {
   private loadAccountsByStatus(status: 'pending' | 'paid' | 'refund' | 'zero'): void {
     this.isLoading = true;
     
+    // Si es rector, incluir su colegioId en la búsqueda
+    const colegioId = this.isRector && this.userColegioId ? this.userColegioId : undefined;
+    
     this.accountService.searchAccountReceivableByStatusWithPagination(
       status,
       this.currentPage,
       this.itemsPerPage,
-      this.searchTerm || undefined
+      this.searchTerm || undefined,
+      colegioId
     ).subscribe({
       next: (response) => {
         this.accounts = response.data;
@@ -430,8 +521,14 @@ export class AccountsReceivable implements OnInit {
 
   onSearch(): void {
     this.currentPage = 1; // Resetear a la primera página
-    // Siempre usar applyFilters para mantener consistencia
-    this.applyFilters();
+    
+    // Si es rector, usar su método específico
+    if (this.isRector && this.userColegioId) {
+      this.loadRectorAccounts();
+    } else {
+      // Siempre usar applyFilters para mantener consistencia
+      this.applyFilters();
+    }
   }
 
   private fetchServerSearchByStatus(): void {
@@ -618,10 +715,16 @@ export class AccountsReceivable implements OnInit {
     // this.paginatedAccounts = this.accounts.slice(startIndex, endIndex);
   }
   
-  goToPage(page: number) {
+  goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadAccountsByStatus(this.activeTab);
+      
+      // Si es rector, usar su método específico
+      if (this.isRector && this.userColegioId) {
+        this.loadRectorAccounts();
+      } else {
+        this.applyFilters();
+      }
     }
   }
 

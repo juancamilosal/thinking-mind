@@ -80,9 +80,10 @@ export class Dashboard implements OnInit {
   }
 
   private loadRectorData(): void {
-    this.accountReceivableService.searchAccountReceivable(1, 10, undefined, this.userColegioId!).subscribe({
+    // Cargar TODAS las cuentas por cobrar sin filtrar por colegio
+    this.accountReceivableService.searchAccountReceivable(1, 1000).subscribe({
       next: (accounts) => {
-        this.accounts = accounts.data; // Ya vienen filtradas por colegio desde el servicio
+        this.accounts = accounts.data; // Todas las cuentas sin filtro
         this.calculateRectorStats(accounts.data);
         this.isLoading = false;
       },
