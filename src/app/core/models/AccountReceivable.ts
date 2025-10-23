@@ -41,6 +41,22 @@ export class AccountReceivable {
   fecha_finalizacion?: string;
   descuento?: number;
   id_inscripcion?: string | null;
+  // Propiedades adicionales según la estructura JSON del servicio
+  colegio_id?: any; // Para el colegio
+  ciudad?: string;
+  acudiente?: string;
+  apellido?: string;
+  celular?: string;
+  direccion?: string;
+  rector_id?: string;
+  grado?: string;
+  nombre?: string;
+  numero_documento?: string;
+  tipo_documento?: string;
+  fecha_creacion?: string;
+  observaciones?: string;
+  precio_inscripcion?: number;
+  colegios_cursos?: any;
 }
 
 export class TotalAccounts {

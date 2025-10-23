@@ -16,7 +16,7 @@ export class SchoolWithPaymentsService {
 
   getAccountsWithPayments(page: number = 1, limit: number = 1000, searchTerm?: string, yearFilter?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     const params: any = {
-      fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,cliente_id.*,curso_id.*,pagos.*',
+      fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,cliente_id.*,curso_id.*,pagos.*',
       page: page.toString(),
       limit: limit.toString(),
       meta: 'total_count,filter_count',
@@ -42,7 +42,7 @@ export class SchoolWithPaymentsService {
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
         console.log('🔍 Datos del servidor (filtrados por saldo > 0 y año):', response.data.length);
-        
+
         // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
         return {
           ...response,
@@ -55,7 +55,7 @@ export class SchoolWithPaymentsService {
 
   getAccountsWithPaymentsBySchool(schoolId: string, page: number = 1, limit: number = 1000, yearFilter?: string): Observable<ResponseAPI<AccountReceivable[]>> {
     const params: any = {
-      fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,cliente_id.*,curso_id.*,pagos.*',
+      fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,cliente_id.*,curso_id.*,pagos.*',
       'filter[estudiante_id][colegio_id][_eq]': schoolId,
       // Filtrar por saldo mayor a 0 directamente en Directus
       'filter[saldo][_gt]': '0',
@@ -74,7 +74,7 @@ export class SchoolWithPaymentsService {
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
         console.log('🔍 Datos del servidor por escuela (filtrados por saldo > 0 y año):', response.data.length);
-        
+
         // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
         return {
           ...response,
