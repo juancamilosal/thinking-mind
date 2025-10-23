@@ -561,8 +561,8 @@ export class AccountsReceivable implements OnInit {
   backToList() {
     this.showDetail = false;
     this.selectedAccount = null;
-    // Mantener la pestaña activa al regresar
-    this.loadAccountsByStatus(this.activeTab);
+    // Mantener los filtros aplicados al regresar
+    this.applyFilters();
     this.totalAccounts();
     this.cdr.detectChanges();
   }
