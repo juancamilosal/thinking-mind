@@ -64,6 +64,7 @@ export class Reports {
     } else if (reportType === 'CARTERA') {
       this.reportGenerated = true; // Mostrar la sección de resultados
       this.generatePaymentsReport(); // Sin fechas, trae todos los datos
+      this.totalPayments();
     } else {
       this.reportGenerated = false; // Ocultar la sección de resultados si no es INSCRIPCIONES o CARTERA
       this.schoolsData = []; // Limpiar datos anteriores
@@ -884,5 +885,9 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       return 'CORRESPONSAL BANCARIO';
     }
     return method;
+  }
+
+  totalPayments(){
+    this.paymentService.totalPayment().subscribe()
   }
 }

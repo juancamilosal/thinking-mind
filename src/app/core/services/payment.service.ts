@@ -11,6 +11,7 @@ import { environment } from '../../../environments/environment';
 export class PaymentService {
   private apiUrl: string = environment.payment;
   private manualPayment: string = environment.manual_payment;
+  private total: string =  environment.total_payment;
 
   constructor(private http: HttpClient) {}
 
@@ -80,5 +81,9 @@ export class PaymentService {
       'fields': '*,cuenta_cobrar_id.*,cuenta_cobrar_id.curso_id.*'
     };
     return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
+  }
+
+  totalPayment(): Observable<ResponseAPI<any>> {
+    return this.http.get<ResponseAPI<any>>(this.total);
   }
 }
