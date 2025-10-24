@@ -1037,4 +1037,124 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
 
     return `${year}-${month}-${day}`;
   }
+
+  // Descargar PDF de Inscripciones
+  async downloadPDFIns(): Promise<void> {
+    try {
+      // Importar jsPDF dinámicamente
+      const { jsPDF } = await import('jspdf');
+      
+      // Crear nuevo documento PDF
+      const doc = new jsPDF();
+      
+      // Configuración inicial
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      let yPosition = margin;
+      
+      // Título principal
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reporte de Inscripciones por Colegio y Programas', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+      
+      // Fecha y hora del reporte
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      const currentDate = new Date().toLocaleDateString('es-CO');
+      const currentTime = new Date().toLocaleTimeString('es-CO', { hour12: false });
+      doc.text(`Fecha del reporte: ${currentDate} Hora: ${currentTime}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 20;
+      
+      // Iterar por cada colegio
+      for (const school of this.schoolsData) {
+        // Verificar si necesitamos una nueva página
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        
+        // Nombre del colegio
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${school.colegio}`, margin, yPosition);
+        yPosition += 10;
+        
+        // Totales del colegio
+        const totalStudents = this.getTotalStudentsInSchool(school);
+        const newStudentsToday = this.getTotalNewStudentsToday(school);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Total de estudiantes: ${totalStudents}`, margin + 10, yPosition);
+        yPosition += 6;
+        doc.text(`Nuevos estudiantes hoy: ${newStudentsToday}`, margin + 10, yPosition);
+        yPosition += 10;
+        
+        // Cursos del colegio
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Programas:', margin + 10, yPosition);
+        yPosition += 8;
+        
+        for (const course of school.cursos) {
+          // Verificar si necesitamos una nueva página
+          if (yPosition > pageHeight - 40) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`• ${course.curso}`, margin + 20, yPosition);
+          yPosition += 6;
+          
+          doc.setFontSize(9);
+          doc.text(`  Precio: $${Number(course.precio).toLocaleString('es-CO')}`, margin + 25, yPosition);
+          yPosition += 5;
+          doc.text(`  Estudiantes inscritos: ${course.total_estudiantes}`, margin + 25, yPosition);
+          yPosition += 5;
+          doc.text(`  Nuevos hoy: ${course.nuevos_hoy}`, margin + 25, yPosition);
+          yPosition += 8;
+        }
+        
+        yPosition += 10; // Espacio entre colegios
+      }
+      
+      // Resumen final
+      if (yPosition > pageHeight - 80) {
+        doc.addPage();
+        yPosition = margin;
+      }
+      
+      yPosition += 10;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Resumen General', margin, yPosition);
+      yPosition += 10;
+      
+      const totalSchools = this.schoolsData.length;
+      const totalAllStudents = this.schoolsData.reduce((sum, school) => sum + this.getTotalStudentsInSchool(school), 0);
+      const totalNewToday = this.schoolsData.reduce((sum, school) => sum + this.getTotalNewStudentsToday(school), 0);
+      const totalPrograms = this.schoolsData.reduce((sum, school) => sum + school.cursos.length, 0);
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total de colegios: ${totalSchools}`, margin + 10, yPosition);
+      yPosition += 6;
+      doc.text(`Total de programas: ${totalPrograms}`, margin + 10, yPosition);
+      yPosition += 6;
+      doc.text(`Total de estudiantes: ${totalAllStudents}`, margin + 10, yPosition);
+      yPosition += 6;
+      doc.text(`Nuevos estudiantes hoy: ${totalNewToday}`, margin + 10, yPosition);
+      
+      // Generar y descargar el PDF
+      const fileName = `Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+    }
+  }
 }
