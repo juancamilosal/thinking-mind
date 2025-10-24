@@ -20,6 +20,9 @@ export const environment = {
     logout: apiUrl + 'auth/logout',
     refresh: apiUrl + 'auth/refresh',
     me: apiUrl + 'users/me',
+    menu: {
+      list: apiUrl + '/items/menu?sort'
+    },
   },
 
   //Flujos

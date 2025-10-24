@@ -4,8 +4,9 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { User } from '../../core/models/User';
 import { StorageServices } from '../../core/services/storage.services';
+import { MenuService, MenuItem } from '../../core/services/menu.service';
 import { Subscription } from 'rxjs';
-
+import {Menu} from '../../core/models/Menu';
 
 @Component({
   selector: 'app-sidebar',
@@ -17,55 +18,45 @@ export class SidebarComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
   @Output() sidebarClose = new EventEmitter<void>();
+  menuItems: Menu[] = [];
 
-  menuItems = [
-    { path: '/private/dashboard', icon: 'home', label: 'Dashboard' },
-    { path: '/private/clients', icon: 'users', label: 'Clientes' },
-    { path: '/private/students', icon: 'student', label: 'Estudiantes' },
-    { path: '/private/schools', icon: 'building', label: 'Colegios' },
-    { path: '/private/users', icon: 'user-group', label: 'Usuarios' },
-    { path: '/private/accounts-receivable', icon: 'cash', label: 'Cuentas por Cobrar' },
-    { path: '/private/payments', icon: 'payment', label: 'Pagos' },
-    { path: '/private/courses', icon: 'book', label: 'Programas' },
-    { path: '/private/reports', icon: 'chart-bar', label: 'Reportes' },
-    { path: '/private/list-schools', icon: 'list', label: 'Listado' }
-  ];
-
-  constructor(private router: Router, private loginService: LoginService) {}
+  constructor(
+    private router: Router,
+    private loginService: LoginService,
+    private menuService: MenuService
+  ) {}
 
   ngOnInit() {
+    this.loadMenuItems();
     this.checkAuthentication();
-    this.checkUserRole();
+  }
+
+  loadMenuItems() {
+    this.menuService.list().subscribe({
+      next: (response) => {
+        this.menuItems = response.data;
+      },
+      error: (error) => {
+      }
+    });
   }
 
   checkAuthentication() {
     const accessToken = StorageServices.getAccessToken();
     const currentUser = StorageServices.getCurrentUser();
-
     if (!accessToken || !currentUser) {
       this.router.navigate(['/login']);
       return;
     }
-
     this.currentUser = currentUser;
   }
 
-  checkUserRole() {
-    const currentUser = StorageServices.getCurrentUser();
-    if (currentUser && currentUser.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-      this.menuItems = [
-        { path: '/private/dashboard', icon: 'home', label: 'Dashboard' },
-        { path: '/private/list-schools', icon: 'list', label: 'Listado' }
-      ];
-    }
-  }
 
   ngOnDestroy() {
     this.userSubscription.unsubscribe();
   }
 
   closeSidebar() {
-    // Emite evento para cerrar el sidebar móvil
     this.sidebarClose.emit();
   }
 
@@ -73,14 +64,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
-        // Forzar recarga completa de la página para resetear todos los estados
         window.location.href = '/login';
       },
       error: (error) => {
-        console.error('Error al cerrar sesión:', error);
-        // Incluso si hay error, limpiamos la sesión y redirigimos
         StorageServices.clearAllSession();
-        // Forzar recarga completa de la página para resetear todos los estados
         window.location.href = '/login';
       }
     });
