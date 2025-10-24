@@ -29,18 +29,26 @@ export class PaymentService {
       params['filter[_or][2][estado][_icontains]'] = searchTerm;
     }
 
-    // Filtro por fecha inicial
+    // Filtro por fecha inicial - Directus maneja el filtro
     if (startDate) {
-      params['filter[fecha_pago][_gte]'] = startDate;
+      // Formato YYYY-MM-DD para el inicio del día
+      params['filter[fecha_pago][_gte]'] = startDate + 'T00:00:00';
+      console.log('Filtro fecha inicio para Directus:', startDate + 'T00:00:00');
     }
 
-    // Filtro por fecha final
+    // Filtro por fecha final - Directus maneja el filtro
     if (endDate) {
-      // Agregar 23:59:59 al final del día para incluir todo el día
-      const endDateTime = new Date(endDate);
-      endDateTime.setHours(23, 59, 59, 999);
-      params['filter[fecha_pago][_lte]'] = endDateTime.toISOString().split('T')[0] + 'T23:59:59';
+      // Formato YYYY-MM-DD para el final del día
+      params['filter[fecha_pago][_lte]'] = endDate + 'T23:59:59';
+      console.log('Filtro fecha fin para Directus:', endDate + 'T23:59:59');
     }
+
+    // Remover filtro de estado para mostrar todos los pagos en la tabla
+    // params['filter[estado][_eq]'] = 'PAGADO';
+
+    // Log de la URL completa que se enviará a Directus
+    const queryString = new URLSearchParams(params).toString();
+    console.log('URL completa para Directus:', `${this.apiUrl}?${queryString}`);
 
     // Ordenar por fecha de pago descendente (más reciente primero)
     params['sort'] = '-fecha_pago';

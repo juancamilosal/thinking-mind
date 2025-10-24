@@ -41,6 +41,7 @@
             type="date"
             id="startDate"
             formControlName="startDate"
+            (change)="onDateChange()"
             class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-12 md:h-14 placeholder:text-[#49739c] p-3 md:p-[15px] text-sm md:text-base font-normal leading-normal"/>
         </div>
         <div class="flex flex-col w-full md:min-w-40 md:flex-1">
@@ -49,6 +50,7 @@
             type="date"
             id="endDate"
             formControlName="endDate"
+            (change)="onDateChange()"
             class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d141c] focus:outline-0 focus:ring-0 border border-[#cedbe8] bg-slate-50 focus:border-[#cedbe8] h-12 md:h-14 placeholder:text-[#49739c] p-3 md:p-[15px] text-sm md:text-base font-normal leading-normal"/>
         </div>
       </div>

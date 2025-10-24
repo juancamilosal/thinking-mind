@@ -36,19 +36,25 @@ export class Reports {
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
 
+  // Propiedades para el total del servicio
+  totalFromService = 0;
+  isFiltered = false;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private notificationService: NotificationService,
+    private confirmationService: ConfirmationService,
     private paymentService: PaymentService,
     private accountReceivableService: AccountReceivableService,
+    private schoolService: SchoolService
   ) {}
 
-  ngOnInit(): void {
-    this.initForm();
+  ngOnInit() {
+    this.initializeForm();
   }
 
-  initForm=(): void => {
+  initializeForm(): void {
     this.reportForm = this.fb.group({
       reportType: ['', [Validators.required]],
       startDate: [null],
@@ -86,7 +92,7 @@ export class Reports {
 
     switch (reportType) {
     case 'CARTERA':
-      this.generatePaymentsReport(startDate, endDate);
+      this.generatePaymentsReport();
       break;
     case 'INSCRIPCIONES':
       this.generateEnrollReport(startDate, endDate);
@@ -97,18 +103,94 @@ export class Reports {
     }
   }
 
-  // Generar reporte de pagos
-  private generatePaymentsReport(startDate?: string, endDate?: string): void {
-    this.loadPaymentsPage(startDate, endDate);
+  generatePaymentsReport() {
+    console.log('Generando reporte de pagos...');
+    
+    const startDate = this.formatDateForAPI(this.reportForm.get('startDate')?.value);
+    const endDate = this.formatDateForAPI(this.reportForm.get('endDate')?.value);
+    
+    console.log('Fecha original startDate:', this.reportForm.get('startDate')?.value);
+    console.log('Fecha original endDate:', this.reportForm.get('endDate')?.value);
+    console.log('Fecha formateada startDate:', startDate);
+    console.log('Fecha formateada endDate:', endDate);
+    
+    this.reportGenerated = true;
+    
+    // Cargar el total del servicio solo cuando no hay filtros de fecha
+    if (!startDate && !endDate) {
+      this.isFiltered = false;
+      this.loadTotalFromService();
+      this.loadPaymentsPage();
+    } else {
+      this.isFiltered = true;
+      this.loadPaymentsPage(startDate, endDate);
+    }
+  }
+
+  // Nuevo método para manejar cambios en las fechas
+  onDateChange() {
+    const startDate = this.reportForm.get('startDate')?.value;
+    const endDate = this.reportForm.get('endDate')?.value;
+    
+    console.log('Cambio en fechas detectado:', { startDate, endDate });
+    
+    // Solo filtrar si el reporte ya fue generado
+    if (this.reportGenerated) {
+      if (startDate && endDate) {
+        // Formatear las fechas para asegurar el formato correcto
+        const formattedStartDate = this.formatDateForAPI(startDate);
+        const formattedEndDate = this.formatDateForAPI(endDate);
+        
+        console.log('Aplicando filtro de fechas:', { formattedStartDate, formattedEndDate });
+        
+        // Hay filtros de fecha - usar cálculo manual
+        this.isFiltered = true;
+        this.loadPaymentsPage(formattedStartDate, formattedEndDate);
+      } else if (!startDate && !endDate) {
+        // Si se limpian ambas fechas, volver a cargar sin filtros
+        console.log('Limpiando filtros de fecha');
+        // No hay filtros - usar total del servicio
+        this.isFiltered = false;
+        this.loadTotalFromService();
+        this.loadPaymentsPage();
+      } else {
+        // Solo una fecha - usar cálculo manual
+        const formattedStartDate = this.formatDateForAPI(startDate);
+        const formattedEndDate = this.formatDateForAPI(endDate);
+        this.isFiltered = true;
+        this.loadPaymentsPage(formattedStartDate, formattedEndDate);
+      }
+    }
   }
 
   private loadPaymentsPage(startDate?: string, endDate?: string): void {
-    // Usar el servicio con filtros de Directus y paginación
+    console.log('loadPaymentsPage llamado con:', { startDate, endDate });
+    
+    // Directus maneja todo el filtrado, el frontend solo pasa los parámetros
     this.paymentService.getPayments(this.currentPage, this.itemsPerPage, undefined, startDate, endDate).subscribe({
       next: (response) => {
-        this.payments = response.data;
+        console.log('Directus está manejando el filtrado de fechas');
+        console.log('Respuesta del servicio:', response);
+        console.log('Número de pagos encontrados (TODOS los estados):', response.data?.length || 0);
+        console.log('Meta información:', response.meta);
+        console.log('Total de items en Directus:', response.meta?.total_count || 0);
+        
+        // Calcular total solo de pagos PAGADO usando valor_neto para mostrar en el resumen
+        const totalPagado = response.data
+          ?.filter((payment: any) => payment.estado === 'PAGADO')
+          ?.reduce((total: number, payment: any) => {
+            const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
+            return total + valorNeto;
+          }, 0) || 0;
+        console.log('Total calculado (solo PAGADO - valor_neto):', totalPagado);
+        
+        // Directus ya devuelve los datos filtrados
+        this.payments = response.data || [];
         this.totalItems = response.meta?.filter_count || 0;
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        
+        console.log('Pagos procesados por Directus:', this.payments.length);
+        console.log('Total items filtrados por Directus:', this.totalItems);
       },
       error: (error) => {
         console.error('Error loading payments:', error);
@@ -164,12 +246,22 @@ export class Reports {
   }
 
   calculateTotal(): number {
-  return this.payments
-    .filter(payment => payment.estado === 'PAGADO')
-    .reduce((total, payment) => {
-      const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
-      return total + valorNeto;
-    }, 0);
+    // Si no hay filtros aplicados, usar el total del servicio
+    if (!this.isFiltered && this.totalFromService > 0) {
+      console.log('Usando total del servicio:', this.totalFromService);
+      return this.totalFromService;
+    }
+    
+    // Si hay filtros, calcular desde los pagos filtrando solo los PAGADO y usando valor_neto
+    const calculatedTotal = this.payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((total, payment) => {
+        const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
+        return total + valorNeto;
+      }, 0);
+    
+    console.log('Calculando total manualmente (solo PAGADO - valor_neto):', calculatedTotal);
+    return calculatedTotal;
   }
 
 // Generar reporte de inscripciones dentro del rango de fechas
@@ -276,6 +368,10 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     this.currentPage = 1;
     this.totalItems = 0;
     this.totalPages = 0;
+
+    // Restablecer el estado de filtros y recargar el total del servicio
+    this.isFiltered = false;
+    this.loadTotalFromService();
   }
 
   navigateToPresupuesto(): void {
@@ -447,11 +543,27 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
   //Descargar Excel Inscripciones
   async downloadExcelIns(): Promise<void> {
     try {
-      // Lazy load ExcelJS
-      const ExcelJS = await import('exceljs');
+      // Importación más robusta para producción
+      let ExcelJS: any;
+      let Workbook: any;
+      
+      try {
+        ExcelJS = await import('exceljs');
+        // Manejar diferentes formas de exportación de ExcelJS
+        if (ExcelJS.default && ExcelJS.default.Workbook) {
+          Workbook = ExcelJS.default.Workbook;
+        } else if (ExcelJS.Workbook) {
+          Workbook = ExcelJS.Workbook;
+        } else {
+          throw new Error('No se pudo encontrar la clase Workbook');
+        }
+      } catch (importError) {
+        console.error('Error al importar ExcelJS:', importError);
+        throw new Error('No se pudo cargar la librería ExcelJS');
+      }
 
       // Crear un nuevo libro de trabajo
-      const workbook = new ExcelJS.Workbook();
+      const workbook = new Workbook();
 
       // Calcular totales
       const totalCourses = this.schoolsData.reduce((sum, school) => sum + school.cursos.length, 0);
@@ -667,37 +779,43 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       // Generar el archivo y descargarlo
       const fileName = `Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-      workbook.xlsx.writeBuffer().then((buffer) => {
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        link.click();
-        window.URL.revokeObjectURL(url);
-
-        this.notificationService.showSuccess(
-          'Excel descargado exitosamente',
-          `El archivo ${fileName} se ha descargado correctamente.`
-        );
-      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(url);
 
     } catch (error) {
       console.error('Error al generar Excel:', error);
-      this.notificationService.showError(
-        'Error al generar Excel',
-        'No se pudo generar el archivo Excel. Inténtalo nuevamente.'
-      );
     }
   }
 
   //Descargar Excel Cartera
   async downloadExcelCart(): Promise<void> {
     try{
-      // Lazy load ExcelJS
-      const ExcelJS = await import('exceljs');
+      // Importación más robusta para producción
+      let ExcelJS: any;
+      let Workbook: any;
+      
+      try {
+        ExcelJS = await import('exceljs');
+        // Manejar diferentes formas de exportación de ExcelJS
+        if (ExcelJS.default && ExcelJS.default.Workbook) {
+          Workbook = ExcelJS.default.Workbook;
+        } else if (ExcelJS.Workbook) {
+          Workbook = ExcelJS.Workbook;
+        } else {
+          throw new Error('No se pudo encontrar la clase Workbook');
+        }
+      } catch (importError) {
+        console.error('Error al importar ExcelJS:', importError);
+        throw new Error('No se pudo cargar la librería ExcelJS');
+      }
 
-      const workBook = new ExcelJS.Workbook();
+      const workBook = new Workbook();
       const worksheet = workBook.addWorksheet('Reporte de Cartera');
 
   // Get date range
@@ -835,25 +953,17 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
   // Generate Excel file
   const fileName = `Reporte_Cartera_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-  workBook.xlsx.writeBuffer().then((buffer) => {
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        link.click();
-        window.URL.revokeObjectURL(url);
-  this.notificationService.showSuccess(
-          'Excel descargado exitosamente',
-          `El archivo ${fileName} se ha descargado correctamente.`
-        );
-    });
+  const buffer = await workBook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  window.URL.revokeObjectURL(url);
+
   } catch (error) {
       console.error('Error al generar Excel:', error);
-      this.notificationService.showError(
-        'Error al generar Excel',
-        'No se pudo generar el archivo Excel. Inténtalo nuevamente.'
-      );
     }
   }
 
@@ -889,5 +999,42 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
 
   totalPayments(){
     this.paymentService.totalPayment().subscribe()
+  }
+
+  // Método para cargar el total desde el servicio totalPayment()
+  loadTotalFromService() {
+    this.paymentService.totalPayment().subscribe({
+      next: (response: any) => {
+        this.totalFromService = response.data || 0;
+      },
+      error: (error) => {
+        console.error('Error al cargar el total del servicio:', error);
+        this.totalFromService = 0;
+      }
+    });
+  }
+
+  // Método para formatear fechas para la API
+  formatDateForAPI(date: string): string {
+    if (!date) return '';
+
+    // Si la fecha ya está en formato YYYY-MM-DD, devolverla tal como está
+    if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return date;
+    }
+
+    // Si es un objeto Date o string de fecha, convertirlo
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      console.error('Fecha inválida:', date);
+      return '';
+    }
+
+    // Formatear como YYYY-MM-DD
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 }
