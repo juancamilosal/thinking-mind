@@ -70,6 +70,9 @@ export class ColegioCursosComponent implements OnInit {
       curso_id: [null, Validators.required],
       colegio_id: [null, Validators.required],
       precio_curso: [null, Validators.required],
+      programa_con_inscripcion: [false], // Checkbox para mostrar/ocultar campos de inscripción
+      precio_inscripcion: [null], // Campo opcional
+      moneda: [''], // Campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: [null],
       courseSearchTerm: [null],
@@ -192,6 +195,14 @@ export class ColegioCursosComponent implements OnInit {
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
         // Enviar el precio desformateado (sin puntos) como número
         precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
+        // Campos de inscripción (solo si el checkbox está marcado)
+        programa_con_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value || false,
+        precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value 
+          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value) 
+          : null,
+        moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value 
+          ? this.fechaFinalizacionForm.get('moneda')?.value 
+          : null,
         // Nuevo: precio especial para Directus
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
         precio_especial: precioEspecialValor,
@@ -234,6 +245,23 @@ export class ColegioCursosComponent implements OnInit {
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  onInscriptionPriceInput(event: any): void {
+    const input = event.target;
+    const value = input.value;
+    
+    // Remover todo lo que no sea dígito
+    const numericValue = value.replace(/\D/g, '');
+    
+    // Formatear con puntos como separadores de miles
+    const formattedValue = this.formatPrice(numericValue);
+    
+    // Actualizar el valor del input
+    input.value = formattedValue;
+    
+    // Actualizar el FormControl
+    this.fechaFinalizacionForm.get('precio_inscripcion')?.setValue(formattedValue, { emitEvent: false });
   }
 
   onPriceInput(event: any): void {

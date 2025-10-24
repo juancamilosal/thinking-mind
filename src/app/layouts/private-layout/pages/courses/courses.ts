@@ -76,6 +76,8 @@ export class Courses {
     this.editFechaForm = this.fb.group({
       fecha_finalizacion: ['', Validators.required],
       precio_curso: [''],
+      precio_inscripcion: [''], // Nuevo campo opcional
+      moneda: [''], // Nuevo campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: ['']
     });
@@ -375,6 +377,10 @@ export class Courses {
       precio_curso: (colegioCurso.precio_curso !== null && colegioCurso.precio_curso !== undefined)
         ? this.formatPrice(colegioCurso.precio_curso)
         : '',
+      precio_inscripcion: (colegioCurso.precio_inscripcion !== null && colegioCurso.precio_inscripcion !== undefined)
+        ? this.formatPrice(colegioCurso.precio_inscripcion)
+        : '',
+      moneda: colegioCurso.moneda || '',
       precio_especial_lanzamiento: this.isTruthyFlag(colegioCurso.tiene_precio_especial),
       precio_especial: (colegioCurso.precio_especial !== null && colegioCurso.precio_especial !== undefined)
         ? this.formatPrice(colegioCurso.precio_especial)
@@ -422,6 +428,22 @@ export class Courses {
         updatedData.precio_curso = unformattedPrice as number;
       }
 
+      // Nuevos campos: precio_inscripcion y moneda
+      const rawInscriptionPrice = this.editFechaForm.get('precio_inscripcion')?.value;
+      const unformattedInscriptionPrice = this.unformatPrice(rawInscriptionPrice);
+      if (rawInscriptionPrice !== null && rawInscriptionPrice !== undefined && String(rawInscriptionPrice).trim() !== '') {
+        updatedData.precio_inscripcion = unformattedInscriptionPrice as number;
+      } else {
+        updatedData.precio_inscripcion = null;
+      }
+
+      const monedaValue = this.editFechaForm.get('moneda')?.value;
+      if (monedaValue && monedaValue.trim() !== '') {
+        updatedData.moneda = monedaValue;
+      } else {
+        updatedData.moneda = null;
+      }
+
       // Precio especial de lanzamiento
       const specialFlag = !!this.editFechaForm.get('precio_especial_lanzamiento')?.value;
       updatedData.tiene_precio_especial = specialFlag ? 'TRUE' : 'FALSE';
@@ -455,6 +477,16 @@ export class Courses {
         }
       });
     }
+  }
+
+  // Formateo del precio para visualización en el input del modal
+  onEditInscriptionPriceInput(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    // Mantener solo dígitos, luego formatear con puntos cada 3
+    const numericValue = inputEl.value.replace(/\D/g, '');
+    const formattedValue = this.formatPrice(numericValue);
+    inputEl.value = formattedValue;
+    this.editFechaForm.get('precio_inscripcion')?.setValue(formattedValue, { emitEvent: false });
   }
 
   // Formateo del precio para visualización en el input del modal
