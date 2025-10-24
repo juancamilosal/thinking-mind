@@ -1,7 +1,7 @@
 <div class="p-4 md:p-6 bg-gray-50 min-h-screen">
   <!-- Header -->
   <div class="mb-6 md:mb-8">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Gestión de Reportes</h1>
+      <h1 class="text-xl md:text-xl font-bold text-gray-800 mb-2">Gestión de Reportes</h1>
       <p class="text-sm md:text-base text-gray-600">Genera y descarga tus reportes</p>
   </div>
 
@@ -16,7 +16,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
             </svg>
           </div>
-          <h3 class="text-lg md:text-2xl font-bold text-gray-800">Generación de Reportes</h3>
+          <h3 class="text-base md:text-lg font-bold text-gray-800">Generación de Reportes</h3>
         </div>
         <!-- Tipo de Reporte -->
         <label class="text-[#0d141c] text-base font-medium leading-normal pb-2">Tipo de Reporte</label>
@@ -84,7 +84,7 @@
   @if(reportGenerated && reportForm.value.reportType === 'INSCRIPCIONES') {
     <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 md:mb-8 mx-2 md:mx-0">
       <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
-        <h2 class="text-lg md:text-xl font-semibold text-gray-800">Inscripciones por Colegio y Programas</h2>
+        <h2 class="text-base md:text-base font-semibold text-gray-800">Inscripciones por Colegio y Programas</h2>
         @if(!loadingSchoolsData && schoolsData.length > 0) {
           <button
             type="button"
@@ -255,31 +255,31 @@
                 @for (payment of payments; track payment.id) {
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
+                    <div class="text-xs font-medium text-gray-900">{{ payment.pagador }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ formatPaymentMethod(payment.metodo_pago) }}</div>
+                    <div class="text-xs text-gray-900">{{ formatPaymentMethod(payment.metodo_pago) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ formatCurrency(payment.valor) }}</div>
+                    <div class="text-xs font-medium text-gray-900">{{ formatCurrency(payment.valor) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ formatCurrency(payment.comision || 0) }}</div>
+                    <div class="text-xs text-gray-900">{{ formatCurrency(payment.comision || 0) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ formatCurrency(payment.iva || 0) }}</div>
+                    <div class="text-xs text-gray-900">{{ formatCurrency(payment.iva || 0) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ formatCurrency(payment.tarifa || 0) }}</div>
+                    <div class="text-xs text-gray-900">{{ formatCurrency(payment.tarifa || 0) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ formatCurrency(payment.retencion_fuente || 0) }}</div>
+                    <div class="text-xs text-gray-900">{{ formatCurrency(payment.retencion_fuente || 0) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ formatCurrency(payment.valor_neto || 0) }}</div>
+                    <div class="text-xs font-medium text-gray-900">{{ formatCurrency(payment.valor_neto || 0) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ payment.fecha_pago | date:'dd/MM/yyyy' }}</div>
+                    <div class="text-xs text-gray-900">{{ payment.fecha_pago | date:'dd/MM/yyyy' }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"

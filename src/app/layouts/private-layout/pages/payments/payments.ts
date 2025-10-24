@@ -46,6 +46,9 @@ export class Payments implements OnInit, OnDestroy {
   isLoadingTariffs: boolean = false;
   isUpdatingTariffs: boolean = false;
   currentTariffId: number | null = null;
+  
+  // Propiedad para el acordeón
+  isAccordionOpen: boolean = false;
 
   constructor(
     private paymentService: PaymentService,
@@ -153,7 +156,8 @@ export class Payments implements OnInit, OnDestroy {
     ).subscribe({
       next: (response: ResponseAPI<PaymentModel[]>) => {
         this.payments = response.data || [];
-        this.totalItems = response.meta?.total_count || 0;
+        // Usar filter_count cuando hay filtros aplicados, sino total_count
+        this.totalItems = response.meta?.filter_count || response.meta?.total_count || 0;
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
       },
       error: (error) => {
@@ -300,5 +304,10 @@ export class Payments implements OnInit, OnDestroy {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
+  }
+
+  // Método para alternar el acordeón
+  toggleAccordion(): void {
+    this.isAccordionOpen = !this.isAccordionOpen;
   }
 }

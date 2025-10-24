@@ -4,7 +4,7 @@
     <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-xl">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold">Información del Cliente</h2>
+          <h2 class="text-lg font-bold">Información del Cliente</h2>
           <p class="text-blue-100 mt-1">Detalles completos del cliente</p>
         </div>
         <button (click)="onClose()" class="text-white hover:text-gray-200 transition-colors">
@@ -29,15 +29,15 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-600">Nombre Completo</label>
+                <label class="block text-xs font-medium text-gray-600">Nombre Completo</label>
                 <p class="text-gray-900 font-medium">{{ client.nombre }} {{ client.apellido }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-600">Tipo de Documento</label>
+                <label class="block text-xs font-medium text-gray-600">Tipo de Documento</label>
                 <p class="text-gray-900">{{ client.tipo_documento }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-600">Número de Documento</label>
+                <label class="block text-xs font-medium text-gray-600">Número de Documento</label>
                 <p class="text-gray-900">{{ client.numero_documento }}</p>
               </div>
             </div>
@@ -53,15 +53,15 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-600">Email</label>
+                <label class="block text-xs font-medium text-gray-600">Email</label>
                 <p class="text-gray-900">{{ client.email }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-600">Celular</label>
+                <label class="block text-xs font-medium text-gray-600">Celular</label>
                 <p class="text-gray-900">{{ client.celular }}</p>
               </div>
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-600">Dirección</label>
+                <label class="block text-xs font-medium text-gray-600">Dirección</label>
                 <p class="text-gray-900">{{ client.direccion }}</p>
               </div>
             </div>
@@ -80,8 +80,8 @@
                 @for (student of client.estudiantes; track student.id) {
                   <div class="bg-white p-3 rounded border border-gray-200">
                     <p class="font-medium text-gray-900">{{ student.nombre }} {{ student.apellido }}</p>
-                    <p class="text-sm text-gray-600">{{ student.tipo_documento }}: {{ student.numero_documento }}</p>
-                    <p class="text-sm text-gray-600">Colegio: {{ student.colegio_id.nombre }}</p>
+                    <p class="text-xs text-gray-600">{{ student.tipo_documento }}: {{ student.numero_documento }}</p>
+                    <p class="text-xs text-gray-600">Colegio: {{ student.colegio_id.nombre }}</p>
                   </div>
                 }
               </div>
@@ -93,10 +93,10 @@
 
     <!-- Footer -->
     <div class="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end space-x-3">
-      <button (click)="onClose()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-        Cerrar
-      </button>
-      <button (click)="onEdit()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+      <button (click)="onClose()" class="btn-secondary">
+          Cerrar
+        </button>
+        <button (click)="onEdit()" class="btn-primary flex items-center space-x-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
         </svg>

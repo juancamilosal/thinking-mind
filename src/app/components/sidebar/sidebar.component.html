@@ -26,13 +26,13 @@
             @for (item of menuItems; track item) {
                 <li>
                     <a
-                            [routerLink]="item.ruta"
-                            (click)="closeSidebar()"
+                      [routerLink]="item.ruta"
+                       (click)="closeSidebar()"
                             class="flex items-center p-4 text-slate-300 rounded-xl hover:bg-gradient-to-r hover:from-teal-600 hover:via-blue-600 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
                             routerLinkActive="bg-gradient-to-r from-teal-500 via-blue-500 to-red-500 text-white shadow-lg scale-105">
                         <div class="flex items-center justify-between w-full">
-                          <img [src]="item.icono" [alt]="item.alt" class="w-16 h-16 object-contain">
-                          <span class="text-2xl font-semibold">{{ item.nombre }}</span>
+                          <img [src]="item.icono" [alt]="item.alt" class="w-10 h-10 object-contain">
+                          <span class="text-lg font-semibold">{{ item.nombre }}</span>
                         </div>
                     </a>
                 </li>
