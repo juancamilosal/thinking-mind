@@ -21,7 +21,9 @@ export class SchoolWithPaymentsService {
       limit: limit.toString(),
       meta: 'total_count,filter_count',
       // Filtrar por saldo mayor a 0 directamente en Directus
-      'filter[saldo][_gt]': '0'
+      'filter[saldo][_gt]': '0',
+      // Filtrar solo cuentas de curso (no inscripción)
+      'filter[es_inscripcion][_eq]': 'FALSE'
     };
 
     // Si hay filtro por año, usar rangos de fecha con formato ISO
@@ -59,6 +61,8 @@ export class SchoolWithPaymentsService {
       'filter[estudiante_id][colegio_id][_eq]': schoolId,
       // Filtrar por saldo mayor a 0 directamente en Directus
       'filter[saldo][_gt]': '0',
+      // Filtrar solo cuentas de curso (no inscripción)
+      'filter[es_inscripcion][_eq]': 'FALSE',
       page: page.toString(),
       limit: limit.toString(),
       meta: 'total_count,filter_count'
