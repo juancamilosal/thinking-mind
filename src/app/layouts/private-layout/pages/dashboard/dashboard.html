@@ -3,7 +3,7 @@
   <div class="mb-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
           Dashboard
         </h1>
         <p class="text-gray-600 mt-2">Resumen general del sistema</p>
@@ -101,7 +101,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Pagos del Mes</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ formatCurrency(stats.monthlyPayments) }}</p>
+              <p class="text-2xl font-bold text-gray-900 mt-2">{{ formatCurrency(stats.monthlyPayments) }}</p>
             </div>
             <div class="bg-green-100 rounded-full p-3">
               <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Cuentas Por Cobrar</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalPendingAccountsReceivable }}</p>
+              <p class="text-2xl font-bold text-gray-900 mt-2">{{ stats.totalPendingAccountsReceivable }}</p>
             </div>
             <div class="bg-red-100 rounded-full p-3">
               <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,20 +138,20 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                 </svg>
               </div>
-              <h3 class="text-2xl font-bold text-gray-900">Resumen Financiero</h3>
+              <h3 class="text-xl font-bold text-gray-900">Resumen Financiero</h3>
             </div>
             <div class="space-y-4">
               <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <span class="text-gray-600 font-medium">Total por Cobrar:</span>
-                <span class="text-2xl font-bold text-gray-900">{{ formatCurrency(stats.totalAmountReceivable) }}</span>
+                <span class="text-xl font-bold text-gray-900">{{ formatCurrency(stats.totalAmountReceivable) }}</span>
               </div>
               <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
                 <span class="text-gray-600 font-medium">Total Pagado:</span>
-                <span class="text-2xl font-bold text-green-600">{{ formatCurrency(stats.totalPaidAmount) }}</span>
+                <span class="text-xl font-bold text-green-600">{{ formatCurrency(stats.totalPaidAmount) }}</span>
               </div>
               <div class="flex justify-between items-center p-4 bg-red-50 rounded-lg">
                 <span class="text-gray-600 font-medium">Saldo Pendiente:</span>
-                <span class="text-2xl font-bold text-red-600">{{ formatCurrency(stats.totalAmountReceivable - stats.totalPaidAmount) }}</span>
+                <span class="text-xl font-bold text-red-600">{{ formatCurrency(stats.totalAmountReceivable - stats.totalPaidAmount) }}</span>
               </div>
             </div>
           </div>
@@ -163,10 +163,10 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
               </div>
-              <h3 class="text-2xl font-bold text-gray-900">Progreso de Pagos</h3>
+              <h3 class="text-xl font-bold text-gray-900">Progreso de Pagos</h3>
             </div>
             <div class="text-center mb-6">
-              <div class="text-4xl font-bold text-gray-900 mb-2">{{ getPaymentProgress().toFixed(1) }}%</div>
+              <div class="text-2xl font-bold text-gray-900 mb-2">{{ getPaymentProgress().toFixed(1) }}%</div>
               <p class="text-gray-600">Pagos completados</p>
             </div>
             <!-- Progress Bar -->

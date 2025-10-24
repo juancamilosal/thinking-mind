@@ -20,6 +20,9 @@ export const environment = {
     logout: apiUrl + 'auth/logout',
     refresh: apiUrl + 'auth/refresh',
     me: apiUrl + 'users/me',
+    menu: {
+      list: apiUrl + '/items/menu?sort'
+    },
   },
 
   //Flujos
@@ -34,6 +37,7 @@ export const environment = {
   return: apiUrl + 'flows/trigger/bcb42dd5-5119-4c09-96c6-cbed0e6e106f',
   listaGrupo: apiUrl + 'flows/trigger/cc098cc1-5ab6-46c4-8d83-59e76dfdd7a0',
   dashboardRector: apiUrl + 'flows/trigger/7e0cc8b7-7d75-47db-804a-03f0d9a4205c',
+  total_payment: apiUrl + 'flows/trigger/dcceb5b9-c6ae-4cda-afb0-55922c337d4e',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
 
   // Configuración de tasas de cambio

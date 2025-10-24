@@ -1058,14 +1058,39 @@ export class PaymentRecord implements OnInit {
         // Determinar precio según el colegio seleccionado; si no existe para el colegio, notificar y limpiar precio
         const priceAsNumber = this.computeCoursePrice(selectedCourse);
         const formattedPrice = priceAsNumber !== null ? this.formatCurrency(priceAsNumber) : '';
-        // Manejo del precio de inscripción si aplica
-        const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
-        const inscriptionNumber: number = typeof inscriptionRaw === 'string'
-          ? parseFloat(inscriptionRaw)
-          : Number(inscriptionRaw || 0);
+        // Obtener precio de inscripción y moneda desde colegios_cursos
+        const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
+        let inscriptionNumber: number = 0;
+        let courseCurrency: string | null = null;
 
-        // Determinar si el curso usa EUR o USD basándose en el atributo moneda del curso
-        const courseCurrency = selectedCourse.moneda; // Puede ser 'USD', 'EUR' o null/undefined
+        // Buscar en colegios_cursos si hay un colegio seleccionado
+        if (schoolId && Array.isArray((selectedCourse as any).colegios_cursos)) {
+          const schoolCourseMatch = (selectedCourse as any).colegios_cursos.find((cc: any) => {
+            const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+            return ccSchoolId && ccSchoolId === schoolId;
+          });
+
+          if (schoolCourseMatch) {
+            // Usar precio de inscripción y moneda desde colegios_cursos
+            const inscriptionRaw: any = schoolCourseMatch.precio_inscripcion;
+            inscriptionNumber = typeof inscriptionRaw === 'string'
+              ? parseFloat(inscriptionRaw)
+              : Number(inscriptionRaw || 0);
+            
+            courseCurrency = schoolCourseMatch.moneda || null;
+          }
+        }
+
+        // Si no se encontró en colegios_cursos, usar valores del curso principal como fallback
+        if (inscriptionNumber === 0 && courseCurrency === null) {
+          const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
+          inscriptionNumber = typeof inscriptionRaw === 'string'
+            ? parseFloat(inscriptionRaw)
+            : Number(inscriptionRaw || 0);
+          courseCurrency = selectedCourse.moneda;
+        }
+
+        // Determinar si el curso usa EUR o USD basándose en el atributo moneda
         this.isEuroCourse = courseCurrency === 'EUR';
 
         // Formatear inscripción para mostrar código de moneda en vez del símbolo COP

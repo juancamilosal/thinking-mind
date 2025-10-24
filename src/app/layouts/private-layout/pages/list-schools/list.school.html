@@ -1,7 +1,7 @@
 <div class="p-6 bg-gray-50 min-h-screen">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Listado del Colegio</h1>
+    <h1 class="text-xl font-bold text-gray-800 mb-2">Listado del Colegio</h1>
     <p class="text-gray-600">Visualiza la información completa de todos los colegios registrados</p>
   </div>
 
@@ -37,7 +37,7 @@
         </div>
         <button
           (click)="onSearch()"
-          class="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
+          class="btn-primary transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
@@ -232,7 +232,7 @@
                                           </span>
                                         </div>
                                         <div>
-                                          <div class="text-sm font-medium text-gray-900">{{ studentWithAccount.student.nombre }} {{ studentWithAccount.student.apellido }}</div>
+                                          <div class="text-xs font-medium text-gray-900">{{ studentWithAccount.student.nombre }} {{ studentWithAccount.student.apellido }}</div>
                                           @if (isNewToday) {
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
                                               ¡NUEVO HOY!
@@ -241,15 +241,15 @@
                                         </div>
                                       </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700">
                                       <div class="flex flex-col">
                                         <span class="font-medium">{{ studentWithAccount.student.tipo_documento || 'Tipo no especificado' }}: {{ studentWithAccount.student.numero_documento || 'Número no disponible' }}</span>
                                       </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700">
                                       <span class="font-medium">{{ studentWithAccount.student.grado || 'Grado no especificado' }}</span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700">
                                       @if (studentWithAccount.account.curso_id && typeof studentWithAccount.account.curso_id === 'object') {
                                         <div class="flex flex-col">
                                           <span class="font-medium">{{ isWillGoCourse(studentWithAccount.account.curso_id.nombre) ? 'WILL - GO' : studentWithAccount.account.curso_id.nombre }}</span>
@@ -259,13 +259,13 @@
                                         <span class="text-gray-400">Sin curso asignado</span>
                                       }
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700">
                                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                             [class]="studentWithAccount.account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (studentWithAccount.account.estado === 'PAGADO' || studentWithAccount.account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                                         {{ studentWithAccount.account.estado }}
                                       </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
                                       <div class="flex items-center">
                                         <input
                                           type="checkbox"
@@ -276,7 +276,7 @@
                                           [class.opacity-50]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                           [class.cursor-not-allowed]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                         />
-                                        <span class="ml-2 text-sm text-gray-600"
+                                        <span class="ml-2 text-xs text-gray-600"
                                               [class.text-gray-400]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'">
                                           {{ getPinEntregadoText(studentWithAccount.account) }}
                                         </span>
@@ -480,7 +480,7 @@
                                                   </span>
                                                 </div>
                                                 <div>
-                                                  <div class="text-sm font-medium text-gray-900">{{ studentWithAccount.student.nombre }} {{ studentWithAccount.student.apellido }}</div>
+                                                  <div class="text-xs font-medium text-gray-900">{{ studentWithAccount.student.nombre }} {{ studentWithAccount.student.apellido }}</div>
                                                   @if (isNewToday) {
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
                                                       ¡NUEVO HOY!
@@ -489,21 +489,21 @@
                                                 </div>
                                               </div>
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-700">
+                                            <td class="px-6 py-4 text-xs text-gray-700">
                                               <div class="flex flex-col">
                                                 <span class="font-medium">{{ studentWithAccount.student.tipo_documento || 'Tipo no especificado' }}: {{ studentWithAccount.student.numero_documento || 'Número no disponible' }}</span>
                                               </div>
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-700">
+                                            <td class="px-6 py-4 text-xs text-gray-700">
                                               <span class="font-medium">{{ studentWithAccount.student.grado || 'Grado no especificado' }}</span>
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-700">
+                                            <td class="px-6 py-4 text-xs text-gray-700">
                                               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                     [class]="studentWithAccount.account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (studentWithAccount.account.estado === 'PAGADO' || studentWithAccount.account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                                                 {{ studentWithAccount.account.estado }}
                                               </span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
                                               <div class="flex items-center">
                                                 <input
                                                   type="checkbox"
@@ -513,7 +513,7 @@
                                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                                   [class.opacity-50]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
                                                 />
-                                                <span class="ml-2 text-sm" 
+                                                <span class="ml-2 text-xs"
                                                       [class.text-gray-400]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'">
                                                   {{ getPinEntregadoText(studentWithAccount.account) }}
                                                 </span>
@@ -563,7 +563,7 @@
             <button
               (click)="goToPreviousPage()"
               [disabled]="currentPage === 1"
-              class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
+              class="btn-primary flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
@@ -572,7 +572,7 @@
             <button
               (click)="goToNextPage()"
               [disabled]="currentPage === totalPages"
-              class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
+              class="btn-primary flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
               Siguiente
               <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

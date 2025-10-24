@@ -274,6 +274,80 @@
           }
         </div>
 
+        <!-- Checkbox Programa Con Inscripción -->
+        <div class="mt-6 space-y-3">
+          <label class="inline-flex items-center">
+            <input
+              type="checkbox"
+              formControlName="programa_con_inscripcion"
+              class="rounded border-green-300 text-green-600 focus:ring-green-500" />
+            <span class="ml-2 text-sm font-semibold text-green-700">Programa Con Inscripción</span>
+          </label>
+
+          <!-- Sección de Inscripción (condicional) -->
+          @if (fechaFinalizacionForm.get('programa_con_inscripcion')?.value) {
+            <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <h4 class="text-lg font-semibold text-green-800 mb-4">Inscripción</h4>
+
+              <!-- Campo de Precio de Inscripción -->
+              <div class="space-y-3 mb-4">
+                <label for="precio_inscripcion" class="block text-sm font-semibold text-green-700">
+                  <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  Precio Inscripción
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="precio_inscripcion"
+                    formControlName="precio_inscripcion"
+                    (input)="onInscriptionPriceInput($event)"
+                    placeholder="Ej: 500"
+                    inputmode="numeric"
+                    class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                    [class.border-green-500]="fechaFinalizacionForm.get('precio_inscripcion')?.valid && fechaFinalizacionForm.get('precio_inscripcion')?.touched">
+                  @if (fechaFinalizacionForm.get('precio_inscripcion')?.valid && fechaFinalizacionForm.get('precio_inscripcion')?.touched) {
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Campo de Moneda -->
+              <div class="space-y-3">
+                <label for="moneda" class="block text-sm font-semibold text-green-700">
+                  <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                  </svg>
+                  Moneda
+                </label>
+                <div class="relative">
+                  <select
+                    id="moneda"
+                    formControlName="moneda"
+                    class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                    [class.border-green-500]="fechaFinalizacionForm.get('moneda')?.valid && fechaFinalizacionForm.get('moneda')?.touched">
+                    <option [value]="">Seleccionar moneda</option>
+                    <option [value]="'USD'">DÓLAR (USD)</option>
+                    <option [value]="'EUR'">EURO (EUR)</option>
+                  </select>
+                  @if (fechaFinalizacionForm.get('moneda')?.valid && fechaFinalizacionForm.get('moneda')?.touched) {
+                    <div class="absolute inset-y-0 right-8 pr-4 flex items-center pointer-events-none">
+                      <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
         <!-- Precio Especial de Lanzamiento -->
         <div class="mt-6 space-y-3">
           <label class="inline-flex items-center">

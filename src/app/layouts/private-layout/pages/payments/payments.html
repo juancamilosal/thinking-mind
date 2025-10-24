@@ -12,128 +12,112 @@
 <div class="p-6 bg-gray-50 min-h-screen">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Gestión de Pagos</h1>
+    <h1 class="text-xl font-bold text-gray-800 mb-2">Gestión de Pagos</h1>
     <p class="text-gray-600">Administra y consulta todos los pagos realizados por tus clientes</p>
   </div>
 
-  <!-- Configuración de Tarifas Wompi -->
-  <div class="mb-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center">
-        <div class="bg-green-500 rounded-full p-2 mr-3">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-          </svg>
+  <!-- Configuración de Tarifas Wompi - Acordeón -->
+  <div class="bg-green-50 rounded-xl shadow-lg overflow-hidden mb-8 border border-green-200">
+    <!-- Header del acordeón -->
+    <div class="px-6 py-4 border-b border-green-200 cursor-pointer  transition-colors duration-200"
+         (click)="toggleAccordion()">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="bg-green-400 rounded-full p-2 mr-3">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-800">Configuración de Tarifas Wompi</h2>
         </div>
-        <h3 class="text-xl font-semibold text-gray-800">Configuración de Tarifas Wompi</h3>
+        <svg class="w-5 h-5 text-gray-500 transform transition-transform duration-200"
+             [class.rotate-180]="isAccordionOpen"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
       </div>
-      <button
-        (click)="updateWompiTariffs()"
-        [disabled]="isUpdatingTariffs"
-        class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-      >
-        @if (isUpdatingTariffs) {
-          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span>Actualizando...</span>
-        } @else {
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          <span>Actualizar</span>
-        }
-      </button>
     </div>
 
-    @if (isLoadingTariffs) {
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        @for (i of [1,2,3]; track i) {
-          <div class="animate-pulse">
-            <div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-            <div class="h-10 bg-gray-200 rounded"></div>
-          </div>
-        }
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Tarifa -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Tarifa (%)
-          </label>
-          <div class="relative">
+    <!-- Contenido del acordeón -->
+      <div class="overflow-hidden transition-all duration-300 ease-in-out"
+           [style.max-height]="isAccordionOpen ? '500px' : '0px'">
+        <div class="p-6 bg-white">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div>
+            <label for="tarifa" class="block text-sm font-medium text-gray-700 mb-2">Tarifa (%)</label>
             <input
               type="number"
+              id="tarifa"
               [(ngModel)]="wompiTariffs.tarifa"
+              class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              placeholder="Ej: 3.4"
               step="0.01"
               min="0"
               max="100"
-              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-              placeholder="0.00"
-            >
-            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
+            />
           </div>
-        </div>
 
-        <!-- Comisión -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Comisión ($)
-          </label>
-          <div class="relative">
+          <div>
+            <label for="comision" class="block text-sm font-medium text-gray-700 mb-2">Comisión ($)</label>
             <input
               type="number"
+              id="comision"
               [(ngModel)]="wompiTariffs.comision"
-              step="100"
+              class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              placeholder="Ej: 900"
+              step="1"
               min="0"
-              class="w-full px-4 py-3 pl-8 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-              placeholder="0"
-            >
-            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
+            />
           </div>
-        </div>
 
-        <!-- IVA -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            IVA (%)
-          </label>
-          <div class="relative">
+          <div>
+            <label for="iva" class="block text-sm font-medium text-gray-700 mb-2">IVA (%)</label>
             <input
               type="number"
+              id="iva"
               [(ngModel)]="wompiTariffs.iva"
+              class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              placeholder="Ej: 19"
               step="0.01"
               min="0"
               max="100"
-              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-              placeholder="0.00"
-            >
-            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
+            />
+          </div>
+
+          <div>
+            <label for="retencion" class="block text-sm font-medium text-gray-700 mb-2">Retención en la Fuente (%)</label>
+            <input
+              type="number"
+              id="retencion"
+              [(ngModel)]="wompiTariffs.retencion_fuente"
+              class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              placeholder="Ej: 2.5"
+              step="0.01"
+              min="0"
+              max="100"
+            />
           </div>
         </div>
 
-        <!-- Retención en la Fuente -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Retención en la Fuente (%)
-          </label>
-          <div class="relative">
-            <input
-              type="number"
-              [(ngModel)]="wompiTariffs.retencion_fuente"
-              step="0.01"
-              min="0"
-              max="100"
-              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-              placeholder="0.00"
+        <div class="flex justify-end">
+            <button
+              (click)="updateWompiTariffs()"
+              [disabled]="isUpdatingTariffs"
+              class="btn-success inline-flex items-center"
             >
-            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">%</span>
-          </div>
+            @if (isUpdatingTariffs) {
+              <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Actualizando...
+            } @else {
+              Actualizar Tarifas
+            }
+          </button>
         </div>
       </div>
-    }
+    </div>
   </div>
 
   <!-- Barra de Búsqueda y Filtros -->
@@ -142,18 +126,18 @@
     <div class="flex gap-4 flex-wrap sm:flex-nowrap mb-4">
       <input
         type="text"
-        placeholder="Buscar por pagador, número de transacción o estado..."
-        [value]="searchTerm"
+        [(ngModel)]="searchTerm"
         (input)="onSearchInputChange($event)"
-        (keyup.enter)="onSearch()"
-        class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        class="flex-1 px-3 py-1.5 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+        placeholder="Buscar por pagador, método de pago o estado..."
+      />
       <button
         (click)="onSearch()"
-        class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold w-full sm:w-auto">
+        class="btn-primary inline-flex items-center rounded-l-none">
         Buscar
       </button>
     </div>
-    
+
     <!-- Filtros por fecha -->
     <div class="border-t border-gray-200 pt-4">
       <h3 class="text-sm font-medium text-gray-700 mb-3">Filtrar por fecha</h3>
@@ -167,10 +151,10 @@
             type="date"
             [(ngModel)]="startDate"
             (change)="onDateFilterChange()"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
         </div>
-        
+
         <!-- Fecha Final -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -180,15 +164,15 @@
             type="date"
             [(ngModel)]="endDate"
             (change)="onDateFilterChange()"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
         </div>
-        
+
         <!-- Botón limpiar filtros -->
         <div class="flex items-end">
           <button
             (click)="clearDateFilters()"
-            class="w-full px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all font-medium">
+            class="btn-secondary inline-flex items-center">
             Limpiar Filtros
           </button>
         </div>
@@ -199,7 +183,7 @@
   <!-- Tabla de Pagos -->
   <div class="bg-white rounded-xl shadow-lg overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-800">Lista de Pagos</h2>
+      <h2 class="text-lg font-semibold text-gray-800">Lista de Pagos</h2>
     </div>
 
     <!-- Loading Skeleton -->
@@ -264,7 +248,7 @@
                       </svg>
                     </div>
                     <div class="space-y-2">
-                      <h3 class="text-xl font-semibold text-gray-700">
+                      <h3 class="text-lg font-semibold text-gray-700">
                         @if (searchTerm) {
                           No se encontraron pagos que coincidan con "{{ searchTerm }}"
                         } @else {
@@ -286,13 +270,13 @@
               @for (payment of payments; track payment.id) {
                 <tr class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ payment.pagador }}</div>
+                    <div class="text-xs font-medium text-gray-900">{{ payment.pagador }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(payment.valor) }}</div>
+                    <div class="text-xs font-semibold text-gray-900">{{ formatCurrency(payment.valor) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ formatDate(payment.fecha_pago) }}</div>
+                    <div class="text-xs text-gray-900">{{ formatDate(payment.fecha_pago) }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-3 py-1 rounded-full text-xs font-medium">
@@ -304,8 +288,8 @@
                       {{ payment.estado }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button (click)="viewPaymentDetail(payment)" class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 transform hover:scale-105">
+                  <td class="px-6 py-4 whitespace-nowrap text-xs font-medium">
+                    <button (click)="viewPaymentDetail(payment)" class="btn-primary inline-flex items-center">
                       <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -319,7 +303,7 @@
           </tbody>
         </table>
       </div>
-      
+
       <!-- Paginación -->
       @if (payments.length > 0) {
         <div class="bg-gradient-to-r from-white to-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-8 shadow-inner">
@@ -328,7 +312,7 @@
               <button
                 (click)="onPageChange(currentPage - 1)"
                 [disabled]="currentPage === 1"
-                class="relative inline-flex items-center px-5 py-2.5 border-0 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                class="btn-secondary inline-flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
@@ -337,7 +321,7 @@
               <button
                 (click)="onPageChange(currentPage + 1)"
                 [disabled]="currentPage === totalPages"
-                class="relative inline-flex items-center px-5 py-2.5 border-0 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                class="btn-secondary inline-flex items-center">
                 Siguiente
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -386,7 +370,7 @@
                    @for (page of getPaginationArray(); track page) {
                      <button
                        (click)="onPageChange(page)"
-                       [class]="page === currentPage ? 
+                       [class]="page === currentPage ?
                          'z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white relative inline-flex items-center px-4 py-2 text-sm font-bold shadow-inner border-r border-indigo-400' :
                          'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 relative inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 border-r border-gray-200'">
                        {{ page }}
