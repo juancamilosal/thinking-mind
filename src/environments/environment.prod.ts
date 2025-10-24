@@ -21,7 +21,7 @@ export const environment = {
     refresh: apiUrl + 'auth/refresh',
     me: apiUrl + 'users/me',
     menu: {
-      list: apiUrl + '/items/menu?sort'
+      list: apiUrl + 'items/menu?sort'
     },
   },
 
