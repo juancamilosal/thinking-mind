@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
+import { SchoolWithPaymentsService } from '../../../../../core/services/school-with-payments.service';
 import { Student } from '../../../../../core/models/Student';
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
 import { map } from 'rxjs/operators';
@@ -36,7 +37,8 @@ export class ShirtColor implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private accountReceivableService: AccountReceivableService
+    private accountReceivableService: AccountReceivableService,
+    private schoolWithPaymentsService: SchoolWithPaymentsService
   ) {}
 
   ngOnInit(): void {
@@ -50,62 +52,129 @@ export class ShirtColor implements OnInit {
   loadWillGoStudents(): void {
     this.isLoading = true;
 
-    const accountsQuery = this.accountReceivableService.getAllAccountsReceivable().pipe(
-      map((response: ResponseAPI<any>) => {
-        if (!response.data) return response;
+    // Use the same service as list.school component to get accounts with proper filtering
+    // This service already filters for: saldo > 0, es_inscripcion = FALSE, and current year
+    const currentYear = new Date().getFullYear().toString();
 
-        // Filter by school if schoolId is provided
-        if (this.schoolId) {
-          return {
-            ...response,
-            data: response.data.filter(account =>
-              account.estudiante_id?.colegio_id?.id === this.schoolId
-            )
-          };
-        }
-
-        return response;
-      })
-    );
+    let accountsQuery;
+    if (this.schoolId) {
+      // If filtering by specific school
+      accountsQuery = this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(
+        this.schoolId,
+        1,
+        9999,
+        currentYear
+      );
+    } else {
+      // Get all accounts
+      accountsQuery = this.schoolWithPaymentsService.getAccountsWithPayments(
+        1,
+        9999,
+        '',
+        currentYear
+      );
+    }
 
     accountsQuery.subscribe({
       next: (response) => {
         if (!response.data) {
+          console.log('No data received from API');
           this.isLoading = false;
           return;
         }
 
-        // Filter accounts for Will-Go courses
-        const willGoAccounts = response.data.filter(account => {
-          const courseName = account.curso_id?.nombre;
-          return account.curso_id &&
-                 typeof account.curso_id === 'object' &&
-                 courseName &&
-                 this.isWillGoCourse(courseName);
+        // Apply the same date filtering logic as list.school component
+        const todayForDateFilter = new Date();
+        todayForDateFilter.setHours(0, 0, 0, 0);
+
+        const filteredAccountsByDate = response.data.filter(account => {
+          if (account.fecha_finalizacion) {
+            const fechaFinalizacion = new Date(account.fecha_finalizacion);
+            fechaFinalizacion.setHours(0, 0, 0, 0);
+
+            // Show only if fecha_finalizacion is today or later (hasn't passed)
+            return fechaFinalizacion >= todayForDateFilter;
+          }
+          // If no fecha_finalizacion, show the account
+          return true;
         });
+
+        // Filter the date-filtered accounts for Will-Go courses
+        const willGoAccounts = filteredAccountsByDate.filter(account => {
+          // Handle different possible structures for curso_id
+          const course = account.curso_id;
+          let courseName = '';
+
+          if (course) {
+            if (typeof course === 'object' && course.nombre) {
+              courseName = course.nombre;
+            } else if (typeof course === 'string') {
+              courseName = course;
+            } else if (course.nombre) {
+              courseName = course.nombre;
+            }
+          }
+
+          const isWillGo = courseName && this.isWillGoCourse(courseName);
+
+          return isWillGo;
+        });
+
+
 
         // Get unique students from accounts
         const studentsMap = new Map<string, Student>();
 
         willGoAccounts.forEach(account => {
+          // Handle different possible structures for estudiante_id
+          let student = null;
+
           if (account.estudiante_id && typeof account.estudiante_id === 'object') {
-            const student = account.estudiante_id;
-            if (student.id) {
-              // If we already have this student, keep the most recent account
-              const existingStudent = studentsMap.get(student.id);
-              if (!existingStudent ||
-                  (account.fecha_inscripcion &&
-                   (!existingStudent.accountInfo?.fecha_inscripcion ||
-                    new Date(account.fecha_inscripcion) > new Date(existingStudent.accountInfo.fecha_inscripcion)))) {
-                student.accountInfo = account;
-                student.acudiente = account.cliente_id;
-                studentsMap.set(student.id, student);
+            student = account.estudiante_id;
+          } else if (account.estudiante_id) {
+            // If estudiante_id is just an ID string, we need to construct a basic student object
+            student = {
+              id: account.estudiante_id,
+              nombre: account.nombre || '',
+              apellido: account.apellido || '',
+              grado: account.grado || '',
+              tipo_documento: account.tipo_documento || '',
+              numero_documento: account.numero_documento || ''
+            };
+          }
+
+          if (student && (student.id || account.estudiante_id)) {
+            const studentId = student.id || account.estudiante_id;
+
+            // Create a composite key using student ID + name to better handle duplicates
+            const compositeKey = `${studentId}_${(student.nombre || '').trim()}_${(student.apellido || '').trim()}`;
+
+            // If we already have this student, keep the most recent account
+            const existingStudent = studentsMap.get(compositeKey);
+            if (!existingStudent ||
+                (account.fecha_inscripcion &&
+                 (!existingStudent.accountInfo?.fecha_inscripcion ||
+                  new Date(account.fecha_inscripcion) > new Date(existingStudent.accountInfo.fecha_inscripcion)))) {
+
+              // Ensure student has all necessary properties
+              student.accountInfo = account;
+              student.acudiente = account.cliente_id;
+              student.id = studentId;
+
+              // Handle colegio_id assignment from multiple possible sources
+              if (!student.colegio_id) {
+                student.colegio_id = account.estudiante_id?.colegio_id ||
+                                    account.colegio_id ||
+                                    { id: account.colegio_id };
               }
+
+              studentsMap.set(compositeKey, student);
             }
           }
         });
 
         this._willGoStudents = Array.from(studentsMap.values());
+
         this.processWillGoStudents();
         this.isLoading = false;
       },
@@ -170,15 +239,45 @@ export class ShirtColor implements OnInit {
       'will-go (estándar)',
       'will-go (segundo hermano)',
       'will-go (tercer hermano)',
+      'will go (estándar)',
+      'will go (segundo hermano)',
+      'will go (tercer hermano)',
       'will go',
-      'will-go'
+      'will-go',
+      'willgo',
+      'will go estándar',
+      'will-go estándar',
+      'will go segundo hermano',
+      'will-go segundo hermano',
+      'will go tercer hermano',
+      'will-go tercer hermano',
+      // Additional variations that might be in the database
+      'will go estandar',
+      'will-go estandar',
+      'curso will go',
+      'curso will-go',
+      'programa will go',
+      'programa will-go'
     ];
 
-    const normalizedName = courseName.toLowerCase().trim();
-    return willGoVariants.some(variant =>
-      normalizedName.includes(variant) ||
-      normalizedName === variant
-    );
+    const normalizedName = courseName.toLowerCase().trim()
+      .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+      .replace(/[()]/g, '') // Remove parentheses for more flexible matching
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove accents for matching
+
+    // Check exact matches first
+    if (willGoVariants.some(variant => {
+      const normalizedVariant = variant.toLowerCase().replace(/[()]/g, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return normalizedName === normalizedVariant ||
+             normalizedName.includes(normalizedVariant);
+    })) {
+      return true;
+    }
+
+    // More flexible pattern matching for "will go" or "will-go" variants
+    const willGoPattern = /will[\s-]*go/i;
+    return willGoPattern.test(courseName);
   }
 
   private processWillGoStudents(): void {
