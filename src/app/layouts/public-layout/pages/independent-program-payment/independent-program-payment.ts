@@ -85,6 +85,15 @@ export class IndependentProgramPayment implements OnInit {
     return parseFloat(String(value)) || 0;
   }
 
+  // Función para determinar qué precio mostrar basado en tiene_precio_especial
+  getDisplayPrice(colegioCurso: any): string {
+    if (colegioCurso.tiene_precio_especial === "TRUE" && colegioCurso.precio_especial) {
+      return colegioCurso.precio_especial;
+    } else {
+      return colegioCurso.precio_curso || '0';
+    }
+  }
+
   showAddCourseFormView(): void {
     this.showAddCourseForm = true;
     // Limpiar los campos del formulario para el nuevo programa
@@ -295,8 +304,14 @@ export class IndependentProgramPayment implements OnInit {
     const selectedColegioCurso = this.independentColegioCursos.find(cc => cc.id === colegioCursoId);
 
     if (selectedColegioCurso) {
-      // Usar los precios de colegios_cursos
-      const coursePrice = selectedColegioCurso.precio_curso || '0';
+      // Determinar qué precio usar basado en tiene_precio_especial
+      let coursePrice: string;
+      if (selectedColegioCurso.tiene_precio_especial === "TRUE" && selectedColegioCurso.precio_especial) {
+        coursePrice = selectedColegioCurso.precio_especial;
+      } else {
+        coursePrice = selectedColegioCurso.precio_curso || '0';
+      }
+      
       const inscriptionPrice = selectedColegioCurso.precio_inscripcion || 0;
 
       // Guardar el precio como número para que el pipe funcione correctamente
@@ -517,8 +532,14 @@ export class IndependentProgramPayment implements OnInit {
     const formData = this.paymentForm.value;
     const selectedColegioCurso = this.independentColegioCursos.find(cc => cc.id === formData.selectedCourse);
 
-    // Obtener el precio del curso desde colegios_cursos
-    const coursePriceRaw: any = selectedColegioCurso?.precio_curso;
+    // Determinar qué precio usar basado en tiene_precio_especial
+    let coursePriceRaw: any;
+    if (selectedColegioCurso?.tiene_precio_especial === "TRUE" && selectedColegioCurso?.precio_especial) {
+      coursePriceRaw = selectedColegioCurso.precio_especial;
+    } else {
+      coursePriceRaw = selectedColegioCurso?.precio_curso;
+    }
+    
     const coursePriceNumber: number = typeof coursePriceRaw === 'string'
       ? parseFloat(coursePriceRaw)
       : Number(coursePriceRaw || 0);

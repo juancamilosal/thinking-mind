@@ -748,7 +748,7 @@
                     class="w-full px-6 py-4 rounded-lg border border-purple-300 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 bg-white text-purple-800">
                     <option value="">Seleccione un programa independiente</option>
                     @for (colegioCurso of independentColegioCursos; track colegioCurso.id) {
-                      <option [value]="colegioCurso.id">{{ colegioCurso.curso_id?.nombre || 'Sin nombre' }} - {{ formatCurrency(parseNumber(colegioCurso.precio_curso || '0')) }}</option>
+                      <option [value]="colegioCurso.id">{{ colegioCurso.curso_id?.nombre || 'Sin nombre' }} - {{ formatCurrency(parseNumber(getDisplayPrice(colegioCurso))) }}</option>
                     }
                   </select>
                   @if (paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
