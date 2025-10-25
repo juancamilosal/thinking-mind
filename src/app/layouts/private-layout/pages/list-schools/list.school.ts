@@ -10,6 +10,7 @@ import { Student } from '../../../../core/models/Student';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { StudentDetail } from '../students/student-detail/student-detail';
 import { Client } from '../../../../core/models/Clients';
+import { Roles } from '../../../../core/const/Roles';
 import {
   SchoolWithAccounts,
   StudentWithAccount,
@@ -39,6 +40,7 @@ export class ListSchool implements OnInit {
   yearFilter = ''; // Nueva propiedad para el filtro por año
   currentDate = new Date();
   isRector = false;
+  isSales = false;
   private searchTimeout: any;
 
   // Modo de vista: 'table' para listado completo, 'courses' para vista por cursos
@@ -94,20 +96,25 @@ export class ListSchool implements OnInit {
   loadSchools(): void {
     this.isLoading = true;
 
-    // Verificar si el usuario es rector
+    // Verificar si el usuario es rector o ventas
     const userData = sessionStorage.getItem('current_user');
     if (userData) {
       const user = JSON.parse(userData);
 
       // Si es rector, filtrar por su colegio_id
-      if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc' && user.colegio_id) {
+      if (user.role === Roles.RECTOR && user.colegio_id) {
         this.isRector = true;
         this.loadAccountsForSchool(user.colegio_id);
         return;
       }
+
+      // Si es ventas, establecer la bandera
+      if (user.role === Roles.VENTAS) {
+        this.isSales = true;
+      }
     }
 
-    // Para otros usuarios, cargar todas las cuentas por cobrar
+    // Para otros usuarios (incluyendo ventas), cargar todas las cuentas por cobrar
     this.loadAllAccountsReceivable();
   }
 
@@ -147,9 +154,29 @@ export class ListSchool implements OnInit {
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
+    // Filtrar cuentas por fecha de finalización para roles de Rector y Ventas
+    let filteredAccounts = accounts;
+    
+    if (this.isRector || this.isSales) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Establecer a medianoche para comparación exacta
+      
+      filteredAccounts = accounts.filter(account => {
+        if (account.fecha_finalizacion) {
+          const fechaFinalizacion = new Date(account.fecha_finalizacion);
+          fechaFinalizacion.setHours(0, 0, 0, 0);
+          
+          // Mostrar solo si la fecha de finalización es hoy o posterior (no ha pasado)
+          return fechaFinalizacion >= today;
+        }
+        // Si no tiene fecha de finalización, mostrar la cuenta
+        return true;
+      });
+    }
+
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
-    accounts.forEach((account, index) => {
+    filteredAccounts.forEach((account, index) => {
       // Verificar que el account tenga la estructura esperada
       if (account.estudiante_id) {
         if (typeof account.estudiante_id === 'object') {
@@ -199,8 +226,8 @@ export class ListSchool implements OnInit {
     });
 
     this.schoolsWithAccounts = Array.from(schoolsMap.values());
-    // Procesar datos para vista por cursos con las cuentas actuales
-    this.processCoursesData(accounts);
+    // Procesar datos para vista por cursos con las cuentas filtradas
+    this.processCoursesData(filteredAccounts);
 
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
