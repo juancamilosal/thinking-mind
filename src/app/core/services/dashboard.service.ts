@@ -18,6 +18,7 @@ export interface DashboardRectorData {
 export class DashboardService {
   private dashboardRectorUrl: string = environment.dashboardRector;
   private dashboardSaleUrl: string = environment.dashboardSale;
+  private dashboardUrl: string = environment.dashboard;
 
   constructor(private http: HttpClient) {}
 
@@ -59,5 +60,9 @@ export class DashboardService {
     const params = userId ? { userId } : {};
 
     return this.http.get<any>(this.dashboardSaleUrl, { params });
+  }
+
+  dashboard(): Observable<any> {
+    return this.http.get<any>(this.dashboardUrl);
   }
 }

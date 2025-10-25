@@ -110,6 +110,48 @@ export class Dashboard implements OnInit {
   }
 
   private loadAdminData(): void {
+    // Usar el nuevo servicio dashboard por defecto para usuarios que no son rector ni ventas
+    this.dashboardService.dashboard().subscribe({
+      next: (response) => {
+        console.log('Datos del dashboard por defecto:', response);
+        // Procesar los datos del servicio por defecto
+        if (response && response.data) {
+          // El servicio retorna un objeto con las estadísticas calculadas
+          this.processDefaultDashboardData(response.data);
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading default dashboard data:', error);
+        // En caso de error, cargar datos usando el método anterior
+        this.loadAdminDataFallback();
+      }
+    });
+  }
+
+  private processDefaultDashboardData(data: any): void {
+    // Procesar los datos del servicio para mapear a las estadísticas del dashboard
+    // Mapeo según la especificación:
+    // - Pagos del Mes = total_pagos_mes
+    // - Total Cuentas Por Cobrar = total_cuentas  
+    // - Total por Cobrar = monto_total
+    // - Total Pagado = saldo_total (dinero ya pagado)
+    // - Saldo Pendiente = saldo_pendiente
+
+    this.stats = {
+      totalStudents: 0, // No disponible en este servicio
+      totalAccountsReceivable: data.total_cuentas || 0, // Total Cuentas Por Cobrar
+      totalAmountReceivable: data.monto_total || 0, // Total por Cobrar
+      totalPaidAmount: data.saldo_total || 0, // Total Pagado
+      pendingPayments: data.saldo_pendiente || 0, // Saldo Pendiente
+      overdueAmount: 0, // No disponible en este servicio
+      monthlyPayments: data.total_pagos_mes || 0, // Pagos del Mes
+      totalPendingAccountsReceivable: data.total_cuentas || 0 // Total Cuentas Por Cobrar
+    };
+  }
+
+  private loadAdminDataFallback(): void {
+    // Método de respaldo en caso de error con el nuevo servicio
     // Obtener fechas del mes actual
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);

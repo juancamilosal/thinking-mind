@@ -38,6 +38,7 @@ export const environment = {
   listaGrupo: apiUrl + 'flows/trigger/cc098cc1-5ab6-46c4-8d83-59e76dfdd7a0',
   dashboardRector: apiUrl + 'flows/trigger/7e0cc8b7-7d75-47db-804a-03f0d9a4205c',
   dashboardSale: apiUrl + 'flows/trigger/e2287aa0-115a-4dac-b484-49363945b9b3',
+  dashboard: apiUrl + 'flows/trigger/8b5137ca-cfe2-4e7a-acb2-73e97663e529',
   total_payment: apiUrl + 'flows/trigger/dcceb5b9-c6ae-4cda-afb0-55922c337d4e',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   // Configuración de tasas de cambio
