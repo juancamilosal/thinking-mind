@@ -1064,21 +1064,18 @@ export class PaymentRecord implements OnInit {
         let inscriptionNumber: number = 0;
         let courseCurrency: string | null = null;
 
-        // Buscar en colegios_cursos si hay un colegio seleccionado
-        if (schoolId && Array.isArray((selectedCourse as any).colegios_cursos)) {
-          const schoolCourseMatch = (selectedCourse as any).colegios_cursos.find((cc: any) => {
-            const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
-            return ccSchoolId && ccSchoolId === schoolId;
-          });
-
-          if (schoolCourseMatch) {
-            // Usar precio de inscripción y moneda desde colegios_cursos
-            const inscriptionRaw: any = schoolCourseMatch.precio_inscripcion;
-            inscriptionNumber = typeof inscriptionRaw === 'string'
-              ? parseFloat(inscriptionRaw)
-              : Number(inscriptionRaw || 0);
+        // Usar la nueva función para obtener el precio de inscripción específico del colegio
+        if (schoolId) {
+          const schoolInscriptionPrice = this.getSchoolSpecificInscriptionPrice(selectedCourse, schoolId);
+          if (schoolInscriptionPrice !== null) {
+            inscriptionNumber = schoolInscriptionPrice;
             
-            courseCurrency = schoolCourseMatch.moneda || null;
+            // Obtener la moneda del colegio específico
+            const schoolCourseMatch = (selectedCourse as any).colegios_cursos?.find((cc: any) => {
+              const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+              return ccSchoolId && ccSchoolId === schoolId;
+            });
+            courseCurrency = schoolCourseMatch?.moneda || null;
           }
         }
 
@@ -1156,6 +1153,25 @@ export class PaymentRecord implements OnInit {
       const selectedRaw = rawSpecial ?? rawRegular;
       const num = typeof selectedRaw === 'string' ? parseFloat(selectedRaw) : Number(selectedRaw);
       return isNaN(num) ? null : num;
+    } catch {
+      return null;
+    }
+  }
+
+  // Obtiene el precio de inscripción específico del colegio seleccionado (si existe)
+  private getSchoolSpecificInscriptionPrice(course: Course, schoolId: string | null): number | null {
+    try {
+      if (!course || !Array.isArray((course as any).colegios_cursos) || !schoolId) return null;
+      const match = (course as any).colegios_cursos.find((cc: any) => {
+        const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+        return ccSchoolId && ccSchoolId === schoolId;
+      });
+      if (!match) return null;
+      
+      // Obtener precio de inscripción del colegio específico
+      const rawInscription = match?.precio_inscripcion;
+      const num = typeof rawInscription === 'string' ? parseFloat(rawInscription) : Number(rawInscription || 0);
+      return isNaN(num) ? 0 : num;
     } catch {
       return null;
     }
@@ -1322,11 +1338,25 @@ export class PaymentRecord implements OnInit {
       // Enviar el array completo de colegios_cursos del curso seleccionado
       colegiosCursos = selectedCourse.colegios_cursos;
     }
-    // Obtener el precio de inscripción del curso (si aplica) como número
-    const inscriptionRaw: any = (selectedCourse as any)?.precio_inscripcion;
-    const inscriptionNumber: number = typeof inscriptionRaw === 'string'
-      ? parseFloat(inscriptionRaw)
-      : Number(inscriptionRaw || 0);
+    // Obtener el precio de inscripción correcto considerando el colegio seleccionado
+    const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
+    let inscriptionNumber: number = 0;
+
+    // Usar la función para obtener el precio de inscripción específico del colegio
+    if (schoolId && selectedCourse) {
+      const schoolInscriptionPrice = this.getSchoolSpecificInscriptionPrice(selectedCourse, schoolId);
+      if (schoolInscriptionPrice !== null) {
+        inscriptionNumber = schoolInscriptionPrice;
+      }
+    }
+
+    // Si no se encontró precio específico del colegio, usar el precio general del curso
+    if (inscriptionNumber === 0 && selectedCourse) {
+      const inscriptionRaw: any = (selectedCourse as any)?.precio_inscripcion;
+      inscriptionNumber = typeof inscriptionRaw === 'string'
+        ? parseFloat(inscriptionRaw)
+        : Number(inscriptionRaw || 0);
+    }
     // Convertir inscripción a COP usando tasa correspondiente (EUR o USD)
     let inscriptionConvertedCop: number = 0;
     if (inscriptionNumber && inscriptionNumber > 0) {
