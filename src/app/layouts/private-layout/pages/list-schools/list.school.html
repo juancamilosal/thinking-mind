@@ -133,7 +133,7 @@
           } @else {
             @for(schoolData of schoolsWithAccounts; track schoolData.school.id) {
               <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="toggleSchoolStudents(schoolData)">
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center justify-between flex-1">
                       <div class="text-sm font-medium text-gray-900">{{ schoolData.school.nombre }}</div>
@@ -145,9 +145,9 @@
                     </svg>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.ciudad || 'Ciudad no especificada' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.direccion || 'Dirección no especificada' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ schoolData.school.ciudad || 'Ciudad no especificada' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ schoolData.school.direccion || 'Dirección no especificada' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
                   @if (schoolData.school.rector_id && schoolData.school.rector_id.length > 0) {
                     @if (schoolData.school.rector_id.length === 1) {
                       <div class="text-sm">
@@ -167,8 +167,8 @@
                     <span class="text-gray-400 italic text-sm">Sin rector asignado</span>
                   }
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.celular || 'Teléfono no disponible' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ schoolData.school.celular || 'Teléfono no disponible' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
                   @if (schoolData.studentsCount > 0) {
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       {{ schoolData.studentsCount }} estudiante{{ schoolData.studentsCount !== 1 ? 's' : '' }}
@@ -224,7 +224,7 @@
                                   @let isNewToday = isStudentNewToday(studentWithAccount.student);
                                   <tr class="transition-colors duration-200"
                                       [class]="isNewToday ? 'bg-green-50 hover:bg-green-100 border-l-4 border-green-400' : 'hover:bg-gray-50'">
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                       <div class="flex items-center">
                                         <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mr-4">
                                           <span class="text-white font-semibold text-sm">
@@ -241,15 +241,15 @@
                                         </div>
                                       </div>
                                     </td>
-                                    <td class="px-6 py-4 text-xs text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                       <div class="flex flex-col">
                                         <span class="font-medium">{{ studentWithAccount.student.tipo_documento || 'Tipo no especificado' }}: {{ studentWithAccount.student.numero_documento || 'Número no disponible' }}</span>
                                       </div>
                                     </td>
-                                    <td class="px-6 py-4 text-xs text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                       <span class="font-medium">{{ studentWithAccount.student.grado || 'Grado no especificado' }}</span>
                                     </td>
-                                    <td class="px-6 py-4 text-xs text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                       @if (studentWithAccount.account.curso_id && typeof studentWithAccount.account.curso_id === 'object') {
                                         <div class="flex flex-col">
                                           <span class="font-medium">{{ isWillGoCourse(studentWithAccount.account.curso_id.nombre) ? 'WILL - GO' : studentWithAccount.account.curso_id.nombre }}</span>
@@ -259,7 +259,7 @@
                                         <span class="text-gray-400">Sin curso asignado</span>
                                       }
                                     </td>
-                                    <td class="px-6 py-4 text-xs text-gray-700">
+                                    <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                             [class]="studentWithAccount.account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (studentWithAccount.account.estado === 'PAGADO' || studentWithAccount.account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                                         {{ studentWithAccount.account.estado }}
@@ -344,7 +344,7 @@
               @for (schoolData of schoolsWithCourses; track schoolData.school.id; let schoolIndex = $index) {
               <!-- Fila principal del colegio -->
               <tr class="hover:bg-blue-50 transition-colors duration-200 cursor-pointer" (click)="toggleSchool(schoolIndex)">
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center justify-between flex-1">
                       <div class="flex items-center space-x-2">
@@ -362,9 +362,10 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                   </div>
-                <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.ciudad || 'Ciudad no especificada' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.direccion || 'Dirección no especificada' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ schoolData.school.ciudad || 'Ciudad no especificada' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ schoolData.school.direccion || 'Dirección no especificada' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
                   @if (schoolData.school.rector_id && schoolData.school.rector_id.length > 0) {
                     @if (schoolData.school.rector_id.length === 1) {
                       <div class="text-sm">
@@ -384,8 +385,8 @@
                     <span class="text-gray-400 italic text-sm">Sin rector asignado</span>
                   }
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-700">{{ schoolData.school.celular || 'Teléfono no disponible' }}</td>
-                <td class="px-6 py-4 text-sm text-gray-700">
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ schoolData.school.celular || 'Teléfono no disponible' }}</td>
+                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
                   @if (schoolData.courses.length > 0) {
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       {{ schoolData.courses.length }} curso{{ schoolData.courses.length !== 1 ? 's' : '' }}
@@ -472,7 +473,7 @@
                                           @let isNewToday = isStudentNewToday(studentWithAccount.student);
                                           <tr class="transition-colors duration-200"
                                               [class]="isNewToday ? 'bg-green-50 hover:bg-green-100 border-l-4 border-green-400' : 'hover:bg-gray-50'">
-                                            <td class="px-6 py-4">
+                                            <td class="px-6 py-4 whitespace-nowrap">
                                               <div class="flex items-center">
                                                 <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center mr-4">
                                                   <span class="text-white font-semibold text-sm">
@@ -489,15 +490,15 @@
                                                 </div>
                                               </div>
                                             </td>
-                                            <td class="px-6 py-4 text-xs text-gray-700">
+                                            <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                               <div class="flex flex-col">
                                                 <span class="font-medium">{{ studentWithAccount.student.tipo_documento || 'Tipo no especificado' }}: {{ studentWithAccount.student.numero_documento || 'Número no disponible' }}</span>
                                               </div>
                                             </td>
-                                            <td class="px-6 py-4 text-xs text-gray-700">
+                                            <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                               <span class="font-medium">{{ studentWithAccount.student.grado || 'Grado no especificado' }}</span>
                                             </td>
-                                            <td class="px-6 py-4 text-xs text-gray-700">
+                                            <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                     [class]="studentWithAccount.account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (studentWithAccount.account.estado === 'PAGADO' || studentWithAccount.account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                                                 {{ studentWithAccount.account.estado }}
