@@ -1,17 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { CourseService } from '../../../../core/services/course.service';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { DashboardService } from '../../../../core/services/dashboard.service';
-import { School } from '../../../../core/models/School';
 import { Course } from '../../../../core/models/Course';
-import { Student } from '../../../../core/models/Student';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
 import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
+import {Roles} from '../../../../core/const/Roles';
 
 @Component({
   selector: 'app-dashboard',
@@ -47,6 +45,8 @@ export class Dashboard implements OnInit {
   userRole: string = '';
   userColegioId: string = '';
   isRector: boolean = false;
+  isSales: boolean = false;
+  rol = Roles;
 
   constructor(
     private schoolService: SchoolService,
@@ -70,7 +70,14 @@ export class Dashboard implements OnInit {
       const user = JSON.parse(userData);
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
-      this.isRector = user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc';
+      this.isRector = user.role === this.rol.RECTOR;
+      this.isSales = user.role === this.rol.VENTAS;
+
+      if (this.isSales) {
+        // Consumir el servicio dashboardSale para el rol específico
+        this.loadSalesData();
+        return;
+      }
     }
 
     if (this.isRector && this.userColegioId) {
@@ -85,9 +92,14 @@ export class Dashboard implements OnInit {
   private loadRectorData(): void {
     // Usar el nuevo servicio de dashboard rector
     this.dashboardService.dashboardRector().subscribe({
-      next: (accounts) => {
-        this.accounts = accounts; // Datos ya filtrados por el API
-        this.calculateRectorStats(accounts);
+      next: (response) => {
+        // El servicio ahora retorna directamente las estadísticas calculadas
+        if (response.data) {
+          this.rectorStats.totalStudentsEnrolled = response.data.total_estudiantes || 0;
+          this.rectorStats.totalStudentsWithPendingStatus = response.data.cuentas_pendientes || 0;
+          this.rectorStats.totalStudentsWithPaidStatus = response.data.cuentas_pagadas || 0;
+          this.rectorStats.totalPinsDelivered = response.data.pines_entregados || 0;
+        }
         this.isLoading = false;
       },
       error: (error) => {
@@ -102,7 +114,7 @@ export class Dashboard implements OnInit {
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    
+
     const startDate = firstDayOfMonth.toISOString().split('T')[0];
     const endDate = lastDayOfMonth.toISOString().split('T')[0];
 
@@ -189,7 +201,7 @@ export class Dashboard implements OnInit {
 
     accounts.forEach(account => {
       const precio = parseFloat(account.monto || account.precio) || 0;
-      
+
       // Solo sumar al total por cobrar si el estado es PENDIENTE
       if (account.estado === 'PENDIENTE') {
         totalAmount += precio;
@@ -310,12 +322,34 @@ export class Dashboard implements OnInit {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   }
 
   getPaymentProgress(): number {
     if (this.stats.totalAmountReceivable === 0) return 0;
     return (this.stats.totalPaidAmount / this.stats.totalAmountReceivable) * 100;
+  }
+
+  private loadSalesData(): void {
+    // Consumir el servicio dashboardSale para el rol específico
+    this.dashboardService.dashboardSale().subscribe({
+      next: (response) => {
+        console.log('Datos del dashboard de ventas:', response);
+        // Procesar los datos del servicio de ventas usando la misma estructura que rector
+        if (response.data) {
+          this.rectorStats.totalStudentsEnrolled = response.data.total_estudiantes || 0;
+          this.rectorStats.totalStudentsWithPendingStatus = response.data.cuentas_pendientes || 0;
+          this.rectorStats.totalStudentsWithPaidStatus = response.data.cuentas_pagadas || 0;
+          this.rectorStats.totalPinsDelivered = response.data.pines_entregados || 0;
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading sales dashboard data:', error);
+        this.isLoading = false;
+      }
+    });
   }
 }
