@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild, ChangeDetectorRef, ElementRef } from '@an
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Course } from '../../../../core/models/Course';
 import { Grupo } from '../../../../core/models/School';
 import { Client } from '../../../../core/models/Clients';
 import { Student } from '../../../../core/models/Student';
@@ -11,7 +10,6 @@ import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import { IndependentProgramConfirmationComponent } from './independent-program-confirmation/independent-program-confirmation.component';
 
-import { CourseService } from '../../../../core/services/course.service';
 import { ColegioCursosService } from '../../../../core/services/colegio-cursos.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { ClientService } from '../../../../core/services/client.service';
@@ -42,8 +40,6 @@ export class IndependentProgramPayment implements OnInit {
   paymentForm!: FormGroup;
   DOCUMENT_TYPE = DOCUMENT_TYPE;
   isSubmitting = false;
-  courses: Course[] = []; // Solo cursos con programa_independiente = true
-  independentCourses: Course[] = []; // Cursos independientes filtrados
   independentColegioCursos: any[] = []; // Colegios_cursos con programa_independiente = true
   grado: Grupo[] = [];
 
@@ -138,7 +134,6 @@ export class IndependentProgramPayment implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private courseService: CourseService,
     private colegioCursosService: ColegioCursosService,
     private accountReceivableService: AccountReceivableService,
     private clientService: ClientService,
@@ -155,7 +150,6 @@ export class IndependentProgramPayment implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadIndependentCourses();
     this.loadIndependentColegioCursos(); // Cargar colegios_cursos independientes
     this.loadGrupos(); // Agregar la carga de grupos
     this.loadExchangeRates();
@@ -203,24 +197,6 @@ export class IndependentProgramPayment implements OnInit {
       selectedCourse: ['', [Validators.required]],
       coursePrice: [{value: '', disabled: true}, [Validators.required]],
       courseInscriptionPrice: [{value: '', disabled: true}],
-    });
-  }
-
-  loadIndependentCourses(): void {
-    this.isLoadingCourses = true;
-    this.courseService.searchIndependentCourses().subscribe({
-      next: (response) => {
-        if (response && response.data) {
-          // Los cursos ya vienen filtrados desde el backend con programa_independiente = true
-          this.independentCourses = response.data;
-          this.courses = this.independentCourses; // Asignar a courses para compatibilidad
-        }
-        this.isLoadingCourses = false;
-      },
-      error: (error) => {
-        this.isLoadingCourses = false;
-        this.showNotificationMessage('Error', 'No se pudieron cargar los programas independientes', 'error');
-      }
     });
   }
 

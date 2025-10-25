@@ -42,6 +42,30 @@
       <span class="text-sm text-gray-600 font-medium">{{ courseCode }}</span>
     </div>
 
+    <!-- Botones de acción -->
+    <div class="flex flex-col space-y-3 mb-4">
+      <!-- Botón Editar -->
+      <button
+        (click)="onEdit()"
+        class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+        </svg>
+        <span>Editar</span>
+      </button>
+
+      <!-- Botón Agregar Colegio -->
+      <button
+        (click)="onAddColegio()"
+        class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+        </svg>
+        <span>Colegio</span>
+      </button>
+    </div>
+
     <!-- Información de colegios asignados -->
     @if (visibleSortedColegiosCursos && visibleSortedColegiosCursos.length > 0) {
       <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -166,30 +190,6 @@
               clip-rule="evenodd"/>
       </svg>
       <span class="text-sm">Disponible</span>
-    </div>
-
-    <!-- Botones de acción -->
-    <div class="flex flex-col space-y-3">
-      <!-- Botón Editar -->
-      <button
-        (click)="onEdit()"
-        class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-        </svg>
-        <span>Editar</span>
-      </button>
-
-      <!-- Botón Agregar Colegio -->
-      <button
-        (click)="onAddColegio()"
-        class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
-        </svg>
-        <span>Colegio</span>
-      </button>
     </div>
 
     <!-- Borde inferior decorativo -->

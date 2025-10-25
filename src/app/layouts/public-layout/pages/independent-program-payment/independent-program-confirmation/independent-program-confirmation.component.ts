@@ -2,8 +2,6 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup } from '@angular/forms';
 
-import { Course } from '../../../../../core/models/Course';
-
 @Component({
   selector: 'app-independent-program-confirmation',
   standalone: true,
@@ -13,7 +11,6 @@ import { Course } from '../../../../../core/models/Course';
 })
 export class IndependentProgramConfirmationComponent {
   @Input() paymentForm!: FormGroup;
-  @Input() courses: Course[] = [];
   @Input() independentColegioCursos: any[] = [];
   @Input() isSubmitting: boolean = false;
   @Input() selectedInscriptionConvertedCop: number | null = null;
