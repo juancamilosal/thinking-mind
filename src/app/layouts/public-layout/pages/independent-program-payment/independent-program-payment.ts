@@ -558,7 +558,7 @@ export class IndependentProgramPayment implements OnInit {
         colegio: selectedColegioCurso?.colegio_id?.id || 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7', // Usar colegio del registro o ID fijo
       },
       curso_id: selectedColegioCurso?.curso_id?.id,
-      colegios_cursos: [selectedColegioCurso?.id], // Usar el ID del colegio_curso seleccionado
+      colegios_cursos: [selectedColegioCurso], // Enviar el objeto completo del colegio_curso seleccionado
       precio: coursePriceNumber,
       // Enviar la inscripción ya convertida a COP
       precio_inscripcion: inscriptionConvertedCop,

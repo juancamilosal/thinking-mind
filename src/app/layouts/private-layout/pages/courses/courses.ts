@@ -76,8 +76,9 @@ export class Courses {
     this.editFechaForm = this.fb.group({
       fecha_finalizacion: ['', Validators.required],
       precio_curso: [''],
-      precio_inscripcion: [''], // Nuevo campo opcional
-      moneda: [''], // Nuevo campo para moneda
+      programa_con_inscripcion: [false], // Nuevo checkbox
+      precio_inscripcion: [''], // Campo opcional
+      moneda: [''], // Campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: ['']
     });
@@ -377,6 +378,7 @@ export class Courses {
       precio_curso: (colegioCurso.precio_curso !== null && colegioCurso.precio_curso !== undefined)
         ? this.formatPrice(colegioCurso.precio_curso)
         : '',
+      programa_con_inscripcion: this.isTruthyFlag(colegioCurso.programa_con_inscripcion),
       precio_inscripcion: (colegioCurso.precio_inscripcion !== null && colegioCurso.precio_inscripcion !== undefined)
         ? this.formatPrice(colegioCurso.precio_inscripcion)
         : '',
@@ -427,6 +429,10 @@ export class Courses {
       if (rawPrice !== null && rawPrice !== undefined && String(rawPrice).trim() !== '') {
         updatedData.precio_curso = unformattedPrice as number;
       }
+
+      // Campo programa_con_inscripcion
+      const programaConInscripcion = !!this.editFechaForm.get('programa_con_inscripcion')?.value;
+      updatedData.programa_con_inscripcion = programaConInscripcion ? 'TRUE' : 'FALSE';
 
       // Nuevos campos: precio_inscripcion y moneda
       const rawInscriptionPrice = this.editFechaForm.get('precio_inscripcion')?.value;
