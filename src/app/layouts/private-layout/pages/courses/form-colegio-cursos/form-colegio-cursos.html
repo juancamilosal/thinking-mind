@@ -153,8 +153,28 @@
           }
         </div>
 
+        <!-- Checkbox Programa Independiente -->
+        <div class="space-y-3">
+          <div class="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="programa_independiente"
+              formControlName="programa_independiente"
+              class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+            <label for="programa_independiente" class="text-sm font-semibold text-blue-700 cursor-pointer">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Programa Independiente
+            </label>
+          </div>
+          <p class="text-xs text-gray-500 ml-8">
+            Marque esta opción si el programa no está asociado a un colegio específico
+          </p>
+        </div>
+
         <!-- Campo de Colegio -->
-        <div class="space-y-3 relative">
+        <div class="space-y-3 relative" [class.hidden]="fechaFinalizacionForm.get('programa_independiente')?.value">
           <label for="colegio_id" class="block text-sm font-semibold text-green-700">
             <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -227,7 +247,7 @@
             </div>
           }
 
-          @if (fechaFinalizacionForm.get('colegio_id')?.touched && fechaFinalizacionForm.get('colegio_id')?.errors?.['required']) {
+          @if (fechaFinalizacionForm.get('colegio_id')?.touched && fechaFinalizacionForm.get('colegio_id')?.errors?.['required'] && !fechaFinalizacionForm.get('programa_independiente')?.value) {
             <p class="text-red-500 text-sm mt-2 flex items-center">
               <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>

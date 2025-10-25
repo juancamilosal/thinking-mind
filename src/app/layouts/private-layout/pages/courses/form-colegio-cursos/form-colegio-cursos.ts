@@ -75,8 +75,32 @@ export class ColegioCursosComponent implements OnInit {
       moneda: [''], // Campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: [null],
+      programa_independiente: [false], // Checkbox para programa independiente
       courseSearchTerm: [null],
       schoolSearchTerm: [null]
+    });
+
+    // Escuchar cambios en el checkbox de programa independiente
+    this.fechaFinalizacionForm.get('programa_independiente')?.valueChanges.subscribe(value => {
+      const colegioControl = this.fechaFinalizacionForm.get('colegio_id');
+      
+      if (value) {
+        // Si se marca programa independiente, establecer el valor específico y limpiar búsqueda
+        colegioControl?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
+        colegioControl?.clearValidators(); // Remover validaciones
+        this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue('');
+        this.isSchoolSelected = false;
+        this.filteredSchools = [];
+      } else {
+        // Si se desmarca, limpiar el valor del colegio y restaurar validaciones
+        colegioControl?.setValue(null);
+        colegioControl?.setValidators([Validators.required]); // Restaurar validación requerida
+        this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue('');
+        this.isSchoolSelected = false;
+        this.filteredSchools = [];
+      }
+      
+      colegioControl?.updateValueAndValidity(); // Actualizar estado de validación
     });
   }
 
