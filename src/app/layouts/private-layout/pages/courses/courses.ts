@@ -435,18 +435,25 @@ export class Courses {
       updatedData.programa_con_inscripcion = programaConInscripcion ? 'TRUE' : 'FALSE';
 
       // Nuevos campos: precio_inscripcion y moneda
-      const rawInscriptionPrice = this.editFechaForm.get('precio_inscripcion')?.value;
-      const unformattedInscriptionPrice = this.unformatPrice(rawInscriptionPrice);
-      if (rawInscriptionPrice !== null && rawInscriptionPrice !== undefined && String(rawInscriptionPrice).trim() !== '') {
-        updatedData.precio_inscripcion = unformattedInscriptionPrice as number;
-      } else {
-        updatedData.precio_inscripcion = null;
-      }
+      if (programaConInscripcion) {
+        // Si el programa tiene inscripción, usar los valores del formulario
+        const rawInscriptionPrice = this.editFechaForm.get('precio_inscripcion')?.value;
+        const unformattedInscriptionPrice = this.unformatPrice(rawInscriptionPrice);
+        if (rawInscriptionPrice !== null && rawInscriptionPrice !== undefined && String(rawInscriptionPrice).trim() !== '') {
+          updatedData.precio_inscripcion = unformattedInscriptionPrice as number;
+        } else {
+          updatedData.precio_inscripcion = null;
+        }
 
-      const monedaValue = this.editFechaForm.get('moneda')?.value;
-      if (monedaValue && monedaValue.trim() !== '') {
-        updatedData.moneda = monedaValue;
+        const monedaValue = this.editFechaForm.get('moneda')?.value;
+        if (monedaValue && monedaValue.trim() !== '') {
+          updatedData.moneda = monedaValue;
+        } else {
+          updatedData.moneda = null;
+        }
       } else {
+        // Si el programa NO tiene inscripción, establecer valores por defecto
+        updatedData.precio_inscripcion = 0;
         updatedData.moneda = null;
       }
 

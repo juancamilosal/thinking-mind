@@ -627,7 +627,7 @@ export class IndependentProgramPayment implements OnInit {
     const grupo = this.paymentForm.get('studentGrupo')?.value || '';
 
     // Si grupo está vacío, es "null" o es "No Aplica", solo devolver el grado
-    if (grado && grupo && grupo.trim() !== '' && grupo !== 'null') {
+    if (grado && grupo && grupo.trim() !== '' && grupo !== 'null' && grupo !== 'No Aplica') {
       return `${grado} ${grupo}`;
     }
     return grado;

@@ -248,7 +248,8 @@ export class PaymentRecord implements OnInit {
     const grado = this.paymentForm.get('studentGrado')?.value || '';
     const grupo = this.paymentForm.get('studentGrupo')?.value || '';
 
-    if (grado && grupo) {
+    // Si grupo está vacío, es "null" o es "No Aplica", solo devolver el grado
+    if (grado && grupo && grupo.trim() !== '' && grupo !== 'null' && grupo !== 'No Aplica') {
       return `${grado} ${grupo}`;
     }
     return grado;
