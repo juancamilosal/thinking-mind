@@ -113,8 +113,6 @@ export class ListSchool implements OnInit {
         this.isSales = true;
       }
     }
-
-    // Para otros usuarios (incluyendo ventas), cargar todas las cuentas por cobrar
     this.loadAllAccountsReceivable();
   }
 
@@ -156,16 +154,16 @@ export class ListSchool implements OnInit {
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
     // Filtrar cuentas por fecha de finalización para roles de Rector y Ventas
     let filteredAccounts = accounts;
-    
+
     if (this.isRector || this.isSales) {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Establecer a medianoche para comparación exacta
-      
+
       filteredAccounts = accounts.filter(account => {
         if (account.fecha_finalizacion) {
           const fechaFinalizacion = new Date(account.fecha_finalizacion);
           fechaFinalizacion.setHours(0, 0, 0, 0);
-          
+
           // Mostrar solo si la fecha de finalización es hoy o posterior (no ha pasado)
           return fechaFinalizacion >= today;
         }
