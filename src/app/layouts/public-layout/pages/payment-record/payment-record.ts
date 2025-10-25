@@ -1056,44 +1056,51 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         // Actualizar imagen del curso seleccionado si existe
         this.selectedCourseImageUrl = selectedCourse.img_url || null;
-        // Determinar precio según el colegio seleccionado; si no existe para el colegio, notificar y limpiar precio
-        const priceAsNumber = this.computeCoursePrice(selectedCourse);
-        const formattedPrice = priceAsNumber !== null ? this.formatCurrency(priceAsNumber) : '';
+        
         // Obtener precio de inscripción y moneda desde colegios_cursos
         const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
         let inscriptionNumber: number = 0;
         let courseCurrency: string | null = null;
+        let coursePrice: number = 0;
 
-        // Usar la nueva función para obtener el precio de inscripción específico del colegio
-        if (schoolId) {
-          const schoolInscriptionPrice = this.getSchoolSpecificInscriptionPrice(selectedCourse, schoolId);
-          if (schoolInscriptionPrice !== null) {
-            inscriptionNumber = schoolInscriptionPrice;
+        // Buscar en colegios_cursos el que corresponde al colegio seleccionado
+        if (schoolId && selectedCourse.colegios_cursos && selectedCourse.colegios_cursos.length > 0) {
+          const schoolCourseMatch = selectedCourse.colegios_cursos.find((cc: any) => {
+            const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+            return ccSchoolId && ccSchoolId === schoolId;
+          });
+          
+          if (schoolCourseMatch) {
+            // Obtener precio del curso (especial o regular)
+            if (schoolCourseMatch.tiene_precio_especial === "TRUE" && schoolCourseMatch.precio_especial) {
+              coursePrice = Number(schoolCourseMatch.precio_especial) || 0;
+            } else {
+              coursePrice = Number(schoolCourseMatch.precio_curso) || 0;
+            }
             
-            // Obtener la moneda del colegio específico
-            const schoolCourseMatch = (selectedCourse as any).colegios_cursos?.find((cc: any) => {
-              const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
-              return ccSchoolId && ccSchoolId === schoolId;
-            });
-            courseCurrency = schoolCourseMatch?.moneda || null;
+            // Obtener precio de inscripción y moneda
+            inscriptionNumber = Number(schoolCourseMatch.precio_inscripcion) || 0;
+            courseCurrency = schoolCourseMatch.moneda || null;
           }
         }
 
         // Si no se encontró en colegios_cursos, usar valores del curso principal como fallback
+        if (coursePrice === 0) {
+          coursePrice = Number((selectedCourse as any).precio) || 0;
+        }
         if (inscriptionNumber === 0 && courseCurrency === null) {
           const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
-          inscriptionNumber = typeof inscriptionRaw === 'string'
-            ? parseFloat(inscriptionRaw)
-            : Number(inscriptionRaw || 0);
+          inscriptionNumber = Number(inscriptionRaw) || 0;
           courseCurrency = selectedCourse.moneda;
         }
 
         // Determinar si el curso usa EUR o USD basándose en el atributo moneda
         this.isEuroCourse = courseCurrency === 'EUR';
 
-        // Formatear inscripción para mostrar código de moneda en vez del símbolo COP
+        // Formatear precios
+        const formattedPrice = coursePrice > 0 ? this.formatCurrency(coursePrice) : '';
         const inscriptionFormatted = inscriptionNumber > 0
-          ? `${this.isEuroCourse ? 'EUR' : 'USD'} ${new Intl.NumberFormat('es-CO', {
+          ? `${courseCurrency || 'COP'} ${new Intl.NumberFormat('es-CO', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
           }).format(inscriptionNumber)}`
@@ -1105,14 +1112,13 @@ export class PaymentRecord implements OnInit {
         });
 
         // Si no se encontró el precio específico para el colegio seleccionado, mostrar notificación y ocultar imagen
-        if (priceAsNumber === null && this.paymentForm.get('studentSchool')?.value) {
+        if (coursePrice === 0 && this.paymentForm.get('studentSchool')?.value) {
           this.showCourseSchoolNotFoundNotification();
           this.selectedCourseImageUrl = null;
         }
 
         // Actualizar banderas para mostrar tasa de cambio
         this.hasInscription = inscriptionNumber > 0;
-        // Guardar monto de inscripción y calcular conversión
         this.selectedInscriptionAmount = inscriptionNumber;
         this.updateInscriptionConversion();
       }
@@ -1153,25 +1159,6 @@ export class PaymentRecord implements OnInit {
       const selectedRaw = rawSpecial ?? rawRegular;
       const num = typeof selectedRaw === 'string' ? parseFloat(selectedRaw) : Number(selectedRaw);
       return isNaN(num) ? null : num;
-    } catch {
-      return null;
-    }
-  }
-
-  // Obtiene el precio de inscripción específico del colegio seleccionado (si existe)
-  private getSchoolSpecificInscriptionPrice(course: Course, schoolId: string | null): number | null {
-    try {
-      if (!course || !Array.isArray((course as any).colegios_cursos) || !schoolId) return null;
-      const match = (course as any).colegios_cursos.find((cc: any) => {
-        const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
-        return ccSchoolId && ccSchoolId === schoolId;
-      });
-      if (!match) return null;
-      
-      // Obtener precio de inscripción del colegio específico
-      const rawInscription = match?.precio_inscripcion;
-      const num = typeof rawInscription === 'string' ? parseFloat(rawInscription) : Number(rawInscription || 0);
-      return isNaN(num) ? 0 : num;
     } catch {
       return null;
     }
@@ -1338,29 +1325,29 @@ export class PaymentRecord implements OnInit {
       // Enviar el array completo de colegios_cursos del curso seleccionado
       colegiosCursos = selectedCourse.colegios_cursos;
     }
-    // Obtener el precio de inscripción correcto considerando el colegio seleccionado
+
+    // Obtener el precio de inscripción y moneda desde colegios_cursos
     const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
     let inscriptionNumber: number = 0;
+    let inscriptionCurrency: string = 'USD'; // Por defecto USD
 
-    // Usar la función para obtener el precio de inscripción específico del colegio
-    if (schoolId && selectedCourse) {
-      const schoolInscriptionPrice = this.getSchoolSpecificInscriptionPrice(selectedCourse, schoolId);
-      if (schoolInscriptionPrice !== null) {
-        inscriptionNumber = schoolInscriptionPrice;
+    if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
+      // Buscar el colegio específico en colegios_cursos
+      const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) => 
+        cc.colegio_id && (cc.colegio_id.id === schoolId || cc.colegio_id === schoolId)
+      );
+
+      if (schoolCourse) {
+        // Usar precio_inscripcion y moneda de colegios_cursos
+        inscriptionNumber = schoolCourse.precio_inscripcion || 0;
+        inscriptionCurrency = schoolCourse.moneda || 'USD';
       }
     }
 
-    // Si no se encontró precio específico del colegio, usar el precio general del curso
-    if (inscriptionNumber === 0 && selectedCourse) {
-      const inscriptionRaw: any = (selectedCourse as any)?.precio_inscripcion;
-      inscriptionNumber = typeof inscriptionRaw === 'string'
-        ? parseFloat(inscriptionRaw)
-        : Number(inscriptionRaw || 0);
-    }
-    // Convertir inscripción a COP usando tasa correspondiente (EUR o USD)
+    // Convertir inscripción a COP usando la tasa correspondiente según la moneda
     let inscriptionConvertedCop: number = 0;
     if (inscriptionNumber && inscriptionNumber > 0) {
-      const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+      const rate = inscriptionCurrency === 'EUR' ? this.eurToCop : this.usdToCop;
       // Si aún no se cargó la tasa, mantener valor 0 para evitar NaN
       inscriptionConvertedCop = rate ? Math.round(inscriptionNumber * rate) : 0;
     }
