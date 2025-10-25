@@ -231,14 +231,18 @@ export class ColegioCursosComponent implements OnInit {
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
         precio_especial: precioEspecialValor,
         // Nueva fecha de creación
-        fecha_creacion: fechaCreacionISO
+        fecha_creacion: fechaCreacionISO,
+        // Enviar el valor del checkbox programa_independiente
+        programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false
       };
       // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
           // Obtener nombres para mostrar en la notificación
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-          const colegioNombre = this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
+          const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value 
+            ? 'Programa Independiente' 
+            : this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
 
           this.notificationService.showSuccess(
             'Colegio y fecha de finalización guardados',

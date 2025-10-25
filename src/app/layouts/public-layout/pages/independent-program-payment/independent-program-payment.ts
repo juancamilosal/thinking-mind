@@ -12,6 +12,7 @@ import { NotificationModalComponent, NotificationData } from '../../../../compon
 import { IndependentProgramConfirmationComponent } from './independent-program-confirmation/independent-program-confirmation.component';
 
 import { CourseService } from '../../../../core/services/course.service';
+import { ColegioCursosService } from '../../../../core/services/colegio-cursos.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { ClientService } from '../../../../core/services/client.service';
 import { StudentService } from '../../../../core/services/student.service';
@@ -43,6 +44,7 @@ export class IndependentProgramPayment implements OnInit {
   isSubmitting = false;
   courses: Course[] = []; // Solo cursos con programa_independiente = true
   independentCourses: Course[] = []; // Cursos independientes filtrados
+  independentColegioCursos: any[] = []; // Colegios_cursos con programa_independiente = true
   grado: Grupo[] = [];
 
   isLoadingCourses = false;
@@ -128,6 +130,7 @@ export class IndependentProgramPayment implements OnInit {
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
+    private colegioCursosService: ColegioCursosService,
     private accountReceivableService: AccountReceivableService,
     private clientService: ClientService,
     private studentService: StudentService,
@@ -144,6 +147,7 @@ export class IndependentProgramPayment implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadIndependentCourses();
+    this.loadIndependentColegioCursos(); // Cargar colegios_cursos independientes
     this.loadGrupos(); // Agregar la carga de grupos
     this.loadExchangeRates();
 
@@ -195,13 +199,11 @@ export class IndependentProgramPayment implements OnInit {
 
   loadIndependentCourses(): void {
     this.isLoadingCourses = true;
-    this.courseService.searchCourse().subscribe({
+    this.courseService.searchIndependentCourses().subscribe({
       next: (response) => {
         if (response && response.data) {
-          // Filtrar solo cursos con programa_independiente = true
-          this.independentCourses = response.data.filter((course: Course) => {
-            return course.programa_independiente === true;
-          });
+          // Los cursos ya vienen filtrados desde el backend con programa_independiente = true
+          this.independentCourses = response.data;
           this.courses = this.independentCourses; // Asignar a courses para compatibilidad
         }
         this.isLoadingCourses = false;
@@ -209,6 +211,28 @@ export class IndependentProgramPayment implements OnInit {
       error: (error) => {
         this.isLoadingCourses = false;
         this.showNotificationMessage('Error', 'No se pudieron cargar los programas independientes', 'error');
+      }
+    });
+  }
+
+  loadIndependentColegioCursos(): void {
+    console.log('Iniciando carga de colegios_cursos independientes...');
+    this.colegioCursosService.getIndependentColegioCursos().subscribe({
+      next: (response) => {
+        console.log('Respuesta completa del servicio:', response);
+        if (response && response.data) {
+          this.independentColegioCursos = response.data;
+          console.log('Colegios_cursos independientes cargados:', this.independentColegioCursos);
+          console.log('Cantidad de elementos:', this.independentColegioCursos.length);
+        } else {
+          console.log('No hay datos en la respuesta');
+          this.independentColegioCursos = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error cargando colegios_cursos independientes:', error);
+        this.showNotificationMessage('Error', 'No se pudieron cargar los colegios_cursos independientes', 'error');
+        this.independentColegioCursos = [];
       }
     });
   }
@@ -267,23 +291,26 @@ export class IndependentProgramPayment implements OnInit {
   }
 
   onCourseChange(event: any): void {
-    const courseId = event.target.value;
-    const selectedCourse = this.independentCourses.find(course => course.id === courseId);
+    const colegioCursoId = event.target.value;
+    const selectedColegioCurso = this.independentColegioCursos.find(cc => cc.id === colegioCursoId);
 
-    if (selectedCourse) {
-      // Configurar precios
-      const coursePrice = selectedCourse.precio || '0';
-      const inscriptionPrice = selectedCourse.precio_inscripcion || 0;
+    if (selectedColegioCurso) {
+      // Usar los precios de colegios_cursos
+      const coursePrice = selectedColegioCurso.precio_curso || '0';
+      const inscriptionPrice = selectedColegioCurso.precio_inscripcion || 0;
+
+      // Guardar el precio como número para que el pipe funcione correctamente
+      const coursePriceNumber = this.parseNumber(coursePrice);
 
       this.paymentForm.patchValue({
-        coursePrice: coursePrice,
+        coursePrice: coursePriceNumber, // Guardar como número, no como string formateado
         courseInscriptionPrice: inscriptionPrice
       });
 
-      // Determinar si es curso EUR o USD basándose en el atributo moneda del curso
-      const courseCurrency = selectedCourse.moneda; // Puede ser 'USD', 'EUR' o null/undefined
+      // Determinar moneda desde colegios_cursos o del curso relacionado
+      const courseCurrency = selectedColegioCurso.moneda || selectedColegioCurso.curso_id?.moneda;
 
-      // Usar el atributo moneda del curso directamente, por defecto USD si es null
+      // Usar el atributo moneda, por defecto USD si es null
       this.isEuroCourse = courseCurrency === 'EUR';
 
       // Actualizar banderas para mostrar tasa de cambio
@@ -292,11 +319,11 @@ export class IndependentProgramPayment implements OnInit {
       this.updateInscriptionConversion();
 
       // Convertir precios si es necesario
-      this.convertCoursePrices(coursePrice, inscriptionPrice);
+      this.convertCoursePrices(coursePrice.toString(), inscriptionPrice);
 
-      // Configurar imagen del curso
-      if (selectedCourse.img_url) {
-        this.selectedCourseImageUrl = selectedCourse.img_url;
+      // Configurar imagen del curso desde el curso relacionado
+      if (selectedColegioCurso.curso_id?.img_url) {
+        this.selectedCourseImageUrl = selectedColegioCurso.curso_id.img_url;
       }
     } else {
       // Reset cuando no hay curso seleccionado
@@ -310,8 +337,10 @@ export class IndependentProgramPayment implements OnInit {
 
   convertCoursePrices(coursePrice: string, inscriptionPrice: number): void {
     // Solo convertir precio de inscripción si hay inscripción y el curso está en moneda extranjera
-    const courseCurrency = this.paymentForm.get('selectedCourse')?.value ? 
-      this.independentCourses.find(course => course.id === this.paymentForm.get('selectedCourse')?.value)?.moneda : null;
+    const selectedColegioCurso = this.paymentForm.get('selectedCourse')?.value ? 
+      this.independentColegioCursos.find(cc => cc.id === this.paymentForm.get('selectedCourse')?.value) : null;
+    
+    const courseCurrency = selectedColegioCurso?.moneda || selectedColegioCurso?.curso_id?.moneda;
 
     // El precio del curso nunca se convierte, siempre se muestra el original
     this.selectedCourseConvertedCop = null;
@@ -409,6 +438,15 @@ export class IndependentProgramPayment implements OnInit {
 
   onSubmit(): void {
     if (this.paymentForm.valid && !this.isSubmitting) {
+      // Asegurar que coursePrice sea un número antes de mostrar la confirmación
+      const coursePriceValue = this.paymentForm.get('coursePrice')?.value;
+      if (typeof coursePriceValue === 'string') {
+        // Si es string, extraer solo el número
+        const numericValue = this.parseNumber(coursePriceValue.replace(/[^\d]/g, ''));
+        this.paymentForm.patchValue({
+          coursePrice: numericValue
+        });
+      }
       this.showConfirmation = true;
     } else {
       this.markFormGroupTouched(this.paymentForm);
@@ -477,16 +515,16 @@ export class IndependentProgramPayment implements OnInit {
 
   createAccountRecord(): void {
     const formData = this.paymentForm.value;
-    const selectedCourse = this.independentCourses.find(course => course.id === formData.selectedCourse);
+    const selectedColegioCurso = this.independentColegioCursos.find(cc => cc.id === formData.selectedCourse);
 
-    // Obtener el precio del curso como número
-    const coursePriceRaw: any = selectedCourse?.precio;
+    // Obtener el precio del curso desde colegios_cursos
+    const coursePriceRaw: any = selectedColegioCurso?.precio_curso;
     const coursePriceNumber: number = typeof coursePriceRaw === 'string'
       ? parseFloat(coursePriceRaw)
       : Number(coursePriceRaw || 0);
 
-    // Obtener el precio de inscripción del curso (si aplica) como número
-    const inscriptionRaw: any = selectedCourse?.precio_inscripcion;
+    // Obtener el precio de inscripción desde colegios_cursos
+    const inscriptionRaw: any = selectedColegioCurso?.precio_inscripcion;
     const inscriptionNumber: number = typeof inscriptionRaw === 'string'
       ? parseFloat(inscriptionRaw)
       : Number(inscriptionRaw || 0);
@@ -494,7 +532,8 @@ export class IndependentProgramPayment implements OnInit {
     // Convertir inscripción a COP usando tasa correspondiente (EUR o USD)
     let inscriptionConvertedCop: number = 0;
     if (inscriptionNumber && inscriptionNumber > 0) {
-      const rate = this.isEuroCourse ? this.eurToCop : this.usdToCop;
+      const courseCurrency = selectedColegioCurso?.moneda || selectedColegioCurso?.curso_id?.moneda;
+      const rate = courseCurrency === 'EUR' ? this.eurToCop : this.usdToCop;
       // Si aún no se cargó la tasa, mantener valor 0 para evitar NaN
       inscriptionConvertedCop = rate ? Math.round(inscriptionNumber * rate) : 0;
     }
@@ -516,10 +555,10 @@ export class IndependentProgramPayment implements OnInit {
         nombre: formData.studentFirstName,
         apellido: formData.studentLastName,
         grado: this.getCombinedGrado(),
-        colegio: 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7', // ID fijo del colegio
+        colegio: selectedColegioCurso?.colegio_id?.id || 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7', // Usar colegio del registro o ID fijo
       },
-      curso_id: selectedCourse?.id,
-      colegios_cursos: [], // Array vacío para programas independientes
+      curso_id: selectedColegioCurso?.curso_id?.id,
+      colegios_cursos: [selectedColegioCurso?.id], // Usar el ID del colegio_curso seleccionado
       precio: coursePriceNumber,
       // Enviar la inscripción ya convertida a COP
       precio_inscripcion: inscriptionConvertedCop,

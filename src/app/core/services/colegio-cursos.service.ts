@@ -30,6 +30,14 @@ export class ColegioCursosService {
     return this.http.get<ResponseAPI<ColegioCurso[]>>(this.apiUrl);
   }
 
+  getIndependentColegioCursos(): Observable<ResponseAPI<ColegioCurso[]>> {
+    const params = {
+      'fields': '*,curso_id.*,colegio_id.*',
+      'filter[curso_id][programa_independiente][_eq]': 'true'
+    };
+    return this.http.get<ResponseAPI<ColegioCurso[]>>(this.apiUrl, { params });
+  }
+
   getColegioCursoById(id: number): Observable<ResponseAPI<ColegioCurso>> {
     return this.http.get<ResponseAPI<ColegioCurso>>(`${this.apiUrl}/${id}`);
   }

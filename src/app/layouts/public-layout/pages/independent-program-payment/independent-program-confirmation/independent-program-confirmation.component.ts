@@ -14,6 +14,7 @@ import { Course } from '../../../../../core/models/Course';
 export class IndependentProgramConfirmationComponent {
   @Input() paymentForm!: FormGroup;
   @Input() courses: Course[] = [];
+  @Input() independentColegioCursos: any[] = [];
   @Input() isSubmitting: boolean = false;
   @Input() selectedInscriptionConvertedCop: number | null = null;
   @Input() selectedCourseImageUrl: string | null = null;

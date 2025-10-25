@@ -128,9 +128,9 @@
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
             <span class="font-medium text-gray-600">Programa Seleccionado:</span>
             <span class="text-gray-800 font-semibold mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">
-              @for (course of courses; track course.id || course.codigo) {
-                @if (course.id === paymentForm.get('selectedCourse')?.value) {
-                  {{ course.nombre }}
+              @for (colegioCurso of independentColegioCursos; track colegioCurso.id) {
+                @if (colegioCurso.id === paymentForm.get('selectedCourse')?.value) {
+                  {{ colegioCurso.curso_id.nombre }}
                 }
               }
             </span>
@@ -142,13 +142,13 @@
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <span class="font-medium text-gray-600">Precio del Programa:</span>
             <div class="flex flex-col sm:items-end">
-              <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0">$ {{ paymentForm.get('coursePrice')?.value | number:'1.0-0' }} COP</span>
+              <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0">${{ paymentForm.get('coursePrice')?.value | number:'1.0-0':'es-CO' }} COP</span>
             </div>
           </div>
           @if (selectedInscriptionConvertedCop) {
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
               <span class="font-medium text-gray-600">Precio de Inscripción:</span>
-              <span class="text-2xl font-bold text-emerald-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ selectedInscriptionConvertedCop | number:'1.0-0' }} COP</span>
+              <span class="text-2xl font-bold text-emerald-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ selectedInscriptionConvertedCop | number:'1.0-0':'es-CO' }} COP</span>
             </div>
           }
         </div>

@@ -47,6 +47,37 @@ export class CourseService {
     );
   }
 
+  searchIndependentCourses(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
+    // Parámetros base con fields y filtro para programa_independiente = true
+    const baseParams = {
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*',
+      'filter[programa_independiente][_eq]': 'true'
+    };
+
+    const request = !searchTerm
+      ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
+      : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
+          params: {
+            ...baseParams,
+            'filter[_and][0][programa_independiente][_eq]': 'true',
+            'filter[_and][1][_or][0][nombre][_icontains]': searchTerm,
+            'filter[_and][1][_or][1][sku][_icontains]': searchTerm,
+          }
+        });
+
+    return request.pipe(
+      map(response => {
+        if (response.data) {
+          response.data = response.data.map(course => ({
+            ...course,
+            img_url: course.img ? `${this.apiUrlAssets}/${course.img}` : undefined
+          }));
+        }
+        return response;
+      })
+    );
+  }
+
   getCourseById(id: string): Observable<ResponseAPI<Course>> {
     return this.http.get<ResponseAPI<Course>>(`${this.apiCourse}/${id}`);
   }
