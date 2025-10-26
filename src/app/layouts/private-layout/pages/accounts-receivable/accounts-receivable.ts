@@ -636,27 +636,43 @@ export class AccountsReceivable implements OnInit {
     const account = this.accounts.find(acc => acc.id === accountId);
     console.log('Found account:', account);
     
+    if (!account) {
+      this.notificationService.showError(
+        'Error',
+        'No se encontró la cuenta por cobrar.'
+      );
+      return;
+    }
+    
+    // Validar que el saldo sea 0 antes de permitir la eliminación
+    const saldo = account.saldo || 0;
+    if (saldo > 0) {
+      this.notificationService.showError(
+        'No se puede eliminar',
+        'No se puede eliminar la cuenta porque ya se han realizado pagos.'
+      );
+      return;
+    }
+    
     // Obtener información del cliente para el modal
     let clientName = 'Cliente no encontrado';
     let tipoDocumento = '';
     let numeroDocumento = '';
     
-    if (account) {
-      // Usar exactamente el mismo valor que se muestra en la columna CLIENTE de la tabla
-      clientName = account.clientName || 'N/A';
-      
-      // Si no hay clientName, intentar construirlo desde cliente_id
-      if (clientName === 'N/A' && account.cliente_id && typeof account.cliente_id === 'object') {
-        const cliente = account.cliente_id as any;
-        if (cliente.nombre && cliente.apellido) {
-          clientName = `${cliente.nombre} ${cliente.apellido}`;
-        }
+    // Usar exactamente el mismo valor que se muestra en la columna CLIENTE de la tabla
+    clientName = account.clientName || 'N/A';
+    
+    // Si no hay clientName, intentar construirlo desde cliente_id
+    if (clientName === 'N/A' && account.cliente_id && typeof account.cliente_id === 'object') {
+      const cliente = account.cliente_id as any;
+      if (cliente.nombre && cliente.apellido) {
+        clientName = `${cliente.nombre} ${cliente.apellido}`;
       }
-      
-      // Obtener tipo y número de documento
-      tipoDocumento = this.getClientDocumentType(account);
-      numeroDocumento = this.getClientDocument(account);
     }
+    
+    // Obtener tipo y número de documento
+    tipoDocumento = this.getClientDocumentType(account);
+    numeroDocumento = this.getClientDocument(account);
     
     console.log('Client info:', { clientName, tipoDocumento, numeroDocumento });
     
