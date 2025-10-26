@@ -6,6 +6,8 @@ import {AccountReceivableFormComponent} from './account-recevable-form/account-r
 import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
 import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
+import {ConfirmationService} from '../../../../core/services/confirmation.service';
+import {NotificationService} from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-accounts-receivable',
@@ -53,7 +55,9 @@ export class AccountsReceivable implements OnInit {
   constructor(
     private accountService: AccountReceivableService,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private confirmationService: ConfirmationService,
+    private notificationService: NotificationService
   ) {
   }
 
@@ -626,27 +630,85 @@ export class AccountsReceivable implements OnInit {
   }
 
   deleteAccount(accountId: string): void {
-    if (confirm('¿Está seguro de que desea eliminar esta cuenta por cobrar?')) {
-      this.accountService.deleteAccountReceivable(accountId).subscribe({
-        next: () => {
-          // Eliminar la cuenta de la lista principal
-          this.allAccounts = this.allAccounts.filter(account => account.id !== accountId);
-          
-          // Refiltrar todas las cuentas
-          this.filterAccountsByStatus();
-          this.updatePagination();
-          this.totalAccounts();
-          
-          // Si la cuenta eliminada era la seleccionada, cerrar el detalle
-          if (this.selectedAccount && this.selectedAccount.id === accountId) {
-            this.backToList();
-          }
-        },
-        error: (error) => {
-          console.error('Error al eliminar la cuenta:', error);
+    console.log('deleteAccount called with ID:', accountId);
+    
+    // Buscar la cuenta en la lista actual que se muestra en la tabla
+    const account = this.accounts.find(acc => acc.id === accountId);
+    console.log('Found account:', account);
+    
+    // Obtener información del cliente para el modal
+    let clientName = 'Cliente no encontrado';
+    let tipoDocumento = '';
+    let numeroDocumento = '';
+    
+    if (account) {
+      // Usar exactamente el mismo valor que se muestra en la columna CLIENTE de la tabla
+      clientName = account.clientName || 'N/A';
+      
+      // Si no hay clientName, intentar construirlo desde cliente_id
+      if (clientName === 'N/A' && account.cliente_id && typeof account.cliente_id === 'object') {
+        const cliente = account.cliente_id as any;
+        if (cliente.nombre && cliente.apellido) {
+          clientName = `${cliente.nombre} ${cliente.apellido}`;
         }
-      });
+      }
+      
+      // Obtener tipo y número de documento
+      tipoDocumento = this.getClientDocumentType(account);
+      numeroDocumento = this.getClientDocument(account);
     }
+    
+    console.log('Client info:', { clientName, tipoDocumento, numeroDocumento });
+    
+    // Crear mensaje personalizado con el formato solicitado
+    const customMessage = `¿Estás seguro de que deseas eliminar la cuenta por cobrar de ${clientName} ${tipoDocumento} ${numeroDocumento}? Esta acción no se puede deshacer.`;
+    
+    console.log('Showing confirmation with message:', customMessage);
+    
+    this.confirmationService.showConfirmation(
+      {
+        title: 'Eliminar cuenta por cobrar',
+        message: customMessage,
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        type: 'danger'
+      },
+      () => {
+        console.log('Confirmation accepted, deleting account');
+        this.accountService.deleteAccountReceivable(accountId).subscribe({
+          next: () => {
+            // Eliminar la cuenta de la lista principal
+            this.allAccounts = this.allAccounts.filter(account => account.id !== accountId);
+            
+            // Refiltrar todas las cuentas
+            this.filterAccountsByStatus();
+            this.updatePagination();
+            this.totalAccounts();
+            
+            // Si la cuenta eliminada era la seleccionada, cerrar el detalle
+            if (this.selectedAccount && this.selectedAccount.id === accountId) {
+              this.backToList();
+            }
+            
+            // Mostrar notificación de éxito
+            this.notificationService.showSuccess(
+              'Cuenta eliminada',
+              'La cuenta por cobrar ha sido eliminada exitosamente.'
+            );
+          },
+          error: (error) => {
+            console.error('Error al eliminar la cuenta:', error);
+            this.notificationService.showError(
+              'Error al eliminar',
+              'No se pudo eliminar la cuenta por cobrar. Inténtalo nuevamente.'
+            );
+          }
+        });
+      },
+      () => {
+        console.log('Confirmation cancelled');
+      }
+    );
   }
 
   viewDetail(account: AccountReceivable) {
