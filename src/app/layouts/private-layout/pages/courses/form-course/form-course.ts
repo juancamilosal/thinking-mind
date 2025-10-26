@@ -59,11 +59,7 @@ export class FormCourse implements OnInit, OnChanges {
   initForm=(): void => {
     this.courseForm = this.fb.group({
       nombre: [null, Validators.required],
-      precio_inscripcion: [null],
-      precio: [null, Validators.required], // Nuevo campo precio
-      programa_independiente: [false], // Nuevo campo checkbox
       codigo: [null, [Validators.required]],
-      moneda: [null], // Campo moneda sin validación requerida
       img: [null] // Campo para el ID de la imagen en Directus
     });
 
@@ -76,11 +72,7 @@ export class FormCourse implements OnInit, OnChanges {
     if (this.courseData && this.courseForm) {
       this.courseForm.patchValue({
         nombre: this.courseData.nombre,
-        precio_inscripcion: this.courseData.precio_inscripcion ?? null,
-        precio: this.courseData.precio ?? null, // Cargar precio
-        programa_independiente: this.courseData.programa_independiente ?? false, // Cargar programa independiente
         codigo: this.courseData.codigo || this.courseData.sku || '', // Usar sku como fallback si codigo no existe
-        moneda: this.courseData.moneda || null, // Cargar moneda, null si no existe
         img: this.courseData.img || null
       });
 
@@ -127,12 +119,8 @@ export class FormCourse implements OnInit, OnChanges {
     // Crear curso sin imagen
     const course = {
       nombre: this.courseForm.value.nombre,
-      precio_inscripcion: this.courseForm.value.precio_inscripcion,
-      precio: this.courseForm.value.precio, // Nuevo campo precio
-      programa_independiente: this.courseForm.value.programa_independiente, // Nuevo campo checkbox
       sku: this.courseForm.value.codigo,
-      codigo: this.courseForm.value.codigo,
-      moneda: this.courseForm.value.moneda // Agregar campo moneda
+      codigo: this.courseForm.value.codigo
     };
     this.courseServices.createCourse(course).subscribe({
       next: (response) => {
@@ -240,11 +228,7 @@ export class FormCourse implements OnInit, OnChanges {
   private updateCourseWithoutNewImage(): void {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
-      precio_inscripcion: this.courseForm.value.precio_inscripcion,
-      precio: this.courseForm.value.precio, // Nuevo campo precio
-      programa_independiente: this.courseForm.value.programa_independiente, // Nuevo campo checkbox
-      sku: this.courseForm.value.codigo,
-      moneda: this.courseForm.value.moneda // Agregar campo moneda
+      sku: this.courseForm.value.codigo
     };
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({
       next: (response) => {
@@ -262,12 +246,8 @@ export class FormCourse implements OnInit, OnChanges {
   private updateCourseWithNewImage(): void {
     const courseToUpdate = {
       nombre: this.courseForm.value.nombre,
-      precio_inscripcion: this.courseForm.value.precio_inscripcion,
-      precio: this.courseForm.value.precio, // Nuevo campo precio
-      programa_independiente: this.courseForm.value.programa_independiente, // Nuevo campo checkbox
       sku: this.courseForm.value.codigo,
-      img: this.uploadedImageId,
-      moneda: this.courseForm.value.moneda // Agregar campo moneda
+      img: this.uploadedImageId
     };
     const previousImageId = this.courseData?.img;
     this.courseServices.updateCourse(this.courseData!.id, courseToUpdate).subscribe({

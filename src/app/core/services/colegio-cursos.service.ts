@@ -12,6 +12,7 @@ export class ColegioCurso {
   precio_curso?: number;
   tiene_precio_especial?: string; // "TRUE" | "FALSE"
   precio_especial?: number | null;
+  programa_independiente?: boolean; // Campo para identificar programas independientes
 }
 
 @Injectable({
@@ -28,6 +29,14 @@ export class ColegioCursosService {
 
   getColegioCursos(): Observable<ResponseAPI<ColegioCurso[]>> {
     return this.http.get<ResponseAPI<ColegioCurso[]>>(this.apiUrl);
+  }
+
+  getIndependentColegioCursos(): Observable<ResponseAPI<ColegioCurso[]>> {
+    const params = {
+      'fields': '*,curso_id.*,colegio_id.*',
+      'filter[programa_independiente][_eq]': 'true'
+    };
+    return this.http.get<ResponseAPI<ColegioCurso[]>>(this.apiUrl, { params });
   }
 
   getColegioCursoById(id: number): Observable<ResponseAPI<ColegioCurso>> {

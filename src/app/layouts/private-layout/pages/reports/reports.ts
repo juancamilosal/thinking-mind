@@ -40,6 +40,14 @@ export class Reports {
   totalFromService = 0;
   isFiltered = false;
 
+  // Nuevas propiedades para los totales detallados del servicio
+  totalValorBruto = 0;
+  totalComisionWompi = 0;
+  totalIva = 0;
+  totalTarifaWompi = 0;
+  totalRetencionFuente = 0;
+  totalValorNeto = 0;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -262,6 +270,57 @@ export class Reports {
     
     console.log('Calculando total manualmente (solo PAGADO - valor_neto):', calculatedTotal);
     return calculatedTotal;
+  }
+
+  // Método para calcular totales de columnas específicas cuando hay filtros
+  calculateColumnTotal(column: string): number {
+    if (!this.isFiltered) {
+      // Si no hay filtros, usar los totales del servicio
+      switch (column) {
+        case 'valor_bruto':
+          return this.totalValorBruto;
+        case 'comision':
+          return this.totalComisionWompi;
+        case 'iva':
+          return this.totalIva;
+        case 'tarifa':
+          return this.totalTarifaWompi;
+        case 'retencion_fuente':
+          return this.totalRetencionFuente;
+        case 'valor_neto':
+          return this.totalValorNeto;
+        default:
+          return 0;
+      }
+    }
+
+    // Si hay filtros, calcular desde los pagos filtrados
+    return this.payments
+      .filter(payment => payment.estado === 'PAGADO')
+      .reduce((total, payment) => {
+        let value = 0;
+        switch (column) {
+          case 'valor_bruto':
+            value = parseFloat(payment.valor?.toString() || '0') || 0;
+            break;
+          case 'comision':
+            value = parseFloat(payment.comision?.toString() || '0') || 0;
+            break;
+          case 'iva':
+            value = parseFloat(payment.iva?.toString() || '0') || 0;
+            break;
+          case 'tarifa':
+            value = parseFloat(payment.tarifa?.toString() || '0') || 0;
+            break;
+          case 'retencion_fuente':
+            value = parseFloat(payment.retencion_fuente?.toString() || '0') || 0;
+            break;
+          case 'valor_neto':
+            value = parseFloat(payment.valor_neto?.toString() || '0') || 0;
+            break;
+        }
+        return total + value;
+      }, 0);
   }
 
 // Generar reporte de inscripciones dentro del rango de fechas
@@ -1005,11 +1064,25 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
   loadTotalFromService() {
     this.paymentService.totalPayment().subscribe({
       next: (response: any) => {
-        this.totalFromService = response.data || 0;
+        this.totalFromService = response.data?.total_valor_neto || 0;
+        
+        // Capturar todos los totales del servicio
+        this.totalValorBruto = response.data?.total_valor_bruto || 0;
+        this.totalComisionWompi = response.data?.total_comision || 0;
+        this.totalIva = response.data?.total_iva || 0;
+        this.totalTarifaWompi = response.data?.total_tarifa || 0;
+        this.totalRetencionFuente = response.data?.total_retencion_fuente || 0;
+        this.totalValorNeto = response.data?.total_valor_neto || 0;
       },
       error: (error) => {
         console.error('Error al cargar el total del servicio:', error);
         this.totalFromService = 0;
+        this.totalValorBruto = 0;
+        this.totalComisionWompi = 0;
+        this.totalIva = 0;
+        this.totalTarifaWompi = 0;
+        this.totalRetencionFuente = 0;
+        this.totalValorNeto = 0;
       }
     });
   }

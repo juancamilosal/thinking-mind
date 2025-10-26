@@ -75,8 +75,32 @@ export class ColegioCursosComponent implements OnInit {
       moneda: [''], // Campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: [null],
+      programa_independiente: [false], // Checkbox para programa independiente
       courseSearchTerm: [null],
       schoolSearchTerm: [null]
+    });
+
+    // Escuchar cambios en el checkbox de programa independiente
+    this.fechaFinalizacionForm.get('programa_independiente')?.valueChanges.subscribe(value => {
+      const colegioControl = this.fechaFinalizacionForm.get('colegio_id');
+      
+      if (value) {
+        // Si se marca programa independiente, establecer el valor específico y limpiar búsqueda
+        colegioControl?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
+        colegioControl?.clearValidators(); // Remover validaciones
+        this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue('');
+        this.isSchoolSelected = false;
+        this.filteredSchools = [];
+      } else {
+        // Si se desmarca, limpiar el valor del colegio y restaurar validaciones
+        colegioControl?.setValue(null);
+        colegioControl?.setValidators([Validators.required]); // Restaurar validación requerida
+        this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue('');
+        this.isSchoolSelected = false;
+        this.filteredSchools = [];
+      }
+      
+      colegioControl?.updateValueAndValidity(); // Actualizar estado de validación
     });
   }
 
@@ -207,14 +231,18 @@ export class ColegioCursosComponent implements OnInit {
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
         precio_especial: precioEspecialValor,
         // Nueva fecha de creación
-        fecha_creacion: fechaCreacionISO
+        fecha_creacion: fechaCreacionISO,
+        // Enviar el valor del checkbox programa_independiente
+        programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false
       };
       // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
           // Obtener nombres para mostrar en la notificación
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-          const colegioNombre = this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
+          const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value 
+            ? 'Programa Independiente' 
+            : this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
 
           this.notificationService.showSuccess(
             'Colegio y fecha de finalización guardados',
