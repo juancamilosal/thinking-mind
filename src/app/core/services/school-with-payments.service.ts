@@ -43,8 +43,6 @@ export class SchoolWithPaymentsService {
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
-        console.log('🔍 Datos del servidor (filtrados por saldo > 0 y año):', response.data.length);
-
         // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
         return {
           ...response,
@@ -77,9 +75,7 @@ export class SchoolWithPaymentsService {
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
-        console.log('🔍 Datos del servidor por escuela (filtrados por saldo > 0 y año):', response.data.length);
-
-        // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
+       // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
         return {
           ...response,
           data: response.data

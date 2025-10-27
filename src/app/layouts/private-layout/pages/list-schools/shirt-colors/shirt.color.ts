@@ -78,7 +78,6 @@ export class ShirtColor implements OnInit {
     accountsQuery.subscribe({
       next: (response) => {
         if (!response.data) {
-          console.log('No data received from API');
           this.isLoading = false;
           return;
         }

@@ -113,7 +113,6 @@ export class Dashboard implements OnInit {
     // Usar el nuevo servicio dashboard por defecto para usuarios que no son rector ni ventas
     this.dashboardService.dashboard().subscribe({
       next: (response) => {
-        console.log('Datos del dashboard por defecto:', response);
         // Procesar los datos del servicio por defecto
         if (response && response.data) {
           // El servicio retorna un objeto con las estadísticas calculadas
@@ -133,7 +132,7 @@ export class Dashboard implements OnInit {
     // Procesar los datos del servicio para mapear a las estadísticas del dashboard
     // Mapeo según la especificación:
     // - Pagos del Mes = total_pagos_mes
-    // - Total Cuentas Por Cobrar = total_cuentas  
+    // - Total Cuentas Por Cobrar = total_cuentas
     // - Total por Cobrar = monto_total
     // - Total Pagado = saldo_total (dinero ya pagado)
     // - Saldo Pendiente = saldo_pendiente
@@ -378,7 +377,6 @@ export class Dashboard implements OnInit {
     // Consumir el servicio dashboardSale para el rol específico
     this.dashboardService.dashboardSale().subscribe({
       next: (response) => {
-        console.log('Datos del dashboard de ventas:', response);
         // Procesar los datos del servicio de ventas usando la misma estructura que rector
         if (response.data) {
           this.rectorStats.totalStudentsEnrolled = response.data.total_estudiantes || 0;
