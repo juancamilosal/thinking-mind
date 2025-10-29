@@ -112,18 +112,9 @@ export class Reports {
   }
 
   generatePaymentsReport() {
-    console.log('Generando reporte de pagos...');
-    
-    const startDate = this.formatDateForAPI(this.reportForm.get('startDate')?.value);
+   const startDate = this.formatDateForAPI(this.reportForm.get('startDate')?.value);
     const endDate = this.formatDateForAPI(this.reportForm.get('endDate')?.value);
-    
-    console.log('Fecha original startDate:', this.reportForm.get('startDate')?.value);
-    console.log('Fecha original endDate:', this.reportForm.get('endDate')?.value);
-    console.log('Fecha formateada startDate:', startDate);
-    console.log('Fecha formateada endDate:', endDate);
-    
     this.reportGenerated = true;
-    
     // Cargar el total del servicio solo cuando no hay filtros de fecha
     if (!startDate && !endDate) {
       this.isFiltered = false;
@@ -139,24 +130,16 @@ export class Reports {
   onDateChange() {
     const startDate = this.reportForm.get('startDate')?.value;
     const endDate = this.reportForm.get('endDate')?.value;
-    
-    console.log('Cambio en fechas detectado:', { startDate, endDate });
-    
-    // Solo filtrar si el reporte ya fue generado
+  // Solo filtrar si el reporte ya fue generado
     if (this.reportGenerated) {
       if (startDate && endDate) {
         // Formatear las fechas para asegurar el formato correcto
         const formattedStartDate = this.formatDateForAPI(startDate);
         const formattedEndDate = this.formatDateForAPI(endDate);
-        
-        console.log('Aplicando filtro de fechas:', { formattedStartDate, formattedEndDate });
-        
         // Hay filtros de fecha - usar cálculo manual
         this.isFiltered = true;
         this.loadPaymentsPage(formattedStartDate, formattedEndDate);
       } else if (!startDate && !endDate) {
-        // Si se limpian ambas fechas, volver a cargar sin filtros
-        console.log('Limpiando filtros de fecha');
         // No hay filtros - usar total del servicio
         this.isFiltered = false;
         this.loadTotalFromService();
@@ -172,34 +155,21 @@ export class Reports {
   }
 
   private loadPaymentsPage(startDate?: string, endDate?: string): void {
-    console.log('loadPaymentsPage llamado con:', { startDate, endDate });
-    
-    // Directus maneja todo el filtrado, el frontend solo pasa los parámetros
+ // Directus maneja todo el filtrado, el frontend solo pasa los parámetros
     this.paymentService.getPayments(this.currentPage, this.itemsPerPage, undefined, startDate, endDate).subscribe({
       next: (response) => {
-        console.log('Directus está manejando el filtrado de fechas');
-        console.log('Respuesta del servicio:', response);
-        console.log('Número de pagos encontrados (TODOS los estados):', response.data?.length || 0);
-        console.log('Meta información:', response.meta);
-        console.log('Total de items en Directus:', response.meta?.total_count || 0);
-        
-        // Calcular total solo de pagos PAGADO usando valor_neto para mostrar en el resumen
+    // Calcular total solo de pagos PAGADO usando valor_neto para mostrar en el resumen
         const totalPagado = response.data
           ?.filter((payment: any) => payment.estado === 'PAGADO')
           ?.reduce((total: number, payment: any) => {
             const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
             return total + valorNeto;
           }, 0) || 0;
-        console.log('Total calculado (solo PAGADO - valor_neto):', totalPagado);
-        
         // Directus ya devuelve los datos filtrados
         this.payments = response.data || [];
         this.totalItems = response.meta?.filter_count || 0;
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        
-        console.log('Pagos procesados por Directus:', this.payments.length);
-        console.log('Total items filtrados por Directus:', this.totalItems);
-      },
+    },
       error: (error) => {
         console.error('Error loading payments:', error);
 
@@ -256,10 +226,9 @@ export class Reports {
   calculateTotal(): number {
     // Si no hay filtros aplicados, usar el total del servicio
     if (!this.isFiltered && this.totalFromService > 0) {
-      console.log('Usando total del servicio:', this.totalFromService);
       return this.totalFromService;
     }
-    
+
     // Si hay filtros, calcular desde los pagos filtrando solo los PAGADO y usando valor_neto
     const calculatedTotal = this.payments
       .filter(payment => payment.estado === 'PAGADO')
@@ -267,8 +236,6 @@ export class Reports {
         const valorNeto = parseFloat(payment.valor_neto?.toString() || '0') || 0;
         return total + valorNeto;
       }, 0);
-    
-    console.log('Calculando total manualmente (solo PAGADO - valor_neto):', calculatedTotal);
     return calculatedTotal;
   }
 
@@ -605,7 +572,7 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       // Importación más robusta para producción
       let ExcelJS: any;
       let Workbook: any;
-      
+
       try {
         ExcelJS = await import('exceljs');
         // Manejar diferentes formas de exportación de ExcelJS
@@ -858,7 +825,7 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       // Importación más robusta para producción
       let ExcelJS: any;
       let Workbook: any;
-      
+
       try {
         ExcelJS = await import('exceljs');
         // Manejar diferentes formas de exportación de ExcelJS
@@ -1065,7 +1032,7 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     this.paymentService.totalPayment().subscribe({
       next: (response: any) => {
         this.totalFromService = response.data?.total_valor_neto || 0;
-        
+
         // Capturar todos los totales del servicio
         this.totalValorBruto = response.data?.total_valor_bruto || 0;
         this.totalComisionWompi = response.data?.total_comision || 0;
@@ -1116,22 +1083,22 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     try {
       // Importar jsPDF dinámicamente
       const { jsPDF } = await import('jspdf');
-      
+
       // Crear nuevo documento PDF
       const doc = new jsPDF();
-      
+
       // Configuración inicial
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 20;
       let yPosition = margin;
-      
+
       // Título principal
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.text('Reporte de Inscripciones por Colegio y Programas', pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 15;
-      
+
       // Fecha y hora del reporte
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
@@ -1139,7 +1106,7 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       const currentTime = new Date().toLocaleTimeString('es-CO', { hour12: false });
       doc.text(`Fecha del reporte: ${currentDate} Hora: ${currentTime}`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 20;
-      
+
       // Iterar por cada colegio
       for (const school of this.schoolsData) {
         // Verificar si necesitamos una nueva página
@@ -1147,42 +1114,42 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
           doc.addPage();
           yPosition = margin;
         }
-        
+
         // Nombre del colegio
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
         doc.text(`${school.colegio}`, margin, yPosition);
         yPosition += 10;
-        
+
         // Totales del colegio
         const totalStudents = this.getTotalStudentsInSchool(school);
         const newStudentsToday = this.getTotalNewStudentsToday(school);
-        
+
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.text(`Total de estudiantes: ${totalStudents}`, margin + 10, yPosition);
         yPosition += 6;
         doc.text(`Nuevos estudiantes hoy: ${newStudentsToday}`, margin + 10, yPosition);
         yPosition += 10;
-        
+
         // Cursos del colegio
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text('Programas:', margin + 10, yPosition);
         yPosition += 8;
-        
+
         for (const course of school.cursos) {
           // Verificar si necesitamos una nueva página
           if (yPosition > pageHeight - 40) {
             doc.addPage();
             yPosition = margin;
           }
-          
+
           doc.setFontSize(11);
           doc.setFont('helvetica', 'normal');
           doc.text(`• ${course.curso}`, margin + 20, yPosition);
           yPosition += 6;
-          
+
           doc.setFontSize(9);
           doc.text(`  Precio: $${Number(course.precio).toLocaleString('es-CO')}`, margin + 25, yPosition);
           yPosition += 5;
@@ -1191,27 +1158,27 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
           doc.text(`  Nuevos hoy: ${course.nuevos_hoy}`, margin + 25, yPosition);
           yPosition += 8;
         }
-        
+
         yPosition += 10; // Espacio entre colegios
       }
-      
+
       // Resumen final
       if (yPosition > pageHeight - 80) {
         doc.addPage();
         yPosition = margin;
       }
-      
+
       yPosition += 10;
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.text('Resumen General', margin, yPosition);
       yPosition += 10;
-      
+
       const totalSchools = this.schoolsData.length;
       const totalAllStudents = this.schoolsData.reduce((sum, school) => sum + this.getTotalStudentsInSchool(school), 0);
       const totalNewToday = this.schoolsData.reduce((sum, school) => sum + this.getTotalNewStudentsToday(school), 0);
       const totalPrograms = this.schoolsData.reduce((sum, school) => sum + school.cursos.length, 0);
-      
+
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
       doc.text(`Total de colegios: ${totalSchools}`, margin + 10, yPosition);
@@ -1221,11 +1188,11 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       doc.text(`Total de estudiantes: ${totalAllStudents}`, margin + 10, yPosition);
       yPosition += 6;
       doc.text(`Nuevos estudiantes hoy: ${totalNewToday}`, margin + 10, yPosition);
-      
+
       // Generar y descargar el PDF
       const fileName = `Reporte_Inscripciones_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
-      
+
     } catch (error) {
       console.error('Error al generar PDF:', error);
     }

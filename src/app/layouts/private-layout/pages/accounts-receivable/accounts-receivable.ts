@@ -31,19 +31,19 @@ export class AccountsReceivable implements OnInit {
   total: TotalAccounts;
   // Search
   searchTerm: string = '';
-  
+
   // User role and colegio info
   userRole: string = '';
   userColegioId: string = '';
   isRector: boolean = false;
-  
+
   // Filtros
   filters = {
     colegio: '',
     fechaFinalizacion: '',
     estado: ''
   };
-  
+
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
@@ -78,9 +78,9 @@ export class AccountsReceivable implements OnInit {
       // Para otros usuarios, aplicar filtros normales
       this.applyFilters();
     }
-    
+
     this.totalAccounts();
-    
+
     // Check for cuentaCobrarId query parameter
     this.route.queryParams.subscribe(params => {
       const cuentaCobrarId = params['cuentaCobrarId'];
@@ -119,9 +119,9 @@ export class AccountsReceivable implements OnInit {
       this.loadRectorAccounts();
       return;
     }
-    
+
     this.isLoading = true;
-    
+
     // Construir parámetros de filtro
     const filterParams: any = {
       page: this.currentPage,
@@ -149,7 +149,7 @@ export class AccountsReceivable implements OnInit {
     this.accountService.getFilteredAccountsReceivable(filterParams).subscribe({
       next: (response) => {
         this.accounts = response.data || [];
-        
+
         // Si hay filtros aplicados y no hay resultados, mostrar 0
         // Si hay filtros aplicados y hay resultados, usar filter_count
         // Si no hay filtros aplicados, usar total_count
@@ -160,10 +160,10 @@ export class AccountsReceivable implements OnInit {
           // Cuando no hay filtros, usar total_count
           this.totalItems = response.meta?.total_count || 0;
         }
-        
+
         // Calcular totalPages correctamente
         this.totalPages = this.totalItems > 0 ? Math.ceil(this.totalItems / this.itemsPerPage) : 0;
-        
+
         // Si no hay resultados, resetear a página 1
         if (this.totalItems === 0) {
           this.currentPage = 1;
@@ -177,7 +177,7 @@ export class AccountsReceivable implements OnInit {
           }, 0);
           return;
         }
-        
+
         this.isLoading = false;
       },
       error: () => {
@@ -189,7 +189,7 @@ export class AccountsReceivable implements OnInit {
   // Método específico para cargar cuentas de rector (similar a list-schools)
   private loadRectorAccounts(): void {
     this.isLoading = true;
-    
+
     // Usar searchAccountReceivable con el colegioId del rector
     this.accountService.searchAccountReceivable(
       this.currentPage,
@@ -201,7 +201,7 @@ export class AccountsReceivable implements OnInit {
         this.accounts = response.data || [];
         this.totalItems = response.meta?.filter_count || this.accounts.length;
         this.totalPages = this.totalItems > 0 ? Math.ceil(this.totalItems / this.itemsPerPage) : 0;
-        
+
         // Si no hay resultados, resetear a página 1
         if (this.totalItems === 0) {
           this.currentPage = 1;
@@ -215,7 +215,7 @@ export class AccountsReceivable implements OnInit {
           }, 0);
           return;
         }
-        
+
         this.isLoading = false;
       },
       error: () => {
@@ -232,7 +232,7 @@ export class AccountsReceivable implements OnInit {
     };
     this.searchTerm = '';
     this.currentPage = 1;
-    
+
     // Si es rector, usar su método específico
     if (this.isRector && this.userColegioId) {
       this.loadRectorAccounts();
@@ -322,7 +322,7 @@ export class AccountsReceivable implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.itemsPerPage = parseInt(target.value, 10);
     this.currentPage = 1; // Reset to first page when changing items per page
-    
+
     // Si es rector, usar su método específico
     if (this.isRector && this.userColegioId) {
       this.loadRectorAccounts();
@@ -339,7 +339,7 @@ export class AccountsReceivable implements OnInit {
 
   loadAccountsPage(): void {
     this.isLoading = true;
-    const serviceCall = this.searchTerm.trim() 
+    const serviceCall = this.searchTerm.trim()
       ? this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage, this.searchTerm.trim())
       : this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage);
 
@@ -361,11 +361,11 @@ export class AccountsReceivable implements OnInit {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
@@ -377,7 +377,7 @@ export class AccountsReceivable implements OnInit {
     this.paidAccounts = this.allAccounts.filter(account => account.estado === 'paid');
     this.refundAccounts = this.allAccounts.filter(account => account.estado === 'refund');
     this.zeroBalanceAccounts = this.allAccounts.filter(account => account.saldo === 0);
-    
+
     // Actualizar las cuentas mostradas según la pestaña activa
     this.updateAccountsForActiveTab();
   }
@@ -395,7 +395,7 @@ export class AccountsReceivable implements OnInit {
 
   totalAccounts = (): void => {
     this.isLoadingTotals = true;
-    
+
     // Si es rector, filtrar totales por su colegio
     if (this.isRector && this.userColegioId) {
       this.accountService.totalAccounts(this.userColegioId).subscribe({
@@ -474,21 +474,21 @@ export class AccountsReceivable implements OnInit {
   onAccountCreated(newAccount: AccountReceivable): void {
     // Agregar la nueva cuenta a la lista principal
     this.allAccounts.unshift(newAccount);
-    
+
     // Refiltrar todas las cuentas
     this.filterAccountsByStatus();
     this.updatePagination();
-    
+
     this.showForm = false;
     this.totalAccounts();
   }
 
   private loadAccountsByStatus(status: 'pending' | 'paid' | 'refund' | 'zero'): void {
     this.isLoading = true;
-    
+
     // Si es rector, incluir su colegioId en la búsqueda
     const colegioId = this.isRector && this.userColegioId ? this.userColegioId : undefined;
-    
+
     this.accountService.searchAccountReceivableByStatusWithPagination(
       status,
       this.currentPage,
@@ -500,7 +500,7 @@ export class AccountsReceivable implements OnInit {
         this.accounts = response.data;
         this.totalItems = response.meta?.filter_count || 0;
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        
+
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -525,7 +525,7 @@ export class AccountsReceivable implements OnInit {
 
   onSearch(): void {
     this.currentPage = 1; // Resetear a la primera página
-    
+
     // Si es rector, usar su método específico
     if (this.isRector && this.userColegioId) {
       this.loadRectorAccounts();
@@ -568,17 +568,17 @@ export class AccountsReceivable implements OnInit {
 
   getTotalOverdue(): number {
     const today = new Date().toISOString().split('T')[0];
-    
+
     // Incluir cuentas pendientes vencidas
     const pendingOverdue = this.pendingAccounts
       .filter(account => account.fecha_finalizacion && account.fecha_finalizacion < today)
       .reduce((total, account) => total + (account.saldo || 0), 0);
-    
+
     // Incluir cuentas con devolución vencidas (también forman parte del pendiente)
     const refundOverdue = this.refundAccounts
       .filter(account => account.fecha_finalizacion && account.fecha_finalizacion < today)
       .reduce((total, account) => total + (account.saldo || 0), 0);
-    
+
     return pendingOverdue + refundOverdue;
   }
 
@@ -616,7 +616,7 @@ export class AccountsReceivable implements OnInit {
           if (index !== -1) {
             this.allAccounts[index] = { ...this.allAccounts[index], ...updateData };
           }
-          
+
           // Refiltrar todas las cuentas
           this.filterAccountsByStatus();
           this.updatePagination();
@@ -630,12 +630,8 @@ export class AccountsReceivable implements OnInit {
   }
 
   deleteAccount(accountId: string): void {
-    console.log('deleteAccount called with ID:', accountId);
-    
-    // Buscar la cuenta en la lista actual que se muestra en la tabla
+  // Buscar la cuenta en la lista actual que se muestra en la tabla
     const account = this.accounts.find(acc => acc.id === accountId);
-    console.log('Found account:', account);
-    
     if (!account) {
       this.notificationService.showError(
         'Error',
@@ -643,7 +639,7 @@ export class AccountsReceivable implements OnInit {
       );
       return;
     }
-    
+
     // Validar que el saldo sea 0 antes de permitir la eliminación
     const saldo = account.saldo || 0;
     if (saldo > 0) {
@@ -653,15 +649,15 @@ export class AccountsReceivable implements OnInit {
       );
       return;
     }
-    
+
     // Obtener información del cliente para el modal
     let clientName = 'Cliente no encontrado';
     let tipoDocumento = '';
     let numeroDocumento = '';
-    
+
     // Usar exactamente el mismo valor que se muestra en la columna CLIENTE de la tabla
     clientName = account.clientName || 'N/A';
-    
+
     // Si no hay clientName, intentar construirlo desde cliente_id
     if (clientName === 'N/A' && account.cliente_id && typeof account.cliente_id === 'object') {
       const cliente = account.cliente_id as any;
@@ -669,19 +665,13 @@ export class AccountsReceivable implements OnInit {
         clientName = `${cliente.nombre} ${cliente.apellido}`;
       }
     }
-    
+
     // Obtener tipo y número de documento
     tipoDocumento = this.getClientDocumentType(account);
     numeroDocumento = this.getClientDocument(account);
-    
-    console.log('Client info:', { clientName, tipoDocumento, numeroDocumento });
-    
     // Crear mensaje personalizado con el formato solicitado
     const customMessage = `¿Estás seguro de que deseas eliminar la cuenta por cobrar de ${clientName} ${tipoDocumento} ${numeroDocumento}? Esta acción no se puede deshacer.`;
-    
-    console.log('Showing confirmation with message:', customMessage);
-    
-    this.confirmationService.showConfirmation(
+   this.confirmationService.showConfirmation(
       {
         title: 'Eliminar cuenta por cobrar',
         message: customMessage,
@@ -690,22 +680,21 @@ export class AccountsReceivable implements OnInit {
         type: 'danger'
       },
       () => {
-        console.log('Confirmation accepted, deleting account');
         this.accountService.deleteAccountReceivable(accountId).subscribe({
           next: () => {
             // Eliminar la cuenta de la lista principal
             this.allAccounts = this.allAccounts.filter(account => account.id !== accountId);
-            
+
             // Refiltrar todas las cuentas
             this.filterAccountsByStatus();
             this.updatePagination();
             this.totalAccounts();
-            
+
             // Si la cuenta eliminada era la seleccionada, cerrar el detalle
             if (this.selectedAccount && this.selectedAccount.id === accountId) {
               this.backToList();
             }
-            
+
             // Mostrar notificación de éxito
             this.notificationService.showSuccess(
               'Cuenta eliminada',
@@ -721,9 +710,6 @@ export class AccountsReceivable implements OnInit {
           }
         });
       },
-      () => {
-        console.log('Confirmation cancelled');
-      }
     );
   }
 
@@ -749,16 +735,16 @@ export class AccountsReceivable implements OnInit {
       if (index !== -1) {
         this.allAccounts[index] = updatedAccount;
       }
-      
+
       // Refiltrar todas las cuentas
       this.filterAccountsByStatus();
       this.updatePagination();
-      
+
       // Actualizar la cuenta seleccionada si coincide
       if (this.selectedAccount && this.selectedAccount.id === updatedAccount.id) {
         this.selectedAccount = updatedAccount;
       }
-      
+
       this.cdr.detectChanges();
     } else {
       // Mantener la pestaña activa al refrescar
@@ -776,7 +762,7 @@ export class AccountsReceivable implements OnInit {
       }, 100);
     }
   }
-  
+
   // Pagination methods
   updatePagination() {
     this.totalPages = Math.ceil(this.accounts.length / this.itemsPerPage);
@@ -785,18 +771,18 @@ export class AccountsReceivable implements OnInit {
     }
     this.updatePaginatedAccounts();
   }
-  
+
   updatePaginatedAccounts() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     // Fixed: Changed paginatedAccounts to accounts since we're using server-side pagination
     // this.paginatedAccounts = this.accounts.slice(startIndex, endIndex);
   }
-  
+
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      
+
       // Si es rector, usar su método específico
       if (this.isRector && this.userColegioId) {
         this.loadRectorAccounts();

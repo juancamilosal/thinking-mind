@@ -201,16 +201,11 @@ export class IndependentProgramPayment implements OnInit {
   }
 
   loadIndependentColegioCursos(): void {
-    console.log('Iniciando carga de colegios_cursos independientes...');
     this.colegioCursosService.getIndependentColegioCursos().subscribe({
       next: (response) => {
-        console.log('Respuesta completa del servicio:', response);
         if (response && response.data) {
           this.independentColegioCursos = response.data;
-          console.log('Colegios_cursos independientes cargados:', this.independentColegioCursos);
-          console.log('Cantidad de elementos:', this.independentColegioCursos.length);
-        } else {
-          console.log('No hay datos en la respuesta');
+     } else {
           this.independentColegioCursos = [];
         }
       },
@@ -287,7 +282,7 @@ export class IndependentProgramPayment implements OnInit {
       } else {
         coursePrice = selectedColegioCurso.precio_curso || '0';
       }
-      
+
       const inscriptionPrice = selectedColegioCurso.precio_inscripcion || 0;
 
       // Guardar el precio como número para que el pipe funcione correctamente
@@ -328,9 +323,9 @@ export class IndependentProgramPayment implements OnInit {
 
   convertCoursePrices(coursePrice: string, inscriptionPrice: number): void {
     // Solo convertir precio de inscripción si hay inscripción y el curso está en moneda extranjera
-    const selectedColegioCurso = this.paymentForm.get('selectedCourse')?.value ? 
+    const selectedColegioCurso = this.paymentForm.get('selectedCourse')?.value ?
       this.independentColegioCursos.find(cc => cc.id === this.paymentForm.get('selectedCourse')?.value) : null;
-    
+
     const courseCurrency = selectedColegioCurso?.moneda || selectedColegioCurso?.curso_id?.moneda;
 
     // El precio del curso nunca se convierte, siempre se muestra el original
@@ -339,7 +334,7 @@ export class IndependentProgramPayment implements OnInit {
     // Solo convertir precio de inscripción si hay inscripción y está en moneda extranjera
     if (this.hasInscription && inscriptionPrice > 0 && (courseCurrency === 'EUR' || courseCurrency === 'USD')) {
       const rate = courseCurrency === 'EUR' ? this.eurToCop : this.usdToCop;
-      
+
       if (rate) {
         this.selectedInscriptionConvertedCop = Math.round(inscriptionPrice * rate);
       } else {
@@ -515,7 +510,7 @@ export class IndependentProgramPayment implements OnInit {
     } else {
       coursePriceRaw = selectedColegioCurso?.precio_curso;
     }
-    
+
     const coursePriceNumber: number = typeof coursePriceRaw === 'string'
       ? parseFloat(coursePriceRaw)
       : Number(coursePriceRaw || 0);
