@@ -75,6 +75,7 @@ export class ColegioCursosComponent implements OnInit {
       moneda: [''], // Campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: [null],
+      fecha_finalizacion_precio_especial: [null], // Nuevo campo para fecha de finalización del precio especial
       programa_independiente: [false], // Checkbox para programa independiente
       courseSearchTerm: [null],
       schoolSearchTerm: [null]
@@ -230,6 +231,7 @@ export class ColegioCursosComponent implements OnInit {
         // Nuevo: precio especial para Directus
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
         precio_especial: precioEspecialValor,
+        fecha_finalizacion_precio_especial: this.fechaFinalizacionForm.get('fecha_finalizacion_precio_especial')?.value,
         // Nueva fecha de creación
         fecha_creacion: fechaCreacionISO,
         // Enviar el valor del checkbox programa_independiente
@@ -322,5 +324,25 @@ export class ColegioCursosComponent implements OnInit {
     Object.values(this.fechaFinalizacionForm.controls).forEach(control => {
       control.markAsTouched();
     });
+  }
+
+  // Método para obtener la fecha actual en formato ISO
+  getCurrentDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  // Método para calcular días entre dos fechas
+  calculateDaysBetweenDates(startDate: string, endDate: string): number {
+    if (!startDate || !endDate) return 0;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    
+    const timeDifference = end.getTime() - start.getTime();
+    const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+    
+    return daysDifference > 0 ? daysDifference : 0;
   }
 }

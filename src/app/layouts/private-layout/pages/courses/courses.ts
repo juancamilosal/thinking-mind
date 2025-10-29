@@ -74,13 +74,15 @@ export class Courses {
 
   initEditForm(): void {
     this.editFechaForm = this.fb.group({
-      fecha_finalizacion: ['', Validators.required],
-      precio_curso: [''],
-      programa_con_inscripcion: [false], // Nuevo checkbox
-      precio_inscripcion: [''], // Campo opcional
-      moneda: [''], // Campo para moneda
+      fecha_finalizacion: [null, Validators.required],
+      precio_curso: [null, Validators.required],
+      programa_con_inscripcion: [false],
+      precio_inscripcion: [null],
+      moneda: ['CLP'],
       precio_especial_lanzamiento: [false],
-      precio_especial: ['']
+      precio_especial: [null],
+      fecha_finalizacion_precio_especial: [null],
+      programa_independiente: [false]
     });
 
     // Validación dinámica del precio especial
@@ -386,7 +388,9 @@ export class Courses {
       precio_especial_lanzamiento: this.isTruthyFlag(colegioCurso.tiene_precio_especial),
       precio_especial: (colegioCurso.precio_especial !== null && colegioCurso.precio_especial !== undefined)
         ? this.formatPrice(colegioCurso.precio_especial)
-        : ''
+        : '',
+      fecha_finalizacion_precio_especial: colegioCurso.fecha_finalizacion_precio_especial || null,
+      programa_independiente: colegioCurso.programa_independiente || false
     });
     this.showEditModal = true;
   }
@@ -468,8 +472,11 @@ export class Courses {
         } else {
           updatedData.precio_especial = null;
         }
+        // Agregar fecha de finalización del precio especial
+        updatedData.fecha_finalizacion_precio_especial = this.editFechaForm.get('fecha_finalizacion_precio_especial')?.value;
       } else {
         updatedData.precio_especial = null;
+        updatedData.fecha_finalizacion_precio_especial = null;
       }
 
       this.colegioCursosService.updateColegioCurso(this.selectedColegioCurso.id, updatedData).subscribe({
@@ -614,5 +621,20 @@ export class Courses {
     const d = new Date(value);
     if (isNaN(d.getTime())) return String(value);
     return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: '2-digit' });
+  }
+
+  // Método para calcular días entre dos fechas
+  calculateDaysBetweenDates(startDate: string, endDate: string): number {
+    if (!startDate || !endDate) return 0;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    
+    const timeDifference = end.getTime() - start.getTime();
+    const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+    
+    return daysDifference > 0 ? daysDifference : 0;
   }
 }

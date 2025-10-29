@@ -472,26 +472,57 @@
             </label>
 
             @if (editFechaForm.get('precio_especial_lanzamiento')?.value) {
-              <div class="space-y-2">
-                <label for="precio_especial" class="block text-sm font-semibold text-green-700">Precio Especial</label>
-                <input
-                  type="text"
-                  id="precio_especial"
-                  formControlName="precio_especial"
-                  (input)="onEditSpecialPriceInput($event)"
-                  placeholder="Ej: 900"
-                  inputmode="numeric"
-                  class="w-full px-4 py-3 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
-                  [class.border-red-500]="editFechaForm.get('precio_especial')?.invalid && editFechaForm.get('precio_especial')?.touched"
-                  [class.border-green-500]="editFechaForm.get('precio_especial')?.valid && editFechaForm.get('precio_especial')?.touched">
-                @if (editFechaForm.get('precio_especial')?.touched && editFechaForm.get('precio_especial')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                    El precio especial es requerido
-                  </p>
-                }
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <label for="precio_especial" class="block text-sm font-semibold text-green-700">Precio Especial</label>
+                  <input
+                    type="text"
+                    id="precio_especial"
+                    formControlName="precio_especial"
+                    (input)="onEditSpecialPriceInput($event)"
+                    placeholder="Ej: 900"
+                    inputmode="numeric"
+                    class="w-full px-4 py-3 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                    [class.border-red-500]="editFechaForm.get('precio_especial')?.invalid && editFechaForm.get('precio_especial')?.touched"
+                    [class.border-green-500]="editFechaForm.get('precio_especial')?.valid && editFechaForm.get('precio_especial')?.touched">
+                  @if (editFechaForm.get('precio_especial')?.touched && editFechaForm.get('precio_especial')?.errors?.['required']) {
+                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      El precio especial es requerido
+                    </p>
+                  }
+                </div>
+                
+                <!-- Nuevo campo: El precio finaliza en -->
+                 <div class="space-y-2">
+                   <label for="fecha_finalizacion_precio_especial_edit" class="block text-sm font-semibold text-green-700">El precio finaliza en:</label>
+                   <input
+                     type="date"
+                     id="fecha_finalizacion_precio_especial_edit"
+                     formControlName="fecha_finalizacion_precio_especial"
+                     class="w-full px-4 py-3 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                     [class.border-red-500]="editFechaForm.get('fecha_finalizacion_precio_especial')?.invalid && editFechaForm.get('fecha_finalizacion_precio_especial')?.touched"
+                     [class.border-green-500]="editFechaForm.get('fecha_finalizacion_precio_especial')?.valid && editFechaForm.get('fecha_finalizacion_precio_especial')?.touched">
+                   @if (editFechaForm.get('fecha_finalizacion_precio_especial')?.touched && editFechaForm.get('fecha_finalizacion_precio_especial')?.errors?.['required']) {
+                     <p class="text-red-500 text-sm mt-2 flex items-center">
+                       <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                       </svg>
+                       La fecha de finalización del precio especial es requerida
+                     </p>
+                   }
+                 </div>
+                 
+                 <!-- Mostrar días calculados -->
+                 @if (editFechaForm.get('fecha_finalizacion_precio_especial')?.value && selectedColegioCurso?.fecha_creacion) {
+                   <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                     <p class="text-sm text-green-700">
+                       <strong>Duración del precio especial:</strong> {{ calculateDaysBetweenDates(selectedColegioCurso.fecha_creacion, editFechaForm.get('fecha_finalizacion_precio_especial')?.value) }} días
+                     </p>
+                   </div>
+                 }
               </div>
             }
           </div>
