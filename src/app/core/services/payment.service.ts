@@ -76,7 +76,7 @@ export class PaymentService {
   }
 
   getDirectusUrl(): string {
-    return 'http://directus-s0so4ogscgwg8s0g8k4s0ooo.77.37.96.16.sslip.io';
+    return 'https://api.appthinkingmind.com';
   }
 
   getPaymentByTransactionNumber(transactionNumber: string): Observable<ResponseAPI<PaymentModel[]>> {

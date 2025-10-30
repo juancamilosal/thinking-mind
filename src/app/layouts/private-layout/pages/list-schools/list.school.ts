@@ -588,6 +588,23 @@ export class ListSchool implements OnInit {
     }
   }
 
+  // Método para formatear fecha de inscripción
+  formatInscriptionDate(account: AccountReceivable): string {
+    if (account.fecha_inscripcion) {
+      try {
+        const date = new Date(account.fecha_inscripcion);
+        return date.toLocaleDateString('es-CO', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      } catch (error) {
+        return 'Fecha no válida';
+      }
+    }
+    return 'No disponible';
+  }
+
   ngOnDestroy(): void {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
