@@ -14,7 +14,7 @@ export class SchoolWithPaymentsService {
 
   constructor(private http: HttpClient) {}
 
-  getAccountsWithPayments(page: number = 1, limit: number = 1000, searchTerm?: string, yearFilter?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+  getAccountsWithPayments(page: number = 1, limit: number = 1000, searchTerm?: string, yearFilter?: string, sortByInscription: boolean = false): Observable<ResponseAPI<AccountReceivable[]>> {
     const params: any = {
       fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,cliente_id.*,curso_id.*,pagos.*',
       page: page.toString(),
@@ -25,6 +25,11 @@ export class SchoolWithPaymentsService {
       // Filtrar solo cuentas de curso (no inscripción)
       'filter[es_inscripcion][_eq]': 'FALSE'
     };
+
+    // Ordenamiento por fecha de inscripción (más reciente primero)
+    if (sortByInscription) {
+      params['sort'] = '-fecha_inscripcion';
+    }
 
     // Si hay filtro por año, usar rangos de fecha con formato ISO
     if (yearFilter && yearFilter.trim()) {
@@ -53,7 +58,7 @@ export class SchoolWithPaymentsService {
   }
 
 
-  getAccountsWithPaymentsBySchool(schoolId: string, page: number = 1, limit: number = 1000, yearFilter?: string): Observable<ResponseAPI<AccountReceivable[]>> {
+  getAccountsWithPaymentsBySchool(schoolId: string, page: number = 1, limit: number = 1000, yearFilter?: string, sortByInscription: boolean = false): Observable<ResponseAPI<AccountReceivable[]>> {
     const params: any = {
       fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,cliente_id.*,curso_id.*,pagos.*',
       'filter[estudiante_id][colegio_id][_eq]': schoolId,
@@ -65,6 +70,11 @@ export class SchoolWithPaymentsService {
       limit: limit.toString(),
       meta: 'total_count,filter_count'
     };
+
+    // Ordenamiento por fecha de inscripción (más reciente primero)
+    if (sortByInscription) {
+      params['sort'] = '-fecha_inscripcion';
+    }
 
     // Si hay filtro por año, usar rangos de fecha con formato ISO
     if (yearFilter && yearFilter.trim()) {
