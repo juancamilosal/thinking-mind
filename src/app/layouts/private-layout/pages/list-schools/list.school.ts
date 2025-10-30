@@ -38,6 +38,7 @@ export class ListSchool implements OnInit {
   selectedClient: Client | null = null;
   searchTerm = '';
   yearFilter = ''; // Nueva propiedad para el filtro por año
+  sortByInscriptionDate = false; // Nueva propiedad para el filtro de ordenamiento por fecha de inscripción
   currentDate = new Date();
   isRector = false;
   isSales = false;
@@ -118,7 +119,7 @@ export class ListSchool implements OnInit {
 
   private loadAllAccountsReceivable(): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos
-    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter).subscribe({
+    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter, this.sortByInscriptionDate).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -136,7 +137,7 @@ export class ListSchool implements OnInit {
 
   private loadAccountsForSchool(schoolId: string): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
-    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter).subscribe({
+    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -261,6 +262,11 @@ export class ListSchool implements OnInit {
     }, 500); // Esperar 500ms después de que el usuario deje de escribir
   }
 
+  onSortByInscriptionChange(): void {
+    this.sortByInscriptionDate = !this.sortByInscriptionDate;
+    this.searchSchools();
+  }
+
   searchSchools(): void {
     this.isLoading = true;
 
@@ -269,7 +275,7 @@ export class ListSchool implements OnInit {
       const userData = sessionStorage.getItem('current_user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, this.yearFilter).subscribe({
+        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, this.yearFilter, this.sortByInscriptionDate).subscribe({
           next: (response) => {
             this.processAccountsReceivable(response.data);
             this.isLoading = false;
@@ -285,7 +291,7 @@ export class ListSchool implements OnInit {
       }
     } else {
       // Para otros usuarios, buscar en todas las cuentas con pagos
-      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter).subscribe({
+      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter, this.sortByInscriptionDate).subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
           this.isLoading = false;
