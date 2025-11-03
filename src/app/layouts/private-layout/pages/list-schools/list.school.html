@@ -137,6 +137,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rectores</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiantes</th>
+              <th class="flex justify-center items-center px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">Descargar Excel</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -163,11 +164,14 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="h-4 bg-gray-200 rounded w-16"></div>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-8 bg-gray-200 rounded w-36"></div>
+                </td>
               </tr>
             }
           } @else if (schoolsWithAccounts.length === 0) {
             <tr>
-              <td colspan="6" class="px-6 py-12 text-center">
+              <td colspan="7" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center justify-center space-y-3">
                   <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -227,12 +231,20 @@
                     </span>
                   }
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                  <button
+                    type="button"
+                    aria-label="Descargar Excel"
+                    (click)="$event.stopPropagation(); downloadSchoolExcel(schoolData)">
+                    <img src="assets/icons/excel.png" alt="Excel" class="h-5" />
+                  </button>
+                </td>
               </tr>
 
               <!-- Fila expandible con estudiantes -->
               @if (schoolData.showStudents) {
                 <tr>
-                  <td colspan="6" class="px-0 py-0">
+                  <td colspan="7" class="px-0 py-0">
                     <div class="bg-gray-50 border-t border-gray-200">
                       @if (schoolData.isLoadingStudents) {
                         <div class="flex justify-center items-center py-8">
@@ -373,12 +385,13 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rectores</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cursos</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Descargar Excel</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             @if (schoolsWithCourses.length === 0) {
               <tr>
-                <td colspan="6" class="px-6 py-12 text-center">
+                <td colspan="7" class="px-6 py-12 text-center">
                   <div class="flex flex-col items-center justify-center space-y-3">
                     <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -446,12 +459,20 @@
                     </span>
                   }
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                  <button
+                    type="button"
+                    aria-label="Descargar Excel"
+                    (click)="$event.stopPropagation(); downloadSchoolExcelById(schoolData.school.id)">
+                    <img src="assets/icons/excel.png" alt="Excel" class="h-5" />
+                  </button>
+                </td>
               </tr>
 
               <!-- Fila expandible con cursos -->
               @if (schoolData.isExpanded) {
                 <tr>
-                  <td colspan="6" class="px-0 py-0">
+                  <td colspan="7" class="px-0 py-0">
                     <div class="bg-gray-50 border-t border-gray-200">
                       <div class="p-6">
                         <div class="flex items-center justify-between mb-4">

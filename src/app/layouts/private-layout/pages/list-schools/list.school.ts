@@ -617,4 +617,117 @@ export class ListSchool implements OnInit {
     }
   }
 
+  // Descargar Excel por colegio (vista de listado completo)
+  async downloadSchoolExcel(schoolData: SchoolWithAccounts): Promise<void> {
+    try {
+      // Importación robusta de ExcelJS
+      let ExcelJS: any;
+      let Workbook: any;
+
+      try {
+        ExcelJS = await import('exceljs');
+        if (ExcelJS.default && ExcelJS.default.Workbook) {
+          Workbook = ExcelJS.default.Workbook;
+        } else if (ExcelJS.Workbook) {
+          Workbook = ExcelJS.Workbook;
+        } else {
+          throw new Error('No se pudo encontrar la clase Workbook');
+        }
+      } catch (importError) {
+        console.error('Error al importar ExcelJS:', importError);
+        throw new Error('No se pudo cargar la librería ExcelJS');
+      }
+
+      const workbook = new Workbook();
+      const sheetName = this.sanitizeFileName(schoolData.school.nombre || 'Colegio');
+      const worksheet = workbook.addWorksheet(sheetName.substring(0, 31)); // Límite de nombre de hoja en Excel
+
+      // Encabezados (removidos: Colegio, Ciudad, Dirección, Rector(es), SKU y Monto)
+      worksheet.columns = [
+        { header: 'Estudiante', key: 'estudiante', width: 28 },
+        { header: 'Tipo Documento', key: 'tipo_documento', width: 16 },
+        { header: 'Número Documento', key: 'numero_documento', width: 18 },
+        { header: 'Grado', key: 'grado', width: 12 },
+        { header: 'Curso', key: 'curso', width: 24 },
+        { header: 'Estado de la Cuenta', key: 'estado', width: 18 },
+        { header: 'Fecha de Inscripción', key: 'fecha_inscripcion', width: 20 },
+        { header: 'Pin Entregado', key: 'pin_entregado', width: 16 },
+      ];
+
+      // Datos por cuenta/estudiante
+      for (const account of schoolData.accounts) {
+        const student = (account.estudiante_id && typeof account.estudiante_id === 'object') ? account.estudiante_id : null;
+        const course = (account.curso_id && typeof account.curso_id === 'object') ? account.curso_id : null;
+
+        worksheet.addRow({
+          estudiante: student ? `${student.nombre || ''} ${student.apellido || ''}` : 'Sin estudiante',
+          tipo_documento: student?.tipo_documento || '',
+          numero_documento: student?.numero_documento || '',
+          grado: student?.grado || '',
+          curso: course ? (this.isWillGoCourse(course.nombre) ? 'WILL - GO' : (course.nombre || '')) : 'Sin curso',
+          estado: account.estado || '',
+          fecha_inscripcion: account.fecha_inscripcion ? new Date(account.fecha_inscripcion).toLocaleDateString('es-CO') : '',
+          pin_entregado: account.pin_entregado || 'NO',
+        });
+      }
+
+      // Estilo simple para encabezados
+      worksheet.getRow(1).font = { bold: true };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a');
+      const schoolName = this.sanitizeFileName(schoolData.school.nombre || 'Colegio');
+      const datePart = this.getColombiaDateStamp();
+      const fileName = `Inscripciones ${schoolName} - ${datePart}.xlsx`;
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err: any) {
+      this.notificationService.showError('Error al descargar', err?.message || 'No se pudo generar el Excel');
+    }
+  }
+
+  // Descargar Excel por colegio desde la vista por cursos (por ID)
+  async downloadSchoolExcelById(schoolId: string): Promise<void> {
+    const schoolAccData = this.schoolsWithAccounts.find(s => s.school.id === schoolId);
+    if (!schoolAccData) {
+      this.notificationService.showError('No disponible', 'No se encontró información de cuentas para este colegio');
+      return;
+    }
+    await this.downloadSchoolExcel(schoolAccData);
+  }
+
+  private sanitizeFileName(name: string): string {
+    // Permite espacios, elimina paréntesis y caracteres no válidos para nombres de archivo
+    return (name || '')
+      .replace(/[()]/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/[^a-zA-Z0-9_\- ]/g, '')
+      .trim()
+      .substring(0, 100);
+  }
+
+  private getColombiaDateStamp(): string {
+    const formatter = new Intl.DateTimeFormat('es-CO', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const parts = formatter.formatToParts(new Date());
+    const map: Record<string, string> = {};
+    for (const p of parts) {
+      map[p.type] = p.value;
+    }
+    // Formato seguro para nombre de archivo
+    return `${map['year']}-${map['month']}-${map['day']}`;
+  }
+
+  private formatRectores(school: School): string {
+    if (!school.rector_id || school.rector_id.length === 0) return '';
+    return school.rector_id.map(r => `${(r as any).first_name || ''} ${(r as any).last_name || ''}`.trim()).join(', ');
+  }
+
 }
