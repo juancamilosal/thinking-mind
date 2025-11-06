@@ -166,6 +166,12 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     });
   }
 
+  // Acceso seguro al objeto de cliente/acudiente para el detalle
+  get client(): any {
+    const c: any = this.account?.cliente_id as any;
+    return c && typeof c === 'object' ? c : null;
+  }
+
   toggleAddPaymentForm() {
     this.showAddPaymentForm = !this.showAddPaymentForm;
     if (!this.showAddPaymentForm) {
