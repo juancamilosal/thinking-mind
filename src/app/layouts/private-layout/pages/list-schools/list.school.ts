@@ -656,6 +656,7 @@ export class ListSchool implements OnInit {
         { header: 'Tipo Documento Acudiente', key: 'tipo_documento_acudiente', width: 20 },
         { header: 'Número Documento Acudiente', key: 'numero_documento_acudiente', width: 22 },
         { header: 'Celular Acudiente', key: 'celular_acudiente', width: 18 },
+        { header: 'Email Acudiente', key: 'email_acudiente', width: 28 },
       ];
 
       // Datos por cuenta/estudiante
@@ -677,6 +678,7 @@ export class ListSchool implements OnInit {
           tipo_documento_acudiente: client?.tipo_documento || '',
           numero_documento_acudiente: client?.numero_documento || '',
           celular_acudiente: client?.celular || '',
+          email_acudiente: client?.email || '',
         });
       }
 
