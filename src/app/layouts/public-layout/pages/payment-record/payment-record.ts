@@ -1056,7 +1056,7 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         // Actualizar imagen del curso seleccionado si existe
         this.selectedCourseImageUrl = selectedCourse.img_url || null;
-        
+
         // Obtener precio de inscripción y moneda desde colegios_cursos
         const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
         let inscriptionNumber: number = 0;
@@ -1069,7 +1069,7 @@ export class PaymentRecord implements OnInit {
             const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
             return ccSchoolId && ccSchoolId === schoolId;
           });
-          
+
           if (schoolCourseMatch) {
             // Obtener precio del curso (especial o regular)
             if (schoolCourseMatch.tiene_precio_especial === "TRUE" && schoolCourseMatch.precio_especial) {
@@ -1077,7 +1077,7 @@ export class PaymentRecord implements OnInit {
             } else {
               coursePrice = Number(schoolCourseMatch.precio_curso) || 0;
             }
-            
+
             // Obtener precio de inscripción y moneda
             inscriptionNumber = Number(schoolCourseMatch.precio_inscripcion) || 0;
             courseCurrency = schoolCourseMatch.moneda || null;
@@ -1302,6 +1302,12 @@ export class PaymentRecord implements OnInit {
   }
 
   confirmAndSubmit(): void {
+    // Validate for duplicate enrollment before submitting
+    if (this.isDuplicateEnrollment()) {
+      this.showDuplicateEnrollmentNotification();
+      return;
+    }
+
     this.isSubmitting = true;
     this.createAccountRecord();
     this.showAddCourseForm = false;
@@ -1333,7 +1339,7 @@ export class PaymentRecord implements OnInit {
 
     if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
       // Buscar el colegio específico en colegios_cursos
-      const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) => 
+      const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) =>
         cc.colegio_id && (cc.colegio_id.id === schoolId || cc.colegio_id === schoolId)
       );
 
@@ -1455,6 +1461,91 @@ export class PaymentRecord implements OnInit {
   onNotificationClose() {
     this.showNotification = false;
     this.notificationData = null;
+  }
+
+  // Validation method to check for duplicate enrollment
+  private isDuplicateEnrollment(): boolean {
+    if (!this.clientData?.cuentas_cobrar) {
+      return false;
+    }
+
+    const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
+    const selectedSchoolId = this.paymentForm.get('studentSchool')?.value;
+    const selectedStudentDoc = this.paymentForm.get('studentDocumentNumber')?.value;
+    const currentYear = new Date().getFullYear();
+
+    // Check if there's already an account for the same course, school, and student in the current year
+    return this.clientData.cuentas_cobrar.some((cuenta: any) => {
+      // Check course ID (cuenta.curso_id is an object with id property)
+      const accountCourseId = cuenta.curso_id?.id || cuenta.curso_id;
+      if (accountCourseId !== selectedCourseId) {
+        return false;
+      }
+
+      // Check if it's the same student (by document number)
+      const accountStudentDoc = cuenta.estudiante_id?.numero_documento;
+      if (accountStudentDoc !== selectedStudentDoc) {
+        return false;
+      }
+
+      // Get school ID from student data or account
+      let accountSchoolId = null;
+      if (cuenta.estudiante_id && typeof cuenta.estudiante_id === 'object') {
+        // Try different possible school field names
+        accountSchoolId = cuenta.estudiante_id.colegio_id || cuenta.estudiante_id.colegio;
+        // If colegio_id is an object, get its id
+        if (typeof accountSchoolId === 'object' && accountSchoolId?.id) {
+          accountSchoolId = accountSchoolId.id;
+        }
+      }
+
+      // Check if school IDs match
+      if (accountSchoolId !== selectedSchoolId) {
+        return false;
+      }
+
+      // Check if it's from the current year
+      // Try different possible date fields
+      const possibleDates = [
+        cuenta.created_at,
+        cuenta.fecha_creacion,
+        cuenta.date_created,
+        cuenta.fecha_finalizacion
+      ];
+
+      let accountYear = null;
+
+      for (const dateField of possibleDates) {
+        if (dateField) {
+          try {
+            const accountDate = new Date(dateField);
+            if (!isNaN(accountDate.getTime())) {
+              accountYear = accountDate.getFullYear();
+              break;
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+
+      // If we couldn't parse any date, consider it a duplicate for safety
+      if (accountYear === null || isNaN(accountYear)) {
+        return true;
+      }
+
+      return accountYear === currentYear;
+    });
+  }
+
+  // Show notification for duplicate enrollment
+  private showDuplicateEnrollmentNotification(): void {
+    this.notificationData = {
+      title: 'Estudiante ya registrado',
+      message: 'El estudiante ya está registrado en este programa para el año actual.',
+      type: 'error'
+    };
+    this.showNotification = true;
   }
 
   onPayCourse(courseData: any): void {
