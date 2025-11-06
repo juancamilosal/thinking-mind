@@ -652,12 +652,17 @@ export class ListSchool implements OnInit {
         { header: 'Estado de la Cuenta', key: 'estado', width: 18 },
         { header: 'Fecha de Inscripción', key: 'fecha_inscripcion', width: 20 },
         { header: 'Pin Entregado', key: 'pin_entregado', width: 16 },
+        { header: 'Acudiente', key: 'acudiente', width: 28 },
+        { header: 'Tipo Documento Acudiente', key: 'tipo_documento_acudiente', width: 20 },
+        { header: 'Número Documento Acudiente', key: 'numero_documento_acudiente', width: 22 },
+        { header: 'Celular Acudiente', key: 'celular_acudiente', width: 18 },
       ];
 
       // Datos por cuenta/estudiante
       for (const account of schoolData.accounts) {
         const student = (account.estudiante_id && typeof account.estudiante_id === 'object') ? account.estudiante_id : null;
         const course = (account.curso_id && typeof account.curso_id === 'object') ? account.curso_id : null;
+        const client = (account.cliente_id && typeof account.cliente_id === 'object') ? account.cliente_id : null;
 
         worksheet.addRow({
           estudiante: student ? `${student.nombre || ''} ${student.apellido || ''}` : 'Sin estudiante',
@@ -668,6 +673,10 @@ export class ListSchool implements OnInit {
           estado: account.estado || '',
           fecha_inscripcion: account.fecha_inscripcion ? new Date(account.fecha_inscripcion).toLocaleDateString('es-CO') : '',
           pin_entregado: account.pin_entregado || 'NO',
+          acudiente: client ? `${client.nombre || ''} ${client.apellido || ''}`.trim() : '',
+          tipo_documento_acudiente: client?.tipo_documento || '',
+          numero_documento_acudiente: client?.numero_documento || '',
+          celular_acudiente: client?.celular || '',
         });
       }
 
