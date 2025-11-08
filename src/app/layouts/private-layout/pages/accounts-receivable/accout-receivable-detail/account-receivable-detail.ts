@@ -22,6 +22,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   ngOnInit() {
     if (this.account) {
       this.initializeDiscountValues();
+      // Check and update account status after initializing values
+      setTimeout(() => this.checkAndUpdateAccountStatus(), 0);
     }
     // Inicializar explícitamente las propiedades del componente
     this.initializeComponentProperties();
@@ -32,6 +34,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (changes['account'] && changes['account'].currentValue) {
       this.initializeDiscountValues();
       this.initializeComponentProperties();
+      // Check and update account status after initializing values
+      setTimeout(() => this.checkAndUpdateAccountStatus(), 0);
       this.cdr.detectChanges();
     }
   }
@@ -61,13 +65,13 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   PAYMENT_METHOD = PAYMENT_METHOD;
   isEditingAmount = false;
   editedAmount: number = 0;
-  
+
   // Propiedades para el descuento
   discountPercentage: number = 0;
   originalAmount: number = 0;
   finalAmount: number = 0;
   isEditingDiscount = false;
-  
+
   // Propiedades para el modal de devolución
   showRefundModal = false;
   refundAmount: number = 0;
@@ -108,12 +112,12 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     const totalPagado = this.payments
       .filter(payment => payment.estado === 'PAGADO')
       .reduce((total, payment) => total + payment.valor, 0);
-    
+
     // Restar las devoluciones del total pagado
     const totalDevoluciones = this.payments
       .filter(payment => payment.estado === 'DEVOLUCION')
       .reduce((total, payment) => total + payment.valor, 0);
-    
+
     return totalPagado - totalDevoluciones;
   }
 
@@ -127,21 +131,23 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         const valorNeto = payment.valor_neto ? parseFloat(payment.valor_neto.toString()) : 0;
         return total + valorNeto;
       }, 0);
-    
+
     // Restar las devoluciones ya realizadas
     const totalDevoluciones = this.payments
       .filter(payment => payment.estado === 'DEVOLUCION')
       .reduce((total, payment) => total + payment.valor, 0);
-    
+
     return totalValorNeto - totalDevoluciones;
   }
 
   getRemainingBalance(): number {
-    return this.account.monto - this.getTotalPaid();
+    // Use finalAmount (discounted amount) instead of account.monto (original amount)
+    return this.finalAmount - this.getTotalPaid();
   }
 
   getPaymentProgress(): number {
-    return (this.getTotalPaid() / this.account.monto) * 100;
+    // Use finalAmount (discounted amount) for progress calculation
+    return (this.getTotalPaid() / this.finalAmount) * 100;
   }
 
   getPaymentProgressCapped(): number {
@@ -217,7 +223,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.paymentService.createPayment(payment).subscribe({
       next: ():void => {
         const newSaldo = this.account.saldo + this.newPaymentAmount;
-        const newEstado = newSaldo >= this.account.monto ? 'PAGADA' : 'PENDIENTE';
+        // Use finalAmount instead of account.monto for status determination
+        const newEstado = newSaldo >= this.finalAmount ? 'PAGADA' : 'PENDIENTE';
         this.accountService.updateAccountReceivable(this.account.id, {
           saldo: newSaldo,
           estado: newEstado
@@ -258,6 +265,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
           this.account.estado = response.data.estado; // Actualizar también el estado
           this.account.pagos = response.data.pagos || [];
           this.cdr.detectChanges();
+          // Check and update account status after refreshing data
+          this.checkAndUpdateAccountStatus();
         }
       },
       error: (error) => {
@@ -384,7 +393,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
             // Lógica correcta para eliminar pagos según su estado
             let newSaldo;
             let newEstado;
-            
+
             if (payment.estado === 'DEVOLUCION') {
               // Si es una devolución, actualizar el saldo: saldo pendiente + valor de la devolución eliminada
               newSaldo = this.account.saldo + payment.valor;
@@ -453,11 +462,12 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   saveAmount() {
     if (this.editedAmount > 0) {
-      // Determinar el nuevo estado basado en la comparación monto vs saldo
+      // Determinar el nuevo estado basado en la comparación finalAmount vs saldo
       let newEstado = '';
       const currentSaldo = this.account.saldo || 0;
 
-      if (currentSaldo >= this.editedAmount) {
+      // Use finalAmount for status determination instead of editedAmount
+      if (currentSaldo >= this.finalAmount) {
         newEstado = 'PAGADA';
       } else {
         newEstado = 'PENDIENTE';
@@ -484,9 +494,9 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   canDeletePayment(payment: PaymentModel): boolean {
     const allowedMethods = ['EFECTIVO', 'TRANSFERENCIA', 'DATÁFONO', 'CHEQUE'];
-    
+
     // Permitir eliminar si es un método permitido O si es TRANSACCIÓN y estado DEVOLUCION
-    return allowedMethods.includes(payment.metodo_pago) || 
+    return allowedMethods.includes(payment.metodo_pago) ||
            (payment.metodo_pago === 'TRANSACCIÓN' && payment.estado === 'DEVOLUCION');
   }
 
@@ -526,22 +536,22 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
     const numericValue = parseInt(value) || 0;
     const maxRefundAvailable = this.getMaxRefundAvailable();
-    
+
     // Validar que no exceda el máximo disponible
     if (numericValue > maxRefundAvailable) {
       this.refundAmount = maxRefundAvailable;
       this.refundAmountDisplay = this.formatNumberWithDots(maxRefundAvailable);
       event.target.value = this.refundAmountDisplay;
-      
+
       // Mostrar notificación de advertencia
-      this.notificationService.showWarning('Advertencia', 
+      this.notificationService.showWarning('Advertencia',
         `El monto no puede ser mayor al máximo disponible: ${this.formatCurrency(maxRefundAvailable)}`);
       return;
     }
-    
+
     this.refundAmount = numericValue;
     this.refundAmountDisplay = this.formatNumberWithDots(numericValue);
-    
+
     // Actualizar el valor del input
     event.target.value = this.refundAmountDisplay;
   }
@@ -554,10 +564,10 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   onPaymentAmountChange(event: any): void {
     const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
     const numericValue = parseInt(value) || 0;
-    
+
     this.newPaymentAmount = numericValue;
     this.newPaymentAmountDisplay = this.formatNumberWithDots(numericValue);
-    
+
     // Actualizar el valor del input
     event.target.value = this.newPaymentAmountDisplay;
   }
@@ -635,7 +645,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
               this.isProcessingRefund = false;
               this.notificationService.showSuccess('Devolución Procesada', 'La devolución ha sido procesada exitosamente');
               this.closeRefundModal();
-              
+
               // Recargar los datos de la cuenta
               this.refreshAccountData();
             },
@@ -663,7 +673,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
           this.isProcessingRefund = false;
           this.notificationService.showSuccess('Devolución Procesada', 'La devolución ha sido procesada exitosamente');
           this.closeRefundModal();
-          
+
           // Recargar los datos de la cuenta
           this.refreshAccountData();
         },
@@ -678,16 +688,17 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   // Métodos para manejar el descuento
   initializeDiscountValues(): void {
     if (!this.account) return;
-    
-    this.originalAmount = this.account.monto;
+
     this.discountPercentage = this.account.descuento || 0;
-    
-    // Si hay un descuento guardado, calcular el monto final basado en el descuento
+
     if (this.discountPercentage > 0) {
-      // El monto actual ya incluye el descuento, así que necesitamos calcular el monto original
-      this.originalAmount = this.account.monto / (1 - this.discountPercentage / 100);
-      this.finalAmount = this.account.monto;
+      // Cuando hay descuento, account.monto es el monto ORIGINAL (sin descuento)
+      // El monto final es el original menos el descuento aplicado
+      this.originalAmount = this.account.monto;
+      this.finalAmount = this.originalAmount * (1 - this.discountPercentage / 100);
     } else {
+      // Si no hay descuento, el monto actual es tanto el original como el final
+      this.originalAmount = this.account.monto;
       this.finalAmount = this.account.monto;
     }
   }
@@ -703,7 +714,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.isProcessingRefund = false;
     this.isEditingAmount = false;
     this.isEditingDiscount = false;
-    
+
     // Inicializar propiedades de formulario
     this.newPaymentAmountDisplay = '';
     this.refundAmountDisplay = '';
@@ -711,11 +722,11 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.deletingPaymentId = null;
     this.newPaymentImage = null;
     this.refundFile = null;
-    
+
     // Forzar detección de cambios múltiple
     this.cdr.markForCheck();
     this.cdr.detectChanges();
-    
+
     // Usar setTimeout para asegurar que los cambios se apliquen en el próximo ciclo
     setTimeout(() => {
       this.cdr.detectChanges();
@@ -735,6 +746,11 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   saveDiscount(): void {
     if (this.discountPercentage >= 0 && this.discountPercentage <= 100) {
+      // Si es la primera vez aplicando descuento, usar el monto actual como original
+      if (this.account.descuento === 0 || !this.account.descuento) {
+        this.originalAmount = this.account.monto;
+      }
+
       this.calculateDiscount();
       this.updateAccountAmount();
       this.isEditingDiscount = false;
@@ -757,20 +773,52 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   private updateAccountAmount(): void {
     const updateData = {
-      monto: this.finalAmount,
+      monto: this.originalAmount,  // Guardar el monto original, no el final
       descuento: this.discountPercentage
     };
 
     this.accountService.updateAccountReceivable(this.account.id, updateData).subscribe({
       next: (response) => {
-        this.account.monto = this.finalAmount;
+        this.account.monto = this.originalAmount;  // Actualizar con el monto original
         this.account.descuento = this.discountPercentage;
         this.notificationService.showSuccess('Éxito', 'Descuento aplicado correctamente');
+        // Check and update account status after applying discount
+        this.checkAndUpdateAccountStatus();
         this.llamarFuncion.emit();
       },
       error: (error) => {
         console.error('Error al aplicar descuento:', error);
         this.notificationService.showError('Error', 'Error al aplicar el descuento');
+      }
+    });
+  }
+
+  // Method to check and update account status based on final amount vs total paid
+  private checkAndUpdateAccountStatus(): void {
+    const totalPaid = this.getTotalPaid();
+    const shouldBePaid = totalPaid >= this.finalAmount;
+
+    // Only update if the status needs to change
+    if (shouldBePaid && this.account.estado === 'PENDIENTE') {
+      this.updateAccountStatus('PAGADA');
+    } else if (!shouldBePaid && this.account.estado === 'PAGADA') {
+      this.updateAccountStatus('PENDIENTE');
+    }
+  }
+
+  // Method to update account status in the database
+  private updateAccountStatus(newStatus: 'PAGADA' | 'PENDIENTE'): void {
+    this.accountService.updateAccountReceivable(this.account.id, {
+      estado: newStatus
+    }).subscribe({
+      next: (response) => {
+        this.account.estado = newStatus;
+        console.log(`Account status updated to: ${newStatus}`);
+        // Emit event to refresh parent component
+        this.llamarFuncion.emit();
+      },
+      error: (error) => {
+        console.error('Error updating account status:', error);
       }
     });
   }
