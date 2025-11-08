@@ -22,6 +22,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   ngOnInit() {
     if (this.account) {
       this.initializeDiscountValues();
+      // Check and update account status after initializing values
+      setTimeout(() => this.checkAndUpdateAccountStatus(), 0);
     }
     // Inicializar explícitamente las propiedades del componente
     this.initializeComponentProperties();
@@ -32,6 +34,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (changes['account'] && changes['account'].currentValue) {
       this.initializeDiscountValues();
       this.initializeComponentProperties();
+      // Check and update account status after initializing values
+      setTimeout(() => this.checkAndUpdateAccountStatus(), 0);
       this.cdr.detectChanges();
     }
   }
@@ -261,6 +265,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
           this.account.estado = response.data.estado; // Actualizar también el estado
           this.account.pagos = response.data.pagos || [];
           this.cdr.detectChanges();
+          // Check and update account status after refreshing data
+          this.checkAndUpdateAccountStatus();
         }
       },
       error: (error) => {
@@ -776,11 +782,43 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         this.account.monto = this.originalAmount;  // Actualizar con el monto original
         this.account.descuento = this.discountPercentage;
         this.notificationService.showSuccess('Éxito', 'Descuento aplicado correctamente');
+        // Check and update account status after applying discount
+        this.checkAndUpdateAccountStatus();
         this.llamarFuncion.emit();
       },
       error: (error) => {
         console.error('Error al aplicar descuento:', error);
         this.notificationService.showError('Error', 'Error al aplicar el descuento');
+      }
+    });
+  }
+
+  // Method to check and update account status based on final amount vs total paid
+  private checkAndUpdateAccountStatus(): void {
+    const totalPaid = this.getTotalPaid();
+    const shouldBePaid = totalPaid >= this.finalAmount;
+
+    // Only update if the status needs to change
+    if (shouldBePaid && this.account.estado === 'PENDIENTE') {
+      this.updateAccountStatus('PAGADA');
+    } else if (!shouldBePaid && this.account.estado === 'PAGADA') {
+      this.updateAccountStatus('PENDIENTE');
+    }
+  }
+
+  // Method to update account status in the database
+  private updateAccountStatus(newStatus: 'PAGADA' | 'PENDIENTE'): void {
+    this.accountService.updateAccountReceivable(this.account.id, {
+      estado: newStatus
+    }).subscribe({
+      next: (response) => {
+        this.account.estado = newStatus;
+        console.log(`Account status updated to: ${newStatus}`);
+        // Emit event to refresh parent component
+        this.llamarFuncion.emit();
+      },
+      error: (error) => {
+        console.error('Error updating account status:', error);
       }
     });
   }
