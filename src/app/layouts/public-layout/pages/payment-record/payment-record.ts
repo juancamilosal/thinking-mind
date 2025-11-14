@@ -109,6 +109,16 @@ export class PaymentRecord implements OnInit {
     this.loadCourses();
     this.loadExchangeRates();
     this.loadGrupos(); // Cargar los grupos del servicio
+
+    const independentCtrl = this.paymentForm.get('independentInstitution');
+    independentCtrl?.valueChanges.subscribe((val: any) => {
+      if (typeof val === 'string') {
+        const capitalized = this.capitalizeText(val || '');
+        if (capitalized !== val) {
+          independentCtrl.setValue(capitalized, { emitEvent: false });
+        }
+      }
+    });
   }
 
   // Al enfocar el input de colegio en mobile, desplazar la pantalla para que quede al inicio

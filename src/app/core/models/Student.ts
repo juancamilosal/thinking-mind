@@ -12,6 +12,8 @@ export class Student {
   acudiente?: Client | string;
   colegio_id?: School;
   curso_id?: Course;
+  colegio_independiente?: string;
+  programa_independiente?: boolean;
   accountInfo?: any;
 }
 
