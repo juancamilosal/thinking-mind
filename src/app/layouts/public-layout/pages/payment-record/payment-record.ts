@@ -42,6 +42,7 @@ export class PaymentRecord implements OnInit {
   schools: School[] = [];
   filteredSchools: School[] = [];
   grado: Grupo[] = []; // Nueva propiedad para los grupos
+  readonly openProgramSchoolId = 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7';
 
   isLoadingCourses = false;
   isLoadingSchools = false;
@@ -181,6 +182,8 @@ export class PaymentRecord implements OnInit {
       studentGrupo: ['', [Validators.required]],
       studentSchool: ['', [Validators.required]],
       schoolSearchTerm: [''],
+      isOpenProgram: [false],
+      independentInstitution: [''],
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
@@ -990,6 +993,23 @@ export class PaymentRecord implements OnInit {
     this.cdRef.detectChanges();
   }
 
+  onOpenProgramChange(event: any): void {
+    const checked = !!event.target.checked;
+    this.paymentForm.get('isOpenProgram')?.setValue(checked);
+    const indCtrl = this.paymentForm.get('independentInstitution');
+    if (checked) {
+      this.paymentForm.get('studentSchool')?.setValue(this.openProgramSchoolId);
+      this.paymentForm.get('studentSchool')?.updateValueAndValidity();
+      this.paymentForm.get('schoolSearchTerm')?.setValue('');
+      this.filteredSchools = [];
+      this.isSchoolSelected = true;
+      this.updateSelectedCoursePriceIfAny();
+    } else {
+      this.paymentForm.get('independentInstitution')?.setValue('');
+      this.clearSchoolSearch();
+    }
+  }
+
   onCourseChange(courseId: string): void {
     if (courseId) {
       // Bloquear selección si la Información del Estudiante no está completa
@@ -1208,8 +1228,16 @@ export class PaymentRecord implements OnInit {
     ];
     return keys.every(key => {
       const control = this.paymentForm.get(key);
-      return !!control && control.valid && !!control.value;
+      if (!control) return false;
+      const value = control.value;
+      const hasValue = typeof value === 'string' ? value.trim().length > 0 : !!value;
+      return control.valid && hasValue;
     });
+  }
+
+  onIndependentInstitutionChange(event: any): void {
+    const value = this.capitalizeText((event?.target?.value || '').toString().trim());
+    this.paymentForm.get('independentInstitution')?.setValue(value, {emitEvent: false});
   }
 
   private showValidationNotification(requiredCourse: string): void {
@@ -1323,6 +1351,12 @@ export class PaymentRecord implements OnInit {
     const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
     const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
 
+    const isOpen = !!this.paymentForm.get('isOpenProgram')?.value;
+    const currentSchoolId = this.paymentForm.get('studentSchool')?.value;
+    if (isOpen && (!currentSchoolId || currentSchoolId.trim() === '')) {
+      this.paymentForm.get('studentSchool')?.setValue(this.openProgramSchoolId);
+    }
+
     // Buscar el curso seleccionado para obtener su array completo de colegios_cursos
     const selectedCourse = this.courses.find(course => course.id === selectedCourseId);
     let colegiosCursos = [];
@@ -1373,7 +1407,8 @@ export class PaymentRecord implements OnInit {
         nombre: this.paymentForm.get('studentFirstName')?.value,
         apellido: this.paymentForm.get('studentLastName')?.value,
         grado: this.getCombinedGrado(),
-        colegio: this.paymentForm.get('studentSchool')?.value,
+        colegio: isOpen ? this.openProgramSchoolId : this.paymentForm.get('studentSchool')?.value,
+        colegio_independiente: this.paymentForm.get('independentInstitution')?.value,
       },
       curso_id: selectedCourseId,
       colegios_cursos: colegiosCursos,

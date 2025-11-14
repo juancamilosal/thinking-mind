@@ -102,10 +102,17 @@
               {{ (!paymentForm.get('studentGrupo')?.value || paymentForm.get('studentGrupo')?.value === null || paymentForm.get('studentGrupo')?.value === 'null' || paymentForm.get('studentGrupo')?.value.trim() === '') ? 'No Aplica' : paymentForm.get('studentGrupo')?.value }}
             </span>
           </div>
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
-            <span class="font-medium text-gray-600">Colegio:</span>
-            <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ schoolSearchTerm || 'No seleccionado' }}</span>
-          </div>
+          @if (!isOpenProgram) {
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
+              <span class="font-medium text-gray-600">Colegio:</span>
+              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ schoolSearchTerm || 'No seleccionado' }}</span>
+            </div>
+          } @else {
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2">
+              <span class="font-medium text-gray-600">Institución Educativa:</span>
+              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ independentInstitution || 'No especificada' }}</span>
+            </div>
+          }
         </div>
       </div>
     </div>

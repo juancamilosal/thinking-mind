@@ -680,86 +680,109 @@
                 }
               </div>
 
-              <!-- Colegio del Estudiante -->
-              <div class="space-y-3 md:col-span-2 relative">
-                <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
-                <div class="relative">
+              <!-- Programa Abierto -->
+              <div class="space-y-2 md:col-span-2">
+                <div class="flex items-center gap-3">
                   <input
-                    type="text"
-                    id="studentSchool"
-                    formControlName="schoolSearchTerm"
-                    (input)="onSchoolSearch($event)"
-                    #schoolSearchInput
-                    (focus)="onSchoolSearchFocus()"
-                    placeholder="Buscar colegio..."
-                    class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
-                    autocomplete="off">
-                  @if (paymentForm.get('schoolSearchTerm')?.value) {
-                    <button
-                      type="button"
-                      (click)="clearSchoolSearch()"
-                      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                    </button>
-                  }
+                    type="checkbox"
+                    id="isOpenProgram"
+                    formControlName="isOpenProgram"
+                    (change)="onOpenProgramChange($event)"
+                    class="h-5 w-5 rounded border-green-300 text-green-600 focus:ring-green-500" />
+                  <label for="isOpenProgram" class="text-sm font-semibold text-green-700">¿Es Programa Abierto?</label>
                 </div>
+                <p class="text-xs text-gray-600">Este campo es opcional.</p>
+              </div>
 
-                <!-- Lista desplegable de resultados -->
-                @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
-                  <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                       (touchstart)="onResultsTouchStart()" (mousedown)="onResultsTouchStart()"
-                       [ngStyle]="{ '-webkit-overflow-scrolling': 'touch' }">
-                    <!-- Indicador de carga -->
-                    @if (isLoadingSchools) {
-                      <div class="px-4 py-3 text-center">
-                        <div class="flex items-center justify-center space-x-2">
-                          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                          <span class="text-green-600 text-sm">Buscando colegios...</span>
-                        </div>
-                      </div>
+              @if (!paymentForm.get('isOpenProgram')?.value) {
+                <!-- Colegio del Estudiante -->
+                <div class="space-y-3 md:col-span-2 relative">
+                  <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
+                  <div class="relative">
+                    <input
+                      type="text"
+                      id="studentSchool"
+                      formControlName="schoolSearchTerm"
+                      (input)="onSchoolSearch($event)"
+                      #schoolSearchInput
+                      (focus)="onSchoolSearchFocus()"
+                      placeholder="Buscar colegio..."
+                      class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                      autocomplete="off">
+                    @if (paymentForm.get('schoolSearchTerm')?.value) {
+                      <button
+                        type="button"
+                        (click)="clearSchoolSearch()"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      </button>
                     }
+                  </div>
 
-                    <!-- Resultados de búsqueda -->
-                    @if (!isLoadingSchools) {
-                      @for (school of filteredSchools; track school.id) {
-                        <div
-                          (click)="selectSchool(school); $event.stopPropagation()"
-                          class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                          <span class="text-green-800">{{ school.nombre }}</span>
-                          @if (school.ciudad) {
-                            <span class="text-gray-500 text-sm ml-2">- {{ school.ciudad }}</span>
-                          }
+                  @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
+                    <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                         (touchstart)="onResultsTouchStart()" (mousedown)="onResultsTouchStart()"
+                         [ngStyle]="{ '-webkit-overflow-scrolling': 'touch' }">
+                      @if (isLoadingSchools) {
+                        <div class="px-4 py-3 text-center">
+                          <div class="flex items-center justify-center space-x-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                            <span class="text-green-600 text-sm">Buscando colegios...</span>
+                          </div>
                         </div>
                       }
-                    }
-                  </div>
-                }
 
-                <!-- Mensaje cuando no hay resultados -->
-                @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
-                  <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg">
-                    <div class="px-4 py-3 text-gray-500 text-center">
-                      <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                      </svg>
-                      Colegio no encontrado
+                      @if (!isLoadingSchools) {
+                        @for (school of filteredSchools; track school.id) {
+                          <div
+                            (click)="selectSchool(school); $event.stopPropagation()"
+                            class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                            <span class="text-green-800">{{ school.nombre }}</span>
+                            @if (school.ciudad) {
+                              <span class="text-gray-500 text-sm ml-2">- {{ school.ciudad }}</span>
+                            }
+                          </div>
+                        }
+                      }
                     </div>
-                  </div>
-                }
+                  }
 
-                @if (paymentForm.get('studentSchool')?.touched && paymentForm.get('studentSchool')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El colegio es obligatorio
-                  </p>
-                }
-              </div>
+                  @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
+                    <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg">
+                      <div class="px-4 py-3 text-gray-500 text-center">
+                        <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Colegio no encontrado
+                      </div>
+                    </div>
+                  }
+
+                  @if (paymentForm.get('studentSchool')?.touched && paymentForm.get('studentSchool')?.errors?.['required']) {
+                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clip-rule="evenodd"/>
+                      </svg>
+                      El colegio es obligatorio
+                    </p>
+                  }
+                </div>
+              } @else {
+                <!-- Institución Educativa -->
+                <div class="space-y-3 md:col-span-2">
+                  <label for="independentInstitution" class="block text-sm font-semibold text-green-700">Institución Educativa</label>
+                  <input
+                    type="text"
+                    id="independentInstitution"
+                    formControlName="independentInstitution"
+                    placeholder="Ingrese la institución educativa"
+                    class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                </div>
+              }
             </div>
           </div>
           }
