@@ -16,6 +16,8 @@ export class PaymentConfirmationComponent {
   @Input() courses: Course[] = [];
   @Input() isSubmitting: boolean = false;
   @Input() schoolSearchTerm: string = '';
+  @Input() isOpenProgram: boolean = false;
+  @Input() independentInstitution: string = '';
   @Input() selectedInscriptionConvertedCop: number | null = null;
   @Input() selectedCourseImageUrl: string | null = null;
 

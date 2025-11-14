@@ -271,6 +271,9 @@
                                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
                                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inscripción</th>
                                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grado</th>
+                                  @if (isIndependentProgramSchool(schoolData.school)) {
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+                                  }
                                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
                                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado de la Cuenta</th>
                                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pin Entregado</th>
@@ -310,6 +313,11 @@
                                     <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                       <span class="font-medium">{{ studentWithAccount.student.grado || 'Grado no especificado' }}</span>
                                     </td>
+                                    @if (isIndependentProgramSchool(schoolData.school)) {
+                                      <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
+                                        <span class="font-medium">{{ studentWithAccount.student.colegio_independiente || 'Colegio no especificado' }}</span>
+                                      </td>
+                                    }
                                     <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                       @if (studentWithAccount.account.curso_id && typeof studentWithAccount.account.curso_id === 'object') {
                                         <div class="flex flex-col">
@@ -526,16 +534,19 @@
                                 <div class="p-4">
                                   <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200">
-                                      <thead class="bg-gray-100">
-                                        <tr>
-                                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
-                                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inscripción</th>
-                                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grado</th>
-                                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado de la Cuenta</th>
-                                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pin Entregado</th>
-                                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                                        </tr>
-                                      </thead>
+                                          <thead class="bg-gray-100">
+                                            <tr>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inscripción</th>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grado</th>
+                                              @if (isIndependentProgramSchool(schoolData.school)) {
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+                                              }
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado de la Cuenta</th>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pin Entregado</th>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                            </tr>
+                                          </thead>
                                       <tbody class="bg-white divide-y divide-gray-200">
                                         @for(studentWithAccount of courseData.students; track $index) {
                                           @let isNewToday = isStudentNewToday(studentWithAccount.student);
@@ -569,6 +580,11 @@
                                             <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                               <span class="font-medium">{{ studentWithAccount.student.grado || 'Grado no especificado' }}</span>
                                             </td>
+                                            @if (isIndependentProgramSchool(schoolData.school)) {
+                                              <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
+                                                <span class="font-medium">{{ studentWithAccount.student.colegio_independiente || 'Colegio no especificado' }}</span>
+                                              </td>
+                                            }
                                             <td class="px-6 py-4 text-xs text-gray-700 whitespace-nowrap">
                                               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                     [class]="studentWithAccount.account.estado === 'PENDIENTE' ? 'bg-orange-100 text-orange-800' : (studentWithAccount.account.estado === 'PAGADO' || studentWithAccount.account.estado === 'PAGADA') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">

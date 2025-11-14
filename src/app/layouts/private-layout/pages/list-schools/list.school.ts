@@ -90,6 +90,11 @@ export class ListSchool implements OnInit {
     );
   }
 
+  isIndependentProgramSchool(school: School): boolean {
+    const name = (school?.nombre || '').toLowerCase().trim();
+    return name === 'programa independiente' || name.includes('programa independiente');
+  }
+
   ngOnInit(): void {
     this.loadSchools();
   }
