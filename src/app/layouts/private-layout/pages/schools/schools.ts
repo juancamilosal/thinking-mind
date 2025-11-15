@@ -22,7 +22,7 @@ export class Schools implements OnInit {
   searchTerm = '';
   private searchTimeout: any;
   selectedSchool: School | null = null;
-  
+
   // Propiedades de paginación
   currentPage = 1;
   itemsPerPage = 10;
@@ -163,10 +163,10 @@ export class Schools implements OnInit {
 
   loadSchoolsPage(): void {
     this.isLoading = true;
-    const searchMethod = this.searchTerm.trim() ? 
+    const searchMethod = this.searchTerm.trim() ?
       this.schoolServices.searchSchool(this.searchTerm, this.currentPage, this.itemsPerPage) :
       this.schoolServices.getAllSchools(this.currentPage, this.itemsPerPage);
-    
+
     searchMethod.subscribe({
       next: (response) => {
         this.schools = response.data;
@@ -175,7 +175,6 @@ export class Schools implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar los colegios:', error);
         this.isLoading = false;
       }
     });
@@ -186,15 +185,15 @@ export class Schools implements OnInit {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 

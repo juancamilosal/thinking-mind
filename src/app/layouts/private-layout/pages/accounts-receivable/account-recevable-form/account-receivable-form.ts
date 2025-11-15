@@ -27,7 +27,7 @@ export class AccountReceivableFormComponent implements OnInit {
   studentId: string = '';
   courses: Course[] = [];
   isLoadingCourses = false;
-  
+
   constructor(
     private fb: FormBuilder,
     private clientService: ClientService,
@@ -241,7 +241,6 @@ export class AccountReceivableFormComponent implements OnInit {
           this.isSubmitting = false;
         },
         error: (error) => {
-          console.error('Error creating account:', error);
           this.notificationService.showError('Error', 'Error al crear la cuenta por cobrar');
           this.isSubmitting = false;
         }

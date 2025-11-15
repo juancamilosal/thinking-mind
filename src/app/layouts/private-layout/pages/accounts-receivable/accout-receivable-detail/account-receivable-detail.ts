@@ -284,7 +284,6 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         }
       },
       error: (error) => {
-        console.error('Error al obtener los pagos:', error);
       }
     });
   }
@@ -422,7 +421,6 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
                 this.deletingPaymentId = null;
               },
               error: (updateError) => {
-                console.error('Error al actualizar el saldo:', updateError);
                 this.notificationService.showError(
                   'Error al actualizar saldo',
                   'El pago fue eliminado pero no se pudo actualizar el saldo. Por favor, actualiza la página.'
@@ -436,7 +434,6 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
             });
           },
           error: (error) => {
-            console.error('Error al eliminar pago:', error);
             this.notificationService.showError(
               'Error al eliminar',
               'No se pudo eliminar el pago. Inténtalo nuevamente.'
@@ -787,7 +784,6 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         this.llamarFuncion.emit();
       },
       error: (error) => {
-        console.error('Error al aplicar descuento:', error);
         this.notificationService.showError('Error', 'Error al aplicar el descuento');
       }
     });
@@ -813,12 +809,9 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     }).subscribe({
       next: (response) => {
         this.account.estado = newStatus;
-        console.log(`Account status updated to: ${newStatus}`);
-        // Emit event to refresh parent component
         this.llamarFuncion.emit();
       },
       error: (error) => {
-        console.error('Error updating account status:', error);
       }
     });
   }

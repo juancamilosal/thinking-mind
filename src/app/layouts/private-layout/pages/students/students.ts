@@ -20,7 +20,7 @@ export class Students implements OnInit {
   selectedStudent: Student | null = null;
   isLoading = false;
   searchTerm = '';
-  
+
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
@@ -29,7 +29,7 @@ export class Students implements OnInit {
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
   private searchTimeout: any;
-  
+
   constructor(private fb: FormBuilder, private studentService: StudentService) {
   }
 
@@ -54,10 +54,10 @@ export class Students implements OnInit {
 
   loadStudentsPage(): void {
     this.isLoading = true;
-    const searchMethod = this.searchTerm.trim() ? 
+    const searchMethod = this.searchTerm.trim() ?
       this.studentService.searchStudent(this.searchTerm, this.currentPage, this.itemsPerPage) :
       this.studentService.getAllStudents(this.currentPage, this.itemsPerPage);
-    
+
     searchMethod.subscribe({
       next: (response) => {
         this.students = response.data;
@@ -66,7 +66,6 @@ export class Students implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar los estudiantes:', error);
         this.isLoading = false;
       }
     });
@@ -77,11 +76,11 @@ export class Students implements OnInit {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }

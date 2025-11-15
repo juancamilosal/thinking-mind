@@ -61,7 +61,6 @@ export class Presupuesto implements OnInit {
              this.loadBudgets();
            },
           error: (error) => {
-            console.error('Error al crear presupuesto:', error);
             this.notificationService.showError('Error', 'No se pudo crear el presupuesto');
           }
         });
@@ -82,7 +81,6 @@ export class Presupuesto implements OnInit {
         this.loadingBudgets = false;
       },
       error: (error) => {
-        console.error('Error al cargar presupuestos:', error);
         this.notificationService.showError('Error', 'No se pudieron cargar los presupuestos');
         this.loadingBudgets = false;
       }

@@ -55,11 +55,6 @@ export class BudgetReport implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('=== ERROR AL CARGAR INFORME ===');
-        console.error('Error completo:', error);
-        console.error('Status:', error.status);
-        console.error('Message:', error.message);
-        console.error('Error body:', error.error);
         this.notificationService.showError('Error', 'No se pudo cargar el informe del presupuesto');
         this.loading = false;
       }

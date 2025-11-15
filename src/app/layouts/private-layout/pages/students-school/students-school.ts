@@ -346,7 +346,6 @@ export class StudentsSchool implements OnInit, OnDestroy {
         next: (response) => {
         },
         error: (error) => {
-          console.error('Error updating pin_entregado:', error);
           account.pin_entregado = isChecked ? 'NO' : 'SI';
           this.notificationService.showError('Error', 'No se pudo actualizar el estado del PIN');
         }

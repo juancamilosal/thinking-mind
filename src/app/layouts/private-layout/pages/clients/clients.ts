@@ -22,7 +22,7 @@ export class Clients implements OnInit {
   isLoading = false;
   searchTerm = '';
   private searchTimeout: any;
-  
+
   // Pagination properties
   currentPage = 1;
   itemsPerPage = 10;
@@ -30,9 +30,9 @@ export class Clients implements OnInit {
   totalPages = 0;
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
-  
+
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     private clientServices: ClientService,
     private notificationService: NotificationService
   ) {}
@@ -58,10 +58,10 @@ export class Clients implements OnInit {
 
   loadClientsPage(): void {
     this.isLoading = true;
-    const searchMethod = this.searchTerm.trim() ? 
+    const searchMethod = this.searchTerm.trim() ?
       this.clientServices.searchClient(this.searchTerm, this.currentPage, this.itemsPerPage) :
       this.clientServices.getAllClients(this.currentPage, this.itemsPerPage);
-    
+
     searchMethod.subscribe({
       next: (response) => {
         this.clients = response.data;
@@ -70,7 +70,6 @@ export class Clients implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar los clientes:', error);
         this.isLoading = false;
       }
     });
@@ -81,11 +80,11 @@ export class Clients implements OnInit {
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }

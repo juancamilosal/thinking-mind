@@ -75,7 +75,7 @@ export class FormUser implements OnInit {
 
   private updateSchoolValidation(): void {
     const schoolControl = this.userForm.get('schoolId');
-    if (this.selectedRole?.name?.toLowerCase().includes('rector') || 
+    if (this.selectedRole?.name?.toLowerCase().includes('rector') ||
         this.selectedRole?.name?.toLowerCase().includes('director')) {
       schoolControl?.setValidators([Validators.required]);
     } else {
@@ -115,7 +115,6 @@ export class FormUser implements OnInit {
         this.isLoadingSchools = false;
       },
       error: (error) => {
-        console.error('Error searching schools:', error);
         this.filteredSchools = [];
         this.isLoadingSchools = false;
       }
@@ -144,17 +143,17 @@ export class FormUser implements OnInit {
     return (control: AbstractControl): { [key: string]: any } | null => {
       const password = control.get('password');
       const confirmPassword = control.get('confirmPassword');
-      
+
       // Solo validar si ambos campos tienen valores
       if (password?.value && confirmPassword?.value && password.value !== confirmPassword.value) {
         return { passwordMismatch: true };
       }
-      
+
       // En modo edición, si solo uno de los campos tiene valor, es un error
       if (this.editMode && ((password?.value && !confirmPassword?.value) || (!password?.value && confirmPassword?.value))) {
         return { passwordMismatch: true };
       }
-      
+
       return null;
     };
   }
@@ -162,12 +161,12 @@ export class FormUser implements OnInit {
   private passwordMatchValidator(control: AbstractControl): { [key: string]: any } | null {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
-    
+
     // Solo validar si ambos campos tienen valores
     if (password?.value && confirmPassword?.value && password.value !== confirmPassword.value) {
       return { passwordMismatch: true };
     }
-    
+
     return null;
   }
 
@@ -231,7 +230,6 @@ export class FormUser implements OnInit {
         this.isSubmitting = false;
       },
       error: (error) => {
-        console.error('Error creating user:', error);
         this.errorMessage = `Error al crear el ${this.selectedRole?.name?.toLowerCase() || 'usuario'}. Por favor, intente nuevamente.`;
         this.notificationService.showError('Error', this.errorMessage);
         this.isSubmitting = false;
@@ -292,7 +290,6 @@ export class FormUser implements OnInit {
         this.isSubmitting = false;
       },
       error: (error) => {
-        console.error('Error updating user:', error);
         this.errorMessage = `Error al actualizar el ${this.selectedRole?.name?.toLowerCase() || 'usuario'}. Por favor, intente nuevamente.`;
         this.notificationService.showError('Error', this.errorMessage);
         this.isSubmitting = false;
@@ -317,7 +314,6 @@ export class FormUser implements OnInit {
           this.showDeleteModal = false;
         },
         error: (error) => {
-          console.error('Error deleting user:', error);
           this.notificationService.showError('Error', `Error al eliminar el ${this.selectedRole?.name?.toLowerCase() || 'usuario'}`);
           this.isDeleting = false;
         }
@@ -357,7 +353,7 @@ export class FormUser implements OnInit {
 
   private capitalizeWords(text: string): string {
     if (!text) return text;
-    
+
     return text
       .toLowerCase()
       .split(' ')

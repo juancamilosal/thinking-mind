@@ -392,7 +392,6 @@ export class PaymentRecord implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error loading school name:', error);
         }
       });
     }
@@ -407,7 +406,6 @@ export class PaymentRecord implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error loading school name from colegio field:', error);
         }
       });
     }
@@ -493,8 +491,6 @@ export class PaymentRecord implements OnInit {
       this.selectedAccountData = courseData;
       this.selectedAccountPayments = account.pagos || [];
       this.showPaymentsModal = true;
-    } else {
-      console.error('No se encontró la cuenta para mostrar los pagos');
     }
   }
 
@@ -506,7 +502,6 @@ export class PaymentRecord implements OnInit {
 
   printPaymentHistory(): void {
     if (!this.selectedAccountData || !this.selectedAccountPayments) {
-      console.error('No hay datos para imprimir');
       return;
     }
 
@@ -879,7 +874,6 @@ export class PaymentRecord implements OnInit {
         this.isLoadingCourses = false;
       },
       error: (error) => {
-        console.error('Error loading courses:', error);
         this.isLoadingCourses = false;
       }
     });
@@ -946,7 +940,6 @@ export class PaymentRecord implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error searching schools:', error);
         this.filteredSchools = [];
         this.isLoadingSchools = false;
         this.cdRef.detectChanges();

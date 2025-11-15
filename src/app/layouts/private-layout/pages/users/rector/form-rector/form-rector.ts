@@ -93,7 +93,7 @@ export class FormRector implements OnInit, OnChanges {
       // Obtener el ID y nombre del colegio
       let schoolId = '';
       let schoolName = '';
-      
+
       if (this.rectorData.colegio_id) {
         if (typeof this.rectorData.colegio_id === 'object') {
           schoolId = this.rectorData.colegio_id.id || '';
@@ -328,7 +328,6 @@ export class FormRector implements OnInit, OnChanges {
         this.isLoadingSchools = false;
       },
       error: (error) => {
-        console.error('Error searching schools:', error);
         this.filteredSchools = [];
         this.isLoadingSchools = false;
       }

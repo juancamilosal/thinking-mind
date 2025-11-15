@@ -59,7 +59,6 @@ export class PaymentStatusComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar información del pago:', error);
         this.error = 'Error al cargar la información del pago';
         this.loading = false;
       }

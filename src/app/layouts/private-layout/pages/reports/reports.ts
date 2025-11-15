@@ -171,8 +171,6 @@ export class Reports {
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
     },
       error: (error) => {
-        console.error('Error loading payments:', error);
-
         if (error.status === 401) {
           this.notificationService.showError(
             'Sesión expirada',
@@ -368,14 +366,12 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
         // this.checkAndNotifyNewStudentsSimple();
 
       } else {
-        console.error('Estructura de datos inesperada:', response);
         this.schoolsData = [];
       }
 
       this.loadingSchoolsData = false;
     },
     error: (error) => {
-      console.error('Error al cargar datos de colegios:', error);
       this.notificationService.showError('Error al cargar los datos de inscripciones');
       this.loadingSchoolsData = false;
     }
@@ -584,7 +580,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
           throw new Error('No se pudo encontrar la clase Workbook');
         }
       } catch (importError) {
-        console.error('Error al importar ExcelJS:', importError);
         throw new Error('No se pudo cargar la librería ExcelJS');
       }
 
@@ -815,7 +810,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       window.URL.revokeObjectURL(url);
 
     } catch (error) {
-      console.error('Error al generar Excel:', error);
     }
   }
 
@@ -837,7 +831,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
           throw new Error('No se pudo encontrar la clase Workbook');
         }
       } catch (importError) {
-        console.error('Error al importar ExcelJS:', importError);
         throw new Error('No se pudo cargar la librería ExcelJS');
       }
 
@@ -989,7 +982,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
   window.URL.revokeObjectURL(url);
 
   } catch (error) {
-      console.error('Error al generar Excel:', error);
     }
   }
 
@@ -1042,7 +1034,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
         this.totalValorNeto = response.data?.total_valor_neto || 0;
       },
       error: (error) => {
-        console.error('Error al cargar el total del servicio:', error);
         this.totalFromService = 0;
         this.totalValorBruto = 0;
         this.totalComisionWompi = 0;
@@ -1066,7 +1057,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
     // Si es un objeto Date o string de fecha, convertirlo
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) {
-      console.error('Fecha inválida:', date);
       return '';
     }
 
@@ -1194,7 +1184,6 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
       doc.save(fileName);
 
     } catch (error) {
-      console.error('Error al generar PDF:', error);
     }
   }
 }

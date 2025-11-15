@@ -130,7 +130,6 @@ export class ListSchool implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar cuentas:', error);
         this.notificationService.showError(
           'Error',
           'Error al cargar las cuentas por cobrar'
@@ -204,17 +203,9 @@ export class ListSchool implements OnInit {
               schoolData.accounts.push(account);
               schoolData.accountsCount++;
               schoolData.totalAmount += account.monto;
-            } else {
-              console.warn('⚠️ colegio_id no es un objeto:', student.colegio_id);
             }
-          } else {
-            console.warn('⚠️ Estudiante sin colegio_id:', student);
           }
-        } else {
-          console.warn('⚠️ estudiante_id no es un objeto:', account.estudiante_id);
         }
-      } else {
-        console.warn('⚠️ Cuenta sin estudiante_id:', account);
       }
     });
     // Calcular total de estudiantes incluyendo duplicados (por cada cuenta/curso)
@@ -478,7 +469,6 @@ export class ListSchool implements OnInit {
           'Error al actualizar PIN',
           'No se pudo actualizar el estado del PIN. Intente nuevamente.'
         );
-        console.error('Error updating pin_entregado:', error);
       }
     });
   }
@@ -639,7 +629,6 @@ export class ListSchool implements OnInit {
           throw new Error('No se pudo encontrar la clase Workbook');
         }
       } catch (importError) {
-        console.error('Error al importar ExcelJS:', importError);
         throw new Error('No se pudo cargar la librería ExcelJS');
       }
 

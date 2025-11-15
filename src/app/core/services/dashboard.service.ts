@@ -32,7 +32,6 @@ export class DashboardService {
         const user = JSON.parse(currentUser);
         userId = user.id || '';
       } catch (error) {
-        console.error('Error parsing current_user from sessionStorage:', error);
       }
     }
 
@@ -52,7 +51,6 @@ export class DashboardService {
         const user = JSON.parse(currentUser);
         userId = user.id || '';
       } catch (error) {
-        console.error('Error parsing current_user from sessionStorage:', error);
       }
     }
 

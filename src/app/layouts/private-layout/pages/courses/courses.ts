@@ -37,7 +37,7 @@ export class Courses {
   isLoading = false;
   searchTerm = '';
   private searchTimeout: any;
-  
+
   // Historial de Programas
   showHistory = false;
   isLoadingHistorial = false;
@@ -50,7 +50,7 @@ export class Courses {
   historialTotalPages: number = 1;
   // Utility method for Math functions in template
   Math = Math;
-  
+
   // Variables para el modal de edición de fecha
   showEditModal = false;
   selectedColegioCurso: any = null;
@@ -132,7 +132,6 @@ export class Courses {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading courses:', error);
         this.isLoading = false;
       }
     });
@@ -239,7 +238,6 @@ export class Courses {
         }
       },
       error: (error) => {
-        console.error('Error cargando historial_programas:', error);
         this.notificationService.showError('Error', 'No se pudo cargar el historial de programas');
       },
       complete: () => {
@@ -335,8 +333,6 @@ export class Courses {
         }
       },
       error: (error) => {
-        console.error('Error loading courses:', error);
-        // Manejar error
       },
       complete: () => {
         this.isLoading = false;
@@ -409,7 +405,6 @@ export class Courses {
             this.searchCourse(); // Recargar los cursos
           },
           error: (error) => {
-            console.error('Error al eliminar colegio_curso:', error);
             this.notificationService.showError(
               'Error',
               'Error al eliminar el colegio del programa'
@@ -489,7 +484,6 @@ export class Courses {
           this.searchCourse(); // Recargar los cursos
         },
         error: (error) => {
-          console.error('Error al actualizar fecha:', error);
           this.notificationService.showError(
             'Error',
             'Error al actualizar la fecha de finalización'
@@ -595,7 +589,6 @@ export class Courses {
             this.searchCourse(); // Recargar la lista de cursos
           },
           error: (error) => {
-            console.error('Error al eliminar el programa:', error);
             this.notificationService.showError(
               'Error al eliminar',
               'No se pudo eliminar el programa. Inténtalo nuevamente.'
@@ -626,15 +619,15 @@ export class Courses {
   // Método para calcular días entre dos fechas
   calculateDaysBetweenDates(startDate: string, endDate: string): number {
     if (!startDate || !endDate) return 0;
-    
+
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-    
+
     const timeDifference = end.getTime() - start.getTime();
     const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
-    
+
     return daysDifference > 0 ? daysDifference : 0;
   }
 }

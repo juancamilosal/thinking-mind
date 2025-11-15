@@ -210,7 +210,6 @@ export class IndependentProgramPayment implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error cargando colegios_cursos independientes:', error);
         this.showNotificationMessage('Error', 'No se pudieron cargar los colegios_cursos independientes', 'error');
         this.independentColegioCursos = [];
       }
@@ -255,7 +254,6 @@ export class IndependentProgramPayment implements OnInit {
         this.usdToCop = rate; // Asignar también a la propiedad para mostrar tasa
       },
       error: (error) => {
-        console.error('Error loading USD rate:', error);
       }
     });
 
@@ -265,7 +263,6 @@ export class IndependentProgramPayment implements OnInit {
         this.eurToCop = rate; // Asignar también a la propiedad para mostrar tasa
       },
       error: (error) => {
-        console.error('Error loading EUR rate:', error);
       }
     });
   }
@@ -396,7 +393,6 @@ export class IndependentProgramPayment implements OnInit {
         this.isSearchingClient = false;
       },
       error: (error) => {
-        console.error('Error searching client:', error);
         this.isSearchingClient = false;
       }
     });
@@ -417,7 +413,6 @@ export class IndependentProgramPayment implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error searching student:', error);
       }
     });
   }
@@ -574,9 +569,6 @@ export class IndependentProgramPayment implements OnInit {
         this.showConfirmation = false;
       },
       error: (error) => {
-        console.error('Error creating account receivable:', error);
-
-        // Verificar si el error contiene un mensaje específico del servidor
         let errorMessage = 'Error al crear el registro del programa independiente';
         if (error?.error?.message) {
           // Si el mensaje contiene información sobre programa/colegio, usar mensaje genérico
@@ -660,7 +652,6 @@ export class IndependentProgramPayment implements OnInit {
       },
       error: (error) => {
         this.isSearchingClient = false;
-        console.error('Error searching client payment:', error);
         this.showRegisteredCourses = false;
         this.clientData = null;
         this.registeredCourses = [];
@@ -811,7 +802,6 @@ export class IndependentProgramPayment implements OnInit {
       this.coursePayments = account.pagos || [];
       this.showPaymentsModal = true;
     } else {
-      console.error('No se encontró la cuenta para mostrar los pagos');
       this.coursePayments = [];
       this.showPaymentsModal = true;
     }
@@ -942,7 +932,6 @@ export class IndependentProgramPayment implements OnInit {
         this.closePaymentModal();
       },
       error: (error) => {
-        console.error('Error creating payment:', error);
         this.showNotificationMessage('Error', 'Error al procesar el pago', 'error');
       }
     });

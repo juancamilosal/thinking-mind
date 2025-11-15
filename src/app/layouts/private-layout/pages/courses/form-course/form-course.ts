@@ -259,7 +259,6 @@ export class FormCourse implements OnInit, OnChanges {
         this.courseUpdated.emit();
       },
       error: (error) => {
-        console.error('Error updating course:', error);
         this.notificationService.showError('Error al actualizar el programa');
       }
     });
@@ -400,7 +399,6 @@ export class FormCourse implements OnInit, OnChanges {
           this.notificationService.showSuccess('Imagen subida exitosamente','');
         },
         error: (error) => {
-          console.error('Error uploading file', error);
           this.notificationService.showError('Error', 'No se pudo subir la imagen.');
         }
       });

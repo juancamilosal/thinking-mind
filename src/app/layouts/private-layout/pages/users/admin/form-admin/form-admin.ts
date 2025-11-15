@@ -100,7 +100,6 @@ export class FormAdmin implements OnInit {
         this.isSubmitting = false;
       },
       error: (error) => {
-        console.error('Error creating admin:', error);
         this.errorMessage = 'Error al crear el administrador. Por favor, intente nuevamente.';
         this.notificationService.showError('Error al crear el administrador');
         this.isSubmitting = false;
@@ -131,7 +130,6 @@ export class FormAdmin implements OnInit {
         this.isSubmitting = false;
       },
       error: (error) => {
-        console.error('Error updating admin:', error);
         this.errorMessage = 'Error al actualizar el administrador. Por favor, intente nuevamente.';
         this.notificationService.showError('Error al actualizar el administrador');
         this.isSubmitting = false;
@@ -156,7 +154,6 @@ export class FormAdmin implements OnInit {
       },
       error: (error) => {
         this.isDeleting = false;
-        console.error('Error deleting admin:', error);
         this.notificationService.showError('Error al eliminar el administrador');
       }
     });

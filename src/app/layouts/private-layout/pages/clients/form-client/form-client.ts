@@ -149,7 +149,6 @@ export class FormClient implements OnInit, OnChanges {
         },
         error: (error) => {
           this.isSubmitting = false; // Asegurar que se resetee en error
-          console.error('Error al actualizar cliente:', error);
           this.notificationService.showError('Error al actualizar', 'No se pudo actualizar el cliente. Inténtalo nuevamente.');
         }
       });

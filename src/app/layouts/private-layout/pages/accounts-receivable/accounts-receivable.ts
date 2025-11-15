@@ -404,7 +404,6 @@ export class AccountsReceivable implements OnInit {
           this.isLoadingTotals = false;
         },
         error: (error) => {
-          console.error('Error al cargar totales:', error);
           this.isLoadingTotals = false;
         }
       });
@@ -415,7 +414,6 @@ export class AccountsReceivable implements OnInit {
           this.isLoadingTotals = false;
         },
         error: (error) => {
-          console.error('Error al cargar totales:', error);
           this.isLoadingTotals = false;
         }
       });
@@ -505,7 +503,6 @@ export class AccountsReceivable implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error loading accounts by status:', error);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -552,7 +549,6 @@ export class AccountsReceivable implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error searching accounts by status:', error);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -623,7 +619,6 @@ export class AccountsReceivable implements OnInit {
           this.totalAccounts();
         },
         error: (error) => {
-          console.error('Error al marcar como pagada:', error);
         }
       });
     }
@@ -702,7 +697,6 @@ export class AccountsReceivable implements OnInit {
             );
           },
           error: (error) => {
-            console.error('Error al eliminar la cuenta:', error);
             this.notificationService.showError(
               'Error al eliminar',
               'No se pudo eliminar la cuenta por cobrar. Inténtalo nuevamente.'
@@ -851,7 +845,6 @@ export class AccountsReceivable implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error loading account details:', error);
       }
     });
   }

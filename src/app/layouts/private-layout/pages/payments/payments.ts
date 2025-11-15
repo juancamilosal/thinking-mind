@@ -46,7 +46,7 @@ export class Payments implements OnInit, OnDestroy {
   isLoadingTariffs: boolean = false;
   isUpdatingTariffs: boolean = false;
   currentTariffId: number | null = null;
-  
+
   // Propiedad para el acordeón
   isAccordionOpen: boolean = false;
 
@@ -82,7 +82,6 @@ export class Payments implements OnInit, OnDestroy {
         this.isLoadingTariffs = false;
       },
       error: (error) => {
-        console.error('Error al cargar las tarifas Wompi:', error);
         this.notificationService.showError('Error al cargar las tarifas de Wompi');
         this.isLoadingTariffs = false;
       }
@@ -111,7 +110,6 @@ export class Payments implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error al crear las tarifas iniciales:', error);
         this.notificationService.showError('Error al crear las tarifas iniciales');
       }
     });
@@ -138,7 +136,6 @@ export class Payments implements OnInit, OnDestroy {
         this.isUpdatingTariffs = false;
       },
       error: (error) => {
-        console.error('Error al actualizar las tarifas Wompi:', error);
         this.notificationService.showError('Error al actualizar las tarifas de Wompi');
         this.isUpdatingTariffs = false;
       }
@@ -161,7 +158,6 @@ export class Payments implements OnInit, OnDestroy {
         this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
       },
       error: (error) => {
-        console.error('Error loading payments:', error);
         this.notificationService.showError('Error al cargar los pagos');
       },
       complete: () => {

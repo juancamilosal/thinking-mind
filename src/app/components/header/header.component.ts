@@ -25,8 +25,8 @@ export class HeaderComponent implements OnInit {
   isUserMenuOpen = false;
 
   constructor(
-    private elementRef: ElementRef, 
-    private router: Router, 
+    private elementRef: ElementRef,
+    private router: Router,
     private loginService: LoginService,
     private tokenRefreshService: TokenRefreshService
   ) {}
@@ -39,7 +39,6 @@ export class HeaderComponent implements OnInit {
     try {
       this.currentUser = StorageServices.getCurrentUser();
     } catch (error) {
-      console.error('Error al cargar usuario desde sessionStorage:', error);
     }
   }
 
@@ -76,14 +75,13 @@ export class HeaderComponent implements OnInit {
   logout() {
     // Detener el servicio de renovación de tokens antes del logout
     this.tokenRefreshService.stopTokenRefreshService();
-    
+
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
         window.location.href = '/login';
       },
       error: (error) => {
-        console.error('Error al cerrar sesión:', error);
         // Incluso si hay error, limpiamos la sesión y redirigimos
         StorageServices.clearAllSession();
         window.location.href = '/login';

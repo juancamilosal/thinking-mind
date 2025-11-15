@@ -54,7 +54,6 @@ export class TokenRefreshService implements OnDestroy {
       const expirationTime = decodedToken.exp;
 
       if (!expirationTime) {
-        console.warn('El token no tiene tiempo de expiración definido');
         return;
       }
 
@@ -73,8 +72,6 @@ export class TokenRefreshService implements OnDestroy {
       }, timeUntilRefresh);
 
     } catch (error) {
-      console.error('Error al decodificar el token:', error);
-      // Si no se puede decodificar el token, intentar renovarlo
       this.refreshToken();
     }
   }
@@ -90,8 +87,6 @@ export class TokenRefreshService implements OnDestroy {
           this.scheduleTokenRefresh();
         },
         error: (error) => {
-          console.error('Error al renovar el token automáticamente:', error);
-          // Si falla la renovación, redirigir al login
           this.handleRefreshError();
         }
       });
@@ -129,7 +124,6 @@ export class TokenRefreshService implements OnDestroy {
 
       return timeUntilExpiry <= refreshThreshold;
     } catch (error) {
-      console.error('Error al verificar expiración del token:', error);
       return true;
     }
   }
@@ -156,7 +150,6 @@ export class TokenRefreshService implements OnDestroy {
       const timeUntilExpiry = expirationTime - currentTime;
       return Math.floor(timeUntilExpiry / 60); // Retornar en minutos
     } catch (error) {
-      console.error('Error al calcular tiempo de expiración:', error);
       return 0;
     }
   }
