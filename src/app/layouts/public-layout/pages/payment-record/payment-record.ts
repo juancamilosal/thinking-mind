@@ -189,7 +189,7 @@ export class PaymentRecord implements OnInit {
       studentFirstName: ['', [Validators.required, Validators.minLength(2)]],
       studentLastName: ['', [Validators.required, Validators.minLength(2)]],
       studentGrado: ['', [Validators.required]],
-      studentGrupo: ['', [Validators.required]],
+      studentGrupo: [''],
       studentSchool: ['', [Validators.required]],
       schoolSearchTerm: [''],
       isOpenProgram: [false],
@@ -1022,8 +1022,8 @@ export class PaymentRecord implements OnInit {
 
   onCourseChange(courseId: string): void {
     if (courseId) {
-      // Bloquear selección si la Información del Estudiante no está completa
-      if (!this.isStudentInfoComplete()) {
+      // Bloquear selección si no está permitido seleccionar el curso
+      if (!this.canSelectCourse()) {
         this.notificationData = {
           title: 'Información del Estudiante incompleta',
           message: 'Debe diligenciar completamente la Información del Estudiante antes de seleccionar un programa.',
@@ -1243,6 +1243,14 @@ export class PaymentRecord implements OnInit {
       const hasValue = typeof value === 'string' ? value.trim().length > 0 : !!value;
       return control.valid && hasValue;
     });
+  }
+
+  canSelectCourse(): boolean {
+    const isOpen = !!this.paymentForm.get('isOpenProgram')?.value;
+    if (isOpen) {
+      return true;
+    }
+    return this.isStudentInfoComplete();
   }
 
   onIndependentInstitutionChange(event: any): void {
