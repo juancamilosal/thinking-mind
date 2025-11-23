@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CourseService } from '../../../../core/services/course.service';
@@ -12,6 +12,8 @@ import { ColegioCursosService } from '../../../../core/services/colegio-cursos.s
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { HistorialProgramasService } from '../../../../core/services/historial-programas.service';
 
+declare var gapi: any;
+
 @Component({
   selector: 'app-courses',
   standalone: true,
@@ -21,7 +23,7 @@ import { HistorialProgramasService } from '../../../../core/services/historial-p
     CourseInfoComponent,
     FormCourse,
     ColegioCursosComponent
-],
+  ],
   templateUrl: './courses.html'
 })
 
@@ -37,7 +39,7 @@ export class Courses {
   isLoading = false;
   searchTerm = '';
   private searchTimeout: any;
-  
+
   // Historial de Programas
   showHistory = false;
   isLoadingHistorial = false;
@@ -50,7 +52,7 @@ export class Courses {
   historialTotalPages: number = 1;
   // Utility method for Math functions in template
   Math = Math;
-  
+
   // Variables para el modal de edición de fecha
   showEditModal = false;
   selectedColegioCurso: any = null;
@@ -62,7 +64,8 @@ export class Courses {
     private colegioCursosService: ColegioCursosService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
-    private historialService: HistorialProgramasService
+    private historialService: HistorialProgramasService,
+    private ngZone: NgZone
   ) {
     this.initEditForm();
   }
@@ -399,21 +402,40 @@ export class Courses {
     this.confirmationService.showDeleteConfirmation(
       colegioCurso.colegio_id?.nombre || 'este colegio',
       'colegio del programa',
-      () => {
-        this.colegioCursosService.deleteColegioCurso(colegioCurso.id).subscribe({
-          next: (response) => {
+      async () => {
+        if (colegioCurso.id_reunion) {
+          try {
+            if (typeof gapi !== 'undefined' && gapi.client && gapi.client.calendar) {
+              await gapi.client.calendar.events.delete({
+                calendarId: 'primary',
+                eventId: colegioCurso.id_reunion
+              });
+            }
+          } catch (error) {
             this.notificationService.showSuccess(
               'Éxito',
-              'Colegio eliminado del programa correctamente'
+              'Error al eliminar evento de Google Calendar:', error
             );
-            this.searchCourse(); // Recargar los cursos
+          }
+        }
+
+        this.colegioCursosService.deleteColegioCurso(colegioCurso.id).subscribe({
+          next: (response) => {
+            this.ngZone.run(() => {
+              this.notificationService.showSuccess(
+                'Éxito',
+                'Colegio eliminado del programa correctamente'
+              );
+              this.searchCourse();
+            });
           },
           error: (error) => {
-            console.error('Error al eliminar colegio_curso:', error);
-            this.notificationService.showError(
-              'Error',
-              'Error al eliminar el colegio del programa'
-            );
+            this.ngZone.run(() => {
+              this.notificationService.showError(
+                'Error',
+                'Error al eliminar el colegio del programa'
+              );
+            });
           }
         });
       }
@@ -626,15 +648,15 @@ export class Courses {
   // Método para calcular días entre dos fechas
   calculateDaysBetweenDates(startDate: string, endDate: string): number {
     if (!startDate || !endDate) return 0;
-    
+
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-    
+
     const timeDifference = end.getTime() - start.getTime();
     const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
-    
+
     return daysDifference > 0 ? daysDifference : 0;
   }
 }
