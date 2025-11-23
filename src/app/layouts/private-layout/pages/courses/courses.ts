@@ -246,16 +246,13 @@ export class Courses {
         this.notificationService.showError('Error', 'No se pudo cargar el historial de programas');
       },
       complete: () => {
-        // el estado se maneja según las eliminaciones
       }
     });
   }
 
-  // Acciones de búsqueda en historial
   onHistorialSearchInputChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.historialSearchTerm = target.value;
-    // Debounce simple
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
       this.historialCurrentPage = 1;
@@ -274,7 +271,6 @@ export class Courses {
     this.loadHistorialProgramas(1);
   }
 
-  // Paginación historial
   goToHistorialPage(page: number) {
     if (page >= 1 && page <= this.historialTotalPages) {
       this.historialCurrentPage = page;
@@ -310,11 +306,6 @@ export class Courses {
     return pages;
   }
 
-  openCourseInfo(course: Course) {
-    this.selectedCourse = course;
-    this.showCourseInfo = true;
-  }
-
   closeCourseInfo() {
     this.selectedCourse = null;
     this.showCourseInfo = false;
@@ -325,57 +316,28 @@ export class Courses {
     this.toggleForm();
   }
 
-
-  loadCourses(): void {
-    this.isLoading = true;
-    this.courseServices.searchCourse(this.searchTerm).subscribe({
-      next: (response) => {
-        if (response.data) {
-          // Ordenar los cursos alfabéticamente por nombre
-          this.courses = response.data.sort((a, b) =>
-            a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
-          );
-        }
-      },
-      error: (error) => {
-        console.error('Error loading courses:', error);
-        // Manejar error
-      },
-      complete: () => {
-        this.isLoading = false;
-      }
-    });
-  }
-
   editCourse(course: Course) {
     this.selectedCourse = course;
     this.editMode = true;
     this.showForm = true;
-    // Scroll al inicio de la página
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Nuevo método para mostrar el formulario de colegio
   showColegioFormForCourse(course: Course) {
     this.selectedCourse = course;
     this.showColegioForm = true;
-    // Scroll al inicio de la página
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Método para cerrar el formulario de colegio
   closeColegioForm() {
     this.showColegioForm = false;
     this.selectedCourse = null;
   }
 
-  // Método para manejar cuando se agrega un colegio exitosamente
   onColegioAdded() {
-    // Recargar los cursos para mostrar los colegios actualizados
     this.searchCourse();
   }
 
-  // Nuevos métodos para editar y eliminar colegios_cursos
   editColegioCurso(colegioCurso: any) {
     this.selectedColegioCurso = colegioCurso;
     this.editFechaForm.patchValue({
@@ -442,7 +404,6 @@ export class Courses {
     );
   }
 
-  // Método para guardar la fecha editada
   saveEditedFecha() {
     if (this.editFechaForm.valid && this.selectedColegioCurso) {
       const updatedData: any = {
@@ -521,7 +482,6 @@ export class Courses {
     }
   }
 
-  // Formateo del precio para visualización en el input del modal
   onEditInscriptionPriceInput(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
     // Mantener solo dígitos, luego formatear con puntos cada 3
@@ -531,14 +491,12 @@ export class Courses {
     this.editFechaForm.get('precio_inscripcion')?.setValue(formattedValue, { emitEvent: false });
   }
 
-  // Formateo del precio para visualización en el input del modal
   onEditPriceInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const formatted = this.formatPrice(input.value);
     this.editFechaForm.get('precio_curso')?.setValue(formatted, { emitEvent: false });
   }
 
-  // Formateo del precio especial en el modal
   onEditSpecialPriceInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     const digitsOnly = String(input.value || '').replace(/\D/g, '');
@@ -565,10 +523,8 @@ export class Courses {
     return flag === true || flag === 'TRUE' || flag === 1 || flag === '1' || flag === 'true';
   }
 
-  // Formatea una fecha (string/Date) a 'YYYY-MM-DD' para input type="date"
   private formatDateForInput(value: any): string {
     if (!value) return '';
-    // Si viene como string ISO, tomamos los primeros 10 caracteres
     const str = String(value);
     if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
       return str.substring(0, 10);
@@ -581,7 +537,6 @@ export class Courses {
     return `${year}-${month}-${day}`;
   }
 
-  // Convierte 'YYYY-MM-DD' a 'YYYY-MM-DDT00:00:00' para el backend
   private toIsoDateString(value: any): string | null {
     if (!value) return null;
     const str = String(value).trim();
@@ -596,7 +551,6 @@ export class Courses {
     return `${str}T00:00:00`;
   }
 
-  // Método para cerrar el modal de edición
   closeEditModal() {
     this.showEditModal = false;
     this.selectedColegioCurso = null;

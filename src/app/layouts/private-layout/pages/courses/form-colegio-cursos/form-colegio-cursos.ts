@@ -418,9 +418,6 @@ export class ColegioCursosComponent implements OnInit {
       resource: event,
       conferenceDataVersion: 1
     });
-
-    console.log('Event created successfully:', request);
-    alert('Evento creado exitosamente en Google Calendar: ' + request.result.htmlLink);
     return request.result;
   }
 
