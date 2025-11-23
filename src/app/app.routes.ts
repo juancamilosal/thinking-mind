@@ -8,9 +8,10 @@ import { Schools } from './layouts/private-layout/pages/schools/schools';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
-import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
+import { PaymentRecord } from './layouts/public-layout/pages/payment-record/payment-record';
 import { PaymentStatusComponent } from './layouts/public-layout/pages/payment-record/payment-status/payment-status.component';
 import { IndependentProgramPayment } from './layouts/public-layout/pages/independent-program-payment/independent-program-payment';
+import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
 import { BudgetReport } from './layouts/private-layout/pages/reports/budget-report/budget-report';
@@ -48,6 +49,11 @@ export const routes: Routes = [
     path: 'payment-status',
     title: 'Thinking Mind | Estado de Pago',
     component: PaymentStatusComponent
+  },
+  {
+    path: 'entry-validation',
+    title: 'Thinking Mind | Validación de Ingreso',
+    component: EntryValidation
   },
   {
     path: 'private',
