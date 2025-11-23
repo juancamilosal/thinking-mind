@@ -280,10 +280,12 @@ export class ColegioCursosComponent implements OnInit {
   async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
 
+      let calendarEventData: any = null;
+
       // Handle Google Calendar Event Creation
       if (this.fechaFinalizacionForm.get('agendar_google_calendar')?.value) {
         try {
-          await this.handleCalendarAuthAndCreation();
+          calendarEventData = await this.handleCalendarAuthAndCreation();
         } catch (error) {
           console.error('Error creating calendar event:', error);
           this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar');
@@ -300,7 +302,7 @@ export class ColegioCursosComponent implements OnInit {
       fechaCreacion.setHours(0, 0, 0, 0);
       const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0];
 
-      const formData = {
+      const formData: any = {
         fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
@@ -318,6 +320,12 @@ export class ColegioCursosComponent implements OnInit {
         fecha_creacion: fechaCreacionISO,
         programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false
       };
+
+      // Add Google Calendar data if available
+      if (calendarEventData) {
+        formData.link_reunion = calendarEventData.hangoutLink;
+        formData.id_reunion = calendarEventData.id;
+      }
 
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
@@ -354,7 +362,7 @@ export class ColegioCursosComponent implements OnInit {
     }
   }
 
-  handleCalendarAuthAndCreation(): Promise<void> {
+  handleCalendarAuthAndCreation(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.tokenClient.callback = async (resp: any) => {
         if (resp.error) {
@@ -362,8 +370,8 @@ export class ColegioCursosComponent implements OnInit {
           return;
         }
         try {
-          await this.createCalendarEvent();
-          resolve();
+          const event = await this.createCalendarEvent();
+          resolve(event);
         } catch (err) {
           reject(err);
         }
@@ -413,6 +421,7 @@ export class ColegioCursosComponent implements OnInit {
 
     console.log('Event created successfully:', request);
     alert('Evento creado exitosamente en Google Calendar: ' + request.result.htmlLink);
+    return request.result;
   }
 
   onInscriptionPriceInput(event: any): void {
