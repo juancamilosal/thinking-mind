@@ -1,28 +1,28 @@
-import {Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
-import {DOCUMENT_TYPE} from '../../../../core/const/DocumentTypeConst';
-import {CourseService} from '../../../../core/services/course.service';
-import {Course} from '../../../../core/models/Course';
-import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
-import {ClientService} from '../../../../core/services/client.service';
-import {SchoolService} from '../../../../core/services/school.service';
-import {PaymentConfirmationComponent} from './payment-confirmation/payment-confirmation.component';
-import {Client} from '../../../../core/models/Clients';
-import {StudentService} from '../../../../core/services/student.service';
-import {Student} from '../../../../core/models/Student';
-import {School} from '../../../../core/models/School';
+import { Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
+import { CourseService } from '../../../../core/services/course.service';
+import { Course } from '../../../../core/models/Course';
+import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { ClientService } from '../../../../core/services/client.service';
+import { SchoolService } from '../../../../core/services/school.service';
+import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
+import { Client } from '../../../../core/models/Clients';
+import { StudentService } from '../../../../core/services/student.service';
+import { Student } from '../../../../core/models/Student';
+import { School } from '../../../../core/models/School';
 import {
   NotificationModalComponent,
   NotificationData
 } from '../../../../components/notification-modal/notification-modal';
-import {PaymentService} from '../../../../core/services/payment.service';
+import { PaymentService } from '../../../../core/services/payment.service';
 import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
-import {PaymentModel} from '../../../../core/models/AccountReceivable';
-import {Grupo} from '../../../../core/models/School';
-import {environment} from '../../../../../environments/environment';
+import { PaymentModel } from '../../../../core/models/AccountReceivable';
+import { Grupo } from '../../../../core/models/School';
+import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
 
 declare var WidgetCheckout: any;
@@ -132,11 +132,11 @@ export class PaymentRecord implements OnInit {
         if (!el) return;
         const offset = 16; // margen superior para que no quede pegado al borde
         const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
-        window.scrollTo({top, behavior: 'smooth'});
+        window.scrollTo({ top, behavior: 'smooth' });
       }, 150);
     } catch (e) {
       // Fallback simple
-      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({behavior: 'smooth', block: 'start'});
+      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -197,8 +197,8 @@ export class PaymentRecord implements OnInit {
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
-      coursePrice: [{value: '', disabled: true}, [Validators.required]],
-      courseInscriptionPrice: [{value: '', disabled: true}],
+      coursePrice: [{ value: '', disabled: true }, [Validators.required]],
+      courseInscriptionPrice: [{ value: '', disabled: true }],
     });
   }
 
@@ -224,32 +224,32 @@ export class PaymentRecord implements OnInit {
 
   onGuardianFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('guardianFirstName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('guardianFirstName')?.setValue(value, { emitEvent: false });
   }
 
   onGuardianLastNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('guardianLastName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('guardianLastName')?.setValue(value, { emitEvent: false });
   }
 
   onStudentFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentFirstName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentFirstName')?.setValue(value, { emitEvent: false });
   }
 
   onStudentLastNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentLastName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentLastName')?.setValue(value, { emitEvent: false });
   }
 
   onStudentSchoolChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentSchool')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentSchool')?.setValue(value, { emitEvent: false });
   }
 
   onStudentGradoChange(event: any): void {
     const value = event.target.value.toUpperCase();
-    this.paymentForm.get('studentGrado')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentGrado')?.setValue(value, { emitEvent: false });
   }
 
   onStudentGrupoChange(event: any): void {
@@ -732,14 +732,14 @@ export class PaymentRecord implements OnInit {
             <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
           </div>
           ${(() => {
-      const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-      return inscription && inscription > 0 ? `
+        const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
+        return inscription && inscription > 0 ? `
               <div class="info-item">
                 <span class="info-label">Precio de Inscripción:</span>
                 <span class="info-value">$${inscription.toLocaleString('es-CO')}</span>
               </div>
             ` : '';
-    })()}
+      })()}
               <div class="info-item">
                 <span class="info-label">Total Abonado:</span>
                 <span class="info-value">${this.selectedAccountData.balance}</span>
@@ -776,14 +776,14 @@ export class PaymentRecord implements OnInit {
               <div class="summary-value total-course">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || '0'}</div>
             </div>
             ${(() => {
-      const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-      return inscription && inscription > 0 ? `
+        const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
+        return inscription && inscription > 0 ? `
                 <div class="summary-item">
                   <div class="summary-label">Inscripción</div>
                   <div class="summary-value">$${inscription.toLocaleString('es-CO')}</div>
                 </div>
               ` : '';
-    })()}
+      })()}
             <div class="summary-item">
               <div class="summary-label">Total Pagado</div>
               <div class="summary-value total-paid">$${totalPaid.toLocaleString('es-CO')}</div>
@@ -983,7 +983,7 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         const price = this.computeCoursePrice(selectedCourse);
         if (price !== null) {
-          this.paymentForm.patchValue({coursePrice: this.formatCurrency(price)});
+          this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
         } else {
           // Si no existe precio para el colegio, notificar y reiniciar programa
           this.showCourseSchoolNotFoundNotification();
@@ -1219,10 +1219,10 @@ export class PaymentRecord implements OnInit {
     if (!selectedCourse) return;
     const price = this.computeCoursePrice(selectedCourse);
     if (price !== null) {
-      this.paymentForm.patchValue({coursePrice: this.formatCurrency(price)});
+      this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
     } else {
       // Solo limpiar precio si no existe para el colegio; la notificación se muestra al seleccionar programa
-      this.paymentForm.patchValue({coursePrice: ''});
+      this.paymentForm.patchValue({ coursePrice: '' });
     }
   }
 
@@ -1255,7 +1255,7 @@ export class PaymentRecord implements OnInit {
 
   onIndependentInstitutionChange(event: any): void {
     const value = this.capitalizeText((event?.target?.value || '').toString().trim());
-    this.paymentForm.get('independentInstitution')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('independentInstitution')?.setValue(value, { emitEvent: false });
   }
 
   private showValidationNotification(requiredCourse: string): void {
@@ -1388,6 +1388,7 @@ export class PaymentRecord implements OnInit {
     const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
     let inscriptionNumber: number = 0;
     let inscriptionCurrency: string = 'USD'; // Por defecto USD
+    let idReunionesMeet: string | null = null;
 
     if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
       // Buscar el colegio específico en colegios_cursos
@@ -1399,6 +1400,13 @@ export class PaymentRecord implements OnInit {
         // Usar precio_inscripcion y moneda de colegios_cursos
         inscriptionNumber = schoolCourse.precio_inscripcion || 0;
         inscriptionCurrency = schoolCourse.moneda || 'USD';
+
+        // Obtener id_reuniones_meet
+        if (schoolCourse.id_reuniones_meet) {
+          idReunionesMeet = typeof schoolCourse.id_reuniones_meet === 'object'
+            ? schoolCourse.id_reuniones_meet.id
+            : schoolCourse.id_reuniones_meet;
+        }
       }
     }
 
@@ -1433,8 +1441,9 @@ export class PaymentRecord implements OnInit {
       precio: coursePriceNumber,
       // Enviar la inscripción ya convertida a COP
       precio_inscripcion: inscriptionConvertedCop,
+      id_reunion_meet: idReunionesMeet,
       estado: 'PENDIENTE',
-      fecha_creacion: new Date().toLocaleString('sv-SE', {timeZone: 'America/Bogota'})
+      fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
     };
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
@@ -1715,7 +1724,7 @@ export class PaymentRecord implements OnInit {
       amountInCents: amountInCents,
       reference: reference,
       publicKey: wompiConfig.publicKey,
-      signature: {integrity: signature},
+      signature: { integrity: signature },
       redirectUrl: environment.wompi.redirectUrl,
       customerData: {
         email: this.paymentModalData?.clientEmail,
