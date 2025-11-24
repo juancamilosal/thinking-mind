@@ -365,22 +365,40 @@ export class Courses {
       colegioCurso.colegio_id?.nombre || 'este colegio',
       'colegio del programa',
       async () => {
-        if (colegioCurso.id_reunion) {
-          try {
-            if (typeof gapi !== 'undefined' && gapi.client && gapi.client.calendar) {
-              await gapi.client.calendar.events.delete({
-                calendarId: 'primary',
-                eventId: colegioCurso.id_reunion
-              });
+        // Verificar si existe id_reuniones_meet (ahora es un objeto expandido)
+        if (colegioCurso.id_reuniones_meet) {
+          const meetingData = colegioCurso.id_reuniones_meet;
+          const googleEventId = meetingData.id_reunion;
+          const directusMeetingId = meetingData.id;
+
+          // 1. Eliminar de Google Calendar
+          if (googleEventId) {
+            try {
+              if (typeof gapi !== 'undefined' && gapi.client && gapi.client.calendar) {
+                await gapi.client.calendar.events.delete({
+                  calendarId: 'primary',
+                  eventId: googleEventId
+                });
+              }
+            } catch (error) {
+              this.notificationService.showSuccess(
+                'Aviso',
+                'No se pudo eliminar el evento de Google Calendar, pero se continuará con la eliminación local.'
+              );
+              console.error('Error Google Calendar:', error);
             }
-          } catch (error) {
-            this.notificationService.showSuccess(
-              'Éxito',
-              'Error al eliminar evento de Google Calendar:', error
-            );
+          }
+
+          // 2. Eliminar de la colección reuniones_meet en Directus
+          if (directusMeetingId) {
+            this.courseServices.deleteReunionMeet(directusMeetingId).subscribe({
+              next: () => console.log('Reunión eliminada de Directus'),
+              error: (err) => console.error('Error eliminando reunión de Directus:', err)
+            });
           }
         }
 
+        // 3. Eliminar el registro colegio_curso
         this.colegioCursosService.deleteColegioCurso(colegioCurso.id).subscribe({
           next: (response) => {
             this.ngZone.run(() => {

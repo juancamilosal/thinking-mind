@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { Course } from '../models/Course';
+import { Meeting } from '../models/Meeting';
 import { environment } from '../../../environments/environment';
 import { map } from 'rxjs/operators';
 
@@ -21,7 +22,7 @@ export class CourseService {
   searchCourse(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
     // Agregar fields para incluir colegios_cursos con colegio_id expandido
     const baseParams = {
-      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*'
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*'
     };
 
     const request = !searchTerm
@@ -50,7 +51,7 @@ export class CourseService {
   searchIndependentCourses(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
     // Parámetros base con fields y filtro para programa_independiente = true
     const baseParams = {
-      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*',
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*',
       'filter[programa_independiente][_eq]': 'true'
     };
 
@@ -106,5 +107,16 @@ export class CourseService {
 
   createReunionMeet(data: any): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(environment.reuniones_meet, data);
+  }
+
+  getReunionesMeet(): Observable<ResponseAPI<Meeting[]>> {
+    const params = {
+      'fields': '*,id_colegios_cursos.curso_id.nombre,id_colegios_cursos.colegio_id.nombre'
+    };
+    return this.http.get<ResponseAPI<Meeting[]>>(environment.reuniones_meet, { params });
+  }
+
+  deleteReunionMeet(id: string): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${environment.reuniones_meet}/${id}`);
   }
 }
