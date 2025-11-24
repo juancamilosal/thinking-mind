@@ -1,10 +1,10 @@
-import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
-import {ResponseAPI} from '../models/ResponseAPI';
-import {Course} from '../models/Course';
-import {environment} from '../../../environments/environment';
-import {map} from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ResponseAPI } from '../models/ResponseAPI';
+import { Course } from '../models/Course';
+import { environment } from '../../../environments/environment';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -27,12 +27,12 @@ export class CourseService {
     const request = !searchTerm
       ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
       : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
-          params: {
-            ...baseParams,
-            'filter[_or][0][nombre][_icontains]': searchTerm,
-            'filter[_or][1][sku][_icontains]': searchTerm,
-          }
-        });
+        params: {
+          ...baseParams,
+          'filter[_or][0][nombre][_icontains]': searchTerm,
+          'filter[_or][1][sku][_icontains]': searchTerm,
+        }
+      });
 
     return request.pipe(
       map(response => {
@@ -57,13 +57,13 @@ export class CourseService {
     const request = !searchTerm
       ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
       : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
-          params: {
-            ...baseParams,
-            'filter[_and][0][programa_independiente][_eq]': 'true',
-            'filter[_and][1][_or][0][nombre][_icontains]': searchTerm,
-            'filter[_and][1][_or][1][sku][_icontains]': searchTerm,
-          }
-        });
+        params: {
+          ...baseParams,
+          'filter[_and][0][programa_independiente][_eq]': 'true',
+          'filter[_and][1][_or][0][nombre][_icontains]': searchTerm,
+          'filter[_and][1][_or][1][sku][_icontains]': searchTerm,
+        }
+      });
 
     return request.pipe(
       map(response => {
@@ -102,5 +102,9 @@ export class CourseService {
 
   deleteFile(fileId: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiFile}/${fileId}`);
+  }
+
+  createReunionMeet(data: any): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(environment.reuniones_meet, data);
   }
 }

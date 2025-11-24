@@ -329,6 +329,22 @@ export class ColegioCursosComponent implements OnInit {
 
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
+          // Save meeting details to Directus if calendar event was created
+          if (calendarEventData) {
+            const meetingData = {
+              fecha_inicio: calendarEventData.start.dateTime,
+              fecha_finalizacion: calendarEventData.end.dateTime,
+              id_reunion: calendarEventData.id,
+              link_reunion: calendarEventData.hangoutLink,
+              id_colegios_cursos: [response.data.id] // Array of IDs for Directus relationship
+            };
+
+            this.courseService.createReunionMeet(meetingData).subscribe({
+              next: (res) => console.log('Reunión guardada en Directus:', res),
+              error: (err) => console.error('Error al guardar reunión en Directus:', err)
+            });
+          }
+
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
           const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value
             ? 'Programa Independiente'
