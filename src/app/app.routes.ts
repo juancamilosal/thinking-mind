@@ -22,6 +22,7 @@ import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
+import { ListMeet } from './layouts/private-layout/pages/list-meet/list-meet';
 
 
 export const routes: Routes = [
@@ -139,6 +140,11 @@ export const routes: Routes = [
         path: 'form-colegio-cursos',
         title: 'Thinking Mind | Colegio Cursos',
         component: ColegioCursosComponent
+      },
+      {
+        path: 'list-meet',
+        title: 'Thinking Mind | Reuniones',
+        component: ListMeet
       },
       {
         path: '**',
