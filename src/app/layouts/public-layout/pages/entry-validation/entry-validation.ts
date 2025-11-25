@@ -20,15 +20,15 @@ export class EntryValidation implements OnInit {
     participants: string[] = [];
     lastCreatedEventId: string | null = null;
 
-    // Google API Configuration
     private readonly CLIENT_ID = '996133721948-6rim847cd71sknq58u3tcov5drtag7vv.apps.googleusercontent.com';
-    // private readonly API_KEY = 'YOUR_API_KEY'; // Optional for quota, but do NOT use the Client Secret here.
     private readonly DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
     private readonly SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
     tokenClient: any;
     gapiInited = false;
     gisInited = false;
+
+    private pendingAction: (() => void) | null = null;
 
     constructor(private formBuilder: FormBuilder) { }
 
@@ -92,8 +92,11 @@ export class EntryValidation implements OnInit {
                         alert('Error de autenticación: ' + resp.error);
                         return;
                     }
-                    console.log('OAuth Success, creating event...');
-                    this.createCalendarEvent();
+                    console.log('OAuth Success');
+                    if (this.pendingAction) {
+                        this.pendingAction();
+                        this.pendingAction = null;
+                    }
                 },
             });
             this.gisInited = true;
@@ -137,6 +140,8 @@ export class EntryValidation implements OnInit {
             alert('Los servicios de Google aún no están listos. Por favor, espera unos segundos e intenta nuevamente.');
             return;
         }
+
+        this.pendingAction = () => this.createCalendarEvent();
 
         if (gapi.client.getToken() === null) {
             console.log('Requesting Access Token (Consent)...');
@@ -206,42 +211,7 @@ export class EntryValidation implements OnInit {
             alert('No hay un evento creado recientemente para editar.');
             return;
         }
-
-        try {
-            // 1. Get current event to retrieve existing attendees
-            const getRequest = await gapi.client.calendar.events.get({
-                calendarId: 'primary',
-                eventId: this.lastCreatedEventId
-            });
-
-            const currentEvent = getRequest.result;
-            const currentAttendees = currentEvent.attendees || [];
-
-            // 2. Check if already exists
-            if (currentAttendees.some((a: any) => a.email === newEmail)) {
-                alert('Este participante ya está en el evento.');
-                return;
-            }
-
-            // 3. Add new attendee
-            const updatedAttendees = [...currentAttendees, { email: newEmail }];
-
-            // 4. Patch the event
-            const patchRequest = await gapi.client.calendar.events.patch({
-                calendarId: 'primary',
-                eventId: this.lastCreatedEventId,
-                resource: {
-                    attendees: updatedAttendees
-                }
-            });
-
-            console.log('Event updated:', patchRequest);
-            alert(`Participante ${newEmail} agregado exitosamente al evento.`);
-
-        } catch (err: any) {
-            console.error('Error updating event', err);
-            alert('Error al actualizar el evento: ' + (err.result?.error?.message || err.message));
-        }
+        await this.addParticipantToAnyEvent(this.lastCreatedEventId, newEmail);
     }
 
     async addParticipantToAnyEvent(eventId: string, email: string) {
@@ -250,40 +220,50 @@ export class EntryValidation implements OnInit {
             return;
         }
 
-        try {
-            // 1. Get current event
-            const getRequest = await gapi.client.calendar.events.get({
-                calendarId: 'primary',
-                eventId: eventId
-            });
+        const action = async () => {
+            try {
+                // 1. Get current event
+                const getRequest = await gapi.client.calendar.events.get({
+                    calendarId: 'primary',
+                    eventId: eventId
+                });
 
-            const currentEvent = getRequest.result;
-            const currentAttendees = currentEvent.attendees || [];
+                const currentEvent = getRequest.result;
+                const currentAttendees = currentEvent.attendees || [];
 
-            // 2. Check if already exists
-            if (currentAttendees.some((a: any) => a.email === email)) {
-                alert('Este participante ya está en el evento.');
-                return;
-            }
-
-            // 3. Add new attendee
-            const updatedAttendees = [...currentAttendees, { email: email }];
-
-            // 4. Patch the event
-            const patchRequest = await gapi.client.calendar.events.patch({
-                calendarId: 'primary',
-                eventId: eventId,
-                resource: {
-                    attendees: updatedAttendees
+                // 2. Check if already exists
+                if (currentAttendees.some((a: any) => a.email === email)) {
+                    alert('Este participante ya está en el evento.');
+                    return;
                 }
-            });
 
-            console.log('Event updated:', patchRequest);
-            alert(`Participante ${email} agregado exitosamente al evento ${eventId}.`);
+                // 3. Add new attendee
+                const updatedAttendees = [...currentAttendees, { email: email }];
 
-        } catch (err: any) {
-            console.error('Error updating event', err);
-            alert('Error al actualizar el evento: ' + (err.result?.error?.message || err.message));
+                // 4. Patch the event
+                const patchRequest = await gapi.client.calendar.events.patch({
+                    calendarId: 'primary',
+                    eventId: eventId,
+                    resource: {
+                        attendees: updatedAttendees
+                    }
+                });
+
+                console.log('Event updated:', patchRequest);
+                alert(`Participante ${email} agregado exitosamente al evento ${eventId}.`);
+
+            } catch (err: any) {
+                console.error('Error updating event', err);
+                alert('Error al actualizar el evento: ' + (err.result?.error?.message || err.message));
+            }
+        };
+
+        if (gapi.client.getToken() === null) {
+            console.log('Token missing, requesting access...');
+            this.pendingAction = action;
+            this.tokenClient.requestAccessToken({ prompt: '' });
+        } else {
+            await action();
         }
     }
 
