@@ -7,6 +7,7 @@ import { SchoolService } from '../../../../../core/services/school.service';
 import { School } from '../../../../../core/models/School';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ColegioCursosService } from '../../../../../core/services/colegio-cursos.service';
+ 
 
 declare var gapi: any;
 declare var google: any;
@@ -331,12 +332,15 @@ export class ColegioCursosComponent implements OnInit {
         next: (response) => {
           // Save meeting details to Directus if calendar event was created
           if (calendarEventData) {
+            const tokenObj = gapi?.client?.getToken?.();
+            const accessToken = tokenObj?.access_token;
             const meetingData = {
               fecha_inicio: calendarEventData.start.dateTime,
               fecha_finalizacion: calendarEventData.end.dateTime,
               id_reunion: calendarEventData.id,
               link_reunion: calendarEventData.hangoutLink,
-              id_colegios_cursos: [response.data.id] // Array of IDs for Directus relationship
+              id_colegios_cursos: [response.data.id], // Array of IDs for Directus relationship
+              token: accessToken
             };
 
             this.courseService.createReunionMeet(meetingData).subscribe({
@@ -400,6 +404,8 @@ export class ColegioCursosComponent implements OnInit {
       }
     });
   }
+
+  
 
   async createCalendarEvent() {
     const startDate = new Date(this.fechaFinalizacionForm.get('evento_inicio')?.value);
