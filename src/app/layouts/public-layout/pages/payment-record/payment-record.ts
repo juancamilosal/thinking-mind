@@ -90,6 +90,11 @@ export class PaymentRecord implements OnInit {
   eurRateErrorNotified: boolean = false;
   isExchangeRateError: boolean = false;
 
+  // Modal para correo de reunión
+  showMeetingEmailModal: boolean = false;
+  meetingEmail: string = '';
+  meetingEmailError: string = '';
+
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
@@ -990,6 +995,7 @@ export class PaymentRecord implements OnInit {
           this.resetCourseSelection();
         }
       }
+      this.checkMeetingRequirement(undefined, school.id);
     }
   }
 
@@ -1014,6 +1020,7 @@ export class PaymentRecord implements OnInit {
       this.filteredSchools = [];
       this.isSchoolSelected = true;
       this.updateSelectedCoursePriceIfAny();
+      this.checkMeetingRequirement(undefined, this.openProgramSchoolId);
     } else {
       this.paymentForm.get('independentInstitution')?.setValue('');
       this.clearSchoolSearch();
@@ -1163,6 +1170,7 @@ export class PaymentRecord implements OnInit {
       this.selectedInscriptionConvertedCop = null;
       this.selectedCourseImageUrl = null;
     }
+    this.checkMeetingRequirement(courseId);
   }
 
   // Obtiene el precio del curso específico del colegio seleccionado (si existe)
@@ -1362,6 +1370,60 @@ export class PaymentRecord implements OnInit {
     setTimeout(() => {
       this.searchClientPayment(documentType, documentNumber);
     }, 500)
+  }
+
+  checkMeetingRequirement(courseIdOverride?: string, schoolIdOverride?: string): void {
+    const selectedCourseId = courseIdOverride || this.paymentForm.get('selectedCourse')?.value;
+    const schoolId = schoolIdOverride || this.paymentForm.get('studentSchool')?.value;
+
+    if (selectedCourseId) {
+      const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
+      
+      // Si el curso es AYO, mostrar el modal independientemente del colegio
+      if (selectedCourse && selectedCourse.nombre === 'AYO') {
+        this.showMeetingEmailModal = true;
+        const guardianEmail = this.paymentForm.get('guardianEmail')?.value;
+        if (guardianEmail && !this.meetingEmail) {
+          this.meetingEmail = guardianEmail;
+        }
+        return;
+      }
+
+      if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
+        const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) => {
+          const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+          return ccSchoolId && ccSchoolId === schoolId;
+        });
+
+        if (schoolCourse && schoolCourse.id_reuniones_meet) {
+          this.showMeetingEmailModal = true;
+          // Pre-llenar con el correo del acudiente si está disponible y no hay uno ingresado
+          const guardianEmail = this.paymentForm.get('guardianEmail')?.value;
+          if (guardianEmail && !this.meetingEmail) {
+            this.meetingEmail = guardianEmail;
+          }
+        }
+      }
+    }
+  }
+
+  closeMeetingEmailModal(): void {
+    this.showMeetingEmailModal = false;
+    this.meetingEmailError = '';
+  }
+
+  confirmMeetingEmail(): void {
+    if (!this.meetingEmail) {
+      this.meetingEmailError = 'El correo electrónico es obligatorio.';
+      return;
+    }
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(this.meetingEmail)) {
+      this.meetingEmailError = 'Ingrese un correo electrónico válido.';
+      return;
+    }
+    this.showMeetingEmailModal = false;
+    this.meetingEmailError = '';
   }
 
   createAccountRecord = () => {
