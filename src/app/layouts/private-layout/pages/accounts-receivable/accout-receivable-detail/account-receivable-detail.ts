@@ -533,14 +533,23 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   }
 
   onRefundAmountChange(event: any): void {
-    const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
-    const numericValue = parseInt(value) || 0;
+    // Remover comas (separadores de miles) y caracteres no válidos (dejar números y punto)
+    let value = event.target.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+
+    // Manejar múltiples puntos - mantener solo el primero
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Calcular valor numérico (parseFloat usa punto nativamente)
+    const numericValue = parseFloat(value) || 0;
     const maxRefundAvailable = this.getMaxRefundAvailable();
 
     // Validar que no exceda el máximo disponible
     if (numericValue > maxRefundAvailable) {
       this.refundAmount = maxRefundAvailable;
-      this.refundAmountDisplay = this.formatNumberWithDots(maxRefundAvailable);
+      this.refundAmountDisplay = this.formatRefundNumber(maxRefundAvailable);
       event.target.value = this.refundAmountDisplay;
 
       // Mostrar notificación de advertencia
@@ -550,15 +559,50 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     }
 
     this.refundAmount = numericValue;
-    this.refundAmountDisplay = this.formatNumberWithDots(numericValue);
+    this.refundAmountDisplay = this.formatRefundInputValue(value);
 
     // Actualizar el valor del input
     event.target.value = this.refundAmountDisplay;
   }
 
+  private formatRefundInputValue(value: string): string {
+    if (!value) return '';
+
+    const parts = value.split('.');
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+
+    // Manejar parte entera vacía o ceros a la izquierda
+    if (integerPart === '') {
+      integerPart = '0';
+    } else {
+      const val = parseInt(integerPart);
+      integerPart = isNaN(val) ? '0' : val.toString();
+    }
+
+    // Agregar separadores de miles (comas)
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    return integerPart + decimalPart;
+  }
+
+  private formatRefundNumber(num: number): string {
+    if (num === 0) return '';
+    // Manejar decimales si existen
+    const parts = num.toString().split('.');
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+    return integerPart + decimalPart;
+  }
+
   private formatNumberWithDots(num: number): string {
     if (num === 0) return '';
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    // Manejar decimales si existen
+    const parts = num.toString().split('.');
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    // Limitar a 2 decimales si hay muchos? Por ahora mostramos lo que hay
+    const decimalPart = parts.length > 1 ? ',' + parts[1] : '';
+    return integerPart + decimalPart;
   }
 
   onPaymentAmountChange(event: any): void {
