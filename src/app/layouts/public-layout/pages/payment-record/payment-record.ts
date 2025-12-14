@@ -90,6 +90,12 @@ export class PaymentRecord implements OnInit {
   eurRateErrorNotified: boolean = false;
   isExchangeRateError: boolean = false;
 
+  // AYO Program properties
+  readonly ayoCourseId = '28070b14-f3c1-48ec-9e2f-95263f19eec3';
+  isAyoSelected = false;
+  ayoOptions: any[] = [];
+  selectedAyoOption: any = null;
+
   // Modal para correo de reunión
   showMeetingEmailModal: boolean = false;
   meetingEmail: string = '';
@@ -209,6 +215,14 @@ export class PaymentRecord implements OnInit {
 
 
   onSubmit(): void {
+    // Validación específica para AYO
+    if (this.isAyoSelected && !this.selectedAyoOption) {
+      this.markFormGroupTouched(this.paymentForm);
+      // Forzar que se muestre el error si no se ha tocado el control (aunque al seleccionar curso ya se tocó)
+      this.paymentForm.get('selectedCourse')?.markAsTouched();
+      return;
+    }
+
     if (this.paymentForm.valid) {
       this.showConfirmation = true;
     } else {
@@ -1040,6 +1054,7 @@ export class PaymentRecord implements OnInit {
         this.resetCourseSelection();
         return;
       }
+      
       // Validación para el curso Will-Go (Segundo Hermano)
       const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
       const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
@@ -1093,6 +1108,25 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         // Actualizar imagen del curso seleccionado si existe
         this.selectedCourseImageUrl = selectedCourse.img_url || null;
+
+        // Lógica específica para AYO
+        if (courseId === this.ayoCourseId) {
+          this.isAyoSelected = true;
+          this.ayoOptions = selectedCourse.colegios_cursos || [];
+          this.selectedAyoOption = null;
+          // Limpiar precios hasta que seleccione una opción
+          this.paymentForm.patchValue({
+            coursePrice: '',
+            courseInscriptionPrice: ''
+          });
+          this.hasInscription = false;
+          this.checkMeetingRequirement(courseId);
+          return; // Salir y esperar selección de opción AYO
+        } else {
+          this.isAyoSelected = false;
+          this.ayoOptions = [];
+          this.selectedAyoOption = null;
+        }
 
         // Obtener precio de inscripción y moneda desde colegios_cursos
         const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
@@ -1160,17 +1194,56 @@ export class PaymentRecord implements OnInit {
         this.updateInscriptionConversion();
       }
     } else {
-      this.paymentForm.patchValue({
-        coursePrice: '',
-        courseInscriptionPrice: ''
-      });
-      this.hasInscription = false;
-      this.isEuroCourse = false;
-      this.selectedInscriptionAmount = 0;
-      this.selectedInscriptionConvertedCop = null;
-      this.selectedCourseImageUrl = null;
+      this.resetCourseSelection();
     }
     this.checkMeetingRequirement(courseId);
+  }
+
+  onAyoOptionChange(option: any): void {
+    this.selectedAyoOption = option;
+    
+    // Calcular precios basados en la opción seleccionada
+    let coursePrice = 0;
+    
+    // Verificar si tiene precio especial
+    const hasSpecial = (() => {
+      const val = option?.tiene_precio_especial;
+      if (typeof val === 'string') return val.trim().toUpperCase() === 'TRUE';
+      if (typeof val === 'boolean') return val === true;
+      if (typeof val === 'number') return val === 1;
+      return false;
+    })();
+
+    if (hasSpecial && option.precio_especial) {
+      coursePrice = Number(option.precio_especial) || 0;
+    } else {
+      coursePrice = Number(option.precio_curso) || 0;
+    }
+
+    const inscriptionNumber = Number(option.precio_inscripcion) || 0;
+    const courseCurrency = option.moneda || null;
+    
+    // Determinar moneda
+    this.isEuroCourse = courseCurrency === 'EUR';
+
+    // Formatear precios
+    const formattedPrice = coursePrice > 0 ? this.formatCurrency(coursePrice) : '';
+    const inscriptionFormatted = inscriptionNumber > 0
+      ? `${courseCurrency || 'COP'} ${new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(inscriptionNumber)}`
+      : '';
+
+    this.paymentForm.patchValue({
+      coursePrice: formattedPrice,
+      courseInscriptionPrice: inscriptionFormatted
+    });
+
+    // Actualizar banderas
+    this.hasInscription = inscriptionNumber > 0;
+    this.selectedInscriptionAmount = inscriptionNumber;
+    this.updateInscriptionConversion();
   }
 
   // Obtiene el precio del curso específico del colegio seleccionado (si existe)

@@ -858,7 +858,77 @@
                }
               </div>
 
+              <!-- AYO Program Options -->
+              @if (isAyoSelected) {
+                <div class="md:col-span-2 space-y-4 mt-6 border-t border-violet-200 pt-6">
+                  <h4 class="text-lg font-bold text-violet-800 mb-2">Seleccione una opción del programa AYO *</h4>
+                  <p class="text-sm text-gray-600 mb-4">Seleccione la opción que corresponda a su institución o modalidad.</p>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @for (option of ayoOptions; track option.id) {
+                      <div
+                        (click)="onAyoOptionChange(option)"
+                        [class.ring-2]="selectedAyoOption?.id === option.id"
+                        [class.ring-violet-600]="selectedAyoOption?.id === option.id"
+                        [class.bg-violet-50]="selectedAyoOption?.id === option.id"
+                        class="cursor-pointer border border-violet-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 bg-white group h-full flex flex-col justify-between relative overflow-hidden">
+                        
+                        <!-- Indicador de selección -->
+                        @if (selectedAyoOption?.id === option.id) {
+                          <div class="absolute top-0 right-0 bg-violet-600 text-white text-[10px] px-2 py-0.5 rounded-bl-lg">
+                            Seleccionado
+                          </div>
+                        }
 
+                        <div class="mb-3 pr-4">
+                           <span class="font-semibold text-violet-800 text-sm block">
+                              {{ option.nombre || option.colegio_id?.nombre || 'Opción AYO' }}
+                           </span>
+                           @if (option.colegio_id?.ciudad) {
+                              <span class="text-xs text-gray-500 block mt-1">{{ option.colegio_id.ciudad }}</span>
+                           }
+                        </div>
+                        
+                        <div class="space-y-2 mt-auto">
+                          <div class="text-sm border-t border-violet-100 pt-2">
+                             <div class="flex justify-between items-center">
+                               <span class="text-gray-500 text-xs">Valor:</span>
+                               <span class="font-bold text-violet-700">
+                                 {{ (option.tiene_precio_especial === 'TRUE' || option.tiene_precio_especial === true) ? (option.precio_especial | currency) : (option.precio_curso | currency) }}
+                               </span>
+                             </div>
+                          </div>
+                          
+                          @if (option.precio_inscripcion > 0) {
+                             <div class="text-sm flex justify-between items-center">
+                               <span class="text-gray-500 text-xs">Inscripción:</span>
+                               <span class="font-bold text-emerald-600">
+                                 {{ option.precio_inscripcion | currency: (option.moneda || 'COP') :'symbol':'1.0-0' }}
+                               </span>
+                             </div>
+                          }
+                          
+                          @if (option.programa_con_inscripcion) {
+                            <div class="mt-2 text-center">
+                              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-medium inline-block w-full">
+                                Requiere Inscripción
+                              </span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                   @if (isAyoSelected && !selectedAyoOption && (paymentForm.get('selectedCourse')?.touched || isSubmitting)) {
+                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      Debe seleccionar una opción del programa para continuar
+                    </p>
+                  }
+                </div>
+              }
 
               <!-- Precio del Curso -->
                @if (paymentForm.get('coursePrice')?.value) {
