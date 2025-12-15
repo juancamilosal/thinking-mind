@@ -23,6 +23,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
 import { ListMeet } from './layouts/private-layout/pages/list-meet/list-meet';
+import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 
 
 export const routes: Routes = [
@@ -145,6 +146,11 @@ export const routes: Routes = [
         path: 'list-meet',
         title: 'Thinking Mind | Reuniones',
         component: ListMeet
+      },
+      {
+        path: 'ayo',
+        title: 'Thinking Mind | AYO',
+        component: AyoComponent
       },
       {
         path: '**',

@@ -333,7 +333,7 @@
           [editMode]="editMode"
           [courseData]="selectedCourse"
           (goBack)="toggleForm()"
-          (searchCourse)="searchCourse()"
+          (searchCourse)="getCourse()"
           (courseUpdated)="onCourseUpdated()">
         </app-form-course>
       </div>
@@ -494,7 +494,7 @@
                     </p>
                   }
                 </div>
-                
+
                 <!-- Nuevo campo: El precio finaliza en -->
                  <div class="space-y-2">
                    <label for="fecha_finalizacion_precio_especial_edit" class="block text-sm font-semibold text-green-700">El precio finaliza en:</label>
@@ -514,7 +514,7 @@
                      </p>
                    }
                  </div>
-                 
+
                  <!-- Mostrar días calculados -->
                  @if (editFechaForm.get('fecha_finalizacion_precio_especial')?.value && selectedColegioCurso?.fecha_creacion) {
                    <div class="bg-green-50 p-3 rounded-lg border border-green-200">
@@ -539,25 +539,25 @@
                          </svg>
                          <h3 class="font-bold text-blue-800 text-lg">Reunión Programada</h3>
                        </div>
-                       <button 
-                         type="button" 
+                       <button
+                         type="button"
                          (click)="editMeeting()"
                          class="text-sm px-3 py-1 bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm font-medium">
                          Editar
                        </button>
                    </div>
-                   
+
                    <div class="space-y-2 text-sm text-gray-700">
                      <p class="flex items-start">
-                       <span class="font-semibold w-24">Inicio:</span> 
+                       <span class="font-semibold w-24">Inicio:</span>
                        <span>{{ existingMeeting.fecha_inicio | date:'medium' }}</span>
                      </p>
                      <p class="flex items-start">
-                       <span class="font-semibold w-24">Fin:</span> 
+                       <span class="font-semibold w-24">Fin:</span>
                        <span>{{ existingMeeting.fecha_finalizacion | date:'medium' }}</span>
                      </p>
                      <p class="flex items-start">
-                       <span class="font-semibold w-24">Link:</span> 
+                       <span class="font-semibold w-24">Link:</span>
                        <a [href]="existingMeeting.link_reunion" target="_blank" class="text-blue-600 underline hover:text-blue-800 break-all">
                          {{ existingMeeting.link_reunion }}
                        </a>
@@ -581,8 +581,8 @@
                             </svg>
                             Editar Reunión
                         </span>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             (click)="cancelEditMeeting()"
                             class="text-xs text-red-500 hover:text-red-700 underline font-medium">
                             Cancelar Edición

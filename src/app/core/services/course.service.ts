@@ -83,6 +83,25 @@ export class CourseService {
     return this.http.get<ResponseAPI<Course>>(`${this.apiCourse}/${id}`);
   }
 
+  getCourseByIdFiltered(id: string): Observable<ResponseAPI<Course[]>> {
+    const baseParams = {
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*',
+      'filter[id][_eq]': id
+    };
+
+    return this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams }).pipe(
+      map(response => {
+        if (response.data) {
+          response.data = response.data.map(course => ({
+            ...course,
+            img_url: course.img ? `${this.apiUrlAssets}/${course.img}` : undefined
+          }));
+        }
+        return response;
+      })
+    );
+  }
+
   createCourse(course: Course): Observable<ResponseAPI<Course>> {
     return this.http.post<ResponseAPI<Course>>(this.apiCourse, course);
   }

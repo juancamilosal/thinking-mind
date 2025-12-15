@@ -23,6 +23,7 @@ declare var google: any;
 })
 export class ColegioCursosComponent implements OnInit {
   @Input() selectedCourse: Course | null = null;
+  @Input() formTitle: string = 'Agregar Colegio y Fecha de Finalización';
   @Output() goBack = new EventEmitter<void>();
   @Output() colegioAdded = new EventEmitter<void>();
 

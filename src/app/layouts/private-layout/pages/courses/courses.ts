@@ -87,7 +87,7 @@ export class Courses {
 
   ngOnInit(): void {
     this.initForm();
-    this.searchCourse();
+    this.getCourse();
   }
 
   initEditForm(): void {
@@ -236,7 +236,7 @@ export class Courses {
     }
     // Consultar el servicio para actualizar la lista cuando se regresa del formulario
     if (!this.showForm) {
-      this.searchCourse();
+      this.getCourse();
     }
   }
 
@@ -248,7 +248,7 @@ export class Courses {
     });
   }
 
-  searchCourse(searchTerm?: string) {
+  getCourse(searchTerm?: string) {
     this.isLoading = true;
     this.courseServices.searchCourse(searchTerm).subscribe({
       next: (data) => {
@@ -266,7 +266,7 @@ export class Courses {
   }
 
   onSearch() {
-    this.searchCourse(this.searchTerm.trim() || undefined);
+    this.getCourse(this.searchTerm.trim() || undefined);
   }
 
   onSearchInputChange(event: Event) {
@@ -280,20 +280,20 @@ export class Courses {
 
     // Si el campo está vacío, buscar inmediatamente
     if (this.searchTerm.trim() === '') {
-      this.searchCourse();
+      this.getCourse();
       return;
     }
 
     // Establecer nuevo timeout para búsqueda automática
     this.searchTimeout = setTimeout(() => {
-      this.searchCourse(this.searchTerm.trim() || undefined);
+      this.getCourse(this.searchTerm.trim() || undefined);
     }, 300); // Reducido a 300ms para mayor responsividad
   }
 
   // Método mejorado para limpiar búsqueda
   clearSearch() {
     this.searchTerm = '';
-    this.searchCourse();
+    this.getCourse();
   }
 
   // Toggle Historial de Programas
@@ -436,7 +436,7 @@ export class Courses {
   }
 
   onCourseUpdated() {
-    this.searchCourse();
+    this.getCourse();
     this.toggleForm();
   }
 
@@ -459,7 +459,7 @@ export class Courses {
   }
 
   onColegioAdded() {
-    this.searchCourse();
+    this.getCourse();
   }
 
   editColegioCurso(colegioCurso: any) {
@@ -550,7 +550,7 @@ export class Courses {
                 'Éxito',
                 'Colegio eliminado del programa correctamente'
               );
-              this.searchCourse();
+              this.getCourse();
             });
           },
           error: (error) => {
@@ -679,9 +679,9 @@ export class Courses {
         } else if (this.isEditingMeeting && this.existingMeeting.id_reunion) {
           // UPDATE EXISTING
           try {
-             // Ensure we have a valid token before making requests? 
+             // Ensure we have a valid token before making requests?
              // If fetch worked, token should be there.
-             
+
              const event = {
                 summary: this.editFechaForm.get('evento_titulo')?.value,
                 description: this.editFechaForm.get('evento_descripcion')?.value,
@@ -706,7 +706,7 @@ export class Courses {
                 fecha_inicio: event.start.dateTime,
                 fecha_finalizacion: event.end.dateTime
              };
-             
+
              this.courseServices.updateReunionMeet(this.existingMeeting.id, meetingData).subscribe({
                 next: (res) => console.log('Reunión actualizada en Directus:', res),
                 error: (err) => console.error('Error al actualizar reunión en Directus:', err)
@@ -783,7 +783,7 @@ export class Courses {
             'Fecha de finalización actualizada correctamente'
           );
           this.closeEditModal();
-          this.searchCourse(); // Recargar los cursos
+          this.getCourse(); // Recargar los cursos
         },
         error: (error) => {
           console.error('Error al actualizar fecha:', error);
@@ -884,7 +884,7 @@ export class Courses {
               'Programa eliminado',
               `${course.nombre} ha sido eliminado exitosamente.`
             );
-            this.searchCourse(); // Recargar la lista de cursos
+            this.getCourse(); // Recargar la lista de cursos
           },
           error: (error) => {
             console.error('Error al eliminar el programa:', error);
