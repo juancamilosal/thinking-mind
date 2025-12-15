@@ -343,8 +343,8 @@
 
 <!-- Modal para editar fecha de finalización -->
 @if (showEditModal) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Editar Fecha de Finalización</h2>
         <button
@@ -526,6 +526,128 @@
               </div>
             }
           </div>
+
+          <!-- Google Calendar Section -->
+          @if (showGoogleCalendarOption) {
+            <div class="space-y-3 border-t pt-4 mt-4">
+               @if (existingMeeting && !isEditingMeeting) {
+                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm relative">
+                   <div class="flex justify-between items-start">
+                       <div class="flex items-center space-x-2 mb-3">
+                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                         </svg>
+                         <h3 class="font-bold text-blue-800 text-lg">Reunión Programada</h3>
+                       </div>
+                       <button 
+                         type="button" 
+                         (click)="editMeeting()"
+                         class="text-sm px-3 py-1 bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm font-medium">
+                         Editar
+                       </button>
+                   </div>
+                   
+                   <div class="space-y-2 text-sm text-gray-700">
+                     <p class="flex items-start">
+                       <span class="font-semibold w-24">Inicio:</span> 
+                       <span>{{ existingMeeting.fecha_inicio | date:'medium' }}</span>
+                     </p>
+                     <p class="flex items-start">
+                       <span class="font-semibold w-24">Fin:</span> 
+                       <span>{{ existingMeeting.fecha_finalizacion | date:'medium' }}</span>
+                     </p>
+                     <p class="flex items-start">
+                       <span class="font-semibold w-24">Link:</span> 
+                       <a [href]="existingMeeting.link_reunion" target="_blank" class="text-blue-600 underline hover:text-blue-800 break-all">
+                         {{ existingMeeting.link_reunion }}
+                       </a>
+                     </p>
+                   </div>
+                 </div>
+               } @else {
+                 @if (!existingMeeting) {
+                   <label class="inline-flex items-center cursor-pointer">
+                     <input
+                       type="checkbox"
+                       formControlName="agendar_google_calendar"
+                       class="rounded border-blue-300 text-blue-600 focus:ring-blue-500 h-5 w-5" />
+                     <span class="ml-2 text-sm font-bold text-blue-700">Agendar en Google Calendar</span>
+                   </label>
+                 } @else {
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-blue-700 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar Reunión
+                        </span>
+                        <button 
+                            type="button" 
+                            (click)="cancelEditMeeting()"
+                            class="text-xs text-red-500 hover:text-red-700 underline font-medium">
+                            Cancelar Edición
+                        </button>
+                    </div>
+                 }
+
+                 @if (editFechaForm.get('agendar_google_calendar')?.value) {
+                   <div class="space-y-4 pl-4 border-l-4 border-blue-100 mt-2 bg-blue-50/50 p-4 rounded-r-lg">
+                     <!-- Título del Evento -->
+                     <div>
+                       <label for="evento_titulo" class="block text-sm font-semibold text-gray-700 mb-1">
+                         Título del Evento <span class="text-red-500">*</span>
+                       </label>
+                       <input
+                         type="text"
+                         id="evento_titulo"
+                         formControlName="evento_titulo"
+                         placeholder="Ej: Reunión de seguimiento"
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                     </div>
+
+                     <!-- Descripción -->
+                     <div>
+                       <label for="evento_descripcion" class="block text-sm font-semibold text-gray-700 mb-1">
+                         Descripción <span class="text-red-500">*</span>
+                       </label>
+                       <textarea
+                         id="evento_descripcion"
+                         formControlName="evento_descripcion"
+                         rows="3"
+                         placeholder="Detalles de la reunión..."
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"></textarea>
+                     </div>
+
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <!-- Fecha Inicio -->
+                       <div>
+                         <label for="evento_inicio" class="block text-sm font-semibold text-gray-700 mb-1">
+                           Inicio <span class="text-red-500">*</span>
+                         </label>
+                         <input
+                           type="datetime-local"
+                           id="evento_inicio"
+                           formControlName="evento_inicio"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                       </div>
+
+                       <!-- Fecha Fin -->
+                       <div>
+                         <label for="evento_fin" class="block text-sm font-semibold text-gray-700 mb-1">
+                           Fin <span class="text-red-500">*</span>
+                         </label>
+                         <input
+                           type="datetime-local"
+                           id="evento_fin"
+                           formControlName="evento_fin"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                       </div>
+                     </div>
+                   </div>
+                 }
+               }
+            </div>
+          }
 
           <div class="flex space-x-4">
             <button

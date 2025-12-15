@@ -109,6 +109,10 @@ export class CourseService {
     return this.http.post<ResponseAPI<any>>(environment.reuniones_meet, data);
   }
 
+  updateReunionMeet(id: string, data: any): Observable<ResponseAPI<any>> {
+    return this.http.patch<ResponseAPI<any>>(`${environment.reuniones_meet}/${id}`, data);
+  }
+
   getReunionesMeet(): Observable<ResponseAPI<Meeting[]>> {
     const params = {
       'fields': '*,id_colegios_cursos.curso_id.nombre,id_colegios_cursos.colegio_id.nombre'

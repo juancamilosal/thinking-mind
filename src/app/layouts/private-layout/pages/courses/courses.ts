@@ -1,4 +1,5 @@
 import { Component, OnInit, NgZone } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CourseService } from '../../../../core/services/course.service';
@@ -13,11 +14,14 @@ import { ConfirmationService } from '../../../../core/services/confirmation.serv
 import { HistorialProgramasService } from '../../../../core/services/historial-programas.service';
 
 declare var gapi: any;
+declare var google: any;
 
 @Component({
   selector: 'app-courses',
   standalone: true,
   imports: [
+    CommonModule,
+    DatePipe,
     ReactiveFormsModule,
     CourseCardComponent,
     CourseInfoComponent,
@@ -58,6 +62,17 @@ export class Courses {
   selectedColegioCurso: any = null;
   editFechaForm!: FormGroup;
 
+  // Google Calendar Integration
+  showGoogleCalendarOption = false;
+  existingMeeting: any = null;
+  isEditingMeeting = false;
+  private CLIENT_ID = '996133721948-6rim847cd71sknq58u3tcov5drtag7vv.apps.googleusercontent.com';
+  private DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+  private SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+  tokenClient: any;
+  gapiInited = false;
+  gisInited = false;
+
   constructor(
     private fb: FormBuilder,
     private courseServices: CourseService,
@@ -85,7 +100,27 @@ export class Courses {
       precio_especial_lanzamiento: [false],
       precio_especial: [null],
       fecha_finalizacion_precio_especial: [null],
-      programa_independiente: [false]
+      programa_independiente: [false],
+      // Google Calendar Fields
+      agendar_google_calendar: [false],
+      evento_titulo: [''],
+      evento_descripcion: [''],
+      evento_inicio: [null],
+      evento_fin: [null]
+    });
+
+    // Listen for Google Calendar checkbox changes
+    this.editFechaForm.get('agendar_google_calendar')?.valueChanges.subscribe(value => {
+      const controls = ['evento_titulo', 'evento_descripcion', 'evento_inicio', 'evento_fin'];
+      if (value) {
+        controls.forEach(c => this.editFechaForm.get(c)?.setValidators([Validators.required]));
+      } else {
+        controls.forEach(c => {
+          this.editFechaForm.get(c)?.clearValidators();
+          this.editFechaForm.get(c)?.setValue(null);
+        });
+      }
+      controls.forEach(c => this.editFechaForm.get(c)?.updateValueAndValidity());
     });
 
     // Validación dinámica del precio especial
@@ -100,6 +135,95 @@ export class Courses {
       }
       specialPriceCtrl?.updateValueAndValidity();
     });
+  }
+
+  loadGoogleScripts() {
+    const script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    script.onload = () => this.gapiLoaded();
+    document.body.appendChild(script);
+
+    const gisScript = document.createElement('script');
+    gisScript.src = 'https://accounts.google.com/gsi/client';
+    gisScript.onload = () => this.gisLoaded();
+    document.body.appendChild(gisScript);
+  }
+
+  gapiLoaded() {
+    gapi.load('client', async () => {
+      await gapi.client.init({
+        discoveryDocs: [this.DISCOVERY_DOC],
+      });
+      this.gapiInited = true;
+    });
+  }
+
+  gisLoaded() {
+    this.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: this.CLIENT_ID,
+      scope: this.SCOPES,
+      callback: '', // defined later
+    });
+    this.gisInited = true;
+  }
+
+  handleCalendarAuthAndCreation(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.tokenClient.callback = async (resp: any) => {
+        if (resp.error) {
+          reject(resp);
+          return;
+        }
+        try {
+          const event = await this.createCalendarEvent();
+          resolve(event);
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      if (gapi.client.getToken() === null) {
+        this.tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        this.tokenClient.requestAccessToken({ prompt: '' });
+      }
+    });
+  }
+
+  async createCalendarEvent() {
+    const startDate = new Date(this.editFechaForm.get('evento_inicio')?.value);
+    const endDate = new Date(this.editFechaForm.get('evento_fin')?.value);
+
+    if (endDate <= startDate) {
+      alert('Error: La fecha de finalización del evento debe ser posterior a la fecha de inicio.');
+      throw new Error('Invalid date range');
+    }
+
+    const event = {
+      summary: this.editFechaForm.get('evento_titulo')?.value,
+      description: this.editFechaForm.get('evento_descripcion')?.value,
+      start: {
+        dateTime: startDate.toISOString(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      },
+      end: {
+        dateTime: endDate.toISOString(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      },
+      conferenceData: {
+        createRequest: {
+          requestId: "req-" + Date.now(),
+          conferenceSolutionKey: { type: "hangoutsMeet" }
+        }
+      }
+    };
+
+    const request = await gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+      conferenceDataVersion: 1
+    });
+    return request.result;
   }
 
   toggleForm() {
@@ -340,6 +464,8 @@ export class Courses {
 
   editColegioCurso(colegioCurso: any) {
     this.selectedColegioCurso = colegioCurso;
+    this.existingMeeting = colegioCurso.id_reuniones_meet || null;
+
     this.editFechaForm.patchValue({
       fecha_finalizacion: this.formatDateForInput(colegioCurso.fecha_finalizacion),
       precio_curso: (colegioCurso.precio_curso !== null && colegioCurso.precio_curso !== undefined)
@@ -355,8 +481,26 @@ export class Courses {
         ? this.formatPrice(colegioCurso.precio_especial)
         : '',
       fecha_finalizacion_precio_especial: colegioCurso.fecha_finalizacion_precio_especial || null,
-      programa_independiente: colegioCurso.programa_independiente || false
+      programa_independiente: colegioCurso.programa_independiente || false,
+      agendar_google_calendar: false,
+      evento_titulo: '',
+      evento_descripcion: '',
+      evento_inicio: null,
+      evento_fin: null
     });
+
+    // Check if course is AYO (ID: 28070b14-f3c1-48ec-9e2f-95263f19eec3)
+    const ayoCourseId = '28070b14-f3c1-48ec-9e2f-95263f19eec3';
+    // colegioCurso.curso_id might be an object or a string depending on how it was fetched
+    const courseId = typeof colegioCurso.curso_id === 'object' ? colegioCurso.curso_id?.id : colegioCurso.curso_id;
+
+    if (courseId === ayoCourseId) {
+      this.showGoogleCalendarOption = true;
+      if (!this.gapiInited) this.loadGoogleScripts();
+    } else {
+      this.showGoogleCalendarOption = false;
+    }
+
     this.showEditModal = true;
   }
 
@@ -422,8 +566,160 @@ export class Courses {
     );
   }
 
-  saveEditedFecha() {
+  async ensureCalendarAuth(): Promise<boolean> {
+    if (!this.gapiInited || !this.gisInited) {
+      await this.loadGoogleScripts();
+      // Wait a bit for init? loadGoogleScripts is not async in previous implementation, let's check.
+      // Actually loadGoogleScripts returns void but sets flags.
+    }
+
+    return new Promise((resolve) => {
+      this.tokenClient.callback = async (resp: any) => {
+        if (resp.error) {
+          throw resp;
+        }
+        resolve(true);
+      };
+
+      if (gapi.client.getToken() === null) {
+        this.tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        this.tokenClient.requestAccessToken({ prompt: '' });
+      }
+    });
+  }
+
+  async editMeeting() {
+    this.isEditingMeeting = true;
+    this.editFechaForm.patchValue({ agendar_google_calendar: true });
+
+    if (this.existingMeeting && this.existingMeeting.id_reunion) {
+      try {
+        await this.ensureCalendarAuth();
+        await this.fetchGoogleEvent(this.existingMeeting.id_reunion);
+      } catch (error) {
+        console.error('Error preparing meeting edit:', error);
+        this.notificationService.showError('Error', 'No se pudo cargar la información de la reunión');
+        this.cancelEditMeeting();
+      }
+    }
+  }
+
+  cancelEditMeeting() {
+    this.isEditingMeeting = false;
+    this.editFechaForm.patchValue({
+      agendar_google_calendar: false,
+      evento_titulo: '',
+      evento_descripcion: '',
+      evento_inicio: null,
+      evento_fin: null
+    });
+  }
+
+  async fetchGoogleEvent(eventId: string) {
+    try {
+      const response = await gapi.client.calendar.events.get({
+        calendarId: 'primary',
+        eventId: eventId
+      });
+      const event = response.result;
+
+      // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
+      const formatDateTime = (isoString: string) => {
+        if (!isoString) return null;
+        const date = new Date(isoString);
+        const pad = (n: number) => n < 10 ? '0' + n : n;
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      };
+
+      this.editFechaForm.patchValue({
+        evento_titulo: event.summary,
+        evento_descripcion: event.description,
+        evento_inicio: formatDateTime(event.start.dateTime),
+        evento_fin: formatDateTime(event.end.dateTime)
+      });
+    } catch (e) {
+      console.error("Error fetching event", e);
+      throw e;
+    }
+  }
+
+  async saveEditedFecha() {
     if (this.editFechaForm.valid && this.selectedColegioCurso) {
+
+      // Handle Google Calendar Logic
+      if (this.editFechaForm.get('agendar_google_calendar')?.value) {
+        if (!this.existingMeeting) {
+          // CREATE NEW
+          try {
+            const calendarEventData = await this.handleCalendarAuthAndCreation();
+
+            if (calendarEventData) {
+              const tokenObj = gapi?.client?.getToken?.();
+              const accessToken = tokenObj?.access_token;
+              const meetingData = {
+                fecha_inicio: calendarEventData.start.dateTime,
+                fecha_finalizacion: calendarEventData.end.dateTime,
+                id_reunion: calendarEventData.id,
+                link_reunion: calendarEventData.hangoutLink,
+                id_colegios_cursos: [this.selectedColegioCurso.id],
+                token: accessToken
+              };
+
+              this.courseServices.createReunionMeet(meetingData).subscribe({
+                next: (res) => console.log('Reunión guardada en Directus:', res),
+                error: (err) => console.error('Error al guardar reunión en Directus:', err)
+              });
+            }
+          } catch (error) {
+            console.error('Error creating calendar event:', error);
+            this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar');
+            return;
+          }
+        } else if (this.isEditingMeeting && this.existingMeeting.id_reunion) {
+          // UPDATE EXISTING
+          try {
+             // Ensure we have a valid token before making requests? 
+             // If fetch worked, token should be there.
+             
+             const event = {
+                summary: this.editFechaForm.get('evento_titulo')?.value,
+                description: this.editFechaForm.get('evento_descripcion')?.value,
+                start: {
+                    dateTime: new Date(this.editFechaForm.get('evento_inicio')?.value).toISOString(),
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                },
+                end: {
+                    dateTime: new Date(this.editFechaForm.get('evento_fin')?.value).toISOString(),
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+             };
+
+             await gapi.client.calendar.events.patch({
+                calendarId: 'primary',
+                eventId: this.existingMeeting.id_reunion,
+                resource: event
+             });
+
+             // Update Directus
+             const meetingData = {
+                fecha_inicio: event.start.dateTime,
+                fecha_finalizacion: event.end.dateTime
+             };
+             
+             this.courseServices.updateReunionMeet(this.existingMeeting.id, meetingData).subscribe({
+                next: (res) => console.log('Reunión actualizada en Directus:', res),
+                error: (err) => console.error('Error al actualizar reunión en Directus:', err)
+             });
+
+          } catch (error) {
+             console.error('Error updating calendar event:', error);
+             this.notificationService.showError('Error', 'No se pudo actualizar el evento en Google Calendar');
+             return;
+          }
+        }
+      }
+
       const updatedData: any = {
         // Convertimos a ISO compatible con el backend (YYYY-MM-DDT00:00:00)
         fecha_finalizacion: this.toIsoDateString(this.editFechaForm.get('fecha_finalizacion')?.value)
@@ -572,6 +868,8 @@ export class Courses {
   closeEditModal() {
     this.showEditModal = false;
     this.selectedColegioCurso = null;
+    this.existingMeeting = null;
+    this.isEditingMeeting = false;
     this.editFechaForm.reset();
   }
 

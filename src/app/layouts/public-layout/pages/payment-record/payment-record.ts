@@ -90,17 +90,6 @@ export class PaymentRecord implements OnInit {
   eurRateErrorNotified: boolean = false;
   isExchangeRateError: boolean = false;
 
-  // AYO Program properties
-  readonly ayoCourseId = '28070b14-f3c1-48ec-9e2f-95263f19eec3';
-  isAyoSelected = false;
-  ayoOptions: any[] = [];
-  selectedAyoOption: any = null;
-
-  // Modal para correo de reunión
-  showMeetingEmailModal: boolean = false;
-  meetingEmail: string = '';
-  meetingEmailError: string = '';
-
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
@@ -215,14 +204,6 @@ export class PaymentRecord implements OnInit {
 
 
   onSubmit(): void {
-    // Validación específica para AYO
-    if (this.isAyoSelected && !this.selectedAyoOption) {
-      this.markFormGroupTouched(this.paymentForm);
-      // Forzar que se muestre el error si no se ha tocado el control (aunque al seleccionar curso ya se tocó)
-      this.paymentForm.get('selectedCourse')?.markAsTouched();
-      return;
-    }
-
     if (this.paymentForm.valid) {
       this.showConfirmation = true;
     } else {
@@ -1009,7 +990,6 @@ export class PaymentRecord implements OnInit {
           this.resetCourseSelection();
         }
       }
-      this.checkMeetingRequirement(undefined, school.id);
     }
   }
 
@@ -1034,7 +1014,7 @@ export class PaymentRecord implements OnInit {
       this.filteredSchools = [];
       this.isSchoolSelected = true;
       this.updateSelectedCoursePriceIfAny();
-      this.checkMeetingRequirement(undefined, this.openProgramSchoolId);
+
     } else {
       this.paymentForm.get('independentInstitution')?.setValue('');
       this.clearSchoolSearch();
@@ -1109,25 +1089,6 @@ export class PaymentRecord implements OnInit {
         // Actualizar imagen del curso seleccionado si existe
         this.selectedCourseImageUrl = selectedCourse.img_url || null;
 
-        // Lógica específica para AYO
-        if (courseId === this.ayoCourseId) {
-          this.isAyoSelected = true;
-          this.ayoOptions = selectedCourse.colegios_cursos || [];
-          this.selectedAyoOption = null;
-          // Limpiar precios hasta que seleccione una opción
-          this.paymentForm.patchValue({
-            coursePrice: '',
-            courseInscriptionPrice: ''
-          });
-          this.hasInscription = false;
-          this.checkMeetingRequirement(courseId);
-          return; // Salir y esperar selección de opción AYO
-        } else {
-          this.isAyoSelected = false;
-          this.ayoOptions = [];
-          this.selectedAyoOption = null;
-        }
-
         // Obtener precio de inscripción y moneda desde colegios_cursos
         const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
         let inscriptionNumber: number = 0;
@@ -1196,54 +1157,6 @@ export class PaymentRecord implements OnInit {
     } else {
       this.resetCourseSelection();
     }
-    this.checkMeetingRequirement(courseId);
-  }
-
-  onAyoOptionChange(option: any): void {
-    this.selectedAyoOption = option;
-    
-    // Calcular precios basados en la opción seleccionada
-    let coursePrice = 0;
-    
-    // Verificar si tiene precio especial
-    const hasSpecial = (() => {
-      const val = option?.tiene_precio_especial;
-      if (typeof val === 'string') return val.trim().toUpperCase() === 'TRUE';
-      if (typeof val === 'boolean') return val === true;
-      if (typeof val === 'number') return val === 1;
-      return false;
-    })();
-
-    if (hasSpecial && option.precio_especial) {
-      coursePrice = Number(option.precio_especial) || 0;
-    } else {
-      coursePrice = Number(option.precio_curso) || 0;
-    }
-
-    const inscriptionNumber = Number(option.precio_inscripcion) || 0;
-    const courseCurrency = option.moneda || null;
-    
-    // Determinar moneda
-    this.isEuroCourse = courseCurrency === 'EUR';
-
-    // Formatear precios
-    const formattedPrice = coursePrice > 0 ? this.formatCurrency(coursePrice) : '';
-    const inscriptionFormatted = inscriptionNumber > 0
-      ? `${courseCurrency || 'COP'} ${new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(inscriptionNumber)}`
-      : '';
-
-    this.paymentForm.patchValue({
-      coursePrice: formattedPrice,
-      courseInscriptionPrice: inscriptionFormatted
-    });
-
-    // Actualizar banderas
-    this.hasInscription = inscriptionNumber > 0;
-    this.selectedInscriptionAmount = inscriptionNumber;
-    this.updateInscriptionConversion();
   }
 
   // Obtiene el precio del curso específico del colegio seleccionado (si existe)
@@ -1445,60 +1358,6 @@ export class PaymentRecord implements OnInit {
     }, 500)
   }
 
-  checkMeetingRequirement(courseIdOverride?: string, schoolIdOverride?: string): void {
-    const selectedCourseId = courseIdOverride || this.paymentForm.get('selectedCourse')?.value;
-    const schoolId = schoolIdOverride || this.paymentForm.get('studentSchool')?.value;
-
-    if (selectedCourseId) {
-      const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
-      
-      // Si el curso es AYO, mostrar el modal independientemente del colegio
-      if (selectedCourse && selectedCourse.nombre === 'AYO') {
-        this.showMeetingEmailModal = true;
-        const guardianEmail = this.paymentForm.get('guardianEmail')?.value;
-        if (guardianEmail && !this.meetingEmail) {
-          this.meetingEmail = guardianEmail;
-        }
-        return;
-      }
-
-      if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
-        const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) => {
-          const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
-          return ccSchoolId && ccSchoolId === schoolId;
-        });
-
-        if (schoolCourse && schoolCourse.id_reuniones_meet) {
-          this.showMeetingEmailModal = true;
-          // Pre-llenar con el correo del acudiente si está disponible y no hay uno ingresado
-          const guardianEmail = this.paymentForm.get('guardianEmail')?.value;
-          if (guardianEmail && !this.meetingEmail) {
-            this.meetingEmail = guardianEmail;
-          }
-        }
-      }
-    }
-  }
-
-  closeMeetingEmailModal(): void {
-    this.showMeetingEmailModal = false;
-    this.meetingEmailError = '';
-  }
-
-  confirmMeetingEmail(): void {
-    if (!this.meetingEmail) {
-      this.meetingEmailError = 'El correo electrónico es obligatorio.';
-      return;
-    }
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailPattern.test(this.meetingEmail)) {
-      this.meetingEmailError = 'Ingrese un correo electrónico válido.';
-      return;
-    }
-    this.showMeetingEmailModal = false;
-    this.meetingEmailError = '';
-  }
-
   createAccountRecord = () => {
     const coursePriceString = this.paymentForm.get('coursePrice')?.value;
     const coursePriceNumber = this.parseCurrencyToNumber(coursePriceString);
@@ -1523,7 +1382,7 @@ export class PaymentRecord implements OnInit {
     const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
     let inscriptionNumber: number = 0;
     let inscriptionCurrency: string = 'USD'; // Por defecto USD
-    let idReunionesMeet: string | null = null;
+
 
     if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
       // Buscar el colegio específico en colegios_cursos
@@ -1536,12 +1395,7 @@ export class PaymentRecord implements OnInit {
         inscriptionNumber = schoolCourse.precio_inscripcion || 0;
         inscriptionCurrency = schoolCourse.moneda || 'USD';
 
-        // Obtener id_reuniones_meet
-        if (schoolCourse.id_reuniones_meet) {
-          idReunionesMeet = typeof schoolCourse.id_reuniones_meet === 'object'
-            ? schoolCourse.id_reuniones_meet.id
-            : schoolCourse.id_reuniones_meet;
-        }
+
       }
     }
 
@@ -1576,7 +1430,7 @@ export class PaymentRecord implements OnInit {
       precio: coursePriceNumber,
       // Enviar la inscripción ya convertida a COP
       precio_inscripcion: inscriptionConvertedCop,
-      id_reunion_meet: idReunionesMeet,
+
       estado: 'PENDIENTE',
       fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
     };
