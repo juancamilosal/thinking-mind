@@ -21,6 +21,7 @@ import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
+import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
 
 
 export const routes: Routes = [
@@ -133,6 +134,11 @@ export const routes: Routes = [
         path: 'form-colegio-cursos',
         title: 'Thinking Mind | Colegio Cursos',
         component: ColegioCursosComponent
+      },
+      {
+        path: 'entry-validation',
+        title: 'Thinking Mind | Validación de Ingreso',
+        component: EntryValidation
       },
       {
         path: '**',
