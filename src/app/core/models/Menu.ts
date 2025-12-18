@@ -6,4 +6,5 @@ export class Menu {
   menu_rol: string
   orden: number
   ruta: string
+  activo: boolean;
 }

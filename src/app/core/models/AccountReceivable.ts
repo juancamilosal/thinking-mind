@@ -17,6 +17,7 @@ export class PaymentModel {
   iva?: number;
   valor_neto?:number;
   retencion_fuente?: number;
+  responsable?: any;
 }
 
 export class AccountReceivable {
@@ -78,4 +79,5 @@ export class ReturnAccount {
   id?: string;
   monto?: number;
   comprobante?: string;
+  responsable?: string;
 }

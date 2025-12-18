@@ -19,7 +19,8 @@ export class PaymentService {
     let params: any = {
       page: page.toString(),
       limit: limit.toString(),
-      meta: 'total_count,filter_count'
+      meta: 'total_count,filter_count',
+      fields: '*,responsable.*'
     };
 
     // Filtro por término de búsqueda
@@ -54,7 +55,8 @@ export class PaymentService {
 
   getPaymentsByAccountId(accountId: string): Observable<ResponseAPI<PaymentModel[]>> {
     const params = {
-      'filter[cuenta_cobrar_id][_eq]': accountId
+      'filter[cuenta_cobrar_id][_eq]': accountId,
+      'fields': '*,responsable.*'
     };
     return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
   }
