@@ -51,6 +51,11 @@ export const routes: Routes = [
     component: PaymentStatusComponent
   },
   {
+    path: 'entry-validation',
+    title: 'Thinking Mind | Validación de Ingreso',
+    component: EntryValidation
+  },
+  {
     path: 'private',
     component: PrivateLayout,
     canActivate: [authGuard],
@@ -134,11 +139,6 @@ export const routes: Routes = [
         path: 'form-colegio-cursos',
         title: 'Thinking Mind | Colegio Cursos',
         component: ColegioCursosComponent
-      },
-      {
-        path: 'entry-validation',
-        title: 'Thinking Mind | Validación de Ingreso',
-        component: EntryValidation
       },
       {
         path: '**',
