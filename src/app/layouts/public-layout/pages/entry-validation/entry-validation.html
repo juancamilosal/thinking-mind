@@ -7,19 +7,18 @@
                 <img src="assets/icons/ayo.png" alt="Logo AYO" class="main-logo">
             </div>
             <div class="greeting">
-              <span class="hand-wave">👋</span>
+                <span class="hand-wave">👋</span>
                 <span>¡BIENVENIDO!</span>
                 <span class="hand-wave">👋</span>
             </div>
 
             <p class="description">
-                Gestiona tus beneficios educativos de forma rápida y segura.<br>
                 Tu futuro comienza aquí.
             </p>
         </div>
 
         <div class="footer-text">
-            © 2025 Thinking Mind | Todos los derechos reservados.
+            © 2026 Thinking Mind | Todos los derechos reservados.
         </div>
     </div>
 
@@ -59,12 +58,15 @@
                     <div class="input-with-icon">
                         <input type="text" id="codigoVerificacion" formControlName="codigoVerificacion"
                             class="custom-input" placeholder="Código">
-                        <!-- Optional toggle icon could go here if it was a password -->
                     </div>
                 </div>
                 <button type="submit" [disabled]="validationForm.invalid || isLoading" class="btn-primary">
-                    <span *ngIf="!isLoading">Ingresar ahora</span>
-                    <div *ngIf="isLoading" class="spinner"></div>
+                    @if (!isLoading) {
+                    <span>Ingresar ahora</span>
+                    }
+                    @if (isLoading) {
+                    <div class="spinner"></div>
+                    }
                 </button>
             </form>
         </div>
