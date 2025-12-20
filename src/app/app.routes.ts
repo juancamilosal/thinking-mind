@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { PublicLayout } from './layouts/public-layout/public-layout';
+import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
@@ -11,7 +12,6 @@ import { Payments } from './layouts/private-layout/pages/payments/payments';
 import { PaymentRecord } from './layouts/public-layout/pages/payment-record/payment-record';
 import { PaymentStatusComponent } from './layouts/public-layout/pages/payment-record/payment-status/payment-status.component';
 import { IndependentProgramPayment } from './layouts/public-layout/pages/independent-program-payment/independent-program-payment';
-import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
 import { BudgetReport } from './layouts/private-layout/pages/reports/budget-report/budget-report';
@@ -38,6 +38,11 @@ export const routes: Routes = [
     component: Login
   },
   {
+    path: 'entry-validation',
+    title: 'Thinking Mind | Validación de Ingreso',
+    component: EntryValidation
+  },
+  {
     path: 'payment-record',
     title: 'Thinking Mind | Payment Registro de Pago',
     component: PaymentRecord
@@ -51,11 +56,6 @@ export const routes: Routes = [
     path: 'payment-status',
     title: 'Thinking Mind | Estado de Pago',
     component: PaymentStatusComponent
-  },
-  {
-    path: 'entry-validation',
-    title: 'Thinking Mind | Validación de Ingreso',
-    component: EntryValidation
   },
   {
     path: 'private',
