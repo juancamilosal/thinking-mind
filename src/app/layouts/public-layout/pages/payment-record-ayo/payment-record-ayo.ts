@@ -24,7 +24,13 @@ export class PaymentRecordAyoComponent implements OnInit {
             apellido: ['', Validators.required],
             celular: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
             email: ['', [Validators.required, Validators.email]],
-            direccion: ['', Validators.required]
+            direccion: ['', Validators.required],
+            // Student Information
+            studentTipoDocumento: ['', Validators.required],
+            studentNumeroDocumento: ['', Validators.required],
+            studentNombre: ['', Validators.required],
+            studentApellido: ['', Validators.required],
+            studentColegio: ['', Validators.required]
         });
     }
 
