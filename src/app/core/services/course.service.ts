@@ -1,10 +1,11 @@
-import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
-import {ResponseAPI} from '../models/ResponseAPI';
-import {Course} from '../models/Course';
-import {environment} from '../../../environments/environment';
-import {map} from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ResponseAPI } from '../models/ResponseAPI';
+import { Course } from '../models/Course';
+import { Meeting } from '../models/Meeting';
+import { environment } from '../../../environments/environment';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -21,18 +22,18 @@ export class CourseService {
   searchCourse(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
     // Agregar fields para incluir colegios_cursos con colegio_id expandido
     const baseParams = {
-      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*'
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*'
     };
 
     const request = !searchTerm
       ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
       : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
-          params: {
-            ...baseParams,
-            'filter[_or][0][nombre][_icontains]': searchTerm,
-            'filter[_or][1][sku][_icontains]': searchTerm,
-          }
-        });
+        params: {
+          ...baseParams,
+          'filter[_or][0][nombre][_icontains]': searchTerm,
+          'filter[_or][1][sku][_icontains]': searchTerm,
+        }
+      });
 
     return request.pipe(
       map(response => {
@@ -50,20 +51,20 @@ export class CourseService {
   searchIndependentCourses(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
     // Parámetros base con fields y filtro para programa_independiente = true
     const baseParams = {
-      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*',
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*',
       'filter[programa_independiente][_eq]': 'true'
     };
 
     const request = !searchTerm
       ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
       : this.http.get<ResponseAPI<Course[]>>(this.apiCourse, {
-          params: {
-            ...baseParams,
-            'filter[_and][0][programa_independiente][_eq]': 'true',
-            'filter[_and][1][_or][0][nombre][_icontains]': searchTerm,
-            'filter[_and][1][_or][1][sku][_icontains]': searchTerm,
-          }
-        });
+        params: {
+          ...baseParams,
+          'filter[_and][0][programa_independiente][_eq]': 'true',
+          'filter[_and][1][_or][0][nombre][_icontains]': searchTerm,
+          'filter[_and][1][_or][1][sku][_icontains]': searchTerm,
+        }
+      });
 
     return request.pipe(
       map(response => {
@@ -80,6 +81,25 @@ export class CourseService {
 
   getCourseById(id: string): Observable<ResponseAPI<Course>> {
     return this.http.get<ResponseAPI<Course>>(`${this.apiCourse}/${id}`);
+  }
+
+  getCourseByIdFiltered(id: string): Observable<ResponseAPI<Course[]>> {
+    const baseParams = {
+      'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*',
+      'filter[id][_eq]': id
+    };
+
+    return this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams }).pipe(
+      map(response => {
+        if (response.data) {
+          response.data = response.data.map(course => ({
+            ...course,
+            img_url: course.img ? `${this.apiUrlAssets}/${course.img}` : undefined
+          }));
+        }
+        return response;
+      })
+    );
   }
 
   createCourse(course: Course): Observable<ResponseAPI<Course>> {
@@ -102,5 +122,24 @@ export class CourseService {
 
   deleteFile(fileId: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiFile}/${fileId}`);
+  }
+
+  createReunionMeet(data: any): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(environment.reuniones_meet, data);
+  }
+
+  updateReunionMeet(id: string, data: any): Observable<ResponseAPI<any>> {
+    return this.http.patch<ResponseAPI<any>>(`${environment.reuniones_meet}/${id}`, data);
+  }
+
+  getReunionesMeet(): Observable<ResponseAPI<Meeting[]>> {
+    const params = {
+      'fields': '*,id_colegios_cursos.curso_id.nombre,id_colegios_cursos.colegio_id.nombre'
+    };
+    return this.http.get<ResponseAPI<Meeting[]>>(environment.reuniones_meet, { params });
+  }
+
+  deleteReunionMeet(id: string): Observable<ResponseAPI<any>> {
+    return this.http.delete<ResponseAPI<any>>(`${environment.reuniones_meet}/${id}`);
   }
 }
