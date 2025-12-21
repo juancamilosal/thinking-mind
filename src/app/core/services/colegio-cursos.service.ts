@@ -13,6 +13,7 @@ export class ColegioCurso {
   tiene_precio_especial?: string; // "TRUE" | "FALSE"
   precio_especial?: number | null;
   programa_independiente?: boolean; // Campo para identificar programas independientes
+  idioma?: string;
 }
 
 @Injectable({

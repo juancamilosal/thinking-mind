@@ -133,8 +133,14 @@ export class ColegioCursosComponent implements OnInit {
       evento_titulo: [''],
       evento_descripcion: [''],
       evento_inicio: [null],
-      evento_fin: [null]
+      evento_fin: [null],
+      idioma: [null]
     });
+
+    if (this.formTitle === 'Agregar Programa AYO') {
+      this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
+      this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
+    }
 
     // Listen for Google Calendar checkbox changes
     this.fechaFinalizacionForm.get('agendar_google_calendar')?.valueChanges.subscribe(value => {
@@ -320,7 +326,8 @@ export class ColegioCursosComponent implements OnInit {
         precio_especial: precioEspecialValor,
         fecha_finalizacion_precio_especial: this.fechaFinalizacionForm.get('fecha_finalizacion_precio_especial')?.value,
         fecha_creacion: fechaCreacionISO,
-        programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false
+        programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false,
+        idioma: this.fechaFinalizacionForm.get('idioma')?.value
       };
 
       // Add Google Calendar data if available
