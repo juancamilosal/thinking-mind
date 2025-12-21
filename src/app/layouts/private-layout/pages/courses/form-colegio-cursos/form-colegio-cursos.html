@@ -282,7 +282,7 @@
 
         <!-- Campo de Precio del Programa -->
         <div class="space-y-3">
-          <label for="precio_curso" class="text-sm font-semibold text-green-700 flex items-center">
+          <label for="precio_curso" class="text-md font-semibold text-green-700 flex items-center">
             <img src="assets/icons/precio.png" class="w-10 h-10 mr-2" alt="Precio">
             Precio del Programa *
           </label>
@@ -456,6 +456,7 @@
           </h3>
 
           <div class="space-y-4">
+            @if (formTitle !== 'Agregar Programa AYO') {
             <div class="flex items-center space-x-3">
               <input type="checkbox" id="agendar_google_calendar" formControlName="agendar_google_calendar"
                 class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
@@ -463,6 +464,7 @@
                 Agendar Evento en Google Calendar
               </label>
             </div>
+            }
 
             @if (fechaFinalizacionForm.get('agendar_google_calendar')?.value) {
             <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 space-y-6 animate-fadeIn">

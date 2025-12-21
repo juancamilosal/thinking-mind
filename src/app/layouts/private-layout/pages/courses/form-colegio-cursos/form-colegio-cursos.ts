@@ -148,17 +148,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       idioma: [null]
     });
 
-    if (this.formTitle === 'Agregar Programa AYO') {
-      this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
-      this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
-      
-      if (this.initialLanguage) {
-        setTimeout(() => {
-          this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
-        });
-      }
-    }
-
     // Listen for Google Calendar checkbox changes
     this.fechaFinalizacionForm.get('agendar_google_calendar')?.valueChanges.subscribe(value => {
       const controls = ['evento_titulo', 'evento_descripcion', 'evento_inicio', 'evento_fin'];
@@ -192,6 +181,18 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
 
       colegioControl?.updateValueAndValidity();
     });
+
+    if (this.formTitle === 'Agregar Programa AYO') {
+      this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
+      this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
+      this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
+      
+      if (this.initialLanguage) {
+        setTimeout(() => {
+          this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
+        });
+      }
+    }
   }
 
   loadCourses(): void {
