@@ -30,6 +30,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             studentNumeroDocumento: ['', Validators.required],
             studentNombre: ['', Validators.required],
             studentApellido: ['', Validators.required],
+            studentEmail: ['', [Validators.required, Validators.email]],
             studentColegio: ['', Validators.required]
         });
     }

@@ -163,9 +163,9 @@
                     <!-- Student Info Card -->
                     <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                         <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
-                          <div class="bg-gradient-to-r  p-3 mr-4">
-                            <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24">
-                          </div>
+                            <div class="bg-gradient-to-r  p-3 mr-4">
+                                <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24">
+                            </div>
                             <h3 class="text-2xl font-bold text-[#13486e]">Información del Estudiante</h3>
                         </div>
 
@@ -210,6 +210,20 @@
                                 <input type="text" id="studentApellido" formControlName="studentApellido"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Apellido del estudiante">
+                            </div>
+
+                            <div class="space-y-3 group md:col-span-2">
+                                <label for="studentEmail"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
+                                    Electrónico</label>
+                                <input type="email" id="studentEmail" formControlName="studentEmail"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="estudiante@gmail.com">
+                                <p class="text-sm text-gray-600 mt-2 flex items-start gap-2">
+                                    <span class="text-orange-500 flex-shrink-0">ℹ️</span>
+                                    <span>Para poder registrarse, el correo del estudiante debe ser un correo electrónico de Gmail. Si no tiene
+                                        uno, lo invitamos a crearlo para poder registrarse.</span>
+                                </p>
                             </div>
 
                             <div class="space-y-3 md:col-span-2 group">
