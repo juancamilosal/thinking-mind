@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { PublicLayout } from './layouts/public-layout/public-layout';
-import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
+import { RegisterAyo } from './layouts/public-layout/pages/register-ayo/register-ayo';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
@@ -38,9 +38,9 @@ export const routes: Routes = [
     component: Login
   },
   {
-    path: 'entry-validation',
+    path: 'register-ayo',
     title: 'Thinking Mind | Validación de Ingreso',
-    component: EntryValidation
+    component: RegisterAyo
   },
   {
     path: 'payment-record',

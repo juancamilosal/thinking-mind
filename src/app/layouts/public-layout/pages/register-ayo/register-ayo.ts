@@ -4,13 +4,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 @Component({
-    selector: 'app-entry-validation',
+    selector: 'app-register-ayo',
     standalone: true,
     imports: [ReactiveFormsModule, CommonModule, RouterModule],
-    templateUrl: './entry-validation.html',
-    styleUrls: ['./entry-validation.css']
+    templateUrl: './register-ayo.html',
+    styleUrls: ['./register-ayo.css']
 })
-export class EntryValidation implements OnInit {
+export class RegisterAyo implements OnInit {
     registerForm!: FormGroup;
     loginForm!: FormGroup;
 
