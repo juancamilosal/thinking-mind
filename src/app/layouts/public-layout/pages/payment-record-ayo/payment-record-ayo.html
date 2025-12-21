@@ -1,0 +1,125 @@
+<div class="ayo-page-container">
+    <div class="background-animation"></div>
+
+    <div class="content-container">
+
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="logo-circle">
+                <img src="assets/icons/ayo.png" alt="Logo AYO" class="header-logo">
+            </div>
+            <h1 class="page-title">Portal de Pagos AYO</h1>
+            <p class="page-subtitle">Consulta tu estado, historial de pagos y accede 24/7 de manera fácil y segura.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3>Registro Seguro</h3>
+                    <p>Información protegida</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Proceso Rápido</h3>
+                    <p>Consulta en minutos</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🕒</span>
+                    <h3>Atención 24/7</h3>
+                    <p>Acceso permanente</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions Section -->
+        <div class="instructions-section">
+            <div class="instructions-icon">ℹ️</div>
+            <div class="instructions-content">
+                <h3>Instrucciones para el registro y consulta</h3>
+                <ul>
+                    <li>• Complete la información del acudiente (persona responsable del pago).</li>
+                    <li>• Todos los campos son obligatorios para garantizar un contacto efectivo.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+
+            <!-- Guardian Info Card -->
+            <div class="form-card">
+                <div class="card-header">
+                    <div class="header-icon-container">
+                        <span class="header-icon">👤</span>
+                    </div>
+                    <h3>Información del Acudiente</h3>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="tipoDocumento">Tipo de Documento</label>
+                        <select id="tipoDocumento" formControlName="tipoDocumento" class="custom-input">
+                            <option value="" disabled selected>Selecciona</option>
+                            <option value="TI">Tarjeta de Identidad</option>
+                            <option value="CC">Cédula de Ciudadanía</option>
+                            <option value="CE">Cédula de Extranjería</option>
+                            <option value="PAS">Pasaporte</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numeroDocumento">Número de Documento</label>
+                        <input type="text" id="numeroDocumento" formControlName="numeroDocumento" class="custom-input"
+                            placeholder="Ej: 1000123456">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" id="nombre" formControlName="nombre" class="custom-input"
+                            placeholder="Tu nombre">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apellido">Apellido</label>
+                        <input type="text" id="apellido" formControlName="apellido" class="custom-input"
+                            placeholder="Tu apellido">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="celular">Número de Celular</label>
+                        <input type="tel" id="celular" formControlName="celular" class="custom-input"
+                            placeholder="Ej: 3001234567">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="email" formControlName="email" class="custom-input"
+                            placeholder="nombre@correo.com">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" id="direccion" formControlName="direccion" class="custom-input"
+                            placeholder="Dirección de residencia">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button Area -->
+            <div class="action-area">
+                <button type="submit" [disabled]="paymentForm.invalid || isLoading" class="btn-primary">
+                    @if (!isLoading) {
+                    <span>Continuar</span>
+                    }
+                    @if (isLoading) {
+                    <div class="spinner"></div>
+                    }
+                </button>
+            </div>
+
+        </form>
+
+        <div class="footer-text">
+            © 2026 Thinking Mind | Todos los derechos reservados.
+        </div>
+    </div>
+</div>
