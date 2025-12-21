@@ -16,6 +16,7 @@ export class AyoComponent implements OnInit {
   courses: Course[] = [];
   isLoading: boolean = true;
   showForm: boolean = false;
+  selectedLanguage: string | null = null;
 
   constructor(private courseService: CourseService) { }
 
@@ -41,13 +42,15 @@ export class AyoComponent implements OnInit {
     });
   }
 
-  openForm(): void {
+  openForm(language: string): void {
+    this.selectedLanguage = language;
     this.showForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   closeForm(): void {
     this.showForm = false;
+    this.selectedLanguage = null;
   }
 
   onColegioAdded(): void {

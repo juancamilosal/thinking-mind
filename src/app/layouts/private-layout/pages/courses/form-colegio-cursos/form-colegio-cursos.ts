@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { CourseService } from '../../../../../core/services/course.service';
@@ -21,9 +21,10 @@ declare var google: any;
   templateUrl: './form-colegio-cursos.html',
   styleUrl: './form-colegio-cursos.css'
 })
-export class ColegioCursosComponent implements OnInit {
+export class ColegioCursosComponent implements OnInit, OnChanges {
   @Input() selectedCourse: Course | null = null;
   @Input() formTitle: string = 'Agregar Colegio y Fecha de Finalización';
+  @Input() initialLanguage: string | null = null;
   @Output() goBack = new EventEmitter<void>();
   @Output() colegioAdded = new EventEmitter<void>();
 
@@ -52,6 +53,16 @@ export class ColegioCursosComponent implements OnInit {
     private notificationService: NotificationService,
     private colegioCursosService: ColegioCursosService
   ) { }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialLanguage'] && this.fechaFinalizacionForm) {
+      if (this.initialLanguage) {
+        setTimeout(() => {
+          this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
+        });
+      }
+    }
+  }
 
   ngOnInit(): void {
     this.initForm();
@@ -140,6 +151,12 @@ export class ColegioCursosComponent implements OnInit {
     if (this.formTitle === 'Agregar Programa AYO') {
       this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
       this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
+      
+      if (this.initialLanguage) {
+        setTimeout(() => {
+          this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
+        });
+      }
     }
 
     // Listen for Google Calendar checkbox changes

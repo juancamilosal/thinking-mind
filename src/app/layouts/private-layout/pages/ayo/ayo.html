@@ -17,7 +17,7 @@
       <div class="flex flex-col md:flex-row justify-center items-center gap-8 mt-10">
 
         <!-- Card AYO Inglés -->
-        <div (click)="openForm()" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
+        <div (click)="openForm('INGLÉS')" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
 
           <div class="h-48 relative overflow-hidden flex flex-col items-center justify-center">
             <!-- Background Image -->
@@ -25,9 +25,6 @@
 
             <!-- Overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-
-            <!-- Flag -->
-            <span class="text-6xl mb-2 relative z-10 transition-transform duration-300 drop-shadow-lg group-hover:scale-110">🇬🇧</span>
           </div>
 
           <div class="p-8 text-center">
@@ -46,7 +43,7 @@
         </div>
 
         <!-- Card AYO Francés -->
-        <div (click)="openForm()" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
+        <div (click)="openForm('FRANCÉS')" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
 
           <div class="h-48 relative overflow-hidden flex flex-col items-center justify-center">
             <!-- Background Image -->
@@ -54,9 +51,6 @@
 
             <!-- Overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-
-            <!-- Flag -->
-            <span class="text-6xl mb-2 relative z-10 transition-transform duration-300 drop-shadow-lg group-hover:scale-110">🇫🇷</span>
           </div>
 
           <div class="p-8 text-center">
@@ -88,6 +82,7 @@
         <app-form-colegio-cursos
           [selectedCourse]="courses.length > 0 ? courses[0] : null"
           [formTitle]="'Agregar Programa AYO'"
+          [initialLanguage]="selectedLanguage"
           (goBack)="closeForm()"
           (colegioAdded)="onColegioAdded()">
         </app-form-colegio-cursos>
