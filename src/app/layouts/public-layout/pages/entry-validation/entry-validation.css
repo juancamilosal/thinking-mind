@@ -228,6 +228,35 @@ select.ng-invalid.ng-touched {
     border-radius: 8px;
 }
 
+.error-text {
+    color: #e53e3e;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.toggle-container {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.toggle-container p {
+    margin: 0;
+}
+
+.toggle-link {
+    color: #13486e;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.toggle-link:hover {
+    color: #0f3a5a;
+}
+
 .btn-primary {
     width: 100%;
     padding: 15px;
@@ -252,7 +281,8 @@ select.ng-invalid.ng-touched {
 }
 
 .btn-primary:disabled {
-    background-color: #cbd5e0;
+    background-color: #13486e;
+    opacity: 0.7;
     cursor: not-allowed;
     box-shadow: none;
 }

@@ -25,10 +25,55 @@
     <!-- Right Panel: Form Card -->
     <div class="right-panel">
         <div class="login-card">
-            <h3 class="card-title">¡Bienvenido!</h3>
+
+            @if (isLoginMode) {
+            <!-- LOGIN VIEW -->
+            <h3 class="card-title">Ingreso</h3>
+            <p class="card-subtitle">Inicia sesión para continuar</p>
+
+            <form [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()">
+
+                <div class="form-group">
+                    <label for="loginEmail">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" formControlName="email" class="custom-input"
+                        placeholder="nombre@correo.com">
+                    @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                    <div class="error-text">Correo inválido o requerido</div>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" formControlName="password" class="custom-input"
+                        placeholder="********">
+                    @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                    <div class="error-text">Contraseña requerida</div>
+                    }
+                </div>
+
+                <button type="submit" [disabled]="loginForm.invalid || isLoading" class="btn-primary">
+                    @if (!isLoading) {
+                    <span>Ingresar</span>
+                    }
+                    @if (isLoading) {
+                    <div class="spinner"></div>
+                    }
+                </button>
+
+                <div class="my-5 toggle-container">
+                    <p class="font-bold">¿Desea registrarse al Programa AYO?
+                        <a (click)="toggleMode()"
+                            class="text-blue-700 underline cursor-pointer hover:text-blue-800">Regístrate aquí</a>
+                    </p>
+                </div>
+
+            </form>
+            } @else {
+            <!-- REGISTER VIEW (Existing) -->
+            <h3 class="card-title">Registro</h3>
             <p class="card-subtitle">Valida tu ingreso para continuar</p>
 
-            <form [formGroup]="validationForm" (ngSubmit)="onSubmit()">
+            <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()">
 
                 <div class="form-group">
                     <label for="tipoDocumento">Tipo de Documento</label>
@@ -60,15 +105,25 @@
                             class="custom-input" placeholder="Código">
                     </div>
                 </div>
-                <button type="submit" [disabled]="validationForm.invalid || isLoading" class="btn-primary">
+
+                <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn-primary">
                     @if (!isLoading) {
-                    <span>Ingresar ahora</span>
+                    <span>Registrarse</span>
                     }
                     @if (isLoading) {
                     <div class="spinner"></div>
                     }
                 </button>
+
+                <div class="my-5 toggle-container">
+                    <p class="font-bold">¿Ya tienes cuenta y deseas ingresar?
+                        <a (click)="toggleMode()"
+                            class="text-blue-700 underline cursor-pointer hover:text-blue-800">Ingresa aquí</a>
+                    </p>
+                </div>
             </form>
+            }
+
         </div>
     </div>
 </div>
