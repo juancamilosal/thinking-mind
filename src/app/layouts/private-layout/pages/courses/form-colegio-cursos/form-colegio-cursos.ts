@@ -143,6 +143,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       agendar_google_calendar: [false],
       evento_titulo: [''],
       evento_descripcion: [''],
+      evento_docente: [''],
       evento_inicio: [null],
       evento_fin: [null],
       idioma: [null]
@@ -328,8 +329,11 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       fechaCreacion.setHours(0, 0, 0, 0);
       const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0];
 
+      const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
+      const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
+
       const formData: any = {
-        fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
+        fecha_finalizacion: fechaFinalizacion,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
         precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
@@ -442,9 +446,19 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       throw new Error('Invalid date range');
     }
 
+    const attendees = [
+      { email: 'juancamilosalazarrojas@gmail.com' }
+    ];
+
+    const docenteEmail = this.fechaFinalizacionForm.get('evento_docente')?.value;
+    if (docenteEmail) {
+      attendees.push({ email: docenteEmail });
+    }
+
     const event = {
       summary: this.fechaFinalizacionForm.get('evento_titulo')?.value,
       description: this.fechaFinalizacionForm.get('evento_descripcion')?.value,
+      guestsCanModify: true,
       start: {
         dateTime: startDate.toISOString(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -453,6 +467,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
         dateTime: endDate.toISOString(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
       },
+      attendees: attendees,
       conferenceData: {
         createRequest: {
           requestId: "req-" + Date.now(),
