@@ -61,7 +61,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private courseService: CourseService,
     private notificationService: NotificationService,
-    private colegioCursosService: ColegioCursosService,
     private programaAyoService: ProgramaAyoService,
     private userService: UserService,
     private nivelService: NivelService,

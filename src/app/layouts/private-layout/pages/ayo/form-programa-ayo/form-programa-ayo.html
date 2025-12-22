@@ -256,7 +256,7 @@
                <select formControlName="evento_nivel" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                  <option value="">Seleccione un nivel</option>
                  @for (nivel of niveles; track nivel.id) {
-                   <option [value]="nivel.id">{{ nivel.subcategoria }}</option>
+                   <option [value]="nivel.id">{{ nivel.subcategoria }} |  {{ nivel.tematica }}</option>
                  }
                </select>
              </div>
