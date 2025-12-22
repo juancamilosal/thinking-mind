@@ -80,6 +80,7 @@
           </button>
         </div>
         <app-form-colegio-cursos
+          [idioma]="selectedLanguage"
           [selectedCourse]="courses.length > 0 ? courses[0] : null"
           [formTitle]="'Agregar Programa AYO'"
           [initialLanguage]="selectedLanguage"

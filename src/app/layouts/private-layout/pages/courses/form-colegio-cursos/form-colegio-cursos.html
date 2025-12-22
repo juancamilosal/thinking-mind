@@ -514,7 +514,7 @@
 
                 <!-- Dropdown de resultados -->
                 @if (filteredTeachers.length > 0 && !isTeacherSelected) {
-                  <ul class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                  <ul id="teacher-dropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                     @for (teacher of filteredTeachers; track teacher.id) {
                       <li (click)="selectTeacher(teacher)"
                           class="px-4 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-0">
@@ -523,6 +523,37 @@
                       </li>
                     }
                   </ul>
+                }
+              </div>
+
+              <!-- Nivel -->
+              <div class="space-y-2 relative">
+                <label for="evento_nivel" class="block text-sm font-semibold text-gray-700">Nivel *</label>
+                <div class="relative">
+                  <select id="evento_nivel" formControlName="evento_nivel"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
+                    [class.border-red-500]="fechaFinalizacionForm.get('evento_nivel')?.invalid && fechaFinalizacionForm.get('evento_nivel')?.touched">
+                    <option [value]="''">Seleccionar nivel</option>
+                    @for (nivel of niveles; track nivel.id) {
+                      <option [value]="nivel.id">
+                        {{ nivel.nivel }} - {{ nivel.subcategoria }} ({{ nivel.idioma }})
+                      </option>
+                    }
+                  </select>
+                  
+                  <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    @if (isLoadingNiveles) {
+                      <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-2"></div>
+                    } @else {
+                      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    }
+                  </div>
+                </div>
+                
+                @if (fechaFinalizacionForm.get('evento_nivel')?.touched && fechaFinalizacionForm.get('evento_nivel')?.errors?.['required']) {
+                  <p class="text-red-500 text-sm mt-1">Debe seleccionar un nivel</p>
                 }
               </div>
 
