@@ -13,8 +13,21 @@ export class NivelService {
 
   constructor(private http: HttpClient) { }
 
-  getNiveles(idioma: string): Observable<ResponseAPI<Nivel[]>> {
+  getNiveles(idiomas?: string[]): Observable<ResponseAPI<Nivel[]>> {
     let url = this.apiUrl;
-    return this.http.get<ResponseAPI<Nivel[]>>(url + '?filter[idioma][_in]=' + idioma);
+    const params: string[] = [];
+    
+    if (idiomas && idiomas.length > 0) {
+      const filterValue = idiomas.join(',');
+      params.push(`filter[idioma][_in]=${encodeURIComponent(filterValue)}`);
+    }
+    
+    params.push('sort=subcategoria');
+    
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+    
+    return this.http.get<ResponseAPI<Nivel[]>>(url);
   }
 }

@@ -396,7 +396,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
   loadNiveles(idiomas?: string[]): void {
     this.isLoadingNiveles = true;
     const filter = idiomas || (this.idioma ? [this.idioma] : undefined);
-    this.nivelService.getNiveles(this.idioma).subscribe({
+    this.nivelService.getNiveles(filter).subscribe({
       next: (response) => {
         this.niveles = response.data || [];
         this.isLoadingNiveles = false;
