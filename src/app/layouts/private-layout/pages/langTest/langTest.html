@@ -1,0 +1,158 @@
+<!-- Welcome screen -->
+@if (!selectedLanguage && !showResults) {
+<section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-16 text-slate-900 font-sans">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl"></div>
+    <div class="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-emerald-500/5 blur-3xl"></div>
+  </div>
+
+  <div class="relative w-full max-w-4xl flex flex-col gap-10 animate-in fade-in zoom-in duration-500">
+    <div class="text-center space-y-4">
+      <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-tight text-slate-900">Welcome to the Assessment</h1>
+      <p class="text-lg font-medium text-slate-700">Please select your preferred language to begin.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full px-2">
+      <button (click)="selectLanguage('INGLÉS')" class="group relative w-full aspect-[16/10] md:aspect-[4/3] rounded-2xl overflow-hidden bg-white shadow-lg ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-primary/30">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-100 via-emerald-50 to-slate-100 opacity-90 transition-opacity duration-300 group-hover:opacity-100"></div>
+        <div class="relative z-10 h-full flex flex-col items-center justify-center gap-3">
+          <span class="text-4xl font-bold tracking-wide text-slate-800 drop-shadow-sm">English</span>
+          <div class="h-1 w-12 bg-emerald-500 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
+        </div>
+      </button>
+
+      <button (click)="selectLanguage('FRANCÉS')" class="group relative w-full aspect-[16/10] md:aspect-[4/3] rounded-2xl overflow-hidden bg-white shadow-lg ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-primary/30">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-100 via-emerald-50 to-slate-100 opacity-90 transition-opacity duration-300 group-hover:opacity-100"></div>
+        <div class="relative z-10 h-full flex flex-col items-center justify-center gap-3">
+          <span class="text-4xl font-bold tracking-wide text-slate-800 drop-shadow-sm">Français</span>
+          <div class="h-1 w-12 bg-emerald-500 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>
+}
+
+<!-- Question cards -->
+@if (selectedLanguage && !showResults) {
+<section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute -top-20 right-10 h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl"></div>
+    <div class="absolute bottom-10 left-0 h-72 w-72 rounded-full bg-emerald-500/5 blur-3xl"></div>
+  </div>
+
+  <div class="relative w-full max-w-3xl bg-white backdrop-blur rounded-3xl shadow-xl ring-1 ring-slate-200 p-6 sm:p-8 flex flex-col gap-8 md:gap-10 animate-in fade-in zoom-in duration-500">
+    <div class="flex flex-col gap-3 w-full">
+      <div class="flex justify-between items-end px-1">
+        <span class="text-sm font-bold tracking-widest uppercase text-slate-600">Progress</span>
+        <span class="text-base font-bold text-slate-800">Question {{ currentIndex + 1 }} of {{ questions.length || 10 }}</span>
+      </div>
+      <div class="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out" [style.width.%]="progressPercent"></div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-8">
+      <div class="text-center px-4">
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight tracking-tight text-slate-900">
+          {{ currentQuestion?.pregunta }}
+        </h2>
+      </div>
+
+      <fieldset aria-label="Answer options" class="flex flex-col gap-4 w-full">
+        @for (opt of (currentQuestion?.respuestas_id || []); track opt.id) {
+        <label class="group relative flex cursor-pointer items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 transition-all hover:border-emerald-500/60 hover:bg-white has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/5 has-[:checked]:shadow-[0_10px_30px_rgba(16,185,129,0.12)]">
+          <input class="peer sr-only" name="translation_answer_{{ currentQuestion?.id }}" type="radio" [checked]="answersByQuestion[currentQuestion!.id] === opt.id" (change)="chooseAnswer(opt.id)"/>
+          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-white transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-focus:ring-2 peer-focus:ring-emerald-400/60 peer-focus:ring-offset-2 peer-focus:ring-offset-white">
+            <svg aria-hidden="true" class="h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.25 7.25a1 1 0 01-1.42 0l-3.25-3.25a1 1 0 011.42-1.42l2.54 2.54 6.54-6.54a1 1 0 011.42 0z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <span class="text-lg font-medium text-slate-800 leading-normal">{{ opt.respuestas }}</span>
+        </label>
+        }
+      </fieldset>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full pt-4 border-t border-slate-200">
+      <button (click)="prev()" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-slate-700 font-semibold transition-all hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
+        <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span>Return</span>
+      </button>
+      @if (!isLastQuestion()) {
+      <button (click)="next()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-500 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
+        <span>Advance</span>
+        <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+      } @else {
+      <button (click)="submitTest()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
+        <span>Submit Test</span>
+        <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+      }
+    </div>
+  </div>
+</section>
+}
+
+<!-- Results screen -->
+@if (showResults) {
+<section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl"></div>
+  </div>
+
+  <div class="relative w-full max-w-xl bg-white backdrop-blur rounded-3xl shadow-xl ring-1 ring-slate-200 overflow-hidden transition-all duration-300">
+    <div class="h-40 w-full bg-gradient-to-br from-emerald-100 via-emerald-50 to-slate-100 relative">
+      <div class="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
+      <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg ring-4 ring-white">
+        <div class="flex h-full w-full items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+          <svg aria-hidden="true" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.5 3.5a1 1 0 00-1 .92l-.38 5.7a1 1 0 01-.27.64l-2.9 3.05a1 1 0 00.62 1.68l3.93.55a1 1 0 01.8.56l1.7 3.73a1 1 0 001.8 0l1.7-3.73a1 1 0 01.8-.56l3.93-.55a1 1 0 00.62-1.68l-2.9-3.05a1 1 0 01-.27-.64l-.38-5.7a1 1 0 00-1-.92h-6.44z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center px-8 pt-14 pb-10 text-center">
+      <h3 class="text-3xl font-bold tracking-tight text-slate-900 mb-2">Test Completed!</h3>
+      <p class="text-slate-700 text-base leading-relaxed max-w-[340px] mb-8">Thank you for completing the assessment. You have successfully finished the language test.</p>
+
+      <div class="w-full bg-slate-50 rounded-2xl p-6 mb-8 flex flex-col gap-4 ring-1 ring-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <span class="text-sm font-medium text-slate-500">Your Score</span>
+          <div class="flex items-center gap-2 text-slate-900">
+            <span class="text-2xl font-bold">{{ score }}<span class="text-slate-400 text-lg font-normal">/{{ questions.length }}</span></span>
+            <svg aria-hidden="true" class="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-slate-500">Classification</span>
+          <div class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-700">A1.1 Beginner</div>
+        </div>
+      </div>
+
+      <button class="group relative w-full overflow-hidden rounded-full bg-emerald-500 p-4 text-center font-bold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-transform active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
+        <span class="relative z-10 flex items-center justify-center gap-2">
+          Finish
+          <svg aria-hidden="true" class="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </span>
+      </button>
+
+      <p class="mt-6 text-xs text-slate-500">Results have been saved automatically.</p>
+    </div>
+  </div>
+</section>
+}

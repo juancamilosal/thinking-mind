@@ -22,6 +22,8 @@ import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
+import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
+import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
 import { ListMeet } from './layouts/private-layout/pages/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 
@@ -56,6 +58,11 @@ export const routes: Routes = [
     path: 'payment-status',
     title: 'Thinking Mind | Estado de Pago',
     component: PaymentStatusComponent
+  },
+  {
+    path: 'entry-validation',
+    title: 'Thinking Mind | Validación de Ingreso',
+    component: EntryValidation
   },
   {
     path: 'private',
@@ -141,6 +148,11 @@ export const routes: Routes = [
         path: 'form-colegio-cursos',
         title: 'Thinking Mind | Colegio Cursos',
         component: ColegioCursosComponent
+      },
+      {
+        path: 'langTest',
+        title: 'Thinking Mind | Language Test',
+        component: LangTest
       },
       {
         path: 'list-meet',
