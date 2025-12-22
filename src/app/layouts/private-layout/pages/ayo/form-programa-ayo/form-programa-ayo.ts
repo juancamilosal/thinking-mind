@@ -495,9 +495,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
             this.showGoogleCalendarOption = true;
             this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
             this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.setValue(true);
-            this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
-            this.fechaFinalizacionForm.get('colegio_id')?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
-
             this.colegioAdded.emit();
             this.goBack.emit();
             this.isSubmitting = false;
@@ -558,8 +555,30 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       attendees.push({ email: docenteEmail });
     }
 
+    // Determine recurrence rule based on day and program end date
+    let recurrenceRule = '';
+    if (suffix === '') { // Martes
+      recurrenceRule = 'RRULE:FREQ=WEEKLY;BYDAY=TU';
+    } else if (suffix === '_jueves') { // Jueves
+      recurrenceRule = 'RRULE:FREQ=WEEKLY;BYDAY=TH';
+    }
+
+    // Add UNTIL if fecha_finalizacion exists to limit recurrence
+    const fechaFinPrograma = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
+    if (fechaFinPrograma && recurrenceRule) {
+      // fechaFinPrograma is 'YYYY-MM-DD'
+      const parts = String(fechaFinPrograma).split('-');
+      if (parts.length === 3) {
+        // Create date at end of that day (23:59:59)
+        const untilDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59);
+        // Convert to UTC string for iCal (YYYYMMDDThhmmssZ)
+        const untilStr = untilDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        recurrenceRule += `;UNTIL=${untilStr}`;
+      }
+    }
+
     // Configuración inicial del evento
-    const event = {
+    const event: any = {
       summary: this.fechaFinalizacionForm.get('evento_titulo' + suffix)?.value,
       description: this.fechaFinalizacionForm.get('evento_descripcion' + suffix)?.value,
       guestsCanModify: false,
@@ -571,6 +590,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         dateTime: endDate.toISOString(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
       },
+      recurrence: recurrenceRule ? [recurrenceRule] : undefined,
       attendees: attendees,
       conferenceData: {
         createRequest: {
