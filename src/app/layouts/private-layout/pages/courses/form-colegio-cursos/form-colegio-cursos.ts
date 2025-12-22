@@ -37,16 +37,20 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
   filteredSchools: School[] = [];
   filteredCourses: Course[] = [];
   filteredTeachers: User[] = [];
+  filteredTeachersJueves: User[] = [];
   niveles: Nivel[] = [];
   courses: Course[] = [];
   isLoadingSchools: boolean = false;
   isLoadingCourses: boolean = false;
   isLoadingTeachers: boolean = false;
+  isLoadingTeachersJueves: boolean = false;
   isLoadingNiveles: boolean = false;
   isSchoolSelected: boolean = false;
   isCourseSelected: boolean = false;
   isTeacherSelected: boolean = false;
+  isTeacherSelectedJueves: boolean = false;
   selectedTeacherId: string | null = null;
+  selectedTeacherIdJueves: string | null = null;
   selectedLanguage: string | null = null;
 
   // Google Calendar Integration
@@ -166,12 +170,35 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       evento_nivel: [''],
       evento_inicio: [null],
       evento_fin: [null],
+      // Google Calendar Fields Jueves
+      agendar_google_calendar_jueves: [false],
+      evento_titulo_jueves: [''],
+      evento_descripcion_jueves: [''],
+      evento_docente_jueves: [''],
+      teacherSearchTermJueves: [''],
+      evento_nivel_jueves: [''],
+      evento_inicio_jueves: [null],
+      evento_fin_jueves: [null],
       idioma: [null]
     });
 
-    // Listen for Google Calendar checkbox changes
+    // Listen for Google Calendar checkbox changes (Martes)
     this.fechaFinalizacionForm.get('agendar_google_calendar')?.valueChanges.subscribe(value => {
       const controls = ['evento_titulo', 'evento_inicio', 'evento_fin', 'evento_docente', 'evento_nivel'];
+      if (value) {
+        controls.forEach(c => this.fechaFinalizacionForm.get(c)?.setValidators([Validators.required]));
+      } else {
+        controls.forEach(c => {
+          this.fechaFinalizacionForm.get(c)?.clearValidators();
+          this.fechaFinalizacionForm.get(c)?.setValue(null);
+        });
+      }
+      controls.forEach(c => this.fechaFinalizacionForm.get(c)?.updateValueAndValidity());
+    });
+
+    // Listen for Google Calendar checkbox changes (Jueves)
+    this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.valueChanges.subscribe(value => {
+      const controls = ['evento_titulo_jueves', 'evento_inicio_jueves', 'evento_fin_jueves', 'evento_docente_jueves', 'evento_nivel_jueves'];
       if (value) {
         controls.forEach(c => this.fechaFinalizacionForm.get(c)?.setValidators([Validators.required]));
       } else {
@@ -207,6 +234,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
       this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
       this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
+      this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.setValue(true);
 
       if (this.initialLanguage) {
         setTimeout(() => {
@@ -356,7 +384,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
   handleClickOutside(event: Event) {
     const target = event.target as HTMLElement;
 
-    // Teacher dropdown
+    // Teacher dropdown (Martes)
     const inputTeacher = document.getElementById('teacherSearchTerm');
     const dropdownTeacher = this.elementRef.nativeElement.querySelector('#teacher-dropdown');
 
@@ -366,6 +394,18 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       // Clicked on dropdown
     } else {
        this.filteredTeachers = [];
+    }
+
+    // Teacher dropdown (Jueves)
+    const inputTeacherJueves = document.getElementById('teacherSearchTermJueves');
+    const dropdownTeacherJueves = this.elementRef.nativeElement.querySelector('#teacher-dropdown-jueves');
+
+    if (inputTeacherJueves && inputTeacherJueves.contains(target)) {
+      // Clicked on input
+    } else if (dropdownTeacherJueves && dropdownTeacherJueves.contains(target)) {
+      // Clicked on dropdown
+    } else {
+       this.filteredTeachersJueves = [];
     }
   }
 
@@ -391,6 +431,55 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     this.filteredTeachers = [];
     this.isTeacherSelected = true;
     this.selectedTeacherId = teacher.id;
+  }
+
+  // Jueves Methods
+  onTeacherSearchJueves(event: any): void {
+    const searchTerm = event.target.value;
+    this.fechaFinalizacionForm.get('teacherSearchTermJueves')?.setValue(searchTerm);
+
+    if (this.isTeacherSelectedJueves) {
+      this.isTeacherSelectedJueves = false;
+      this.fechaFinalizacionForm.get('evento_docente_jueves')?.setValue('');
+      this.selectedTeacherIdJueves = null;
+    }
+
+    this.searchTeachersJueves(searchTerm);
+  }
+
+  onTeacherInputFocusJueves(): void {
+    const currentTerm = this.fechaFinalizacionForm.get('teacherSearchTermJueves')?.value || '';
+    this.searchTeachersJueves(currentTerm);
+  }
+
+  hideTeacherListJueves(): void {
+    setTimeout(() => {
+      // Logic handled in HostListener
+    }, 200);
+  }
+
+  searchTeachersJueves(searchTerm: string): void {
+    this.isLoadingTeachersJueves = true;
+    const roleId = 'fe83d2f3-1b89-477d-984a-de3b56e12001';
+    this.userService.getUsersByRole(roleId, searchTerm).subscribe({
+      next: (response) => {
+        this.filteredTeachersJueves = response.data || [];
+        this.isLoadingTeachersJueves = false;
+      },
+      error: (error) => {
+        console.error('Error searching teachers Jueves:', error);
+        this.filteredTeachersJueves = [];
+        this.isLoadingTeachersJueves = false;
+      }
+    });
+  }
+
+  selectTeacherJueves(teacher: User): void {
+    this.fechaFinalizacionForm.get('evento_docente_jueves')?.setValue(teacher.email);
+    this.fechaFinalizacionForm.get('teacherSearchTermJueves')?.setValue(`${teacher.first_name} ${teacher.last_name}`);
+    this.filteredTeachersJueves = [];
+    this.isTeacherSelectedJueves = true;
+    this.selectedTeacherIdJueves = teacher.id;
   }
 
   loadNiveles(idiomas?: string[]): void {
@@ -437,7 +526,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     this.loadNiveles(this.selectedLanguage ? [this.selectedLanguage] : undefined);
   }
 
-  onDateInput(event: any, controlName: string): void {
+  onDateInput(event: any, controlName: string, dayOfWeek: number = 2): void {
     const input = event.target as HTMLInputElement;
     if (!input.value) return;
 
@@ -446,8 +535,9 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     // Check if valid date
     if (isNaN(dateValue.getTime())) return;
 
-    if (dateValue.getDay() !== 2) { // 0=Sun, 1=Mon, 2=Tue
-      this.notificationService.showError('Día no permitido', 'Solo se permiten agendar eventos los días martes. Por favor selecciona un martes.');
+    if (dateValue.getDay() !== dayOfWeek) { // 0=Sun, 1=Mon, 2=Tue, 4=Thu
+      const dayName = dayOfWeek === 2 ? 'martes' : 'jueves';
+      this.notificationService.showError('Día no permitido', `Solo se permiten agendar eventos los días ${dayName}. Por favor selecciona un ${dayName}.`);
       this.fechaFinalizacionForm.get(controlName)?.setValue(null);
       input.value = '';
       input.blur(); // Close the picker
@@ -457,12 +547,25 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
   async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
 
-      let calendarEventData: any = null;
+      let calendarEventDataMartes: any = null;
+      let calendarEventDataJueves: any = null;
 
       // Handle Google Calendar Event Creation
-      if (this.fechaFinalizacionForm.get('agendar_google_calendar')?.value) {
+      const agendarMartes = this.fechaFinalizacionForm.get('agendar_google_calendar')?.value;
+      const agendarJueves = this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.value;
+
+      if (agendarMartes || agendarJueves) {
         try {
-          calendarEventData = await this.handleCalendarAuthAndCreation();
+          await this.ensureCalendarToken();
+          
+          if (agendarMartes) {
+            calendarEventDataMartes = await this.createCalendarEvent('');
+          }
+          
+          if (agendarJueves) {
+            calendarEventDataJueves = await this.createCalendarEvent('_jueves');
+          }
+
         } catch (error) {
           console.error('Error creating calendar event:', error);
           this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar');
@@ -502,31 +605,56 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
         idioma: this.fechaFinalizacionForm.get('idioma')?.value
       };
 
-      // Add Google Calendar data if available
-      if (calendarEventData) {
-        formData.link_reunion = calendarEventData.hangoutLink;
-        formData.id_reunion = calendarEventData.id;
+      // Add Google Calendar data if available (Prioritize Martes, then Jueves, or just use one)
+      // Using Martes as default if available, else Jueves
+      if (calendarEventDataMartes) {
+        formData.link_reunion = calendarEventDataMartes.hangoutLink;
+        formData.id_reunion = calendarEventDataMartes.id;
+      } else if (calendarEventDataJueves) {
+        formData.link_reunion = calendarEventDataJueves.hangoutLink;
+        formData.id_reunion = calendarEventDataJueves.id;
       }
 
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
-          // Save meeting details to Directus if calendar event was created
-          if (calendarEventData) {
-            const tokenObj = gapi?.client?.getToken?.();
-            const accessToken = tokenObj?.access_token;
-            const meetingData = {
-              fecha_inicio: this.formatDateForDirectus(calendarEventData.start.dateTime),
-              fecha_finalizacion: this.formatDateForDirectus(calendarEventData.end.dateTime, true),
-              id_reunion: calendarEventData.id,
-              link_reunion: calendarEventData.hangoutLink,
+          const tokenObj = gapi?.client?.getToken?.();
+          const accessToken = tokenObj?.access_token;
+
+          // Save meeting details to Directus for Martes
+          if (calendarEventDataMartes) {
+            const meetingDataMartes = {
+              fecha_inicio: this.formatDateForDirectus(calendarEventDataMartes.start.dateTime),
+              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime, true),
+              id_reunion: calendarEventDataMartes.id,
+              link_reunion: calendarEventDataMartes.hangoutLink,
               token: accessToken,
               id_docente: this.selectedTeacherId,
-              nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value
+              id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
+              id_colegios_cursos: [response.data.id]
             };
 
-            this.courseService.createReunionMeet(meetingData).subscribe({
-              next: (res) => console.log('Reunión guardada en Directus:', res),
-              error: (err) => console.error('Error al guardar reunión en Directus:', err)
+            this.courseService.createReunionMeet(meetingDataMartes).subscribe({
+              next: (res) => console.log('Reunión Martes guardada en Directus:', res),
+              error: (err) => console.error('Error al guardar reunión Martes en Directus:', err)
+            });
+          }
+
+          // Save meeting details to Directus for Jueves
+          if (calendarEventDataJueves) {
+            const meetingDataJueves = {
+              fecha_inicio: this.formatDateForDirectus(calendarEventDataJueves.start.dateTime),
+              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime, true),
+              id_reunion: calendarEventDataJueves.id,
+              link_reunion: calendarEventDataJueves.hangoutLink,
+              token: accessToken,
+              id_docente: this.selectedTeacherIdJueves,
+              id_nivel: this.fechaFinalizacionForm.get('evento_nivel_jueves')?.value,
+              id_colegios_cursos: [response.data.id]
+            };
+
+            this.courseService.createReunionMeet(meetingDataJueves).subscribe({
+              next: (res) => console.log('Reunión Jueves guardada en Directus:', res),
+              error: (err) => console.error('Error al guardar reunión Jueves en Directus:', err)
             });
           }
 
@@ -546,6 +674,8 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
           this.filteredSchools = [];
           this.filteredCourses = [];
           this.showGoogleCalendarOption = false; // Reset option
+          this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(false);
+          this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.setValue(false);
 
           this.colegioAdded.emit();
           this.goBack.emit();
@@ -563,18 +693,13 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     }
   }
 
-  handleCalendarAuthAndCreation(): Promise<any> {
+  ensureCalendarToken(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.tokenClient.callback = async (resp: any) => {
+      this.tokenClient.callback = (resp: any) => {
         if (resp.error) {
           reject(resp);
-          return;
-        }
-        try {
-          const event = await this.createCalendarEvent();
-          resolve(event);
-        } catch (err) {
-          reject(err);
+        } else {
+          resolve();
         }
       };
 
@@ -586,11 +711,9 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     });
   }
 
-
-
-  async createCalendarEvent() {
-    const startDate = new Date(this.fechaFinalizacionForm.get('evento_inicio')?.value);
-    const endDate = new Date(this.fechaFinalizacionForm.get('evento_fin')?.value);
+  async createCalendarEvent(suffix: string = '') {
+    const startDate = new Date(this.fechaFinalizacionForm.get('evento_inicio' + suffix)?.value);
+    const endDate = new Date(this.fechaFinalizacionForm.get('evento_fin' + suffix)?.value);
 
     if (endDate <= startDate) {
       this.notificationService.showError('Error en fechas', 'La fecha de finalización del evento debe ser posterior a la fecha de inicio.');
@@ -598,7 +721,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     }
 
     const attendees: any[] = [];
-    const docenteEmail = this.fechaFinalizacionForm.get('evento_docente')?.value;
+    const docenteEmail = this.fechaFinalizacionForm.get('evento_docente' + suffix)?.value;
 
     // Agregar al docente como invitado
     if (docenteEmail) {
@@ -607,8 +730,8 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
 
     // Configuración inicial del evento
     const event = {
-      summary: this.fechaFinalizacionForm.get('evento_titulo')?.value,
-      description: this.fechaFinalizacionForm.get('evento_descripcion')?.value,
+      summary: this.fechaFinalizacionForm.get('evento_titulo' + suffix)?.value,
+      description: this.fechaFinalizacionForm.get('evento_descripcion' + suffix)?.value,
       guestsCanModify: false,
       start: {
         dateTime: startDate.toISOString(),
