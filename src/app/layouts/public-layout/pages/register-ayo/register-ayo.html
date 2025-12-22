@@ -1,0 +1,129 @@
+<div class="split-screen-container">
+
+    <!-- Left Panel: Branding & Info -->
+    <div class="left-panel">
+        <div class="content-wrapper">
+            <div class="logo-container">
+                <img src="assets/icons/ayo.png" alt="Logo AYO" class="main-logo">
+            </div>
+            <div class="greeting">
+                <span class="hand-wave">👋</span>
+                <span>¡BIENVENIDO!</span>
+                <span class="hand-wave">👋</span>
+            </div>
+
+            <p class="description">
+                Tu futuro comienza aquí.
+            </p>
+        </div>
+
+        <div class="footer-text">
+            © 2026 Thinking Mind | Todos los derechos reservados.
+        </div>
+    </div>
+
+    <!-- Right Panel: Form Card -->
+    <div class="right-panel">
+        <div class="login-card">
+
+            @if (isLoginMode) {
+            <!-- LOGIN VIEW -->
+            <h3 class="card-title">Ingreso</h3>
+            <p class="card-subtitle">Inicia sesión para continuar</p>
+
+            <form [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()">
+
+                <div class="form-group">
+                    <label for="loginEmail">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" formControlName="email" class="custom-input"
+                        placeholder="nombre@correo.com">
+                    @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                    <div class="error-text">Correo inválido o requerido</div>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" formControlName="password" class="custom-input"
+                        placeholder="********">
+                    @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                    <div class="error-text">Contraseña requerida</div>
+                    }
+                </div>
+
+                <button type="submit" [disabled]="loginForm.invalid || isLoading" class="btn-primary">
+                    @if (!isLoading) {
+                    <span>Ingresar</span>
+                    }
+                    @if (isLoading) {
+                    <div class="spinner"></div>
+                    }
+                </button>
+
+                <div class="my-5 toggle-container">
+                    <p class="font-bold">¿Desea registrarse al Programa AYO?
+                        <a (click)="toggleMode()"
+                            class="text-blue-700 underline cursor-pointer hover:text-blue-800">Regístrate aquí</a>
+                    </p>
+                </div>
+
+            </form>
+            } @else {
+            <!-- REGISTER VIEW (Existing) -->
+            <h3 class="card-title">Registro</h3>
+            <p class="card-subtitle">Valida tu ingreso para continuar</p>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()">
+
+                <div class="form-group">
+                    <label for="tipoDocumento">Tipo de Documento</label>
+                    <select id="tipoDocumento" formControlName="tipoDocumento" class="custom-input">
+                        <option value="" disabled selected>Selecciona una opción</option>
+                        <option value="TI">Tarjeta de Identidad</option>
+                        <option value="CC">Cédula de Ciudadanía</option>
+                        <option value="CE">Cédula de Extranjería</option>
+                        <option value="PAS">Pasaporte</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="numeroDocumento">Número de Documento</label>
+                    <input type="text" id="numeroDocumento" formControlName="numeroDocumento" class="custom-input"
+                        placeholder="Ej: 1000123456">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" formControlName="email" class="custom-input"
+                        placeholder="nombre@correo.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="codigoVerificacion">Código de Verificación</label>
+                    <div class="input-with-icon">
+                        <input type="text" id="codigoVerificacion" formControlName="codigoVerificacion"
+                            class="custom-input" placeholder="Código">
+                    </div>
+                </div>
+
+                <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn-primary">
+                    @if (!isLoading) {
+                    <span>Registrarse</span>
+                    }
+                    @if (isLoading) {
+                    <div class="spinner"></div>
+                    }
+                </button>
+
+                <div class="my-5 toggle-container">
+                    <p class="font-bold">¿Ya tienes cuenta y deseas ingresar?
+                        <a (click)="toggleMode()"
+                            class="text-blue-700 underline cursor-pointer hover:text-blue-800">Ingresa aquí</a>
+                    </p>
+                </div>
+            </form>
+            }
+
+        </div>
+    </div>
+</div>
