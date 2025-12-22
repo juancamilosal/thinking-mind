@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { CourseService } from '../../../../../core/services/course.service';
@@ -7,12 +7,6 @@ import { SchoolService } from '../../../../../core/services/school.service';
 import { School } from '../../../../../core/models/School';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ColegioCursosService } from '../../../../../core/services/colegio-cursos.service';
-import { UserService } from '../../../../../core/services/user.service';
-import { User } from '../../../../../core/models/User';
-
-
-declare var gapi: any;
-declare var google: any;
 
 @Component({
   selector: 'app-form-colegio-cursos',
@@ -23,7 +17,8 @@ declare var google: any;
   templateUrl: './form-colegio-cursos.html',
   styleUrl: './form-colegio-cursos.css'
 })
-export class ColegioCursosComponent implements OnInit, OnChanges {
+export class ColegioCursosComponent implements OnInit {
+  @Input() idioma: string;
   @Input() selectedCourse: Course | null = null;
   @Input() formTitle: string = 'Agregar Colegio y Fecha de Finalización';
   @Input() initialLanguage: string | null = null;
@@ -33,54 +28,23 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
   fechaFinalizacionForm!: FormGroup;
   filteredSchools: School[] = [];
   filteredCourses: Course[] = [];
-  filteredTeachers: User[] = [];
   courses: Course[] = [];
   isLoadingSchools: boolean = false;
   isLoadingCourses: boolean = false;
-  isLoadingTeachers: boolean = false;
   isSchoolSelected: boolean = false;
   isCourseSelected: boolean = false;
-  isTeacherSelected: boolean = false;
-  selectedTeacherId: string | null = null;
-
-  // Google Calendar Integration
-  showGoogleCalendarOption = false;
-  private CLIENT_ID = '996133721948-6rim847cd71sknq58u3tcov5drtag7vv.apps.googleusercontent.com';
-  private DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-  private SCOPES = 'https://www.googleapis.com/auth/calendar.events';
-  tokenClient: any;
-  gapiInited = false;
-  gisInited = false;
 
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
     private schoolService: SchoolService,
     private notificationService: NotificationService,
-    private colegioCursosService: ColegioCursosService,
-    private userService: UserService,
-    private elementRef: ElementRef
+    private colegioCursosService: ColegioCursosService
   ) { }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['initialLanguage'] && this.fechaFinalizacionForm) {
-      if (this.initialLanguage) {
-        setTimeout(() => {
-          this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
-        });
-      }
-    }
-  }
 
   ngOnInit(): void {
     this.initForm();
     this.loadCourses();
-
-    // Check for specific course ID
-    if (this.selectedCourse?.id === '28070b14-f3c1-48ec-9e2f-95263f19eec3') {
-      this.showGoogleCalendarOption = true;
-      this.loadGoogleScripts();
-    }
 
     // Si hay un curso seleccionado, pre-llenarlo
     if (this.selectedCourse) {
@@ -102,36 +66,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     });
   }
 
-  loadGoogleScripts() {
-    const script = document.createElement('script');
-    script.src = 'https://apis.google.com/js/api.js';
-    script.onload = () => this.gapiLoaded();
-    document.body.appendChild(script);
-
-    const gisScript = document.createElement('script');
-    gisScript.src = 'https://accounts.google.com/gsi/client';
-    gisScript.onload = () => this.gisLoaded();
-    document.body.appendChild(gisScript);
-  }
-
-  gapiLoaded() {
-    gapi.load('client', async () => {
-      await gapi.client.init({
-        discoveryDocs: [this.DISCOVERY_DOC],
-      });
-      this.gapiInited = true;
-    });
-  }
-
-  gisLoaded() {
-    this.tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: this.CLIENT_ID,
-      scope: this.SCOPES,
-      callback: '', // defined later
-    });
-    this.gisInited = true;
-  }
-
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
@@ -147,29 +81,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       programa_independiente: [false],
       courseSearchTerm: [null],
       schoolSearchTerm: [null],
-      // Google Calendar Fields
-      agendar_google_calendar: [false],
-      evento_titulo: [''],
-      evento_descripcion: [''],
-      evento_docente: [''],
-      teacherSearchTerm: [''],
-      evento_inicio: [null],
-      evento_fin: [null],
-      idioma: [null]
-    });
-
-    // Listen for Google Calendar checkbox changes
-    this.fechaFinalizacionForm.get('agendar_google_calendar')?.valueChanges.subscribe(value => {
-      const controls = ['evento_titulo', 'evento_inicio', 'evento_fin', 'evento_docente'];
-      if (value) {
-        controls.forEach(c => this.fechaFinalizacionForm.get(c)?.setValidators([Validators.required]));
-      } else {
-        controls.forEach(c => {
-          this.fechaFinalizacionForm.get(c)?.clearValidators();
-          this.fechaFinalizacionForm.get(c)?.setValue(null);
-        });
-      }
-      controls.forEach(c => this.fechaFinalizacionForm.get(c)?.updateValueAndValidity());
+      idioma: [this.initialLanguage || '']
     });
 
     this.fechaFinalizacionForm.get('programa_independiente')?.valueChanges.subscribe(value => {
@@ -191,18 +103,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
 
       colegioControl?.updateValueAndValidity();
     });
-
-    if (this.formTitle === 'Agregar Programa AYO') {
-      this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
-      this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
-      this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
-      
-      if (this.initialLanguage) {
-        setTimeout(() => {
-          this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
-        });
-      }
-    }
   }
 
   loadCourses(): void {
@@ -250,15 +150,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     this.fechaFinalizacionForm.get('courseSearchTerm')?.setValue(course.nombre);
     this.filteredCourses = [];
     this.isCourseSelected = true;
-
-    // Check ID again in case selection changes
-    if (course.id === '28070b14-f3c1-48ec-9e2f-95263f19eec3') {
-      this.showGoogleCalendarOption = true;
-      if (!this.gapiInited) this.loadGoogleScripts();
-    } else {
-      this.showGoogleCalendarOption = false;
-      this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(false);
-    }
   }
 
   clearCourseSearch(): void {
@@ -266,8 +157,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     this.filteredCourses = [];
     this.isCourseSelected = false;
     this.fechaFinalizacionForm.get('curso_id')?.setValue('');
-    this.showGoogleCalendarOption = false;
-    this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(false);
   }
 
   onSchoolSearch(event: any): void {
@@ -313,87 +202,8 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     this.fechaFinalizacionForm.get('colegio_id')?.setValue('');
   }
 
-  onTeacherSearch(event: any): void {
-    const searchTerm = event.target.value;
-    this.fechaFinalizacionForm.get('teacherSearchTerm')?.setValue(searchTerm);
-
-    if (this.isTeacherSelected) {
-      this.isTeacherSelected = false;
-      this.fechaFinalizacionForm.get('evento_docente')?.setValue('');
-      this.selectedTeacherId = null;
-    }
-
-    this.searchTeachers(searchTerm);
-  }
-
-  onTeacherInputFocus(): void {
-    const currentTerm = this.fechaFinalizacionForm.get('teacherSearchTerm')?.value || '';
-    this.searchTeachers(currentTerm);
-  }
-
-  hideTeacherList(): void {
-    setTimeout(() => {
-      // this.filteredTeachers = []; // Logic moved to HostListener
-    }, 200);
-  }
-
-  @HostListener('document:click', ['$event'])
-  handleClickOutside(event: Event) {
-    const target = event.target as HTMLElement;
-    const input = document.getElementById('teacherSearchTerm');
-    const dropdown = this.elementRef.nativeElement.querySelector('ul.absolute.z-10.w-full.mt-1');
-
-    if (input && input.contains(target)) {
-      return; // Clicked on input
-    }
-    if (dropdown && dropdown.contains(target)) {
-      return; // Clicked on dropdown
-    }
-    
-    // Clicked outside both
-    this.filteredTeachers = [];
-  }
-
-  searchTeachers(searchTerm: string): void {
-    this.isLoadingTeachers = true;
-    const roleId = 'fe83d2f3-1b89-477d-984a-de3b56e12001';
-    this.userService.getUsersByRole(roleId, searchTerm).subscribe({
-      next: (response) => {
-        this.filteredTeachers = response.data || [];
-        this.isLoadingTeachers = false;
-      },
-      error: (error) => {
-        console.error('Error searching teachers:', error);
-        this.filteredTeachers = [];
-        this.isLoadingTeachers = false;
-      }
-    });
-  }
-
-  selectTeacher(teacher: User): void {
-    this.fechaFinalizacionForm.get('evento_docente')?.setValue(teacher.email);
-    this.fechaFinalizacionForm.get('teacherSearchTerm')?.setValue(`${teacher.first_name} ${teacher.last_name}`);
-    this.filteredTeachers = [];
-    this.isTeacherSelected = true;
-    this.selectedTeacherId = teacher.id;
-  }
-
-  async onSubmit(): Promise<void> {
+  onSubmit(): void {
     if (this.fechaFinalizacionForm.valid) {
-
-      let calendarEventData: any = null;
-
-      // Handle Google Calendar Event Creation
-      if (this.fechaFinalizacionForm.get('agendar_google_calendar')?.value) {
-        try {
-          calendarEventData = await this.handleCalendarAuthAndCreation();
-        } catch (error) {
-          console.error('Error creating calendar event:', error);
-          this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar');
-          return; // Stop submission if calendar fails
-        }
-      }
-
       const precioEspecialLanzamiento = !!this.fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value;
       const precioEspecialValor = precioEspecialLanzamiento
         ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
@@ -426,33 +236,8 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
         idioma: this.fechaFinalizacionForm.get('idioma')?.value
       };
 
-      // Add Google Calendar data if available
-      if (calendarEventData) {
-        formData.link_reunion = calendarEventData.hangoutLink;
-        formData.id_reunion = calendarEventData.id;
-      }
-
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
-          // Save meeting details to Directus if calendar event was created
-          if (calendarEventData) {
-            const tokenObj = gapi?.client?.getToken?.();
-            const accessToken = tokenObj?.access_token;
-            const meetingData = {
-              fecha_inicio: this.formatDateForDirectus(calendarEventData.start.dateTime),
-              fecha_finalizacion: this.formatDateForDirectus(calendarEventData.end.dateTime),
-              id_reunion: calendarEventData.id,
-              link_reunion: calendarEventData.hangoutLink,
-              token: accessToken,
-              docente_id: this.selectedTeacherId
-            };
-
-            this.courseService.createReunionMeet(meetingData).subscribe({
-              next: (res) => console.log('Reunión guardada en Directus:', res),
-              error: (err) => console.error('Error al guardar reunión en Directus:', err)
-            });
-          }
-
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
           const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value
             ? 'Programa Independiente'
@@ -468,8 +253,7 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
           this.isCourseSelected = false;
           this.filteredSchools = [];
           this.filteredCourses = [];
-          this.showGoogleCalendarOption = false; // Reset option
-
+          
           this.colegioAdded.emit();
           this.goBack.emit();
         },
@@ -483,86 +267,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
       });
     } else {
       this.markFormGroupTouched();
-    }
-  }
-
-  handleCalendarAuthAndCreation(): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.tokenClient.callback = async (resp: any) => {
-        if (resp.error) {
-          reject(resp);
-          return;
-        }
-        try {
-          const event = await this.createCalendarEvent();
-          resolve(event);
-        } catch (err) {
-          reject(err);
-        }
-      };
-
-      if (gapi.client.getToken() === null) {
-        this.tokenClient.requestAccessToken({ prompt: 'consent' });
-      } else {
-        this.tokenClient.requestAccessToken({ prompt: '' });
-      }
-    });
-  }
-
-  
-
-  async createCalendarEvent() {
-    const startDate = new Date(this.fechaFinalizacionForm.get('evento_inicio')?.value);
-    const endDate = new Date(this.fechaFinalizacionForm.get('evento_fin')?.value);
-
-    if (endDate <= startDate) {
-      this.notificationService.showError('Error en fechas', 'La fecha de finalización del evento debe ser posterior a la fecha de inicio.');
-      throw new Error('Invalid date range');
-    }
-
-    const attendees: any[] = [];
-    const docenteEmail = this.fechaFinalizacionForm.get('evento_docente')?.value;
-
-    // Agregar al docente como invitado
-    if (docenteEmail) {
-      attendees.push({ email: docenteEmail });
-    }
-
-    // Configuración inicial del evento
-    const event = {
-      summary: this.fechaFinalizacionForm.get('evento_titulo')?.value,
-      description: this.fechaFinalizacionForm.get('evento_descripcion')?.value,
-      guestsCanModify: false,
-      start: {
-        dateTime: startDate.toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      },
-      end: {
-        dateTime: endDate.toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      },
-      attendees: attendees,
-      conferenceData: {
-        createRequest: {
-          requestId: "req-" + Date.now(),
-          conferenceSolutionKey: { type: "hangoutsMeet" }
-        }
-      }
-    };
-
-    try {
-      // Crear el evento en el calendario principal
-      const request = await gapi.client.calendar.events.insert({
-        calendarId: 'primary',
-        resource: event,
-        conferenceDataVersion: 1
-      });
-
-      return request.result;
-
-    } catch (error) {
-      console.error('Error creating calendar event:', error);
-      throw error;
     }
   }
 
@@ -597,13 +301,6 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
   private unformatPrice(value: string | null | undefined): number {
     const numericStr = (value || '').replace(/\./g, '');
     return numericStr ? parseInt(numericStr, 10) : 0;
-  }
-
-  private formatDateForDirectus(dateStr: string): string {
-    if (!dateStr) return '';
-    // Formato simple para evitar errores de longitud en Directus: YYYY-MM-DDTHH:mm:ss
-    // Eliminamos el offset de zona horaria (-05:00) si existe
-    return dateStr.substring(0, 19);
   }
 
   private markFormGroupTouched(): void {
