@@ -378,6 +378,23 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
     this.selectedTeacherId = teacher.id;
   }
 
+  onDateInput(event: any, controlName: string): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.value) return;
+    
+    const dateValue = new Date(input.value);
+    
+    // Check if valid date
+    if (isNaN(dateValue.getTime())) return;
+
+    if (dateValue.getDay() !== 2) { // 0=Sun, 1=Mon, 2=Tue
+      this.notificationService.showError('Día no permitido', 'Solo se permiten agendar eventos los días martes. Por favor selecciona un martes.');
+      this.fechaFinalizacionForm.get(controlName)?.setValue(null);
+      input.value = '';
+      input.blur(); // Close the picker
+    }
+  }
+
   async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
 

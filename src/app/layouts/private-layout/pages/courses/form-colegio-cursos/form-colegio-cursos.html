@@ -531,19 +531,21 @@
                 <div class="space-y-2">
                   <label for="evento_inicio" class="block text-sm font-semibold text-gray-700">Inicio *</label>
                   <input type="datetime-local" id="evento_inicio" formControlName="evento_inicio"
+                    (input)="onDateInput($event, 'evento_inicio')"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                   @if (fechaFinalizacionForm.get('evento_inicio')?.invalid &&
                   fechaFinalizacionForm.get('evento_inicio')?.touched) {
-                  <p class="text-red-500 text-sm">La fecha de inicio es requerida</p>
+                  <p class="text-red-500 text-sm">La fecha de inicio es requerida y debe ser un martes</p>
                   }
                 </div>
                 <div class="space-y-2">
                   <label for="evento_fin" class="block text-sm font-semibold text-gray-700">Fin *</label>
                   <input type="datetime-local" id="evento_fin" formControlName="evento_fin"
+                    (input)="onDateInput($event, 'evento_fin')"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                   @if (fechaFinalizacionForm.get('evento_fin')?.invalid &&
                   fechaFinalizacionForm.get('evento_fin')?.touched) {
-                  <p class="text-red-500 text-sm">La fecha de fin es requerida</p>
+                  <p class="text-red-500 text-sm">La fecha de fin es requerida y debe ser un martes</p>
                   }
                 </div>
               </div>
