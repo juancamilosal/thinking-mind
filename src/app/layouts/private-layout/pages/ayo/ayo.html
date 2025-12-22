@@ -79,14 +79,13 @@
             Volver
           </button>
         </div>
-        <app-form-colegio-cursos
+        <app-form-programa-ayo
           [idioma]="selectedLanguage"
           [selectedCourse]="courses.length > 0 ? courses[0] : null"
-          [formTitle]="'Agregar Programa AYO'"
           [initialLanguage]="selectedLanguage"
           (goBack)="closeForm()"
           (colegioAdded)="onColegioAdded()">
-        </app-form-colegio-cursos>
+        </app-form-programa-ayo>
       </div>
     }
   }

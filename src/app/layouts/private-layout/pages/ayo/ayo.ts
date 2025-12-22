@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
 
-import { ColegioCursosComponent } from '../courses/form-colegio-cursos/form-colegio-cursos';
+import { FormProgramaAyoComponent } from './form-programa-ayo/form-programa-ayo';
 
 @Component({
   selector: 'app-ayo',
   standalone: true,
-  imports: [CommonModule, ColegioCursosComponent],
+  imports: [CommonModule, FormProgramaAyoComponent],
   templateUrl: './ayo.html',
   styleUrls: ['./ayo.css']
 })
