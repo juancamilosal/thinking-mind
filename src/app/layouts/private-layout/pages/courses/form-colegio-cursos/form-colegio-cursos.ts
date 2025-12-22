@@ -13,17 +13,14 @@ import { ColegioCursosService } from '../../../../../core/services/colegio-curso
   standalone: true,
   imports: [
     ReactiveFormsModule
-  ],
+],
   templateUrl: './form-colegio-cursos.html',
   styleUrl: './form-colegio-cursos.css'
 })
 export class ColegioCursosComponent implements OnInit {
-  @Input() idioma: string;
   @Input() selectedCourse: Course | null = null;
-  @Input() formTitle: string = 'Agregar Colegio y Fecha de Finalización';
-  @Input() initialLanguage: string | null = null;
   @Output() goBack = new EventEmitter<void>();
-  @Output() colegioAdded = new EventEmitter<void>();
+  @Output() colegioAdded = new EventEmitter<void>(); // Nuevo evento para notificar que se agregó un colegio
 
   fechaFinalizacionForm!: FormGroup;
   filteredSchools: School[] = [];
@@ -40,7 +37,7 @@ export class ColegioCursosComponent implements OnInit {
     private schoolService: SchoolService,
     private notificationService: NotificationService,
     private colegioCursosService: ColegioCursosService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -60,6 +57,7 @@ export class ColegioCursosComponent implements OnInit {
         specialPriceCtrl?.addValidators(Validators.required);
       } else {
         specialPriceCtrl?.clearValidators();
+        // Limpiar el campo cuando se desmarca
         specialPriceCtrl?.setValue('');
       }
       specialPriceCtrl?.updateValueAndValidity();
@@ -72,36 +70,38 @@ export class ColegioCursosComponent implements OnInit {
       curso_id: [null, Validators.required],
       colegio_id: [null, Validators.required],
       precio_curso: [null, Validators.required],
-      programa_con_inscripcion: [false],
-      precio_inscripcion: [null],
-      moneda: [''],
+      programa_con_inscripcion: [false], // Checkbox para mostrar/ocultar campos de inscripción
+      precio_inscripcion: [null], // Campo opcional
+      moneda: [''], // Campo para moneda
       precio_especial_lanzamiento: [false],
       precio_especial: [null],
-      fecha_finalizacion_precio_especial: [null],
-      programa_independiente: [false],
+      fecha_finalizacion_precio_especial: [null], // Nuevo campo para fecha de finalización del precio especial
+      programa_independiente: [false], // Checkbox para programa independiente
       courseSearchTerm: [null],
-      schoolSearchTerm: [null],
-      idioma: [this.initialLanguage || '']
+      schoolSearchTerm: [null]
     });
 
+    // Escuchar cambios en el checkbox de programa independiente
     this.fechaFinalizacionForm.get('programa_independiente')?.valueChanges.subscribe(value => {
       const colegioControl = this.fechaFinalizacionForm.get('colegio_id');
-
+      
       if (value) {
+        // Si se marca programa independiente, establecer el valor específico y limpiar búsqueda
         colegioControl?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
-        colegioControl?.clearValidators();
+        colegioControl?.clearValidators(); // Remover validaciones
         this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue('');
         this.isSchoolSelected = false;
         this.filteredSchools = [];
       } else {
+        // Si se desmarca, limpiar el valor del colegio y restaurar validaciones
         colegioControl?.setValue(null);
-        colegioControl?.setValidators([Validators.required]);
+        colegioControl?.setValidators([Validators.required]); // Restaurar validación requerida
         this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue('');
         this.isSchoolSelected = false;
         this.filteredSchools = [];
       }
-
-      colegioControl?.updateValueAndValidity();
+      
+      colegioControl?.updateValueAndValidity(); // Actualizar estado de validación
     });
   }
 
@@ -209,38 +209,41 @@ export class ColegioCursosComponent implements OnInit {
         ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
         : null;
 
+      // Obtener la fecha actual sin hora (solo fecha)
       const fechaCreacion = new Date();
-      fechaCreacion.setHours(0, 0, 0, 0);
-      const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0];
+      fechaCreacion.setHours(0, 0, 0, 0); // Establecer hora a 00:00:00
+      const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0]; // Formato YYYY-MM-DD
 
-      const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
-      const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
-
-      const formData: any = {
-        fecha_finalizacion: fechaFinalizacion,
+      const formData = {
+        fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
+        // Enviar el precio desformateado (sin puntos) como número
         precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
+        // Campos de inscripción (solo si el checkbox está marcado)
         programa_con_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value || false,
-        precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value
-          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value)
+        precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value 
+          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value) 
           : null,
-        moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value
-          ? this.fechaFinalizacionForm.get('moneda')?.value
+        moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value 
+          ? this.fechaFinalizacionForm.get('moneda')?.value 
           : null,
+        // Nuevo: precio especial para Directus
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
         precio_especial: precioEspecialValor,
         fecha_finalizacion_precio_especial: this.fechaFinalizacionForm.get('fecha_finalizacion_precio_especial')?.value,
+        // Nueva fecha de creación
         fecha_creacion: fechaCreacionISO,
-        programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false,
-        idioma: this.fechaFinalizacionForm.get('idioma')?.value
+        // Enviar el valor del checkbox programa_independiente
+        programa_independiente: this.fechaFinalizacionForm.get('programa_independiente')?.value || false
       };
-
+      // Enviar datos a Directus
       this.colegioCursosService.createColegioCurso(formData).subscribe({
         next: (response) => {
+          // Obtener nombres para mostrar en la notificación
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-          const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value
-            ? 'Programa Independiente'
+          const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value 
+            ? 'Programa Independiente' 
             : this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
 
           this.notificationService.showSuccess(
@@ -248,13 +251,17 @@ export class ColegioCursosComponent implements OnInit {
             `Se ha establecido la fecha de finalización para el curso ${cursoNombre} en ${colegioNombre}`
           );
 
+          // Resetear formulario
           this.fechaFinalizacionForm.reset();
           this.isSchoolSelected = false;
           this.isCourseSelected = false;
           this.filteredSchools = [];
           this.filteredCourses = [];
-          
+
+          // Emitir evento para notificar que se agregó un colegio
           this.colegioAdded.emit();
+
+          // Emitir evento para regresar
           this.goBack.emit();
         },
         error: (error) => {
@@ -273,14 +280,23 @@ export class ColegioCursosComponent implements OnInit {
   onInscriptionPriceInput(event: any): void {
     const input = event.target;
     const value = input.value;
+    
+    // Remover todo lo que no sea dígito
     const numericValue = value.replace(/\D/g, '');
+    
+    // Formatear con puntos como separadores de miles
     const formattedValue = this.formatPrice(numericValue);
+    
+    // Actualizar el valor del input
     input.value = formattedValue;
+    
+    // Actualizar el FormControl
     this.fechaFinalizacionForm.get('precio_inscripcion')?.setValue(formattedValue, { emitEvent: false });
   }
 
   onPriceInput(event: any): void {
     const inputEl = event.target as HTMLInputElement;
+    // Mantener solo dígitos, luego formatear con puntos cada 3
     const digitsOnly = (inputEl.value || '').replace(/\D/g, '');
     const formatted = this.formatPrice(digitsOnly);
     this.fechaFinalizacionForm.get('precio_curso')?.setValue(formatted, { emitEvent: false });
@@ -295,6 +311,7 @@ export class ColegioCursosComponent implements OnInit {
 
   private formatPrice(value: string): string {
     if (!value) return '';
+    // Insertar puntos como separadores de miles
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 
@@ -309,21 +326,23 @@ export class ColegioCursosComponent implements OnInit {
     });
   }
 
+  // Método para obtener la fecha actual en formato ISO
   getCurrentDate(): string {
     return new Date().toISOString().split('T')[0];
   }
 
+  // Método para calcular días entre dos fechas
   calculateDaysBetweenDates(startDate: string, endDate: string): number {
     if (!startDate || !endDate) return 0;
-
+    
     const start = new Date(startDate);
     const end = new Date(endDate);
-
+    
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-
+    
     const timeDifference = end.getTime() - start.getTime();
     const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
-
+    
     return daysDifference > 0 ? daysDifference : 0;
   }
 }
