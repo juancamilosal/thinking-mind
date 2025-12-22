@@ -148,8 +148,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
-      curso_id: [null, Validators.required],
-      colegio_id: ['dfdc71c9-20ab-4981-865f-f5e93fa3efc7', Validators.required],
       precio_curso: [null, Validators.required],
       programa_con_inscripcion: [false],
       precio_inscripcion: [null],
@@ -175,7 +173,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       evento_descripcion_jueves: [''],
       evento_docente_jueves: ['', Validators.required],
       teacherSearchTermJueves: [''],
-
       evento_inicio_jueves: [null, Validators.required],
       evento_fin_jueves: [null, Validators.required],
       idioma: [null]
