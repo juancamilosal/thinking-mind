@@ -20,12 +20,7 @@ export class UserService {
     };
 
     if (searchTerm) {
-      params = {
-        ...params,
-        'filter[_or][0][first_name][_icontains]': searchTerm,
-        'filter[_or][1][last_name][_icontains]': searchTerm,
-        'filter[_or][2][email][_icontains]': searchTerm
-      };
+      params['search'] = searchTerm;
     }
 
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
