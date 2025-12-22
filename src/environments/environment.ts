@@ -16,6 +16,7 @@ export const environment = {
   colegio_cursos: apiUrl + 'items/colegios_cursos',
   historial_programas: apiUrl + 'items/historial_programas',
   reuniones_meet: apiUrl + 'items/reuniones_meet',
+  programa_ayo: apiUrl + 'items/programa_ayo',
   nivel: apiUrl + 'items/nivel',
   security: {
     login: apiUrl + 'auth/login',

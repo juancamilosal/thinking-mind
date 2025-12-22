@@ -9,6 +9,7 @@ import { UserService } from '../../../../../core/services/user.service';
 import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Meeting';
+import {ProgramaAyoService} from '../../../../../core/services/programa-ayo.service';
 
 
 declare var gapi: any;
@@ -61,6 +62,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     private courseService: CourseService,
     private notificationService: NotificationService,
     private colegioCursosService: ColegioCursosService,
+    private programaAyoService: ProgramaAyoService,
     private userService: UserService,
     private nivelService: NivelService,
     private elementRef: ElementRef
@@ -107,7 +109,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     // AYO Specific Init
     this.fechaFinalizacionForm.get('idioma')?.setValidators([Validators.required]);
     this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
-    
+
     if (this.initialLanguage) {
       setTimeout(() => {
         this.fechaFinalizacionForm.get('idioma')?.setValue(this.initialLanguage);
@@ -149,7 +151,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
       curso_id: [null, Validators.required],
-      colegio_id: ['dfdc71c9-20ab-4981-865f-f5e93fa3efc7', Validators.required], // Fixed ID for Independent
+      colegio_id: ['dfdc71c9-20ab-4981-865f-f5e93fa3efc7', Validators.required],
       precio_curso: [null, Validators.required],
       programa_con_inscripcion: [false],
       precio_inscripcion: [null],
@@ -159,7 +161,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       fecha_finalizacion_precio_especial: [null],
       programa_independiente: [true], // Always true
       courseSearchTerm: [null],
-      schoolSearchTerm: [null], 
+      schoolSearchTerm: [null],
       // Google Calendar Fields (Start true for AYO)
       agendar_google_calendar: [true],
       evento_titulo: ['', Validators.required],
@@ -409,11 +411,11 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       if (agendarMartes || agendarJueves) {
         try {
           await this.ensureCalendarToken();
-          
+
           if (agendarMartes) {
             calendarEventDataMartes = await this.createCalendarEvent('');
           }
-          
+
           if (agendarJueves) {
             calendarEventDataJueves = await this.createCalendarEvent('_jueves');
           }
@@ -440,7 +442,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       const formData: any = {
         fecha_finalizacion: fechaFinalizacion,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
-        colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
         precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
         programa_con_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value || false,
         precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value
@@ -449,16 +450,18 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value
           ? this.fechaFinalizacionForm.get('moneda')?.value
           : null,
-        tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
+        tiene_precio_especial: precioEspecialLanzamiento,
         precio_especial: precioEspecialValor,
         fecha_finalizacion_precio_especial: this.fechaFinalizacionForm.get('fecha_finalizacion_precio_especial')?.value,
         fecha_creacion: fechaCreacionISO,
-        programa_independiente: true, // Always true for AYO
-        idioma: this.fechaFinalizacionForm.get('idioma')?.value
+        idioma: this.fechaFinalizacionForm.get('idioma')?.value,
+        id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
+        id_reuniones_meet: []
       };
 
       // Add Google Calendar data if available (Prioritize Martes, then Jueves, or just use one)
       // Using Martes as default if available, else Jueves
+      /*
       if (calendarEventDataMartes) {
         formData.link_reunion = calendarEventDataMartes.hangoutLink;
         formData.id_reunion = calendarEventDataMartes.id;
@@ -466,8 +469,9 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         formData.link_reunion = calendarEventDataJueves.hangoutLink;
         formData.id_reunion = calendarEventDataJueves.id;
       }
+      */
 
-      this.colegioCursosService.createColegioCurso(formData).subscribe({
+      this.programaAyoService.createProgramaAyo(formData).subscribe({
         next: (response) => {
           const tokenObj = gapi?.client?.getToken?.();
           const accessToken = tokenObj?.access_token;
@@ -511,8 +515,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           }
 
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-          const colegioNombre = 'Programa Independiente';
-
           this.notificationService.showSuccess(
             'Programa AYO guardado',
             `Se ha establecido el programa ${cursoNombre} correctamente.`
