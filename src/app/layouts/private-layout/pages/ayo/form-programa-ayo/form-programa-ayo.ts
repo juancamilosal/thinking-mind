@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CourseService } from '../../../../../core/services/course.service';
 import { Course } from '../../../../../core/models/Course';
 import { NotificationService } from '../../../../../core/services/notification.service';
-import { ColegioCursosService } from '../../../../../core/services/colegio-cursos.service';
 import { UserService } from '../../../../../core/services/user.service';
 import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
@@ -176,7 +175,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       evento_descripcion_jueves: [''],
       evento_docente_jueves: ['', Validators.required],
       teacherSearchTermJueves: [''],
-      evento_nivel_jueves: ['', Validators.required],
+
       evento_inicio_jueves: [null, Validators.required],
       evento_fin_jueves: [null, Validators.required],
       idioma: [null]
@@ -184,7 +183,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
     // Listen for Google Calendar checkbox changes (Martes)
     this.fechaFinalizacionForm.get('agendar_google_calendar')?.valueChanges.subscribe(value => {
-      const controls = ['evento_titulo', 'evento_inicio', 'evento_fin', 'evento_docente', 'evento_nivel'];
+      const controls = ['evento_titulo', 'evento_inicio', 'evento_fin', 'evento_docente'];
       if (value) {
         controls.forEach(c => this.fechaFinalizacionForm.get(c)?.setValidators([Validators.required]));
       } else {
@@ -198,7 +197,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
     // Listen for Google Calendar checkbox changes (Jueves)
     this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.valueChanges.subscribe(value => {
-      const controls = ['evento_titulo_jueves', 'evento_inicio_jueves', 'evento_fin_jueves', 'evento_docente_jueves', 'evento_nivel_jueves'];
+      const controls = ['evento_titulo_jueves', 'evento_inicio_jueves', 'evento_fin_jueves', 'evento_docente_jueves'];
       if (value) {
         controls.forEach(c => this.fechaFinalizacionForm.get(c)?.setValidators([Validators.required]));
       } else {
@@ -503,7 +502,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
               link_reunion: calendarEventDataJueves.hangoutLink,
               token: accessToken,
               id_docente: this.selectedTeacherIdJueves,
-              id_nivel: this.fechaFinalizacionForm.get('evento_nivel_jueves')?.value,
+              id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
               id_colegios_cursos: [] // Empty as requested
             };
 
