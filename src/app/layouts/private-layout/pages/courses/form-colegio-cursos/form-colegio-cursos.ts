@@ -624,13 +624,13 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
           if (calendarEventDataMartes) {
             const meetingDataMartes = {
               fecha_inicio: this.formatDateForDirectus(calendarEventDataMartes.start.dateTime),
-              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime, true),
+              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime),
               id_reunion: calendarEventDataMartes.id,
               link_reunion: calendarEventDataMartes.hangoutLink,
               token: accessToken,
               id_docente: this.selectedTeacherId,
               id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
-              id_colegios_cursos: [response.data.id]
+              id_colegios_cursos: []
             };
 
             this.courseService.createReunionMeet(meetingDataMartes).subscribe({
@@ -643,13 +643,13 @@ export class ColegioCursosComponent implements OnInit, OnChanges {
           if (calendarEventDataJueves) {
             const meetingDataJueves = {
               fecha_inicio: this.formatDateForDirectus(calendarEventDataJueves.start.dateTime),
-              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime, true),
+              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime),
               id_reunion: calendarEventDataJueves.id,
               link_reunion: calendarEventDataJueves.hangoutLink,
               token: accessToken,
               id_docente: this.selectedTeacherIdJueves,
               id_nivel: this.fechaFinalizacionForm.get('evento_nivel_jueves')?.value,
-              id_colegios_cursos: [response.data.id]
+              id_colegios_cursos: []
             };
 
             this.courseService.createReunionMeet(meetingDataJueves).subscribe({
