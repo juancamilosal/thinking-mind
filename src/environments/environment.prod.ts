@@ -10,11 +10,17 @@ export const environment = {
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',
   budget: apiUrl + 'items/presupuesto',
+  // Language test collections
+  langTest: {
+    questions: apiUrl + 'items/test',
+    answers: apiUrl + 'items/respuestas',
+  },
   files: apiUrl + 'files',
   users: apiUrl + 'users',
   assets: apiUrl + 'assets',
   colegio_cursos: apiUrl + 'items/colegios_cursos',
   historial_programas: apiUrl + 'items/historial_programas',
+  reuniones_meet: apiUrl + 'items/reuniones_meet',
   security: {
     login: apiUrl + 'auth/login',
     logout: apiUrl + 'auth/logout',

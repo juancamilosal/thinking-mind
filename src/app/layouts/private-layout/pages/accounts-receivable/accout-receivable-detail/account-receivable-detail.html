@@ -285,7 +285,7 @@
             </svg>
             <span>Agregar Pago</span>
           </button>
-          
+
           <button (click)="openRefundModal()"
                   class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,14 +432,14 @@
                     <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                       <span class="text-blue-600 font-semibold text-sm">{{ i + 1 }}</span>
                     </div>
-                    <span class="text-sm font-medium" 
+                    <span class="text-sm font-medium"
                           [class]="payment.estado === 'DEVOLUCION' ? 'text-red-600' : 'text-gray-900'">
                       {{ payment.estado === 'DEVOLUCION' ? 'Devolución' : 'Pago ' + (i + 1) }}
                     </span>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
-                  <span class="text-lg font-bold" 
+                  <span class="text-lg font-bold"
                         [class]="payment.estado === 'DEVOLUCION' ? 'text-red-600' : 'text-green-600'">
                     {{ formatCurrency(payment.valor) }}
                   </span>
@@ -460,8 +460,8 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap cursor-pointer" (click)="viewPaymentDetail(payment)">
                   <span class="px-2 py-1 text-xs font-semibold rounded-full"
-                        [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 
-                                 (payment.estado === 'RECHAZADA' || payment.estado === 'RECHAZADO') ? 'bg-red-100 text-red-800' : 
+                        [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800' :
+                                 (payment.estado === 'RECHAZADA' || payment.estado === 'RECHAZADO') ? 'bg-red-100 text-red-800' :
                                  'bg-yellow-100 text-yellow-800'">
                     {{ payment.estado }}
                   </span>
@@ -594,7 +594,7 @@
                      accept=".pdf,.jpg,.jpeg,.png"
                      class="hidden"
                      #refundFileInput>
-              
+
               @if (!refundFile) {
                 <div (click)="refundFileInput.click()" class="cursor-pointer">
                   <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

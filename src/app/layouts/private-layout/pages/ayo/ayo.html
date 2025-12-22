@@ -1,0 +1,92 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">AYO</h1>
+        <p class="text-gray-600 mt-2">Gestión del programa AYO</p>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+  } @else {
+    @if (!showForm) {
+      <div class="flex flex-col md:flex-row justify-center items-center gap-8 mt-10">
+
+        <!-- Card AYO Inglés -->
+        <div (click)="openForm('INGLÉS')" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
+
+          <div class="h-48 relative overflow-hidden flex flex-col items-center justify-center">
+            <!-- Background Image -->
+            <img src="assets/images/ayo-ingles.jpg" alt="AYO Inglés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          </div>
+
+          <div class="p-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">AYO Inglés</h2>
+            <div class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full"></div>
+            <p class="text-gray-500 leading-relaxed mb-4">
+              Programa intensivo de aprendizaje del idioma inglés.
+            </p>
+            @if (courses.length > 0 && courses[0].precio) {
+              <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 inline-block w-full">
+                <p class="text-xs text-blue-600 font-medium uppercase mb-1">Inversión</p>
+                <p class="text-xl font-bold text-blue-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Card AYO Francés -->
+        <div (click)="openForm('FRANCÉS')" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
+
+          <div class="h-48 relative overflow-hidden flex flex-col items-center justify-center">
+            <!-- Background Image -->
+            <img src="assets/images/ayo-frances.jpg" alt="AYO Francés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          </div>
+
+          <div class="p-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">AYO Francés</h2>
+            <div class="w-16 h-1 bg-purple-500 mx-auto mb-4 rounded-full"></div>
+            <p class="text-gray-500 leading-relaxed mb-4">
+              Programa intensivo de aprendizaje del idioma francés.
+            </p>
+            @if (courses.length > 0 && courses[0].precio) {
+              <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100 inline-block w-full">
+                <p class="text-xs text-purple-600 font-medium uppercase mb-1">Inversión</p>
+                <p class="text-xl font-bold text-purple-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    } @else {
+      <div class="max-w-4xl mx-auto mt-8">
+        <div class="flex justify-end mb-4">
+          <button (click)="closeForm()" class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 transition-colors duration-200 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Volver
+          </button>
+        </div>
+        <app-form-colegio-cursos
+          [selectedCourse]="courses.length > 0 ? courses[0] : null"
+          [formTitle]="'Agregar Programa AYO'"
+          [initialLanguage]="selectedLanguage"
+          (goBack)="closeForm()"
+          (colegioAdded)="onColegioAdded()">
+        </app-form-colegio-cursos>
+      </div>
+    }
+  }
+</div>

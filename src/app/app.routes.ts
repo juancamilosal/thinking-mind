@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { PublicLayout } from './layouts/public-layout/public-layout';
+import { RegisterAyo } from './layouts/public-layout/pages/register-ayo/register-ayo';
+import { PaymentRecordAyoComponent } from './layouts/public-layout/pages/payment-record-ayo/payment-record-ayo';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
@@ -8,7 +10,7 @@ import { Schools } from './layouts/private-layout/pages/schools/schools';
 import { Courses } from './layouts/private-layout/pages/courses/courses';
 import { AccountsReceivable } from './layouts/private-layout/pages/accounts-receivable/accounts-receivable';
 import { Payments } from './layouts/private-layout/pages/payments/payments';
-import {PaymentRecord} from './layouts/public-layout/pages/payment-record/payment-record';
+import { PaymentRecord } from './layouts/public-layout/pages/payment-record/payment-record';
 import { PaymentStatusComponent } from './layouts/public-layout/pages/payment-record/payment-status/payment-status.component';
 import { IndependentProgramPayment } from './layouts/public-layout/pages/independent-program-payment/independent-program-payment';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
@@ -21,6 +23,10 @@ import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
+import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
+import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
+import { ListMeet } from './layouts/private-layout/pages/list-meet/list-meet';
+import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 
 
 export const routes: Routes = [
@@ -33,6 +39,16 @@ export const routes: Routes = [
     path: 'login',
     title: 'Thinking Mind | Login',
     component: Login
+  },
+  {
+    path: 'register-ayo',
+    title: 'Thinking Mind | Validación de Ingreso',
+    component: RegisterAyo
+  },
+  {
+    path: 'payment-record-ayo',
+    title: 'Thinking Mind | Registro de Pago AYO',
+    component: PaymentRecordAyoComponent
   },
   {
     path: 'payment-record',
@@ -48,6 +64,11 @@ export const routes: Routes = [
     path: 'payment-status',
     title: 'Thinking Mind | Estado de Pago',
     component: PaymentStatusComponent
+  },
+  {
+    path: 'entry-validation',
+    title: 'Thinking Mind | Validación de Ingreso',
+    component: EntryValidation
   },
   {
     path: 'private',
@@ -133,6 +154,21 @@ export const routes: Routes = [
         path: 'form-colegio-cursos',
         title: 'Thinking Mind | Colegio Cursos',
         component: ColegioCursosComponent
+      },
+      {
+        path: 'langTest',
+        title: 'Thinking Mind | Language Test',
+        component: LangTest
+      },
+      {
+        path: 'list-meet',
+        title: 'Thinking Mind | Reuniones',
+        component: ListMeet
+      },
+      {
+        path: 'ayo',
+        title: 'Thinking Mind | AYO',
+        component: AyoComponent
       },
       {
         path: '**',

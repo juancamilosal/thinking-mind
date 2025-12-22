@@ -1,0 +1,262 @@
+<div class="min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
+
+    <!-- Decorative background elements similar to payment-record -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+            class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-[#1c6ea4] to-[#0d324d] rounded-full opacity-20 blur-3xl">
+        </div>
+        <div
+            class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#13486e] to-[#082032] rounded-full opacity-20 blur-3xl">
+        </div>
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-[#1c6ea4] via-[#13486e] to-[#0d324d] rounded-full opacity-15 blur-3xl">
+        </div>
+    </div>
+
+    <div class="relative z-10 p-6">
+        <div class="max-w-6xl mx-auto">
+
+            <!-- Header Section (Matching structure with AYO styling) -->
+            <div class="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 text-white shadow-2xl border border-white/10">
+                <div class="text-center">
+                    <div class="flex justify-center mb-6">
+                        <div class="p-4 w-[200px] h-[200px] flex items-center justify-center">
+                            <img src="assets/icons/ayo.png" alt="Logo AYO" class="w-56 h-56 object-contain">
+                        </div>
+                    </div>
+                    <h1 class="text-3xl md:text-6xl font-bold mb-5 text-white drop-shadow-md">Portal de Pagos AYO</h1>
+
+                    <p class="text-xl mb-6 text-blue-50 max-w-2xl mx-auto font-light">
+                        Consulta tu estado, historial de pagos y accede 24/7 de manera fácil y segura.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                        <div
+                            class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
+                            <div class="flex justify-center mb-3">
+                                <span class="text-3xl">🔒</span>
+                            </div>
+                            <h3 class="font-semibold mb-2 text-white text-lg">Registro Seguro</h3>
+                            <p class="text-sm text-blue-100">Información protegida y encriptada</p>
+                        </div>
+                        <div
+                            class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
+                            <div class="flex justify-center mb-3">
+                                <span class="text-3xl">⚡</span>
+                            </div>
+                            <h3 class="font-semibold mb-2 text-white text-lg">Proceso Rápido</h3>
+                            <p class="text-sm text-blue-100">Consulta y pago en minutos</p>
+                        </div>
+                        <div
+                            class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
+                            <div class="flex justify-center mb-3">
+                                <span class="text-3xl">🕒</span>
+                            </div>
+                            <h3 class="font-semibold mb-2 text-white text-lg">Atención 24/7</h3>
+                            <p class="text-sm text-blue-100">Acceso permanente al sistema</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions Section -->
+            <div
+                class="bg-gradient-to-r from-orange-600 to-amber-500 shadow-lg p-6 mb-8 rounded-2xl border border-orange-400/30">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-white/20 rounded-full p-2">
+                        <span class="text-xl text-white">ℹ️</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-white mb-2">Instrucciones para el registro y consulta</h3>
+                        <ul class="text-orange-50 space-y-1 font-medium text-sm md:text-base">
+                            <li>• Complete la información del acudiente (persona responsable del pago).</li>
+                            <li>• Todos los campos son obligatorios para garantizar un contacto efectivo.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Section -->
+            <div>
+                <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="space-y-8">
+
+                    <!-- Guardian Info Card -->
+                    <!-- Using white card to keep AYO "clean" look but with payment-record structure -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                        <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
+                            <div class="bg-gradient-to-r  p-3 mr-4">
+                                <img src="assets/icons/acudiente.png" alt="Icono Acudiente" class="w-24 h-24">
+                            </div>
+                            <h3 class="text-2xl font-bold text-[#13486e]">Información del Acudiente</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Input Groups with improved styling matching payment-record input height/feel -->
+                            <div class="space-y-3 group">
+                                <label for="tipoDocumento"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo de
+                                    Documento</label>
+                                <select id="tipoDocumento" formControlName="tipoDocumento"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
+                                    <option value="" disabled selected>Selecciona una opción</option>
+                                    <option value="TI">Tarjeta de Identidad</option>
+                                    <option value="CC">Cédula de Ciudadanía</option>
+                                    <option value="CE">Cédula de Extranjería</option>
+                                    <option value="PAS">Pasaporte</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="numeroDocumento"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
+                                    Documento</label>
+                                <input type="text" id="numeroDocumento" formControlName="numeroDocumento"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Ej: 1000123456">
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="nombre"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
+                                <input type="text" id="nombre" formControlName="nombre"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Ingresa tu nombre">
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="apellido"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
+                                <input type="text" id="apellido" formControlName="apellido"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Ingresa tu apellido">
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="celular"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
+                                    Celular</label>
+                                <input type="tel" id="celular" formControlName="celular"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Ej: 3001234567">
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="email"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
+                                    Electrónico</label>
+                                <input type="email" id="email" formControlName="email"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="nombre@ejemplo.com">
+                            </div>
+
+                            <!-- Full width address -->
+                            <div class="space-y-3 md:col-span-2 group">
+                                <label for="direccion"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Dirección</label>
+                                <input type="text" id="direccion" formControlName="direccion"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Dirección completa de residencia">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Info Card -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                        <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
+                            <div class="bg-gradient-to-r  p-3 mr-4">
+                                <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24">
+                            </div>
+                            <h3 class="text-2xl font-bold text-[#13486e]">Información del Estudiante</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-3 group">
+                                <label for="studentTipoDocumento"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo
+                                    de
+                                    Documento</label>
+                                <select id="studentTipoDocumento" formControlName="studentTipoDocumento"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
+                                    <option value="" disabled selected>Selecciona una opción</option>
+                                    <option value="TI">Tarjeta de Identidad</option>
+                                    <option value="CC">Cédula de Ciudadanía</option>
+                                    <option value="CE">Cédula de Extranjería</option>
+                                    <option value="PAS">Pasaporte</option>
+                                    <option value="RC">Registro Civil</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="studentNumeroDocumento"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número
+                                    de
+                                    Documento</label>
+                                <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Ej: 1000123456">
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="studentNombre"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
+                                <input type="text" id="studentNombre" formControlName="studentNombre"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Nombre del estudiante">
+                            </div>
+
+                            <div class="space-y-3 group">
+                                <label for="studentApellido"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
+                                <input type="text" id="studentApellido" formControlName="studentApellido"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Apellido del estudiante">
+                            </div>
+
+                            <div class="space-y-3 group md:col-span-2">
+                                <label for="studentEmail"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
+                                    Electrónico</label>
+                                <input type="email" id="studentEmail" formControlName="studentEmail"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="estudiante@gmail.com">
+                                <p class="text-sm text-gray-600 mt-2 flex items-start gap-2">
+                                    <span class="text-orange-500 flex-shrink-0">ℹ️</span>
+                                    <span>Para poder registrarse, el correo del estudiante debe ser un correo electrónico de Gmail. Si no tiene
+                                        uno, lo invitamos a crearlo para poder registrarse.</span>
+                                </p>
+                            </div>
+
+                            <div class="space-y-3 md:col-span-2 group">
+                                <label for="studentColegio"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Colegio</label>
+                                <input type="text" id="studentColegio" formControlName="studentColegio"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Nombre del colegio">
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Main Submit Button -->
+                    <div class="mt-8 flex justify-center">
+                        <button type="submit" [disabled]="paymentForm.invalid || isLoading"
+                            class="min-w-[280px] bg-gradient-to-r from-[#13486e] to-[#1c6ea4] hover:from-[#0d324d] hover:to-[#13486e] text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
+                            @if (!isLoading) {
+                            <span>Continuar</span>
+                            }
+                            @if (isLoading) {
+                            <div class="spinner border-t-white/100 border-white/30"></div>
+                            }
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="text-center text-white/50 text-sm mt-12 pb-6">
+                © 2026 Thinking Mind | Todos los derechos reservados.
+            </div>
+
+        </div>
+    </div>
+</div>
