@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ElementRef, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
 import { CourseService } from '../../../../../core/services/course.service';
 import { Course } from '../../../../../core/models/Course';
@@ -46,6 +47,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   selectedTeacherId: string | null = null;
   selectedTeacherIdJueves: string | null = null;
   selectedLanguage: string | null = null;
+  isSubmitting: boolean = false;
 
   // Google Calendar Integration
   showGoogleCalendarOption = true; // Always true for AYO
@@ -395,149 +397,127 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
   async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
+      this.isSubmitting = true;
 
-      let calendarEventDataMartes: any = null;
-      let calendarEventDataJueves: any = null;
+      try {
+        const agendarMartes = this.fechaFinalizacionForm.get('agendar_google_calendar')?.value;
+        const agendarJueves = this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.value;
+        const meetingIds: string[] = [];
 
-      // Handle Google Calendar Event Creation
-      const agendarMartes = this.fechaFinalizacionForm.get('agendar_google_calendar')?.value;
-      const agendarJueves = this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.value;
-
-      if (agendarMartes || agendarJueves) {
-        try {
+        // 1. Create Calendar Events and Meetings FIRST
+        if (agendarMartes || agendarJueves) {
           await this.ensureCalendarToken();
-
-          if (agendarMartes) {
-            calendarEventDataMartes = await this.createCalendarEvent('');
-          }
-
-          if (agendarJueves) {
-            calendarEventDataJueves = await this.createCalendarEvent('_jueves');
-          }
-
-        } catch (error) {
-          console.error('Error creating calendar event:', error);
-          this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar');
-          return; // Stop submission if calendar fails
-        }
-      }
-
-      const precioEspecialLanzamiento = !!this.fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value;
-      const precioEspecialValor = precioEspecialLanzamiento
-        ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
-        : null;
-
-      const fechaCreacion = new Date();
-      fechaCreacion.setHours(0, 0, 0, 0);
-      const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0];
-
-      const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
-      const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
-
-      const formData: any = {
-        fecha_finalizacion: fechaFinalizacion,
-        curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
-        precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
-        programa_con_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value || false,
-        precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value
-          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value)
-          : null,
-        moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value
-          ? this.fechaFinalizacionForm.get('moneda')?.value
-          : null,
-        tiene_precio_especial: precioEspecialLanzamiento,
-        precio_especial: precioEspecialValor,
-        fecha_finalizacion_precio_especial: this.fechaFinalizacionForm.get('fecha_finalizacion_precio_especial')?.value,
-        fecha_creacion: fechaCreacionISO,
-        idioma: this.fechaFinalizacionForm.get('idioma')?.value,
-        id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
-        id_reuniones_meet: []
-      };
-
-      // Add Google Calendar data if available (Prioritize Martes, then Jueves, or just use one)
-      // Using Martes as default if available, else Jueves
-      /*
-      if (calendarEventDataMartes) {
-        formData.link_reunion = calendarEventDataMartes.hangoutLink;
-        formData.id_reunion = calendarEventDataMartes.id;
-      } else if (calendarEventDataJueves) {
-        formData.link_reunion = calendarEventDataJueves.hangoutLink;
-        formData.id_reunion = calendarEventDataJueves.id;
-      }
-      */
-
-      this.programaAyoService.createProgramaAyo(formData).subscribe({
-        next: (response) => {
           const tokenObj = gapi?.client?.getToken?.();
           const accessToken = tokenObj?.access_token;
 
-          // Save meeting details to Directus for Martes
-          if (calendarEventDataMartes) {
-            const meetingDataMartes = {
-              fecha_inicio: this.formatDateForDirectus(calendarEventDataMartes.start.dateTime),
-              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime),
-              id_reunion: calendarEventDataMartes.id,
-              link_reunion: calendarEventDataMartes.hangoutLink,
-              token: accessToken,
-              id_docente: this.selectedTeacherId,
-              id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
-              id_colegios_cursos: [] // Empty as requested
-            };
-
-            this.courseService.createReunionMeet(meetingDataMartes).subscribe({
-              next: (res) => console.log('Reunión Martes guardada en Directus:', res),
-              error: (err) => console.error('Error al guardar reunión Martes en Directus:', err)
-            });
+          if (agendarMartes) {
+            const calendarEventDataMartes = await this.createCalendarEvent('');
+            if (calendarEventDataMartes) {
+              const meetingDataMartes = {
+                fecha_inicio: this.formatDateForDirectus(calendarEventDataMartes.start.dateTime),
+                fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime),
+                id_reunion: calendarEventDataMartes.id,
+                link_reunion: calendarEventDataMartes.hangoutLink,
+                token: accessToken,
+                id_docente: this.selectedTeacherId,
+                id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
+                id_colegios_cursos: []
+              };
+              const res = await firstValueFrom(this.courseService.createReunionMeet(meetingDataMartes));
+              if (res?.data?.id) meetingIds.push(res.data.id);
+            }
           }
 
-          // Save meeting details to Directus for Jueves
-          if (calendarEventDataJueves) {
-            const meetingDataJueves = {
-              fecha_inicio: this.formatDateForDirectus(calendarEventDataJueves.start.dateTime),
-              fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime),
-              id_reunion: calendarEventDataJueves.id,
-              link_reunion: calendarEventDataJueves.hangoutLink,
-              token: accessToken,
-              id_docente: this.selectedTeacherIdJueves,
-              id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
-              id_colegios_cursos: [] // Empty as requested
-            };
-
-            this.courseService.createReunionMeet(meetingDataJueves).subscribe({
-              next: (res) => console.log('Reunión Jueves guardada en Directus:', res),
-              error: (err) => console.error('Error al guardar reunión Jueves en Directus:', err)
-            });
+          if (agendarJueves) {
+            const calendarEventDataJueves = await this.createCalendarEvent('_jueves');
+            if (calendarEventDataJueves) {
+              const meetingDataJueves = {
+                fecha_inicio: this.formatDateForDirectus(calendarEventDataJueves.start.dateTime),
+                fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime),
+                id_reunion: calendarEventDataJueves.id,
+                link_reunion: calendarEventDataJueves.hangoutLink,
+                token: accessToken,
+                id_docente: this.selectedTeacherIdJueves,
+                id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
+                id_colegios_cursos: []
+              };
+              const res = await firstValueFrom(this.courseService.createReunionMeet(meetingDataJueves));
+              if (res?.data?.id) meetingIds.push(res.data.id);
+            }
           }
-
-          const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-          this.notificationService.showSuccess(
-            'Programa AYO guardado',
-            `Se ha establecido el programa ${cursoNombre} correctamente.`
-          );
-
-          this.fechaFinalizacionForm.reset();
-          // this.isSchoolSelected = false; // Removed
-          this.isCourseSelected = false;
-          // this.filteredSchools = []; // Removed
-          this.filteredCourses = [];
-          this.showGoogleCalendarOption = true; // Reset option to true for AYO
-          // Re-init default values for AYO
-          this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
-          this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.setValue(true);
-          this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
-          this.fechaFinalizacionForm.get('colegio_id')?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
-
-          this.colegioAdded.emit();
-          this.goBack.emit();
-        },
-        error: (error) => {
-          console.error('Error al crear colegio-curso:', error);
-          this.notificationService.showError(
-            'Error al guardar',
-            'No se pudo guardar la información. Inténtalo nuevamente.'
-          );
         }
-      });
+
+        // 2. Prepare Program Data with meetingIds
+        const precioEspecialLanzamiento = !!this.fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value;
+        const precioEspecialValor = precioEspecialLanzamiento
+          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
+          : null;
+
+        const fechaCreacion = new Date();
+        fechaCreacion.setHours(0, 0, 0, 0);
+        const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0];
+
+        const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
+        const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
+
+        const formData: any = {
+          fecha_finalizacion: fechaFinalizacion,
+          curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
+          precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
+          programa_con_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value || false,
+          precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value
+            ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value)
+            : null,
+          moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value
+            ? this.fechaFinalizacionForm.get('moneda')?.value
+            : null,
+          tiene_precio_especial: precioEspecialLanzamiento,
+          precio_especial: precioEspecialValor,
+          fecha_finalizacion_precio_especial: this.fechaFinalizacionForm.get('fecha_finalizacion_precio_especial')?.value,
+          fecha_creacion: fechaCreacionISO,
+          idioma: this.fechaFinalizacionForm.get('idioma')?.value,
+          id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
+          id_reuniones_meet: meetingIds
+        };
+
+        // 3. Create Program
+        this.programaAyoService.createProgramaAyo(formData).subscribe({
+          next: (response) => {
+            const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
+            this.notificationService.showSuccess(
+              'Programa AYO guardado',
+              `Se ha establecido el programa y las reuniones de los Martes y Jueves`
+            );
+
+            this.fechaFinalizacionForm.reset();
+            this.isCourseSelected = false;
+            this.filteredCourses = [];
+            this.showGoogleCalendarOption = true;
+            this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
+            this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.setValue(true);
+            this.fechaFinalizacionForm.get('programa_independiente')?.setValue(true);
+            this.fechaFinalizacionForm.get('colegio_id')?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
+
+            this.colegioAdded.emit();
+            this.goBack.emit();
+            this.isSubmitting = false;
+          },
+          error: (error) => {
+            console.error('Error al crear programa ayo:', error);
+            this.notificationService.showError(
+              'Error al guardar',
+              'No se pudo guardar la información del programa. Sin embargo, las reuniones pueden haberse creado.'
+            );
+            this.isSubmitting = false;
+          }
+        });
+
+      } catch (error) {
+        console.error('Error creating calendar events or meetings:', error);
+        this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar o guardar las reuniones.');
+        this.isSubmitting = false;
+      }
+
     } else {
       this.markFormGroupTouched();
     }

@@ -21,15 +21,15 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl);
   }
 
-  getProgramaAyoById(id: number): Observable<ResponseAPI<ProgramaAyo>> {
+  getProgramaAyoById(id: string | number): Observable<ResponseAPI<ProgramaAyo>> {
     return this.http.get<ResponseAPI<ProgramaAyo>>(`${this.apiUrl}/${id}`);
   }
 
-  updateProgramaAyo(id: number, programaAyo: Partial<ProgramaAyo>): Observable<ResponseAPI<ProgramaAyo>> {
+  updateProgramaAyo(id: string | number, programaAyo: Partial<ProgramaAyo>): Observable<ResponseAPI<ProgramaAyo>> {
     return this.http.patch<ResponseAPI<ProgramaAyo>>(`${this.apiUrl}/${id}`, programaAyo);
   }
 
-  deleteProgramaAyo(id: number): Observable<ResponseAPI<any>> {
+  deleteProgramaAyo(id: string | number): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }
 }
