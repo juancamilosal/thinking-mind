@@ -8,8 +8,8 @@
 
   <div class="relative w-full max-w-4xl flex flex-col gap-10 animate-in fade-in zoom-in duration-500">
     <div class="text-center space-y-4">
-      <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-tight text-slate-900">Welcome to the Assessment</h1>
-      <p class="text-lg font-medium text-slate-700">Please select your preferred language to begin.</p>
+      <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-tight text-slate-900">Bienvenido a la Evaluación</h1>
+      <p class="text-lg font-medium text-slate-700">Selecciona tu idioma preferido para comenzar.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full px-2">
@@ -44,8 +44,13 @@
   <div class="relative w-full max-w-3xl bg-white backdrop-blur rounded-3xl shadow-xl ring-1 ring-slate-200 p-6 sm:p-8 flex flex-col gap-8 md:gap-10 animate-in fade-in zoom-in duration-500">
     <div class="flex flex-col gap-3 w-full">
       <div class="flex justify-between items-end px-1">
-        <span class="text-sm font-bold tracking-widest uppercase text-slate-600">Progress</span>
-        <span class="text-base font-bold text-slate-800">Question {{ currentIndex + 1 }} of {{ questions.length || 10 }}</span>
+        <span class="text-sm font-bold tracking-widest uppercase text-slate-600">{{ selectedLanguage === 'FRANCÉS' ? 'Progrès' : 'Progress' }}</span>
+        <span class="text-base font-bold text-slate-800">
+          {{ selectedLanguage === 'FRANCÉS'
+            ? ('Question ' + (currentIndex + 1) + ' sur ' + (questions.length || 10))
+            : ('Question ' + (currentIndex + 1) + ' of ' + (questions.length || 10))
+          }}
+        </span>
       </div>
       <div class="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
         <div class="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out" [style.width.%]="progressPercent"></div>
@@ -79,18 +84,18 @@
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 18l-6-6 6-6" />
         </svg>
-        <span>Return</span>
+        <span>{{ selectedLanguage === 'FRANCÉS' ? 'Retour' : 'Return' }}</span>
       </button>
       @if (!isLastQuestion()) {
       <button (click)="next()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-500 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
-        <span>Advance</span>
+        <span>{{ selectedLanguage === 'FRANCÉS' ? 'Suivant' : 'Advance' }}</span>
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6" />
         </svg>
       </button>
       } @else {
-      <button (click)="submitTest()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
-        <span>Submit Test</span>
+      <button (click)="submitTest()" [disabled]="!isAllAnswered" [class.opacity-50]="!isAllAnswered" [class.cursor-not-allowed]="!isAllAnswered" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white disabled:hover:shadow-[0_4px_14px_rgba(16,185,129,0.35)] disabled:hover:translate-y-0">
+        <span>{{ selectedLanguage === 'FRANCÉS' ? 'Soumettre le test' : 'Submit Test' }}</span>
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6" />
         </svg>
@@ -122,12 +127,12 @@
     </div>
 
     <div class="flex flex-col items-center px-8 pt-14 pb-10 text-center">
-      <h3 class="text-3xl font-bold tracking-tight text-slate-900 mb-2">Test Completed!</h3>
-      <p class="text-slate-700 text-base leading-relaxed max-w-[340px] mb-8">Thank you for completing the assessment. You have successfully finished the language test.</p>
+      <h3 class="text-3xl font-bold tracking-tight text-slate-900 mb-2">¡Prueba completada!</h3>
+      <p class="text-slate-700 text-base leading-relaxed max-w-[340px] mb-8">Gracias por completar la evaluación. Has finalizado la prueba de idioma con éxito.</p>
 
       <div class="w-full bg-slate-50 rounded-2xl p-6 mb-8 flex flex-col gap-4 ring-1 ring-slate-200">
         <div class="flex items-center justify-between border-b border-slate-200 pb-4">
-          <span class="text-sm font-medium text-slate-500">Your Score</span>
+          <span class="text-sm font-medium text-slate-500">Tu Calificación</span>
           <div class="flex items-center gap-2 text-slate-900">
             <span class="text-2xl font-bold">{{ score }}<span class="text-slate-400 text-lg font-normal">/{{ questions.length }}</span></span>
             <svg aria-hidden="true" class="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -137,21 +142,21 @@
         </div>
 
         <div class="flex items-center justify-between">
-          <span class="text-sm font-medium text-slate-500">Classification</span>
+          <span class="text-sm font-medium text-slate-500">Clasificación</span>
           <div class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-700">A1.1 Beginner</div>
         </div>
       </div>
 
       <button class="group relative w-full overflow-hidden rounded-full bg-emerald-500 p-4 text-center font-bold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-transform active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
         <span class="relative z-10 flex items-center justify-center gap-2">
-          Finish
+          Finalizar
           <svg aria-hidden="true" class="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </span>
       </button>
 
-      <p class="mt-6 text-xs text-slate-500">Results have been saved automatically.</p>
+      <p class="mt-6 text-xs text-slate-500">Los resultados se han guardado automáticamente.</p>
     </div>
   </div>
 </section>
