@@ -18,7 +18,9 @@ export class ProgramaAyoService {
   }
 
   getProgramaAyo(idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
-    let params: any = {};
+    let params: any = {
+      'fields': '*,id_nivel.*,id_reuniones_meet.*'
+    };
     if (idioma) {
       params['filter[idioma][_eq]'] = idioma;
     }

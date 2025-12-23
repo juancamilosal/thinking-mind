@@ -1,3 +1,5 @@
+import {Nivel} from './Meeting';
+
 export class Course {
   id?: string;
   nombre: string;
@@ -27,7 +29,7 @@ export interface ProgramaAyo {
   precio_inscripcion?: number | null;
   fecha_finalizacion_precio_especial?: string | null;
   idioma?: string;
-  id_nivel?: string;
+  id_nivel?: Nivel;
   id_reuniones_meet?: any[];
 }
 
