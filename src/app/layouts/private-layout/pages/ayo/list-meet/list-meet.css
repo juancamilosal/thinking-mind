@@ -1,0 +1,585 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* ========================================
+   AYO Brand Colors & Variables
+   ======================================== */
+:host {
+    --ayo-primary: #13486e;
+    --ayo-secondary: #d5ca25;
+    --ayo-primary-light: #1a5f8f;
+    --ayo-primary-dark: #0d3450;
+    --ayo-secondary-light: #e8dd5f;
+    --ayo-secondary-dark: #b8ae1f;
+    --ayo-gradient: linear-gradient(135deg, #13486e 0%, #1a5f8f 100%);
+    --ayo-gradient-accent: linear-gradient(135deg, #d5ca25 0%, #e8dd5f 100%);
+    --shadow-sm: 0 2px 8px rgba(19, 72, 110, 0.08);
+    --shadow-md: 0 4px 16px rgba(19, 72, 110, 0.12);
+    --shadow-lg: 0 8px 32px rgba(19, 72, 110, 0.16);
+    --shadow-xl: 0 12px 48px rgba(19, 72, 110, 0.2);
+}
+
+/* ========================================
+   Container & Layout
+   ======================================== */
+.ayo-container {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+    position: relative;
+}
+
+.ayo-container::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    background: var(--ayo-gradient);
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ========================================
+   Back Button
+   ======================================== */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: var(--ayo-primary);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+.back-button:hover {
+    background: var(--ayo-primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--ayo-primary-dark);
+}
+
+.back-button:active {
+    transform: translateY(0);
+}
+
+/* ========================================
+   Header Section
+   ======================================== */
+.header-section {
+    position: relative;
+    z-index: 1;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--ayo-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.language-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    background: var(--ayo-gradient-accent);
+    color: var(--ayo-primary-dark);
+    border-radius: 50px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+    animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* ========================================
+   Programs Grid
+   ======================================== */
+.programs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .programs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   Program Card
+   ======================================== */
+.program-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    border: 1px solid rgba(19, 72, 110, 0.08);
+}
+
+/* ========================================
+   Card Header
+   ======================================== */
+.card-header {
+    position: relative;
+    padding: 1.75rem 1.5rem 1.25rem;
+    background: var(--ayo-gradient);
+    overflow: hidden;
+}
+
+.gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.3;
+    animation: patternMove 20s linear infinite;
+}
+
+@keyframes patternMove {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(60px, 60px);
+    }
+}
+
+.header-content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+.icon-wrapper {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.program-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: white;
+    stroke-width: 2.5;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: #10b981;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+    }
+}
+
+/* ========================================
+   Card Body
+   ======================================== */
+.card-body {
+    padding: 1.75rem 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.program-title-section {
+    text-align: center;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid rgba(19, 72, 110, 0.1);
+    position: relative;
+}
+
+.program-title-section::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: var(--ayo-gradient-accent);
+    border-radius: 2px;
+}
+
+.program-language {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--ayo-primary);
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.01em;
+}
+
+.program-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ========================================
+   Program Details
+   ======================================== */
+.program-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 0.875rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid transparent;
+}
+
+.detail-item:hover {
+    background: #f8f9fa;
+}
+
+.detail-item.highlight {
+    background: linear-gradient(135deg, rgba(213, 202, 37, 0.08) 0%, rgba(213, 202, 37, 0.02) 100%);
+    border: 1px solid rgba(213, 202, 37, 0.2);
+}
+
+.detail-item.highlight:hover {
+    background: linear-gradient(135deg, rgba(213, 202, 37, 0.08) 0%, rgba(213, 202, 37, 0.02) 100%);
+}
+
+.detail-icon {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(19, 72, 110, 0.08);
+}
+
+.detail-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--ayo-primary);
+    stroke-width: 2.5;
+}
+
+.detail-item.highlight .detail-icon {
+    background: var(--ayo-gradient-accent);
+}
+
+.detail-item.highlight .detail-icon svg {
+    color: var(--ayo-primary-dark);
+}
+
+.detail-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    font-size: 0.925rem;
+    color: var(--ayo-primary-dark);
+    font-weight: 700;
+}
+
+.detail-value.price {
+    font-size: 1.2rem;
+    color: var(--ayo-primary);
+}
+
+/* ========================================
+   Meetings Section
+   ======================================== */
+.meetings-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 2px solid rgba(19, 72, 110, 0.1);
+}
+
+.meetings-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ayo-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.meetings-title svg {
+    color: var(--ayo-secondary);
+}
+
+.meetings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.meeting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0.875rem;
+    background: linear-gradient(135deg, rgba(19, 72, 110, 0.04) 0%, rgba(19, 72, 110, 0.01) 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(19, 72, 110, 0.08);
+}
+
+.meeting-item:hover {
+    background: linear-gradient(135deg, rgba(19, 72, 110, 0.04) 0%, rgba(19, 72, 110, 0.01) 100%);
+}
+
+.meeting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.meeting-day {
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: var(--ayo-primary);
+}
+
+.meeting-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.meeting-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: var(--ayo-gradient);
+    color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.meeting-link:hover {
+    background: var(--ayo-gradient);
+    color: white;
+}
+
+/* ========================================
+   Empty State
+   ======================================== */
+.empty-state {
+    background: white;
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    border: 2px dashed rgba(19, 72, 110, 0.2);
+}
+
+.empty-icon {
+    width: 5rem;
+    height: 5rem;
+    margin: 0 auto 1.5rem;
+    color: #adb5bd;
+    stroke-width: 1.5;
+}
+
+.empty-text {
+    font-size: 1.25rem;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+/* ========================================
+   Skeleton Loading
+   ======================================== */
+.program-card.skeleton {
+    pointer-events: none;
+}
+
+.skeleton-header {
+    height: 120px;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 0;
+}
+
+.skeleton-line {
+    height: 1rem;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+    margin: 1rem 1.5rem;
+}
+
+.skeleton-line.w-75 {
+    width: 75%;
+}
+
+.skeleton-line.w-50 {
+    width: 50%;
+}
+
+.skeleton-button {
+    height: 3rem;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 12px;
+    margin: 1.5rem;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .language-badge {
+        font-size: 1rem;
+        padding: 0.4rem 1rem;
+    }
+
+    .program-language {
+        font-size: 1.5rem;
+    }
+
+    .card-header {
+        padding: 1.5rem 1rem 1rem;
+    }
+
+    .card-body {
+        padding: 1.5rem 1rem;
+    }
+
+    .programs-grid {
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .detail-item {
+        padding: 0.75rem;
+    }
+
+    .detail-icon {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .detail-icon svg {
+        width: 1rem;
+        height: 1rem;
+    }
+}
