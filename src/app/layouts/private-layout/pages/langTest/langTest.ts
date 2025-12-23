@@ -82,6 +82,10 @@ export class LangTest {
     return Math.round(((this.currentIndex + 1) / this.questions.length) * 100);
   }
 
+  get isAllAnswered(): boolean {
+    return this.questions.every((q) => this.answersByQuestion[q.id] !== null);
+  }
+
   // Submit & score
   submitTest() {
     let correct = 0;

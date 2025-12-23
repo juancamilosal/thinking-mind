@@ -94,7 +94,7 @@
         </svg>
       </button>
       } @else {
-      <button (click)="submitTest()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
+      <button (click)="submitTest()" [disabled]="!isAllAnswered" [class.opacity-50]="!isAllAnswered" [class.cursor-not-allowed]="!isAllAnswered" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white disabled:hover:shadow-[0_4px_14px_rgba(16,185,129,0.35)] disabled:hover:translate-y-0">
         <span>{{ selectedLanguage === 'FRANCÉS' ? 'Soumettre le test' : 'Submit Test' }}</span>
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6" />
