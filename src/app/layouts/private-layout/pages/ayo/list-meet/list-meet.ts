@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { CourseService} from '../../../../../core/services/course.service';
-import {Meeting} from '../../../../../core/models/Meeting';
+import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
+import { NotificationService } from '../../../../../core/services/notification.service';
+import {ProgramaAyo} from '../../../../../core/models/Course';
 
 @Component({
     selector: 'app-list-meet',
@@ -12,12 +13,14 @@ import {Meeting} from '../../../../../core/models/Meeting';
     styleUrl: './list-meet.css'
 })
 export class ListMeet implements OnInit {
-    meetings: Meeting[] = [];
+
+    programas: ProgramaAyo[] = [];
     isLoading = false;
     selectedLanguage: string | null = null;
 
     constructor(
-        private courseService: CourseService,
+        private programaAyoService: ProgramaAyoService,
+        private notificationService: NotificationService,
         private router: Router,
         private route: ActivatedRoute
     ) { }
@@ -28,18 +31,18 @@ export class ListMeet implements OnInit {
                 this.selectedLanguage = params['idioma'];
             }
         });
-        this.loadMeetings();
+        this.loadProgramas();
     }
 
-    loadMeetings(): void {
+    loadProgramas(): void {
         this.isLoading = true;
-        this.courseService.getReunionesMeet().subscribe({
+        this.programaAyoService.getProgramaAyo(this.selectedLanguage || undefined).subscribe({
             next: (response) => {
-                this.meetings = response.data || [];
+                this.programas = response.data || [];
                 this.isLoading = false;
             },
             error: (error) => {
-                console.error('Error loading meetings:', error);
+                this.notificationService.showError('Error', 'No se pudieron cargar los programas AYO.');
                 this.isLoading = false;
             }
         });

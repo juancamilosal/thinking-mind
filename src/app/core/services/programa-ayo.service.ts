@@ -17,8 +17,12 @@ export class ProgramaAyoService {
     return this.http.post<ResponseAPI<ProgramaAyo>>(this.apiUrl, programaAyo);
   }
 
-  getProgramaAyo(): Observable<ResponseAPI<ProgramaAyo[]>> {
-    return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl);
+  getProgramaAyo(idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
+    let params: any = {};
+    if (idioma) {
+      params['filter[idioma][_eq]'] = idioma;
+    }
+    return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl, { params });
   }
 
   getProgramaAyoById(id: string | number): Observable<ResponseAPI<ProgramaAyo>> {
