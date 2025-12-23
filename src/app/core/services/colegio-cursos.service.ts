@@ -3,18 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
-
-export class ColegioCurso {
-  id?: number;
-  fecha_finalizacion: string;
-  curso_id: number;
-  colegio_id: number;
-  precio_curso?: number;
-  tiene_precio_especial?: string; // "TRUE" | "FALSE"
-  precio_especial?: number | null;
-  programa_independiente?: boolean; // Campo para identificar programas independientes
-  idioma?: string;
-}
+import { ColegioCurso } from '../models/Course';
 
 @Injectable({
   providedIn: 'root'

@@ -41,17 +41,7 @@
       }
     </div>
 
-    <!-- Campo de Curso (Programa) -->
-    <div class="space-y-3 relative">
-      <label for="curso_id" class="text-md font-semibold text-blue-700 flex items-center">
-        <img src="assets/icons/birrete.png" class="w-10 h-10 mr-2" alt="Programa">
-        Programa *
-      </label>
-      <div class="relative">
-        <input type="text" id="curso_id" [value]="selectedCourse?.nombre" readonly
-          class="w-full px-6 py-4 rounded-lg border border-blue-300 shadow-sm bg-gray-100 text-blue-800 cursor-not-allowed">
-      </div>
-    </div>
+
 
     <!-- Campo de Idioma (Always visible for AYO) -->
     <div class="space-y-3">
@@ -76,6 +66,23 @@
         El idioma es requerido
       </p>
       }
+    </div>
+
+    <!-- Campo de Nivel -->
+    <div class="space-y-3">
+      <label for="evento_nivel" class="text-md font-semibold text-green-700 flex items-center">
+        <img src="assets/icons/nivel.png" class="w-10 h-10 mr-2" alt="Idioma">
+        Nivel *
+      </label>
+      <div class="relative">
+        <select id="evento_nivel" formControlName="evento_nivel"
+          class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+          <option value="">Seleccione un nivel</option>
+          @for (nivel of niveles; track nivel.id) {
+          <option [value]="nivel.id">{{ nivel.subcategoria }} | {{ nivel.tematica }}</option>
+          }
+        </select>
+      </div>
     </div>
 
     <!-- Campo de Precio del Programa -->
@@ -164,8 +171,6 @@
             <option value="" disabled>Seleccione una moneda</option>
             <option value="USD">USD - Dólar Estadounidense</option>
             <option value="EUR">EUR - Euro</option>
-            <option value="COP">COP - Peso Colombiano</option>
-            <option value="MXN">MXN - Peso Mexicano</option>
           </select>
         </div>
       </div>
@@ -209,17 +214,16 @@
     <!-- Google Calendar Section -->
     <div class="mt-8 border-t pt-8">
       <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <img src="assets/icons/google-calendar.png" class="w-8 h-8 mr-2" alt="Google Calendar">
-        Agendar en Google Calendar
+        <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
+        Agendar en Google Calendar Sesión MARTES
       </h3>
 
       <!-- Martes -->
       <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-        <h4 class="text-lg font-semibold text-blue-800 mb-4">Sesión Martes</h4>
         <div class="space-y-4">
             <!-- Event Title -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Título del Evento (Martes)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
               <input type="text" formControlName="evento_titulo"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ej: Clase de Inglés - Martes">
@@ -227,7 +231,7 @@
 
             <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción (Martes)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
               <textarea formControlName="evento_descripcion" rows="3"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Detalles de la sesión..."></textarea>
@@ -235,7 +239,7 @@
 
             <!-- Teacher Selection -->
             <div class="relative">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Docente (Martes)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Docente</label>
               <input type="text" id="teacherSearchTerm" formControlName="teacherSearchTerm" (input)="onTeacherSearch($event)"
                      (focus)="onTeacherInputFocus()"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -253,27 +257,18 @@
               }
             </div>
 
-            <!-- Level Selection -->
-             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Nivel (Martes)</label>
-               <select formControlName="evento_nivel" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                 <option value="">Seleccione un nivel</option>
-                 @for (nivel of niveles; track nivel.id) {
-                   <option [value]="nivel.id">{{ nivel.subcategoria }}</option>
-                 }
-               </select>
-             </div>
+
 
 
             <!-- Date/Time Range -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Inicio (Martes)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Inicio</label>
                 <input type="datetime-local" formControlName="evento_inicio" (blur)="onDateInput($event, 'evento_inicio', 2)"
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Fin (Martes)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fin</label>
                 <input type="datetime-local" formControlName="evento_fin" (blur)="onDateInput($event, 'evento_fin', 2)"
                   class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
@@ -282,31 +277,34 @@
       </div>
 
       <!-- Jueves -->
-      <div class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-100">
-        <h4 class="text-lg font-semibold text-purple-800 mb-4">Sesión Jueves</h4>
+      <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
+        Agendar en Google Calendar Sesión JUEVES
+      </h3>
+      <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-purple-100">
          <div class="space-y-4">
             <!-- Event Title -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Título del Evento (Jueves)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
               <input type="text" formControlName="evento_titulo_jueves"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ej: Clase de Inglés - Jueves">
             </div>
 
             <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción (Jueves)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
               <textarea formControlName="evento_descripcion_jueves" rows="3"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Detalles de la sesión..."></textarea>
             </div>
 
             <!-- Teacher Selection -->
             <div class="relative">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Docente (Jueves)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Docente</label>
               <input type="text" id="teacherSearchTermJueves" formControlName="teacherSearchTermJueves" (input)="onTeacherSearchJueves($event)"
                      (focus)="onTeacherInputFocusJueves()"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Buscar docente..." autocomplete="off">
 
               @if (filteredTeachersJueves.length > 0) {
@@ -321,28 +319,19 @@
               }
             </div>
 
-             <!-- Level Selection -->
-             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Nivel (Jueves)</label>
-               <select formControlName="evento_nivel_jueves" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                 <option value="">Seleccione un nivel</option>
-                 @for (nivel of niveles; track nivel.id) {
-                   <option [value]="nivel.id">{{ nivel.subcategoria }}</option>
-                 }
-               </select>
-             </div>
+
 
             <!-- Date/Time Range -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Inicio (Jueves)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Inicio</label>
                 <input type="datetime-local" formControlName="evento_inicio_jueves" (blur)="onDateInput($event, 'evento_inicio_jueves', 4)"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Fin (Jueves)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fin</label>
                 <input type="datetime-local" formControlName="evento_fin_jueves" (blur)="onDateInput($event, 'evento_fin_jueves', 4)"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               </div>
             </div>
          </div>
@@ -351,11 +340,18 @@
 
     <!-- Submit Button -->
     <div class="pt-6">
-      <button type="submit" [disabled]="fechaFinalizacionForm.invalid"
-        class="w-full bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-        Guardar Programa AYO
+      <button type="submit" [disabled]="fechaFinalizacionForm.invalid || isSubmitting"
+        class="w-full bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+        @if (isSubmitting) {
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Guardando...
+        } @else {
+          Guardar Programa AYO
+        }
       </button>
     </div>
-
   </form>
 </div>
