@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ElementRef, HostListener, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
@@ -65,7 +65,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     private programaAyoService: ProgramaAyoService,
     private userService: UserService,
     private nivelService: NivelService,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private ngZone: NgZone
   ) { }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -483,36 +484,36 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         // 3. Create Program
         this.programaAyoService.createProgramaAyo(formData).subscribe({
           next: (response) => {
-            const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-            this.notificationService.showSuccess(
-              'Programa AYO guardado',
-              `Se ha establecido el programa y las reuniones de los Martes y Jueves`
-            );
+            this.ngZone.run(() => {
+              const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
+              this.notificationService.showSuccess(
+                'Programa AYO guardado',
+                `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
+                0,
+                () => window.location.reload()
+              );
 
-            this.fechaFinalizacionForm.reset();
-            this.isCourseSelected = false;
-            this.filteredCourses = [];
-            this.showGoogleCalendarOption = true;
-            this.fechaFinalizacionForm.get('agendar_google_calendar')?.setValue(true);
-            this.fechaFinalizacionForm.get('agendar_google_calendar_jueves')?.setValue(true);
-            this.colegioAdded.emit();
-            this.goBack.emit();
-            this.isSubmitting = false;
+              this.isSubmitting = false;
+            });
           },
           error: (error) => {
-            console.error('Error al crear programa ayo:', error);
-            this.notificationService.showError(
-              'Error al guardar',
-              'No se pudo guardar la información del programa. Sin embargo, las reuniones pueden haberse creado.'
-            );
-            this.isSubmitting = false;
+            this.ngZone.run(() => {
+              console.error('Error al crear programa ayo:', error);
+              this.notificationService.showError(
+                'Error al guardar',
+                'No se pudo guardar la información del programa. Sin embargo, las reuniones pueden haberse creado.'
+              );
+              this.isSubmitting = false;
+            });
           }
         });
 
       } catch (error) {
-        console.error('Error creating calendar events or meetings:', error);
-        this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar o guardar las reuniones.');
-        this.isSubmitting = false;
+        this.ngZone.run(() => {
+          console.error('Error creating calendar events or meetings:', error);
+          this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar o guardar las reuniones.');
+          this.isSubmitting = false;
+        });
       }
 
     } else {
