@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CourseService } from '../../../../core/services/course.service';
-import { Meeting } from '../../../../core/models/Meeting';
+import { Router, ActivatedRoute } from '@angular/router';
+import { CourseService} from '../../../../../core/services/course.service';
+import {Meeting} from '../../../../../core/models/Meeting';
 
 @Component({
     selector: 'app-list-meet',
@@ -13,10 +14,20 @@ import { Meeting } from '../../../../core/models/Meeting';
 export class ListMeet implements OnInit {
     meetings: Meeting[] = [];
     isLoading = false;
+    selectedLanguage: string | null = null;
 
-    constructor(private courseService: CourseService) { }
+    constructor(
+        private courseService: CourseService,
+        private router: Router,
+        private route: ActivatedRoute
+    ) { }
 
     ngOnInit(): void {
+        this.route.queryParams.subscribe(params => {
+            if (params['idioma']) {
+                this.selectedLanguage = params['idioma'];
+            }
+        });
         this.loadMeetings();
     }
 
@@ -32,5 +43,13 @@ export class ListMeet implements OnInit {
                 this.isLoading = false;
             }
         });
+    }
+
+    goBack(): void {
+        if (this.selectedLanguage) {
+            this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.selectedLanguage } });
+        } else {
+            this.router.navigate(['/private/ayo']);
+        }
     }
 }

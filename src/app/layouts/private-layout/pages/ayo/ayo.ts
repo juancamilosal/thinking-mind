@@ -89,8 +89,11 @@ export class AyoComponent implements OnInit {
   }
 
   openMeetings(): void {
-    this.step = 'meetings';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (this.selectedLanguage) {
+      this.router.navigate(['/private/ayo/list-meet'], { queryParams: { idioma: this.selectedLanguage } });
+    } else {
+      this.router.navigate(['/private/ayo/list-meet']);
+    }
   }
 
   goBack(): void {

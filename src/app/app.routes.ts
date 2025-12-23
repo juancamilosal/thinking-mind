@@ -25,7 +25,7 @@ import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-co
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
 import { EntryValidation } from './layouts/public-layout/pages/entry-validation/entry-validation';
 import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
-import { ListMeet } from './layouts/private-layout/pages/list-meet/list-meet';
+import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
 
@@ -162,11 +162,6 @@ export const routes: Routes = [
         component: LangTest
       },
       {
-        path: 'list-meet',
-        title: 'Thinking Mind | Reuniones',
-        component: ListMeet
-      },
-      {
         path: 'ayo',
         title: 'Thinking Mind | AYO',
         component: AyoComponent
@@ -175,6 +170,11 @@ export const routes: Routes = [
         path: 'ayo/create',
         title: 'Thinking Mind | Crear Programa AYO',
         component: FormProgramaAyoComponent
+      },
+      {
+        path: 'ayo/list-meet',
+        title: 'Thinking Mind | Reuniones AYO',
+        component: ListMeet
       },
       {
         path: '**',
