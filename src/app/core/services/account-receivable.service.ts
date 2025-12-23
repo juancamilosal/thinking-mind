@@ -27,7 +27,7 @@ export class AccountReceivableService {
 
 
   getAccountById(id: string): Observable<ResponseAPI<AccountReceivable>> {
-    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,pagos.*,curso_id.*`).pipe(
+    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,pagos.*,pagos.responsable.*,curso_id.*`).pipe(
       map(response => ({
         ...response,
         data: this.mapToAccountReceivable(response.data)
@@ -49,7 +49,7 @@ export class AccountReceivableService {
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
       const searchTerms = searchTerm.trim().split(/\s+/);
-      
+
       if (searchTerms.length === 1) {
         // Búsqueda de una sola palabra - usar OR entre campos
         const term = searchTerms[0];
@@ -74,7 +74,7 @@ export class AccountReceivableService {
     }
 
     const queryString = new URLSearchParams(params).toString();
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -94,7 +94,7 @@ export class AccountReceivableService {
     // Filtro por búsqueda general (nombre, apellido, documento)
     if (filterParams.search) {
       const searchTerms = filterParams.search.trim().split(/\s+/);
-      
+
       if (searchTerms.length === 1) {
         // Búsqueda de una sola palabra - usar OR entre campos
         const term = searchTerms[0];
@@ -138,7 +138,7 @@ export class AccountReceivableService {
     }
 
     const queryString = new URLSearchParams(params).toString();
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -163,7 +163,7 @@ export class AccountReceivableService {
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
       const searchTerms = searchTerm.trim().split(/\s+/);
-      
+
       if (searchTerms.length === 1) {
         // Búsqueda de una sola palabra - usar OR entre campos
         const term = searchTerms[0];
@@ -208,7 +208,7 @@ export class AccountReceivableService {
     };
 
     const queryString = new URLSearchParams(params).toString();
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*, comprobante.*&' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -259,7 +259,7 @@ export class AccountReceivableService {
     // Filtro por término de búsqueda si se proporciona
     if (searchTerm) {
       const searchTerms = searchTerm.trim().split(/\s+/);
-      
+
       if (searchTerms.length === 1) {
         // Búsqueda de una sola palabra - usar OR entre campos
         const term = searchTerms[0];
@@ -348,14 +348,14 @@ export class AccountReceivableService {
 
   totalAccounts(colegioId?: string): Observable<ResponseAPI<TotalAccounts>> {
     let url = this.apiUrlTotalAccounts;
-    
+
     if (colegioId) {
       const params = new URLSearchParams({
         'filter[estudiante_id][colegio_id][_eq]': colegioId
       });
       url += '?' + params.toString();
     }
-    
+
     return this.http.get<ResponseAPI<TotalAccounts>>(url);
   }
 

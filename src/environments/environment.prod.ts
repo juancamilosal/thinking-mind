@@ -10,6 +10,11 @@ export const environment = {
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',
   budget: apiUrl + 'items/presupuesto',
+  // Language test collections
+  langTest: {
+    questions: apiUrl + 'items/test',
+    answers: apiUrl + 'items/respuestas',
+  },
   files: apiUrl + 'files',
   users: apiUrl + 'users',
   assets: apiUrl + 'assets',

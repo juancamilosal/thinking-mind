@@ -63,7 +63,7 @@ export class ListSchool implements OnInit {
     private schoolWithPaymentsService: SchoolWithPaymentsService,
     private notificationService: NotificationService,
     private router: Router
-  ) {}
+  ) { }
 
   // Método público para usar en el template
   isWillGoCourse(courseName: string): boolean {
@@ -436,7 +436,7 @@ export class ListSchool implements OnInit {
 
   navigateToShirtsForSchool(schoolId: string): void {
     const school = this.schoolsWithAccounts.find(s => s.school.id === schoolId) ||
-                  this.schoolsWithCourses.find(s => s.school.id === schoolId);
+      this.schoolsWithCourses.find(s => s.school.id === schoolId);
 
     this.router.navigate(['/private/shirt-colors'], {
       queryParams: {
@@ -527,7 +527,7 @@ export class ListSchool implements OnInit {
 
     accounts.forEach(account => {
       if (account.estudiante_id && typeof account.estudiante_id === 'object' &&
-          account.curso_id && typeof account.curso_id === 'object') {
+        account.curso_id && typeof account.curso_id === 'object') {
         const student = account.estudiante_id;
         const course = account.curso_id;
 
@@ -647,7 +647,7 @@ export class ListSchool implements OnInit {
       const sheetName = this.sanitizeFileName(schoolData.school.nombre || 'Colegio');
       const worksheet = workbook.addWorksheet(sheetName.substring(0, 31)); // Límite de nombre de hoja en Excel
 
-      // Encabezados (removidos: Colegio, Ciudad, Dirección, Rector(es), SKU y Monto)
+      // Encabezados - Incluye información de pagos
       worksheet.columns = [
         { header: 'Estudiante', key: 'estudiante', width: 28 },
         { header: 'Tipo Documento', key: 'tipo_documento', width: 16 },
@@ -662,15 +662,21 @@ export class ListSchool implements OnInit {
         { header: 'Número Documento Acudiente', key: 'numero_documento_acudiente', width: 22 },
         { header: 'Celular Acudiente', key: 'celular_acudiente', width: 18 },
         { header: 'Email Acudiente', key: 'email_acudiente', width: 28 },
+        // Columnas de pagos (simplificadas)
+        { header: 'Valor Pago', key: 'valor_pago', width: 15 },
+        { header: 'Fecha Pago', key: 'fecha_pago', width: 20 },
+        { header: 'Método Pago', key: 'metodo_pago', width: 15 },
+        { header: 'Total Pagos', key: 'total_pagos', width: 15 },
       ];
 
-      // Datos por cuenta/estudiante
+      // Datos por cuenta/estudiante con pagos
       for (const account of schoolData.accounts) {
         const student = (account.estudiante_id && typeof account.estudiante_id === 'object') ? account.estudiante_id : null;
         const course = (account.curso_id && typeof account.curso_id === 'object') ? account.curso_id : null;
         const client = (account.cliente_id && typeof account.cliente_id === 'object') ? account.cliente_id : null;
 
-        worksheet.addRow({
+        // Primero agregar la fila de la cuenta (sin datos de pagos)
+        const accountRow = worksheet.addRow({
           estudiante: student ? `${student.nombre || ''} ${student.apellido || ''}` : 'Sin estudiante',
           tipo_documento: student?.tipo_documento || '',
           numero_documento: student?.numero_documento || '',
@@ -684,7 +690,54 @@ export class ListSchool implements OnInit {
           numero_documento_acudiente: client?.numero_documento || '',
           celular_acudiente: client?.celular || '',
           email_acudiente: client?.email || '',
+          valor_pago: '',
+          fecha_pago: '',
+          metodo_pago: '',
+          total_pagos: '',
         });
+
+        // Aplicar estilo a la fila de la cuenta (fondo gris claro)
+        accountRow.eachCell((cell) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+          };
+        });
+
+        // Luego agregar los pagos debajo (si existen y están PAGADOS)
+        if (account.pagos && account.pagos.length > 0) {
+          // Filtrar solo pagos con estado PAGADO
+          const pagosPagados = account.pagos.filter(pago => pago.estado === 'PAGADO');
+
+          if (pagosPagados.length > 0) {
+            let totalPagos = 0;
+
+            pagosPagados.forEach((pago, index) => {
+              totalPagos += pago.valor || 0;
+
+              worksheet.addRow({
+                estudiante: '',
+                tipo_documento: '',
+                numero_documento: '',
+                grado: '',
+                curso: '',
+                estado: '',
+                fecha_inscripcion: '',
+                pin_entregado: '',
+                acudiente: '',
+                tipo_documento_acudiente: '',
+                numero_documento_acudiente: '',
+                celular_acudiente: '',
+                email_acudiente: '',
+                valor_pago: pago.valor || 0,
+                fecha_pago: pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString('es-CO') : '',
+                metodo_pago: pago.metodo_pago || '',
+                total_pagos: index === pagosPagados.length - 1 ? totalPagos : '', // Mostrar total solo en la última fila de pagos
+              });
+            });
+          }
+        }
       }
 
       // Estilo simple para encabezados
