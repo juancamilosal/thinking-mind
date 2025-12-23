@@ -95,24 +95,24 @@
       <!-- Opciones desplegables (Step 2) -->
       @if (step === 'options') {
         <div class="w-full max-w-4xl mx-auto fade-in">
-          <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+          <div class="flex flex-col md:flex-row justify-center items-stretch gap-8">
             <!-- Card Reuniones Meet -->
-            <div (click)="openMeetings()" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-80 group">
-                <div class="h-40 bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
+            <div (click)="openMeetings()" class="flex flex-col cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-80 group">
+                <div class="h-40 bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center shrink-0">
                     <img src="assets/icons/meet.png" alt="Meet" class="w-24 h-24 object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-lg">
                 </div>
-                <div class="p-6 text-center">
+                <div class="p-6 text-center flex-1 flex flex-col justify-center">
                     <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">Reuniones Meet Programadas</h3>
                     <p class="text-gray-500 text-sm">Ver y gestionar las reuniones programadas.</p>
                 </div>
             </div>
 
             <!-- Card Crear Programa Ayo -->
-            <div (click)="openCreateForm()" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-80 group">
-                <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <div (click)="openCreateForm()" class="flex flex-col cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-80 group">
+                <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
                     <img src="assets/icons/ayo.png" alt="AYO" class="w-24 h-24 object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-lg">
                 </div>
-                <div class="p-6 text-center">
+                <div class="p-6 text-center flex-1 flex flex-col justify-center">
                     <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">Crear Programa Ayo</h3>
                     <p class="text-gray-500 text-sm">Crear un nuevo programa AYO para {{ selectedLanguage | titlecase }}.</p>
                 </div>
