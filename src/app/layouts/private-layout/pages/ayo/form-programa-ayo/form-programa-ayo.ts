@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ElementRef, HostListener, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { CourseService } from '../../../../../core/services/course.service';
@@ -66,7 +67,9 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     private userService: UserService,
     private nivelService: NivelService,
     private elementRef: ElementRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -81,6 +84,18 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initForm();
+
+    // Check for query params if inputs are not provided (e.g. via routing)
+    this.route.queryParams.subscribe(params => {
+      if (params['idioma']) {
+        this.idioma = params['idioma'];
+        this.selectedLanguage = params['idioma'];
+        this.initialLanguage = params['idioma'];
+        if (this.fechaFinalizacionForm) {
+          this.fechaFinalizacionForm.get('idioma')?.setValue(this.idioma);
+        }
+      }
+    });
 
     this.showGoogleCalendarOption = true;
     this.loadGoogleScripts();
@@ -396,6 +411,14 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     }
   }
 
+  goBackAction() {
+    if (this.goBack.observed) {
+      this.goBack.emit();
+    } else {
+      this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.idioma } });
+    }
+  }
+
   async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
       this.isSubmitting = true;
@@ -490,7 +513,9 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 'Programa AYO guardado',
                 `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
                 0,
-                () => window.location.reload()
+                () => {
+                  this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.idioma } });
+                }
               );
 
               this.isSubmitting = false;

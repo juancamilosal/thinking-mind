@@ -27,6 +27,7 @@ import { EntryValidation } from './layouts/public-layout/pages/entry-validation/
 import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
 import { ListMeet } from './layouts/private-layout/pages/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
+import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
 
 
 export const routes: Routes = [
@@ -169,6 +170,11 @@ export const routes: Routes = [
         path: 'ayo',
         title: 'Thinking Mind | AYO',
         component: AyoComponent
+      },
+      {
+        path: 'ayo/create',
+        title: 'Thinking Mind | Crear Programa AYO',
+        component: FormProgramaAyoComponent
       },
       {
         path: '**',
