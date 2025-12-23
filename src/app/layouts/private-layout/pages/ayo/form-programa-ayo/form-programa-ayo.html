@@ -1,19 +1,20 @@
-<div class="flex justify-end mb-4">
-  <button (click)="goBackAction()" class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 transition-colors duration-200 flex items-center">
-    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-    </svg>
-    Volver
-  </button>
-</div>
-
-<div class="bg-white rounded-xl shadow-lg p-8">
-  <div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Agregar Programa AYO</h2>
-    <p class="text-gray-600">Complete la información para asignar el programa</p>
+<div class="max-w-3xl mx-auto w-full">
+  <div class="flex justify-end my-10">
+    <button (click)="goBackAction()" class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 transition-colors duration-200 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Volver
+    </button>
   </div>
 
-  <form [formGroup]="fechaFinalizacionForm" (ngSubmit)="onSubmit()" class="space-y-8">
+  <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+    <div class="mb-8 text-center">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Agregar Programa AYO</h2>
+      <p class="text-gray-600">Complete la información para asignar el programa</p>
+    </div>
+
+    <form [formGroup]="fechaFinalizacionForm" (ngSubmit)="onSubmit()" class="space-y-8">
 
     <!-- Campo de Fecha -->
     <div class="space-y-3">
@@ -348,9 +349,9 @@
     </div>
 
     <!-- Submit Button -->
-    <div class="pt-6">
+    <div class="pt-6 flex justify-center">
       <button type="submit" [disabled]="fechaFinalizacionForm.invalid || isSubmitting"
-        class="w-full bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+        class="w-full md:w-auto min-w-[200px] bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
         @if (isSubmitting) {
           <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -358,9 +359,10 @@
           </svg>
           Guardando...
         } @else {
-          Guardar Programa AYO
+          Crear Programa AYO
         }
       </button>
     </div>
   </form>
+</div>
 </div>
