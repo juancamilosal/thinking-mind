@@ -24,6 +24,9 @@ declare var google: any;
 export class ListMeet implements OnInit {
 
   programas: ProgramaAyo[] = [];
+  programGroups: any[] = [];
+  selectedGroup: any = null;
+  viewMode: 'groups' | 'details' = 'groups';
   isLoading = false;
   selectedLanguage: string | null = null;
 
@@ -359,6 +362,7 @@ export class ListMeet implements OnInit {
     this.programaAyoService.getProgramaAyo(this.selectedLanguage || undefined).subscribe({
       next: (response) => {
         this.programas = response.data || [];
+        this.groupPrograms();
         this.isLoading = false;
       },
       error: (error) => {
@@ -368,7 +372,47 @@ export class ListMeet implements OnInit {
     });
   }
 
+  groupPrograms(): void {
+    const groups: {[key: string]: any} = {};
+    this.programas.forEach(p => {
+      const key = p.id_nivel?.tematica || 'Sin Temática';
+      if (!groups[key]) {
+        groups[key] = {
+          tematica: key,
+          nivel: p.id_nivel?.nivel,
+          subcategoria: p.id_nivel?.subcategoria,
+          img: p.img,
+          programs: []
+        };
+      }
+      groups[key].programs.push(p);
+    });
+    this.programGroups = Object.values(groups);
+
+    // If a group was selected, update it with new data
+    if (this.selectedGroup) {
+      const updatedGroup = this.programGroups.find(g => g.tematica === this.selectedGroup.tematica);
+      if (updatedGroup) {
+        this.selectedGroup = updatedGroup;
+      } else {
+        this.viewMode = 'groups';
+        this.selectedGroup = null;
+      }
+    }
+  }
+
+  selectGroup(group: any): void {
+    this.selectedGroup = group;
+    this.viewMode = 'details';
+  }
+
   goBack(): void {
+    if (this.viewMode === 'details') {
+      this.viewMode = 'groups';
+      this.selectedGroup = null;
+      return;
+    }
+
     if (this.selectedLanguage) {
       this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.selectedLanguage } });
     } else {
