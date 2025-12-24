@@ -520,7 +520,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime),
                 id_reunion: calendarEventDataMartes.id,
                 link_reunion: calendarEventDataMartes.hangoutLink,
-                token: accessToken,
+                // token: accessToken, // Token is not needed and causes length errors. We use fresh tokens for deletion.
                 id_docente: this.selectedTeacherId,
                 id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
                 id_colegios_cursos: []
@@ -538,7 +538,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime),
                 id_reunion: calendarEventDataJueves.id,
                 link_reunion: calendarEventDataJueves.hangoutLink,
-                token: accessToken,
                 id_docente: this.selectedTeacherIdJueves,
                 id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
                 id_colegios_cursos: []
@@ -608,8 +607,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
                 0,
                 () => {
-                   // Force full page reload and navigation to AYO menu
-                   window.location.href = `/private/ayo?idioma=${this.idioma}`;
+                   this.goBackAction();
                 }
               );
 
