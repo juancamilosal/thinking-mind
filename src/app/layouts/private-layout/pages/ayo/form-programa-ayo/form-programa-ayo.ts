@@ -608,10 +608,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
                 0,
                 () => {
-                  this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.idioma } })
-                    .then(() => {
-                      window.location.reload();
-                    });
+                   // Force full page reload and navigation to AYO menu
+                   window.location.href = `/private/ayo?idioma=${this.idioma}`;
                 }
               );
 
