@@ -667,12 +667,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     }
 
     const attendees: any[] = [];
-    const docenteEmail = this.fechaFinalizacionForm.get('evento_docente' + suffix)?.value;
+    // No adding guests/teacher as per requirement
 
-    // Agregar al docente como invitado
-    if (docenteEmail) {
-      attendees.push({ email: docenteEmail });
-    }
 
     // Determine recurrence rule based on day and program end date
     let recurrenceRule = '';
@@ -701,6 +697,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       summary: this.fechaFinalizacionForm.get('evento_titulo' + suffix)?.value,
       description: this.fechaFinalizacionForm.get('evento_descripcion' + suffix)?.value,
       guestsCanModify: false,
+      guestsCanSeeOtherGuests: false,
+      guestsCanInviteOthers: false,
       start: {
         dateTime: startDate.toISOString(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
