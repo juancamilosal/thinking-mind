@@ -1,4 +1,4 @@
-import {Nivel} from './Meeting';
+import {Meeting, Nivel} from './Meeting';
 
 export class Course {
   id?: string;
@@ -30,7 +30,8 @@ export interface ProgramaAyo {
   fecha_finalizacion_precio_especial?: string | null;
   idioma?: string;
   id_nivel?: Nivel;
-  id_reuniones_meet?: any[];
+  id_reuniones_meet?: Meeting[];
+  img?: any;
 }
 
 export class ColegioCurso {

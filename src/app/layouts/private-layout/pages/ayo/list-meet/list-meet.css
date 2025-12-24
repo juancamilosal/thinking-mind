@@ -191,20 +191,30 @@
     z-index: 1;
 }
 
+/* Icon Wrapper */
 .icon-wrapper {
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    position: relative;
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* Added to clip image */
 }
 
 .program-icon {
-    width: 1.75rem;
-    height: 1.75rem;
-    color: white;
-    stroke-width: 2.5;
+    width: 40px;
+    height: 40px;
+    color: var(--ayo-primary);
+}
+
+.program-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .status-badge {
