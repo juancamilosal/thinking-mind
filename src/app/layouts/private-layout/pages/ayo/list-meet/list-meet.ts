@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, HostListener } from '@angular/core';
+import {Component, OnInit, ElementRef, HostListener, Inject} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { CourseService } from '../../../../../core/services/course.service';
 import { ProgramaAyo } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
 import { Meeting } from '../../../../../core/models/Meeting';
+import {ConfirmationService} from '../../../../../core/services/confirmation.service';
 
 @Component({
     selector: 'app-list-meet',
@@ -34,6 +35,7 @@ export class ListMeet implements OnInit {
     constructor(
         private programaAyoService: ProgramaAyoService,
         private notificationService: NotificationService,
+        @Inject(ConfirmationService) private confirmationService: ConfirmationService,
         private userService: UserService,
         private courseService: CourseService,
         private router: Router,
@@ -120,15 +122,15 @@ export class ListMeet implements OnInit {
     // Modal Logic
     openEditModal(meeting: any): void {
         this.selectedMeeting = meeting;
-        
+
         // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
         const startDate = this.formatDateForInput(meeting.fecha_inicio);
         const endDate = this.formatDateForInput(meeting.fecha_finalizacion);
-        
+
         // Setup teacher data
         let teacherName = '';
         let teacherId = null;
-        
+
         if (meeting.id_docente) {
             teacherName = `${meeting.id_docente.first_name} ${meeting.id_docente.last_name}`;
             teacherId = meeting.id_docente.id;
@@ -181,6 +183,28 @@ export class ListMeet implements OnInit {
                 this.notificationService.showError('Error', 'No se pudo actualizar la reunión.');
             }
         });
+    }
+
+    deleteMeeting(meeting: any): void {
+        this.confirmationService.showDeleteConfirmation(
+            'esta reunión',
+            'reunión',
+            () => {
+                this.courseService.deleteReunionMeet(meeting.id).subscribe({
+                    next: () => {
+                        this.notificationService.showSuccess('Reunión eliminada', 'La reunión ha sido eliminada correctamente.');
+                        this.loadProgramas();
+                        if (this.showEditModal) {
+                            this.closeEditModal();
+                        }
+                    },
+                    error: (error) => {
+                        console.error('Error deleting meeting:', error);
+                        this.notificationService.showError('Error', 'No se pudo eliminar la reunión.');
+                    }
+                });
+            }
+        );
     }
 
     private formatDateForInput(dateString: string): string {
