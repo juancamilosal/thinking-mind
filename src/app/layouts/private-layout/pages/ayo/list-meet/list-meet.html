@@ -143,6 +143,9 @@
                         <div class="meeting-item">
                             <div class="meeting-info">
                                 <span class="meeting-day">{{ reunion.fecha_inicio | date:'EEEE' | titlecase }}</span>
+                                <span class="meeting-teacher">
+                                    {{ reunion.id_docente?.first_name }} {{ reunion.id_docente?.last_name }}
+                                </span>
                                 <span class="meeting-time">
                                     {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion |
                                     date:'shortTime' }}

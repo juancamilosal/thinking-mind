@@ -19,7 +19,7 @@ export class ProgramaAyoService {
 
   getProgramaAyo(idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*,id_nivel.*,id_reuniones_meet.*,img.*'
+      'fields': '*,id_nivel.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*'
     };
     if (idioma) {
       params['filter[idioma][_eq]'] = idioma;
@@ -28,7 +28,10 @@ export class ProgramaAyoService {
   }
 
   getProgramaAyoById(id: string | number): Observable<ResponseAPI<ProgramaAyo>> {
-    return this.http.get<ResponseAPI<ProgramaAyo>>(`${this.apiUrl}/${id}`);
+    const params = {
+      'fields': '*,id_nivel.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*'
+    };
+    return this.http.get<ResponseAPI<ProgramaAyo>>(`${this.apiUrl}/${id}`, { params });
   }
 
   updateProgramaAyo(id: string | number, programaAyo: Partial<ProgramaAyo>): Observable<ResponseAPI<ProgramaAyo>> {

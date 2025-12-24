@@ -1,21 +1,15 @@
+import {AccountReceivable} from './AccountReceivable';
+
 export class Meeting {
     id: string;
     fecha_inicio: string;
     fecha_finalizacion: string;
     id_reunion: string;
     link_reunion: string;
-    id_colegios_cursos: MeetingColegioCurso[];
-    id_cuentas_cobrar: any[];
+    id_cuentas_cobrar: AccountReceivable[];
+    id_docente: Docente;
 }
 
-export class MeetingColegioCurso {
-    curso_id: {
-        nombre: string;
-    };
-    colegio_id: {
-        nombre: string;
-    };
-}
 
 export class Nivel {
     id: string;
@@ -24,4 +18,9 @@ export class Nivel {
     nivel: string;
     idioma: string;
     tematica: string;
+}
+
+export class Docente {
+  first_name: string;
+  last_name: string;
 }

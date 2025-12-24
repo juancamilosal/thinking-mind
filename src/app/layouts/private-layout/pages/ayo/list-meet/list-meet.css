@@ -442,6 +442,12 @@
     color: var(--ayo-primary);
 }
 
+.meeting-teacher {
+    font-size: 0.85rem;
+    color: var(--ayo-primary-light);
+    font-weight: 600;
+}
+
 .meeting-time {
     font-size: 0.8rem;
     color: #6c757d;
