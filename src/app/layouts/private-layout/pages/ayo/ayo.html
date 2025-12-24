@@ -8,18 +8,13 @@
     </div>
   </div>
 
-  @if (isLoading) {
-    <div class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
-  } @else {
     <!-- Paso 1 y 2 combinados visualmente -->
     <div class="flex flex-col items-center gap-8 mt-10">
 
       <!-- Botón Volver / Cambiar Selección (visible cuando hay selección) -->
       @if (selectedLanguage) {
         <div class="w-full max-w-4xl flex justify-center mb-8 fade-in">
-          <button (click)="goBack()" 
+          <button (click)="goBack()"
                   class="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-3">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -121,5 +116,4 @@
         </div>
       }
     </div>
-  }
 </div>

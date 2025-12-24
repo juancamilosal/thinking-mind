@@ -10,7 +10,7 @@ import { UserService } from '../../../../../core/services/user.service';
 import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Meeting';
-import {ProgramaAyoService} from '../../../../../core/services/programa-ayo.service';
+import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 
 
 declare var gapi: any;
@@ -49,6 +49,10 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   selectedTeacherIdJueves: string | null = null;
   selectedLanguage: string | null = null;
   isSubmitting: boolean = false;
+  previewImage: string | null = null;
+  selectedFile: File | null = null;
+  isDragging: boolean = false;
+
 
   // Google Calendar Integration
   showGoogleCalendarOption = true; // Always true for AYO
@@ -176,6 +180,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       programa_independiente: [true], // Always true
       courseSearchTerm: [null],
       schoolSearchTerm: [null],
+      img: [null],
       // Google Calendar Fields (Start true for AYO)
       agendar_google_calendar: [true],
       evento_titulo: ['', Validators.required],
@@ -261,7 +266,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     } else if (dropdownTeacher && dropdownTeacher.contains(target)) {
       // Clicked on dropdown
     } else {
-       this.filteredTeachers = [];
+      this.filteredTeachers = [];
     }
 
     // Teacher dropdown (Jueves)
@@ -273,7 +278,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     } else if (dropdownTeacherJueves && dropdownTeacherJueves.contains(target)) {
       // Clicked on dropdown
     } else {
-       this.filteredTeachersJueves = [];
+      this.filteredTeachersJueves = [];
     }
   }
 
@@ -292,6 +297,79 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       }
     });
   }
+
+  onFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.fechaFinalizacionForm.patchValue({ img: file });
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeImage(): void {
+    this.selectedFile = null;
+    this.previewImage = null;
+    this.fechaFinalizacionForm.patchValue({ img: null });
+    // Reset file input if needed
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.notificationService.showError('Tipo de archivo inválido', 'Por favor, selecciona una imagen (PNG, JPG, GIF)');
+        return;
+      }
+
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        this.notificationService.showError('Archivo muy grande', 'El tamaño máximo permitido es 5MB');
+        return;
+      }
+
+      this.selectedFile = file;
+      this.fechaFinalizacionForm.patchValue({ img: file });
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
 
   selectTeacher(teacher: User): void {
     this.fechaFinalizacionForm.get('evento_docente')?.setValue(teacher.email);
@@ -484,6 +562,21 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
 
+        // Handle Image Upload
+        let imageId = null;
+        if (this.selectedFile) {
+          try {
+            const uploadRes = await firstValueFrom(this.courseService.uploadFile(this.selectedFile));
+            if (uploadRes?.data?.id) {
+              imageId = uploadRes.data.id;
+            }
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            this.notificationService.showError('Error al subir imagen', 'No se pudo cargar la imagen del programa.');
+            // Optionally stop submission here or continue without image
+          }
+        }
+
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
@@ -501,7 +594,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           fecha_creacion: fechaCreacionISO,
           idioma: this.fechaFinalizacionForm.get('idioma')?.value,
           id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
-          id_reuniones_meet: meetingIds
+          id_reuniones_meet: meetingIds,
+          img: imageId // Add image ID to payload
         };
 
         // 3. Create Program
@@ -514,7 +608,10 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
                 0,
                 () => {
-                  this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.idioma } });
+                  this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.idioma } })
+                    .then(() => {
+                      window.location.reload();
+                    });
                 }
               );
 

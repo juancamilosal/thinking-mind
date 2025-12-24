@@ -26,7 +26,6 @@ export class AyoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadCourses();
 
     this.route.queryParams.subscribe(params => {
       if (params['idioma']) {
@@ -47,24 +46,6 @@ export class AyoComponent implements OnInit {
         // Only reset if we are not navigating away (which shouldn't happen here but safe to check)
         this.step = 'initial';
         this.selectedLanguage = null;
-      }
-    });
-  }
-
-  loadCourses(): void {
-    this.isLoading = true;
-    const ayoCourseId = '28070b14-f3c1-48ec-9e2f-95263f19eec3';
-
-    this.courseService.getCourseByIdFiltered(ayoCourseId).subscribe({
-      next: (response) => {
-        if (response.data) {
-          this.courses = response.data;
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading courses:', error);
-        this.isLoading = false;
       }
     });
   }
@@ -110,11 +91,5 @@ export class AyoComponent implements OnInit {
       });
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  onColegioAdded(): void {
-    // If we want to go back to initial after adding, or just back to options
-    this.goBack();
-    this.loadCourses();
   }
 }
