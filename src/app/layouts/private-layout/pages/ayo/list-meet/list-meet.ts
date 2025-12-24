@@ -222,7 +222,7 @@ export class ListMeet implements OnInit {
     this.isTeacherSelected = false;
   }
 
-  saveEditedMeeting(): void {
+  async saveEditedMeeting(): Promise<void> {
     if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
       return;
@@ -236,6 +236,46 @@ export class ListMeet implements OnInit {
       fecha_finalizacion: formData.fecha_finalizacion,
       id_docente: formData.id_docente
     };
+
+    // Update Google Calendar if event ID exists
+    if (this.selectedMeeting.id_reunion) {
+      try {
+        const startDate = new Date(formData.fecha_inicio);
+        const endDate = new Date(formData.fecha_finalizacion);
+
+        if (endDate <= startDate) {
+           this.notificationService.showError('Error en fechas', 'La fecha de finalización debe ser posterior a la de inicio.');
+           return;
+        }
+
+        // Ensure valid token
+        await this.ensureCalendarToken();
+
+        const eventPatch = {
+          start: {
+            dateTime: startDate.toISOString(),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          },
+          end: {
+            dateTime: endDate.toISOString(),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          }
+        };
+
+        await gapi.client.calendar.events.patch({
+          calendarId: 'primary',
+          eventId: this.selectedMeeting.id_reunion,
+          resource: eventPatch
+        });
+        
+        console.log('Google Calendar event updated');
+
+      } catch (error) {
+        console.error('Error updating Google Calendar event:', error);
+        this.notificationService.showError('Error de Sincronización', 'No se pudo actualizar el evento en Google Calendar.');
+        return; // Stop execution if Google Calendar sync fails
+      }
+    }
 
     this.courseService.updateReunionMeet(this.selectedMeeting.id, updateData).subscribe({
       next: () => {

@@ -339,9 +339,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: transparent;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(19, 72, 110, 0.08);
+    box-shadow: none;
 }
 
 .detail-icon svg {
@@ -352,7 +352,7 @@
 }
 
 .detail-item.highlight .detail-icon {
-    background: var(--ayo-gradient-accent);
+    background: transparent;
 }
 
 .detail-item.highlight .detail-icon svg {
@@ -421,13 +421,12 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem 0.875rem;
-    background: linear-gradient(135deg, rgba(19, 72, 110, 0.04) 0%, rgba(19, 72, 110, 0.01) 100%);
     border-radius: 8px;
     border: 1px solid rgba(19, 72, 110, 0.08);
 }
 
 .meeting-item:hover {
-    background: linear-gradient(135deg, rgba(19, 72, 110, 0.04) 0%, rgba(19, 72, 110, 0.01) 100%);
+    background: transparent;
 }
 
 .meeting-info {
@@ -458,17 +457,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    background: var(--ayo-gradient);
-    color: white;
+    width: 1.85rem;
+    height: 1.85rem;
+    background: transparent;
     border-radius: 8px;
-    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
 }
 
 .meeting-link:hover {
-    background: var(--ayo-gradient);
-    color: white;
+    background: transparent;
 }
 
 /* ========================================
