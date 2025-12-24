@@ -130,11 +130,16 @@
                         @for (reunion of programa.id_reuniones_meet; track $index) {
                         <div class="meeting-item">
                             <div class="meeting-info">
-                                <span class="meeting-day">{{ reunion.fecha_inicio | date:'EEEE' | titlecase }}</span>
+                                <span class="meeting-day">
+                                    <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
+                                    {{ reunion.fecha_inicio | date:'EEEE' | titlecase }}
+                                </span>
                                 <span class="meeting-teacher">
+                                    <span class="text-gray-500 font-semibold text-sm mr-1">Docente:</span>
                                     {{ reunion.id_docente?.first_name }} {{ reunion.id_docente?.last_name }}
                                 </span>
                                 <span class="meeting-time">
+                                    <span class="text-gray-500 font-semibold text-sm mr-1">Horario:</span>
                                     {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion |
                                     date:'shortTime' }}
                                 </span>
