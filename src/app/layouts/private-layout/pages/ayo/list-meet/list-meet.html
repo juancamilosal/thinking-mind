@@ -151,15 +151,24 @@
                                     date:'shortTime' }}
                                 </span>
                             </div>
-                            @if (reunion.link_reunion) {
-                            <a [href]="reunion.link_reunion" target="_blank" class="meeting-link"
-                                title="Unirse a reunión">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                            </a>
-                            }
+                            <div class="flex items-center gap-2">
+                                @if (reunion.link_reunion) {
+                                <a [href]="reunion.link_reunion" target="_blank" class="meeting-link"
+                                    title="Unirse a reunión">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </a>
+                                }
+                                <button (click)="openEditModal(reunion)" class="meeting-link bg-yellow-500 hover:bg-yellow-600 text-white"
+                                    title="Editar reunión">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         }
                     </div>
@@ -170,5 +179,73 @@
         }
     </div>
     }
+    }
+
+    <!-- Edit Meeting Modal -->
+    @if (showEditModal) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeEditModal()">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            (click)="$event.stopPropagation()">
+            
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800" id="modal-title">
+                    Editar Reunión
+                </h3>
+                <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form [formGroup]="editForm" (ngSubmit)="saveEditedMeeting()" class="space-y-6">
+                <!-- Fecha Inicio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+                    <input type="datetime-local" formControlName="fecha_inicio"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                </div>
+
+                <!-- Fecha Fin -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+                    <input type="datetime-local" formControlName="fecha_finalizacion"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                </div>
+
+                <!-- Docente Search -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Docente</label>
+                    <input type="text" id="teacherSearchTerm" formControlName="teacherSearchTerm"
+                        (input)="onTeacherSearch($event)" (focus)="onTeacherInputFocus()"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="Buscar docente..." autocomplete="off">
+                    @if (filteredTeachers.length > 0) {
+                    <div id="teacher-dropdown"
+                        class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        @for (teacher of filteredTeachers; track teacher.id) {
+                        <div (click)="selectTeacher(teacher)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <div class="font-medium">{{ teacher.first_name }} {{ teacher.last_name }}
+                            </div>
+                            <div class="text-xs text-gray-500">{{ teacher.email }}</div>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="flex space-x-4 pt-2">
+                    <button type="button" (click)="closeEditModal()"
+                        class="flex-1 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium">
+                        Cancelar
+                    </button>
+                    <button type="submit" [disabled]="editForm.invalid"
+                        class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium disabled:opacity-50">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     }
 </div>
