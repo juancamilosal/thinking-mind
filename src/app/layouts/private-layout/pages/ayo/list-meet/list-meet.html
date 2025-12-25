@@ -204,7 +204,7 @@
 
                     <!-- Add Meeting Icon -->
                     <div class="flex justify-center mt-6 mb-2 w-full">
-                         <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión">
+                         <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión" (click)="openAddMeetingModal(programa)">
                     </div>
                 </div>
             </div>
@@ -290,4 +290,108 @@
         </div>
     </div>
     }
+
+<!-- Add Meeting Modal -->
+@if (showAddMeetingModal) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+        <div class="bg-primary px-6 py-4 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-white">Agendar Nueva Reunión</h3>
+            <button (click)="closeAddMeetingModal()" class="text-white hover:text-gray-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form [formGroup]="addMeetingForm" (ngSubmit)="createNewMeeting()" class="p-6">
+            <div class="space-y-4">
+                <!-- Title -->
+                <div>
+                    <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
+                    <input type="text" id="titulo" formControlName="titulo"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300"
+                        placeholder="Ej: Sesión de Inglés - Nivel A1">
+                    @if (addMeetingForm.get('titulo')?.invalid && addMeetingForm.get('titulo')?.touched) {
+                        <p class="mt-1 text-sm text-red-600">El título es requerido</p>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea id="descripcion" formControlName="descripcion" rows="3"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300"
+                        placeholder="Descripción opcional del evento..."></textarea>
+                </div>
+
+                <!-- Teacher Selection -->
+                <div class="relative">
+                    <label for="teacher-search-add" class="block text-sm font-medium text-gray-700 mb-1">Docente</label>
+                    <input type="text" 
+                           id="teacher-search-add" 
+                           formControlName="teacherSearchTerm"
+                           (input)="onTeacherSearch($event, true)"
+                           (focus)="onTeacherInputFocus(true)"
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300"
+                           placeholder="Buscar docente..."
+                           autocomplete="off">
+                    
+                    @if (filteredTeachers.length > 0) {
+                    <div id="teacher-dropdown-add" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        @for (teacher of filteredTeachers; track teacher.id) {
+                        <div (click)="selectTeacher(teacher, true)"
+                             class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3 transition-colors duration-150">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                {{ teacher.first_name.charAt(0) }}{{ teacher.last_name.charAt(0) }}
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ teacher.first_name }} {{ teacher.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ teacher.email }}</p>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    }
+                    @if (addMeetingForm.get('id_docente')?.invalid && addMeetingForm.get('id_docente')?.touched) {
+                        <p class="mt-1 text-sm text-red-600">Debe seleccionar un docente válido</p>
+                    }
+                </div>
+
+                <!-- Date & Time -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="fecha_inicio_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                        <input type="datetime-local" id="fecha_inicio_add" formControlName="fecha_inicio"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300">
+                        @if (addMeetingForm.get('fecha_inicio')?.invalid && addMeetingForm.get('fecha_inicio')?.touched) {
+                            <p class="mt-1 text-sm text-red-600">Fecha de inicio requerida</p>
+                        }
+                    </div>
+                    
+                    <div>
+                        <label for="fecha_finalizacion_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha Finalización</label>
+                        <input type="datetime-local" id="fecha_finalizacion_add" formControlName="fecha_finalizacion"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300">
+                        @if (addMeetingForm.get('fecha_finalizacion')?.invalid && addMeetingForm.get('fecha_finalizacion')?.touched) {
+                            <p class="mt-1 text-sm text-red-600">Fecha de finalización requerida</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button type="button" (click)="closeAddMeetingModal()"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Cancelar
+                </button>
+                <button type="submit" [disabled]="addMeetingForm.invalid"
+                    class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    Crear Reunión
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+}
 </div>

@@ -46,6 +46,11 @@ export class ListMeet implements OnInit {
   gapiInited = false;
   gisInited = false;
 
+  // Add Meeting Modal Properties
+  showAddMeetingModal = false;
+  addMeetingForm!: FormGroup;
+  selectedProgramId: string | null = null;
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private notificationService: NotificationService,
@@ -60,6 +65,7 @@ export class ListMeet implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    this.initAddMeetingForm();
     this.loadGoogleScripts();
     this.route.queryParams.subscribe(params => {
       if (params['idioma']) {
@@ -78,21 +84,35 @@ export class ListMeet implements OnInit {
     });
   }
 
+  initAddMeetingForm(): void {
+    this.addMeetingForm = this.fb.group({
+      titulo: ['', Validators.required],
+      descripcion: [''],
+      fecha_inicio: [null, Validators.required],
+      fecha_finalizacion: [null, Validators.required],
+      id_docente: [null, Validators.required],
+      teacherSearchTerm: ['']
+    });
+  }
+
   // Teacher Search Logic
-  onTeacherSearch(event: any): void {
+  onTeacherSearch(event: any, isAddMode: boolean = false): void {
     const searchTerm = event.target.value;
-    this.editForm.get('teacherSearchTerm')?.setValue(searchTerm);
+    const form = isAddMode ? this.addMeetingForm : this.editForm;
+    
+    form.get('teacherSearchTerm')?.setValue(searchTerm);
 
     if (this.isTeacherSelected) {
       this.isTeacherSelected = false;
-      this.editForm.get('id_docente')?.setValue(null);
+      form.get('id_docente')?.setValue(null);
     }
 
     this.searchTeachers(searchTerm);
   }
 
-  onTeacherInputFocus(): void {
-    const currentTerm = this.editForm.get('teacherSearchTerm')?.value || '';
+  onTeacherInputFocus(isAddMode: boolean = false): void {
+    const form = isAddMode ? this.addMeetingForm : this.editForm;
+    const currentTerm = form.get('teacherSearchTerm')?.value || '';
     this.searchTeachers(currentTerm);
   }
 
@@ -112,9 +132,10 @@ export class ListMeet implements OnInit {
     });
   }
 
-  selectTeacher(teacher: User): void {
-    this.editForm.get('id_docente')?.setValue(teacher.id);
-    this.editForm.get('teacherSearchTerm')?.setValue(`${teacher.first_name} ${teacher.last_name}`);
+  selectTeacher(teacher: User, isAddMode: boolean = false): void {
+    const form = isAddMode ? this.addMeetingForm : this.editForm;
+    form.get('id_docente')?.setValue(teacher.id);
+    form.get('teacherSearchTerm')?.setValue(`${teacher.first_name} ${teacher.last_name}`);
     this.filteredTeachers = [];
     this.isTeacherSelected = true;
   }
@@ -132,6 +153,105 @@ export class ListMeet implements OnInit {
     } else {
       this.filteredTeachers = [];
     }
+  }
+  
+  openAddMeetingModal(program: any): void {
+      this.selectedProgramId = program.id;
+      this.showAddMeetingModal = true;
+      this.addMeetingForm.reset();
+      this.filteredTeachers = [];
+      this.isTeacherSelected = false;
+  }
+
+  closeAddMeetingModal(): void {
+      this.showAddMeetingModal = false;
+      this.selectedProgramId = null;
+      this.addMeetingForm.reset();
+      this.filteredTeachers = [];
+      this.isTeacherSelected = false;
+  }
+
+  async createNewMeeting(): Promise<void> {
+      if (this.addMeetingForm.invalid) {
+          this.addMeetingForm.markAllAsTouched();
+          return;
+      }
+
+      if (!this.selectedProgramId) {
+          this.notificationService.showError('Error', 'No se ha seleccionado un programa.');
+          return;
+      }
+
+      const formData = this.addMeetingForm.value;
+      const startDate = new Date(formData.fecha_inicio);
+      const endDate = new Date(formData.fecha_finalizacion);
+
+      if (endDate <= startDate) {
+          this.notificationService.showError('Error en fechas', 'La fecha de finalización debe ser posterior a la de inicio.');
+          return;
+      }
+
+      try {
+          // Ensure valid token
+          await this.ensureCalendarToken();
+
+          const event = {
+              summary: formData.titulo,
+              description: formData.descripcion,
+              guestsCanModify: false,
+              guestsCanSeeOtherGuests: false,
+              guestsCanInviteOthers: false,
+              start: {
+                  dateTime: startDate.toISOString(),
+                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+              },
+              end: {
+                  dateTime: endDate.toISOString(),
+                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+              },
+              conferenceData: {
+                  createRequest: {
+                      requestId: "req-" + Date.now(),
+                      conferenceSolutionKey: { type: "hangoutsMeet" }
+                  }
+              }
+          };
+
+          const calendarResponse: any = await gapi.client.calendar.events.insert({
+              calendarId: 'primary',
+              resource: event,
+              conferenceDataVersion: 1
+          });
+
+          console.log('Google Calendar event created:', calendarResponse);
+          
+          const meetingData = {
+              id_reunion: calendarResponse.result.id,
+              meet_link: calendarResponse.result.hangoutLink,
+              fecha_inicio: formData.fecha_inicio,
+              fecha_finalizacion: formData.fecha_finalizacion,
+              id_docente: formData.id_docente,
+              id_programa_ayo: this.selectedProgramId
+          };
+
+          this.courseService.createReunionMeet(meetingData).subscribe({
+              next: () => {
+                  this.notificationService.showSuccess('Reunión creada', 'La reunión se ha creado correctamente.');
+                  this.loadProgramas();
+                  this.closeAddMeetingModal();
+              },
+              error: (error) => {
+                  console.error('Error creating meeting in backend:', error);
+                  this.notificationService.showError('Error', 'No se pudo guardar la reunión en el sistema.');
+                  // Optionally delete from Google Calendar if backend fails? 
+                  // For now, let's keep it simple.
+              }
+          });
+
+      } catch (error) {
+          console.error('Error creating Google Calendar event:', error);
+          this.notificationService.showError('Error de Sincronización', 'No se pudo crear el evento en Google Calendar.');
+      }
   }
 
   // Modal Logic
