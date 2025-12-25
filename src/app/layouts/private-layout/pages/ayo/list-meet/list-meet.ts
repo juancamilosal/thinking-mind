@@ -227,7 +227,7 @@ export class ListMeet implements OnInit {
           
           const meetingData = {
               id_reunion: calendarResponse.result.id,
-              meet_link: calendarResponse.result.hangoutLink,
+              link_reunion: calendarResponse.result.hangoutLink,
               fecha_inicio: formData.fecha_inicio,
               fecha_finalizacion: formData.fecha_finalizacion,
               id_docente: formData.id_docente,
