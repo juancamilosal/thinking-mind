@@ -221,9 +221,12 @@
             (click)="$event.stopPropagation()">
 
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-800" id="modal-title">
-                    Editar Reunión
-                </h3>
+                <div class="flex items-center gap-2">
+                    <img src="assets/icons/editar.png" class="w-8 h-8 object-contain" alt="Editar">
+                    <h3 class="text-2xl font-bold text-gray-800" id="modal-title">
+                        Editar Reunión
+                    </h3>
+                </div>
                 <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -295,9 +298,12 @@
 @if (showAddMeetingModal) {
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 overflow-hidden">
-        <div class="bg-primary px-6 py-4 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-white">Agendar Nueva Reunión</h3>
-            <button (click)="closeAddMeetingModal()" class="text-white hover:text-gray-200 focus:outline-none">
+        <div class="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100">
+            <div class="flex items-center gap-2">
+                <img src="assets/icons/agregar-meet.png" class="w-8 h-8 object-contain" alt="Agregar">
+                <h3 class="text-xl font-bold text-gray-800">Agendar Nueva Reunión</h3>
+            </div>
+            <button (click)="closeAddMeetingModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -386,7 +392,7 @@
                     Cancelar
                 </button>
                 <button type="submit" [disabled]="addMeetingForm.invalid"
-                    class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
                     Crear Reunión
                 </button>
             </div>
