@@ -82,7 +82,17 @@
             @for (programa of selectedGroup?.programs; track programa.id) {
             <div class="program-card">
                 <!-- Header with gradient -->
-                <div class="card-header">
+                <div class="card-header relative">
+                    <!-- Delete Program Button (Top Right) -->
+                    <button type="button" (click)="deleteProgram(programa)"
+                        class="absolute top-4 right-4 z-20 p-2 bg-white/90 text-red-600 rounded-full hover:bg-white transition-colors shadow-lg flex items-center justify-center"
+                        title="Eliminar Programa AYO">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+
                     <div class="gradient-overlay"></div>
                     <div class="header-content">
                         <div class="icon-wrapper">
@@ -202,8 +212,9 @@
                     </div>
                     }
 
-                    <!-- Add Meeting Icon -->
+                    <!-- Actions Section -->
                     <div class="flex justify-center mt-6 mb-2 w-full">
+                         <!-- Add Meeting Icon -->
                          <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión" (click)="openAddMeetingModal(programa)">
                     </div>
                 </div>

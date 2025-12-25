@@ -171,6 +171,35 @@ export class ListMeet implements OnInit {
       this.isTeacherSelected = false;
   }
 
+  deleteProgram(program: any): void {
+    if (program.id_reuniones_meet && program.id_reuniones_meet.length > 0) {
+      this.notificationService.showError('Operación no permitida', 'No se puede eliminar el programa AYO si ya tiene reuniones programadas en Google Calendar.');
+      return;
+    }
+
+    this.confirmationService.showConfirmation(
+      {
+        title: 'Confirmar Eliminación',
+        message: '¿Estás seguro de que deseas eliminar este programa AYO?',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        type: 'danger'
+      },
+      () => {
+        this.programaAyoService.deleteProgramaAyo(program.id).subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Programa eliminado', 'El programa AYO ha sido eliminado correctamente.');
+            this.loadProgramas();
+          },
+          error: (error) => {
+            console.error('Error deleting program:', error);
+            this.notificationService.showError('Error', 'No se pudo eliminar el programa.');
+          }
+        });
+      }
+    );
+  }
+
   async createNewMeeting(): Promise<void> {
       if (this.addMeetingForm.invalid) {
           this.addMeetingForm.markAllAsTouched();
