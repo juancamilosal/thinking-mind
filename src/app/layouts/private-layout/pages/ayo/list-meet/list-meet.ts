@@ -6,9 +6,8 @@ import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.se
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { UserService } from '../../../../../core/services/user.service';
 import { CourseService } from '../../../../../core/services/course.service';
-import { ProgramaAyo } from '../../../../../core/models/Course';
+import { ProgramaAyo, ProgramGroup } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
-import {Meeting, Nivel} from '../../../../../core/models/Meeting';
 import {ConfirmationService} from '../../../../../core/services/confirmation.service';
 
 declare var gapi: any;
@@ -24,8 +23,8 @@ declare var google: any;
 export class ListMeet implements OnInit {
 
   programas: ProgramaAyo[] = [];
-  programGroups: ProgramaAyo[] = [];
-  selectedGroup: any = null;
+  programGroups: ProgramGroup[] = [];
+  selectedGroup: ProgramGroup | null = null;
   viewMode: 'groups' | 'details' = 'groups';
   isLoading = false;
   selectedLanguage: string | null = null;
@@ -522,7 +521,7 @@ export class ListMeet implements OnInit {
   }
 
   groupPrograms(): void {
-    const groups: {[key: string]: any} = {};
+    const groups: {[key: string]: ProgramGroup} = {};
     this.programas.forEach(p => {
       const key = p.id_nivel?.tematica || 'Sin Temática';
       if (!groups[key]) {
@@ -531,7 +530,8 @@ export class ListMeet implements OnInit {
           nivel: p.id_nivel?.nivel,
           subcategoria: p.id_nivel?.subcategoria,
           img: p.img,
-          programs: []
+          programs: [],
+          id_nivel: p.id_nivel
         };
       }
       groups[key].programs.push(p);
@@ -540,7 +540,11 @@ export class ListMeet implements OnInit {
 
     // If a group was selected, update it with new data
     if (this.selectedGroup) {
-      const updatedGroup = this.programGroups.find(g => g.id_nivel.tematica === this.selectedGroup.tematica);
+      const updatedGroup = this.programGroups.find((g: ProgramGroup) => {
+        const groupTematica = g.tematica || 'Sin Temática';
+        const selectedTematica = this.selectedGroup?.tematica || 'Sin Temática';
+        return groupTematica === selectedTematica;
+      });
       if (updatedGroup) {
         this.selectedGroup = updatedGroup;
       } else {
@@ -550,7 +554,7 @@ export class ListMeet implements OnInit {
     }
   }
 
-  selectGroup(group: any): void {
+  selectGroup(group: ProgramGroup): void {
     this.selectedGroup = group;
     this.viewMode = 'details';
   }

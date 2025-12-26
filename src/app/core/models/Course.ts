@@ -34,6 +34,15 @@ export interface ProgramaAyo {
   img?: any;
 }
 
+export interface ProgramGroup {
+  tematica: string;
+  nivel?: string;
+  subcategoria?: string;
+  img?: any;
+  programs: ProgramaAyo[];
+  id_nivel?: Nivel;
+}
+
 export interface PrecioProgramaAyo {
   id?: string;
   precio: number;
