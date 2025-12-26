@@ -34,6 +34,12 @@ export interface ProgramaAyo {
   img?: any;
 }
 
+export interface PrecioProgramaAyo {
+  id?: string;
+  precio: number;
+  nombre: string;
+}
+
 export class ColegioCurso {
   id?: number;
   fecha_finalizacion: string;

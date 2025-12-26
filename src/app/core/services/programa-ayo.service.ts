@@ -3,13 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
-import { ProgramaAyo } from '../models/Course';
+import { ProgramaAyo, PrecioProgramaAyo } from '../models/Course';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProgramaAyoService {
   private apiUrl: string = environment.programa_ayo;
+  private precioUrl: string = environment.precio_programa_ayo;
 
   constructor(private http: HttpClient) {}
 
@@ -40,5 +41,14 @@ export class ProgramaAyoService {
 
   deleteProgramaAyo(id: string | number): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
+  }
+
+  // Precio Programa AYO
+  getPrecioProgramaAyo(): Observable<ResponseAPI<PrecioProgramaAyo[]>> {
+    return this.http.get<ResponseAPI<PrecioProgramaAyo[]>>(this.precioUrl);
+  }
+
+  updatePrecioProgramaAyo(id: string, precio: number): Observable<ResponseAPI<PrecioProgramaAyo>> {
+    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, { precio });
   }
 }

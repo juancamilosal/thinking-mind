@@ -88,6 +88,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initForm();
+    this.loadPrecioPrograma();
 
     // Check for query params if inputs are not provided (e.g. via routing)
     this.route.queryParams.subscribe(params => {
@@ -165,6 +166,24 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       callback: '', // defined later
     });
     this.gisInited = true;
+  }
+
+  loadPrecioPrograma(): void {
+    this.programaAyoService.getPrecioProgramaAyo().subscribe({
+      next: (response) => {
+        if (response.data && response.data.length > 0) {
+          const precio = response.data[0].precio;
+          const precioControl = this.fechaFinalizacionForm.get('precio_curso');
+          if (precioControl) {
+            precioControl.setValue(precio);
+            precioControl.disable();
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar el precio del programa', error);
+      }
+    });
   }
 
   initForm(): void {

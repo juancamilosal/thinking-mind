@@ -119,7 +119,7 @@
         <div class="relative">
           <input type="text" id="precio_curso" formControlName="precio_curso" (input)="onPriceInput($event)"
             placeholder="Ej: 1.000" inputmode="numeric"
-            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-gray-100 text-gray-600 cursor-not-allowed"
             [class.border-red-500]="fechaFinalizacionForm.get('precio_curso')?.invalid && fechaFinalizacionForm.get('precio_curso')?.touched"
             [class.border-green-500]="fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched">
           @if (fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched)
