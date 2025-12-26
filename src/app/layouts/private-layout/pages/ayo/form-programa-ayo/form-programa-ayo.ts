@@ -645,10 +645,12 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           }
         });
 
-      } catch (error) {
+      } catch (error: any) {
         this.ngZone.run(() => {
           console.error('Error creating calendar events or meetings:', error);
-          this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar o guardar las reuniones.');
+          // Check if meetings were actually created (user feedback suggests they are)
+          // We'll show the specific error to help debugging
+          this.notificationService.showError('Error', `No se pudo completar el proceso. Detalles: ${error.message || error}`);
           this.isSubmitting = false;
         });
       }
@@ -780,8 +782,10 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 
-  private unformatPrice(value: string | null | undefined): number {
-    const numericStr = (value || '').replace(/\./g, '');
+  private unformatPrice(value: string | number | null | undefined): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    const numericStr = String(value).replace(/\./g, '');
     return numericStr ? parseInt(numericStr, 10) : 0;
   }
 
