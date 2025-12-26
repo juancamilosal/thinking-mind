@@ -1,259 +1,353 @@
-<div class="bg-white rounded-xl shadow-lg p-8">
-  <div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Agregar Programa AYO</h2>
-    <p class="text-gray-600">Complete la información para asignar el programa</p>
+<div class="max-w-3xl mx-auto w-full">
+  <div class="flex justify-end my-10">
+    <button (click)="goBackAction()"
+      class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 transition-colors duration-200 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Volver
+    </button>
   </div>
 
-  <form [formGroup]="fechaFinalizacionForm" (ngSubmit)="onSubmit()" class="space-y-8">
-
-    <!-- Campo de Fecha -->
-    <div class="space-y-3">
-      <label for="fecha_finalizacion" class="text-md font-semibold text-green-700 flex items-center">
-        <img src="assets/icons/calendario.png" class="w-10 h-10 mr-2" alt="Calendario">
-        Fecha de Finalización *
-      </label>
-      <div class="relative">
-        <input type="date" id="fecha_finalizacion" formControlName="fecha_finalizacion"
-          class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
-          [class.border-red-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.invalid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched"
-          [class.border-green-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.valid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched">
-
-        @if (fechaFinalizacionForm.get('fecha_finalizacion')?.valid &&
-        fechaFinalizacionForm.get('fecha_finalizacion')?.touched) {
-        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-        }
-      </div>
-
-      @if (fechaFinalizacionForm.get('fecha_finalizacion')?.touched &&
-      fechaFinalizacionForm.get('fecha_finalizacion')?.errors?.['required']) {
-      <p class="text-red-500 text-sm mt-2 flex items-center">
-        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-            clip-rule="evenodd" />
-        </svg>
-        La fecha de finalización es requerida
-      </p>
-      }
+  <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+    <div class="mb-8 text-center">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Agregar Programa AYO</h2>
+      <p class="text-gray-600">Complete la información para asignar el programa</p>
     </div>
 
+    <form [formGroup]="fechaFinalizacionForm" (ngSubmit)="onSubmit()" class="space-y-8">
 
+      <!-- Campo de Fecha -->
+      <div class="space-y-3">
+        <label for="fecha_finalizacion" class="text-md font-semibold text-green-700 flex items-center">
+          <img src="assets/icons/calendario.png" class="w-10 h-10 mr-2" alt="Calendario">
+          Fecha de Finalización *
+        </label>
+        <div class="relative">
+          <input type="date" id="fecha_finalizacion" formControlName="fecha_finalizacion"
+            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+            [class.border-red-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.invalid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched"
+            [class.border-green-500]="fechaFinalizacionForm.get('fecha_finalizacion')?.valid && fechaFinalizacionForm.get('fecha_finalizacion')?.touched">
 
-    <!-- Campo de Idioma (Always visible for AYO) -->
-    <div class="space-y-3">
-      <label for="idioma" class="text-md font-semibold text-green-700 flex items-center">
-        <img src="assets/icons/idioma.png" class="w-10 h-10 mr-2" alt="Idioma">
-        Idioma *
-      </label>
-      <div class="relative">
-        <input type="text" id="idioma" formControlName="idioma" readonly
-          class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-gray-100 text-green-800 cursor-not-allowed"
-          [class.border-red-500]="fechaFinalizacionForm.get('idioma')?.invalid && fechaFinalizacionForm.get('idioma')?.touched"
-          [class.border-green-500]="fechaFinalizacionForm.get('idioma')?.valid && fechaFinalizacionForm.get('idioma')?.touched">
-      </div>
-
-      @if (fechaFinalizacionForm.get('idioma')?.touched && fechaFinalizacionForm.get('idioma')?.errors?.['required']) {
-      <p class="text-red-500 text-sm mt-2 flex items-center">
-        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-            clip-rule="evenodd" />
-        </svg>
-        El idioma es requerido
-      </p>
-      }
-    </div>
-
-    <!-- Campo de Nivel -->
-    <div class="space-y-3">
-      <label for="evento_nivel" class="text-md font-semibold text-green-700 flex items-center">
-        <img src="assets/icons/nivel.png" class="w-10 h-10 mr-2" alt="Idioma">
-        Nivel *
-      </label>
-      <div class="relative">
-        <select id="evento_nivel" formControlName="evento_nivel"
-          class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
-          <option value="">Seleccione un nivel</option>
-          @for (nivel of niveles; track nivel.id) {
-          <option [value]="nivel.id">{{ nivel.subcategoria }} | {{ nivel.tematica }}</option>
-          }
-        </select>
-      </div>
-    </div>
-
-    <!-- Campo de Precio del Programa -->
-    <div class="space-y-3">
-      <label for="precio_curso" class="text-md font-semibold text-green-700 flex items-center">
-        <img src="assets/icons/precio.png" class="w-10 h-10 mr-2" alt="Precio">
-        Precio del Programa *
-      </label>
-      <div class="relative">
-        <input type="text" id="precio_curso" formControlName="precio_curso" (input)="onPriceInput($event)"
-          placeholder="Ej: 1.000" inputmode="numeric"
-          class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
-          [class.border-red-500]="fechaFinalizacionForm.get('precio_curso')?.invalid && fechaFinalizacionForm.get('precio_curso')?.touched"
-          [class.border-green-500]="fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched">
-        @if (fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched)
-        {
-        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-        }
-      </div>
-      @if (fechaFinalizacionForm.get('precio_curso')?.touched &&
-      fechaFinalizacionForm.get('precio_curso')?.errors?.['required']) {
-      <p class="text-red-500 text-sm mt-2 flex items-center">
-        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-            clip-rule="evenodd" />
-        </svg>
-        El precio del programa es requerido
-      </p>
-      }
-    </div>
-
-    <!-- Checkbox Programa Con Inscripción -->
-    <div class="mt-6 space-y-3">
-      <label class="inline-flex items-center">
-        <input type="checkbox" formControlName="programa_con_inscripcion"
-          class="rounded border-green-300 text-green-600 focus:ring-green-500" />
-        <span class="ml-2 text-sm font-semibold text-green-700">Programa Con Inscripción</span>
-      </label>
-
-      <!-- Sección de Inscripción (condicional) -->
-      @if (fechaFinalizacionForm.get('programa_con_inscripcion')?.value) {
-      <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-        <h4 class="text-lg font-semibold text-green-800 mb-4">Inscripción</h4>
-
-        <!-- Campo de Precio de Inscripción -->
-        <div class="space-y-3 mb-4">
-          <label for="precio_inscripcion" class="block text-sm font-semibold text-green-700">
-            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          @if (fechaFinalizacionForm.get('fecha_finalizacion')?.valid &&
+          fechaFinalizacionForm.get('fecha_finalizacion')?.touched) {
+          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            Precio Inscripción
-          </label>
-          <div class="relative">
-            <input type="text" id="precio_inscripcion" formControlName="precio_inscripcion"
-              (input)="onInscriptionPriceInput($event)" placeholder="Ej: 500" inputmode="numeric"
-              class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
-              [class.border-green-500]="fechaFinalizacionForm.get('precio_inscripcion')?.valid && fechaFinalizacionForm.get('precio_inscripcion')?.touched">
-            @if (fechaFinalizacionForm.get('precio_inscripcion')?.valid &&
-            fechaFinalizacionForm.get('precio_inscripcion')?.touched) {
-            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </div>
+          }
+        </div>
+
+        @if (fechaFinalizacionForm.get('fecha_finalizacion')?.touched &&
+        fechaFinalizacionForm.get('fecha_finalizacion')?.errors?.['required']) {
+        <p class="text-red-500 text-sm mt-2 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd" />
+          </svg>
+          La fecha de finalización es requerida
+        </p>
+        }
+      </div>
+
+
+
+      <!-- Campo de Idioma (Always visible for AYO) -->
+      <div class="space-y-3">
+        <label for="idioma" class="text-md font-semibold text-green-700 flex items-center">
+          <img src="assets/icons/idioma.png" class="w-10 h-10 mr-2" alt="Idioma">
+          Idioma *
+        </label>
+        <div class="relative">
+          <input type="text" id="idioma" formControlName="idioma" readonly
+            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-gray-100 text-green-800 cursor-not-allowed"
+            [class.border-red-500]="fechaFinalizacionForm.get('idioma')?.invalid && fechaFinalizacionForm.get('idioma')?.touched"
+            [class.border-green-500]="fechaFinalizacionForm.get('idioma')?.valid && fechaFinalizacionForm.get('idioma')?.touched">
+        </div>
+
+        @if (fechaFinalizacionForm.get('idioma')?.touched && fechaFinalizacionForm.get('idioma')?.errors?.['required'])
+        {
+        <p class="text-red-500 text-sm mt-2 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd" />
+          </svg>
+          El idioma es requerido
+        </p>
+        }
+      </div>
+
+      <!-- Campo de Nivel -->
+      <div class="space-y-3">
+        <label for="evento_nivel" class="text-md font-semibold text-green-700 flex items-center">
+          <img src="assets/icons/nivel.png" class="w-10 h-10 mr-2" alt="Idioma">
+          Nivel *
+        </label>
+        <div class="relative">
+          <select id="evento_nivel" formControlName="evento_nivel"
+            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+            [class.border-red-500]="fechaFinalizacionForm.get('evento_nivel')?.invalid && fechaFinalizacionForm.get('evento_nivel')?.touched"
+            [class.border-green-500]="fechaFinalizacionForm.get('evento_nivel')?.valid && fechaFinalizacionForm.get('evento_nivel')?.touched">
+            <option value="">Seleccione un nivel</option>
+            @for (nivel of niveles; track nivel.id) {
+            <option [value]="nivel.id">{{ nivel.subcategoria }} | {{ nivel.tematica }}</option>
+            }
+          </select>
+        </div>
+        @if (fechaFinalizacionForm.get('evento_nivel')?.touched &&
+        fechaFinalizacionForm.get('evento_nivel')?.errors?.['required']) {
+        <p class="text-red-500 text-sm mt-2 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd" />
+          </svg>
+          El nivel es requerido
+        </p>
+        }
+      </div>
+
+      <!-- Campo de Precio del Programa -->
+      <div class="space-y-3">
+        <label for="precio_curso" class="text-md font-semibold text-green-700 flex items-center">
+          <img src="assets/icons/precio.png" class="w-10 h-10 mr-2" alt="Precio">
+          Precio del Programa *
+        </label>
+        <div class="relative">
+          <input type="text" id="precio_curso" formControlName="precio_curso" (input)="onPriceInput($event)"
+            placeholder="Ej: 1.000" inputmode="numeric"
+            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-gray-100 text-gray-600 cursor-not-allowed"
+            [class.border-red-500]="fechaFinalizacionForm.get('precio_curso')?.invalid && fechaFinalizacionForm.get('precio_curso')?.touched"
+            [class.border-green-500]="fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched">
+          @if (fechaFinalizacionForm.get('precio_curso')?.valid && fechaFinalizacionForm.get('precio_curso')?.touched)
+          {
+          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          }
+        </div>
+        @if (fechaFinalizacionForm.get('precio_curso')?.touched &&
+        fechaFinalizacionForm.get('precio_curso')?.errors?.['required']) {
+        <p class="text-red-500 text-sm mt-2 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd" />
+          </svg>
+          El precio del programa es requerido
+        </p>
+        }
+      </div>
+
+      <!-- Checkbox Programa Con Inscripción -->
+      <div class="mt-6 space-y-3">
+        <label class="inline-flex items-center">
+          <input type="checkbox" formControlName="programa_con_inscripcion"
+            class="rounded border-green-300 text-green-600 focus:ring-green-500" />
+          <span class="ml-2 text-sm font-semibold text-green-700">Programa Con Inscripción</span>
+        </label>
+
+        <!-- Sección de Inscripción (condicional) -->
+        @if (fechaFinalizacionForm.get('programa_con_inscripcion')?.value) {
+        <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <h4 class="text-lg font-semibold text-green-800 mb-4">Inscripción</h4>
+
+          <!-- Campo de Precio de Inscripción -->
+          <div class="space-y-3 mb-4">
+            <label for="precio_inscripcion" class="block text-sm font-semibold text-green-700">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
+              Precio Inscripción
+            </label>
+            <div class="relative">
+              <input type="text" id="precio_inscripcion" formControlName="precio_inscripcion"
+                (input)="onInscriptionPriceInput($event)" placeholder="Ej: 500" inputmode="numeric"
+                class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                [class.border-green-500]="fechaFinalizacionForm.get('precio_inscripcion')?.valid && fechaFinalizacionForm.get('precio_inscripcion')?.touched">
+              @if (fechaFinalizacionForm.get('precio_inscripcion')?.valid &&
+              fechaFinalizacionForm.get('precio_inscripcion')?.touched) {
+              <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              }
             </div>
+          </div>
+
+          <!-- Campo de Moneda -->
+          <div class="space-y-3">
+            <label for="moneda" class="block text-sm font-semibold text-green-700">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Moneda
+            </label>
+            <select id="moneda" formControlName="moneda"
+              class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+              <option value="" disabled>Seleccione una moneda</option>
+              <option value="USD">USD - Dólar Estadounidense</option>
+              <option value="EUR">EUR - Euro</option>
+            </select>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Checkbox Precio Especial Lanzamiento -->
+      <div class="mt-6 space-y-3">
+        <label class="inline-flex items-center">
+          <input type="checkbox" formControlName="precio_especial_lanzamiento"
+            class="rounded border-green-300 text-green-600 focus:ring-green-500" />
+          <span class="ml-2 text-sm font-semibold text-green-700">Precio Especial Lanzamiento</span>
+        </label>
+
+        <!-- Sección de Precio Especial (condicional) -->
+        @if (fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value) {
+        <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <h4 class="text-lg font-semibold text-yellow-800 mb-4">Precio Especial</h4>
+
+          <div class="space-y-3 mb-4">
+            <label for="precio_especial" class="block text-sm font-semibold text-yellow-700">
+              Precio Especial
+            </label>
+            <input type="text" id="precio_especial" formControlName="precio_especial"
+              (input)="onSpecialPriceInput($event)" placeholder="Ej: 800" inputmode="numeric"
+              class="w-full px-6 py-4 rounded-lg border border-yellow-300 shadow-sm focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 bg-white text-yellow-800">
+          </div>
+
+          <div class="space-y-3">
+            <label for="fecha_finalizacion_precio_especial" class="block text-sm font-semibold text-yellow-700">
+              Fecha Finalización Precio Especial
+            </label>
+            <input type="date" id="fecha_finalizacion_precio_especial"
+              formControlName="fecha_finalizacion_precio_especial"
+              class="w-full px-6 py-4 rounded-lg border border-yellow-300 shadow-sm focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 bg-white text-yellow-800">
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Sección de Imagen del Programa -->
+      <div class="mt-6 space-y-3">
+        <label class="block text-md font-semibold text-gray-700 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+            </path>
+          </svg>
+          Imagen de la Temática
+        </label>
+
+        <div (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+          [class.border-blue-500]="isDragging" [class.bg-blue-50]="isDragging"
+          class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-500 transition-colors duration-200">
+          <div class="space-y-1 text-center">
+            @if (previewImage) {
+            <div class="relative inline-block">
+              <img [src]="previewImage" class="max-h-48 rounded-lg shadow-md mx-auto" alt="Vista previa">
+              <button type="button" (click)="removeImage()"
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            } @else {
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"
+              aria-hidden="true">
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="flex text-sm text-gray-600 justify-center">
+              <label for="file-upload"
+                class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                <span>Subir un archivo</span>
+                <input id="file-upload" name="file-upload" type="file" class="sr-only" accept="image/*"
+                  (change)="onFileSelected($event)">
+              </label>
+              <p class="pl-1">o arrastrar y soltar</p>
+            </div>
+            <p class="text-xs text-gray-500">
+              PNG, JPG, GIF hasta 5MB
+            </p>
             }
           </div>
         </div>
-
-        <!-- Campo de Moneda -->
-        <div class="space-y-3">
-          <label for="moneda" class="block text-sm font-semibold text-green-700">
-            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Moneda
-          </label>
-          <select id="moneda" formControlName="moneda"
-            class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
-            <option value="" disabled>Seleccione una moneda</option>
-            <option value="USD">USD - Dólar Estadounidense</option>
-            <option value="EUR">EUR - Euro</option>
-          </select>
-        </div>
       </div>
-      }
-    </div>
 
-    <!-- Checkbox Precio Especial Lanzamiento -->
-    <div class="mt-6 space-y-3">
-      <label class="inline-flex items-center">
-        <input type="checkbox" formControlName="precio_especial_lanzamiento"
-          class="rounded border-green-300 text-green-600 focus:ring-green-500" />
-        <span class="ml-2 text-sm font-semibold text-green-700">Precio Especial Lanzamiento</span>
-      </label>
 
-      <!-- Sección de Precio Especial (condicional) -->
-      @if (fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value) {
-      <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-        <h4 class="text-lg font-semibold text-yellow-800 mb-4">Precio Especial</h4>
+      <!-- Google Calendar Section -->
+      <div class="mt-8 border-t pt-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
+          Agendar en Google Calendar Sesión MARTES
+        </h3>
 
-        <div class="space-y-3 mb-4">
-          <label for="precio_especial" class="block text-sm font-semibold text-yellow-700">
-            Precio Especial
-          </label>
-          <input type="text" id="precio_especial" formControlName="precio_especial"
-            (input)="onSpecialPriceInput($event)" placeholder="Ej: 800" inputmode="numeric"
-            class="w-full px-6 py-4 rounded-lg border border-yellow-300 shadow-sm focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 bg-white text-yellow-800">
-        </div>
-
-        <div class="space-y-3">
-          <label for="fecha_finalizacion_precio_especial" class="block text-sm font-semibold text-yellow-700">
-            Fecha Finalización Precio Especial
-          </label>
-          <input type="date" id="fecha_finalizacion_precio_especial"
-            formControlName="fecha_finalizacion_precio_especial"
-            class="w-full px-6 py-4 rounded-lg border border-yellow-300 shadow-sm focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 bg-white text-yellow-800">
-        </div>
-      </div>
-      }
-    </div>
-
-    <!-- Google Calendar Section -->
-    <div class="mt-8 border-t pt-8">
-      <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
-        Agendar en Google Calendar Sesión MARTES
-      </h3>
-
-      <!-- Martes -->
-      <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-        <div class="space-y-4">
+        <!-- Martes -->
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <div class="space-y-4">
             <!-- Event Title -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
-              <input type="text" formControlName="evento_titulo"
+              <label for="evento_titulo" class="block text-sm font-medium text-gray-700 mb-1">Título del Evento *</label>
+              <input type="text" id="evento_titulo" formControlName="evento_titulo"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-500]="fechaFinalizacionForm.get('evento_titulo')?.invalid && fechaFinalizacionForm.get('evento_titulo')?.touched"
                 placeholder="Ej: Clase de Inglés - Martes">
+              @if (fechaFinalizacionForm.get('evento_titulo')?.touched && fechaFinalizacionForm.get('evento_titulo')?.errors?.['required']) {
+              <p class="text-red-500 text-sm mt-2 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                El título del evento es requerido
+              </p>
+              }
             </div>
 
             <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-              <textarea formControlName="evento_descripcion" rows="3"
+              <label for="evento_descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <textarea id="evento_descripcion" formControlName="evento_descripcion" rows="3"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Detalles de la sesión..."></textarea>
             </div>
 
             <!-- Teacher Selection -->
             <div class="relative">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Docente</label>
-              <input type="text" id="teacherSearchTerm" formControlName="teacherSearchTerm" (input)="onTeacherSearch($event)"
-                     (focus)="onTeacherInputFocus()"
+              <label for="teacherSearchTerm" class="block text-sm font-medium text-gray-700 mb-1">Docente *</label>
+              <input type="text" id="teacherSearchTerm" formControlName="teacherSearchTerm"
+                (input)="onTeacherSearch($event)" (focus)="onTeacherInputFocus()"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-500]="fechaFinalizacionForm.get('evento_docente')?.invalid && fechaFinalizacionForm.get('evento_docente')?.touched"
                 placeholder="Buscar docente..." autocomplete="off">
+              @if (fechaFinalizacionForm.get('evento_docente')?.touched && fechaFinalizacionForm.get('evento_docente')?.errors?.['required']) {
+              <p class="text-red-500 text-sm mt-2 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                El docente es requerido
+              </p>
+              }
 
               @if (filteredTeachers.length > 0) {
-                <div id="teacher-dropdown" class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  @for (teacher of filteredTeachers; track teacher.id) {
-                    <div (click)="selectTeacher(teacher)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      <div class="font-medium">{{ teacher.first_name }} {{ teacher.last_name }}</div>
-                      <div class="text-xs text-gray-500">{{ teacher.email }}</div>
-                    </div>
-                  }
+              <div id="teacher-dropdown"
+                class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                @for (teacher of filteredTeachers; track teacher.id) {
+                <div (click)="selectTeacher(teacher)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                  <div class="font-medium">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+                  <div class="text-xs text-gray-500">{{ teacher.email }}</div>
                 </div>
+                }
+              </div>
               }
             </div>
 
@@ -263,59 +357,97 @@
             <!-- Date/Time Range -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Inicio</label>
-                <input type="datetime-local" formControlName="evento_inicio" (blur)="onDateInput($event, 'evento_inicio', 2)"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label for="evento_inicio" class="block text-sm font-medium text-gray-700 mb-1">Inicio *</label>
+                <input type="datetime-local" id="evento_inicio" formControlName="evento_inicio"
+                  (blur)="onDateInput($event, 'evento_inicio', 2)"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  [class.border-red-500]="fechaFinalizacionForm.get('evento_inicio')?.invalid && fechaFinalizacionForm.get('evento_inicio')?.touched">
+                @if (fechaFinalizacionForm.get('evento_inicio')?.touched && fechaFinalizacionForm.get('evento_inicio')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  La fecha de inicio es requerida
+                </p>
+                }
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Fin</label>
-                <input type="datetime-local" formControlName="evento_fin" (blur)="onDateInput($event, 'evento_fin', 2)"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label for="evento_fin" class="block text-sm font-medium text-gray-700 mb-1">Fin *</label>
+                <input type="datetime-local" id="evento_fin" formControlName="evento_fin" (blur)="onDateInput($event, 'evento_fin', 2)"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  [class.border-red-500]="fechaFinalizacionForm.get('evento_fin')?.invalid && fechaFinalizacionForm.get('evento_fin')?.touched">
+                @if (fechaFinalizacionForm.get('evento_fin')?.touched && fechaFinalizacionForm.get('evento_fin')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  La fecha de fin es requerida
+                </p>
+                }
               </div>
             </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Jueves -->
-      <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
-        Agendar en Google Calendar Sesión JUEVES
-      </h3>
-      <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-purple-100">
-         <div class="space-y-4">
+        <!-- Jueves -->
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
+          Agendar en Google Calendar Sesión JUEVES
+        </h3>
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-purple-100">
+          <div class="space-y-4">
             <!-- Event Title -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
-              <input type="text" formControlName="evento_titulo_jueves"
+              <label for="evento_titulo_jueves" class="block text-sm font-medium text-gray-700 mb-1">Título del Evento *</label>
+              <input type="text" id="evento_titulo_jueves" formControlName="evento_titulo_jueves"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-500]="fechaFinalizacionForm.get('evento_titulo_jueves')?.invalid && fechaFinalizacionForm.get('evento_titulo_jueves')?.touched"
                 placeholder="Ej: Clase de Inglés - Jueves">
+              @if (fechaFinalizacionForm.get('evento_titulo_jueves')?.touched && fechaFinalizacionForm.get('evento_titulo_jueves')?.errors?.['required']) {
+              <p class="text-red-500 text-sm mt-2 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                El título del evento es requerido
+              </p>
+              }
             </div>
 
             <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-              <textarea formControlName="evento_descripcion_jueves" rows="3"
+              <label for="evento_descripcion_jueves" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <textarea id="evento_descripcion_jueves" formControlName="evento_descripcion_jueves" rows="3"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Detalles de la sesión..."></textarea>
             </div>
 
             <!-- Teacher Selection -->
             <div class="relative">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Docente</label>
-              <input type="text" id="teacherSearchTermJueves" formControlName="teacherSearchTermJueves" (input)="onTeacherSearchJueves($event)"
-                     (focus)="onTeacherInputFocusJueves()"
+              <label for="teacherSearchTermJueves" class="block text-sm font-medium text-gray-700 mb-1">Docente *</label>
+              <input type="text" id="teacherSearchTermJueves" formControlName="teacherSearchTermJueves"
+                (input)="onTeacherSearchJueves($event)" (focus)="onTeacherInputFocusJueves()"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-500]="fechaFinalizacionForm.get('evento_docente_jueves')?.invalid && fechaFinalizacionForm.get('evento_docente_jueves')?.touched"
                 placeholder="Buscar docente..." autocomplete="off">
+              @if (fechaFinalizacionForm.get('evento_docente_jueves')?.touched && fechaFinalizacionForm.get('evento_docente_jueves')?.errors?.['required']) {
+              <p class="text-red-500 text-sm mt-2 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                El docente es requerido
+              </p>
+              }
 
               @if (filteredTeachersJueves.length > 0) {
-                <div id="teacher-dropdown-jueves" class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  @for (teacher of filteredTeachersJueves; track teacher.id) {
-                    <div (click)="selectTeacherJueves(teacher)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      <div class="font-medium">{{ teacher.first_name }} {{ teacher.last_name }}</div>
-                      <div class="text-xs text-gray-500">{{ teacher.email }}</div>
-                    </div>
-                  }
+              <div id="teacher-dropdown-jueves"
+                class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                @for (teacher of filteredTeachersJueves; track teacher.id) {
+                <div (click)="selectTeacherJueves(teacher)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                  <div class="font-medium">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+                  <div class="text-xs text-gray-500">{{ teacher.email }}</div>
                 </div>
+                }
+              </div>
               }
             </div>
 
@@ -324,34 +456,58 @@
             <!-- Date/Time Range -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Inicio</label>
-                <input type="datetime-local" formControlName="evento_inicio_jueves" (blur)="onDateInput($event, 'evento_inicio_jueves', 4)"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label for="evento_inicio_jueves" class="block text-sm font-medium text-gray-700 mb-1">Inicio *</label>
+                <input type="datetime-local" id="evento_inicio_jueves" formControlName="evento_inicio_jueves"
+                  (blur)="onDateInput($event, 'evento_inicio_jueves', 4)"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  [class.border-red-500]="fechaFinalizacionForm.get('evento_inicio_jueves')?.invalid && fechaFinalizacionForm.get('evento_inicio_jueves')?.touched">
+                @if (fechaFinalizacionForm.get('evento_inicio_jueves')?.touched && fechaFinalizacionForm.get('evento_inicio_jueves')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  La fecha de inicio es requerida
+                </p>
+                }
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Fin</label>
-                <input type="datetime-local" formControlName="evento_fin_jueves" (blur)="onDateInput($event, 'evento_fin_jueves', 4)"
-                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label for="evento_fin_jueves" class="block text-sm font-medium text-gray-700 mb-1">Fin *</label>
+                <input type="datetime-local" id="evento_fin_jueves" formControlName="evento_fin_jueves"
+                  (blur)="onDateInput($event, 'evento_fin_jueves', 4)"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  [class.border-red-500]="fechaFinalizacionForm.get('evento_fin_jueves')?.invalid && fechaFinalizacionForm.get('evento_fin_jueves')?.touched">
+                @if (fechaFinalizacionForm.get('evento_fin_jueves')?.touched && fechaFinalizacionForm.get('evento_fin_jueves')?.errors?.['required']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  La fecha de fin es requerida
+                </p>
+                }
               </div>
             </div>
-         </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Submit Button -->
-    <div class="pt-6">
-      <button type="submit" [disabled]="fechaFinalizacionForm.invalid || isSubmitting"
-        class="w-full bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
-        @if (isSubmitting) {
-          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <!-- Submit Button -->
+      <div class="pt-6 flex justify-center">
+        <button type="submit" [disabled]="fechaFinalizacionForm.invalid || isSubmitting"
+          class="w-full md:w-auto min-w-[200px] bg-gradient-to-r from-green-600 to-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center">
+          @if (isSubmitting) {
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
           </svg>
           Guardando...
-        } @else {
-          Guardar Programa AYO
-        }
-      </button>
-    </div>
-  </form>
+          } @else {
+          Crear Programa AYO
+          }
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

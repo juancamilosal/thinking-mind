@@ -8,84 +8,146 @@
     </div>
   </div>
 
-  @if (isLoading) {
-    <div class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
-  } @else {
-    @if (!showForm) {
-      <div class="flex flex-col md:flex-row justify-center items-center gap-8 mt-10">
+    <!-- Paso 1 y 2 combinados visualmente -->
+    <div class="flex flex-col items-center gap-8 mt-10">
 
-        <!-- Card AYO Inglés -->
-        <div (click)="openForm('INGLÉS')" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
-
-          <div class="h-48 relative overflow-hidden flex flex-col items-center justify-center">
-            <!-- Background Image -->
-            <img src="assets/images/ayo-ingles.jpg" alt="AYO Inglés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-
-            <!-- Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-          </div>
-
-          <div class="p-8 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">AYO Inglés</h2>
-            <div class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full"></div>
-            <p class="text-gray-500 leading-relaxed mb-4">
-              Programa intensivo de aprendizaje del idioma inglés.
-            </p>
-            @if (courses.length > 0 && courses[0].precio) {
-              <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 inline-block w-full">
-                <p class="text-xs text-blue-600 font-medium uppercase mb-1">Inversión</p>
-                <p class="text-xl font-bold text-blue-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Card AYO Francés -->
-        <div (click)="openForm('FRANCÉS')" class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-96 group">
-
-          <div class="h-48 relative overflow-hidden flex flex-col items-center justify-center">
-            <!-- Background Image -->
-            <img src="assets/images/ayo-frances.jpg" alt="AYO Francés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-
-            <!-- Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-          </div>
-
-          <div class="p-8 text-center">
-            <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">AYO Francés</h2>
-            <div class="w-16 h-1 bg-purple-500 mx-auto mb-4 rounded-full"></div>
-            <p class="text-gray-500 leading-relaxed mb-4">
-              Programa intensivo de aprendizaje del idioma francés.
-            </p>
-            @if (courses.length > 0 && courses[0].precio) {
-              <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100 inline-block w-full">
-                <p class="text-xs text-purple-600 font-medium uppercase mb-1">Inversión</p>
-                <p class="text-xl font-bold text-purple-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
-              </div>
-            }
-          </div>
-        </div>
-
-      </div>
-    } @else {
-      <div class="max-w-4xl mx-auto mt-8">
-        <div class="flex justify-end mb-4">
-          <button (click)="closeForm()" class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-50 transition-colors duration-200 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Botón Volver / Cambiar Selección (visible cuando hay selección) -->
+      @if (selectedLanguage) {
+        <div class="w-full max-w-4xl flex justify-center mb-8 fade-in">
+          <button (click)="goBack()"
+                  class="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
-            Volver
+            <span>Cambiar selección</span>
           </button>
         </div>
-        <app-form-programa-ayo
-          [idioma]="selectedLanguage"
-          [initialLanguage]="selectedLanguage"
-          (goBack)="closeForm()"
-          (colegioAdded)="onColegioAdded()">
-        </app-form-programa-ayo>
+      }
+
+      <!-- Contenedor de Cards de Idioma -->
+      <div class="flex flex-col md:flex-row justify-center items-center gap-8 transition-all duration-500 ease-in-out">
+
+        <!-- Card AYO Inglés -->
+        @if (!selectedLanguage || selectedLanguage === 'INGLES') {
+          <div (click)="selectLanguage('INGLES')"
+               class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group w-full md:w-96 hover:-translate-y-2 hover:shadow-2xl"
+               [ngClass]="{'ring-4 ring-blue-100 transform scale-105': selectedLanguage === 'INGLES'}">
+
+            <div class="relative overflow-hidden flex flex-col items-center justify-center h-48 transition-all duration-500">
+              <!-- Background Image -->
+              <img src="assets/images/ayo-ingles.jpg" alt="AYO Inglés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+              <!-- Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            </div>
+
+            <div class="p-8 text-center">
+              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">AYO Inglés</h2>
+              <div class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full"></div>
+              <p class="text-gray-500 leading-relaxed mb-4">
+                Programa intensivo de aprendizaje del idioma inglés.
+              </p>
+              @if (courses.length > 0 && courses[0].precio) {
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 inline-block w-full">
+                  <p class="text-xs text-blue-600 font-medium uppercase mb-1">Inversión</p>
+                  <p class="text-xl font-bold text-blue-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Card AYO Francés -->
+        @if (!selectedLanguage || selectedLanguage === 'FRANCES') {
+          <div (click)="selectLanguage('FRANCES')"
+               class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group w-full md:w-96 hover:-translate-y-2 hover:shadow-2xl"
+               [ngClass]="{'ring-4 ring-purple-100 transform scale-105': selectedLanguage === 'FRANCES'}">
+
+            <div class="relative overflow-hidden flex flex-col items-center justify-center h-48 transition-all duration-500">
+              <!-- Background Image -->
+              <img src="assets/images/ayo-frances.jpg" alt="AYO Francés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+              <!-- Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            </div>
+
+            <div class="p-8 text-center">
+              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">AYO Francés</h2>
+              <div class="w-16 h-1 bg-purple-500 mx-auto mb-4 rounded-full"></div>
+              <p class="text-gray-500 leading-relaxed mb-4">
+                Programa intensivo de aprendizaje del idioma francés.
+              </p>
+              @if (courses.length > 0 && courses[0].precio) {
+                <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100 inline-block w-full">
+                  <p class="text-xs text-purple-600 font-medium uppercase mb-1">Inversión</p>
+                  <p class="text-xl font-bold text-purple-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
       </div>
-    }
-  }
+
+      <!-- Card Precio Programa AYO -->
+      @if ((precioData || isLoadingPrice) && step === 'initial') {
+        <div class="w-full md:w-96 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 flex flex-col items-center justify-center text-center mt-4 transition-all duration-500 hover:shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Precio Programa AYO</h3>
+            
+            @if (isLoadingPrice) {
+                <div class="animate-pulse flex flex-col items-center w-full my-4">
+                    <div class="h-10 w-48 bg-gray-200 rounded mb-4"></div>
+                    <div class="h-8 w-32 bg-gray-200 rounded"></div>
+                </div>
+            } @else if (precioData) {
+                @if (!isEditingPrice) {
+                    <p class="text-3xl font-extrabold text-blue-600 mb-4">$ {{ precioData.precio | number:'1.0-0' }}</p>
+                    <button (click)="startEditingPrice()" class="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium flex items-center gap-2 border border-gray-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Editar Precio
+                    </button>
+                } @else {
+                    <div class="w-full space-y-3">
+                        <input type="number" [(ngModel)]="tempPrice" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-gray-300 text-center font-bold text-lg">
+                        <div class="flex justify-center gap-2">
+                            <button (click)="cancelEditingPrice()" class="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm font-medium transition-colors">Cancelar</button>
+                            <button (click)="savePrice()" [disabled]="isSavingPrice" class="px-3 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 text-sm font-medium disabled:opacity-50 transition-colors">
+                                {{ isSavingPrice ? 'Guardando...' : 'Guardar' }}
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+      }
+
+      <!-- Opciones desplegables (Step 2) -->
+      @if (step === 'options') {
+        <div class="w-full max-w-4xl mx-auto fade-in">
+          <div class="flex flex-col md:flex-row justify-center items-stretch gap-8">
+            <!-- Card Reuniones Meet -->
+            <div (click)="openMeetings()" class="flex flex-col cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-80 group">
+                <div class="h-40 bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center shrink-0">
+                    <img src="assets/icons/meet.png" alt="Meet" class="w-24 h-24 object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-lg">
+                </div>
+                <div class="p-6 text-center flex-1 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">Reuniones Meet Programadas</h3>
+                    <p class="text-gray-500 text-sm">Ver y gestionar las reuniones programadas.</p>
+                </div>
+            </div>
+
+            <!-- Card Crear Programa Ayo -->
+            <div (click)="openCreateForm()" class="flex flex-col cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border border-gray-100 w-full md:w-80 group">
+                <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+                    <img src="assets/icons/ayo.png" alt="AYO" class="w-24 h-24 object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-lg">
+                </div>
+                <div class="p-6 text-center flex-1 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">Crear Programa Ayo</h3>
+                    <p class="text-gray-500 text-sm">Crear un nuevo programa AYO para {{ selectedLanguage | titlecase }}.</p>
+                </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
 </div>

@@ -142,4 +142,12 @@ export class CourseService {
   deleteReunionMeet(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${environment.reuniones_meet}/${id}`);
   }
+
+  deleteGoogleCalendarEvent(eventId: string, token: string): Observable<any> {
+    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`;
+    const headers = {
+      'Authorization': `Bearer ${token}`
+    };
+    return this.http.delete(url, { headers });
+  }
 }

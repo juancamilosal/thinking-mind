@@ -19,6 +19,7 @@ export class AccountReceivableService {
   private apiUrl: string = environment.accountsReceivable;
   private apiUrlTotalAccounts = environment.total_accounts
   private apiUrlPaymentReceivable = environment.payment_record;
+  private apiUrlPaymentRecordAyo = environment.payment_record_ayo;
   private apiUrlReturn = environment.return;
   private apiUrlListSchool = environment.list_student_school;
 
@@ -37,6 +38,10 @@ export class AccountReceivableService {
 
   createAccountReceivable(accountReceivable: any): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(this.apiUrl, accountReceivable);
+  }
+
+  createPaymentRecordAyo(data: any): Observable<any> {
+    return this.http.post(this.apiUrlPaymentRecordAyo, data);
   }
 
   getAllAccountsReceivable(page: number = 1, limit: number = 10, searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {

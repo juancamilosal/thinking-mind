@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, ElementRef, HostListener, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { CourseService } from '../../../../../core/services/course.service';
@@ -9,7 +10,7 @@ import { UserService } from '../../../../../core/services/user.service';
 import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Meeting';
-import {ProgramaAyoService} from '../../../../../core/services/programa-ayo.service';
+import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 
 
 declare var gapi: any;
@@ -48,6 +49,10 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   selectedTeacherIdJueves: string | null = null;
   selectedLanguage: string | null = null;
   isSubmitting: boolean = false;
+  previewImage: string | null = null;
+  selectedFile: File | null = null;
+  isDragging: boolean = false;
+
 
   // Google Calendar Integration
   showGoogleCalendarOption = true; // Always true for AYO
@@ -66,7 +71,9 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     private userService: UserService,
     private nivelService: NivelService,
     private elementRef: ElementRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -81,6 +88,19 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initForm();
+    this.loadPrecioPrograma();
+
+    // Check for query params if inputs are not provided (e.g. via routing)
+    this.route.queryParams.subscribe(params => {
+      if (params['idioma']) {
+        this.idioma = params['idioma'];
+        this.selectedLanguage = params['idioma'];
+        this.initialLanguage = params['idioma'];
+        if (this.fechaFinalizacionForm) {
+          this.fechaFinalizacionForm.get('idioma')?.setValue(this.idioma);
+        }
+      }
+    });
 
     this.showGoogleCalendarOption = true;
     this.loadGoogleScripts();
@@ -148,6 +168,24 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.gisInited = true;
   }
 
+  loadPrecioPrograma(): void {
+    this.programaAyoService.getPrecioProgramaAyo().subscribe({
+      next: (response) => {
+        if (response.data && response.data.length > 0) {
+          const precio = response.data[0].precio;
+          const precioControl = this.fechaFinalizacionForm.get('precio_curso');
+          if (precioControl) {
+            precioControl.setValue(precio);
+            precioControl.disable();
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar el precio del programa', error);
+      }
+    });
+  }
+
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
@@ -161,6 +199,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       programa_independiente: [true], // Always true
       courseSearchTerm: [null],
       schoolSearchTerm: [null],
+      img: [null],
       // Google Calendar Fields (Start true for AYO)
       agendar_google_calendar: [true],
       evento_titulo: ['', Validators.required],
@@ -246,7 +285,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     } else if (dropdownTeacher && dropdownTeacher.contains(target)) {
       // Clicked on dropdown
     } else {
-       this.filteredTeachers = [];
+      this.filteredTeachers = [];
     }
 
     // Teacher dropdown (Jueves)
@@ -258,7 +297,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     } else if (dropdownTeacherJueves && dropdownTeacherJueves.contains(target)) {
       // Clicked on dropdown
     } else {
-       this.filteredTeachersJueves = [];
+      this.filteredTeachersJueves = [];
     }
   }
 
@@ -277,6 +316,79 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       }
     });
   }
+
+  onFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.fechaFinalizacionForm.patchValue({ img: file });
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeImage(): void {
+    this.selectedFile = null;
+    this.previewImage = null;
+    this.fechaFinalizacionForm.patchValue({ img: null });
+    // Reset file input if needed
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.notificationService.showError('Tipo de archivo inválido', 'Por favor, selecciona una imagen (PNG, JPG, GIF)');
+        return;
+      }
+
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        this.notificationService.showError('Archivo muy grande', 'El tamaño máximo permitido es 5MB');
+        return;
+      }
+
+      this.selectedFile = file;
+      this.fechaFinalizacionForm.patchValue({ img: file });
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
 
   selectTeacher(teacher: User): void {
     this.fechaFinalizacionForm.get('evento_docente')?.setValue(teacher.email);
@@ -396,6 +508,14 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     }
   }
 
+  goBackAction() {
+    if (this.goBack.observed) {
+      this.goBack.emit();
+    } else {
+      this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.idioma } });
+    }
+  }
+
   async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
       this.isSubmitting = true;
@@ -419,7 +539,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 fecha_finalizacion: this.formatDateForDirectus(calendarEventDataMartes.end.dateTime),
                 id_reunion: calendarEventDataMartes.id,
                 link_reunion: calendarEventDataMartes.hangoutLink,
-                token: accessToken,
+                // token: accessToken, // Token is not needed and causes length errors. We use fresh tokens for deletion.
                 id_docente: this.selectedTeacherId,
                 id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
                 id_colegios_cursos: []
@@ -437,7 +557,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 fecha_finalizacion: this.formatDateForDirectus(calendarEventDataJueves.end.dateTime),
                 id_reunion: calendarEventDataJueves.id,
                 link_reunion: calendarEventDataJueves.hangoutLink,
-                token: accessToken,
                 id_docente: this.selectedTeacherIdJueves,
                 id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
                 id_colegios_cursos: []
@@ -461,6 +580,21 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
 
+        // Handle Image Upload
+        let imageId = null;
+        if (this.selectedFile) {
+          try {
+            const uploadRes = await firstValueFrom(this.courseService.uploadFile(this.selectedFile));
+            if (uploadRes?.data?.id) {
+              imageId = uploadRes.data.id;
+            }
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            this.notificationService.showError('Error al subir imagen', 'No se pudo cargar la imagen del programa.');
+            // Optionally stop submission here or continue without image
+          }
+        }
+
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
@@ -478,7 +612,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           fecha_creacion: fechaCreacionISO,
           idioma: this.fechaFinalizacionForm.get('idioma')?.value,
           id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
-          id_reuniones_meet: meetingIds
+          id_reuniones_meet: meetingIds,
+          img: imageId // Add image ID to payload
         };
 
         // 3. Create Program
@@ -490,7 +625,9 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
                 'Programa AYO guardado',
                 `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
                 0,
-                () => window.location.reload()
+                () => {
+                   this.goBackAction();
+                }
               );
 
               this.isSubmitting = false;
@@ -508,10 +645,12 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           }
         });
 
-      } catch (error) {
+      } catch (error: any) {
         this.ngZone.run(() => {
           console.error('Error creating calendar events or meetings:', error);
-          this.notificationService.showError('Error', 'No se pudo crear el evento en Google Calendar o guardar las reuniones.');
+          // Check if meetings were actually created (user feedback suggests they are)
+          // We'll show the specific error to help debugging
+          this.notificationService.showError('Error', `No se pudo completar el proceso. Detalles: ${error.message || error}`);
           this.isSubmitting = false;
         });
       }
@@ -549,12 +688,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     }
 
     const attendees: any[] = [];
-    const docenteEmail = this.fechaFinalizacionForm.get('evento_docente' + suffix)?.value;
+    // No adding guests/teacher as per requirement
 
-    // Agregar al docente como invitado
-    if (docenteEmail) {
-      attendees.push({ email: docenteEmail });
-    }
 
     // Determine recurrence rule based on day and program end date
     let recurrenceRule = '';
@@ -583,6 +718,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       summary: this.fechaFinalizacionForm.get('evento_titulo' + suffix)?.value,
       description: this.fechaFinalizacionForm.get('evento_descripcion' + suffix)?.value,
       guestsCanModify: false,
+      guestsCanSeeOtherGuests: false,
+      guestsCanInviteOthers: false,
       start: {
         dateTime: startDate.toISOString(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -640,13 +777,17 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.fechaFinalizacionForm.get('precio_especial')?.setValue(formatted, { emitEvent: false });
   }
 
-  private formatPrice(value: string): string {
-    if (!value) return '';
-    return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  private formatPrice(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === '') return '';
+    const valStr = String(value);
+    return valStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 
-  private unformatPrice(value: string | null | undefined): number {
-    const numericStr = (value || '').replace(/\./g, '');
+  private unformatPrice(value: string | number | null | undefined): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    const valStr = String(value);
+    const numericStr = valStr.replace(/\./g, '');
     return numericStr ? parseInt(numericStr, 10) : 0;
   }
 

@@ -1,60 +1,153 @@
 import {Component, Input, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CourseService } from '../../../../core/services/course.service';
-import { Course } from '../../../../core/models/Course';
+import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
+import { Course, PrecioProgramaAyo } from '../../../../core/models/Course';
 
-import { FormProgramaAyoComponent } from './form-programa-ayo/form-programa-ayo';
+export type AyoStep = 'initial' | 'options' | 'meetings';
 
 @Component({
   selector: 'app-ayo',
   standalone: true,
-  imports: [CommonModule, FormProgramaAyoComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './ayo.html',
   styleUrls: ['./ayo.css']
 })
 export class AyoComponent implements OnInit {
   courses: Course[] = [];
   isLoading: boolean = true;
-  showForm: boolean = false;
+  step: AyoStep = 'initial';
   selectedLanguage: string | null = null;
+  
+  // Precio Programa AYO
+  precioData: PrecioProgramaAyo | null = null;
+  isLoadingPrice: boolean = true;
+  isEditingPrice: boolean = false;
+  tempPrice: number = 0;
+  isSavingPrice: boolean = false;
 
-  constructor(private courseService: CourseService) { }
+  constructor(
+    private courseService: CourseService,
+    private programaAyoService: ProgramaAyoService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
-    this.loadCourses();
-  }
+    this.loadPrecio();
 
-  loadCourses(): void {
-    this.isLoading = true;
-    const ayoCourseId = '28070b14-f3c1-48ec-9e2f-95263f19eec3';
-
-    this.courseService.getCourseByIdFiltered(ayoCourseId).subscribe({
-      next: (response) => {
-        if (response.data) {
-          this.courses = response.data;
+    this.route.queryParams.subscribe(params => {
+      if (params['idioma']) {
+        const lang = params['idioma'].toUpperCase();
+        if (lang === 'INGLÉS' || lang === 'INGLES') {
+          this.selectedLanguage = 'INGLES';
+        } else if (lang === 'FRANCÉS' || lang === 'FRANCES') {
+          this.selectedLanguage = 'FRANCES';
+        } else {
+          this.selectedLanguage = lang;
         }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading courses:', error);
-        this.isLoading = false;
+
+        // Si ya estamos en 'meetings', no forzamos 'options' para evitar reseteo
+        if (this.step !== 'meetings') {
+          this.step = 'options';
+        }
+      } else {
+        // Only reset if we are not navigating away (which shouldn't happen here but safe to check)
+        this.step = 'initial';
+        this.selectedLanguage = null;
       }
     });
   }
 
-  openForm(language: string): void {
+  loadPrecio(): void {
+    this.isLoadingPrice = true;
+    this.programaAyoService.getPrecioProgramaAyo().subscribe({
+      next: (response) => {
+        if (response.data && response.data.length > 0) {
+          this.precioData = response.data[0];
+        }
+        this.isLoadingPrice = false;
+      },
+      error: (error) => {
+        console.error('Error loading price:', error);
+        this.isLoadingPrice = false;
+      }
+    });
+  }
+
+  startEditingPrice(): void {
+    if (this.precioData) {
+      this.tempPrice = this.precioData.precio;
+      this.isEditingPrice = true;
+    }
+  }
+
+  cancelEditingPrice(): void {
+    this.isEditingPrice = false;
+    this.tempPrice = 0;
+  }
+
+  savePrice(): void {
+    if (this.precioData && this.precioData.id) {
+      this.isSavingPrice = true;
+      this.programaAyoService.updatePrecioProgramaAyo(this.precioData.id, this.tempPrice).subscribe({
+        next: (response) => {
+          if (response.data) {
+            this.precioData = response.data;
+            this.isEditingPrice = false;
+          }
+          this.isSavingPrice = false;
+        },
+        error: (error) => {
+          console.error('Error updating price:', error);
+          this.isSavingPrice = false;
+        }
+      });
+    }
+  }
+
+  selectLanguage(language: string): void {
     this.selectedLanguage = language;
-    this.showForm = true;
+    this.step = 'options';
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { idioma: language },
+      queryParamsHandling: 'merge'
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  closeForm(): void {
-    this.showForm = false;
-    this.selectedLanguage = null;
+  openCreateForm(): void {
+    if (this.selectedLanguage) {
+        this.router.navigate(['/private/ayo/create'], { queryParams: { idioma: this.selectedLanguage } });
+    } else {
+        console.error('No language selected');
+    }
   }
 
-  onColegioAdded(): void {
-    this.closeForm();
-    this.loadCourses();
+  openMeetings(): void {
+    if (this.selectedLanguage) {
+      this.router.navigate(['/private/ayo/list-meet'], { queryParams: { idioma: this.selectedLanguage } });
+    } else {
+      this.router.navigate(['/private/ayo/list-meet']);
+    }
+  }
+
+  goBack(): void {
+    if (this.step === 'meetings') {
+      this.step = 'options';
+    } else if (this.step === 'options') {
+      this.step = 'initial';
+      this.selectedLanguage = null;
+      // Limpiamos los parámetros de la URL usando navegación relativa para mantener el contexto
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { idioma: null },
+        queryParamsHandling: 'merge'
+      });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

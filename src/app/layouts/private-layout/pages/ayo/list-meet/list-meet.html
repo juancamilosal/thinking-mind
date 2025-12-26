@@ -1,0 +1,414 @@
+<div class="p-6 min-h-screen ayo-container">
+    <div class="mb-6">
+        <button (click)="goBack()" class="back-button">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+            Volver
+        </button>
+    </div>
+
+    <div class="mb-10 header-section">
+        <h1 class="page-title">
+            Programas AYO
+        </h1>
+        <p class="page-subtitle">Gestión de programas creados</p>
+    </div>
+
+    @if (isLoading) {
+    <div class="programs-grid">
+        @for (item of [1,2,3,4,5,6]; track item) {
+        <div class="program-card skeleton">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-line w-75"></div>
+            <div class="skeleton-line w-50"></div>
+            <div class="skeleton-line w-50"></div>
+            <div class="skeleton-button"></div>
+        </div>
+        }
+    </div>
+    } @else {
+    @if (programas.length === 0) {
+    <div class="empty-state">
+        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <p class="empty-text">No hay programas creados.</p>
+    </div>
+    } @else {
+    <div class="programs-grid">
+        @if (viewMode === 'groups') {
+            @for (group of programGroups; track group.tematica) {
+            <div class="program-card group-card cursor-pointer hover:shadow-2xl transition-all duration-300 relative overflow-hidden h-96 group" (click)="selectGroup(group)">
+                <!-- Background Image -->
+                @if (group.img && group.img.id) {
+                <img [src]="'https://api.appthinkingmind.com/assets/' + group.img.id"
+                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                     alt="Imagen del programa">
+                } @else {
+                <div class="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                    <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                }
+
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+
+                <!-- Content -->
+                <div class="absolute bottom-0 left-0 right-0 p-6 z-10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <h3 class="text-3xl font-bold text-white mb-4 leading-tight drop-shadow-md">{{ group.tematica }}</h3>
+
+                    <div class="flex items-center gap-3">
+                        <div class="bg-white/20 backdrop-blur-md p-2 rounded-lg border border-white/10">
+                             <img src="assets/icons/nivel.png" class="w-6 h-6 object-contain brightness-0 invert" alt="Nivel">
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-300 uppercase tracking-wider font-semibold">Nivel</span>
+                            <span class="text-white font-bold text-lg drop-shadow-sm">
+                                {{ group.nivel }}
+                                @if (group.subcategoria) { <span class="text-gray-300 font-normal">| {{ group.subcategoria }}</span> }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        } @else {
+            @for (programa of selectedGroup?.programs; track programa.id) {
+            <div class="program-card">
+                <!-- Header with gradient -->
+                <div class="card-header relative">
+                    <!-- Delete Program Button (Top Right) -->
+                    <button type="button" (click)="deleteProgram(programa)"
+                        class="absolute top-4 right-4 z-20 p-2 bg-white/90 text-red-600 rounded-full hover:bg-white transition-colors shadow-lg flex items-center justify-center"
+                        title="Eliminar Programa AYO">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+
+                    <div class="gradient-overlay"></div>
+                    <div class="header-content">
+                        <div class="icon-wrapper">
+                            @if (programa.img && programa.img.id) {
+                            <img [src]="'https://api.appthinkingmind.com/assets/' + programa.img.id" class="program-icon-img"
+                                alt="Imagen del programa">
+                            } @else {
+                            <svg class="program-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Program Title -->
+                <div class="card-body">
+                    <div class="program-title-section">
+                        <h3 class="program-language">{{ programa.id_nivel.tematica }}</h3>
+                        <p class="program-label">Programa AYO</p>
+                    </div>
+
+                    <!-- Program Details -->
+                    <div class="program-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <img src="assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
+                            </div>
+                            <div class="detail-content">
+                                <span class="detail-label">Finalización</span>
+                                <span class="detail-value">{{ programa.fecha_finalizacion | date:'mediumDate' }}</span>
+                            </div>
+                        </div>
+
+                        @if (programa.id_nivel) {
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <img src="assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
+                            </div>
+                            <div class="detail-content">
+                                <span class="detail-label">Nivel</span>
+                                <span class="detail-value">{{ programa.id_nivel.nivel }} | {{
+                                    programa.id_nivel.subcategoria}}</span>
+                            </div>
+                        </div>
+                        }
+
+                        <div class="detail-item highlight">
+                            <div class="detail-icon">
+                                <img src="assets/icons/precio.png" class="w-full h-full object-contain" alt="Precio">
+                            </div>
+                            <div class="detail-content">
+                                <span class="detail-label">Precio del Programa</span>
+                                <span class="detail-value price">{{ programa.moneda || '$' }} {{ programa.precio_curso |
+                                    number }}</span>
+                            </div>
+                        </div>
+
+                        @if (programa.programa_con_inscripcion) {
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                </svg>
+                            </div>
+                            <div class="detail-content">
+                                <span class="detail-label">Inscripción</span>
+                                <span class="detail-value">{{ programa.moneda || '$' }} {{ programa.precio_inscripcion |
+                                    number }}</span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Meetings Section -->
+                    @if (programa.id_reuniones_meet && programa.id_reuniones_meet.length > 0) {
+                    <div class="meetings-section">
+                        <h4 class="meetings-title">
+                            <img src="assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
+                            Reuniones Programadas
+                        </h4>
+                        <div class="meetings-list">
+                            @for (reunion of programa.id_reuniones_meet; track $index) {
+                            <div class="meeting-item">
+                                <div class="meeting-info">
+                                    <span class="meeting-day">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
+                                        {{ reunion.fecha_inicio | date:'EEEE' | titlecase }}
+                                    </span>
+                                    <span class="meeting-teacher">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">Docente:</span>
+                                        {{ reunion.id_docente?.first_name }} {{ reunion.id_docente?.last_name }}
+                                    </span>
+                                    <span class="meeting-time">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">Horario:</span>
+                                        {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion |
+                                        date:'shortTime' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-5">
+                                    @if (reunion.link_reunion) {
+                                    <a [href]="reunion.link_reunion" target="_blank" class="meeting-link"
+                                        title="Unirse a reunión">
+                                        <img src="assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                    </a>
+                                    }
+                                    <a (click)="openEditModal(reunion)" class="meeting-link"
+                                        title="Editar reunión">
+                                        <img src="assets/icons/editar.png" class="w-full h-full object-contain cursor-pointer" alt="Editar">
+                                    </a>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
+
+                    <!-- Actions Section -->
+                    <div class="flex justify-center mt-6 mb-2 w-full">
+                         <!-- Add Meeting Icon -->
+                         <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión" (click)="openAddMeetingModal(programa)">
+                    </div>
+                </div>
+            </div>
+            }
+        }
+    </div>
+    }
+    }
+
+    <!-- Edit Meeting Modal -->
+    @if (showEditModal) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeEditModal()">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            (click)="$event.stopPropagation()">
+
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <img src="assets/icons/editar.png" class="w-8 h-8 object-contain" alt="Editar">
+                    <h3 class="text-2xl font-bold text-gray-800" id="modal-title">
+                        Editar Reunión
+                    </h3>
+                </div>
+                <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form [formGroup]="editForm" (ngSubmit)="saveEditedMeeting()" class="space-y-6">
+                <!-- Fecha Inicio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+                    <input type="datetime-local" formControlName="fecha_inicio"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                </div>
+
+                <!-- Fecha Fin -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+                    <input type="datetime-local" formControlName="fecha_finalizacion"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                </div>
+
+                <!-- Docente Search -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Docente</label>
+                    <input type="text" id="teacherSearchTerm" formControlName="teacherSearchTerm"
+                        (input)="onTeacherSearch($event)" (focus)="onTeacherInputFocus()"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="Buscar docente..." autocomplete="off">
+                    @if (filteredTeachers.length > 0) {
+                    <div id="teacher-dropdown"
+                        class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        @for (teacher of filteredTeachers; track teacher.id) {
+                        <div (click)="selectTeacher(teacher)" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <div class="font-medium">{{ teacher.first_name }} {{ teacher.last_name }}
+                            </div>
+                            <div class="text-xs text-gray-500">{{ teacher.email }}</div>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" (click)="deleteMeeting(selectedMeeting)"
+                        class="px-4 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center justify-center"
+                        title="Eliminar reunión">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+
+                    <button type="button" (click)="closeEditModal()"
+                        class="flex-1 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium">
+                        Cancelar
+                    </button>
+                    <button type="submit" [disabled]="editForm.invalid"
+                        class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium disabled:opacity-50">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    }
+
+<!-- Add Meeting Modal -->
+@if (showAddMeetingModal) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+        <div class="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100">
+            <div class="flex items-center gap-2">
+                <img src="assets/icons/agregar-meet.png" class="w-8 h-8 object-contain" alt="Agregar">
+                <h3 class="text-xl font-bold text-gray-800">Agendar Nueva Reunión</h3>
+            </div>
+            <button (click)="closeAddMeetingModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <form [formGroup]="addMeetingForm" (ngSubmit)="createNewMeeting()" class="p-6">
+            <div class="space-y-4">
+                <!-- Title -->
+                <div>
+                    <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
+                    <input type="text" id="titulo" formControlName="titulo"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300"
+                        placeholder="Ej: Sesión de Inglés - Nivel A1">
+                    @if (addMeetingForm.get('titulo')?.invalid && addMeetingForm.get('titulo')?.touched) {
+                        <p class="mt-1 text-sm text-red-600">El título es requerido</p>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea id="descripcion" formControlName="descripcion" rows="3"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300"
+                        placeholder="Descripción opcional del evento..."></textarea>
+                </div>
+
+                <!-- Teacher Selection -->
+                <div class="relative">
+                    <label for="teacher-search-add" class="block text-sm font-medium text-gray-700 mb-1">Docente</label>
+                    <input type="text"
+                           id="teacher-search-add"
+                           formControlName="teacherSearchTerm"
+                           (input)="onTeacherSearch($event, true)"
+                           (focus)="onTeacherInputFocus(true)"
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300"
+                           placeholder="Buscar docente..."
+                           autocomplete="off">
+
+                    @if (filteredTeachers.length > 0) {
+                    <div id="teacher-dropdown-add" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        @for (teacher of filteredTeachers; track teacher.id) {
+                        <div (click)="selectTeacher(teacher, true)"
+                             class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3 transition-colors duration-150">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                {{ teacher.first_name.charAt(0) }}{{ teacher.last_name.charAt(0) }}
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ teacher.first_name }} {{ teacher.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ teacher.email }}</p>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    }
+                    @if (addMeetingForm.get('id_docente')?.invalid && addMeetingForm.get('id_docente')?.touched) {
+                        <p class="mt-1 text-sm text-red-600">Debe seleccionar un docente válido</p>
+                    }
+                </div>
+
+                <!-- Date & Time -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="fecha_inicio_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                        <input type="datetime-local" id="fecha_inicio_add" formControlName="fecha_inicio"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300">
+                        @if (addMeetingForm.get('fecha_inicio')?.invalid && addMeetingForm.get('fecha_inicio')?.touched) {
+                            <p class="mt-1 text-sm text-red-600">Fecha de inicio requerida</p>
+                        }
+                    </div>
+
+                    <div>
+                        <label for="fecha_finalizacion_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha Finalización</label>
+                        <input type="datetime-local" id="fecha_finalizacion_add" formControlName="fecha_finalizacion"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary border-gray-300">
+                        @if (addMeetingForm.get('fecha_finalizacion')?.invalid && addMeetingForm.get('fecha_finalizacion')?.touched) {
+                            <p class="mt-1 text-sm text-red-600">Fecha de finalización requerida</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button type="button" (click)="closeAddMeetingModal()"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Cancelar
+                </button>
+                <button type="submit" [disabled]="addMeetingForm.invalid"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    Crear Reunión
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+}
+</div>
