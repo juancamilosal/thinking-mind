@@ -8,7 +8,7 @@ import { UserService } from '../../../../../core/services/user.service';
 import { CourseService } from '../../../../../core/services/course.service';
 import { ProgramaAyo } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
-import { Meeting } from '../../../../../core/models/Meeting';
+import {Meeting, Nivel} from '../../../../../core/models/Meeting';
 import {ConfirmationService} from '../../../../../core/services/confirmation.service';
 
 declare var gapi: any;
@@ -24,7 +24,7 @@ declare var google: any;
 export class ListMeet implements OnInit {
 
   programas: ProgramaAyo[] = [];
-  programGroups: any[] = [];
+  programGroups: ProgramaAyo[] = [];
   selectedGroup: any = null;
   viewMode: 'groups' | 'details' = 'groups';
   isLoading = false;
@@ -99,7 +99,7 @@ export class ListMeet implements OnInit {
   onTeacherSearch(event: any, isAddMode: boolean = false): void {
     const searchTerm = event.target.value;
     const form = isAddMode ? this.addMeetingForm : this.editForm;
-    
+
     form.get('teacherSearchTerm')?.setValue(searchTerm);
 
     if (this.isTeacherSelected) {
@@ -154,7 +154,7 @@ export class ListMeet implements OnInit {
       this.filteredTeachers = [];
     }
   }
-  
+
   openAddMeetingModal(program: any): void {
       this.selectedProgramId = program.id;
       this.showAddMeetingModal = true;
@@ -253,7 +253,7 @@ export class ListMeet implements OnInit {
           });
 
           console.log('Google Calendar event created:', calendarResponse);
-          
+
           const meetingData = {
               id_reunion: calendarResponse.result.id,
               link_reunion: calendarResponse.result.hangoutLink,
@@ -272,7 +272,7 @@ export class ListMeet implements OnInit {
               error: (error) => {
                   console.error('Error creating meeting in backend:', error);
                   this.notificationService.showError('Error', 'No se pudo guardar la reunión en el sistema.');
-                  // Optionally delete from Google Calendar if backend fails? 
+                  // Optionally delete from Google Calendar if backend fails?
                   // For now, let's keep it simple.
               }
           });
@@ -419,7 +419,7 @@ export class ListMeet implements OnInit {
           eventId: this.selectedMeeting.id_reunion,
           resource: eventPatch
         });
-        
+
         console.log('Google Calendar event updated');
 
       } catch (error) {
@@ -452,7 +452,7 @@ export class ListMeet implements OnInit {
                     try {
                         // Ensure we have a valid token (refreshed if needed)
                         await this.ensureCalendarToken();
-                        
+
                         // Use gapi directly for deletion as it handles the session better
                         await gapi.client.calendar.events.delete({
                             calendarId: 'primary',
@@ -540,7 +540,7 @@ export class ListMeet implements OnInit {
 
     // If a group was selected, update it with new data
     if (this.selectedGroup) {
-      const updatedGroup = this.programGroups.find(g => g.tematica === this.selectedGroup.tematica);
+      const updatedGroup = this.programGroups.find(g => g.id_nivel.tematica === this.selectedGroup.tematica);
       if (updatedGroup) {
         this.selectedGroup = updatedGroup;
       } else {
