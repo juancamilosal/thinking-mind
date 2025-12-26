@@ -96,7 +96,7 @@
                                 <label for="tipoDocumento"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo de
                                     Documento</label>
-                                <select id="tipoDocumento" formControlName="tipoDocumento"
+                                <select id="tipoDocumento" formControlName="tipoDocumento" (change)="onGuardianDocumentTypeChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
                                   <option value="" disabled selected>Selecciona una opción</option>
                                   @for (type  of DOCUMENT_TYPE; track type) {
@@ -109,15 +109,20 @@
                                 <label for="numeroDocumento"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
                                     Documento</label>
-                                <input type="text" id="numeroDocumento" formControlName="numeroDocumento"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Ej: 1000123456">
+                                <div class="relative">
+                                    <input type="text" id="numeroDocumento" formControlName="numeroDocumento" (blur)="onGuardianDocumentNumberChange($event)"
+                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                        placeholder="Ej: 1000123456">
+                                    <div *ngIf="isSearchingClient" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                        <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="space-y-3 group">
                                 <label for="nombre"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
-                                <input type="text" id="nombre" formControlName="nombre"
+                                <input type="text" id="nombre" formControlName="nombre" (input)="onGuardianNameChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Ingresa tu nombre">
                             </div>
@@ -125,7 +130,7 @@
                             <div class="space-y-3 group">
                                 <label for="apellido"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
-                                <input type="text" id="apellido" formControlName="apellido"
+                                <input type="text" id="apellido" formControlName="apellido" (input)="onGuardianSurnameChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Ingresa tu apellido">
                             </div>
@@ -174,7 +179,7 @@
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo
                                     de
                                     Documento</label>
-                                <select id="studentTipoDocumento" formControlName="studentTipoDocumento"
+                                <select id="studentTipoDocumento" formControlName="studentTipoDocumento" (change)="onStudentDocumentTypeChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
                                     <option value="" disabled selected>Selecciona una opción</option>
                                   @for (type  of DOCUMENT_TYPE; track type) {
@@ -188,15 +193,20 @@
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número
                                     de
                                     Documento</label>
-                                <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Ej: 1000123456">
+                                <div class="relative">
+                                    <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)"
+                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                        placeholder="Ej: 1000123456">
+                                    <div *ngIf="isSearchingStudent" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                        <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="space-y-3 group">
                                 <label for="studentNombre"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
-                                <input type="text" id="studentNombre" formControlName="studentNombre"
+                                <input type="text" id="studentNombre" formControlName="studentNombre" (input)="onStudentNameChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Nombre del estudiante">
                             </div>
@@ -204,7 +214,7 @@
                             <div class="space-y-3 group">
                                 <label for="studentApellido"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
-                                <input type="text" id="studentApellido" formControlName="studentApellido"
+                                <input type="text" id="studentApellido" formControlName="studentApellido" (input)="onStudentSurnameChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Apellido del estudiante">
                             </div>
@@ -226,7 +236,7 @@
                             <div class="space-y-3 md:col-span-2 group">
                                 <label for="studentColegio"
                                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Colegio</label>
-                                <input type="text" id="studentColegio" formControlName="studentColegio"
+                                <input type="text" id="studentColegio" formControlName="studentColegio" (input)="onStudentSchoolChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Nombre del colegio">
                             </div>
