@@ -23,6 +23,7 @@ export class AyoComponent implements OnInit {
   
   // Precio Programa AYO
   precioData: PrecioProgramaAyo | null = null;
+  isLoadingPrice: boolean = true;
   isEditingPrice: boolean = false;
   tempPrice: number = 0;
   isSavingPrice: boolean = false;
@@ -61,14 +62,17 @@ export class AyoComponent implements OnInit {
   }
 
   loadPrecio(): void {
+    this.isLoadingPrice = true;
     this.programaAyoService.getPrecioProgramaAyo().subscribe({
       next: (response) => {
         if (response.data && response.data.length > 0) {
           this.precioData = response.data[0];
         }
+        this.isLoadingPrice = false;
       },
       error: (error) => {
         console.error('Error loading price:', error);
+        this.isLoadingPrice = false;
       }
     });
   }
