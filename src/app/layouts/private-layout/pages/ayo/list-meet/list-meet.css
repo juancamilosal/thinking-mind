@@ -23,21 +23,7 @@
    ======================================== */
 .ayo-container {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
     position: relative;
-}
-
-.ayo-container::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 300px;
-    background: var(--ayo-gradient);
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 0;
 }
 
 /* ========================================
