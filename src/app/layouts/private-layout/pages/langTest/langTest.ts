@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { HttpClientModule } from '@angular/common/http';
 import { LangTestService } from '../../../../core/services/langTest.service';
 import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestModels';
@@ -7,7 +7,7 @@ import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestMode
 @Component({
   selector: 'app-test',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [HttpClientModule],
   templateUrl: './langTest.html',
 })
 

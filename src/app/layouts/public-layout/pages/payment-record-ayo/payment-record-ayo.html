@@ -1,478 +1,482 @@
 <div class="min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
 
-    <!-- Decorative background elements similar to payment-record -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-            class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-[#1c6ea4] to-[#0d324d] rounded-full opacity-20 blur-3xl">
-        </div>
-        <div
-            class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#13486e] to-[#082032] rounded-full opacity-20 blur-3xl">
-        </div>
-        <div
-            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-[#1c6ea4] via-[#13486e] to-[#0d324d] rounded-full opacity-15 blur-3xl">
-        </div>
+  <!-- Decorative background elements similar to payment-record -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div
+      class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-[#1c6ea4] to-[#0d324d] rounded-full opacity-20 blur-3xl">
     </div>
+    <div
+      class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#13486e] to-[#082032] rounded-full opacity-20 blur-3xl">
+    </div>
+    <div
+      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-[#1c6ea4] via-[#13486e] to-[#0d324d] rounded-full opacity-15 blur-3xl">
+    </div>
+  </div>
 
-    <div class="relative z-10 p-6">
-        <div class="max-w-6xl mx-auto">
+  <div class="relative z-10 p-6">
+    <div class="max-w-6xl mx-auto">
 
-            <!-- Header Section (Matching structure with AYO styling) -->
-            <div class="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 text-white shadow-2xl border border-white/10">
-                <div class="text-center">
-                    <div class="flex justify-center mb-6">
-                        <div class="p-4 w-[200px] h-[200px] flex items-center justify-center">
-                            <img src="assets/icons/ayo.png" alt="Logo AYO" class="w-56 h-56 object-contain">
-                        </div>
-                    </div>
-                    <h1 class="text-3xl md:text-6xl font-bold mb-5 text-white drop-shadow-md">Portal de Pagos AYO</h1>
-
-                    <p class="text-xl mb-6 text-blue-50 max-w-2xl mx-auto font-light">
-                        Consulta tu estado, historial de pagos y accede 24/7 de manera fácil y segura.
-                    </p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                        <div
-                            class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
-                            <div class="flex justify-center mb-3">
-                                <span class="text-3xl">🔒</span>
-                            </div>
-                            <h3 class="font-semibold mb-2 text-white text-lg">Registro Seguro</h3>
-                            <p class="text-sm text-blue-100">Información protegida y encriptada</p>
-                        </div>
-                        <div
-                            class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
-                            <div class="flex justify-center mb-3">
-                                <span class="text-3xl">⚡</span>
-                            </div>
-                            <h3 class="font-semibold mb-2 text-white text-lg">Proceso Rápido</h3>
-                            <p class="text-sm text-blue-100">Consulta y pago en minutos</p>
-                        </div>
-                        <div
-                            class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
-                            <div class="flex justify-center mb-3">
-                                <span class="text-3xl">🕒</span>
-                            </div>
-                            <h3 class="font-semibold mb-2 text-white text-lg">Atención 24/7</h3>
-                            <p class="text-sm text-blue-100">Acceso permanente al sistema</p>
-                        </div>
-                    </div>
-                </div>
+      <!-- Header Section (Matching structure with AYO styling) -->
+      <div class="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 text-white shadow-2xl border border-white/10">
+        <div class="text-center">
+          <div class="flex justify-center mb-6">
+            <div class="p-4 w-[200px] h-[200px] flex items-center justify-center">
+              <img src="assets/icons/ayo.png" alt="Logo AYO" class="w-56 h-56 object-contain">
             </div>
+          </div>
+          <h1 class="text-3xl md:text-6xl font-bold mb-5 text-white drop-shadow-md">Portal de Pagos AYO</h1>
 
-            @if (!showConfirmation) {
-            <!-- Instructions Section -->
+          <p class="text-xl mb-6 text-blue-50 max-w-2xl mx-auto font-light">
+            Consulta tu estado, historial de pagos y accede 24/7 de manera fácil y segura.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
             <div
-                class="bg-gradient-to-r from-orange-600 to-amber-500 shadow-lg p-6 mb-8 rounded-2xl border border-orange-400/30">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-white/20 rounded-full p-2">
-                        <span class="text-xl text-white">ℹ️</span>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-bold text-white mb-2">Instrucciones para el registro y consulta</h3>
-                        <ul class="text-orange-50 space-y-1 font-medium text-sm md:text-base">
-                            <li>• Complete la información del acudiente (persona responsable del pago).</li>
-                            <li>• Todos los campos son obligatorios para garantizar un contacto efectivo.</li>
-                        </ul>
-                    </div>
-                </div>
+              class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
+              <div class="flex justify-center mb-3">
+                <span class="text-3xl">🔒</span>
+              </div>
+              <h3 class="font-semibold mb-2 text-white text-lg">Registro Seguro</h3>
+              <p class="text-sm text-blue-100">Información protegida y encriptada</p>
             </div>
+            <div
+              class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
+              <div class="flex justify-center mb-3">
+                <span class="text-3xl">⚡</span>
+              </div>
+              <h3 class="font-semibold mb-2 text-white text-lg">Proceso Rápido</h3>
+              <p class="text-sm text-blue-100">Consulta y pago en minutos</p>
+            </div>
+            <div
+              class="bg-[#13486e]/60 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-lg hover:-translate-y-1 transition-transform duration-200">
+              <div class="flex justify-center mb-3">
+                <span class="text-3xl">🕒</span>
+              </div>
+              <h3 class="font-semibold mb-2 text-white text-lg">Atención 24/7</h3>
+              <p class="text-sm text-blue-100">Acceso permanente al sistema</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Form Section -->
-            <div>
-                <form [formGroup]="paymentForm" (ngSubmit)="onContinue()" class="space-y-8">
+      @if (!showConfirmation) {
+        <!-- Instructions Section -->
+        <div
+          class="bg-gradient-to-r from-orange-600 to-amber-500 shadow-lg p-6 mb-8 rounded-2xl border border-orange-400/30">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 bg-white/20 rounded-full p-2">
+              <span class="text-xl text-white">ℹ️</span>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-bold text-white mb-2">Instrucciones para el registro y consulta</h3>
+              <ul class="text-orange-50 space-y-1 font-medium text-sm md:text-base">
+                <li>• Complete la información del acudiente (persona responsable del pago).</li>
+                <li>• Todos los campos son obligatorios para garantizar un contacto efectivo.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
-                    <!-- Guardian Info Card -->
-                    <!-- Using white card to keep AYO "clean" look but with payment-record structure -->
-                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                        <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
-                            <div class="bg-gradient-to-r  p-3 mr-4">
-                                <img src="assets/icons/acudiente.png" alt="Icono Acudiente" class="w-24 h-24">
-                            </div>
-                            <h3 class="text-2xl font-bold text-[#13486e]">Información del Acudiente</h3>
+        <!-- Form Section -->
+        <div>
+          <form [formGroup]="paymentForm" (ngSubmit)="onContinue()" class="space-y-8">
+
+            <!-- Guardian Info Card -->
+            <!-- Using white card to keep AYO "clean" look but with payment-record structure -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
+                <div class="bg-gradient-to-r  p-3 mr-4">
+                  <img src="assets/icons/acudiente.png" alt="Icono Acudiente" class="w-24 h-24">
+                </div>
+                <h3 class="text-2xl font-bold text-[#13486e]">Información del Acudiente</h3>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Input Groups with improved styling matching payment-record input height/feel -->
+                <div class="space-y-3 group">
+                  <label for="tipoDocumento"
+                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo de
+                  Documento</label>
+                  <select id="tipoDocumento" formControlName="tipoDocumento" (change)="onGuardianDocumentTypeChange($event)"
+                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
+                    <option value="" disabled selected>Selecciona una opción</option>
+                    @for (type  of DOCUMENT_TYPE; track type) {
+                      <option [value]="type.id">{{ type.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="space-y-3 group">
+                  <label for="numeroDocumento"
+                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
+                  Documento</label>
+                  <div class="relative">
+                    <input type="text" id="numeroDocumento" formControlName="numeroDocumento" (blur)="onGuardianDocumentNumberChange($event)"
+                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                      placeholder="Ej: 1000123456">
+                      @if (isSearchingClient) {
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
                         </div>
+                      }
+                    </div>
+                  </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Input Groups with improved styling matching payment-record input height/feel -->
-                            <div class="space-y-3 group">
-                                <label for="tipoDocumento"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo de
-                                    Documento</label>
-                                <select id="tipoDocumento" formControlName="tipoDocumento" (change)="onGuardianDocumentTypeChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
-                                  <option value="" disabled selected>Selecciona una opción</option>
-                                  @for (type  of DOCUMENT_TYPE; track type) {
-                                    <option [value]="type.id">{{ type.name }}</option>
-                                  }
-                                </select>
-                            </div>
-
-                            <div class="space-y-3 group">
-                                <label for="numeroDocumento"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
-                                    Documento</label>
-                                <div class="relative">
-                                    <input type="text" id="numeroDocumento" formControlName="numeroDocumento" (blur)="onGuardianDocumentNumberChange($event)"
-                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                        placeholder="Ej: 1000123456">
-                                    <div *ngIf="isSearchingClient" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                        <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3 group">
-                                <label for="nombre"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
-                                <input type="text" id="nombre" formControlName="nombre" (input)="onGuardianNameChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Ingresa tu nombre">
-                            </div>
-
-                            <div class="space-y-3 group">
-                                <label for="apellido"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
-                                <input type="text" id="apellido" formControlName="apellido" (input)="onGuardianSurnameChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Ingresa tu apellido">
-                            </div>
-
-                            <div class="space-y-3 group">
-                                <label for="celular"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
-                                    Celular</label>
-                                <input type="tel" id="celular" formControlName="celular"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Ej: 3001234567">
-                            </div>
-
-                            <div class="space-y-3 group">
-                                <label for="email"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
-                                    Electrónico</label>
-                                <input type="email" id="email" formControlName="email"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="nombre@ejemplo.com">
-                            </div>
-
-                            <!-- Full width address -->
-                            <div class="space-y-3 md:col-span-2 group">
-                                <label for="direccion"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Dirección</label>
-                                <input type="text" id="direccion" formControlName="direccion"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Dirección completa de residencia">
-                            </div>
-                        </div>
+                  <div class="space-y-3 group">
+                    <label for="nombre"
+                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
+                    <input type="text" id="nombre" formControlName="nombre" (input)="onGuardianNameChange($event)"
+                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                      placeholder="Ingresa tu nombre">
                     </div>
 
-                    <!-- Student Info Card -->
-                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                        <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
+                    <div class="space-y-3 group">
+                      <label for="apellido"
+                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
+                      <input type="text" id="apellido" formControlName="apellido" (input)="onGuardianSurnameChange($event)"
+                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                        placeholder="Ingresa tu apellido">
+                      </div>
+
+                      <div class="space-y-3 group">
+                        <label for="celular"
+                          class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
+                        Celular</label>
+                        <input type="tel" id="celular" formControlName="celular"
+                          class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                          placeholder="Ej: 3001234567">
+                        </div>
+
+                        <div class="space-y-3 group">
+                          <label for="email"
+                            class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
+                          Electrónico</label>
+                          <input type="email" id="email" formControlName="email"
+                            class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                            placeholder="nombre@ejemplo.com">
+                          </div>
+
+                          <!-- Full width address -->
+                          <div class="space-y-3 md:col-span-2 group">
+                            <label for="direccion"
+                            class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Dirección</label>
+                            <input type="text" id="direccion" formControlName="direccion"
+                              class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                              placeholder="Dirección completa de residencia">
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Student Info Card -->
+                        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                          <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
                             <div class="bg-gradient-to-r  p-3 mr-4">
-                                <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24">
+                              <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24">
                             </div>
                             <h3 class="text-2xl font-bold text-[#13486e]">Información del Estudiante</h3>
-                        </div>
+                          </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-3 group">
-                                <label for="studentTipoDocumento"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo
-                                    de
-                                    Documento</label>
-                                <select id="studentTipoDocumento" formControlName="studentTipoDocumento" (change)="onStudentDocumentTypeChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
-                                    <option value="" disabled selected>Selecciona una opción</option>
-                                  @for (type  of DOCUMENT_TYPE; track type) {
-                                    <option [value]="type.id">{{ type.name }}</option>
-                                  }
-                                </select>
+                              <label for="studentTipoDocumento"
+                                class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo
+                                de
+                              Documento</label>
+                              <select id="studentTipoDocumento" formControlName="studentTipoDocumento" (change)="onStudentDocumentTypeChange($event)"
+                                class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
+                                <option value="" disabled selected>Selecciona una opción</option>
+                                @for (type  of DOCUMENT_TYPE; track type) {
+                                  <option [value]="type.id">{{ type.name }}</option>
+                                }
+                              </select>
                             </div>
 
                             <div class="space-y-3 group">
-                                <label for="studentNumeroDocumento"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número
-                                    de
-                                    Documento</label>
-                                <div class="relative">
-                                    <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)"
-                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                        placeholder="Ej: 1000123456">
-                                    <div *ngIf="isSearchingStudent" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                        <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
+                              <label for="studentNumeroDocumento"
+                                class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número
+                                de
+                              Documento</label>
+                              <div class="relative">
+                                <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)"
+                                  class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                  placeholder="Ej: 1000123456">
+                                  @if (isSearchingStudent) {
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                      <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
                                     </div>
+                                  }
                                 </div>
-                            </div>
+                              </div>
 
-                            <div class="space-y-3 group">
+                              <div class="space-y-3 group">
                                 <label for="studentNombre"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
+                                class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre</label>
                                 <input type="text" id="studentNombre" formControlName="studentNombre" (input)="onStudentNameChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Nombre del estudiante">
-                            </div>
+                                  class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                  placeholder="Nombre del estudiante">
+                                </div>
 
-                            <div class="space-y-3 group">
-                                <label for="studentApellido"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
-                                <input type="text" id="studentApellido" formControlName="studentApellido" (input)="onStudentSurnameChange($event)"
+                                <div class="space-y-3 group">
+                                  <label for="studentApellido"
+                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido</label>
+                                  <input type="text" id="studentApellido" formControlName="studentApellido" (input)="onStudentSurnameChange($event)"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Apellido del estudiante">
-                            </div>
+                                  </div>
 
-                            <div class="space-y-3 group md:col-span-2">
-                                <label for="studentEmail"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
+                                  <div class="space-y-3 group md:col-span-2">
+                                    <label for="studentEmail"
+                                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo
                                     Electrónico</label>
-                                <input type="email" id="studentEmail" formControlName="studentEmail"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="estudiante@gmail.com">
-                                <p class="text-sm text-gray-600 mt-2 flex items-start gap-2">
-                                    <span class="text-orange-500 flex-shrink-0">ℹ️</span>
-                                    <span>Para poder registrarse, el correo del estudiante debe ser un correo electrónico de Gmail. Si no tiene
+                                    <input type="email" id="studentEmail" formControlName="studentEmail"
+                                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                      placeholder="estudiante@gmail.com">
+                                      <p class="text-sm text-gray-600 mt-2 flex items-start gap-2">
+                                        <span class="text-orange-500 flex-shrink-0">ℹ️</span>
+                                        <span>Para poder registrarse, el correo del estudiante debe ser un correo electrónico de Gmail. Si no tiene
                                         uno, lo invitamos a crearlo para poder registrarse.</span>
-                                </p>
-                            </div>
+                                      </p>
+                                    </div>
 
-                            <div class="space-y-3 md:col-span-2 group">
-                                <label for="studentColegio"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Colegio</label>
-                                <input type="text" id="studentColegio" formControlName="studentColegio" (input)="onStudentSchoolChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Nombre del colegio">
-                            </div>
+                                    <div class="space-y-3 md:col-span-2 group">
+                                      <label for="studentColegio"
+                                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Colegio</label>
+                                      <input type="text" id="studentColegio" formControlName="studentColegio" (input)="onStudentSchoolChange($event)"
+                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                        placeholder="Nombre del colegio">
+                                      </div>
 
-                        </div>
-                    </div>
+                                    </div>
+                                  </div>
 
-                    <!-- Program Price Card -->
-                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                        <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
-                            <div class="p-3 mr-4 flex items-center justify-center w-24 h-24">
-                                <img src="assets/icons/ayo.png" alt="Logo AYO" class="w-full h-full object-contain">
-                            </div>
-                            <h3 class="text-2xl font-bold text-[#13486e]">Valor del Programa</h3>
-                        </div>
+                                  <!-- Program Price Card -->
+                                  <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                                    <div class="flex items-center mb-6 border-b border-gray-100 pb-4">
+                                      <div class="p-3 mr-4 flex items-center justify-center w-24 h-24">
+                                        <img src="assets/icons/ayo.png" alt="Logo AYO" class="w-full h-full object-contain">
+                                      </div>
+                                      <h3 class="text-2xl font-bold text-[#13486e]">Valor del Programa</h3>
+                                    </div>
 
-                        <div class="flex flex-col items-center justify-center p-8 bg-blue-50/30 rounded-xl border border-blue-100/50">
-                            @if (precioPrograma) {
-                                <span class="text-gray-500 font-semibold mb-3 uppercase tracking-wider text-sm">Inversión Total</span>
-                                <div class="flex items-baseline gap-2">
-                                    <span class="text-5xl md:text-6xl font-extrabold text-[#1c6ea4] drop-shadow-sm">$ {{ precioPrograma.precio | number:'1.0-0' }}</span>
-                                    <span class="text-xl text-gray-400 font-medium">COP</span>
-                                </div>
-                                <p class="text-sm text-gray-400 mt-4 text-center max-w-md">
-                                    Este valor cubre todos los beneficios del programa AYO.
-                                </p>
+                                    <div class="flex flex-col items-center justify-center p-8 bg-blue-50/30 rounded-xl border border-blue-100/50">
+                                      @if (precioPrograma) {
+                                        <span class="text-gray-500 font-semibold mb-3 uppercase tracking-wider text-sm">Inversión Total</span>
+                                        <div class="flex items-baseline gap-2">
+                                          <span class="text-5xl md:text-6xl font-extrabold text-[#1c6ea4] drop-shadow-sm">$ {{ precioPrograma.precio | number:'1.0-0' }}</span>
+                                          <span class="text-xl text-gray-400 font-medium">COP</span>
+                                        </div>
+                                        <p class="text-sm text-gray-400 mt-4 text-center max-w-md">
+                                          Este valor cubre todos los beneficios del programa AYO.
+                                        </p>
+                                      } @else {
+                                        <div class="animate-pulse flex flex-col items-center w-full">
+                                          <div class="h-4 w-32 bg-gray-200 rounded mb-4"></div>
+                                          <div class="h-12 w-64 bg-gray-200 rounded mb-2"></div>
+                                          <div class="h-3 w-40 bg-gray-200 rounded"></div>
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+
+                                  <!-- Main Submit Button -->
+                                  <div class="mt-8 flex justify-center">
+                                    <button type="submit" [disabled]="paymentForm.invalid || isLoading"
+                                      class="min-w-[280px] bg-gradient-to-r from-[#13486e] to-[#1c6ea4] hover:from-[#0d324d] hover:to-[#13486e] text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
+                                      @if (!isLoading) {
+                                        <span>Continuar</span>
+                                      }
+                                      @if (isLoading) {
+                                        <div class="spinner border-t-white/100 border-white/30"></div>
+                                      }
+                                    </button>
+                                  </div>
+
+                                </form>
+                              </div>
                             } @else {
-                                <div class="animate-pulse flex flex-col items-center w-full">
-                                    <div class="h-4 w-32 bg-gray-200 rounded mb-4"></div>
-                                    <div class="h-12 w-64 bg-gray-200 rounded mb-2"></div>
-                                    <div class="h-3 w-40 bg-gray-200 rounded"></div>
+                              <!-- Pantalla de Confirmación -->
+                              <div class="bg-gradient-to-br from-[#1c6ea4] via-[#13486e] to-[#0d324d] rounded-3xl p-8 mb-8 text-white shadow-2xl border border-[#13486e]/50">
+                                <div class="text-center mb-8">
+                                  <div class="flex justify-center mb-6">
+                                    <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                      <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                      </div>
+                                    </div>
+                                    <h1 class="text-4xl font-bold mb-4 text-white">Confirmar Información</h1>
+                                    <p class="text-xl mb-6 text-blue-200">Por favor revisa que toda la información esté correcta antes de proceder</p>
+                                  </div>
                                 </div>
-                            }
-                        </div>
-                    </div>
 
-                    <!-- Main Submit Button -->
-                    <div class="mt-8 flex justify-center">
-                        <button type="submit" [disabled]="paymentForm.invalid || isLoading"
-                            class="min-w-[280px] bg-gradient-to-r from-[#13486e] to-[#1c6ea4] hover:from-[#0d324d] hover:to-[#13486e] text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
-                            @if (!isLoading) {
-                            <span>Continuar</span>
-                            }
-                            @if (isLoading) {
-                            <div class="spinner border-t-white/100 border-white/30"></div>
-                            }
-                        </button>
-                    </div>
+                                <!-- Resumen de Información -->
+                                <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+                                  <div class="p-8">
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                </form>
-            </div>
-            } @else {
-            <!-- Pantalla de Confirmación -->
-            <div class="bg-gradient-to-br from-[#1c6ea4] via-[#13486e] to-[#0d324d] rounded-3xl p-8 mb-8 text-white shadow-2xl border border-[#13486e]/50">
-              <div class="text-center mb-8">
-                <div class="flex justify-center mb-6">
-                  <div class="bg-white bg-opacity-20 rounded-full p-4">
-                    <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                  </div>
-                </div>
-                <h1 class="text-4xl font-bold mb-4 text-white">Confirmar Información</h1>
-                <p class="text-xl mb-6 text-blue-200">Por favor revisa que toda la información esté correcta antes de proceder</p>
-              </div>
-            </div>
+                                      <!-- Información del Acudiente -->
+                                      <div class="space-y-6">
+                                        <div class="border-b border-gray-200 pb-4">
+                                          <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
+                                            <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                              </svg>
+                                              Información del Acudiente
+                                            </h2>
+                                          </div>
 
-            <!-- Resumen de Información -->
-            <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-              <div class="p-8">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                          <div class="space-y-4">
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                              <span class="font-medium text-gray-600">Tipo de Documento:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('tipoDocumento')?.value }}</span>
+                                            </div>
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                              <span class="font-medium text-gray-600">Número de Documento:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('numeroDocumento')?.value }}</span>
+                                            </div>
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                              <span class="font-medium text-gray-600">Nombres:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('nombre')?.value }}</span>
+                                            </div>
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                              <span class="font-medium text-gray-600">Apellidos:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('apellido')?.value }}</span>
+                                            </div>
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                              <span class="font-medium text-gray-600">Celular:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('celular')?.value }}</span>
+                                            </div>
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                              <span class="font-medium text-gray-600">Correo Electrónico:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('email')?.value }}</span>
+                                            </div>
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2">
+                                              <span class="font-medium text-gray-600">Dirección:</span>
+                                              <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:text-right">{{ paymentForm.get('direccion')?.value }}</span>
+                                            </div>
+                                          </div>
+                                        </div>
 
-                  <!-- Información del Acudiente -->
-                  <div class="space-y-6">
-                    <div class="border-b border-gray-200 pb-4">
-                      <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        Información del Acudiente
-                      </h2>
-                    </div>
+                                        <!-- Información del Estudiante -->
+                                        <div class="space-y-6">
+                                          <div class="border-b border-gray-200 pb-4">
+                                            <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
+                                              <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                                </svg>
+                                                Información del Estudiante
+                                              </h2>
+                                            </div>
 
-                    <div class="space-y-4">
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Tipo de Documento:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('tipoDocumento')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Número de Documento:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('numeroDocumento')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Nombres:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('nombre')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Apellidos:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('apellido')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Celular:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('celular')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Correo Electrónico:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('email')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2">
-                        <span class="font-medium text-gray-600">Dirección:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:text-right">{{ paymentForm.get('direccion')?.value }}</span>
-                      </div>
-                    </div>
-                  </div>
+                                            <div class="space-y-4">
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                                <span class="font-medium text-gray-600">Tipo de Documento:</span>
+                                                <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentTipoDocumento')?.value }}</span>
+                                              </div>
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                                <span class="font-medium text-gray-600">Número de Documento:</span>
+                                                <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentNumeroDocumento')?.value }}</span>
+                                              </div>
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                                <span class="font-medium text-gray-600">Nombres:</span>
+                                                <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentNombre')?.value }}</span>
+                                              </div>
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                                <span class="font-medium text-gray-600">Apellidos:</span>
+                                                <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentApellido')?.value }}</span>
+                                              </div>
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                                <span class="font-medium text-gray-600">Correo Electrónico:</span>
+                                                <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentEmail')?.value }}</span>
+                                              </div>
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                                                <span class="font-medium text-gray-600">Colegio:</span>
+                                                <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentColegio')?.value }}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
 
-                  <!-- Información del Estudiante -->
-                  <div class="space-y-6">
-                    <div class="border-b border-gray-200 pb-4">
-                      <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                        Información del Estudiante
-                      </h2>
-                    </div>
+                                        <!-- Información del Programa -->
+                                        <div class="mt-8 pt-8 border-t border-gray-200">
+                                          <div class="border-b border-gray-200 pb-4 mb-6">
+                                            <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
+                                              <svg class="w-6 h-6 mr-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                                </svg>
+                                                Información del Programa
+                                              </h2>
+                                            </div>
 
-                    <div class="space-y-4">
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Tipo de Documento:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentTipoDocumento')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Número de Documento:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentNumeroDocumento')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Nombres:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentNombre')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Apellidos:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentApellido')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Correo Electrónico:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentEmail')?.value }}</span>
-                      </div>
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
-                        <span class="font-medium text-gray-600">Colegio:</span>
-                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentColegio')?.value }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                              <!-- Columna 1: Programa Seleccionado -->
+                                              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gray-50 rounded-lg">
+                                                <span class="font-medium text-gray-600">Programa Seleccionado:</span>
+                                                <span class="text-gray-800 font-semibold mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">
+                                                  {{ precioPrograma?.nombre || 'Programa AYO' }}
+                                                </span>
+                                              </div>
 
-                <!-- Información del Programa -->
-                <div class="mt-8 pt-8 border-t border-gray-200">
-                  <div class="border-b border-gray-200 pb-4 mb-6">
-                    <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
-                      <svg class="w-6 h-6 mr-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                      </svg>
-                      Información del Programa
-                    </h2>
-                  </div>
+                                              <!-- Columna 2: Precio -->
+                                              <div class="flex flex-col gap-6">
+                                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                                                  <span class="font-medium text-gray-600">Precio Total:</span>
+                                                  <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
 
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Columna 1: Programa Seleccionado -->
-                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gray-50 rounded-lg">
-                      <span class="font-medium text-gray-600">Programa Seleccionado:</span>
-                      <span class="text-gray-800 font-semibold mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">
-                        {{ precioPrograma?.nombre || 'Programa AYO' }}
-                      </span>
-                    </div>
+                                          <!-- Botones de Acción -->
+                                          <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-8 border-t border-gray-200">
+                                            <button
+                                              type="button"
+                                              (click)="onEdit()"
+                                              class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                              <span class="flex items-center justify-center space-x-2">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                                                  </svg>
+                                                  <span>Volver a Editar</span>
+                                                </span>
+                                              </button>
 
-                    <!-- Columna 2: Precio -->
-                    <div class="flex flex-col gap-6">
-                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                        <span class="font-medium text-gray-600">Precio Total:</span>
-                        <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                                              <button
+                                                type="button"
+                                                (click)="onSubmit()"
+                                                [disabled]="isLoading"
+                                                class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl disabled:opacity-50  shadow-emerald-500/25">
+                                                <span class="flex items-center justify-center space-x-2">
+                                                  @if (isLoading) {
+                                                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                      <path class="opacity-75" fill="currentColor"
+                                                      d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span>Procesando...</span>
+                                                  } @else {
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                      </svg>
+                                                      <span>Confirmar</span>
+                                                    }
+                                                  </span>
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        }
 
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-8 border-t border-gray-200">
-                  <button
-                    type="button"
-                    (click)="onEdit()"
-                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                    <span class="flex items-center justify-center space-x-2">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
-                      </svg>
-                      <span>Volver a Editar</span>
-                    </span>
-                  </button>
+                                        <div class="text-center text-white/50 text-sm mt-12 pb-6">
+                                          © 2026 Thinking Mind | Todos los derechos reservados.
+                                        </div>
 
-                  <button
-                    type="button"
-                    (click)="onSubmit()"
-                    [disabled]="isLoading"
-                    class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl disabled:opacity-50  shadow-emerald-500/25">
-                    <span class="flex items-center justify-center space-x-2">
-                      @if (isLoading) {
-                        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor"
-                                d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Procesando...</span>
-                      } @else {
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>Confirmar</span>
-                      }
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            }
-
-            <div class="text-center text-white/50 text-sm mt-12 pb-6">
-                © 2026 Thinking Mind | Todos los derechos reservados.
-            </div>
-
-        </div>
-    </div>
-</div>
+                                      </div>
+                                    </div>
+                                  </div>
