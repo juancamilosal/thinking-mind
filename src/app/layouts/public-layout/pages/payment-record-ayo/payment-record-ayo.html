@@ -59,6 +59,7 @@
                 </div>
             </div>
 
+            @if (!showConfirmation) {
             <!-- Instructions Section -->
             <div
                 class="bg-gradient-to-r from-orange-600 to-amber-500 shadow-lg p-6 mb-8 rounded-2xl border border-orange-400/30">
@@ -78,7 +79,7 @@
 
             <!-- Form Section -->
             <div>
-                <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="space-y-8">
+                <form [formGroup]="paymentForm" (ngSubmit)="onContinue()" class="space-y-8">
 
                     <!-- Guardian Info Card -->
                     <!-- Using white card to keep AYO "clean" look but with payment-record structure -->
@@ -288,6 +289,185 @@
 
                 </form>
             </div>
+            } @else {
+            <!-- Pantalla de Confirmación -->
+            <div class="bg-gradient-to-br from-[#1c6ea4] via-[#13486e] to-[#0d324d] rounded-3xl p-8 mb-8 text-white shadow-2xl border border-[#13486e]/50">
+              <div class="text-center mb-8">
+                <div class="flex justify-center mb-6">
+                  <div class="bg-white bg-opacity-20 rounded-full p-4">
+                    <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                </div>
+                <h1 class="text-4xl font-bold mb-4 text-white">Confirmar Información</h1>
+                <p class="text-xl mb-6 text-blue-200">Por favor revisa que toda la información esté correcta antes de proceder</p>
+              </div>
+            </div>
+
+            <!-- Resumen de Información -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+              <div class="p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                  <!-- Información del Acudiente -->
+                  <div class="space-y-6">
+                    <div class="border-b border-gray-200 pb-4">
+                      <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Información del Acudiente
+                      </h2>
+                    </div>
+
+                    <div class="space-y-4">
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Tipo de Documento:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('tipoDocumento')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Número de Documento:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('numeroDocumento')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Nombres:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('nombre')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Apellidos:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('apellido')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Celular:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('celular')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Correo Electrónico:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('email')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2">
+                        <span class="font-medium text-gray-600">Dirección:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:text-right">{{ paymentForm.get('direccion')?.value }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Información del Estudiante -->
+                  <div class="space-y-6">
+                    <div class="border-b border-gray-200 pb-4">
+                      <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        Información del Estudiante
+                      </h2>
+                    </div>
+
+                    <div class="space-y-4">
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Tipo de Documento:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentTipoDocumento')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Número de Documento:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentNumeroDocumento')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Nombres:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentNombre')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Apellidos:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentApellido')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Correo Electrónico:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentEmail')?.value }}</span>
+                      </div>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
+                        <span class="font-medium text-gray-600">Colegio:</span>
+                        <span class="text-gray-800 mt-1 sm:mt-0 break-words w-full sm:w-auto">{{ paymentForm.get('studentColegio')?.value }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Información del Programa -->
+                <div class="mt-8 pt-8 border-t border-gray-200">
+                  <div class="border-b border-gray-200 pb-4 mb-6">
+                    <h2 class="text-2xl font-bold text-[#13486e] flex items-center">
+                      <svg class="w-6 h-6 mr-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                      </svg>
+                      Información del Programa
+                    </h2>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Columna 1: Programa Seleccionado -->
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gray-50 rounded-lg">
+                      <span class="font-medium text-gray-600">Programa Seleccionado:</span>
+                      <span class="text-gray-800 font-semibold mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">
+                        {{ precioPrograma?.nombre || 'Programa AYO' }}
+                      </span>
+                    </div>
+
+                    <!-- Columna 2: Precio -->
+                    <div class="flex flex-col gap-6">
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                        <span class="font-medium text-gray-600">Precio Total:</span>
+                        <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-8 border-t border-gray-200">
+                  <button
+                    type="button"
+                    (click)="onEdit()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <span class="flex items-center justify-center space-x-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                      </svg>
+                      <span>Volver a Editar</span>
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="onSubmit()"
+                    [disabled]="isLoading"
+                    class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl disabled:opacity-50  shadow-emerald-500/25">
+                    <span class="flex items-center justify-center space-x-2">
+                      @if (isLoading) {
+                        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor"
+                                d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Procesando...</span>
+                      } @else {
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Confirmar</span>
+                      }
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            }
 
             <div class="text-center text-white/50 text-sm mt-12 pb-6">
                 © 2026 Thinking Mind | Todos los derechos reservados.

@@ -777,15 +777,17 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.fechaFinalizacionForm.get('precio_especial')?.setValue(formatted, { emitEvent: false });
   }
 
-  private formatPrice(value: string): string {
-    if (!value) return '';
-    return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  private formatPrice(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === '') return '';
+    const valStr = String(value);
+    return valStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 
   private unformatPrice(value: string | number | null | undefined): number {
     if (value === null || value === undefined) return 0;
     if (typeof value === 'number') return value;
-    const numericStr = String(value).replace(/\./g, '');
+    const valStr = String(value);
+    const numericStr = valStr.replace(/\./g, '');
     return numericStr ? parseInt(numericStr, 10) : 0;
   }
 

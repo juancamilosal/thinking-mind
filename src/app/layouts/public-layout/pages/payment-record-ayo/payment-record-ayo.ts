@@ -8,6 +8,7 @@ import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { ClientService } from '../../../../core/services/client.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { SchoolService } from '../../../../core/services/school.service';
+import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 
 @Component({
     selector: 'app-payment-record-ayo',
@@ -27,13 +28,17 @@ export class PaymentRecordAyoComponent implements OnInit {
     isSearchingStudent = false;
     clientData: any = null;
     studentData: any = null;
+    
+    // Confirmation flag
+    showConfirmation: boolean = false;
 
     constructor(
         private formBuilder: FormBuilder,
         private programaAyoService: ProgramaAyoService,
         private clientService: ClientService,
         private studentService: StudentService,
-        private schoolService: SchoolService
+        private schoolService: SchoolService,
+        private accountReceivableService: AccountReceivableService
     ) { }
 
     ngOnInit(): void {
@@ -256,13 +261,61 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     onSubmit() {
-        if (this.paymentForm.invalid) return;
+        if (this.paymentForm.invalid) {
+            this.paymentForm.markAllAsTouched();
+            return;
+        }
         this.isLoading = true;
-        console.log('Payment Record Submit:', this.paymentForm.value);
 
-        setTimeout(() => {
-            this.isLoading = false;
-            alert('Información enviada correctamente');
-        }, 1500);
+        const formData = this.paymentForm.value;
+        const payload = {
+            acudiente: {
+                tipo_documento: formData.tipoDocumento,
+                numero_documento: formData.numeroDocumento,
+                nombre: formData.nombre,
+                apellido: formData.apellido,
+                celular: formData.celular,
+                email: formData.email,
+                direccion: formData.direccion
+            },
+            estudiante: {
+                tipo_documento: formData.studentTipoDocumento,
+                numero_documento: formData.studentNumeroDocumento,
+                nombre: formData.studentNombre,
+                apellido: formData.studentApellido,
+                email: formData.studentEmail,
+                colegio: formData.studentColegio
+            },
+            precio_programa: this.precioPrograma?.precio || 0
+        };
+
+        this.accountReceivableService.createPaymentRecordAyo(payload).subscribe({
+            next: (response) => {
+                this.isLoading = false;
+                alert('Información enviada correctamente');
+                // Optional: Reset form or redirect
+                // this.paymentForm.reset();
+                // this.showConfirmation = false;
+            },
+            error: (error) => {
+                this.isLoading = false;
+                console.error('Error submitting payment record:', error);
+                alert('Hubo un error al enviar la información. Por favor, intente nuevamente.');
+            }
+        });
+    }
+
+    onContinue(): void {
+        if (this.paymentForm.invalid) {
+            this.paymentForm.markAllAsTouched();
+            return;
+        }
+        this.showConfirmation = true;
+        window.scrollTo(0, 0);
+    }
+
+    onEdit(): void {
+        this.showConfirmation = false;
+        window.scrollTo(0, 0);
     }
 }
