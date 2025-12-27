@@ -580,7 +580,15 @@
                                     </div>
 
                                     <!-- Main Submit Button -->
-                                    <div class="mt-8 flex justify-center">
+                                    <div class="mt-8 flex justify-center gap-4">
+                                      @if (showRegisteredCourses && showAddCourseForm) {
+                                        <button
+                                          type="button"
+                                          (click)="cancelAddCourse()"
+                                          class="min-w-[200px] bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex justify-center items-center">
+                                          Volver
+                                        </button>
+                                      }
                                       <button type="submit" [disabled]="paymentForm.invalid || isLoading"
                                         class="min-w-[280px] bg-gradient-to-r from-[#13486e] to-[#1c6ea4] hover:from-[#0d324d] hover:to-[#13486e] text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
                                         @if (!isLoading) {
