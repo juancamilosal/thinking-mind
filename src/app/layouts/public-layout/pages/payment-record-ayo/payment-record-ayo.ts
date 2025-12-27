@@ -59,13 +59,6 @@ export class PaymentRecordAyoComponent implements OnInit {
     totalAmountToPay = 0;
     editablePaymentAmount = 0;
 
-    // Exchange rates
-    usdToCop: number | null = null;
-    eurToCop: number | null = null;
-    usdRateErrorNotified: boolean = false;
-    eurRateErrorNotified: boolean = false;
-    isExchangeRateError: boolean = false;
-
     readonly openProgramSchoolId = 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7';
 
     // School and Grade properties
@@ -356,10 +349,6 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     private clearGuardianFields(): void {
-        // Only clear if we are not manually typing (this logic can be tricky,
-        // usually we clear if search fails to avoid mismatched data,
-        // but if user is typing a new person, we might not want to clear immediately.
-        // However, following payment-record logic, it clears fields if search fails or input is invalid)
         this.paymentForm.patchValue({
             nombre: '',
             apellido: '',
@@ -1093,7 +1082,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             this.isLoading = true;
             console.log('Iniciando confirmPayment...');
             const reference = this.generatePaymentReference(this.paymentModalData?.id || 'REF-UNKNOWN');
-            
+
             // Asegurar que el monto sea entero y en centavos
             const amountInCents = Math.round(this.editablePaymentAmount * 100);
 
@@ -1110,7 +1099,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
             console.log('Configuración Wompi (modo prueba: ' + environment.wompi.testMode + ')');
             console.log('Public Key usada:', JSON.stringify(wompiConfig.publicKey));
-            
+
             const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
             console.log('Firma de integridad generada:', signature);
 
@@ -1137,7 +1126,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                     legalIdType: this.paymentModalData?.clientDocumentType,
                 },
             });
-            
+
             console.log('Abriendo widget de Wompi...');
             checkout.open((result: any) => {
                 console.log('Resultado Wompi:', result);
