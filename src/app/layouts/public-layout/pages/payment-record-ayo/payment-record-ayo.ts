@@ -8,6 +8,7 @@ import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { ClientService } from '../../../../core/services/client.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { SchoolService } from '../../../../core/services/school.service';
+import { School } from '../../../../core/models/School';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
@@ -1088,36 +1089,75 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     async confirmPayment(): Promise<void> {
-        const reference = this.generatePaymentReference(this.paymentModalData?.id);
-        const amountInCents = this.editablePaymentAmount * 100;
+        try {
+            this.isLoading = true;
+            console.log('Iniciando confirmPayment...');
+            const reference = this.generatePaymentReference(this.paymentModalData?.id || 'REF-UNKNOWN');
+            
+            // Asegurar que el monto sea entero y en centavos
+            const amountInCents = Math.round(this.editablePaymentAmount * 100);
 
-        const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-        const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
-        const checkout = new (window as any).WidgetCheckout({
-            currency: 'COP',
-            amountInCents: amountInCents,
-            reference: reference,
-            publicKey: wompiConfig.publicKey,
-            signature: { integrity: signature },
-            redirectUrl: environment.wompi.redirectUrl,
-            customerData: {
-                email: this.paymentModalData?.clientEmail,
-                fullName: this.paymentModalData?.clientName,
-                phoneNumber: this.paymentModalData?.clientPhone,
-                phoneNumberPrefix: '+57',
-                legalId: this.paymentModalData?.clientDocumentNumber,
-                legalIdType: this.paymentModalData?.clientDocumentType,
-            },
-        });
-        checkout.open((result: any) => {
-            this.closePaymentModal();
-            if (result.transaction && result.transaction.status === 'APPROVED') {
-                this.showSuccessNotification('Pago realizado con éxito');
-                this.searchClientIfReady(); // Refresh table
-            } else {
-                this.showErrorNotification('El pago no fue aprobado o fue cancelado');
+            if (amountInCents <= 0) {
+                console.warn('Intento de pago con monto 0 o negativo');
+                this.showErrorNotification('El monto a pagar debe ser mayor a cero.');
+                this.isLoading = false;
+                return;
             }
-        });
+
+            console.log('Referencia:', reference);
+            console.log('Monto en centavos:', amountInCents);
+
+            const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
+            console.log('Configuración Wompi (modo prueba: ' + environment.wompi.testMode + ')');
+            console.log('Public Key usada:', JSON.stringify(wompiConfig.publicKey));
+            
+            const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+            console.log('Firma de integridad generada:', signature);
+
+            if (typeof (window as any).WidgetCheckout === 'undefined') {
+                console.error('WidgetCheckout no está definido. Verifique que el script de Wompi se haya cargado.');
+                this.showErrorNotification('No se pudo cargar la pasarela de pagos. Por favor recargue la página.');
+                this.isLoading = false;
+                return;
+            }
+
+            const checkout = new (window as any).WidgetCheckout({
+                currency: 'COP',
+                amountInCents: amountInCents,
+                reference: reference,
+                publicKey: wompiConfig.publicKey,
+                signature: { integrity: signature },
+                redirectUrl: environment.wompi.redirectUrl,
+                customerData: {
+                    email: this.paymentModalData?.clientEmail,
+                    fullName: this.paymentModalData?.clientName,
+                    phoneNumber: this.paymentModalData?.clientPhone,
+                    phoneNumberPrefix: '+57',
+                    legalId: this.paymentModalData?.clientDocumentNumber,
+                    legalIdType: this.paymentModalData?.clientDocumentType,
+                },
+            });
+            
+            console.log('Abriendo widget de Wompi...');
+            checkout.open((result: any) => {
+                console.log('Resultado Wompi:', result);
+                this.isLoading = false;
+                this.closePaymentModal();
+                if (result.transaction && result.transaction.status === 'APPROVED') {
+                    this.showSuccessNotification('Pago realizado con éxito');
+                    this.searchClientIfReady(); // Refresh table
+                } else if (result.transaction) {
+                    this.showErrorNotification('El pago no fue aprobado: ' + result.transaction.status);
+                } else {
+                    // Si se cierra sin transacción (usuario cierra el widget)
+                    console.log('Widget cerrado sin transacción completa');
+                }
+            });
+        } catch (error) {
+            console.error('Error en confirmPayment:', error);
+            this.showErrorNotification('Ocurrió un error inesperado al procesar el pago.');
+            this.isLoading = false;
+        }
     }
 
     async generateIntegrity(reference: string, amountInCents: number, currency: string, secretKey: string): Promise<string> {
