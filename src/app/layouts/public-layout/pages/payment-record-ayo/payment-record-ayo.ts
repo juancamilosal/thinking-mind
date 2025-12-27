@@ -9,11 +9,12 @@ import { ClientService } from '../../../../core/services/client.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
 @Component({
     selector: 'app-payment-record-ayo',
     standalone: true,
-    imports: [ReactiveFormsModule, CommonModule, RouterModule],
+    imports: [ReactiveFormsModule, CommonModule, RouterModule, NotificationModalComponent],
     templateUrl: './payment-record-ayo.html',
     styleUrls: ['./payment-record-ayo.css']
 })
@@ -28,9 +29,13 @@ export class PaymentRecordAyoComponent implements OnInit {
     isSearchingStudent = false;
     clientData: any = null;
     studentData: any = null;
-    
+
     // Confirmation flag
     showConfirmation: boolean = false;
+
+    // Notification
+    showNotification: boolean = false;
+    notificationData: NotificationData | null = null;
 
     constructor(
         private formBuilder: FormBuilder,
@@ -143,8 +148,8 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     private clearGuardianFields(): void {
-        // Only clear if we are not manually typing (this logic can be tricky, 
-        // usually we clear if search fails to avoid mismatched data, 
+        // Only clear if we are not manually typing (this logic can be tricky,
+        // usually we clear if search fails to avoid mismatched data,
         // but if user is typing a new person, we might not want to clear immediately.
         // However, following payment-record logic, it clears fields if search fails or input is invalid)
         this.paymentForm.patchValue({
@@ -244,6 +249,8 @@ export class PaymentRecordAyoComponent implements OnInit {
                     console.error('Error loading school name:', error);
                 }
             });
+        } else if (student.colegio_independiente) {
+            this.paymentForm.get('studentColegio')?.setValue(student.colegio_independiente);
         } else if (student.colegio && typeof student.colegio === 'string' && student.colegio.length > 20) {
              // Assuming long string might be an ID if not a direct name, but payment-record logic treats 'colegio' field as potential ID too
              // Simple fallback
@@ -304,17 +311,43 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.accountReceivableService.createPaymentRecordAyo(payload).subscribe({
             next: (response) => {
                 this.isLoading = false;
-                alert('Información enviada correctamente');
-                // Optional: Reset form or redirect
-                // this.paymentForm.reset();
-                // this.showConfirmation = false;
+                if (response.status === 'SUCCES') {
+                    this.showSuccessNotification('Programa AYO creado correctamente');
+                } else {
+                    this.showErrorNotification('Error inesperado. Inténtelo más tarde.');
+                }
             },
             error: (error) => {
                 this.isLoading = false;
                 console.error('Error submitting payment record:', error);
-                alert('Hubo un error al enviar la información. Por favor, intente nuevamente.');
+                this.showErrorNotification('Error inesperado. Inténtelo más tarde.');
             }
         });
+    }
+
+    showSuccessNotification(message: string) {
+        this.notificationData = {
+            type: 'success',
+            title: 'Éxito',
+            message: message,
+            duration: 5000
+        };
+        this.showNotification = true;
+    }
+
+    showErrorNotification(message: string) {
+        this.notificationData = {
+            type: 'error',
+            title: 'Error',
+            message: message,
+            duration: 5000
+        };
+        this.showNotification = true;
+    }
+
+    onNotificationClose() {
+        this.showNotification = false;
+        this.notificationData = null;
     }
 
     onContinue(): void {

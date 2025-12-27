@@ -479,4 +479,10 @@
 
                                       </div>
                                     </div>
+
+                                    <app-notification-modal
+                                      [isVisible]="showNotification"
+                                      [notification]="notificationData"
+                                      (close)="onNotificationClose()">
+                                    </app-notification-modal>
                                   </div>
