@@ -105,6 +105,21 @@ export class PaymentRecordAyoComponent implements OnInit {
             isOpenProgram: [false] // Optional toggle
         });
 
+        // Force lowercase for emails
+        const emailCtrl = this.paymentForm.get('email');
+        emailCtrl?.valueChanges.subscribe((val: any) => {
+            if (val && val !== val.toLowerCase()) {
+                emailCtrl.setValue(val.toLowerCase(), { emitEvent: false });
+            }
+        });
+
+        const studentEmailCtrl = this.paymentForm.get('studentEmail');
+        studentEmailCtrl?.valueChanges.subscribe((val: any) => {
+            if (val && val !== val.toLowerCase()) {
+                studentEmailCtrl.setValue(val.toLowerCase(), { emitEvent: false });
+            }
+        });
+
         const independentCtrl = this.paymentForm.get('independentInstitution');
         independentCtrl?.valueChanges.subscribe((val: any) => {
             if (typeof val === 'string') {
@@ -129,94 +144,8 @@ export class PaymentRecordAyoComponent implements OnInit {
         });
     }
 
-    onStudentGradoChange(event: any): void {
-        const value = event.target.value.toUpperCase();
-        this.paymentForm.get('studentGrado')?.setValue(value, { emitEvent: false });
-    }
 
-    onSchoolSearchFocus(): void {
-        try {
-            const isMobileViewport = window.innerWidth <= 768;
-            if (!isMobileViewport) return;
-            setTimeout(() => {
-                const el = this.schoolSearchInput?.nativeElement;
-                if (!el) return;
-                const offset = 16;
-                const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
-                window.scrollTo({ top, behavior: 'smooth' });
-            }, 150);
-        } catch (e) {
-            this.schoolSearchInput?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
 
-    onSchoolSearch(event: any): void {
-        const searchTerm = (event.target.value || '').toString();
-        this.paymentForm.get('schoolSearchTerm')?.setValue(searchTerm);
-        this.isSchoolSelected = false; // Reset cuando el usuario empieza a escribir
-
-        // Limpiar el valor del colegio seleccionado cuando el usuario empieza a escribir
-        this.paymentForm.get('studentSchool')?.setValue('');
-
-        const trimmed = searchTerm.trim();
-        if (!trimmed || trimmed.length < 2) {
-            this.filteredSchools = [];
-            this.isLoadingSchools = false;
-            this.cdRef.detectChanges();
-            return;
-        }
-
-        // Buscar inmediatamente para evitar demoras por throttling de timers en móviles
-        this.searchSchools(trimmed);
-    }
-
-    searchSchools(searchTerm: string): void {
-        this.isLoadingSchools = true;
-        this.cdRef.detectChanges();
-        this.schoolService.searchSchool(searchTerm, 1, 15).subscribe({
-            next: (response) => {
-                const data = response.data || [];
-                const normalizedTerm = this.normalize(searchTerm);
-                const accentMatches = data.filter(s => {
-                    const name = this.normalize(s.nombre || '');
-                    const city = this.normalize(s.ciudad || '');
-                    return name.includes(normalizedTerm) || city.includes(normalizedTerm);
-                });
-
-                if (accentMatches.length > 0) {
-                    this.filteredSchools = accentMatches.slice(0, 10);
-                    this.isLoadingSchools = false;
-                    this.cdRef.detectChanges();
-                    return;
-                }
-
-                // Fallback: ampliar búsqueda y filtrar localmente sin acentos
-                this.schoolService.getAllSchools(1, 100).subscribe({
-                    next: (allResp) => {
-                        const all = allResp.data || [];
-                        this.filteredSchools = all.filter(s => {
-                            const name = this.normalize(s.nombre || '');
-                            const city = this.normalize(s.ciudad || '');
-                            return name.includes(normalizedTerm) || city.includes(normalizedTerm);
-                        }).slice(0, 10);
-                        this.isLoadingSchools = false;
-                        this.cdRef.detectChanges();
-                    },
-                    error: () => {
-                        this.filteredSchools = [];
-                        this.isLoadingSchools = false;
-                        this.cdRef.detectChanges();
-                    }
-                });
-            },
-            error: (error) => {
-                console.error('Error searching schools:', error);
-                this.filteredSchools = [];
-                this.isLoadingSchools = false;
-                this.cdRef.detectChanges();
-            }
-        });
-    }
 
     private normalize(value: string): string {
         return (value || '')
@@ -226,34 +155,6 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
 
-    clearSchoolSearch(): void {
-        this.paymentForm.get('schoolSearchTerm')?.setValue('');
-        this.filteredSchools = [];
-        this.isSchoolSelected = false;
-        this.paymentForm.get('studentSchool')?.setValue('');
-        this.cdRef.detectChanges();
-    }
-
-    onOpenProgramChange(event: any): void {
-        const checked = !!event.target.checked;
-        this.paymentForm.get('isOpenProgram')?.setValue(checked);
-        const indCtrl = this.paymentForm.get('independentInstitution');
-        if (checked) {
-            this.paymentForm.get('studentSchool')?.setValue(this.openProgramSchoolId);
-            this.paymentForm.get('studentSchool')?.updateValueAndValidity();
-            this.paymentForm.get('schoolSearchTerm')?.setValue('');
-            this.filteredSchools = [];
-            this.isSchoolSelected = true;
-
-        } else {
-            this.paymentForm.get('independentInstitution')?.setValue('');
-            this.clearSchoolSearch();
-        }
-    }
-
-    onResultsTouchStart(): void {
-        // Prevent default to avoid blur issues on some mobile devices when scrolling results
-    }
 
     loadPrecioPrograma(): void {
         this.programaAyoService.getPrecioProgramaAyo().subscribe({
@@ -306,7 +207,7 @@ export class PaymentRecordAyoComponent implements OnInit {
 
     private searchClientPayment(documentType: string, documentNumber: string): void {
         this.isSearchingClient = true;
-        this.clientService.searchClientPayment(documentType, documentNumber).subscribe({
+        this.clientService.searchClientPayment(documentType, documentNumber, true).subscribe({
             next: (data) => {
                 this.isSearchingClient = false;
                 if (data.data && data.data.length > 0) {
@@ -489,6 +390,14 @@ export class PaymentRecordAyoComponent implements OnInit {
             }, {});
         };
 
+        let colegioValue = formData.studentSchool;
+        if (formData.isOpenProgram) {
+            colegioValue = formData.independentInstitution;
+        } else if (!colegioValue && formData.schoolSearchTerm) {
+            // Fallback: si no se seleccionó un colegio de la lista pero se escribió algo, enviar eso como nombre
+            colegioValue = formData.schoolSearchTerm;
+        }
+
         const payload = {
             acudiente: cleanPayload({
                 tipo_documento: formData.tipoDocumento,
@@ -505,7 +414,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 nombre: formData.studentNombre,
                 apellido: formData.studentApellido,
                 email: formData.studentEmail,
-                colegio: formData.studentColegio
+                colegio: colegioValue
             }),
             precio_programa: this.precioPrograma?.precio || 0,
             precio_inscripcion: 0,

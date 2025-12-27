@@ -64,10 +64,11 @@ export class ClientService {
     return this.http.delete<ResponseAPI<Client>>(`${this.apiCliente}/${id}`);
   }
 
-  searchClientPayment(documentType: string, documentNumber: string): Observable<ResponseAPI<Client[]>>{
+  searchClientPayment(documentType: string, documentNumber: string, es_programa_ayo?: boolean): Observable<ResponseAPI<Client[]>>{
     const params = {
       'tipo_documento': documentType,
       'numero_documento': documentNumber,
+      'es_programa_ayo': es_programa_ayo,
     };
     return this.http.get<ResponseAPI<Client[]>>(this.apiSearchClientPayment , { params });
   }
