@@ -268,8 +268,18 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.isLoading = true;
 
         const formData = this.paymentForm.value;
+
+        const cleanPayload = (obj: any) => {
+            return Object.entries(obj).reduce((acc: any, [key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {});
+        };
+
         const payload = {
-            acudiente: {
+            acudiente: cleanPayload({
                 tipo_documento: formData.tipoDocumento,
                 numero_documento: formData.numeroDocumento,
                 nombre: formData.nombre,
@@ -277,16 +287,18 @@ export class PaymentRecordAyoComponent implements OnInit {
                 celular: formData.celular,
                 email: formData.email,
                 direccion: formData.direccion
-            },
-            estudiante: {
+            }),
+            estudiante: cleanPayload({
                 tipo_documento: formData.studentTipoDocumento,
                 numero_documento: formData.studentNumeroDocumento,
                 nombre: formData.studentNombre,
                 apellido: formData.studentApellido,
                 email: formData.studentEmail,
                 colegio: formData.studentColegio
-            },
-            precio_programa: this.precioPrograma?.precio || 0
+            }),
+            precio_programa: this.precioPrograma?.precio || 0,
+            precio_inscripcion: 0,
+            fecha_creacion: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
         };
 
         this.accountReceivableService.createPaymentRecordAyo(payload).subscribe({
