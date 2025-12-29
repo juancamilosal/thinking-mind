@@ -15,6 +15,7 @@ import {Menu} from '../../core/models/Menu';
   templateUrl: './sidebar.component.html'
 })
 export class SidebarComponent implements OnInit, OnDestroy {
+
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
   @Output() sidebarClose = new EventEmitter<void>();

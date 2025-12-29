@@ -21,6 +21,7 @@ export class PrivateLayout implements OnInit, AfterViewInit {
   isBrowser = false;
   isMobileSidebarOpen = false;
   hasInitialized = false;
+  isDesktop = false;
 
   // Propiedades para el modal de notificaciones
   isNotificationVisible = false;
@@ -42,6 +43,7 @@ export class PrivateLayout implements OnInit, AfterViewInit {
   ngOnInit() {
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
+      this.isDesktop = this.windowWidth >= 768;
       this.isSidebarOpen = this.windowWidth >= 640;
     }
 
@@ -97,6 +99,7 @@ export class PrivateLayout implements OnInit, AfterViewInit {
   onResize() {
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
+      this.isDesktop = this.windowWidth >= 768;
       this.isSidebarOpen = this.windowWidth >= 640;
       // Actualizar vista en cambios de tamaño de ventana
       this.cdr.detectChanges();
