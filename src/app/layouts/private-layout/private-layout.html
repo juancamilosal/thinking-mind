@@ -1,22 +1,25 @@
 <div class="h-screen overflow-x-hidden md:overflow-hidden md:flex">
-    <!-- Sidebar para desktop -->
-    <app-sidebar class="hidden md:block flex-shrink-0" (sidebarClose)="onToggleSidebar()" />
-    
-    <!-- Sidebar móvil con overlay -->
-    <div class="md:hidden fixed inset-0 z-50" 
-         [ngClass]="{'transition-opacity': hasInitialized, 'duration-300': hasInitialized}"
-         [class.opacity-0]="!isMobileSidebarOpen" 
-         [class.pointer-events-none]="!isMobileSidebarOpen">
-        <!-- Overlay -->
-        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300" (click)="onToggleSidebar()"></div>
-        <!-- Sidebar -->
-        <div class="fixed top-0 left-0 z-10 w-72 h-full transform"
-             [ngClass]="{'transition-transform': hasInitialized, 'duration-300': hasInitialized, 'ease-in-out': hasInitialized}"
-             [class.-translate-x-full]="!isMobileSidebarOpen">
+
+      @if (isDesktop) {
+        <!-- Sidebar para desktop -->
+        <app-sidebar class="hidden md:block flex-shrink-0" (sidebarClose)="onToggleSidebar()" />
+      } @else {
+        <!-- Sidebar móvil con overlay -->
+        <div class="md:hidden fixed inset-0 z-50"
+             [ngClass]="{'transition-opacity': hasInitialized, 'duration-300': hasInitialized}"
+             [class.opacity-0]="!isMobileSidebarOpen"
+             [class.pointer-events-none]="!isMobileSidebarOpen">
+          <!-- Overlay -->
+          <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300" (click)="onToggleSidebar()"></div>
+          <!-- Sidebar -->
+          <div class="fixed top-0 left-0 z-10 w-72 h-full transform"
+               [ngClass]="{'transition-transform': hasInitialized, 'duration-300': hasInitialized, 'ease-in-out': hasInitialized}"
+               [class.-translate-x-full]="!isMobileSidebarOpen">
             <app-sidebar (sidebarClose)="onToggleSidebar()" />
+          </div>
         </div>
-    </div>
-    
+      }
+
     <div class="flex-1 flex flex-col overflow-x-hidden md:overflow-hidden">
         <app-header class="flex-shrink-0" (toggleSidebar)="onToggleSidebar()" />
         <div class="flex-1 overflow-auto">
