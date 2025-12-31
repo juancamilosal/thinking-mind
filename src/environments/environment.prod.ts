@@ -60,25 +60,8 @@ export const environment = {
 
   // Configuración de Wompi
   wompi: {
-    // ⚠️ IMPORTANTE: Cambiar testMode a false SOLO cuando tengas las claves de producción REALES
-    testMode: false, // ✅ MODO PRUEBA - Pagos simulados (seguro para testing en producción)
-
-    // URLs base de Wompi según el ambiente
-    sandboxUrl: 'https://sandbox.wompi.co/v1',
-    productionUrl: 'https://production.wompi.co/v1',
-
-    // Llaves de prueba (FUNCIONAN CORRECTAMENTE)
-    test: {
-      publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
-      integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY'
-    },
-
-    // Llaves de producción
-    prod: {
-      publicKey: 'pub_prod_aDinMfCvarfkhNiAQKzdm7cFDy6Szeuy',
-      integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
-    },
-
-    redirectUrl: 'http://appthinkingmind.com/payment-status'
+    publicKey: 'pub_prod_aDinMfCvarfkhNiAQKzdm7cFDy6Szeuy',
+    integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V',
+    redirectUrl: 'https://appthinkingmind.com/payment-status'
   }
 };

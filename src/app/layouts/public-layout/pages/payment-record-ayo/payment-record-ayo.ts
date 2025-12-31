@@ -60,6 +60,7 @@ export class PaymentRecordAyoComponent implements OnInit {
     editablePaymentAmount = 0;
 
     readonly openProgramSchoolId = 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7';
+    wompiConfig = environment.wompi;
 
     // School and Grade properties
     grado: any[] = []; // Should be Grupo[] but using any for safety if model not imported
@@ -1007,14 +1008,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 return;
             }
 
-            console.log('Referencia:', reference);
-            console.log('Monto en centavos:', amountInCents);
-
-            const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-            console.log('Configuración Wompi (modo prueba: ' + environment.wompi.testMode + ')');
-            console.log('Public Key usada:', JSON.stringify(wompiConfig.publicKey));
-
-            const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+            const signature = await this.generateIntegrity(reference, amountInCents, 'COP', this.wompiConfig.integrityKey);
             console.log('Firma de integridad generada:', signature);
 
             if (typeof (window as any).WidgetCheckout === 'undefined') {
@@ -1028,9 +1022,9 @@ export class PaymentRecordAyoComponent implements OnInit {
                 currency: 'COP',
                 amountInCents: amountInCents,
                 reference: reference,
-                publicKey: wompiConfig.publicKey,
+                publicKey: this.wompiConfig.publicKey,
                 signature: { integrity: signature },
-                redirectUrl: environment.wompi.redirectUrl,
+
                 customerData: {
                     email: this.paymentModalData?.clientEmail,
                     fullName: this.paymentModalData?.clientName,

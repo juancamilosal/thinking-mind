@@ -90,6 +90,8 @@ export class PaymentRecord implements OnInit {
   eurRateErrorNotified: boolean = false;
   isExchangeRateError: boolean = false;
 
+  wompiConfig = environment.wompi;
+
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
@@ -1034,7 +1036,7 @@ export class PaymentRecord implements OnInit {
         this.resetCourseSelection();
         return;
       }
-      
+
       // Validación para el curso Will-Go (Segundo Hermano)
       const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
       const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
@@ -1706,15 +1708,14 @@ export class PaymentRecord implements OnInit {
     const reference = this.generatePaymentReference(this.paymentModalData?.id);
     const amountInCents = this.editablePaymentAmount * 100;
 
-    const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', this.wompiConfig.integrityKey);
     const checkout = new (window as any).WidgetCheckout({
       currency: 'COP',
       amountInCents: amountInCents,
       reference: reference,
-      publicKey: wompiConfig.publicKey,
+      publicKey: this.wompiConfig.publicKey,
       signature: { integrity: signature },
-      redirectUrl: environment.wompi.redirectUrl,
+      redirectUrl: this.wompiConfig.redirectUrl,
       customerData: {
         email: this.paymentModalData?.clientEmail,
         fullName: this.paymentModalData?.clientName,

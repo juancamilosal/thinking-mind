@@ -12,7 +12,6 @@ import { AccountsReceivable } from './layouts/private-layout/pages/accounts-rece
 import { Payments } from './layouts/private-layout/pages/payments/payments';
 import { PaymentRecord } from './layouts/public-layout/pages/payment-record/payment-record';
 import { PaymentStatusComponent } from './layouts/public-layout/pages/payment-record/payment-status/payment-status.component';
-import { IndependentProgramPayment } from './layouts/public-layout/pages/independent-program-payment/independent-program-payment';
 import { Reports } from './layouts/private-layout/pages/reports/reports';
 import { Presupuesto } from './layouts/private-layout/pages/reports/presupuesto/presupuesto';
 import { BudgetReport } from './layouts/private-layout/pages/reports/budget-report/budget-report';
@@ -55,11 +54,6 @@ export const routes: Routes = [
     path: 'payment-record',
     title: 'Thinking Mind | Payment Registro de Pago',
     component: PaymentRecord
-  },
-  {
-    path: 'independent-program-payment',
-    title: 'Thinking Mind | Pago Programa Independiente',
-    component: IndependentProgramPayment
   },
   {
     path: 'payment-status',
