@@ -11,6 +11,8 @@ import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Meeting';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
+import { FileService, DirectusFile } from '../../../../../core/services/file.service';
+import {environment} from '../../../../../../environments/environment';
 
 
 declare var gapi: any;
@@ -53,6 +55,12 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   selectedFile: File | null = null;
   isDragging: boolean = false;
 
+  // File Selection Modal
+  showFileModal = false;
+  directusFiles: DirectusFile[] = [];
+  isLoadingFiles = false;
+  selectedDirectusFileId: string | null = null;
+  assetsUrl = environment.assets;
 
   // Google Calendar Integration
   showGoogleCalendarOption = true; // Always true for AYO
@@ -66,6 +74,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
+    private fileService: FileService,
     private notificationService: NotificationService,
     private programaAyoService: ProgramaAyoService,
     private userService: UserService,
@@ -317,30 +326,79 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     });
   }
 
-  onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
-      this.fechaFinalizacionForm.patchValue({ img: file });
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.previewImage = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      this.handleFile(file);
     }
   }
 
-  removeImage(): void {
+  handleFile(file: File) {
+    if (file.type.match(/image\/*/) == null) {
+      this.notificationService.showError('Error', 'Solo se permiten imágenes.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      this.notificationService.showError('Error', 'El archivo no debe superar los 5MB.');
+      return;
+    }
+
+    this.selectedFile = file;
+    this.selectedDirectusFileId = null; // Reset directus selection
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.previewImage = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeImage() {
     this.selectedFile = null;
     this.previewImage = null;
-    this.fechaFinalizacionForm.patchValue({ img: null });
-    // Reset file input if needed
-    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
+    this.selectedDirectusFileId = null;
+  }
+
+  // File Modal Methods
+  openFileModal() {
+    this.showFileModal = true;
+    this.loadFiles();
+  }
+
+  closeFileModal() {
+    this.showFileModal = false;
+  }
+
+  async loadFiles() {
+    this.isLoadingFiles = true;
+    try {
+      const filter = {
+        tematica: {
+          _eq: true
+        }
+      };
+      
+      const res = await firstValueFrom(this.fileService.getFiles({ 
+        sort: '-uploaded_on', 
+        limit: 20, 
+        type: 'image/jpeg,image/png,image/webp',
+        filter: JSON.stringify(filter)
+      }));
+      this.directusFiles = res.data;
+    } catch (error) {
+      console.error('Error loading files', error);
+      this.notificationService.showError('Error', 'No se pudieron cargar los archivos.');
+    } finally {
+      this.isLoadingFiles = false;
     }
+  }
+
+  selectDirectusFile(file: DirectusFile) {
+    this.selectedDirectusFileId = file.id;
+    this.selectedFile = null;
+    this.previewImage = `${this.assetsUrl}/${file.id}`;
+    this.closeFileModal();
   }
 
   onDragOver(event: DragEvent): void {
