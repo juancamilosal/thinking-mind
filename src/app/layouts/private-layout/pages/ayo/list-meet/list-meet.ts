@@ -9,6 +9,7 @@ import { CourseService } from '../../../../../core/services/course.service';
 import { ProgramaAyo, ProgramGroup } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
 import {ConfirmationService} from '../../../../../core/services/confirmation.service';
+import {environment} from '../../../../../../environments/environment';
 
 declare var gapi: any;
 declare var google: any;
@@ -22,6 +23,7 @@ declare var google: any;
 })
 export class ListMeet implements OnInit {
 
+  assetsUrl = environment.assets;
   programas: ProgramaAyo[] = [];
   programGroups: ProgramGroup[] = [];
   selectedGroup: ProgramGroup | null = null;
