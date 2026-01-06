@@ -2,7 +2,6 @@ import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChange
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-
 import { CourseService } from '../../../../../core/services/course.service';
 import { Course } from '../../../../../core/models/Course';
 import { NotificationService } from '../../../../../core/services/notification.service';
@@ -378,10 +377,9 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           _eq: true
         }
       };
-      
-      const res = await firstValueFrom(this.fileService.getFiles({ 
-        sort: '-uploaded_on', 
-        limit: 20, 
+
+      const res = await firstValueFrom(this.fileService.getFiles({
+        sort: '-uploaded_on',
         type: 'image/jpeg,image/png,image/webp',
         filter: JSON.stringify(filter)
       }));
@@ -637,22 +635,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
         const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
-
-        // Handle Image Upload
-        let imageId = null;
-        if (this.selectedFile) {
-          try {
-            const uploadRes = await firstValueFrom(this.courseService.uploadFile(this.selectedFile));
-            if (uploadRes?.data?.id) {
-              imageId = uploadRes.data.id;
-            }
-          } catch (error) {
-            console.error('Error uploading image:', error);
-            this.notificationService.showError('Error al subir imagen', 'No se pudo cargar la imagen del programa.');
-            // Optionally stop submission here or continue without image
-          }
-        }
-
+        let imageId = this.selectedDirectusFileId;
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
