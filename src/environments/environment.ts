@@ -65,7 +65,7 @@ export const environment = {
   wompi: {
     publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
     integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY',
-    redirectUrl: 'https://appthinkingmind.com/payment-status'
+    redirectUrl: 'http://localhost:4200//payment-status'
   }
 };
 

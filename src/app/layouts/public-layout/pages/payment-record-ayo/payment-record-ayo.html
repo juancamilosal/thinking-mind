@@ -319,10 +319,10 @@
                                           @if (courseData.isInscription) {
                                             <div class="flex flex-col">
                                               <span class="text-red-700 font-bold uppercase tracking-wide">INSCRIPCIÓN</span>
-                                              <span class="text-gray-900 font-medium">{{ courseData.courseName }}</span>
+                                              <span class="text-gray-900 font-medium">AYO</span>
                                             </div>
                                           } @else {
-                                            {{ courseData.courseName }}
+                                            <span class="text-gray-900 font-medium">AYO</span>
                                           }
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900">
@@ -567,21 +567,21 @@
                                               <!-- Decorative elements -->
                                               <div class="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
                                               <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
-                                              
+
                                               <div class="relative z-10 flex flex-col items-center">
                                                 <div class="bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 shadow-sm animate-pulse">
                                                   ¡Oferta Especial!
                                                 </div>
-                                                
+
                                                 <div class="flex flex-col items-center mb-1">
                                                   <span class="text-gray-300 line-through text-lg font-medium">$ {{ precioPrograma.precio | number:'1.0-0' }} COP</span>
                                                 </div>
-                                                
+
                                                 <div class="flex items-baseline gap-2 mb-2">
                                                   <span class="text-5xl md:text-6xl font-extrabold text-white drop-shadow-md tracking-tight">$ {{ precioPrograma.precio_especial | number:'1.0-0' }}</span>
                                                   <span class="text-xl text-blue-200 font-medium">COP</span>
                                                 </div>
-                                                
+
                                                 <div class="text-sm text-blue-100 font-light text-center">
                                                   Aprovecha este precio exclusivo hasta el {{ precioPrograma.fecha_finalizacion_precio_especial | date:'dd/MM/yyyy' }}
                                                 </div>
