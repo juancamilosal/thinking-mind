@@ -27,6 +27,10 @@ export class AyoComponent implements OnInit {
   isEditingPrice: boolean = false;
   tempPrice: number = 0;
   isSavingPrice: boolean = false;
+  tempTienePrecioEspecial: boolean = false;
+  tempPrecioEspecial: number | null = null;
+  tempFechaCreacion: string | null = null;
+  tempFechaFinEspecial: string | null = null;
 
   constructor(
     private courseService: CourseService,
@@ -80,6 +84,10 @@ export class AyoComponent implements OnInit {
   startEditingPrice(): void {
     if (this.precioData) {
       this.tempPrice = this.precioData.precio;
+      this.tempTienePrecioEspecial = this.precioData.tiene_precio_especial;
+      this.tempPrecioEspecial = this.precioData.precio_especial;
+      this.tempFechaCreacion = this.precioData.fecha_creacion ? String(this.precioData.fecha_creacion).split('T')[0] : null;
+      this.tempFechaFinEspecial = this.precioData.fecha_finalizacion_precio_especial ? String(this.precioData.fecha_finalizacion_precio_especial).split('T')[0] : null;
       this.isEditingPrice = true;
     }
   }
@@ -87,12 +95,24 @@ export class AyoComponent implements OnInit {
   cancelEditingPrice(): void {
     this.isEditingPrice = false;
     this.tempPrice = 0;
+    this.tempTienePrecioEspecial = false;
+    this.tempPrecioEspecial = null;
+    this.tempFechaCreacion = null;
+    this.tempFechaFinEspecial = null;
   }
 
   savePrice(): void {
     if (this.precioData && this.precioData.id) {
       this.isSavingPrice = true;
-      this.programaAyoService.updatePrecioProgramaAyo(this.precioData.id, this.tempPrice).subscribe({
+      const payload: Partial<PrecioProgramaAyo> = {
+        precio: this.tempPrice,
+        tiene_precio_especial: this.tempTienePrecioEspecial,
+        precio_especial: this.tempPrecioEspecial,
+        fecha_creacion: this.tempFechaCreacion,
+        fecha_finalizacion_precio_especial: this.tempFechaFinEspecial
+      };
+
+      this.programaAyoService.updatePrecioProgramaAyo(this.precioData.id, payload).subscribe({
         next: (response) => {
           if (response.data) {
             this.precioData = response.data;

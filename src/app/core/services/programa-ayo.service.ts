@@ -48,7 +48,7 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<PrecioProgramaAyo[]>>(this.precioUrl);
   }
 
-  updatePrecioProgramaAyo(id: string, precio: number): Observable<ResponseAPI<PrecioProgramaAyo>> {
-    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, { precio });
+  updatePrecioProgramaAyo(id: string, data: Partial<PrecioProgramaAyo>): Observable<ResponseAPI<PrecioProgramaAyo>> {
+    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, data);
   }
 }
