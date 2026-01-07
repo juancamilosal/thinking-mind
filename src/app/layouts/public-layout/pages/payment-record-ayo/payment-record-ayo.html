@@ -1,4 +1,4 @@
-<div class="min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
+<div class="print:hidden min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
 
   <!-- Decorative background elements similar to payment-record -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -319,10 +319,10 @@
                                           @if (courseData.isInscription) {
                                             <div class="flex flex-col">
                                               <span class="text-red-700 font-bold uppercase tracking-wide">INSCRIPCIÓN</span>
-                                              <span class="text-gray-900 font-medium">{{ courseData.courseName }}</span>
+                                              <span class="text-gray-900 font-medium">AYO</span>
                                             </div>
                                           } @else {
-                                            {{ courseData.courseName }}
+                                            <span class="text-gray-900 font-medium">AYO</span>
                                           }
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900">
@@ -562,13 +562,40 @@
 
                                       <div class="flex flex-col items-center justify-center p-8 bg-blue-50/30 rounded-xl border border-blue-100/50">
                                         @if (precioPrograma) {
-                                          <div class="flex items-baseline gap-2">
-                                            <span class="text-5xl md:text-6xl font-extrabold text-[#1c6ea4] drop-shadow-sm">$ {{ precioPrograma.precio | number:'1.0-0' }}</span>
-                                            <span class="text-xl text-gray-400 font-medium">COP</span>
-                                          </div>
-                                          <p class="text-sm text-gray-400 mt-4 text-center max-w-md">
-                                            Este valor cubre todos los beneficios del programa AYO.
-                                          </p>
+                                          @if (precioPrograma.tiene_precio_especial) {
+                                            <div class="relative overflow-hidden w-full max-w-lg mx-auto bg-gradient-to-br from-[#1c6ea4] to-[#0d324d] rounded-2xl shadow-2xl p-6 text-white">
+                                              <!-- Decorative elements -->
+                                              <div class="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+                                              <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+
+                                              <div class="relative z-10 flex flex-col items-center">
+                                                <div class="bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 shadow-sm animate-pulse">
+                                                  ¡Oferta Especial!
+                                                </div>
+
+                                                <div class="flex flex-col items-center mb-1">
+                                                  <span class="text-gray-300 line-through text-lg font-medium">$ {{ precioPrograma.precio | number:'1.0-0' }} COP</span>
+                                                </div>
+
+                                                <div class="flex items-baseline gap-2 mb-2">
+                                                  <span class="text-5xl md:text-6xl font-extrabold text-white drop-shadow-md tracking-tight">$ {{ precioPrograma.precio_especial | number:'1.0-0' }}</span>
+                                                  <span class="text-xl text-blue-200 font-medium">COP</span>
+                                                </div>
+
+                                                <div class="text-sm text-blue-100 font-light text-center">
+                                                  Aprovecha este precio exclusivo hasta el {{ precioPrograma.fecha_finalizacion_precio_especial | date:'dd/MM/yyyy' }}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          } @else {
+                                            <div class="flex items-baseline gap-2">
+                                              <span class="text-5xl md:text-6xl font-extrabold text-[#1c6ea4] drop-shadow-sm">$ {{ precioPrograma.precio | number:'1.0-0' }}</span>
+                                              <span class="text-xl text-gray-400 font-medium">COP</span>
+                                            </div>
+                                            <p class="text-sm text-gray-400 mt-4 text-center max-w-md">
+                                              Este valor cubre todos los beneficios del programa AYO.
+                                            </p>
+                                          }
                                         } @else {
                                           <div class="animate-pulse flex flex-col items-center w-full">
                                             <div class="h-4 w-32 bg-gray-200 rounded mb-4"></div>
@@ -735,7 +762,14 @@
                                     <div class="flex flex-col gap-6">
                                       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                                         <span class="font-medium text-gray-600">Precio Total:</span>
-                                        <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                        @if (precioPrograma?.tiene_precio_especial) {
+                                            <div class="flex flex-col items-end w-full sm:w-auto">
+                                                <span class="text-sm text-gray-500 line-through">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                                <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:text-right">$ {{ precioPrograma?.precio_especial | number:'1.0-0' }}</span>
+                                            </div>
+                                        } @else {
+                                            <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                        }
                                       </div>
                                     </div>
                                   </div>
@@ -1026,3 +1060,127 @@
                             (close)="onNotificationClose()">
                           </app-notification-modal>
                         </div>
+
+<!-- Print Layout Section -->
+@if (selectedAccountData) {
+<div class="hidden print:block font-sans m-5 text-gray-700 leading-snug bg-white">
+  <div class="text-center mb-8 border-b-2 border-blue-500 pb-5">
+    <div class="text-2xl font-bold text-blue-800 mb-1">Thinking Mind</div>
+    <div class="text-lg text-gray-700 mb-2">Historial de Pagos</div>
+    <div class="text-xs text-gray-500">Generado el: {{ printDate }}</div>
+  </div>
+
+  <div class="bg-slate-50 p-5 rounded-lg mb-6 border-l-4 border-blue-500 [print-color-adjust:exact]">
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Estudiante:</span>
+          <span class="text-gray-800">{{ selectedAccountData.studentName }}</span>
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Programa:</span>
+          <span class="text-gray-800">{{ selectedAccountData.courseName }}</span>
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Estado:</span>
+          <span class="text-gray-800">{{ selectedAccountData.status }}</span>
+        </div>
+      </div>
+      <div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Precio del Programa:</span>
+          <span class="text-gray-800">${{ (selectedAccountData.coursePriceNumber || 0) | number:'1.0-0':'es-CO' }}</span>
+        </div>
+
+        @if (selectedAccountData.courseInscriptionPriceNumber && selectedAccountData.courseInscriptionPriceNumber > 0) {
+          <div class="mb-2">
+            <span class="font-bold text-gray-700 inline-block min-w-[120px]">Precio de Inscripción:</span>
+            <span class="text-gray-800">${{ selectedAccountData.courseInscriptionPriceNumber | number:'1.0-0':'es-CO' }}</span>
+          </div>
+        }
+
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Total Abonado:</span>
+          <span class="text-gray-800">{{ selectedAccountData.balance }}</span>
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Total de Pagos:</span>
+          <span class="text-gray-800">{{ selectedAccountPayments?.length || 0 }} pago(s)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="w-full border-collapse mb-6 shadow-sm">
+    <thead>
+      <tr>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">ID del Pago</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Valor</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Fecha de Pago</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Método de Pago</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Pagador</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Núm. Transacción</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
+        @for (payment of selectedAccountPayments; track payment.id) {
+          <tr class="even:bg-gray-50 [print-color-adjust:exact]">
+            <td class="text-sm border-b border-gray-200 p-3 text-center font-mono">{{ payment.id }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-right font-bold text-emerald-600">${{ (payment.valor || 0) | number:'1.0-0':'es-CO' }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center">{{ formatDateForPrint(payment.fecha_pago) }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center">{{ formatPaymentMethod(payment.metodo_pago) }}</td>
+            <td class="text-sm border-b border-gray-200 p-3">{{ payment.pagador || 'N/A' }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center font-mono">{{ payment.numero_transaccion || 'N/A' }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center">
+              <span [class]="payment.estado === 'PAGADO' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'"
+                    class="px-2 py-1 rounded-xl text-[11px] font-bold [print-color-adjust:exact]">
+                {{ payment.estado }}
+              </span>
+            </td>
+          </tr>
+        }
+      } @else {
+        <tr>
+          <td colspan="7" class="p-5 text-center text-gray-500">
+            No hay pagos registrados para este programa
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="bg-blue-50 p-5 rounded-lg border border-blue-200 [print-color-adjust:exact]">
+    <div class="grid grid-cols-3 gap-5 text-center">
+      <div class="p-2">
+        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Precio del Programa</div>
+        <div class="text-lg font-bold text-gray-800">${{ (selectedAccountData.coursePriceNumber || 0) | number:'1.0-0':'es-CO' }}</div>
+      </div>
+
+      @if (selectedAccountData.courseInscriptionPriceNumber && selectedAccountData.courseInscriptionPriceNumber > 0) {
+        <div class="p-2">
+          <div class="text-xs text-gray-500 uppercase font-bold mb-1">Inscripción</div>
+          <div class="text-lg font-bold">${{ selectedAccountData.courseInscriptionPriceNumber | number:'1.0-0':'es-CO' }}</div>
+        </div>
+      }
+
+      <div class="p-2">
+        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Total Pagado</div>
+        <div class="text-lg font-bold text-emerald-600">${{ totalPaid | number:'1.0-0':'es-CO' }}</div>
+      </div>
+      <div class="p-2">
+        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Saldo Pendiente</div>
+        <div class="text-lg font-bold" [class.text-red-600]="pendingBalance > 0" [class.text-emerald-600]="pendingBalance <= 0">
+            ${{ pendingBalance | number:'1.0-0':'es-CO' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 text-center text-[11px] text-gray-500 border-t border-gray-200 pt-4">
+    <p>Este documento fue generado automáticamente por el sistema Thinking Mind</p>
+    <p>Para consultas o aclaraciones, contacte con el área administrativa</p>
+  </div>
+</div>
+}

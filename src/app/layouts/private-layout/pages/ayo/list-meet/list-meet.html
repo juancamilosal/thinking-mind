@@ -44,7 +44,7 @@
             <div class="program-card group-card cursor-pointer hover:shadow-2xl transition-all duration-300 relative overflow-hidden h-96 group" (click)="selectGroup(group)">
                 <!-- Background Image -->
                 @if (group.img && group.img.id) {
-                <img [src]="'https://api.appthinkingmind.com/assets/' + group.img.id"
+                <img [src]="assetsUrl + '/' + group.img.id"
                      class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                      alt="Imagen del programa">
                 } @else {
@@ -97,7 +97,7 @@
                     <div class="header-content">
                         <div class="icon-wrapper">
                             @if (programa.img && programa.img.id) {
-                            <img [src]="'https://api.appthinkingmind.com/assets/' + programa.img.id" class="program-icon-img"
+                            <img [src]="assetsUrl + '/' + programa.img.id" class="program-icon-img"
                                 alt="Imagen del programa">
                             } @else {
                             <svg class="program-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
