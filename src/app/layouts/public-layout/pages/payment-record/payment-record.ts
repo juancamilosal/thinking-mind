@@ -394,7 +394,7 @@ export class PaymentRecord implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error loading school name:', error);
+          this.showServerErrorNotification('Error al cargar el nombre del colegio.');
         }
       });
     }
@@ -409,7 +409,7 @@ export class PaymentRecord implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error loading school name from colegio field:', error);
+          this.showServerErrorNotification('Error al cargar el nombre del colegio.');
         }
       });
     }
@@ -496,7 +496,12 @@ export class PaymentRecord implements OnInit {
       this.selectedAccountPayments = account.pagos || [];
       this.showPaymentsModal = true;
     } else {
-      console.error('No se encontró la cuenta para mostrar los pagos');
+      this.notificationData = {
+        title: 'Error',
+        message: 'No se encontró la cuenta para mostrar los pagos.',
+        type: 'error'
+      };
+      this.showNotification = true;
     }
   }
 
@@ -508,7 +513,12 @@ export class PaymentRecord implements OnInit {
 
   printPaymentHistory(): void {
     if (!this.selectedAccountData || !this.selectedAccountPayments) {
-      console.error('No hay datos para imprimir');
+      this.notificationData = {
+        title: 'Sin datos',
+        message: 'No hay datos para imprimir.',
+        type: 'warning'
+      };
+      this.showNotification = true;
       return;
     }
     window.print();
@@ -628,7 +638,7 @@ export class PaymentRecord implements OnInit {
         this.isLoadingCourses = false;
       },
       error: (error) => {
-        console.error('Error loading courses:', error);
+        this.showServerErrorNotification('Error al cargar los cursos.');
         this.isLoadingCourses = false;
       }
     });
@@ -695,7 +705,7 @@ export class PaymentRecord implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error searching schools:', error);
+        this.showServerErrorNotification('Error al buscar colegios.');
         this.filteredSchools = [];
         this.isLoadingSchools = false;
         this.cdRef.detectChanges();
