@@ -1,4 +1,4 @@
-<div class="min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
+<div class="no-print min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
 
   <!-- Decorative background elements similar to payment-record -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -1026,3 +1026,128 @@
                             (close)="onNotificationClose()">
                           </app-notification-modal>
                         </div>
+
+<!-- Print Layout Section -->
+@if (selectedAccountData) {
+<div class="print-only print-container">
+  <div class="print-header">
+    <div class="print-company-name">Thinking Mind</div>
+    <div class="print-document-title">Historial de Pagos</div>
+    <div class="print-date">Generado el: {{ printDate }}</div>
+  </div>
+
+  <div class="print-student-info">
+    <div class="print-info-grid">
+      <div>
+        <div class="print-info-item">
+          <span class="print-info-label">Estudiante:</span>
+          <span class="print-info-value">{{ selectedAccountData.studentName }}</span>
+        </div>
+        <div class="print-info-item">
+          <span class="print-info-label">Programa:</span>
+          <span class="print-info-value">{{ selectedAccountData.courseName }}</span>
+        </div>
+        <div class="print-info-item">
+          <span class="print-info-label">Estado:</span>
+          <span class="print-info-value">{{ selectedAccountData.status }}</span>
+        </div>
+      </div>
+      <div>
+        <div class="print-info-item">
+          <span class="print-info-label">Precio del Programa:</span>
+          <span class="print-info-value">${{ (selectedAccountData.coursePriceNumber || 0) | number:'1.0-0':'es-CO' }}</span>
+        </div>
+
+        @if (selectedAccountData.courseInscriptionPriceNumber && selectedAccountData.courseInscriptionPriceNumber > 0) {
+          <div class="print-info-item">
+            <span class="print-info-label">Precio de Inscripción:</span>
+            <span class="print-info-value">${{ selectedAccountData.courseInscriptionPriceNumber | number:'1.0-0':'es-CO' }}</span>
+          </div>
+        }
+
+        <div class="print-info-item">
+          <span class="print-info-label">Total Abonado:</span>
+          <span class="print-info-value">{{ selectedAccountData.balance }}</span>
+        </div>
+        <div class="print-info-item">
+          <span class="print-info-label">Total de Pagos:</span>
+          <span class="print-info-value">{{ selectedAccountPayments?.length || 0 }} pago(s)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="print-payments-table">
+    <thead>
+      <tr>
+        <th>ID del Pago</th>
+        <th>Valor</th>
+        <th>Fecha de Pago</th>
+        <th>Método de Pago</th>
+        <th>Pagador</th>
+        <th>Núm. Transacción</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
+        @for (payment of selectedAccountPayments; track payment.id) {
+          <tr>
+            <td style="text-align: center; font-family: monospace;">{{ payment.id }}</td>
+            <td style="text-align: right; font-weight: bold; color: #059669;">${{ (payment.valor || 0) | number:'1.0-0':'es-CO' }}</td>
+            <td style="text-align: center;">{{ formatDateForPrint(payment.fecha_pago) }}</td>
+            <td style="text-align: center;">{{ formatPaymentMethod(payment.metodo_pago) }}</td>
+            <td>{{ payment.pagador || 'N/A' }}</td>
+            <td style="text-align: center; font-family: monospace;">{{ payment.numero_transaccion || 'N/A' }}</td>
+            <td style="text-align: center;">
+              <span [style.background-color]="payment.estado === 'PAGADO' ? '#d1fae5' : '#fee2e2'"
+                    [style.color]="payment.estado === 'PAGADO' ? '#065f46' : '#991b1b'"
+                    style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">
+                {{ payment.estado }}
+              </span>
+            </td>
+          </tr>
+        }
+      } @else {
+        <tr>
+          <td colspan="7" style="padding: 20px; text-align: center; color: #6b7280;">
+            No hay pagos registrados para este programa
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="print-summary">
+    <div class="print-summary-grid">
+      <div class="print-summary-item">
+        <div class="print-summary-label">Precio del Programa</div>
+        <div class="print-summary-value print-total-course">${{ (selectedAccountData.coursePriceNumber || 0) | number:'1.0-0':'es-CO' }}</div>
+      </div>
+
+      @if (selectedAccountData.courseInscriptionPriceNumber && selectedAccountData.courseInscriptionPriceNumber > 0) {
+        <div class="print-summary-item">
+          <div class="print-summary-label">Inscripción</div>
+          <div class="print-summary-value">${{ selectedAccountData.courseInscriptionPriceNumber | number:'1.0-0':'es-CO' }}</div>
+        </div>
+      }
+
+      <div class="print-summary-item">
+        <div class="print-summary-label">Total Pagado</div>
+        <div class="print-summary-value print-total-paid">${{ totalPaid | number:'1.0-0':'es-CO' }}</div>
+      </div>
+      <div class="print-summary-item">
+        <div class="print-summary-label">Saldo Pendiente</div>
+        <div class="print-summary-value" [class.print-pending-balance-positive]="pendingBalance > 0" [class.print-pending-balance-negative]="pendingBalance <= 0">
+            ${{ pendingBalance | number:'1.0-0':'es-CO' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-footer">
+    <p>Este documento fue generado automáticamente por el sistema Thinking Mind</p>
+    <p>Para consultas o aclaraciones, contacte con el área administrativa</p>
+  </div>
+</div>
+}
