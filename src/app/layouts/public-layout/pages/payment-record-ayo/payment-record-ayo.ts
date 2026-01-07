@@ -417,7 +417,9 @@ export class PaymentRecordAyoComponent implements OnInit {
                 email: formData.studentEmail,
                 colegio: colegioValue
             }),
-            precio_programa: this.precioPrograma?.precio || 0,
+            precio_programa: (this.precioPrograma?.tiene_precio_especial && this.precioPrograma?.precio_especial)
+                ? this.precioPrograma.precio_especial
+                : (this.precioPrograma?.precio || 0),
             precio_inscripcion: 0,
             fecha_creacion: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
         };

@@ -562,13 +562,40 @@
 
                                       <div class="flex flex-col items-center justify-center p-8 bg-blue-50/30 rounded-xl border border-blue-100/50">
                                         @if (precioPrograma) {
-                                          <div class="flex items-baseline gap-2">
-                                            <span class="text-5xl md:text-6xl font-extrabold text-[#1c6ea4] drop-shadow-sm">$ {{ precioPrograma.precio | number:'1.0-0' }}</span>
-                                            <span class="text-xl text-gray-400 font-medium">COP</span>
-                                          </div>
-                                          <p class="text-sm text-gray-400 mt-4 text-center max-w-md">
-                                            Este valor cubre todos los beneficios del programa AYO.
-                                          </p>
+                                          @if (precioPrograma.tiene_precio_especial) {
+                                            <div class="relative overflow-hidden w-full max-w-lg mx-auto bg-gradient-to-br from-[#1c6ea4] to-[#0d324d] rounded-2xl shadow-2xl p-6 text-white">
+                                              <!-- Decorative elements -->
+                                              <div class="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+                                              <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+                                              
+                                              <div class="relative z-10 flex flex-col items-center">
+                                                <div class="bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 shadow-sm animate-pulse">
+                                                  ¡Oferta Especial!
+                                                </div>
+                                                
+                                                <div class="flex flex-col items-center mb-1">
+                                                  <span class="text-gray-300 line-through text-lg font-medium">$ {{ precioPrograma.precio | number:'1.0-0' }} COP</span>
+                                                </div>
+                                                
+                                                <div class="flex items-baseline gap-2 mb-2">
+                                                  <span class="text-5xl md:text-6xl font-extrabold text-white drop-shadow-md tracking-tight">$ {{ precioPrograma.precio_especial | number:'1.0-0' }}</span>
+                                                  <span class="text-xl text-blue-200 font-medium">COP</span>
+                                                </div>
+                                                
+                                                <div class="text-sm text-blue-100 font-light text-center">
+                                                  Aprovecha este precio exclusivo hasta el {{ precioPrograma.fecha_finalizacion_precio_especial | date:'dd/MM/yyyy' }}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          } @else {
+                                            <div class="flex items-baseline gap-2">
+                                              <span class="text-5xl md:text-6xl font-extrabold text-[#1c6ea4] drop-shadow-sm">$ {{ precioPrograma.precio | number:'1.0-0' }}</span>
+                                              <span class="text-xl text-gray-400 font-medium">COP</span>
+                                            </div>
+                                            <p class="text-sm text-gray-400 mt-4 text-center max-w-md">
+                                              Este valor cubre todos los beneficios del programa AYO.
+                                            </p>
+                                          }
                                         } @else {
                                           <div class="animate-pulse flex flex-col items-center w-full">
                                             <div class="h-4 w-32 bg-gray-200 rounded mb-4"></div>
@@ -735,7 +762,14 @@
                                     <div class="flex flex-col gap-6">
                                       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                                         <span class="font-medium text-gray-600">Precio Total:</span>
-                                        <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                        @if (precioPrograma?.tiene_precio_especial) {
+                                            <div class="flex flex-col items-end w-full sm:w-auto">
+                                                <span class="text-sm text-gray-500 line-through">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                                <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:text-right">$ {{ precioPrograma?.precio_especial | number:'1.0-0' }}</span>
+                                            </div>
+                                        } @else {
+                                            <span class="text-2xl font-bold text-green-700 mt-1 sm:mt-0 break-words w-full sm:w-auto sm:text-right">$ {{ precioPrograma?.precio | number:'1.0-0' }}</span>
+                                        }
                                       </div>
                                     </div>
                                   </div>
