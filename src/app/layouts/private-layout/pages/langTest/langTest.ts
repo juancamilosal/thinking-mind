@@ -1,13 +1,12 @@
 import { Component } from '@angular/core';
-
-import { HttpClientModule } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 import { LangTestService } from '../../../../core/services/langTest.service';
 import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestModels';
 
 @Component({
   selector: 'app-test',
   standalone: true,
-  imports: [HttpClientModule],
+  imports: [CommonModule],
   templateUrl: './langTest.html',
 })
 
@@ -88,14 +87,27 @@ export class LangTest {
 
   // Submit & score
   submitTest() {
-    let correct = 0;
+    // Collect all selected answer IDs
+    const selectedAnswerIds: string[] = [];
     for (const q of this.questions) {
-      const selectedId = this.answersByQuestion[q.id];
-      const options = q.respuestas_id || [];
-      const selected = options.find((o) => o.id === selectedId);
-      if (selected?.correcta) correct++;
+      const answerId = this.answersByQuestion[q.id];
+      if (answerId !== null) {
+        selectedAnswerIds.push(answerId.toString());
+      }
     }
-    this.score = correct;
-    this.showResults = true;
+
+    // Send to server for scoring
+    this.loading = true;
+    this.langTestService.submitTest(selectedAnswerIds).subscribe({
+      next: (response) => {
+        this.score = response.data.respuestas_correctas;
+        this.showResults = true;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error submitting test:', err);
+        this.loading = false;
+      }
+    });
   }
 }
