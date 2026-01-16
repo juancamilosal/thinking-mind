@@ -40,10 +40,6 @@ export class LangTestService {
 		return this.http.get<ResponseAPI<AnswerOption[]>>(this.apiAnswers, { params });
 	}
 
-	/**
-	 * Submit test answers to server for scoring.
-	 * Sends array of answer IDs and receives back correct/incorrect counts.
-	 */
 	submitTest(answerIds: string[]): Observable<any> {
 		const body = { ids: answerIds };
 		return this.http.post(environment.submit_lang_test, body);

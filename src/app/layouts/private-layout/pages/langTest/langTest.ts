@@ -21,6 +21,7 @@ export class LangTest {
   currentIndex = 0;
   answersByQuestion: Record<number, number | null> = {};
   score = 0;
+  classification = '';
 
   constructor(private langTestService: LangTestService) {}
 
@@ -85,6 +86,13 @@ export class LangTest {
     return this.questions.every((q) => this.answersByQuestion[q.id] !== null);
   }
 
+  private getClassification(score: number): string {
+    if (score <= 2) return 'A1.1 – Explorer';
+    if (score <= 4) return 'A1.2 – Explorer';
+    if (score <= 6) return 'A1.3 – Seeker';
+    return 'A1.4 – Seeker';
+  }
+
   // Submit & score
   submitTest() {
     // Collect all selected answer IDs
@@ -101,6 +109,7 @@ export class LangTest {
     this.langTestService.submitTest(selectedAnswerIds).subscribe({
       next: (response) => {
         this.score = response.data.respuestas_correctas;
+        this.classification = this.getClassification(this.score);
         this.showResults = true;
         this.loading = false;
       },
