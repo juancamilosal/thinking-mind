@@ -4,13 +4,13 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { RouterModule } from '@angular/router';
 
 @Component({
-    selector: 'app-register-ayo',
+    selector: 'app-login-ayo',
     standalone: true,
     imports: [ReactiveFormsModule, RouterModule],
-    templateUrl: './register-ayo.html',
-    styleUrls: ['./register-ayo.css']
+    templateUrl: './login-ayo.html',
+    styleUrls: ['./login-ayo.css']
 })
-export class RegisterAyo implements OnInit {
+export class LoginAyo implements OnInit {
     registerForm!: FormGroup;
     loginForm!: FormGroup;
 

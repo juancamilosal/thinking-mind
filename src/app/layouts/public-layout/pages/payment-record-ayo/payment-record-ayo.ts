@@ -60,6 +60,7 @@ export class PaymentRecordAyoComponent implements OnInit {
     editablePaymentAmount = 0;
 
     readonly openProgramSchoolId = 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7';
+    wompiConfig = environment.wompi;
 
     // School and Grade properties
     grado: any[] = []; // Should be Grupo[] but using any for safety if model not imported
@@ -416,7 +417,9 @@ export class PaymentRecordAyoComponent implements OnInit {
                 email: formData.studentEmail,
                 colegio: colegioValue
             }),
-            precio_programa: this.precioPrograma?.precio || 0,
+            precio_programa: (this.precioPrograma?.tiene_precio_especial && this.precioPrograma?.precio_especial)
+                ? this.precioPrograma.precio_especial
+                : (this.precioPrograma?.precio || 0),
             precio_inscripcion: 0,
             fecha_creacion: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
         };
@@ -630,307 +633,37 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.selectedAccountPayments = [];
     }
 
-    printPaymentHistory(): void {
-        if (!this.selectedAccountData || !this.selectedAccountPayments) {
-            console.error('No hay datos para imprimir');
-            return;
-        }
-
-        // Crear el contenido HTML para imprimir
-        const printContent = this.generatePrintContent();
-
-        // Crear una nueva ventana para imprimir
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-
-        if (printWindow) {
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-
-            // Esperar a que se cargue el contenido y luego imprimir
-            printWindow.onload = () => {
-                printWindow.print();
-            };
-        }
+    get totalPaid(): number {
+        return this.selectedAccountPayments?.reduce((sum, payment) => {
+            if (payment.estado === 'PAGADO') {
+                return sum + (payment.valor || 0);
+            }
+            if (payment.estado === 'DEVOLUCION') {
+                return sum - (payment.valor || 0);
+            }
+            return sum;
+        }, 0) || 0;
     }
 
-    private generatePrintContent(): string {
-        const currentDate = new Date().toLocaleDateString('es-CO', {
+    get pendingBalance(): number {
+        return (this.selectedAccountData?.coursePriceNumber || 0) - this.totalPaid;
+    }
+
+    get printDate(): string {
+        return new Date().toLocaleDateString('es-CO', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
         });
-
-        let paymentsHtml = '';
-
-        if (this.selectedAccountPayments && this.selectedAccountPayments.length > 0) {
-            this.selectedAccountPayments.forEach((payment, index) => {
-                paymentsHtml += `
-          <tr style="border-bottom: 1px solid #e5e7eb;">
-            <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 12px;">${payment.id}</td>
-            <td style="padding: 12px; text-align: right; font-weight: bold; color: #059669;">$${payment.valor?.toLocaleString('es-CO') || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center;">${this.formatDateForPrint(payment.fecha_pago)}</td>
-            <td style="padding: 12px; text-align: center;">${this.formatPaymentMethod(payment.metodo_pago)}</td>
-            <td style="padding: 12px;">${payment.pagador || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 12px;">${payment.numero_transaccion || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center;">
-              <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;
-                           background-color: ${payment.estado === 'PAGADO' ? '#d1fae5' : '#fee2e2'};
-                           color: ${payment.estado === 'PAGADO' ? '#065f46' : '#991b1b'};">
-                ${payment.estado}
-              </span>
-            </td>
-          </tr>
-        `;
-            });
-        } else {
-            paymentsHtml = `
-        <tr>
-          <td colspan="7" style="padding: 20px; text-align: center; color: #6b7280;">
-            No hay pagos registrados para este programa
-          </td>
-        </tr>
-      `;
-        }
-
-        const totalPaid = this.selectedAccountPayments?.reduce((sum, payment) => {
-            // Solo sumar pagos con estado PAGADO
-            if (payment.estado === 'PAGADO') {
-                return sum + (payment.valor || 0);
-            }
-            // Restar pagos con estado DEVOLUCION
-            if (payment.estado === 'DEVOLUCION') {
-                return sum - (payment.valor || 0);
-            }
-            return sum;
-        }, 0) || 0;
-        const pendingBalance = (this.selectedAccountData.coursePriceNumber || 0) - totalPaid;
-
-        return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Historial de Pagos - ${this.selectedAccountData.studentName}</title>
-        <style>
-          @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-          }
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #374151;
-            line-height: 1.4;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 20px;
-          }
-          .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1e40af;
-            margin-bottom: 5px;
-          }
-          .document-title {
-            font-size: 18px;
-            color: #374151;
-            margin-bottom: 10px;
-          }
-          .print-date {
-            font-size: 12px;
-            color: #6b7280;
-          }
-          .student-info {
-            background-color: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border-left: 4px solid #3b82f6;
-          }
-          .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-          }
-          .info-item {
-            margin-bottom: 8px;
-          }
-          .info-label {
-            font-weight: bold;
-            color: #374151;
-            display: inline-block;
-            min-width: 120px;
-          }
-          .info-value {
-            color: #1f2937;
-          }
-          .payments-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 25px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          .payments-table th {
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 13px;
-          }
-          .payments-table td {
-            font-size: 13px;
-            border-bottom: 1px solid #e5e7eb;
-          }
-          .payments-table tr:nth-child(even) {
-            background-color: #f9fafb;
-          }
-          .summary {
-            background-color: #f0f9ff;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #bae6fd;
-          }
-          .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            text-align: center;
-          }
-          .summary-item {
-            padding: 10px;
-          }
-          .summary-label {
-            font-size: 12px;
-            color: #6b7280;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 5px;
-          }
-          .summary-value {
-            font-size: 18px;
-            font-weight: bold;
-          }
-          .total-course { color: #1f2937; }
-          .total-paid { color: #059669; }
-          .pending-balance { color: ${pendingBalance > 0 ? '#dc2626' : '#059669'}; }
-          .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 11px;
-            color: #6b7280;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company-name">Thinking Mind</div>
-          <div class="document-title">Historial de Pagos</div>
-          <div class="print-date">Generado el: ${currentDate}</div>
-        </div>
-
-        <div class="student-info">
-          <div class="info-grid">
-            <div>
-              <div class="info-item">
-                <span class="info-label">Estudiante:</span>
-                <span class="info-value">${this.selectedAccountData.studentName}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Programa:</span>
-                <span class="info-value">${this.selectedAccountData.courseName}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Estado:</span>
-                <span class="info-value">${this.selectedAccountData.status}</span>
-              </div>
-            </div>
-            <div>
-          <div class="info-item">
-            <span class="info-label">Precio del Programa:</span>
-            <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
-          </div>
-          ${(() => {
-                const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-                return inscription && inscription > 0 ? `
-              <div class="info-item">
-                <span class="info-label">Precio de Inscripción:</span>
-                <span class="info-value">$${inscription.toLocaleString('es-CO')}</span>
-              </div>
-            ` : '';
-            })()}
-              <div class="info-item">
-                <span class="info-label">Total Abonado:</span>
-                <span class="info-value">${this.selectedAccountData.balance}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Total de Pagos:</span>
-                <span class="info-value">${this.selectedAccountPayments?.length || 0} pago(s)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <table class="payments-table">
-          <thead>
-            <tr>
-              <th>ID del Pago</th>
-              <th>Valor</th>
-              <th>Fecha de Pago</th>
-              <th>Método de Pago</th>
-              <th>Pagador</th>
-              <th>Núm. Transacción</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${paymentsHtml}
-          </tbody>
-        </table>
-
-        <div class="summary">
-          <div class="summary-grid">
-            <div class="summary-item">
-              <div class="summary-label">Precio del Program</div>
-              <div class="summary-value total-course">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || '0'}</div>
-            </div>
-            ${(() => {
-                const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-                return inscription && inscription > 0 ? `
-                <div class="summary-item">
-                  <div class="summary-label">Inscripción</div>
-                  <div class="summary-value">$${inscription.toLocaleString('es-CO')}</div>
-                </div>
-              ` : '';
-            })()}
-            <div class="summary-item">
-              <div class="summary-label">Total Pagado</div>
-              <div class="summary-value total-paid">$${totalPaid.toLocaleString('es-CO')}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Saldo Pendiente</div>
-              <div class="summary-value pending-balance">$${pendingBalance.toLocaleString('es-CO')}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Este documento fue generado automáticamente por el sistema Thinking Mind</p>
-          <p>Para consultas o aclaraciones, contacte con el área administrativa</p>
-        </div>
-      </body>
-      </html>
-    `;
     }
 
-    private formatDateForPrint(dateString: string): string {
+    printPaymentHistory(): void {
+        window.print();
+    }
+
+    formatDateForPrint(dateString: string): string {
         if (!dateString) return 'N/A';
 
         const date = new Date(dateString);
@@ -1007,14 +740,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 return;
             }
 
-            console.log('Referencia:', reference);
-            console.log('Monto en centavos:', amountInCents);
-
-            const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-            console.log('Configuración Wompi (modo prueba: ' + environment.wompi.testMode + ')');
-            console.log('Public Key usada:', JSON.stringify(wompiConfig.publicKey));
-
-            const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+            const signature = await this.generateIntegrity(reference, amountInCents, 'COP', this.wompiConfig.integrityKey);
             console.log('Firma de integridad generada:', signature);
 
             if (typeof (window as any).WidgetCheckout === 'undefined') {
@@ -1028,9 +754,9 @@ export class PaymentRecordAyoComponent implements OnInit {
                 currency: 'COP',
                 amountInCents: amountInCents,
                 reference: reference,
-                publicKey: wompiConfig.publicKey,
+                publicKey: this.wompiConfig.publicKey,
                 signature: { integrity: signature },
-                redirectUrl: environment.wompi.redirectUrl,
+
                 customerData: {
                     email: this.paymentModalData?.clientEmail,
                     fullName: this.paymentModalData?.clientName,

@@ -14,9 +14,6 @@ export class LangTestService {
 
 	constructor(private http: HttpClient) {}
 
-	/**
-	 * Fetch up to 10 questions by language with nested answers using Directus relational field `respuestas_id`.
-	 */
 	getQuestionsByLanguage(language: TestLanguage): Observable<ResponseAPI<TestQuestion[]>> {
 		const params: any = {
 			fields: '*,respuestas_id.*',
@@ -35,14 +32,16 @@ export class LangTestService {
 		return this.getQuestionsByLanguage('FRANCÉS');
 	}
 
-	/**
-	 * Fetch answers for a given question by `test_id`.
-	 */
 	getAnswersByTestId(testId: number): Observable<ResponseAPI<AnswerOption[]>> {
 		const params: any = {
 			'filter[test_id][_eq]': testId,
 			sort: 'id'
 		};
 		return this.http.get<ResponseAPI<AnswerOption[]>>(this.apiAnswers, { params });
+	}
+
+	submitTest(answerIds: string[]): Observable<any> {
+		const body = { ids: answerIds };
+		return this.http.post(environment.submit_lang_test, body);
 	}
 }

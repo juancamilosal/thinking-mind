@@ -51,6 +51,7 @@ export const environment = {
   dashboard: apiUrl + 'flows/trigger/8b5137ca-cfe2-4e7a-acb2-73e97663e529',
   total_payment: apiUrl + 'flows/trigger/dcceb5b9-c6ae-4cda-afb0-55922c337d4e',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
+  submit_lang_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   // Configuración de tasas de cambio
   exchangeRates: {
     // Proveedor de tasas: 'exchangerate_host' (gratis), 'alphavantage' (requiere API key), 'erapi' (anterior)
@@ -63,22 +64,9 @@ export const environment = {
 
   // Configuración de Wompi
   wompi: {
-    // En desarrollo siempre usar modo de prueba
-    testMode: true,
-
-    // Llaves de prueba
-    test: {
-      publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
-      integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY'
-    },
-
-    // Llaves de producción (no se usan en desarrollo)
-    prod: {
-      publicKey: 'pub_prod_aDinMfCvarfkhNiAQKzdm7cFDy6Szeuy',
-      integrityKey: 'prod_integrity_Uma95tilbzOeU81QAycPinIM4Vtova3V'
-    },
-
-    redirectUrl: 'http://localhost:4200/payment-status'
+    publicKey: 'pub_test_HDn6WhxEGVzryUl66FkUiPbXI2GsuDUB',
+    integrityKey: 'test_integrity_7pRzKXXTFoawku4E8lAMTQmMg3iEhCOY',
+    redirectUrl: 'https://appthinkingmind.com/payment-status'
   }
 };
 

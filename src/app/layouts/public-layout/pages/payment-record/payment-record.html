@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 relative overflow-hidden">
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 relative overflow-hidden print:hidden">
   <!-- Elementos decorativos de fondo -->
   <div class="absolute inset-0 overflow-hidden">
     <!-- Círculos grandes principales -->
@@ -1229,5 +1229,129 @@
   [notification]="notificationData"
   (close)="onNotificationClose()">
 </app-notification-modal>
+
+<!-- Print Layout Section -->
+@if (selectedAccountData) {
+<div class="hidden print:block font-sans m-5 text-gray-700 leading-snug bg-white">
+  <div class="text-center mb-8 border-b-2 border-blue-500 pb-5">
+    <div class="text-2xl font-bold text-blue-800 mb-1">Thinking Mind</div>
+    <div class="text-lg text-gray-700 mb-2">Historial de Pagos</div>
+    <div class="text-xs text-gray-500">Generado el: {{ printDate }}</div>
+  </div>
+
+  <div class="bg-slate-50 p-5 rounded-lg mb-6 border-l-4 border-blue-500 [print-color-adjust:exact]">
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Estudiante:</span>
+          <span class="text-gray-800">{{ selectedAccountData.studentName }}</span>
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Programa:</span>
+          <span class="text-gray-800">{{ selectedAccountData.courseName }}</span>
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Estado:</span>
+          <span class="text-gray-800">{{ selectedAccountData.status }}</span>
+        </div>
+      </div>
+      <div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Precio del Programa:</span>
+          <span class="text-gray-800">${{ (selectedAccountData.coursePriceNumber || 0) | number:'1.0-0':'es-CO' }}</span>
+        </div>
+
+        @if (selectedAccountData.courseInscriptionPriceNumber && selectedAccountData.courseInscriptionPriceNumber > 0) {
+          <div class="mb-2">
+            <span class="font-bold text-gray-700 inline-block min-w-[120px]">Precio de Inscripción:</span>
+            <span class="text-gray-800">${{ selectedAccountData.courseInscriptionPriceNumber | number:'1.0-0':'es-CO' }}</span>
+          </div>
+        }
+
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Total Abonado:</span>
+          <span class="text-gray-800">{{ selectedAccountData.balance }}</span>
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700 inline-block min-w-[120px]">Total de Pagos:</span>
+          <span class="text-gray-800">{{ selectedAccountPayments?.length || 0 }} pago(s)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="w-full border-collapse mb-6 shadow-sm">
+    <thead>
+      <tr>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">ID del Pago</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Valor</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Fecha de Pago</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Método de Pago</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Pagador</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Núm. Transacción</th>
+        <th class="bg-blue-500 text-white p-3 text-left font-bold text-sm [print-color-adjust:exact]">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
+        @for (payment of selectedAccountPayments; track payment.id) {
+          <tr class="even:bg-gray-50 [print-color-adjust:exact]">
+            <td class="text-sm border-b border-gray-200 p-3 text-center font-mono">{{ payment.id }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-right font-bold text-emerald-600">${{ (payment.valor || 0) | number:'1.0-0':'es-CO' }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center">{{ formatDateForPrint(payment.fecha_pago) }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center">{{ formatPaymentMethod(payment.metodo_pago) }}</td>
+            <td class="text-sm border-b border-gray-200 p-3">{{ payment.pagador || 'N/A' }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center font-mono">{{ payment.numero_transaccion || 'N/A' }}</td>
+            <td class="text-sm border-b border-gray-200 p-3 text-center">
+              <span [class]="payment.estado === 'PAGADO' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'"
+                    class="px-2 py-1 rounded-xl text-[11px] font-bold [print-color-adjust:exact]">
+                {{ payment.estado }}
+              </span>
+            </td>
+          </tr>
+        }
+      } @else {
+        <tr>
+          <td colspan="7" class="p-5 text-center text-gray-500">
+            No hay pagos registrados para este programa
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="bg-blue-50 p-5 rounded-lg border border-blue-200 [print-color-adjust:exact]">
+    <div class="grid grid-cols-3 gap-5 text-center">
+      <div class="p-2">
+        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Precio del Programa</div>
+        <div class="text-lg font-bold text-gray-800">${{ (selectedAccountData.coursePriceNumber || 0) | number:'1.0-0':'es-CO' }}</div>
+      </div>
+
+      @if (selectedAccountData.courseInscriptionPriceNumber && selectedAccountData.courseInscriptionPriceNumber > 0) {
+        <div class="p-2">
+          <div class="text-xs text-gray-500 uppercase font-bold mb-1">Inscripción</div>
+          <div class="text-lg font-bold">${{ selectedAccountData.courseInscriptionPriceNumber | number:'1.0-0':'es-CO' }}</div>
+        </div>
+      }
+
+      <div class="p-2">
+        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Total Pagado</div>
+        <div class="text-lg font-bold text-emerald-600">${{ totalPaid | number:'1.0-0':'es-CO' }}</div>
+      </div>
+      <div class="p-2">
+        <div class="text-xs text-gray-500 uppercase font-bold mb-1">Saldo Pendiente</div>
+        <div class="text-lg font-bold" [class.text-red-600]="pendingBalance > 0" [class.text-emerald-600]="pendingBalance <= 0">
+            ${{ pendingBalance | number:'1.0-0':'es-CO' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 text-center text-[11px] text-gray-500 border-t border-gray-200 pt-4">
+    <p>Este documento fue generado automáticamente por el sistema Thinking Mind</p>
+    <p>Para consultas o aclaraciones, contacte con el área administrativa</p>
+  </div>
+</div>
+}
 
 
