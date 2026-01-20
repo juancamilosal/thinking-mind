@@ -16,6 +16,7 @@ import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
+import {PaymentModalData} from '../../../../core/models/PaymentModalData';
 
 declare var WidgetCheckout: any;
 
@@ -55,7 +56,7 @@ export class PaymentRecordAyoComponent implements OnInit {
 
     // Properties for payment modal
     showPaymentModal = false;
-    paymentModalData: any = null;
+    paymentModalData: PaymentModalData | null = null;
     totalAmountToPay = 0;
     editablePaymentAmount = 0;
 
@@ -428,7 +429,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             next: (response) => {
                 this.isLoading = false;
                 if (response.status === 'SUCCES') {
-                    this.showSuccessNotification('Programa AYO creado correctamente');
+                    this.showSuccessNotification('Programa AYO inscrito correctamente');
 
                     const docType = this.paymentForm.get('tipoDocumento')?.value;
                     const docNum = this.paymentForm.get('numeroDocumento')?.value;
@@ -681,6 +682,7 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.paymentModalData = null;
         this.totalAmountToPay = 0;
         this.editablePaymentAmount = 0;
+        this.isLoading = false;
     }
 
     onPaymentAmountChange(event: any): void {

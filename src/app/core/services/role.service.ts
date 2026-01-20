@@ -14,7 +14,7 @@ export interface Role {
   providedIn: 'root'
 })
 export class RoleService {
-  private apiUrl = 'https://api.appthinkingmind.com/roles';
+  private apiUrl = environment.roles;
 
   constructor(private http: HttpClient) {}
 

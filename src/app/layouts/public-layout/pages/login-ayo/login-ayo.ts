@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-
 import { RouterModule } from '@angular/router';
+import { PruebaService } from '../../../../core/services/prueba.service';
 
 @Component({
     selector: 'app-login-ayo',
@@ -17,7 +17,7 @@ export class LoginAyo implements OnInit {
     isLoginMode: boolean = true; // Default to Login view
     isLoading: boolean = false;
 
-    constructor(private formBuilder: FormBuilder) { }
+    constructor(private formBuilder: FormBuilder, private pruebaService: PruebaService) { }
 
     ngOnInit(): void {
         // Form for Registration (Existing)
@@ -62,5 +62,20 @@ export class LoginAyo implements OnInit {
             this.isLoading = false;
             alert('Registro simulado exitoso');
         }, 1500);
+    }
+
+    testService() {
+        const ids = ["002c3b78-b952-489d-877c-ad51ca633ff8",
+          "17a09429-343f-4468-8474-020120f696d2"];
+        this.pruebaService.triggerPrueba(ids).subscribe({
+            next: (res) => {
+                console.log('Prueba exitosa', res);
+                alert('Prueba exitosa: ' + JSON.stringify(res));
+            },
+            error: (err) => {
+                console.error('Error prueba', err);
+                alert('Error en prueba: ' + JSON.stringify(err));
+            }
+        });
     }
 }

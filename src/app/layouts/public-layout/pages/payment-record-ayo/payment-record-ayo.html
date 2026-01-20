@@ -961,14 +961,10 @@
                 class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
               />
             } @else {
-              <div class="w-16 h-16 bg-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-              </div>
+              <img src="assets/icons/ayo.png" alt="AYO" class="w-16 h-16 rounded-lg object-contain flex-shrink-0">
             }
             <div class="flex-1 min-w-0">
-              <h4 class="text-lg font-semibold text-gray-900 truncate">{{ paymentModalData?.courseName }}</h4>
+              <h4 class="text-lg font-semibold text-gray-900 truncate">PROGRAMA AYO</h4>
               <p class="text-sm text-gray-600 mt-1">{{ paymentModalData?.studentName }}</p>
               @if (paymentModalData?.clientName) {
                 <p class="text-sm text-gray-500">Acudiente: {{ paymentModalData.clientName }}</p>
@@ -987,10 +983,10 @@
               <span class="text-sm font-medium text-gray-900">${{ (paymentModalData?.coursePriceNumber || 0) | number:'1.0-0' }}</span>
             </div>
 
-            @if ((paymentModalData?.balance || 0) > 0) {
+            @if ((paymentModalData?.balanceNumber || 0) > 0) {
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">Pagos realizados:</span>
-                <span class="text-sm font-medium text-green-600">-${{ (paymentModalData?.balance || 0) | number:'1.0-0' }}</span>
+                <span class="text-sm font-medium text-green-600">-${{ (paymentModalData?.balanceNumber || 0) | number:'1.0-0' }}</span>
               </div>
             }
 
@@ -1013,8 +1009,8 @@
             <input
               type="text"
               [value]="getFormattedPaymentAmount()"
-              (input)="onPaymentAmountChange($event)"
-              class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-medium"
+              readonly
+              class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed focus:outline-none text-lg font-medium"
               placeholder="0"
             />
           </div>

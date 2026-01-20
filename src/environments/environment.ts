@@ -9,6 +9,7 @@ export const environment = {
   courses: apiUrl + 'items/Cursos',
   accountsReceivable: apiUrl + 'items/cuentas_cobrar',
   payment: apiUrl + 'items/pagos',
+  roles: apiUrl + 'roles',
   budget: apiUrl + 'items/presupuesto',
   // Language test collections
   langTest: {
@@ -23,6 +24,7 @@ export const environment = {
   reuniones_meet: apiUrl + 'items/reuniones_meet',
   programa_ayo: apiUrl + 'items/programas_ayo',
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
+  tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   nivel: apiUrl + 'items/nivel',
   security: {
     login: apiUrl + 'auth/login',
@@ -50,7 +52,7 @@ export const environment = {
   dashboardSale: apiUrl + 'flows/trigger/e2287aa0-115a-4dac-b484-49363945b9b3',
   dashboard: apiUrl + 'flows/trigger/8b5137ca-cfe2-4e7a-acb2-73e97663e529',
   total_payment: apiUrl + 'flows/trigger/dcceb5b9-c6ae-4cda-afb0-55922c337d4e',
-  tarifa_wompi: apiUrl + 'items/tarifa_wompi',
+  resultado_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   // Configuración de tasas de cambio
   exchangeRates: {
     // Proveedor de tasas: 'exchangerate_host' (gratis), 'alphavantage' (requiere API key), 'erapi' (anterior)
