@@ -14,17 +14,19 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full px-2">
       <button (click)="selectLanguage('INGLÉS')" class="group relative w-full aspect-[16/10] md:aspect-[4/3] rounded-2xl overflow-hidden bg-white shadow-lg ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-primary/30">
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-100 via-emerald-50 to-slate-100 opacity-90 transition-opacity duration-300 group-hover:opacity-100"></div>
-        <div class="relative z-10 h-full flex flex-col items-center justify-center gap-3">
-          <span class="text-4xl font-bold tracking-wide text-slate-800 drop-shadow-sm">English</span>
+        <img src="assets/images/ayo-ingles.jpg" alt="English" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+        <div class="relative z-10 h-full flex flex-col items-center justify-end pb-6 gap-3">
+          <span class="text-4xl font-bold tracking-wide text-white drop-shadow-lg">English</span>
           <div class="h-1 w-12 bg-emerald-500 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
         </div>
       </button>
 
       <button (click)="selectLanguage('FRANCÉS')" class="group relative w-full aspect-[16/10] md:aspect-[4/3] rounded-2xl overflow-hidden bg-white shadow-lg ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-primary/30">
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-100 via-emerald-50 to-slate-100 opacity-90 transition-opacity duration-300 group-hover:opacity-100"></div>
-        <div class="relative z-10 h-full flex flex-col items-center justify-center gap-3">
-          <span class="text-4xl font-bold tracking-wide text-slate-800 drop-shadow-sm">Français</span>
+        <img src="assets/images/ayo-frances.jpg" alt="Français" class="absolute inset-0 w-full h-full object-contain scale-[0.9] transition-transform duration-700 group-hover:scale-[1.0]">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+        <div class="relative z-10 h-full flex flex-col items-center justify-end pb-6 gap-3">
+          <span class="text-4xl font-bold tracking-wide text-white drop-shadow-lg">Français</span>
           <div class="h-1 w-12 bg-emerald-500 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
         </div>
       </button>
@@ -143,7 +145,7 @@
 
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-slate-500">Clasificación</span>
-          <div class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-700">A1.1 Beginner</div>
+          <div class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-700">{{ classification }}</div>
         </div>
       </div>
 

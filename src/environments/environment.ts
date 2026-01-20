@@ -53,6 +53,7 @@ export const environment = {
   dashboard: apiUrl + 'flows/trigger/8b5137ca-cfe2-4e7a-acb2-73e97663e529',
   total_payment: apiUrl + 'flows/trigger/dcceb5b9-c6ae-4cda-afb0-55922c337d4e',
   resultado_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
+  submit_lang_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   // Configuración de tasas de cambio
   exchangeRates: {
     // Proveedor de tasas: 'exchangerate_host' (gratis), 'alphavantage' (requiere API key), 'erapi' (anterior)
