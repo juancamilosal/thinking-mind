@@ -51,6 +51,11 @@ export class LoginService {
             }
             
             StorageServices.setUserData(filteredUserData);
+            
+            // Guardar el rol en localStorage para redirecciones futuras (ej: auth guard)
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('last_user_role', userData.role);
+            }
           }
         })
       );
@@ -58,22 +63,30 @@ export class LoginService {
 
   logout(): Observable<any> {
     const refreshToken = StorageServices.getRefreshToken();
+    
+    // Si existe refresh token (modo normal), se envía en el body
     if (refreshToken) {
       const payload = { refresh_token: refreshToken };
-
       return this.http.post(environment.security.logout, payload).pipe(
         tap(() => {
           StorageServices.clearSession();
         }),
         catchError((error) => {
-
           StorageServices.clearSession();
           return of(null);
         })
       );
     } else {
-      StorageServices.clearSession();
-      return of(null);
+      // Si no hay refresh token (modo cookie/AYO), se intenta logout con cookies
+      return this.http.post(environment.security.logout, {}, { withCredentials: true }).pipe(
+        tap(() => {
+          StorageServices.clearSession();
+        }),
+        catchError((error) => {
+          StorageServices.clearSession();
+          return of(null);
+        })
+      );
     }
   }
 

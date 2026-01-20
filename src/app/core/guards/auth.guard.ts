@@ -15,8 +15,15 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
   const currentUser = StorageServices.getCurrentUser();
   
   if (!accessToken) {
-    // Si no hay token, redirigir al login inmediatamente
-    router.navigate(['/login']);
+    // Verificar si el último usuario fue de AYO para redirigir correctamente
+    const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
+    const isAyoRole = lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+
+    if (isAyoRole) {
+      router.navigate(['/login-ayo']);
+    } else {
+      router.navigate(['/login']);
+    }
     return false;
   }
   
@@ -32,9 +39,17 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
       return true;
     }),
     catchError((error) => {
-      // Si hay error, limpiar tokens y redirigir al login
+      // Si hay error, limpiar tokens y redirigir al login correspondiente
       StorageServices.clearSession();
-      router.navigate(['/login']);
+      
+      const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
+      const isAyoRole = lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+
+      if (isAyoRole) {
+        router.navigate(['/login-ayo']);
+      } else {
+        router.navigate(['/login']);
+      }
       return of(false);
     })
   );

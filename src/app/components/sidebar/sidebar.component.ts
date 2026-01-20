@@ -62,14 +62,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   logout() {
+    const user = StorageServices.getCurrentUser();
+    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+
+    // Asegurar que last_user_role esté actualizado antes de borrar la sesión
+    if (user?.role && typeof localStorage !== 'undefined') {
+      localStorage.setItem('last_user_role', user.role);
+    }
+
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
-        window.location.href = '/login';
+        if (isAyoRole) {
+          window.location.href = '/login-ayo';
+        } else {
+          window.location.href = '/login';
+        }
       },
       error: (error) => {
         StorageServices.clearAllSession();
-        window.location.href = '/login';
+        if (isAyoRole) {
+          window.location.href = '/login-ayo';
+        } else {
+          window.location.href = '/login';
+        }
       }
     });
   }

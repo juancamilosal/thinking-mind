@@ -6,6 +6,8 @@ import { LoginService } from '../../../../core/services/login.service';
 import { TokenRefreshService } from '../../../../core/services/token-refresh.service';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
+import { StorageServices } from '../../../../core/services/storage.services';
+
 @Component({
     selector: 'app-login-ayo',
     standalone: true,
@@ -37,6 +39,13 @@ export class LoginAyo implements OnInit {
     ) { }
 
     ngOnInit(): void {
+        // Redirigir si ya hay sesión activa
+        const accessToken = StorageServices.getAccessToken();
+        const currentUser = StorageServices.getCurrentUser();
+        if (accessToken && currentUser) {
+            this.router.navigate(['/private']);
+        }
+
         // Form for Registration (Existing)
         this.registerForm = this.formBuilder.group({
             tipoDocumento: ['', Validators.required],
@@ -70,10 +79,35 @@ export class LoginAyo implements OnInit {
     onLoginSubmit() {
         if (this.loginForm.invalid) return;
         this.isLoading = true;
-        setTimeout(() => {
-            this.isLoading = false;
-            this.showMessage('success', 'Éxito', 'Login simulado exitoso');
-        }, 1500);
+
+        const { email, password } = this.loginForm.value;
+        const loginPayload = {
+            email,
+            password,
+            mode: 'cookie'
+        };
+
+        this.loginServices.login(loginPayload).subscribe({
+            next: (loginRes) => {
+                this.loginServices.me().subscribe({
+                    next: (userResponse) => {
+                        this.isLoading = false;
+                        this.tokenRefreshService.startTokenRefreshService();
+                        this.router.navigateByUrl('/private');
+                    },
+                    error: (userError) => {
+                        this.isLoading = false;
+                        console.error('Error fetching user info:', userError);
+                        this.showMessage('error', 'Error', 'Credenciales válidas, pero hubo un error al obtener la información del usuario.');
+                    }
+                });
+            },
+            error: (loginErr) => {
+                this.isLoading = false;
+                console.error('Error logging in:', loginErr);
+                this.showMessage('error', 'Error', 'Credenciales inválidas o error en el inicio de sesión.');
+            }
+        });
     }
 
     onRegisterSubmit() {
