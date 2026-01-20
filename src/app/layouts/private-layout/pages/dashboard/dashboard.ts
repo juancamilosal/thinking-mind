@@ -10,6 +10,7 @@ import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
 import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
 import {Roles} from '../../../../core/const/Roles';
+import { StorageServices } from '../../../../core/services/storage.services';
 
 @Component({
   selector: 'app-dashboard',
@@ -46,7 +47,16 @@ export class Dashboard implements OnInit {
   userColegioId: string = '';
   isRector: boolean = false;
   isSales: boolean = false;
+  isAyoStudent: boolean = false;
   rol = Roles;
+
+  // AYO Student Stats
+  ayoStats = {
+    creditos: 0,
+    nivel_id: 0,
+    calificacion: 0,
+    resultado_test: 0
+  };
 
   constructor(
     private schoolService: SchoolService,
@@ -64,18 +74,30 @@ export class Dashboard implements OnInit {
   private loadDashboardData(): void {
     this.isLoading = true;
 
-    // Obtener información del usuario desde sessionStorage
-    const userData = sessionStorage.getItem('current_user');
-    if (userData) {
-      const user = JSON.parse(userData);
+    // Obtener información del usuario desde sessionStorage usando StorageServices
+    const user = StorageServices.getItemObjectFromSessionStorage('current_user');
+    
+    if (user) {
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === this.rol.RECTOR;
       this.isSales = user.role === this.rol.VENTAS;
+      this.isAyoStudent = user.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
 
       if (this.isSales) {
         // Consumir el servicio dashboardSale para el rol específico
         this.loadSalesData();
+        return;
+      }
+      
+      if (this.isAyoStudent) {
+        // Para estudiantes AYO, cargamos los datos desde la sesión
+        this.ayoStats.creditos = user.creditos || 0;
+        this.ayoStats.nivel_id = user.nivel_id || 0;
+        this.ayoStats.calificacion = user.calificacion || 0;
+        this.ayoStats.resultado_test = user.resultado_test || 0;
+        
+        this.isLoading = false;
         return;
       }
     }
