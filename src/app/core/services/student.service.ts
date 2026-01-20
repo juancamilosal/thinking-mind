@@ -12,6 +12,7 @@ export class StudentService {
 
   apiStudent: string = environment.students;
   apiSearchStudentPayment: string = environment.search_student;
+  apiRegisterStudentFlow: string = environment.register_student;
 
   constructor(private http: HttpClient) {
   }
@@ -92,5 +93,19 @@ export class StudentService {
       'fields': '*,curso_id.*,colegio_id.*,acudiente.*,acudiente.cuentas_cobrar.*,acudiente.cuentas_cobrar.curso_id.*,acudiente.cuentas_cobrar.pagos.*'
     };
     return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+  }
+
+  verifyStudentRegistration(tipoDocumento: string, numeroDocumento: string, email: string, codigoRegistro: string): Observable<ResponseAPI<Student[]>> {
+    const params = {
+      'filter[tipo_documento][_eq]': tipoDocumento,
+      'filter[numero_documento][_eq]': numeroDocumento,
+      'filter[email][_eq]': email,
+      'filter[codigo_registro][_eq]': codigoRegistro,
+    };
+    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+  }
+
+  registerStudentFlow(payload: any): Observable<any> {
+    return this.http.post<any>(this.apiRegisterStudentFlow, payload);
   }
 }
