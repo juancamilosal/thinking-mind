@@ -189,4 +189,9 @@
 
         </div>
     </div>
+
+    <!-- Notification Modal -->
+    <app-notification-modal [isVisible]="showNotification" [notification]="notificationData"
+        (close)="onNotificationClose()">
+    </app-notification-modal>
 </div>

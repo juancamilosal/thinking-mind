@@ -1,12 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { StudentService } from '../../../../core/services/student.service';
+import { LoginService } from '../../../../core/services/login.service';
+import { TokenRefreshService } from '../../../../core/services/token-refresh.service';
+import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 
 @Component({
     selector: 'app-login-ayo',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterModule],
+    imports: [ReactiveFormsModule, RouterModule, NotificationModalComponent],
     templateUrl: './login-ayo.html',
     styleUrls: ['./login-ayo.css']
 })
@@ -19,7 +22,19 @@ export class LoginAyo implements OnInit {
     showRegisterPassword = false;
     showRegisterConfirmPassword = false;
 
-    constructor(private formBuilder: FormBuilder, private studentService: StudentService) { }
+    // Notification Modal
+    showNotification: boolean = false;
+    notificationData: NotificationData | null = null;
+
+    constructor(
+        private formBuilder: FormBuilder,
+        private studentService: StudentService,
+        private loginServices: LoginService,
+        private tokenRefreshService: TokenRefreshService,
+        private router: Router,
+        private cdr: ChangeDetectorRef,
+        private ngZone: NgZone
+    ) { }
 
     ngOnInit(): void {
         // Form for Registration (Existing)
@@ -57,7 +72,7 @@ export class LoginAyo implements OnInit {
         this.isLoading = true;
         setTimeout(() => {
             this.isLoading = false;
-            alert('Login simulado exitoso');
+            this.showMessage('success', 'Éxito', 'Login simulado exitoso');
         }, 1500);
     }
 
@@ -77,32 +92,69 @@ export class LoginAyo implements OnInit {
                         const studentData = { ...response.data[0], password };
                         this.studentService.registerStudentFlow(studentData).subscribe({
                             next: (flowResponse) => {
-                                this.isLoading = false;
-                                setTimeout(() => {
-                                    alert('Estudiante validado y registrado exitosamente');
-                                }, 100);
+                                if (flowResponse.status === 'ERROR') {
+                                    this.isLoading = false;
+                                    this.showMessage('error', 'Error', flowResponse.message || 'Error desconocido en el registro');
+                                    return;
+                                }
+
+                                const loginPayload = {
+                                    email: email,
+                                    password: password,
+                                    mode: 'cookie'
+                                };
+
+                                this.loginServices.login(loginPayload).subscribe({
+                                    next: (loginRes) => {
+                                        this.loginServices.me().subscribe({
+                                            next: (userResponse) => {
+                                                this.isLoading = false;
+                                                this.tokenRefreshService.startTokenRefreshService();
+                                                this.router.navigateByUrl('/private');
+                                            },
+                                            error: (userError) => {
+                                                this.isLoading = false;
+                                                    this.showMessage('warning', 'Atención', 'Registro exitoso, pero hubo un error al obtener la información del usuario.');
+                                            }
+                                        });
+                                    },
+                                    error: (loginErr) => {
+                                        this.isLoading = false;
+                                            this.showMessage('warning', 'Atención', 'Registro exitoso, pero hubo un error al iniciar sesión automáticamente.');
+                                    }
+                                });
                             },
                             error: (flowErr) => {
                                 this.isLoading = false;
-                                setTimeout(() => {
-                                    alert('Estudiante validado, pero hubo un error en el proceso de registro');
-                                }, 100);
+                                    this.showMessage('error', 'Error', 'Estudiante validado, pero hubo un error en el proceso de registro');
                             }
                         });
                     } else {
                         this.isLoading = false;
-                        setTimeout(() => {
-                            alert('No se encontró estudiante con estos datos o los datos no coinciden');
-                        }, 100);
+                            this.showMessage('error', 'Error', 'No se encontró estudiante con estos datos o los datos no coinciden');
                     }
                 },
                 error: (err) => {
                     this.isLoading = false;
-                    console.error('Error al verificar estudiante:', err);
-                    setTimeout(() => {
-                        alert('Error al verificar la información del estudiante');
-                    }, 100);
+                        this.showMessage('error', 'Error', 'Error al verificar la información del estudiante');
                 }
             });
+    }
+
+    onNotificationClose() {
+        this.showNotification = false;
+        this.notificationData = null;
+    }
+
+    private showMessage(type: 'success' | 'error' | 'info' | 'warning', title: string, message: string) {
+        this.ngZone.run(() => {
+            this.notificationData = {
+                type,
+                title,
+                message
+            };
+            this.showNotification = true;
+            this.cdr.detectChanges();
+        });
     }
 }
