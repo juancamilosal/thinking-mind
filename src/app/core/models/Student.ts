@@ -15,5 +15,10 @@ export class Student {
   colegio_independiente?: string;
   programa_independiente?: boolean;
   accountInfo?: any;
+  // Extended fields for student registration & test tracking
+  email?: string;
+  test_completado?: boolean;
+  nivel_idioma?: string;
+  test_resultado?: any;
 }
 

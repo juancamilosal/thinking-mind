@@ -1,7 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LangTestService } from '../../../../core/services/langTest.service';
 import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestModels';
+import { StorageServices } from '../../../../core/services/storage.services';
+import { StudentService } from '../../../../core/services/student.service';
+import { Student } from '../../../../core/models/Student';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-test',
@@ -10,7 +14,7 @@ import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestMode
   templateUrl: './langTest.html',
 })
 
-export class LangTest {
+export class LangTest implements OnInit {
   // UI state
   selectedLanguage: TestLanguage | null = null;
   loading = false;
@@ -22,11 +26,44 @@ export class LangTest {
   answersByQuestion: Record<number, number | null> = {};
   score = 0;
   classification = '';
+  currentStudent: Student | null = null;
 
-  constructor(private langTestService: LangTestService) {}
+  constructor(
+    private langTestService: LangTestService,
+    private studentService: StudentService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const email = currentUser?.email;
+    if (!email) {
+      // Fallback: rely on authGuard, but if no user, redirect to login
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.studentService.getStudentByEmail(email).subscribe({
+      next: (res) => {
+        const students = res.data || [];
+        if (students.length) {
+          this.currentStudent = students[0];
+          if ((this.currentStudent as any).test_completado === true) {
+            // Student already completed test, redirect to dashboard/profile
+            this.router.navigate(['/private/dashboard']);
+          }
+        }
+      },
+      error: () => {
+        // Non-blocking: allow test if lookup fails
+      }
+    });
+  }
 
   // Welcome actions
   selectLanguage(lang: TestLanguage) {
+    console.log('Language selected:', lang);
     this.selectedLanguage = lang;
     this.fetchQuestions(lang);
   }
@@ -36,6 +73,7 @@ export class LangTest {
     this.loading = true;
     this.langTestService.getQuestionsByLanguage(lang).subscribe({
       next: (res) => {
+        console.log('Questions fetched successfully:', res);
         this.questions = res.data || [];
         this.currentIndex = 0;
         this.answersByQuestion = {};
@@ -44,7 +82,8 @@ export class LangTest {
         }
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error fetching questions:', err);
         this.loading = false;
       }
     });
@@ -106,17 +145,27 @@ export class LangTest {
 
     // Send to server for scoring
     this.loading = true;
-    this.langTestService.submitTest(selectedAnswerIds).subscribe({
+    const studentId = this.currentStudent?.id;
+    this.langTestService.submitTest(selectedAnswerIds, studentId).subscribe({
       next: (response) => {
         this.score = response.data.respuestas_correctas;
         this.classification = this.getClassification(this.score);
         this.showResults = true;
         this.loading = false;
+
+        // Mark completion locally; backend should persist this
+        if (this.currentStudent) {
+          (this.currentStudent as any).test_completado = true;
+        }
       },
       error: (err) => {
         console.error('Error submitting test:', err);
         this.loading = false;
       }
     });
+  }
+
+  goToDashboard() {
+    this.router.navigate(['/private/dashboard']);
   }
 }
