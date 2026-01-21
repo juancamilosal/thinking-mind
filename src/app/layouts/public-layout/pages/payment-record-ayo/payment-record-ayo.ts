@@ -92,7 +92,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             apellido: ['', [Validators.required, Validators.minLength(2)]],
             celular: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
             email: ['', [Validators.required, Validators.email]],
-            direccion: ['', [Validators.required, Validators.minLength(10)]],
+            direccion: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(80)]],
             // Student Information
             studentTipoDocumento: ['TI', Validators.required],
             studentNumeroDocumento: ['', [Validators.required, Validators.minLength(6), Validators.pattern(/^[0-9]+$/)]],

@@ -183,7 +183,7 @@ export class PaymentRecord implements OnInit {
       guardianLastName: ['', [Validators.required, Validators.minLength(2)]],
       guardianPhoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       guardianEmail: ['', [Validators.required, Validators.email]],
-      guardianAddress: ['', [Validators.required, Validators.minLength(10)]],
+      guardianAddress: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(80)]],
 
       // Student fields
       studentDocumentType: ['TI', [Validators.required]],

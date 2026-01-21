@@ -264,7 +264,7 @@
                   <div class="space-y-3 md:col-span-2 group">
                     <label for="direccion"
                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Dirección *</label>
-                    <input type="text" id="direccion" formControlName="direccion"
+                    <input type="text" id="direccion" formControlName="direccion" maxlength="80"
                       class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                       placeholder="Dirección completa de residencia">
                     @if (paymentForm.get('direccion')?.touched && paymentForm.get('direccion')?.errors?.['required']) {
