@@ -40,8 +40,11 @@ export class LangTestService {
 		return this.http.get<ResponseAPI<AnswerOption[]>>(this.apiAnswers, { params });
 	}
 
-	submitTest(answerIds: string[]): Observable<any> {
-		const body = { ids: answerIds };
+	submitTest(answerIds: string[], studentId?: string): Observable<any> {
+		const body: any = { ids: answerIds };
+		if (studentId) {
+			body.student_id = studentId;
+		}
 		return this.http.post(environment.submit_lang_test, body);
 	}
 }
