@@ -26,6 +26,8 @@ import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
 import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
+import { MeetStudent } from './layouts/private-layout/pages/meet-student/meet-student';
+import { Advance } from './layouts/private-layout/pages/advance/advance';
 
 
 export const routes: Routes = [
@@ -164,6 +166,16 @@ export const routes: Routes = [
         path: 'ayo/list-meet',
         title: 'Thinking Mind | Reuniones AYO',
         component: ListMeet
+      },
+      {
+        path: 'meetings',
+        title: 'Thinking Mind | Reuniones Estudiante',
+        component: MeetStudent
+      },
+      {
+        path: 'advance',
+        title: 'Thinking Mind | Advance',
+        component: Advance
       },
       {
         path: '**',

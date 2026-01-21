@@ -5,6 +5,7 @@ import { CourseService } from '../../../../core/services/course.service';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { DashboardService } from '../../../../core/services/dashboard.service';
+import { StudentService } from '../../../../core/services/student.service';
 import { Course } from '../../../../core/models/Course';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
@@ -64,7 +65,8 @@ export class Dashboard implements OnInit {
     private courseService: CourseService,
     private paymentService: PaymentService,
     private notificationService: NotificationService,
-    private dashboardService: DashboardService
+    private dashboardService: DashboardService,
+    private studentService: StudentService
   ) {}
 
   ngOnInit(): void {
@@ -91,13 +93,33 @@ export class Dashboard implements OnInit {
       }
       
       if (this.isAyoStudent) {
-        // Para estudiantes AYO, cargamos los datos desde la sesión
+        // Para estudiantes AYO, cargamos los datos desde la sesión inicialmente
         this.ayoStats.creditos = user.creditos || 0;
         this.ayoStats.nivel_id = user.nivel_id || 0;
         this.ayoStats.calificacion = user.calificacion || 0;
         this.ayoStats.resultado_test = user.resultado_test || 0;
+
+        // Consumir servicio dashboardStudent para obtener datos actualizados
+        this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
+          next: (response) => {
+            if (response && response.data) {
+              const data = response.data;
+              this.ayoStats.creditos = data.creditos !== undefined ? data.creditos : this.ayoStats.creditos;
+              this.ayoStats.calificacion = data.calificacion !== undefined ? data.calificacion : this.ayoStats.calificacion;
+              this.ayoStats.resultado_test = data.resultado_test !== undefined ? data.resultado_test : this.ayoStats.resultado_test;
+              
+              if (data.nivel_id) {
+                 this.ayoStats.nivel_id = data.nivel_id;
+              }
+            }
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error loading AYO dashboard data', error);
+            this.isLoading = false;
+          }
+        });
         
-        this.isLoading = false;
         return;
       }
     }

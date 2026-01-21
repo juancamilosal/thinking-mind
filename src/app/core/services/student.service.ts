@@ -13,6 +13,7 @@ export class StudentService {
   apiStudent: string = environment.students;
   apiSearchStudentPayment: string = environment.search_student;
   apiRegisterStudentFlow: string = environment.register_student;
+  apiDashboardStudent: string = environment.dashboardStudent;
 
   constructor(private http: HttpClient) {
   }
@@ -107,5 +108,9 @@ export class StudentService {
 
   registerStudentFlow(payload: any): Observable<any> {
     return this.http.post<any>(this.apiRegisterStudentFlow, payload);
+  }
+
+  dashboardStudent(payload: any): Observable<any> {
+    return this.http.get<any>(this.apiDashboardStudent, payload);
   }
 }

@@ -1,0 +1,122 @@
+<div class="p-6 min-h-screen ayo-container flex flex-col bg-gray-50/50">
+    <!-- Header with Back Button -->
+    <div class="mb-8 w-full max-w-7xl mx-auto">
+        <button (click)="goBack()" class="back-button hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+            Volver al Dashboard
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col items-center w-full max-w-7xl mx-auto -mt-10">
+        
+        <div class="text-center mb-16 relative">
+            <h1 class="text-5xl font-extrabold text-[#13486e] mb-4 tracking-tight">Mi Progreso</h1>
+            <p class="text-gray-500 text-xl font-light">Visualiza tu nivel actual y resultados de evaluación</p>
+            <!-- Decorative element -->
+            <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-[#13486e] to-transparent opacity-30"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl px-4">
+            <!-- Nivel Info Card -->
+            <div class="bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-10 transform hover:scale-[1.02] transition-all duration-300 border border-gray-100 relative overflow-hidden group">
+                <!-- Background Decoration -->
+                <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-[10rem] opacity-60 group-hover:scale-110 transition-transform duration-500"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-blue-50/50 rounded-tr-[5rem] -ml-10 -mb-10"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-8">
+                        <div class="w-16 h-16 bg-blue-100/80 rounded-2xl flex items-center justify-center shadow-sm backdrop-blur-sm">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <span class="px-4 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full border border-blue-100">
+                            Nivel Actual
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-1">Nivel</h3>
+                            <div class="text-6xl font-black text-[#13486e] tracking-tight leading-none">
+                                {{ ayoStats.nivel }}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+                            <div>
+                                <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-1">Idioma</h3>
+                                <p class="text-lg font-bold text-gray-700">{{ ayoStats.idioma }}</p>
+                            </div>
+                            <div>
+                                <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-1">Subcategoría</h3>
+                                <p class="text-lg font-bold text-gray-700">{{ ayoStats.subcategoria }}</p>
+                            </div>
+                        </div>
+                        
+                        @if(ayoStats.tematica) {
+                        <div class="pt-2">
+                            <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-1">Temática</h3>
+                            <p class="text-lg font-bold text-[#d5ca25]">{{ ayoStats.tematica }}</p>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Realizado Card -->
+            <div class="bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-10 transform hover:scale-[1.02] transition-all duration-300 border border-gray-100 relative overflow-hidden group">
+                <!-- Background Decoration -->
+                <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-yellow-50 to-transparent rounded-bl-[10rem] opacity-60 group-hover:scale-110 transition-transform duration-500"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-yellow-50/50 rounded-tr-[5rem] -ml-10 -mb-10"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-8">
+                        <div class="w-16 h-16 bg-yellow-100/80 rounded-2xl flex items-center justify-center shadow-sm backdrop-blur-sm">
+                            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="px-4 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-bold uppercase tracking-wider rounded-full border border-yellow-100">
+                            Evaluación
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-1">Resultado del Test</h3>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-6xl font-black text-[#13486e] tracking-tight leading-none">{{ ayoStats.calificacion || 0 }}</span>
+                                <span class="text-3xl text-gray-300 font-bold">/10</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-100">
+                            <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-2">Estado del Test</h3>
+                            <div class="inline-flex items-center px-4 py-2 rounded-xl bg-gray-50 text-gray-700 border border-gray-100 font-semibold">
+                                <span class="w-2 h-2 rounded-full mr-2" 
+                                      [class.bg-green-500]="ayoStats.resultado_test !== 'No realizado'"
+                                      [class.bg-gray-300]="ayoStats.resultado_test === 'No realizado'">
+                                </span>
+                                {{ ayoStats.resultado_test !== 'undefined' ? ayoStats.resultado_test : 'Pendiente' }}
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                                <div class="bg-gradient-to-r from-[#13486e] to-[#1a5f8f] h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                     [style.width.%]="(ayoStats.calificacion || 0) * 10">
+                                </div>
+                            </div>
+                            <p class="text-right text-xs text-gray-400 mt-2 font-medium">Progreso basado en calificación</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
