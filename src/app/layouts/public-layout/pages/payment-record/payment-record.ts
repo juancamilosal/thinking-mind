@@ -1,28 +1,28 @@
-import {Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
-import {DOCUMENT_TYPE} from '../../../../core/const/DocumentTypeConst';
-import {CourseService} from '../../../../core/services/course.service';
-import {Course} from '../../../../core/models/Course';
-import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
-import {ClientService} from '../../../../core/services/client.service';
-import {SchoolService} from '../../../../core/services/school.service';
-import {PaymentConfirmationComponent} from './payment-confirmation/payment-confirmation.component';
-import {Client} from '../../../../core/models/Clients';
-import {StudentService} from '../../../../core/services/student.service';
-import {Student} from '../../../../core/models/Student';
-import {School} from '../../../../core/models/School';
+import { Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
+import { CourseService } from '../../../../core/services/course.service';
+import { Course } from '../../../../core/models/Course';
+import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { ClientService } from '../../../../core/services/client.service';
+import { SchoolService } from '../../../../core/services/school.service';
+import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
+import { Client } from '../../../../core/models/Clients';
+import { StudentService } from '../../../../core/services/student.service';
+import { Student } from '../../../../core/models/Student';
+import { School } from '../../../../core/models/School';
 import {
   NotificationModalComponent,
   NotificationData
 } from '../../../../components/notification-modal/notification-modal';
-import {PaymentService} from '../../../../core/services/payment.service';
+import { PaymentService } from '../../../../core/services/payment.service';
 import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
-import {PaymentModel} from '../../../../core/models/AccountReceivable';
-import {Grupo} from '../../../../core/models/School';
-import {environment} from '../../../../../environments/environment';
+import { PaymentModel } from '../../../../core/models/AccountReceivable';
+import { Grupo } from '../../../../core/models/School';
+import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
 
 declare var WidgetCheckout: any;
@@ -90,6 +90,8 @@ export class PaymentRecord implements OnInit {
   eurRateErrorNotified: boolean = false;
   isExchangeRateError: boolean = false;
 
+  wompiConfig = environment.wompi;
+
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
@@ -132,11 +134,11 @@ export class PaymentRecord implements OnInit {
         if (!el) return;
         const offset = 16; // margen superior para que no quede pegado al borde
         const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
-        window.scrollTo({top, behavior: 'smooth'});
+        window.scrollTo({ top, behavior: 'smooth' });
       }, 150);
     } catch (e) {
       // Fallback simple
-      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({behavior: 'smooth', block: 'start'});
+      this.schoolSearchInputRef?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -181,7 +183,7 @@ export class PaymentRecord implements OnInit {
       guardianLastName: ['', [Validators.required, Validators.minLength(2)]],
       guardianPhoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       guardianEmail: ['', [Validators.required, Validators.email]],
-      guardianAddress: ['', [Validators.required, Validators.minLength(10)]],
+      guardianAddress: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(80)]],
 
       // Student fields
       studentDocumentType: ['TI', [Validators.required]],
@@ -197,8 +199,8 @@ export class PaymentRecord implements OnInit {
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
-      coursePrice: [{value: '', disabled: true}, [Validators.required]],
-      courseInscriptionPrice: [{value: '', disabled: true}],
+      coursePrice: [{ value: '', disabled: true }, [Validators.required]],
+      courseInscriptionPrice: [{ value: '', disabled: true }],
     });
   }
 
@@ -224,32 +226,32 @@ export class PaymentRecord implements OnInit {
 
   onGuardianFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('guardianFirstName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('guardianFirstName')?.setValue(value, { emitEvent: false });
   }
 
   onGuardianLastNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('guardianLastName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('guardianLastName')?.setValue(value, { emitEvent: false });
   }
 
   onStudentFirstNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentFirstName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentFirstName')?.setValue(value, { emitEvent: false });
   }
 
   onStudentLastNameChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentLastName')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentLastName')?.setValue(value, { emitEvent: false });
   }
 
   onStudentSchoolChange(event: any): void {
     const value = this.capitalizeText(event.target.value);
-    this.paymentForm.get('studentSchool')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentSchool')?.setValue(value, { emitEvent: false });
   }
 
   onStudentGradoChange(event: any): void {
     const value = event.target.value.toUpperCase();
-    this.paymentForm.get('studentGrado')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('studentGrado')?.setValue(value, { emitEvent: false });
   }
 
   onStudentGrupoChange(event: any): void {
@@ -392,7 +394,7 @@ export class PaymentRecord implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error loading school name:', error);
+          this.showServerErrorNotification('Error al cargar el nombre del colegio.');
         }
       });
     }
@@ -407,7 +409,7 @@ export class PaymentRecord implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Error loading school name from colegio field:', error);
+          this.showServerErrorNotification('Error al cargar el nombre del colegio.');
         }
       });
     }
@@ -494,7 +496,12 @@ export class PaymentRecord implements OnInit {
       this.selectedAccountPayments = account.pagos || [];
       this.showPaymentsModal = true;
     } else {
-      console.error('No se encontró la cuenta para mostrar los pagos');
+      this.notificationData = {
+        title: 'Error',
+        message: 'No se encontró la cuenta para mostrar los pagos.',
+        type: 'error'
+      };
+      this.showNotification = true;
     }
   }
 
@@ -506,305 +513,44 @@ export class PaymentRecord implements OnInit {
 
   printPaymentHistory(): void {
     if (!this.selectedAccountData || !this.selectedAccountPayments) {
-      console.error('No hay datos para imprimir');
+      this.notificationData = {
+        title: 'Sin datos',
+        message: 'No hay datos para imprimir.',
+        type: 'warning'
+      };
+      this.showNotification = true;
       return;
     }
-
-    // Crear el contenido HTML para imprimir
-    const printContent = this.generatePrintContent();
-
-    // Crear una nueva ventana para imprimir
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-
-      // Esperar a que se cargue el contenido y luego imprimir
-      printWindow.onload = () => {
-        printWindow.print();
-      };
-    }
+    window.print();
   }
 
-  private generatePrintContent(): string {
-    const currentDate = new Date().toLocaleDateString('es-CO', {
+  get totalPaid(): number {
+    return this.selectedAccountPayments?.reduce((sum, payment) => {
+      if (payment.estado === 'PAGADO') {
+        return sum + (payment.valor || 0);
+      }
+      if (payment.estado === 'DEVOLUCION') {
+        return sum - (payment.valor || 0);
+      }
+      return sum;
+    }, 0) || 0;
+  }
+
+  get pendingBalance(): number {
+    return (this.selectedAccountData?.coursePriceNumber || 0) - this.totalPaid;
+  }
+
+  get printDate(): string {
+    return new Date().toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
-
-    let paymentsHtml = '';
-
-    if (this.selectedAccountPayments && this.selectedAccountPayments.length > 0) {
-      this.selectedAccountPayments.forEach((payment, index) => {
-        paymentsHtml += `
-          <tr style="border-bottom: 1px solid #e5e7eb;">
-            <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 12px;">${payment.id}</td>
-            <td style="padding: 12px; text-align: right; font-weight: bold; color: #059669;">$${payment.valor?.toLocaleString('es-CO') || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center;">${this.formatDateForPrint(payment.fecha_pago)}</td>
-            <td style="padding: 12px; text-align: center;">${this.formatPaymentMethod(payment.metodo_pago)}</td>
-            <td style="padding: 12px;">${payment.pagador || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center; font-family: monospace; font-size: 12px;">${payment.numero_transaccion || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center;">
-              <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;
-                           background-color: ${payment.estado === 'PAGADO' ? '#d1fae5' : '#fee2e2'};
-                           color: ${payment.estado === 'PAGADO' ? '#065f46' : '#991b1b'};">
-                ${payment.estado}
-              </span>
-            </td>
-          </tr>
-        `;
-      });
-    } else {
-      paymentsHtml = `
-        <tr>
-          <td colspan="7" style="padding: 20px; text-align: center; color: #6b7280;">
-            No hay pagos registrados para este programa
-          </td>
-        </tr>
-      `;
-    }
-
-    const totalPaid = this.selectedAccountPayments?.reduce((sum, payment) => {
-      // Solo sumar pagos con estado PAGADO
-      if (payment.estado === 'PAGADO') {
-        return sum + (payment.valor || 0);
-      }
-      // Restar pagos con estado DEVOLUCION
-      if (payment.estado === 'DEVOLUCION') {
-        return sum - (payment.valor || 0);
-      }
-      return sum;
-    }, 0) || 0;
-    const pendingBalance = (this.selectedAccountData.coursePriceNumber || 0) - totalPaid;
-
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Historial de Pagos - ${this.selectedAccountData.studentName}</title>
-        <style>
-          @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-          }
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #374151;
-            line-height: 1.4;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 20px;
-          }
-          .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1e40af;
-            margin-bottom: 5px;
-          }
-          .document-title {
-            font-size: 18px;
-            color: #374151;
-            margin-bottom: 10px;
-          }
-          .print-date {
-            font-size: 12px;
-            color: #6b7280;
-          }
-          .student-info {
-            background-color: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border-left: 4px solid #3b82f6;
-          }
-          .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-          }
-          .info-item {
-            margin-bottom: 8px;
-          }
-          .info-label {
-            font-weight: bold;
-            color: #374151;
-            display: inline-block;
-            min-width: 120px;
-          }
-          .info-value {
-            color: #1f2937;
-          }
-          .payments-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 25px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          .payments-table th {
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 13px;
-          }
-          .payments-table td {
-            font-size: 13px;
-            border-bottom: 1px solid #e5e7eb;
-          }
-          .payments-table tr:nth-child(even) {
-            background-color: #f9fafb;
-          }
-          .summary {
-            background-color: #f0f9ff;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #bae6fd;
-          }
-          .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            text-align: center;
-          }
-          .summary-item {
-            padding: 10px;
-          }
-          .summary-label {
-            font-size: 12px;
-            color: #6b7280;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 5px;
-          }
-          .summary-value {
-            font-size: 18px;
-            font-weight: bold;
-          }
-          .total-course { color: #1f2937; }
-          .total-paid { color: #059669; }
-          .pending-balance { color: ${pendingBalance > 0 ? '#dc2626' : '#059669'}; }
-          .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 11px;
-            color: #6b7280;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company-name">Thinking Mind</div>
-          <div class="document-title">Historial de Pagos</div>
-          <div class="print-date">Generado el: ${currentDate}</div>
-        </div>
-
-        <div class="student-info">
-          <div class="info-grid">
-            <div>
-              <div class="info-item">
-                <span class="info-label">Estudiante:</span>
-                <span class="info-value">${this.selectedAccountData.studentName}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Programa:</span>
-                <span class="info-value">${this.selectedAccountData.courseName}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Estado:</span>
-                <span class="info-value">${this.selectedAccountData.status}</span>
-              </div>
-            </div>
-            <div>
-          <div class="info-item">
-            <span class="info-label">Precio del Programa:</span>
-            <span class="info-value">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || 'N/A'}</span>
-          </div>
-          ${(() => {
-      const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-      return inscription && inscription > 0 ? `
-              <div class="info-item">
-                <span class="info-label">Precio de Inscripción:</span>
-                <span class="info-value">$${inscription.toLocaleString('es-CO')}</span>
-              </div>
-            ` : '';
-    })()}
-              <div class="info-item">
-                <span class="info-label">Total Abonado:</span>
-                <span class="info-value">${this.selectedAccountData.balance}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Total de Pagos:</span>
-                <span class="info-value">${this.selectedAccountPayments?.length || 0} pago(s)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <table class="payments-table">
-          <thead>
-            <tr>
-              <th>ID del Pago</th>
-              <th>Valor</th>
-              <th>Fecha de Pago</th>
-              <th>Método de Pago</th>
-              <th>Pagador</th>
-              <th>Núm. Transacción</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${paymentsHtml}
-          </tbody>
-        </table>
-
-        <div class="summary">
-          <div class="summary-grid">
-            <div class="summary-item">
-              <div class="summary-label">Precio del Program</div>
-              <div class="summary-value total-course">$${this.selectedAccountData.coursePriceNumber?.toLocaleString('es-CO') || '0'}</div>
-            </div>
-            ${(() => {
-      const inscription = (this.selectedAccountData as any).courseInscriptionPriceNumber;
-      return inscription && inscription > 0 ? `
-                <div class="summary-item">
-                  <div class="summary-label">Inscripción</div>
-                  <div class="summary-value">$${inscription.toLocaleString('es-CO')}</div>
-                </div>
-              ` : '';
-    })()}
-            <div class="summary-item">
-              <div class="summary-label">Total Pagado</div>
-              <div class="summary-value total-paid">$${totalPaid.toLocaleString('es-CO')}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Saldo Pendiente</div>
-              <div class="summary-value pending-balance">$${pendingBalance.toLocaleString('es-CO')}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Este documento fue generado automáticamente por el sistema Thinking Mind</p>
-          <p>Para consultas o aclaraciones, contacte con el área administrativa</p>
-        </div>
-      </body>
-      </html>
-    `;
   }
 
-  private formatDateForPrint(dateString: string): string {
+  formatDateForPrint(dateString: string): string {
     if (!dateString) return 'N/A';
 
     const date = new Date(dateString);
@@ -815,6 +561,19 @@ export class PaymentRecord implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  formatPaymentMethod(method: string): string {
+    if (method === 'CARD') {
+      return 'TARJETA';
+    }
+    if (method === 'BANCOLOMBIA_TRANSFER') {
+      return 'TRANSFERENCIA BANCOLOMBIA';
+    }
+    if (method === 'BANCOLOMBIA_COLLECT') {
+      return 'CORRESPONSAL BANCARIO';
+    }
+    return method;
   }
 
   showAddCourseFormView(): void {
@@ -879,7 +638,7 @@ export class PaymentRecord implements OnInit {
         this.isLoadingCourses = false;
       },
       error: (error) => {
-        console.error('Error loading courses:', error);
+        this.showServerErrorNotification('Error al cargar los cursos.');
         this.isLoadingCourses = false;
       }
     });
@@ -946,7 +705,7 @@ export class PaymentRecord implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error searching schools:', error);
+        this.showServerErrorNotification('Error al buscar colegios.');
         this.filteredSchools = [];
         this.isLoadingSchools = false;
         this.cdRef.detectChanges();
@@ -983,7 +742,7 @@ export class PaymentRecord implements OnInit {
       if (selectedCourse) {
         const price = this.computeCoursePrice(selectedCourse);
         if (price !== null) {
-          this.paymentForm.patchValue({coursePrice: this.formatCurrency(price)});
+          this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
         } else {
           // Si no existe precio para el colegio, notificar y reiniciar programa
           this.showCourseSchoolNotFoundNotification();
@@ -1014,6 +773,7 @@ export class PaymentRecord implements OnInit {
       this.filteredSchools = [];
       this.isSchoolSelected = true;
       this.updateSelectedCoursePriceIfAny();
+
     } else {
       this.paymentForm.get('independentInstitution')?.setValue('');
       this.clearSchoolSearch();
@@ -1033,6 +793,7 @@ export class PaymentRecord implements OnInit {
         this.resetCourseSelection();
         return;
       }
+
       // Validación para el curso Will-Go (Segundo Hermano)
       const willGoSegundoHermanoId = '2818d82d-25e3-4396-a964-1ae7bdc60054';
       const willGoEstandarId = '98e183f7-a568-4992-b1e8-d2f00915a153';
@@ -1153,15 +914,7 @@ export class PaymentRecord implements OnInit {
         this.updateInscriptionConversion();
       }
     } else {
-      this.paymentForm.patchValue({
-        coursePrice: '',
-        courseInscriptionPrice: ''
-      });
-      this.hasInscription = false;
-      this.isEuroCourse = false;
-      this.selectedInscriptionAmount = 0;
-      this.selectedInscriptionConvertedCop = null;
-      this.selectedCourseImageUrl = null;
+      this.resetCourseSelection();
     }
   }
 
@@ -1219,10 +972,10 @@ export class PaymentRecord implements OnInit {
     if (!selectedCourse) return;
     const price = this.computeCoursePrice(selectedCourse);
     if (price !== null) {
-      this.paymentForm.patchValue({coursePrice: this.formatCurrency(price)});
+      this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
     } else {
       // Solo limpiar precio si no existe para el colegio; la notificación se muestra al seleccionar programa
-      this.paymentForm.patchValue({coursePrice: ''});
+      this.paymentForm.patchValue({ coursePrice: '' });
     }
   }
 
@@ -1255,7 +1008,7 @@ export class PaymentRecord implements OnInit {
 
   onIndependentInstitutionChange(event: any): void {
     const value = this.capitalizeText((event?.target?.value || '').toString().trim());
-    this.paymentForm.get('independentInstitution')?.setValue(value, {emitEvent: false});
+    this.paymentForm.get('independentInstitution')?.setValue(value, { emitEvent: false });
   }
 
   private showValidationNotification(requiredCourse: string): void {
@@ -1389,6 +1142,7 @@ export class PaymentRecord implements OnInit {
     let inscriptionNumber: number = 0;
     let inscriptionCurrency: string = 'USD'; // Por defecto USD
 
+
     if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
       // Buscar el colegio específico en colegios_cursos
       const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) =>
@@ -1399,6 +1153,8 @@ export class PaymentRecord implements OnInit {
         // Usar precio_inscripcion y moneda de colegios_cursos
         inscriptionNumber = schoolCourse.precio_inscripcion || 0;
         inscriptionCurrency = schoolCourse.moneda || 'USD';
+
+
       }
     }
 
@@ -1433,8 +1189,9 @@ export class PaymentRecord implements OnInit {
       precio: coursePriceNumber,
       // Enviar la inscripción ya convertida a COP
       precio_inscripcion: inscriptionConvertedCop,
+
       estado: 'PENDIENTE',
-      fecha_creacion: new Date().toLocaleString('sv-SE', {timeZone: 'America/Bogota'})
+      fecha_creacion: new Date().toLocaleString('sv-SE', { timeZone: 'America/Bogota' })
     };
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
@@ -1708,15 +1465,14 @@ export class PaymentRecord implements OnInit {
     const reference = this.generatePaymentReference(this.paymentModalData?.id);
     const amountInCents = this.editablePaymentAmount * 100;
 
-    const wompiConfig = environment.wompi.testMode ? environment.wompi.test : environment.wompi.prod;
-    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', wompiConfig.integrityKey);
+    const signature = await this.generateIntegrity(reference, amountInCents, 'COP', this.wompiConfig.integrityKey);
     const checkout = new (window as any).WidgetCheckout({
       currency: 'COP',
       amountInCents: amountInCents,
       reference: reference,
-      publicKey: wompiConfig.publicKey,
-      signature: {integrity: signature},
-      redirectUrl: environment.wompi.redirectUrl,
+      publicKey: this.wompiConfig.publicKey,
+      signature: { integrity: signature },
+      redirectUrl: this.wompiConfig.redirectUrl,
       customerData: {
         email: this.paymentModalData?.clientEmail,
         fullName: this.paymentModalData?.clientName,
@@ -1755,19 +1511,6 @@ export class PaymentRecord implements OnInit {
     } catch (error) {
       throw new Error('Error generando la firma de integridad');
     }
-  }
-
-  formatPaymentMethod(method: string): string {
-    if (method === 'CARD') {
-      return 'TARJETA';
-    }
-    if (method === 'BANCOLOMBIA_TRANSFER') {
-      return 'TRANSFERENCIA BANCOLOMBIA';
-    }
-    if (method === 'BANCOLOMBIA_COLLECT') {
-      return 'CORRESPONSAL BANCARIO';
-    }
-    return method;
   }
 
   private loadExchangeRates(): void {

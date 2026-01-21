@@ -6,6 +6,7 @@ export class NotificationData {
   title: string;
   message: string;
   duration?: number; // duración en milisegundos, opcional
+  onClose?: () => void; // Callback opcional al cerrar
 }
 
 @Component({
@@ -29,6 +30,9 @@ export class NotificationModalComponent {
   }
 
   closeModal() {
+    if (this.notification?.onClose) {
+      this.notification.onClose();
+    }
     this.isVisible = false;
     this.close.emit();
   }

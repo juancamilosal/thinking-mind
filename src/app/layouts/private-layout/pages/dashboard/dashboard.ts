@@ -5,11 +5,13 @@ import { CourseService } from '../../../../core/services/course.service';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { DashboardService } from '../../../../core/services/dashboard.service';
+import { StudentService } from '../../../../core/services/student.service';
 import { Course } from '../../../../core/models/Course';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
 import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
 import {Roles} from '../../../../core/const/Roles';
+import { StorageServices } from '../../../../core/services/storage.services';
 
 @Component({
   selector: 'app-dashboard',
@@ -46,7 +48,16 @@ export class Dashboard implements OnInit {
   userColegioId: string = '';
   isRector: boolean = false;
   isSales: boolean = false;
+  isAyoStudent: boolean = false;
   rol = Roles;
+
+  // AYO Student Stats
+  ayoStats = {
+    creditos: 0,
+    nivel_id: 0,
+    calificacion: 0,
+    resultado_test: 0
+  };
 
   constructor(
     private schoolService: SchoolService,
@@ -54,7 +65,8 @@ export class Dashboard implements OnInit {
     private courseService: CourseService,
     private paymentService: PaymentService,
     private notificationService: NotificationService,
-    private dashboardService: DashboardService
+    private dashboardService: DashboardService,
+    private studentService: StudentService
   ) {}
 
   ngOnInit(): void {
@@ -64,18 +76,50 @@ export class Dashboard implements OnInit {
   private loadDashboardData(): void {
     this.isLoading = true;
 
-    // Obtener información del usuario desde sessionStorage
-    const userData = sessionStorage.getItem('current_user');
-    if (userData) {
-      const user = JSON.parse(userData);
+    // Obtener información del usuario desde sessionStorage usando StorageServices
+    const user = StorageServices.getItemObjectFromSessionStorage('current_user');
+    
+    if (user) {
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === this.rol.RECTOR;
       this.isSales = user.role === this.rol.VENTAS;
+      this.isAyoStudent = user.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
 
       if (this.isSales) {
         // Consumir el servicio dashboardSale para el rol específico
         this.loadSalesData();
+        return;
+      }
+      
+      if (this.isAyoStudent) {
+        // Para estudiantes AYO, cargamos los datos desde la sesión inicialmente
+        this.ayoStats.creditos = user.creditos || 0;
+        this.ayoStats.nivel_id = user.nivel_id || 0;
+        this.ayoStats.calificacion = user.calificacion || 0;
+        this.ayoStats.resultado_test = user.resultado_test || 0;
+
+        // Consumir servicio dashboardStudent para obtener datos actualizados
+        this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
+          next: (response) => {
+            if (response && response.data) {
+              const data = response.data;
+              this.ayoStats.creditos = data.creditos !== undefined ? data.creditos : this.ayoStats.creditos;
+              this.ayoStats.calificacion = data.calificacion !== undefined ? data.calificacion : this.ayoStats.calificacion;
+              this.ayoStats.resultado_test = data.resultado_test !== undefined ? data.resultado_test : this.ayoStats.resultado_test;
+              
+              if (data.nivel_id) {
+                 this.ayoStats.nivel_id = data.nivel_id;
+              }
+            }
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error loading AYO dashboard data', error);
+            this.isLoading = false;
+          }
+        });
+        
         return;
       }
     }

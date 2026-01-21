@@ -104,8 +104,19 @@ function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshServic
   isRefreshing = false;
   // Detener el servicio de renovación de tokens
   tokenRefreshService.stopTokenRefreshService();
+  
+  const user = StorageServices.getCurrentUser();
+  const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
+  const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3' || lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+
   // Limpiar tokens usando StorageServices
   StorageServices.clearTokens();
-  router.navigate(['/login']);
+  
+  if (isAyoRole) {
+    router.navigate(['/login-ayo']);
+  } else {
+    router.navigate(['/login']);
+  }
+
   return throwError(() => 'Token refresh failed');
 }

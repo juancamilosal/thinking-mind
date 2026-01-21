@@ -1,6 +1,6 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import {AccountReceivable} from '../../../../../core/models/AccountReceivable';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {ClientService} from '../../../../../core/services/client.service';
@@ -13,7 +13,7 @@ import {ResponseAPI} from '../../../../../core/models/ResponseAPI';
 
 @Component({
   selector: 'app-account-receivable-form',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './account-receivable-form.html',
   standalone: true
 })

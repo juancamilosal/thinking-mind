@@ -43,14 +43,27 @@ export class LoginService {
               last_name: userData.last_name,
               role: userData.role
             };
-            
+
             // Si el rol es rector, agregar celular y colegio_id
             if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
               filteredUserData.celular = userData.celular;
               filteredUserData.colegio_id = userData.colegio_id;
             }
-            
+
+            // Si el rol es AYO (Estudiante), agregar campos específicos
+            if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+              filteredUserData.calificacion = userData.calificacion;
+              filteredUserData.creditos = userData.creditos;
+              filteredUserData.resultado_test = userData.resultado_test;
+              filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+            }
+
             StorageServices.setUserData(filteredUserData);
+
+            // Guardar el rol en localStorage para redirecciones futuras (ej: auth guard)
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('last_user_role', userData.role);
+            }
           }
         })
       );
@@ -58,22 +71,30 @@ export class LoginService {
 
   logout(): Observable<any> {
     const refreshToken = StorageServices.getRefreshToken();
+
+    // Si existe refresh token (modo normal), se envía en el body
     if (refreshToken) {
       const payload = { refresh_token: refreshToken };
-
       return this.http.post(environment.security.logout, payload).pipe(
         tap(() => {
           StorageServices.clearSession();
         }),
         catchError((error) => {
-
           StorageServices.clearSession();
           return of(null);
         })
       );
     } else {
-      StorageServices.clearSession();
-      return of(null);
+      // Si no hay refresh token (modo cookie/AYO), se intenta logout con cookies
+      return this.http.post(environment.security.logout, {}, { withCredentials: true }).pipe(
+        tap(() => {
+          StorageServices.clearSession();
+        }),
+        catchError((error) => {
+          StorageServices.clearSession();
+          return of(null);
+        })
+      );
     }
   }
 
@@ -108,13 +129,21 @@ export class LoginService {
             last_name: userData.last_name,
             role: userData.role
           };
-          
+
           // Si el rol es rector, agregar celular y colegio_id
           if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
             filteredUserData.celular = userData.celular;
             filteredUserData.colegio_id = userData.colegio_id;
           }
-          
+
+          // Si el rol es AYO (Estudiante), agregar campos específicos
+          if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+            filteredUserData.calificacion = userData.calificacion;
+            filteredUserData.creditos = userData.creditos;
+            filteredUserData.resultado_test = userData.resultado_test;
+            filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+          }
+
           StorageServices.setUserData(filteredUserData);
         }
       }),
@@ -137,13 +166,21 @@ export class LoginService {
             last_name: userData.last_name,
             role: userData.role
           };
-          
+
           // Si el rol es rector, agregar celular y colegio_id
           if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
             filteredUserData.celular = userData.celular;
             filteredUserData.colegio_id = userData.colegio_id;
           }
-          
+
+          // Si el rol es AYO (Estudiante), agregar campos específicos
+          if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+            filteredUserData.calificacion = userData.calificacion;
+            filteredUserData.creditos = userData.creditos;
+            filteredUserData.resultado_test = userData.resultado_test;
+            filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+          }
+
           StorageServices.setUserData(filteredUserData);
         }
       })

@@ -21,12 +21,13 @@ export class NotificationService {
   }
 
   // Método para mostrar notificación de éxito
-  showSuccess(title: string, message: string, duration: number = 3000): void {
+  showSuccess(title: string, message: string, duration: number = 3000, onClose?: () => void): void {
     this.showNotification({
       type: 'success',
       title,
       message,
-      duration
+      duration,
+      onClose
     });
   }
 

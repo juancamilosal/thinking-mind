@@ -14,22 +14,15 @@ import { StorageServices } from './core/services/storage.services';
   styleUrl: './app.css'
 })
 export class App implements OnInit, OnDestroy {
-  protected readonly title = signal('n');
-
   constructor(
-    @Inject(PLATFORM_ID) private platformId: Object,
     private tokenRefreshService: TokenRefreshService
   ) {}
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      initFlowbite();
-      
-      // Iniciar el servicio de renovación automática de tokens si hay un token válido
-      const accessToken = StorageServices.getAccessToken();
-      if (accessToken) {
-        this.tokenRefreshService.startTokenRefreshService();
-      }
+    // Iniciar el servicio de renovación automática de tokens si hay un token válido
+    const accessToken = StorageServices.getAccessToken();
+    if (accessToken) {
+      this.tokenRefreshService.startTokenRefreshService();
     }
   }
 

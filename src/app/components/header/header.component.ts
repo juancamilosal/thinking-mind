@@ -76,17 +76,33 @@ export class HeaderComponent implements OnInit {
   logout() {
     // Detener el servicio de renovación de tokens antes del logout
     this.tokenRefreshService.stopTokenRefreshService();
+
+    const user = StorageServices.getCurrentUser();
+    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+    
+    // Asegurar que last_user_role esté actualizado antes de borrar la sesión
+    if (user?.role && typeof localStorage !== 'undefined') {
+      localStorage.setItem('last_user_role', user.role);
+    }
     
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
-        window.location.href = '/login';
+        if (isAyoRole) {
+          window.location.href = '/login-ayo';
+        } else {
+          window.location.href = '/login';
+        }
       },
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
         // Incluso si hay error, limpiamos la sesión y redirigimos
         StorageServices.clearAllSession();
-        window.location.href = '/login';
+        if (isAyoRole) {
+          window.location.href = '/login-ayo';
+        } else {
+          window.location.href = '/login';
+        }
       }
     });
   }
