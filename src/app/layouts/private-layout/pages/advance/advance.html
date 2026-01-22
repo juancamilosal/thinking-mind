@@ -21,6 +21,68 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-5xl px-4 mb-12">
+            @if (isLoading) {
+                <!-- Skeleton for Nivel Info Card -->
+                <div class="bg-white rounded-[2rem] shadow-sm p-10 border border-gray-100 animate-pulse">
+                    <div class="flex items-start justify-between mb-8">
+                        <div class="w-16 h-16 bg-gray-200 rounded-2xl"></div>
+                        <div class="h-8 w-24 bg-gray-200 rounded-full"></div>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                            <div class="h-16 w-48 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+                            <div>
+                                <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                                <div class="h-6 w-32 bg-gray-200 rounded"></div>
+                            </div>
+                            <div>
+                                <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                                <div class="h-6 w-32 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Skeleton for Test Realizado Card -->
+                <div class="bg-white rounded-[2rem] shadow-sm p-10 border border-gray-100 animate-pulse">
+                     <div class="flex items-start justify-between mb-8">
+                        <div class="w-16 h-16 bg-gray-200 rounded-2xl"></div>
+                        <div class="h-8 w-24 bg-gray-200 rounded-full"></div>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-2"></div>
+                            <div class="flex items-baseline gap-2">
+                                <div class="h-16 w-24 bg-gray-200 rounded"></div>
+                                <div class="h-8 w-12 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="pt-6 border-t border-gray-100">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-2"></div>
+                            <div class="h-10 w-40 bg-gray-200 rounded-xl"></div>
+                        </div>
+                         <div class="pt-4">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5"></div>
+                            <div class="h-3 w-40 bg-gray-200 rounded mt-2 ml-auto"></div>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Skeleton for Chart Section -->
+                <div class="col-span-1 lg:col-span-2 bg-white rounded-[2rem] shadow-sm p-8 border border-gray-100 animate-pulse">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <div class="h-8 w-64 bg-gray-200 rounded mb-2"></div>
+                            <div class="h-4 w-48 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    </div>
+                    <div class="h-[400px] w-full bg-gray-100 rounded-xl"></div>
+                </div>
+            } @else {
             <!-- Nivel Info Card -->
             <div class="bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-10 transform hover:scale-[1.02] transition-all duration-300 border border-gray-100 relative overflow-hidden group">
                 <!-- Background Decoration -->
@@ -136,6 +198,7 @@
             <canvas #progressChart></canvas>
         </div>
             </div>
+            }
         </div>
     </div>
 </div>

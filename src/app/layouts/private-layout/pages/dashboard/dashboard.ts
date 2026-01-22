@@ -52,11 +52,16 @@ export class Dashboard implements OnInit {
   rol = Roles;
 
   // AYO Student Stats
-  ayoStats = {
+  ayoStats: any = {
     creditos: 0,
-    nivel_id: 0,
+    nivel: '',
     calificacion: 0,
-    resultado_test: 0
+    resultado_test: '',
+    estado_cuenta: '',
+    idioma: '',
+    subcategoria: '',
+    tematica: '',
+    reuniones_meet: ''
   };
 
   constructor(
@@ -95,22 +100,24 @@ export class Dashboard implements OnInit {
       if (this.isAyoStudent) {
         // Para estudiantes AYO, cargamos los datos desde la sesión inicialmente
         this.ayoStats.creditos = user.creditos || 0;
-        this.ayoStats.nivel_id = user.nivel_id || 0;
         this.ayoStats.calificacion = user.calificacion || 0;
-        this.ayoStats.resultado_test = user.resultado_test || 0;
 
         // Consumir servicio dashboardStudent para obtener datos actualizados
         this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
           next: (response) => {
-            if (response && response.data) {
-              const data = response.data;
-              this.ayoStats.creditos = data.creditos !== undefined ? data.creditos : this.ayoStats.creditos;
-              this.ayoStats.calificacion = data.calificacion !== undefined ? data.calificacion : this.ayoStats.calificacion;
-              this.ayoStats.resultado_test = data.resultado_test !== undefined ? data.resultado_test : this.ayoStats.resultado_test;
-              
-              if (data.nivel_id) {
-                 this.ayoStats.nivel_id = data.nivel_id;
-              }
+            const data = response.data || response;
+            if (data) {
+              this.ayoStats = {
+                creditos: data.creditos ?? 0,
+                nivel: data.nivel || 'N/A',
+                calificacion: data.calificacion ?? 0,
+                resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
+                estado_cuenta: data.estado_cuenta || 'N/A',
+                idioma: data.idioma || 'N/A',
+                subcategoria: data.subcategoria || 'N/A',
+                tematica: data.tematica || 'N/A',
+                reuniones_meet: data.reuniones_meet
+              };
             }
             this.isLoading = false;
           },

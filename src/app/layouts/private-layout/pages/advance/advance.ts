@@ -19,6 +19,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('progressChart') progressChartRef!: ElementRef<HTMLCanvasElement>;
   private chart: Chart | null = null;
+  isLoading = true;
 
   assetsUrl = environment.assets;
   ayoStats = {
@@ -55,6 +56,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadStats(): void {
+    this.isLoading = true;
     const user = StorageServices.getItemObjectFromSessionStorage('current_user');
     if (user) {
       // Inicializar con datos de sesión
@@ -81,14 +83,26 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
               calificacion: data.calificacion !== null ? data.calificacion : 0,
               resultado_test: (data.resultado_test && data.resultado_test !== 'undefined') ? data.resultado_test : 'No realizado'
             };
-            this.initChart(); // Actualizar gráfico si cambian los datos (si fuera dinámico)
-            this.cd.detectChanges();
           }
+          this.isLoading = false;
+          this.cd.detectChanges();
+          
+          // Inicializar gráfico después de que el DOM se haya actualizado
+          setTimeout(() => {
+            this.initChart();
+          }, 0);
         },
         error: (error) => {
           console.error('Error loading AYO stats', error);
+          this.isLoading = false;
+          this.cd.detectChanges();
+          setTimeout(() => {
+            this.initChart();
+          }, 0);
         }
       });
+    } else {
+      this.isLoading = false;
     }
   }
 
