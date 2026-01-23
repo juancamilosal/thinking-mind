@@ -88,6 +88,14 @@ export class StudentService {
     return this.http.get<ResponseAPI<Student>>(`${this.apiStudent}/${id}`, { params });
   }
 
+  getStudentByEmail(email: string): Observable<ResponseAPI<Student[]>> {
+    const params = {
+      'filter[email][_eq]': email,
+      'fields': '*,acudiente.*,curso_id.*'
+    };
+    return this.http.get<ResponseAPI<Student[]>>(this.apiStudent, { params });
+  }
+
   getStudentsByCourseName(courseName: string): Observable<ResponseAPI<Student[]>> {
     const params = {
       'filter[curso_id][nombre][_icontains]': courseName,

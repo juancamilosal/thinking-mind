@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
+import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { ProgramaAyo } from '../../../../core/models/Course';
 import { environment } from '../../../../../environments/environment';
 
@@ -17,13 +18,16 @@ export class MeetStudent implements OnInit {
   assetsUrl = environment.assets;
   programas: ProgramaAyo[] = [];
   isLoading = false;
+  accountsReceivable: any[] = [];
 
   constructor(
     private programaAyoService: ProgramaAyoService,
+    private accountReceivableService: AccountReceivableService,
     private router: Router
   ) { }
 
   ngOnInit(): void {
+    this.loadAccountsReceivable();
     this.programas = [
       {
         id: '1',
@@ -48,5 +52,17 @@ export class MeetStudent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/private/dashboard']);
+  }
+
+  loadAccountsReceivable(): void {
+    this.accountReceivableService.getAllAccountsReceivable(1, 1000).subscribe({
+      next: (response) => {
+        this.accountsReceivable = response.data;
+        console.log('Cuentas por cobrar cargadas en Meetings:', this.accountsReceivable);
+      },
+      error: (error) => {
+        console.error('Error al cargar cuentas por cobrar:', error);
+      }
+    });
   }
 }

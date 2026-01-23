@@ -144,7 +144,8 @@ export class LoginAyo implements OnInit {
                                             next: (userResponse) => {
                                                 this.isLoading = false;
                                                 this.tokenRefreshService.startTokenRefreshService();
-                                                this.router.navigateByUrl('/private');
+                                                // After successful registration + login, go to Language Test
+                                                this.router.navigateByUrl('/private/langTest');
                                             },
                                             error: (userError) => {
                                                 this.isLoading = false;
