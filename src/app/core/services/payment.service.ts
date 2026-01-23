@@ -22,32 +22,17 @@ export class PaymentService {
       meta: 'total_count,filter_count',
       fields: '*,responsable.*'
     };
-
-    // Filtro por término de búsqueda
     if (searchTerm && searchTerm.trim()) {
       params['filter[_or][0][pagador][_icontains]'] = searchTerm;
       params['filter[_or][1][numero_transaccion][_icontains]'] = searchTerm;
       params['filter[_or][2][estado][_icontains]'] = searchTerm;
     }
-
-    // Filtro por fecha inicial - Directus maneja el filtro
     if (startDate) {
-      // Formato YYYY-MM-DD para el inicio del día
       params['filter[fecha_pago][_gte]'] = startDate + 'T00:00:00';
     }
-
-    // Filtro por fecha final - Directus maneja el filtro
     if (endDate) {
-      // Formato YYYY-MM-DD para el final del día
       params['filter[fecha_pago][_lte]'] = endDate + 'T23:59:59';
     }
-
-    // Remover filtro de estado para mostrar todos los pagos en la tabla
-    // params['filter[estado][_eq]'] = 'PAGADO';
-
-    // Log de la URL completa que se enviará a Directus
-    const queryString = new URLSearchParams(params).toString();
-    // Ordenar por fecha de pago descendente (más reciente primero)
     params['sort'] = '-fecha_pago';
 
     return this.http.get<ResponseAPI<PaymentModel[]>>(this.apiUrl, { params });
@@ -63,10 +48,6 @@ export class PaymentService {
 
   createPayment(payment: PaymentModel ): Observable<ResponseAPI<PaymentModel>> {
     return this.http.post<ResponseAPI<PaymentModel>>(this.manualPayment, payment);
-  }
-
-  updatePayment(id: string, payment: Partial<PaymentModel>): Observable<ResponseAPI<PaymentModel>> {
-    return this.http.patch<ResponseAPI<PaymentModel>>(`${this.apiUrl}/${id}`, payment);
   }
 
   deletePayment(id: string): Observable<ResponseAPI<any>> {

@@ -632,17 +632,9 @@
                   (change)="onStudentGradoChange($event)"
                   class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
                   <option disabled value="">Seleccione el grado</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
+                  @for (gradoItem of grados; track gradoItem.grado) {
+                    <option [value]="gradoItem.grado">{{ gradoItem.grado }}</option>
+                  }
                 </select>
                 @if (paymentForm.get('studentGrado')?.touched && paymentForm.get('studentGrado')?.errors?.['required']) {
                   <p class="text-red-500 text-sm mt-2 flex items-center">
