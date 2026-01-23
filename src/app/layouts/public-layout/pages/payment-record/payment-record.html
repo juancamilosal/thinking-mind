@@ -382,22 +382,48 @@
                 <h3 class="text-2xl font-bold text-gray-800">Programas Registrados</h3>
               </div>
 
+              <!-- Indicador de scroll para móviles -->
+              <div class="md:hidden flex items-center justify-end mb-2 text-indigo-600 animate-pulse">
+                <span class="text-xs font-semibold mr-1">Desliza para ver más</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+              </div>
+
               <div class="overflow-x-auto">
                 <table class="w-full bg-white rounded-lg shadow-sm border ">
                   <thead class="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
                     <tr>
+                      <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider md:hidden">Acción</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Programa</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Programa</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
                       <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
                       <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
-                      <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Acción</th>
+                      <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider hidden md:table-cell">Acción</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-emerald-100">
                     @for (courseData of registeredCourses; track courseData.id) {
                         <tr class="transition-colors duration-200">
+                          <!-- Columna Acción (Mobile) -->
+                          <td class="px-6 py-4 text-center md:hidden">
+                            <div class="flex flex-col gap-2 justify-center">
+                              <button
+                                type="button"
+                                (click)="onPayCourse(courseData)"
+                                class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-xs">
+                                Pagar
+                              </button>
+                              <button
+                                type="button"
+                                (click)="onViewPayments(courseData)"
+                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-xs whitespace-nowrap">
+                                Ver Pagos
+                              </button>
+                            </div>
+                          </td>
                           <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                             @if (courseData.isInscription) {
                               <div class="flex flex-col">
@@ -431,7 +457,7 @@
                               {{ courseData.status }}
                             </span>
                           </td>
-                          <td class="px-6 py-4 text-center">
+                          <td class="px-6 py-4 text-center hidden md:table-cell">
                             <div class="flex gap-2 justify-center">
                               <button
                                 type="button"
@@ -442,7 +468,7 @@
                               <button
                                 type="button"
                                 (click)="onViewPayments(courseData)"
-                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 whitespace-nowrap">
                                 Ver Pagos
                               </button>
                             </div>
