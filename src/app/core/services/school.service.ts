@@ -12,6 +12,8 @@ import {environment} from '../../../environments/environment';
 export class SchoolService {
   apiSchool: string = environment.schools;
   list_group: string = environment.listaGrupo;
+  apiGrado: string = environment.grado;
+
   constructor(private http: HttpClient) {
   }
 
@@ -59,5 +61,12 @@ export class SchoolService {
 
   getGroup(): Observable<ResponseAPI<Grupo[]>> {
     return this.http.get<ResponseAPI<Grupo[]>>(this.list_group);
+  }
+
+  getGrados(): Observable<ResponseAPI<any[]>> {
+    const params = {
+      fields: 'grado'
+    };
+    return this.http.get<ResponseAPI<any[]>>(this.apiGrado, { params });
   }
 }

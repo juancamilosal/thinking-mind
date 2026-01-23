@@ -56,6 +56,7 @@ export const environment = {
   register_student: apiUrl + 'flows/trigger/c27fe837-9095-43f2-bd18-c89dc4fbfdca',
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
   nivel: apiUrl + 'items/nivel',
+  grado: apiUrl + 'items/grado',
 
   // Configuración de tasas de cambio
   exchangeRates: {

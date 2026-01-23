@@ -42,19 +42,16 @@ export class PaymentRecord implements OnInit {
   schools: School[] = [];
   filteredSchools: School[] = [];
   grado: Grupo[] = []; // Nueva propiedad para los grupos
+  grados: any[] = []; // Nueva propiedad para los grados
   readonly openProgramSchoolId = 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7';
 
   isLoadingCourses = false;
   isLoadingSchools = false;
   isSchoolSelected = false;
-  private schoolSearchDebounce: any; // deprecated, no longer used
   showConfirmation = false;
   isSearchingClient = false;
-
-  // Referencia al input de búsqueda de colegio para manejar el scroll en mobile
   @ViewChild('schoolSearchInput') schoolSearchInputRef?: ElementRef<HTMLInputElement>;
 
-  // New properties for registered courses table
   showRegisteredCourses = false;
   clientData: any = null;
   registeredCourses: any[] = [];
@@ -111,6 +108,7 @@ export class PaymentRecord implements OnInit {
     this.loadCourses();
     this.loadExchangeRates();
     this.loadGrupos(); // Cargar los grupos del servicio
+    this.loadGrados(); // Cargar los grados del servicio
 
     const independentCtrl = this.paymentForm.get('independentInstitution');
     independentCtrl?.valueChanges.subscribe((val: any) => {
@@ -119,6 +117,37 @@ export class PaymentRecord implements OnInit {
         if (capitalized !== val) {
           independentCtrl.setValue(capitalized, { emitEvent: false });
         }
+      }
+    });
+  }
+
+  loadGrados(): void {
+    this.schoolService.getGrados().subscribe({
+      next: (response) => {
+        this.grados = response.data.sort((a: any, b: any) => {
+          const valA = a.grado;
+          const valB = b.grado;
+          // Verificar si son números
+          const isNumA = !isNaN(Number(valA)) && valA.toString().trim() !== '';
+          const isNumB = !isNaN(Number(valB)) && valB.toString().trim() !== '';
+
+          // Si ambos son números, ordenar numéricamente
+          if (isNumA && isNumB) {
+            return Number(valA) - Number(valB);
+          }
+
+          // Si ambos son texto (no números), ordenar alfabéticamente
+          if (!isNumA && !isNumB) {
+            return valA.toString().localeCompare(valB.toString());
+          }
+
+          // Si uno es texto y el otro número, el texto va primero
+          return !isNumA ? -1 : 1;
+        });
+        console.log('Grados cargados:', this.grados);
+      },
+      error: (error) => {
+        console.error('Error al cargar grados:', error);
       }
     });
   }
