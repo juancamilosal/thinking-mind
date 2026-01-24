@@ -58,9 +58,9 @@ export class Teacher implements OnInit {
 
     openMeetings(): void {
       if (this.selectedLanguage) {
-        this.router.navigate(['/private/ayo/list-meet'], { queryParams: { idioma: this.selectedLanguage } });
+        this.router.navigate(['/private/teacher/meetings'], { queryParams: { idioma: this.selectedLanguage } });
       } else {
-        this.router.navigate(['/private/ayo/list-meet']);
+        this.router.navigate(['/private/teacher/meetings']);
       }
     }
 
