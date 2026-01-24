@@ -16,20 +16,8 @@
         <p class="page-subtitle">Visualiza tus programas y reuniones programadas</p>
     </div>
 
-    @if (isLoading) {
-    <div class="programs-grid">
-        @for (item of [1,2,3]; track item) {
-        <div class="program-card skeleton">
-            <div class="skeleton-header"></div>
-            <div class="skeleton-line w-75"></div>
-            <div class="skeleton-line w-50"></div>
-            <div class="skeleton-line w-50"></div>
-            <div class="skeleton-button"></div>
-        </div>
-        }
-    </div>
-    } @else {
-    @if (programas.length === 0) {
+
+    @if (accountsReceivable.length === 0) {
     <div class="empty-state">
         <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -39,7 +27,7 @@
     </div>
     } @else {
     <div class="programs-grid">
-        @for (programa of programas; track programa.id) {
+        @for (account of accountsReceivable; track account.id) {
         <div class="program-card">
             <!-- Header with gradient -->
             <div class="card-header relative">
@@ -47,7 +35,7 @@
                 <div class="header-content">
                     <div class="icon-wrapper">
                         <!-- Icono basado en la temática o uno por defecto -->
-                        <img [src]="programa.id_nivel?.imagen ? assetsUrl + programa.id_nivel.imagen : 'assets/icons/ayo.png'"
+                        <img [src]="account.programa_ayo_id?.id_nivel?.imagen ? assetsUrl + account.programa_ayo_id.id_nivel.imagen : 'assets/icons/ayo.png'"
                              class="program-icon-img"
                              alt="Icono Programa"
                              onError="this.src='assets/icons/ayo.png'">
@@ -66,7 +54,7 @@
             <!-- Program Title -->
             <div class="card-body">
                 <div class="program-title-section">
-                    <h3 class="program-language">{{ programa.id_nivel.tematica }}</h3>
+                    <h3 class="program-language">{{ account.programa_ayo_id?.id_nivel?.tematica }}</h3>
                     <p class="program-label">Programa AYO</p>
                 </div>
 
@@ -77,86 +65,88 @@
                             <img src="assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
                         </div>
                         <div class="detail-content">
-                            <span class="detail-label">Finalización</span>
-                            <span class="detail-value">{{ programa.fecha_finalizacion | date:'mediumDate' }}</span>
+                            <span class="detail-label">Fecha Finalización</span>
+                            <span class="detail-value">{{ account.programa_ayo_id?.fecha_finalizacion | date:'mediumDate' }}</span>
                         </div>
                     </div>
 
-                    @if (programa.id_nivel) {
+                    @if (account.programa_ayo_id?.id_nivel) {
                     <div class="detail-item">
                         <div class="detail-icon">
                             <img src="assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Nivel</span>
-                            <span class="detail-value">{{ programa.id_nivel.nivel }} | {{
-                                programa.id_nivel.subcategoria}}</span>
+                            <span class="detail-value">{{ account.programa_ayo_id.id_nivel?.nivel }} | {{
+                                account.programa_ayo_id.id_nivel?.subcategoria}}</span>
                         </div>
                     </div>
                     }
 
-                    <div class="detail-item highlight">
-                        <div class="detail-icon">
-                            <img src="assets/icons/precio.png" class="w-full h-full object-contain" alt="Precio">
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-label">Precio del Programa</span>
-                            <span class="detail-value price">{{ programa.moneda || '$' }} {{ programa.precio_curso |
-                                number }}</span>
-                        </div>
-                    </div>
+                    @if (account.programa_ayo_id?.id_reuniones_meet && account.programa_ayo_id.id_reuniones_meet.length > 0) {
+                        <div class="meetings-section mt-4 border-t pt-4">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <img src="assets/icons/calendario-de-google.png" class="w-4 h-4 object-contain" alt="Calendario">
+                                Reuniones Programadas
+                            </h4>
+                            <div class="space-y-3">
+                                @for (reunion of account.programa_ayo_id.id_reuniones_meet; track reunion.id) {
+                                    <div class="meeting-item bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <div class="flex items-start gap-3">
+                                            <!-- Date Box -->
+                                            <div class="meeting-date flex-shrink-0 text-center bg-white p-2 rounded border border-gray-200 min-w-[60px] shadow-sm">
+                                                <div class="text-xs text-gray-500 uppercase font-bold">{{ reunion.fecha_inicio | date:'EEE' }}</div>
+                                                <div class="text-lg font-bold text-indigo-600 leading-none my-1">{{ reunion.fecha_inicio | date:'dd' }}</div>
+                                                <div class="text-xs text-gray-400">{{ reunion.fecha_inicio | date:'MMM' }}</div>
+                                            </div>
 
-                    @if (programa.programa_con_inscripcion) {
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                            </svg>
+                                            <div class="meeting-info flex-grow">
+                                                <div class="flex flex-col h-full justify-between">
+                                                    <!-- Time -->
+                                                    <div class="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        {{ reunion.fecha_inicio | date:'h:mm a' }} - {{ reunion.fecha_finalizacion | date:'h:mm a' }}
+                                                    </div>
+                                                    
+                                                    <!-- Docente -->
+                                                    @if (reunion.id_docente) {
+                                                        <div class="text-xs text-gray-600 mt-2 flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-gray-100 w-fit">
+                                                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                            </svg>
+                                                            <span class="font-medium">Docente:</span> 
+                                                            {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
+                                                        </div>
+                                                    }
+
+                                                    <!-- Link Button -->
+                                                    @if (reunion.link_reunion) {
+                                                        <div class="mt-2">
+                                                            <a [href]="reunion.link_reunion"
+                                                               target="_blank"
+                                                               class="text-xs inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                                </svg>
+                                                                Unirse a la reunión
+                                                            </a>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         </div>
-                        <div class="detail-content">
-                            <span class="detail-label">Inscripción</span>
-                            <span class="detail-value">{{ programa.moneda || '$' }} {{ programa.precio_inscripcion |
-                                number }}</span>
-                        </div>
-                    </div>
                     }
-                </div>
-
-                <!-- Meetings Section -->
-                <div class="meetings-section">
-                    <h4 class="meetings-title">
-                        <img src="assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
-                        Reuniones Programadas
-                    </h4>
-                    <div class="meetings-list">
-                        <div class="meeting-item">
-                            <div class="meeting-info">
-                                <span class="meeting-day">
-                                    <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
-                                    Martes
-                                </span>
-                                <span class="meeting-time">
-                                    09:00 AM - 10:00 AM
-                                </span>
-                                <a href="#" target="_blank" class="text-blue-600 hover:underline text-sm mt-1 flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                    Unirse a la reunión
-                                </a>
-                            </div>
-                            <div class="meeting-link">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
         }
     </div>
     }
-    }
+    
 </div>

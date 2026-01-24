@@ -97,13 +97,7 @@ export class AccountReceivableService {
       'filter[programa_ayo_id][_nnull]': true,
       'fields': '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*,programa_ayo_id.id_reuniones_meet.*,programa_ayo_id.id_reuniones_meet.id_docente.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*,pagos.responsable.*,comprobante.*'
     };
-
-    return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
-      map(response => ({
-        ...response,
-        data: response.data.map(item => this.mapToAccountReceivable(item))
-      }))
-    );
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params })
   }
 
   getFilteredAccountsReceivable(filterParams: any): Observable<ResponseAPI<AccountReceivable[]>> {
