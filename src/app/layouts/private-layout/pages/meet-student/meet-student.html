@@ -84,63 +84,41 @@
                     }
 
                     @if (account.programa_ayo_id?.id_reuniones_meet && account.programa_ayo_id.id_reuniones_meet.length > 0) {
-                        <div class="meetings-section mt-4 border-t pt-4">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <img src="assets/icons/calendario-de-google.png" class="w-4 h-4 object-contain" alt="Calendario">
-                                Reuniones Programadas
-                            </h4>
-                            <div class="space-y-3">
-                                @for (reunion of account.programa_ayo_id.id_reuniones_meet; track reunion.id) {
-                                    <div class="meeting-item bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                        <div class="flex items-start gap-3">
-                                            <!-- Date Box -->
-                                            <div class="meeting-date flex-shrink-0 text-center bg-white p-2 rounded border border-gray-200 min-w-[60px] shadow-sm">
-                                                <div class="text-xs text-gray-500 uppercase font-bold">{{ reunion.fecha_inicio | date:'EEE' }}</div>
-                                                <div class="text-lg font-bold text-indigo-600 leading-none my-1">{{ reunion.fecha_inicio | date:'dd' }}</div>
-                                                <div class="text-xs text-gray-400">{{ reunion.fecha_inicio | date:'MMM' }}</div>
-                                            </div>
-
-                                            <div class="meeting-info flex-grow">
-                                                <div class="flex flex-col h-full justify-between">
-                                                    <!-- Time -->
-                                                    <div class="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
-                                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        {{ reunion.fecha_inicio | date:'h:mm a' }} - {{ reunion.fecha_finalizacion | date:'h:mm a' }}
-                                                    </div>
-                                                    
-                                                    <!-- Docente -->
-                                                    @if (reunion.id_docente) {
-                                                        <div class="text-xs text-gray-600 mt-2 flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-gray-100 w-fit">
-                                                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                            <span class="font-medium">Docente:</span> 
-                                                            {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
-                                                        </div>
-                                                    }
-
-                                                    <!-- Link Button -->
-                                                    @if (reunion.link_reunion) {
-                                                        <div class="mt-2">
-                                                            <a [href]="reunion.link_reunion"
-                                                               target="_blank"
-                                                               class="text-xs inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium hover:underline">
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                                </svg>
-                                                                Unirse a la reunión
-                                                            </a>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
+                    <div class="meetings-section">
+                        <h4 class="meetings-title">
+                            <img src="assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
+                            Reuniones Programadas
+                        </h4>
+                        <div class="meetings-list">
+                            @for (reunion of account.programa_ayo_id.id_reuniones_meet; track reunion.id) {
+                            <div class="meeting-item">
+                                <div class="meeting-info">
+                                    <span class="meeting-day">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
+                                        {{ reunion.fecha_inicio | date:'EEEE' | titlecase }}
+                                    </span>
+                                    @if (reunion.id_docente) {
+                                    <span class="meeting-teacher">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">Docente:</span>
+                                        {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
+                                    </span>
+                                    }
+                                    <span class="meeting-time">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">Horario:</span>
+                                        {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion | date:'shortTime' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-5">
+                                    @if (reunion.link_reunion) {
+                                    <a [href]="reunion.link_reunion" target="_blank" class="meeting-link" title="Unirse a reunión">
+                                        <img src="assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                    </a>
+                                    }
+                                </div>
                             </div>
+                            }
                         </div>
+                    </div>
                     }
                 </div>
             </div>
