@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CourseService } from '../../../../../core/services/course.service';
-import { AttendanceService } from '../../../../../core/services/attendance.service';
 import { Course } from '../../../../../core/models/Course';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { UserService } from '../../../../../core/services/user.service';
@@ -74,7 +73,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   constructor(
     private fb: FormBuilder,
     private courseService: CourseService,
-    private attendanceService: AttendanceService,
     private fileService: FileService,
     private notificationService: NotificationService,
     private programaAyoService: ProgramaAyoService,
@@ -639,22 +637,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
         let imageId = this.selectedDirectusFileId;
 
-        // Create Attendance first
-        let attendanceId = null;
-        try {
-          const attendanceResponse = await firstValueFrom(this.attendanceService.createAttendance({
-            status: 'published'
-          }));
-          if (attendanceResponse?.data?.id) {
-            attendanceId = attendanceResponse.data.id;
-          }
-        } catch (error) {
-          console.error('Error creating attendance:', error);
-          this.notificationService.showError('Error', 'No se pudo crear el registro de asistencia.');
-          this.isSubmitting = false;
-          return;
-        }
-
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
@@ -673,8 +655,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           idioma: this.fechaFinalizacionForm.get('idioma')?.value,
           id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
           id_reuniones_meet: meetingIds,
-          img: imageId, // Add image ID to payload
-          asistencia_id: attendanceId
+          img: imageId // Add image ID to payload
         };
 
         // 3. Create Program
