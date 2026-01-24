@@ -32,6 +32,7 @@ export interface ProgramaAyo {
   id_nivel?: Nivel;
   id_reuniones_meet?: Meeting[];
   img?: any;
+  cuentas_cobrar_id?: any[];
 }
 
 export interface ProgramGroup {

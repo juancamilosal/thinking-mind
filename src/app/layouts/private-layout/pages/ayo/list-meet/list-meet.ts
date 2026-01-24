@@ -52,6 +52,10 @@ export class ListMeet implements OnInit {
   addMeetingForm!: FormGroup;
   selectedProgramId: string | null = null;
 
+  // Student Modal Properties
+  showStudentModal = false;
+  selectedStudents: User[] = [];
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private notificationService: NotificationService,
@@ -573,5 +577,60 @@ export class ListMeet implements OnInit {
     } else {
       this.router.navigate(['/private/ayo']);
     }
+  }
+
+  verEstudiante(programa: ProgramaAyo) {
+    const prog = programa as any;
+    
+    if (prog.cuentas_cobrar_id && prog.cuentas_cobrar_id.length > 0) {
+      const documents: {tipo: string, numero: string}[] = [];
+      
+      // Filter unique documents to avoid duplicate requests
+      const seenDocs = new Set<string>();
+
+      prog.cuentas_cobrar_id.forEach((cuenta: any) => {
+        const est = cuenta.estudiante_id;
+        if (est && est.tipo_documento && est.numero_documento) {
+          const key = `${est.tipo_documento}-${est.numero_documento}`;
+          if (!seenDocs.has(key)) {
+            seenDocs.add(key);
+            documents.push({
+              tipo: est.tipo_documento,
+              numero: est.numero_documento
+            });
+          }
+        }
+      });
+      
+      if (documents.length > 0) {
+        this.isLoading = true;
+        this.userService.getUsersByMultipleDocuments(documents)
+          .subscribe({
+            next: (response) => {
+              this.isLoading = false;
+              if (response.data && response.data.length > 0) {
+                this.selectedStudents = response.data;
+                this.showStudentModal = true;
+              } else {
+                this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+              }
+            },
+            error: (error) => {
+              this.isLoading = false;
+              console.error('Error fetching students:', error);
+              this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+            }
+          });
+      } else {
+        this.notificationService.showWarning('Información', 'Los estudiantes asociados no tienen documento registrado.');
+      }
+    } else {
+        this.notificationService.showWarning('Información', 'No hay estudiantes asociados a este programa.');
+    }
+  }
+
+  closeStudentModal() {
+    this.showStudentModal = false;
+    this.selectedStudents = [];
   }
 }

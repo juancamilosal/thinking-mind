@@ -8,4 +8,6 @@ export class User {
   role?: string;
   celular?: string;
   colegio_id?: School;
+  tipo_documento?: string;
+  numero_documento?: string;
 }

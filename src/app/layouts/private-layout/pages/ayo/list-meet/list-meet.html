@@ -218,7 +218,7 @@
                          <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión" (click)="openAddMeetingModal(programa)">
                          
                          <!-- Student Icon -->
-                         <img src="assets/icons/students.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Estudiantes" title="Ver Estudiantes">
+                         <img src="assets/icons/students.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Estudiantes" title="Ver Estudiantes" (click)="verEstudiante(programa)">
                     </div>
                 </div>
             </div>
@@ -411,6 +411,65 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+}
+
+<!-- Student Details Modal -->
+@if (showStudentModal && selectedStudents.length > 0) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeStudentModal()">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        (click)="$event.stopPropagation()">
+
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-2">
+                <img src="assets/icons/students.png" class="w-8 h-8 object-contain" alt="Estudiante">
+                <h3 class="text-2xl font-bold text-gray-800">
+                    Información de Estudiantes ({{ selectedStudents.length }})
+                </h3>
+            </div>
+            <button (click)="closeStudentModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="space-y-8">
+            @for (student of selectedStudents; track student.id) {
+            <div class="border-b border-gray-200 pb-8 last:border-0 last:pb-0">
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-gray-500 font-semibold uppercase">Nombre Completo</p>
+                    <p class="text-lg font-bold text-gray-800">{{ student.first_name }} {{ student.last_name }}</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500 font-semibold uppercase">Documento</p>
+                        <p class="text-md font-medium text-gray-800">{{ student.tipo_documento }} - {{ student.numero_documento }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500 font-semibold uppercase">Email</p>
+                        <p class="text-md font-medium text-gray-800 break-all">{{ student.email }}</p>
+                    </div>
+                </div>
+
+                @if (student.celular) {
+                <div class="bg-gray-50 p-4 rounded-lg mt-4">
+                    <p class="text-sm text-gray-500 font-semibold uppercase">Celular</p>
+                    <p class="text-md font-medium text-gray-800">{{ student.celular }}</p>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <button (click)="closeStudentModal()" 
+                class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold transition-colors">
+                Cerrar
+            </button>
+        </div>
     </div>
 </div>
 }
