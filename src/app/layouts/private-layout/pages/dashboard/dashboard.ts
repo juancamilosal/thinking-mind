@@ -61,7 +61,7 @@ export class Dashboard implements OnInit {
     idioma: '',
     subcategoria: '',
     tematica: '',
-    reuniones_meet: ''
+    reuniones_meet: []
   };
 
   constructor(
@@ -76,6 +76,15 @@ export class Dashboard implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboardData();
+  }
+
+  private sortReuniones(reuniones: any[]): any[] {
+    const weekdayOrder = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
+    return reuniones.sort((a, b) => {
+        const dayA = a.DIA ? a.DIA.toUpperCase() : '';
+        const dayB = b.DIA ? b.DIA.toUpperCase() : '';
+        return weekdayOrder.indexOf(dayA) - weekdayOrder.indexOf(dayB);
+    });
   }
 
   private loadDashboardData(): void {
@@ -116,7 +125,7 @@ export class Dashboard implements OnInit {
                 idioma: data.idioma || 'N/A',
                 subcategoria: data.subcategoria || 'N/A',
                 tematica: data.tematica || 'N/A',
-                reuniones_meet: data.reuniones_meet
+                reuniones_meet: data.reuniones_meet ? this.sortReuniones(data.reuniones_meet) : []
               };
             }
             this.isLoading = false;
