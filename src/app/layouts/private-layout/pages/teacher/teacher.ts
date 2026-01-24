@@ -15,6 +15,7 @@ export type TeacherStep = 'initial' | 'options';
   templateUrl: './teacher.html',
   styleUrl: './teacher.css'
 })
+
 export class Teacher implements OnInit {
     courses: Course[] = [];
     isLoading: boolean = true;

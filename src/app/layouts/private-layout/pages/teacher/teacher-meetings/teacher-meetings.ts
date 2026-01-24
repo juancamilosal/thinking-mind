@@ -1,16 +1,19 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 import { ProgramaAyo } from '../../../../../core/models/Course';
 import { MeetingTimerService } from '../../../../../core/services/meeting-timer.service';
+import { NotificationService } from '../../../../../core/services/notification.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
 import { Subscription } from 'rxjs';
 
 interface StudentEvaluation {
   id: string;
   name: string;
+  attended: boolean;
   rating: number;
   comment: string;
 }
@@ -42,12 +45,13 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   // Temporary hardcoded teacher ID for testing
   private readonly TEMP_TEACHER_ID = 'temp-teacher-id-123'; // TODO: Replace with actual teacher ID from auth
 
-  constructor(
-    private programaAyoService: ProgramaAyoService,
-    private router: Router,
-    private route: ActivatedRoute,
-    public timerService: MeetingTimerService
-  ) { }
+  // Inject services
+  private programaAyoService = inject(ProgramaAyoService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  public timerService = inject(MeetingTimerService);
+  private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
 
   ngOnInit(): void {
     // Get language from query params
@@ -155,13 +159,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     // Check if there's already an active session
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
-      alert('Ya tienes una reunión activa. Por favor finaliza la sesión actual antes de iniciar otra.');
+      this.notificationService.showWarning(
+        'Reunión Activa',
+        'Ya tienes una reunión activa. Por favor finaliza la sesión actual antes de iniciar otra.'
+      );
       return;
     }
 
     // Only allow access to upcoming or in-progress meetings
     if (status === 'completed') {
-      alert('Esta reunión ya ha finalizado.');
+      this.notificationService.showInfo(
+        'Reunión Finalizada',
+        'Esta reunión ya ha finalizado.'
+      );
       return;
     }
 
@@ -186,12 +196,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       {
         id: 'student-1',
         name: 'María García',
+        attended: true,
         rating: 0,
         comment: ''
       },
       {
         id: 'student-2',
         name: 'Juan Pérez',
+        attended: true,
         rating: 0,
         comment: ''
       }
@@ -207,11 +219,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   submitEvaluations(): void {
-    // Validate that all students have ratings
-    const allRated = this.students.every(s => s.rating > 0);
+    // Validate that all students who attended have ratings
+    const attendedStudents = this.students.filter(s => s.attended);
+    const allRated = attendedStudents.every(s => s.rating > 0);
 
-    if (!allRated) {
-      alert('Por favor califica a todos los estudiantes antes de continuar.');
+    if (attendedStudents.length > 0 && !allRated) {
+      this.notificationService.showWarning(
+        'Calificaciones Incompletas',
+        'Por favor califica a todos los estudiantes que asistieron.'
+      );
       return;
     }
 
@@ -222,13 +238,29 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.showEvaluationModal = false;
     this.timerService.endSession();
     this.showNotificationBanner = false;
+
+    // Show success notification
+    this.notificationService.showSuccess(
+      'Evaluación Guardada',
+      'Las evaluaciones han sido guardadas exitosamente.',
+      3000
+    );
   }
 
   cancelEvaluation(): void {
-    if (confirm('¿Estás seguro de que deseas cancelar? Se perderán las evaluaciones.')) {
-      this.showEvaluationModal = false;
-      this.students = [];
-    }
+    this.confirmationService.showConfirmation(
+      {
+        title: 'Cancelar Evaluación',
+        message: '¿Estás seguro de que deseas cancelar? Se perderán las evaluaciones.',
+        confirmText: 'Sí, cancelar',
+        cancelText: 'No, continuar',
+        type: 'warning'
+      },
+      () => {
+        this.showEvaluationModal = false;
+        this.students = [];
+      }
+    );
   }
 
   dismissNotification(): void {
