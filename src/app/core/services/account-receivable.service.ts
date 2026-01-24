@@ -92,6 +92,7 @@ export class AccountReceivableService {
   getAccountsByDocument(tipoDocumento: string, numeroDocumento: string): Observable<ResponseAPI<AccountReceivable[]>> {
     const params: any = {
       'filter[es_programa_ayo][_eq]': true,
+      'filter[estado][_eq]': "PAGADA",
       'filter[estudiante_id][tipo_documento][_eq]': tipoDocumento,
       'filter[estudiante_id][numero_documento][_eq]': numeroDocumento,
       'filter[programa_ayo_id][_nnull]': true,

@@ -46,13 +46,23 @@ export class MeetStudent implements OnInit {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error al cargar cuentas por cobrar:', error);
           this.isLoading = false;
         }
       });
     } else {
-      console.warn('Información de documento del usuario no encontrada. Por favor inicie sesión nuevamente.');
       this.isLoading = false;
     }
+  }
+
+  getProgramImage(account: any): string {
+    const program = account.programa_ayo_id;
+    if (program?.img) {
+      const imgId = typeof program.img === 'object' ? program.img.id : program.img;
+      return `${this.assetsUrl}/${imgId}`;
+    }
+    if (program?.id_nivel?.imagen) {
+      return `${this.assetsUrl}/${program.id_nivel.imagen}`;
+    }
+    return 'assets/icons/ayo.png';
   }
 }
