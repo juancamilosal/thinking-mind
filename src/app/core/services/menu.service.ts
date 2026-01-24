@@ -27,7 +27,19 @@ export class MenuService {
 
   constructor(private http: HttpClient) {}
 
-  list(): Observable<ResponseAPI<Menu[]>> {
-    return this.http.get<ResponseAPI<Menu[]>>(this.menuListUrl);
+  list(role?: string): Observable<ResponseAPI<Menu[]>> {
+    let url = this.menuListUrl;
+    const ayoRoles = [
+      'ca8ffc29-c040-439f-8017-0dcb141f0fd3',
+      'fe83d2f3-1b89-477d-984a-de3b56e12001'
+    ];
+
+    if (role && ayoRoles.includes(role)) {
+      url += '&filter[menu_ayo][_eq]=true';
+    } else {
+      url += '&filter[_or][0][menu_ayo][_neq]=true&filter[_or][1][nombre][_eq]=Dashboard';
+    }
+
+    return this.http.get<ResponseAPI<Menu[]>>(url);
   }
 }
