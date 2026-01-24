@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { StorageServices } from '../../../../core/services/storage.services';
 import { ProgramaAyo } from '../../../../core/models/Course';
 import { environment } from '../../../../../environments/environment';
 
@@ -27,6 +28,7 @@ export class MeetStudent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    console.log(this.accountsReceivable);
     this.loadAccountsReceivable();
     this.programas = [
       {
@@ -55,14 +57,20 @@ export class MeetStudent implements OnInit {
   }
 
   loadAccountsReceivable(): void {
-    this.accountReceivableService.getAllAccountsReceivable(1, 1000).subscribe({
-      next: (response) => {
-        this.accountsReceivable = response.data;
-        console.log('Cuentas por cobrar cargadas en Meetings:', this.accountsReceivable);
-      },
-      error: (error) => {
-        console.error('Error al cargar cuentas por cobrar:', error);
-      }
-    });
+    const user = StorageServices.getCurrentUser();
+
+    if (user && user.tipo_documento && user.numero_documento) {
+      this.accountReceivableService.getAccountsByDocument(user.tipo_documento, user.numero_documento).subscribe({
+        next: (response) => {
+          this.accountsReceivable = response.data;
+          console.log('Cuentas por cobrar cargadas en Meetings:', this.accountsReceivable);
+        },
+        error: (error) => {
+          console.error('Error al cargar cuentas por cobrar:', error);
+        }
+      });
+    } else {
+      console.warn('Información de documento del usuario no encontrada. Por favor inicie sesión nuevamente.');
+    }
   }
 }

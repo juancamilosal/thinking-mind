@@ -89,12 +89,33 @@ export class AccountReceivableService {
     );
   }
 
+  getAccountsByDocument(tipoDocumento: string, numeroDocumento: string): Observable<ResponseAPI<AccountReceivable[]>> {
+    const params: any = {
+      'filter[es_programa_ayo][_eq]': true,
+      'filter[estudiante_id][tipo_documento][_eq]': tipoDocumento,
+      'filter[estudiante_id][numero_documento][_eq]': numeroDocumento,
+      'filter[programa_ayo_id][_nnull]': true,
+      'fields': '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*,programa_ayo_id.id_reuniones_meet.*,programa_ayo_id.id_reuniones_meet.id_docente.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*,pagos.responsable.*,comprobante.*'
+    };
+
+    return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map(item => this.mapToAccountReceivable(item))
+      }))
+    );
+  }
+
   getFilteredAccountsReceivable(filterParams: any): Observable<ResponseAPI<AccountReceivable[]>> {
     let params: any = {
       page: filterParams.page?.toString() || '1',
       limit: filterParams.limit?.toString() || '10',
       meta: 'total_count,filter_count'
     };
+
+    if (filterParams.sort) {
+      params['sort'] = filterParams.sort;
+    }
 
     // Filtro por búsqueda general (nombre, apellido, documento)
     if (filterParams.search) {

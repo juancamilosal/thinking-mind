@@ -56,6 +56,8 @@ export class LoginService {
               filteredUserData.creditos = userData.creditos;
               filteredUserData.resultado_test = userData.resultado_test;
               filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+              filteredUserData.tipo_documento = userData.tipo_documento;
+              filteredUserData.numero_documento = userData.numero_documento;
             }
 
             StorageServices.setUserData(filteredUserData);
@@ -179,6 +181,8 @@ export class LoginService {
             filteredUserData.creditos = userData.creditos;
             filteredUserData.resultado_test = userData.resultado_test;
             filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+            filteredUserData.tipo_documento = userData.tipo_documento || userData.tipo_documento;
+            filteredUserData.numero_documento = userData.numero_documento || userData.numero_documento;
           }
 
           StorageServices.setUserData(filteredUserData);
