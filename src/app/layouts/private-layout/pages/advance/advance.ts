@@ -79,7 +79,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
         next: (response) => {
           // Manejar tanto response.data como response directo por si acaso
           const data = response.data || response;
-          
+
           if (data) {
             this.ayoStats = {
               nivel: data.nivel || this.ayoStats.nivel,
@@ -92,7 +92,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
           }
           this.isLoading = false;
           this.cd.detectChanges();
-          
+
           // Inicializar gráfico después de que el DOM se haya actualizado
           setTimeout(() => {
             this.initChart();
@@ -117,7 +117,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     if (user && user.id) {
       const filter = { estudiante_id: user.id };
       // Limit set to 100 to get a good amount of history without pagination for now
-      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha').subscribe({
+      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha', '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*').subscribe({
         next: (response) => {
           this.attendanceList = response.data || [];
           // Una vez cargadas las asistencias, inicializamos el gráfico con los datos reales
@@ -126,8 +126,6 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
           }, 0);
         },
         error: (error) => {
-          console.error('Error loading attendances', error);
-          // Si falla, inicializamos con datos vacíos o mock
           this.attendanceList = [];
           setTimeout(() => {
             this.initChart();
@@ -156,16 +154,16 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
     // Si no hay datos, usamos arrays vacíos para mostrar gráfico vacío
-    const labels = validAttendances.length > 0 
+    const labels = validAttendances.length > 0
       ? validAttendances.map((a, index) => `Sesión ${index + 1} - ${new Date(a.fecha).toLocaleDateString()}`)
       : [];
-      
-    const dataPoints = validAttendances.length > 0 
+
+    const dataPoints = validAttendances.length > 0
       ? validAttendances.map(a => Number(a.calificacion))
       : [];
 
-    const average = dataPoints.length > 0 
-      ? dataPoints.reduce((a, b) => a + b, 0) / dataPoints.length 
+    const average = dataPoints.length > 0
+      ? dataPoints.reduce((a, b) => a + b, 0) / dataPoints.length
       : 0;
 
     // Calcular ancho dinámico: mínimo 100% o 60px por punto
@@ -176,7 +174,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       labels.length * minWidthPerPoint
     );
     this.chartWidth = `${calculatedWidth}px`;
-    
+
     // Forzar detección de cambios para aplicar el nuevo ancho antes de renderizar
     this.cd.detectChanges();
 
