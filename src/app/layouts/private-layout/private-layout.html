@@ -2,7 +2,7 @@
 
       @if (isDesktop) {
         <!-- Sidebar para desktop -->
-        <app-sidebar class="hidden md:block flex-shrink-0" (sidebarClose)="onToggleSidebar()" />
+        <app-sidebar class="hidden md:block flex-shrink-0 w-72" (sidebarClose)="onToggleSidebar()" />
       } @else {
         <!-- Sidebar móvil con overlay -->
         <div class="md:hidden fixed inset-0 z-50"

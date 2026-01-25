@@ -10,6 +10,18 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
+interface LevelAnalysis {
+  levelName: string;
+  theme: string;
+  averageScore: number;
+  attendancePercentage: number;
+  totalSessions: number;
+  attendedSessions: number;
+  lastObservation: string;
+  observations: { date: string, text: string, score: number }[];
+  trend: 'up' | 'down' | 'stable';
+}
+
 @Component({
   selector: 'app-advance',
   standalone: true,
@@ -24,6 +36,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
   isLoading = true;
   attendanceList: Attendance[] = [];
   chartWidth: string = '100%';
+  levelAnalysisList: LevelAnalysis[] = [];
 
   assetsUrl = environment.assets;
   ayoStats = {
@@ -120,6 +133,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       this.attendanceService.getAttendances(1, 100, '', filter, 'fecha', '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*').subscribe({
         next: (response) => {
           this.attendanceList = response.data || [];
+          this.processLevelAnalysis();
           // Una vez cargadas las asistencias, inicializamos el gráfico con los datos reales
           setTimeout(() => {
             this.initChart();
@@ -133,6 +147,90 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     }
+  }
+
+  processLevelAnalysis(): void {
+    const groupedByLevel: { [key: string]: Attendance[] } = {};
+
+    // Agrupar asistencias por nivel (id_nivel)
+    this.attendanceList.forEach(att => {
+      // Acceder de forma segura a la estructura anidada
+      // att.programa_ayo_id puede ser un objeto o string, pero con el 'fields' que pedimos debería ser objeto
+      const programa = att['programa_ayo_id'] as any;
+      const nivel = programa?.id_nivel;
+      
+      if (nivel && typeof nivel === 'object' && nivel.id) {
+        const levelKey = nivel.id; // Usamos el ID para agrupar
+        if (!groupedByLevel[levelKey]) {
+          groupedByLevel[levelKey] = [];
+        }
+        groupedByLevel[levelKey].push(att);
+      }
+    });
+
+    // Calcular estadísticas por cada grupo
+    this.levelAnalysisList = Object.keys(groupedByLevel).map(levelId => {
+      const attendances = groupedByLevel[levelId];
+      // Ordenar por fecha para análisis de tendencia
+      attendances.sort((a, b) => new Date(a.fecha!).getTime() - new Date(b.fecha!).getTime());
+
+      // Obtener info del nivel del primer registro (todos deben ser iguales)
+      const firstAtt = attendances[0];
+      const programa = firstAtt['programa_ayo_id'] as any;
+      const nivelInfo = programa.id_nivel;
+
+      const levelName = `${nivelInfo.nivel} - ${nivelInfo.subcategoria}`;
+      const theme = nivelInfo.tematica || 'General';
+
+      const totalSessions = attendances.length;
+      const attendedSessions = attendances.filter(a => a.asiste).length;
+      const attendancePercentage = (attendedSessions / totalSessions) * 100;
+
+      // Calcular promedio solo de las sesiones asistidas o calificadas
+      const gradedSessions = attendances.filter(a => a.calificacion !== undefined && a.calificacion !== null);
+      const totalScore = gradedSessions.reduce((sum, a) => sum + Number(a.calificacion), 0);
+      const averageScore = gradedSessions.length > 0 ? totalScore / gradedSessions.length : 0;
+
+      // Última observación
+      const lastObservation = attendances[attendances.length - 1].observaciones || 'Sin observaciones recientes';
+
+      // Todas las observaciones (filtrando las vacías)
+      const observations = attendances
+        .filter(a => a.observaciones)
+        .map(a => ({
+          date: a.fecha || '',
+          text: a.observaciones || '',
+          score: a.calificacion || 0
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Ordenar por fecha descendente
+
+      // Tendencia (comparar última mitad vs primera mitad o últimos 3)
+      let trend: 'up' | 'down' | 'stable' = 'stable';
+      if (gradedSessions.length >= 2) {
+        const recent = gradedSessions.slice(-2); // Últimos 2
+        const previous = gradedSessions.slice(0, -2); // Anteriores
+        
+        if (previous.length > 0) {
+            const avgRecent = recent.reduce((s, a) => s + Number(a.calificacion), 0) / recent.length;
+            const avgPrev = previous.reduce((s, a) => s + Number(a.calificacion), 0) / previous.length;
+            
+            if (avgRecent > avgPrev + 0.5) trend = 'up';
+            else if (avgRecent < avgPrev - 0.5) trend = 'down';
+        }
+      }
+
+      return {
+        levelName,
+        theme,
+        averageScore,
+        attendancePercentage,
+        totalSessions,
+        attendedSessions,
+        lastObservation,
+        observations,
+        trend
+      };
+    });
   }
 
   initChart(): void {
@@ -278,5 +376,9 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/private/dashboard']);
+  }
+
+  getStarArray(score: number): number[] {
+    return Array(Math.round(score)).fill(0);
   }
 }
