@@ -3,9 +3,7 @@ import { CommonModule } from '@angular/common';
 import { LangTestService } from '../../../../core/services/langTest.service';
 import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestModels';
 import { StorageServices } from '../../../../core/services/storage.services';
-import { StudentService } from '../../../../core/services/student.service';
-import { Student } from '../../../../core/models/Student';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-test',
@@ -26,39 +24,22 @@ export class LangTest implements OnInit {
   answersByQuestion: Record<number, number | null> = {};
   score = 0;
   classification = '';
-  currentStudent: Student | null = null;
+  studentId: string | null = null;
 
   constructor(
     private langTestService: LangTestService,
-    private studentService: StudentService,
-    private router: Router,
-    private activatedRoute: ActivatedRoute
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     const currentUser = StorageServices.getCurrentUser();
-    const email = currentUser?.email;
-    if (!email) {
-      // Fallback: rely on authGuard, but if no user, redirect to login
+    if (!currentUser) {
       this.router.navigate(['/login']);
       return;
     }
 
-    this.studentService.getStudentByEmail(email).subscribe({
-      next: (res) => {
-        const students = res.data || [];
-        if (students.length) {
-          this.currentStudent = students[0];
-          if ((this.currentStudent as any).test_completado === true) {
-            // Student already completed test, redirect to dashboard/profile
-            this.router.navigate(['/private/dashboard']);
-          }
-        }
-      },
-      error: () => {
-        // Non-blocking: allow test if lookup fails
-      }
-    });
+    // Get student ID from current user
+    this.studentId = currentUser.student_id || currentUser.id;
   }
 
   // Welcome actions
@@ -145,18 +126,12 @@ export class LangTest implements OnInit {
 
     // Send to server for scoring
     this.loading = true;
-    const studentId = this.currentStudent?.id;
-    this.langTestService.submitTest(selectedAnswerIds, studentId).subscribe({
+    this.langTestService.submitTest(selectedAnswerIds, this.studentId || undefined).subscribe({
       next: (response) => {
         this.score = response.data.respuestas_correctas;
         this.classification = this.getClassification(this.score);
         this.showResults = true;
         this.loading = false;
-
-        // Mark completion locally; backend should persist this
-        if (this.currentStudent) {
-          (this.currentStudent as any).test_completado = true;
-        }
       },
       error: (err) => {
         console.error('Error submitting test:', err);
