@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, HostListener, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener, Inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -84,7 +84,8 @@ export class ListMeet implements OnInit {
     private fb: FormBuilder,
     private elementRef: ElementRef,
     private cdr: ChangeDetectorRef,
-    private nivelService: NivelService
+    private nivelService: NivelService,
+    private ngZone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -146,31 +147,59 @@ export class ListMeet implements OnInit {
 
     this.isLoadingLevels = true;
     const userId = this.selectedStudentForPromotion.id;
+    const studentName = this.selectedStudentForPromotion.studentName;
+    const currentLevelId = this.selectedStudentForPromotion.currentLevelId;
+
+    // Prepare names for message
+    const newLevelName = `${nivel.nivel} ${nivel.subcategoria || ''}`.trim();
+    let oldLevelName = 'Sin nivel';
+
+    if (currentLevelId) {
+        const oldLevel = this.niveles.find(n => n.id === currentLevelId);
+        if (oldLevel) {
+            oldLevelName = `${oldLevel.nivel} ${oldLevel.subcategoria || ''}`.trim();
+        } else {
+            oldLevelName = 'Nivel anterior';
+        }
+    }
 
     this.userService.updateUser(userId, { nivel_id: nivel.id }).subscribe({
       next: () => {
-        this.notificationService.showSuccess('Éxito', 'Nivel del estudiante actualizado correctamente.');
-        
-        // Update local state
-        if (this.selectedStudentForPromotion) {
-            this.selectedStudentForPromotion.currentLevelId = nivel.id;
-        }
-        
-        // Update student in the main list
-        const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
-        if (studentIndex !== -1) {
-            this.attendanceList[studentIndex].currentLevelId = nivel.id;
-        }
+        this.ngZone.run(() => {
+            try {
+                const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
+                this.notificationService.showSuccess('Éxito', message);
+                
+                // Update local state
+                if (this.selectedStudentForPromotion) {
+                    this.selectedStudentForPromotion.currentLevelId = nivel.id;
+                }
+                
+                // Update student in the main list
+                const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
+                if (studentIndex !== -1) {
+                    this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                }
 
-        this.isLoadingLevels = false;
-        this.closePromotionModal();
-        this.cdr.detectChanges();
+                this.closePromotionModal();
+                this.loadProgramas(); // Refresh program list
+            } catch (e) {
+                console.error('Error processing promotion success:', e);
+                this.closePromotionModal();
+                this.loadProgramas();
+            } finally {
+                this.isLoadingLevels = false;
+                this.cdr.detectChanges();
+            }
+        });
       },
       error: (error) => {
-        console.error('Error updating student level:', error);
-        this.notificationService.showError('Error', 'No se pudo actualizar el nivel del estudiante.');
-        this.isLoadingLevels = false;
-        this.cdr.detectChanges();
+        this.ngZone.run(() => {
+            console.error('Error updating student level:', error);
+            this.notificationService.showError('Error', 'No se pudo actualizar el nivel del estudiante.');
+            this.isLoadingLevels = false;
+            this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -613,6 +642,24 @@ export class ListMeet implements OnInit {
         this.programas = response.data || [];
         this.groupPrograms();
         this.isLoading = false;
+
+        // Refresh student panel if open
+        if (this.showStudentPanel && this.selectedProgramForFocus) {
+            // Check if it's "Ver Todos" view
+            if (this.selectedProgramForFocus.id_nivel?.tematica === 'Listado General') {
+                this.verTodosEstudiantes(true);
+            } else {
+                // Find the updated program in the new list
+                const updatedProgram = this.programas.find(p => p.id === this.selectedProgramForFocus?.id);
+                if (updatedProgram) {
+                    this.verEstudiante(updatedProgram, true);
+                } else {
+                     // Program might have been deleted or filtered out, but we might want to keep the panel open 
+                     // or close it. For now, let's leave it as is if not found, 
+                     // or we could close it. But safer to just not update if not found.
+                }
+            }
+        }
       },
       error: (error) => {
         this.notificationService.showError('Error', 'No se pudieron cargar los programas AYO.');
@@ -686,27 +733,67 @@ export class ListMeet implements OnInit {
     }
   }
 
-  verEstudiante(programa: ProgramaAyo) {
+  verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
     
-    // New Logic: Use estudiantes_id from id_nivel
+    // New Logic: Use estudiantes_id from id_nivel to get documents and fetch users
     if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
-        this.isLoadingStudents = false; 
-        this.showStudentPanel = true;
-        this.selectedProgramForFocus = programa;
-        
-        this.selectedStudents = prog.id_nivel.estudiantes_id;
-        this.attendanceList = this.selectedStudents.map(student => ({
-            id: student.id,
-            studentName: `${student.first_name} ${student.last_name}`,
-            email: student.email,
-            fecha: new Date(),
-            attended: false,
-            score: '',
-            currentLevelId: (student as any).nivel_id
-        }));
-        this.cdr.detectChanges();
-        return;
+        const documents: {tipo: string, numero: string}[] = [];
+        const seenDocs = new Set<string>();
+
+        prog.id_nivel.estudiantes_id.forEach((student: any) => {
+            if (student.tipo_documento && student.numero_documento) {
+                const docKey = `${student.tipo_documento}-${student.numero_documento}`;
+                if (!seenDocs.has(docKey)) {
+                    seenDocs.add(docKey);
+                    documents.push({
+                        tipo: student.tipo_documento,
+                        numero: student.numero_documento
+                    });
+                }
+            }
+        });
+
+        if (documents.length > 0) {
+            this.isLoadingStudents = true; 
+            this.showStudentPanel = true;
+            this.selectedProgramForFocus = programa;
+            
+            this.userService.getUsersByMultipleDocuments(documents).subscribe({
+                next: (response) => {
+                    this.isLoadingStudents = false;
+                    if (response.data && response.data.length > 0) {
+                        this.selectedStudents = response.data;
+                        this.attendanceList = this.selectedStudents.map(student => ({
+                            id: student.id,
+                            studentName: `${student.first_name} ${student.last_name}`,
+                            email: student.email,
+                            fecha: new Date(),
+                            attended: false,
+                            score: '',
+                            currentLevelId: (student as any).nivel_id
+                        }));
+                        this.cdr.detectChanges();
+                    } else {
+                        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+                        this.cdr.detectChanges();
+                    }
+                },
+                error: (error) => {
+                    this.isLoadingStudents = false;
+                    console.error('Error fetching students:', error);
+                    if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+                    this.cdr.detectChanges();
+                }
+            });
+            return;
+        } else {
+             if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes inscritos a este programa.');
+             // Reset list if no students found
+             this.selectedStudents = [];
+             this.attendanceList = [];
+             return;
+        }
     }
 
     // Fallback: Old Logic using cuentas_cobrar_id
@@ -753,100 +840,76 @@ export class ListMeet implements OnInit {
                 }));
                 this.cdr.detectChanges();
               } else {
-                this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+                if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
                 this.cdr.detectChanges();
               }
             },
             error: (error) => {
               this.isLoadingStudents = false;
               console.error('Error fetching students:', error);
-              this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+              if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
               this.cdr.detectChanges();
             }
           });
       } else {
-        this.notificationService.showWarning('Información', 'No hay estudiantes inscritos a este programa.');
+        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes inscritos a este programa.');
       }
     } else {
-        this.notificationService.showWarning('Información', 'No hay estudiantes asociados a este programa.');
+        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes asociados a este programa.');
         // Reset list if no students found/linked
         this.selectedStudents = [];
         this.attendanceList = [];
     }
   }
 
-  verTodosEstudiantes() {
-    // New Logic: Collect from id_nivel.estudiantes_id
-    const allStudentsMap = new Map<string, User>();
-    
+  verTodosEstudiantes(suppressWarnings: boolean = false) {
+    const documents: { tipo: string; numero: string }[] = [];
+    const seenDocs = new Set<string>();
+
+    // 1. Collect from id_nivel.estudiantes_id
     this.programas.forEach((prog: any) => {
         if (prog.id_nivel && prog.id_nivel.estudiantes_id && Array.isArray(prog.id_nivel.estudiantes_id)) {
-            prog.id_nivel.estudiantes_id.forEach((student: User) => {
-                if (student.id && !allStudentsMap.has(student.id)) {
-                    allStudentsMap.set(student.id, student);
+            prog.id_nivel.estudiantes_id.forEach((student: any) => {
+                if (student.tipo_documento && student.numero_documento) {
+                    const docKey = `${student.tipo_documento}-${student.numero_documento}`;
+                    if (!seenDocs.has(docKey)) {
+                        seenDocs.add(docKey);
+                        documents.push({
+                            tipo: student.tipo_documento,
+                            numero: student.numero_documento
+                        });
+                    }
                 }
             });
         }
     });
 
-    if (allStudentsMap.size > 0) {
-        this.isLoadingStudents = false;
-        this.showStudentPanel = true;
-        
-        // Dummy object for view
-        this.selectedProgramForFocus = {
-            id_nivel: {
-                tematica: 'Listado General',
-                nivel: 'Todos los Niveles',
-                subcategoria: 'Todos los Estudiantes',
-                categoria: '',
-                id: '',
-                idioma: ''
-            },
-            fecha_finalizacion: '',
-            curso_id: ''
-        };
-
-        this.selectedStudents = Array.from(allStudentsMap.values());
-        this.attendanceList = this.selectedStudents.map(student => ({
-            id: student.id,
-            studentName: `${student.first_name} ${student.last_name}`,
-            email: student.email,
-            fecha: new Date(),
-            attended: false,
-            score: '',
-            currentLevelId: (student as any).nivel_id
-        }));
-        this.cdr.detectChanges();
-        return;
-    }
-
-    const documents: { tipo: string; numero: string }[] = [];
-    const seenDocs = new Set<string>();
-
-    this.programas.forEach((programa: any) => {
-      if (programa.cuentas_cobrar_id) {
-        programa.cuentas_cobrar_id.forEach((cuenta: any) => {
-          const est = cuenta.estudiante_id;
-          if (est && est.tipo_documento && est.numero_documento) {
-            const key = `${est.tipo_documento}-${est.numero_documento}`;
-            if (!seenDocs.has(key)) {
-              seenDocs.add(key);
-              documents.push({
-                tipo: est.tipo_documento,
-                numero: est.numero_documento
-              });
-            }
+    // 2. Fallback to cuentas_cobrar_id if no documents found yet
+    if (documents.length === 0) {
+        this.programas.forEach((programa: any) => {
+          if (programa.cuentas_cobrar_id) {
+            programa.cuentas_cobrar_id.forEach((cuenta: any) => {
+              const est = cuenta.estudiante_id;
+              if (est && est.tipo_documento && est.numero_documento) {
+                const key = `${est.tipo_documento}-${est.numero_documento}`;
+                if (!seenDocs.has(key)) {
+                  seenDocs.add(key);
+                  documents.push({
+                    tipo: est.tipo_documento,
+                    numero: est.numero_documento
+                  });
+                }
+              }
+            });
           }
         });
-      }
-    });
+    }
 
     if (documents.length > 0) {
       this.isLoadingStudents = true;
       this.showStudentPanel = true;
       
-      // Objeto dummy para la vista
+      // Dummy object for view
       this.selectedProgramForFocus = {
         id_nivel: {
             tematica: 'Listado General',
@@ -877,19 +940,19 @@ export class ListMeet implements OnInit {
               }));
               this.cdr.detectChanges();
             } else {
-              this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+              if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
               this.cdr.detectChanges();
             }
           },
           error: (error) => {
             this.isLoadingStudents = false;
             console.error('Error fetching students:', error);
-            this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+            if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
             this.cdr.detectChanges();
           }
         });
     } else {
-        this.notificationService.showWarning('Información', 'No hay estudiantes registrados en ningún programa.');
+        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes registrados en ningún programa.');
     }
   }
 
