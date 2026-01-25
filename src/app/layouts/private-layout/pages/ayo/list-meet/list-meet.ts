@@ -1,4 +1,4 @@
-import {Component, OnInit, ElementRef, HostListener, Inject} from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -8,8 +8,9 @@ import { UserService } from '../../../../../core/services/user.service';
 import { CourseService } from '../../../../../core/services/course.service';
 import { ProgramaAyo, ProgramGroup } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
-import {ConfirmationService} from '../../../../../core/services/confirmation.service';
-import {environment} from '../../../../../../environments/environment';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { environment } from '../../../../../../environments/environment';
+import { AttendanceComponent, AttendanceItem } from '../../../../../components/attendance/attendance.component';
 
 declare var gapi: any;
 declare var google: any;
@@ -17,7 +18,7 @@ declare var google: any;
 @Component({
   selector: 'app-list-meet',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AttendanceComponent],
   templateUrl: './list-meet.html',
   styleUrl: './list-meet.css'
 })
@@ -27,8 +28,9 @@ export class ListMeet implements OnInit {
   programas: ProgramaAyo[] = [];
   programGroups: ProgramGroup[] = [];
   selectedGroup: ProgramGroup | null = null;
-  viewMode: 'groups' | 'details' = 'groups';
+  viewMode: 'groups' | 'details' | 'students' = 'groups';
   isLoading = false;
+  isLoadingStudents = false;
   selectedLanguage: string | null = null;
 
   // Edit Modal Properties
@@ -51,10 +53,12 @@ export class ListMeet implements OnInit {
   showAddMeetingModal = false;
   addMeetingForm!: FormGroup;
   selectedProgramId: string | null = null;
+  selectedProgramForFocus: ProgramaAyo | null = null;
 
-  // Student Modal Properties
-  showStudentModal = false;
+  // Student Panel Properties
+  showStudentPanel = false;
   selectedStudents: User[] = [];
+  attendanceList: AttendanceItem[] = [];
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -566,6 +570,11 @@ export class ListMeet implements OnInit {
   }
 
   goBack(): void {
+    if (this.showStudentPanel) {
+      this.closeStudentPanel();
+      return;
+    }
+
     if (this.viewMode === 'details') {
       this.viewMode = 'groups';
       this.selectedGroup = null;
@@ -603,20 +612,30 @@ export class ListMeet implements OnInit {
       });
       
       if (documents.length > 0) {
-        this.isLoading = true;
+        // Use isLoadingStudents instead of global isLoading to avoid main skeleton
+        this.isLoadingStudents = true; 
+        this.showStudentPanel = true;
+        this.selectedProgramForFocus = programa;
+        
         this.userService.getUsersByMultipleDocuments(documents)
           .subscribe({
             next: (response) => {
-              this.isLoading = false;
+              this.isLoadingStudents = false;
               if (response.data && response.data.length > 0) {
                 this.selectedStudents = response.data;
-                this.showStudentModal = true;
+                this.attendanceList = this.selectedStudents.map(student => ({
+                  studentName: `${student.first_name} ${student.last_name}`,
+                  email: student.email,
+                  fecha: new Date(),
+                  attended: false,
+                  score: ''
+                }));
               } else {
                 this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
               }
             },
             error: (error) => {
-              this.isLoading = false;
+              this.isLoadingStudents = false;
               console.error('Error fetching students:', error);
               this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
             }
@@ -626,11 +645,16 @@ export class ListMeet implements OnInit {
       }
     } else {
         this.notificationService.showWarning('Información', 'No hay estudiantes asociados a este programa.');
+        // Reset list if no students found/linked
+        this.selectedStudents = [];
+        this.attendanceList = [];
     }
   }
 
-  closeStudentModal() {
-    this.showStudentModal = false;
+  closeStudentPanel() {
+    this.showStudentPanel = false;
+    this.selectedProgramForFocus = null;
     this.selectedStudents = [];
+    this.attendanceList = [];
   }
 }

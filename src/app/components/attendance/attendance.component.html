@@ -1,0 +1,62 @@
+<div class="attendance-container bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <img src="assets/icons/asistencia.png" class="w-6 h-6 object-contain opacity-70" alt="" onerror="this.style.display='none'">
+            Listado de Estudiantes
+        </h2>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Nombre del Estudiante
+                    </th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Email
+                    </th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Calificación
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @for (item of attendanceList; track $index) {
+                <tr class="hover:bg-blue-50/30 transition-colors group">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3">
+                                {{ item.studentName.charAt(0) }}
+                            </div>
+                            <div class="text-sm font-bold text-gray-900">{{ item.studentName }}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-600">{{ item.email || 'Sin email' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="text" 
+                               [value]="item.score"
+                               readonly
+                               class="block w-24 rounded-lg border-gray-200 bg-gray-50 text-gray-500 shadow-sm text-sm py-2 px-3 border cursor-not-allowed focus:ring-0"
+                               placeholder="-">
+                    </td>
+                </tr>
+                }
+                @empty {
+                <tr>
+                    <td colspan="3" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-400">
+                            <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            <p class="text-lg font-medium text-gray-500">No hay estudiantes en la lista</p>
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
