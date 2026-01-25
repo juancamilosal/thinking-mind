@@ -1,11 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LangTestService } from '../../../../core/services/langTest.service';
 import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestModels';
 import { StorageServices } from '../../../../core/services/storage.services';
-import { StudentService } from '../../../../core/services/student.service';
-import { Student } from '../../../../core/models/Student';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-test',
@@ -14,7 +12,7 @@ import { Router, ActivatedRoute } from '@angular/router';
   templateUrl: './langTest.html',
 })
 
-export class LangTest implements OnInit {
+export class LangTest implements OnInit, OnDestroy {
   // UI state
   selectedLanguage: TestLanguage | null = null;
   loading = false;
@@ -26,39 +24,58 @@ export class LangTest implements OnInit {
   answersByQuestion: Record<number, number | null> = {};
   score = 0;
   classification = '';
-  currentStudent: Student | null = null;
+  studentId: string | null = null;
 
   constructor(
     private langTestService: LangTestService,
-    private studentService: StudentService,
-    private router: Router,
-    private activatedRoute: ActivatedRoute
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     const currentUser = StorageServices.getCurrentUser();
-    const email = currentUser?.email;
-    if (!email) {
-      // Fallback: rely on authGuard, but if no user, redirect to login
+    if (!currentUser) {
       this.router.navigate(['/login']);
       return;
     }
 
-    this.studentService.getStudentByEmail(email).subscribe({
-      next: (res) => {
-        const students = res.data || [];
-        if (students.length) {
-          this.currentStudent = students[0];
-          if ((this.currentStudent as any).test_completado === true) {
-            // Student already completed test, redirect to dashboard/profile
-            this.router.navigate(['/private/dashboard']);
-          }
+    // Check if student already completed the test
+    if (currentUser.resultado_test !== null && currentUser.resultado_test !== undefined) {
+      // Student has already taken the test, redirect to dashboard
+      this.router.navigate(['/private/dashboard']);
+      return;
+    }
+
+    // Get student ID from current user
+    this.studentId = currentUser.student_id || currentUser.id;
+
+    // Hide sidebar by adding class to body
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('lang-test-active');
+      // Add styles to hide sidebar
+      const style = document.createElement('style');
+      style.id = 'lang-test-styles';
+      style.textContent = `
+        .lang-test-active app-sidebar,
+        .lang-test-active app-header {
+          display: none !important;
         }
-      },
-      error: () => {
-        // Non-blocking: allow test if lookup fails
+        .lang-test-active .md\\:flex > div:first-child {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Remove class and styles when leaving component
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('lang-test-active');
+      const style = document.getElementById('lang-test-styles');
+      if (style) {
+        style.remove();
       }
-    });
+    }
   }
 
   // Welcome actions
@@ -145,17 +162,18 @@ export class LangTest implements OnInit {
 
     // Send to server for scoring
     this.loading = true;
-    const studentId = this.currentStudent?.id;
-    this.langTestService.submitTest(selectedAnswerIds, studentId).subscribe({
+    this.langTestService.submitTest(selectedAnswerIds, this.studentId || undefined).subscribe({
       next: (response) => {
         this.score = response.data.respuestas_correctas;
         this.classification = this.getClassification(this.score);
         this.showResults = true;
         this.loading = false;
 
-        // Mark completion locally; backend should persist this
-        if (this.currentStudent) {
-          (this.currentStudent as any).test_completado = true;
+        // Update user data in session storage with test result
+        const currentUser = StorageServices.getCurrentUser();
+        if (currentUser) {
+          currentUser.resultado_test = this.score;
+          StorageServices.setUserData(currentUser);
         }
       },
       error: (err) => {

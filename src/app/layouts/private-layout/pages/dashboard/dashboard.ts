@@ -92,7 +92,7 @@ export class Dashboard implements OnInit {
 
     // Obtener información del usuario desde sessionStorage usando StorageServices
     const user = StorageServices.getItemObjectFromSessionStorage('current_user');
-    
+
     if (user) {
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
@@ -105,11 +105,16 @@ export class Dashboard implements OnInit {
         this.loadSalesData();
         return;
       }
-      
-      if (this.isAyoStudent) {
-        // Para estudiantes AYO, cargamos los datos desde la sesión inicialmente
+
+      // Check if user is a regular student (has resultado_test or student_id field)
+      const isRegularStudent = user.resultado_test !== undefined || user.student_id !== undefined;
+
+      if (this.isAyoStudent || isRegularStudent) {
+        // Para estudiantes (AYO o regulares), cargamos los datos desde la sesión inicialmente
         this.ayoStats.creditos = user.creditos || 0;
         this.ayoStats.calificacion = user.calificacion || 0;
+        this.ayoStats.nivel_idioma = user.nivel_idioma || 'N/A';
+        this.ayoStats.resultado_test = user.resultado_test || 'N/A';
 
         // Consumir servicio dashboardStudent para obtener datos actualizados
         this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
@@ -118,7 +123,7 @@ export class Dashboard implements OnInit {
             if (data) {
               this.ayoStats = {
                 creditos: data.creditos ?? 0,
-                nivel: data.nivel || 'N/A',
+                nivel: data.nivel || data.nivel_idioma || 'N/A',
                 calificacion: data.calificacion ?? 0,
                 resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
                 estado_cuenta: data.estado_cuenta || 'N/A',
@@ -131,11 +136,11 @@ export class Dashboard implements OnInit {
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error loading AYO dashboard data', error);
+            console.error('Error loading student dashboard data', error);
             this.isLoading = false;
           }
         });
-        
+
         return;
       }
     }
