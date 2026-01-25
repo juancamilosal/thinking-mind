@@ -1,7 +1,7 @@
 import { Component, OnInit, ElementRef, HostListener, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { UserService } from '../../../../../core/services/user.service';
@@ -11,6 +11,8 @@ import { User } from '../../../../../core/models/User';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
 import { AttendanceComponent, AttendanceItem } from '../../../../../components/attendance/attendance.component';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 declare var gapi: any;
 declare var google: any;
@@ -18,7 +20,7 @@ declare var google: any;
 @Component({
   selector: 'app-list-meet',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AttendanceComponent],
+  imports: [CommonModule, ReactiveFormsModule, AttendanceComponent, FormsModule],
   templateUrl: './list-meet.html',
   styleUrl: './list-meet.css'
 })
@@ -32,6 +34,9 @@ export class ListMeet implements OnInit {
   isLoading = false;
   isLoadingStudents = false;
   selectedLanguage: string | null = null;
+  searchTerm: string = '';
+  filteredProgramGroups: ProgramGroup[] = [];
+  private searchSubject = new Subject<string>();
 
   // Edit Modal Properties
   showEditModal = false;
@@ -81,6 +86,15 @@ export class ListMeet implements OnInit {
         this.selectedLanguage = params['idioma'];
       }
     });
+
+    this.searchSubject.pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    ).subscribe(searchTerm => {
+      this.searchTerm = searchTerm;
+      this.loadProgramas();
+    });
+
     this.loadProgramas();
   }
 
@@ -517,7 +531,7 @@ export class ListMeet implements OnInit {
 
   loadProgramas(): void {
     this.isLoading = true;
-    this.programaAyoService.getProgramaAyo(this.selectedLanguage || undefined).subscribe({
+    this.programaAyoService.getProgramaAyo(this.selectedLanguage || undefined, this.searchTerm).subscribe({
       next: (response) => {
         this.programas = response.data || [];
         this.groupPrograms();
@@ -547,6 +561,8 @@ export class ListMeet implements OnInit {
       groups[key].programs.push(p);
     });
     this.programGroups = Object.values(groups);
+    // Since filtering is server-side, filteredProgramGroups is just the grouped result
+    this.filteredProgramGroups = this.programGroups;
 
     // If a group was selected, update it with new data
     if (this.selectedGroup) {
@@ -562,6 +578,11 @@ export class ListMeet implements OnInit {
         this.selectedGroup = null;
       }
     }
+  }
+
+  onSearchInput(term: string): void {
+    this.searchTerm = term;
+    this.searchSubject.next(term);
   }
 
   selectGroup(group: ProgramGroup): void {

@@ -16,10 +16,26 @@
             </h1>
             <p class="page-subtitle">Gestión de programas creados</p>
         </div>
-        <button (click)="verTodosEstudiantes()" class="flex items-center gap-2 bg-[#13486e] text-white px-5 py-2.5 rounded-xl hover:bg-[#0f3a5a] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-            <img src="assets/icons/students.png" class="w-5 h-5 object-contain brightness-0 invert" alt="Estudiantes">
-            <span class="font-semibold">Ver Listado de Estudiantes</span>
-        </button>
+        
+        <div class="flex items-center gap-4">
+            @if (viewMode === 'groups') {
+            <div class="relative">
+                <input type="text" 
+                    [ngModel]="searchTerm" 
+                    (ngModelChange)="onSearchInput($event)"
+                    placeholder="Buscar por temática o nivel..." 
+                    class="pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all w-64 shadow-sm">
+                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+
+            <button (click)="verTodosEstudiantes()" class="flex items-center gap-2 bg-[#13486e] text-white px-5 py-2.5 rounded-xl hover:bg-[#0f3a5a] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <img src="assets/icons/students.png" class="w-5 h-5 object-contain brightness-0 invert" alt="Estudiantes">
+                <span class="font-semibold">Ver Listado de Estudiantes</span>
+            </button>
+            }
+        </div>
     </div>
 
     <ng-template #programCard let-programa="programa">
@@ -156,12 +172,14 @@
                 }
 
                 <!-- Actions Section -->
-                <div class="flex justify-center items-center gap-4 mt-6 mb-2 w-full">
-                     <!-- Add Meeting Icon -->
-                     <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión" (click)="openAddMeetingModal(programa)">
-                     
-                     <!-- Student Icon -->
-                     <img src="assets/icons/students.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Estudiantes" title="Ver Estudiantes" (click)="verEstudiante(programa)">
+                <div class="flex flex-col items-center gap-3 mt-6 mb-2 w-full">
+                     <div class="flex justify-center items-center gap-4">
+                         <!-- Add Meeting Icon -->
+                         <img src="assets/icons/agregar-meet.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Agregar Reunión" title="Agregar Reunión" (click)="openAddMeetingModal(programa)">
+                         
+                         <!-- Student Icon -->
+                         <img src="assets/icons/students.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Estudiantes" title="Ver Estudiantes" (click)="verEstudiante(programa)">
+                     </div>
                 </div>
             </div>
         </div>
@@ -194,7 +212,7 @@
             } @else {
             <div class="programs-grid">
                 @if (viewMode === 'groups') {
-                    @for (group of programGroups; track group.tematica) {
+                    @for (group of filteredProgramGroups; track group.tematica) {
                     <div class="program-card group-card cursor-pointer hover:shadow-2xl transition-all duration-300 relative overflow-hidden h-96 group" (click)="selectGroup(group)">
                         <!-- Background Image -->
                         @if (group.img && group.img.id) {
@@ -232,9 +250,9 @@
                         </div>
                     </div>
                     }
-                } @else if (viewMode === 'details') {
-                    @for (programa of selectedGroup?.programs; track programa.id) {
-                        <ng-container *ngTemplateOutlet="programCard; context: {programa: programa}"></ng-container>
+                } @else if (viewMode === 'details' && selectedGroup) {
+                    @for (programa of selectedGroup.programs; track programa.id) {
+                    <ng-container *ngTemplateOutlet="programCard; context: { programa: programa }"></ng-container>
                     }
                 }
             </div>

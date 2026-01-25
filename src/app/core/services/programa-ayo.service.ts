@@ -18,13 +18,20 @@ export class ProgramaAyoService {
     return this.http.post<ResponseAPI<ProgramaAyo>>(this.apiUrl, programaAyo);
   }
 
-  getProgramaAyo(idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
+  getProgramaAyo(idioma?: string, search?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
       'fields': '*,cuentas_cobrar_id.*,cuentas_cobrar_id.estudiante_id.*,id_nivel.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*'
     };
     if (idioma) {
       params['filter[idioma][_eq]'] = idioma;
     }
+    
+    if (search) {
+      params['filter[_or][0][id_nivel][tematica][_icontains]'] = search;
+      params['filter[_or][1][id_nivel][nivel][_icontains]'] = search;
+      params['filter[_or][2][id_nivel][subcategoria][_icontains]'] = search;
+    }
+
     // Filter active accounts only (deep filtering)
     params['deep[cuentas_cobrar_id][_filter][programa_finalizado][_eq]'] = false;
     
