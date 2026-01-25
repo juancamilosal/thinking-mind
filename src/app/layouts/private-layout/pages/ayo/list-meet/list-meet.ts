@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, HostListener, Inject } from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -74,7 +74,8 @@ export class ListMeet implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private fb: FormBuilder,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -651,14 +652,17 @@ export class ListMeet implements OnInit {
                   attended: false,
                   score: ''
                 }));
+                this.cdr.detectChanges();
               } else {
                 this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+                this.cdr.detectChanges();
               }
             },
             error: (error) => {
               this.isLoadingStudents = false;
               console.error('Error fetching students:', error);
               this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+              this.cdr.detectChanges();
             }
           });
       } else {
@@ -725,14 +729,17 @@ export class ListMeet implements OnInit {
                 attended: false,
                 score: ''
               }));
+              this.cdr.detectChanges();
             } else {
               this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+              this.cdr.detectChanges();
             }
           },
           error: (error) => {
             this.isLoadingStudents = false;
             console.error('Error fetching students:', error);
             this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+            this.cdr.detectChanges();
           }
         });
     } else {
