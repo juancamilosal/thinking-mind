@@ -651,6 +651,74 @@ export class ListMeet implements OnInit {
     }
   }
 
+  verTodosEstudiantes() {
+    const documents: { tipo: string; numero: string }[] = [];
+    const seenDocs = new Set<string>();
+
+    this.programas.forEach((programa: any) => {
+      if (programa.cuentas_cobrar_id) {
+        programa.cuentas_cobrar_id.forEach((cuenta: any) => {
+          const est = cuenta.estudiante_id;
+          if (est && est.tipo_documento && est.numero_documento) {
+            const key = `${est.tipo_documento}-${est.numero_documento}`;
+            if (!seenDocs.has(key)) {
+              seenDocs.add(key);
+              documents.push({
+                tipo: est.tipo_documento,
+                numero: est.numero_documento
+              });
+            }
+          }
+        });
+      }
+    });
+
+    if (documents.length > 0) {
+      this.isLoadingStudents = true;
+      this.showStudentPanel = true;
+      
+      // Objeto dummy para la vista
+      this.selectedProgramForFocus = {
+        id_nivel: {
+            tematica: 'Listado General',
+            nivel: 'Todos los Niveles',
+            subcategoria: 'Todos los Estudiantes',
+            categoria: '',
+            id: '',
+            idioma: ''
+        },
+        fecha_finalizacion: '',
+        curso_id: ''
+      };
+
+      this.userService.getUsersByMultipleDocuments(documents)
+        .subscribe({
+          next: (response) => {
+            this.isLoadingStudents = false;
+            if (response.data && response.data.length > 0) {
+              this.selectedStudents = response.data;
+              this.attendanceList = this.selectedStudents.map(student => ({
+                studentName: `${student.first_name} ${student.last_name}`,
+                email: student.email,
+                fecha: new Date(),
+                attended: false,
+                score: ''
+              }));
+            } else {
+              this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+            }
+          },
+          error: (error) => {
+            this.isLoadingStudents = false;
+            console.error('Error fetching students:', error);
+            this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+          }
+        });
+    } else {
+        this.notificationService.showWarning('Información', 'No hay estudiantes registrados en ningún programa.');
+    }
+  }
+
   closeStudentPanel() {
     this.showStudentPanel = false;
     this.selectedProgramForFocus = null;

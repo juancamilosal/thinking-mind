@@ -9,11 +9,17 @@
         </button>
     </div>
 
-    <div class="mb-10 header-section">
-        <h1 class="page-title">
-            Programas AYO
-        </h1>
-        <p class="page-subtitle">Gestión de programas creados</p>
+    <div class="mb-10 header-section flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <h1 class="page-title">
+                Programas AYO
+            </h1>
+            <p class="page-subtitle">Gestión de programas creados</p>
+        </div>
+        <button (click)="verTodosEstudiantes()" class="flex items-center gap-2 bg-[#13486e] text-white px-5 py-2.5 rounded-xl hover:bg-[#0f3a5a] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            <img src="assets/icons/students.png" class="w-5 h-5 object-contain brightness-0 invert" alt="Estudiantes">
+            <span class="font-semibold">Ver Listado de Estudiantes</span>
+        </button>
     </div>
 
     <ng-template #programCard let-programa="programa">
