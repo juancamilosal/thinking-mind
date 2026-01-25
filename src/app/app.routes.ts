@@ -28,6 +28,8 @@ import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
 import { MeetStudent } from './layouts/private-layout/pages/meet-student/meet-student';
 import { Advance } from './layouts/private-layout/pages/advance/advance';
+import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
+import { TeacherMeetingsComponent } from './layouts/private-layout/pages/teacher/teacher-meetings/teacher-meetings';
 
 
 export const routes: Routes = [
@@ -171,6 +173,16 @@ export const routes: Routes = [
         path: 'meetings',
         title: 'Thinking Mind | Reuniones Estudiante',
         component: MeetStudent
+      },
+      {
+        path: 'teacher',
+        title: 'Thinking Mind | Pantalla Profesor',
+        component: Teacher
+      },
+      {
+        path: 'teacher/meetings',
+        title: 'Thinking Mind | Mis Reuniones',
+        component: TeacherMeetingsComponent
       },
       {
         path: 'advance',
