@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LangTestService } from '../../../../core/services/langTest.service';
 import { TestQuestion, TestLanguage } from '../../../../core/models/LangTestModels';
@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
   templateUrl: './langTest.html',
 })
 
-export class LangTest implements OnInit {
+export class LangTest implements OnInit, OnDestroy {
   // UI state
   selectedLanguage: TestLanguage | null = null;
   loading = false;
@@ -47,6 +47,35 @@ export class LangTest implements OnInit {
 
     // Get student ID from current user
     this.studentId = currentUser.student_id || currentUser.id;
+
+    // Hide sidebar by adding class to body
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('lang-test-active');
+      // Add styles to hide sidebar
+      const style = document.createElement('style');
+      style.id = 'lang-test-styles';
+      style.textContent = `
+        .lang-test-active app-sidebar,
+        .lang-test-active app-header {
+          display: none !important;
+        }
+        .lang-test-active .md\\:flex > div:first-child {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Remove class and styles when leaving component
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('lang-test-active');
+      const style = document.getElementById('lang-test-styles');
+      if (style) {
+        style.remove();
+      }
+    }
   }
 
   // Welcome actions
@@ -139,6 +168,13 @@ export class LangTest implements OnInit {
         this.classification = this.getClassification(this.score);
         this.showResults = true;
         this.loading = false;
+
+        // Update user data in session storage with test result
+        const currentUser = StorageServices.getCurrentUser();
+        if (currentUser) {
+          currentUser.resultado_test = this.score;
+          StorageServices.setUserData(currentUser);
+        }
       },
       error: (err) => {
         console.error('Error submitting test:', err);
