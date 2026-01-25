@@ -6,7 +6,7 @@ import { AttendanceService } from '../../../../core/services/attendance.service'
 import { NivelService } from '../../../../core/services/nivel.service';
 import { StorageServices } from '../../../../core/services/storage.services';
 import { Attendance } from '../../../../core/models/Attendance';
-import { Nivel } from '../../../../core/models/Meeting';
+import { Nivel } from '../../../../core/models/Nivel';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({

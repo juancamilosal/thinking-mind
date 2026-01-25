@@ -15,16 +15,6 @@ export class Meeting {
 }
 
 
-export class Nivel {
-    id: string;
-    categoria: string;
-    subcategoria: string;
-    nivel: string;
-    idioma: string;
-    tematica: string;
-    imagen?: string;
-}
-
 export class Docente {
   first_name: string;
   last_name: string;

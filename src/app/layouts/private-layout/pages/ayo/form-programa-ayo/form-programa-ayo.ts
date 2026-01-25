@@ -8,7 +8,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { UserService } from '../../../../../core/services/user.service';
 import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
-import { Nivel } from '../../../../../core/models/Meeting';
+import { Nivel } from '../../../../../core/models/Nivel';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 import { FileService, DirectusFile } from '../../../../../core/services/file.service';
 import {environment} from '../../../../../../environments/environment';

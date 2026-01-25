@@ -1,4 +1,5 @@
-import {Meeting, Nivel} from './Meeting';
+import {Meeting} from './Meeting';
+import {Nivel} from './Nivel';
 
 export class Course {
   id?: string;

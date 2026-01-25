@@ -11,6 +11,8 @@ import { User } from '../../../../../core/models/User';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
 import { AttendanceComponent, AttendanceItem } from '../../../../../components/attendance/attendance.component';
+import { NivelService } from '../../../../../core/services/nivel.service';
+import { Nivel } from '../../../../../core/models/Nivel';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -65,6 +67,12 @@ export class ListMeet implements OnInit {
   selectedStudents: User[] = [];
   attendanceList: AttendanceItem[] = [];
 
+  // Promotion Modal Properties
+  niveles: Nivel[] = [];
+  showLevelModal = false;
+  selectedStudentForPromotion: AttendanceItem | null = null;
+  isLoadingLevels = false;
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private notificationService: NotificationService,
@@ -75,7 +83,8 @@ export class ListMeet implements OnInit {
     private route: ActivatedRoute,
     private fb: FormBuilder,
     private elementRef: ElementRef,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private nivelService: NivelService
   ) { }
 
   ngOnInit(): void {
@@ -97,6 +106,36 @@ export class ListMeet implements OnInit {
     });
 
     this.loadProgramas();
+  }
+
+  loadNiveles(): void {
+    this.isLoadingLevels = true;
+    const languages = this.selectedLanguage ? [this.selectedLanguage] : undefined;
+    this.nivelService.getNiveles(languages).subscribe({
+      next: (response) => {
+        this.niveles = response.data || [];
+        this.isLoadingLevels = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading levels:', error);
+        this.isLoadingLevels = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  openPromotionModal(student: AttendanceItem): void {
+    this.selectedStudentForPromotion = student;
+    this.showLevelModal = true;
+    if (this.niveles.length === 0) {
+      this.loadNiveles();
+    }
+  }
+
+  closePromotionModal(): void {
+    this.showLevelModal = false;
+    this.selectedStudentForPromotion = null;
   }
 
   initForm(): void {
@@ -650,7 +689,8 @@ export class ListMeet implements OnInit {
                   email: student.email,
                   fecha: new Date(),
                   attended: false,
-                  score: ''
+                  score: '',
+                  currentLevelId: (student as any).nivel_id
                 }));
                 this.cdr.detectChanges();
               } else {
@@ -727,7 +767,8 @@ export class ListMeet implements OnInit {
                 email: student.email,
                 fecha: new Date(),
                 attended: false,
-                score: ''
+                score: '',
+                currentLevelId: (student as any).nivel_id
               }));
               this.cdr.detectChanges();
             } else {

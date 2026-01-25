@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ResponseAPI } from '../models/ResponseAPI';
-import { Nivel } from '../models/Meeting';
+import { Nivel } from '../models/Nivel';
 
 @Injectable({
   providedIn: 'root'
