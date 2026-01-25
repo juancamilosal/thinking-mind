@@ -2,8 +2,8 @@
 @if (!selectedLanguage && !showResults) {
 <section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-16 text-slate-900 font-sans">
   <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl"></div>
-    <div class="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-emerald-500/5 blur-3xl"></div>
+    <div class="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-emerald-600/10 blur-3xl"></div>
+    <div class="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-emerald-600/5 blur-3xl"></div>
   </div>
 
   <div class="relative w-full max-w-4xl flex flex-col gap-10 animate-in fade-in zoom-in duration-500">
@@ -18,7 +18,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
         <div class="relative z-10 h-full flex flex-col items-center justify-end pb-6 gap-3">
           <span class="text-4xl font-bold tracking-wide text-white drop-shadow-lg">English</span>
-          <div class="h-1 w-12 bg-emerald-500 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
+          <div class="h-1 w-12 bg-emerald-600 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
         </div>
       </button>
 
@@ -27,7 +27,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
         <div class="relative z-10 h-full flex flex-col items-center justify-end pb-6 gap-3">
           <span class="text-4xl font-bold tracking-wide text-white drop-shadow-lg">Français</span>
-          <div class="h-1 w-12 bg-emerald-500 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
+          <div class="h-1 w-12 bg-emerald-600 rounded-full transform scale-75 group-hover:scale-100 transition-transform duration-300"></div>
         </div>
       </button>
     </div>
@@ -39,8 +39,8 @@
 @if (selectedLanguage && !showResults) {
 <section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
   <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute -top-20 right-10 h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl"></div>
-    <div class="absolute bottom-10 left-0 h-72 w-72 rounded-full bg-emerald-500/5 blur-3xl"></div>
+    <div class="absolute -top-20 right-10 h-60 w-60 rounded-full bg-emerald-600/10 blur-3xl"></div>
+    <div class="absolute bottom-10 left-0 h-72 w-72 rounded-full bg-emerald-600/5 blur-3xl"></div>
   </div>
 
   <div class="relative w-full max-w-3xl bg-white backdrop-blur rounded-3xl shadow-xl ring-1 ring-slate-200 p-6 sm:p-8 flex flex-col gap-8 md:gap-10 animate-in fade-in zoom-in duration-500">
@@ -55,7 +55,7 @@
         </span>
       </div>
       <div class="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
-        <div class="h-full bg-emerald-500 rounded-full transition-all duration-500 ease-out" [style.width.%]="progressPercent"></div>
+        <div class="h-full bg-emerald-600 rounded-full transition-all duration-500 ease-out" [style.width.%]="progressPercent"></div>
       </div>
     </div>
 
@@ -68,9 +68,9 @@
 
       <fieldset aria-label="Answer options" class="flex flex-col gap-4 w-full">
         @for (opt of (currentQuestion?.respuestas_id || []); track opt.id) {
-        <label class="group relative flex cursor-pointer items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 transition-all hover:border-emerald-500/60 hover:bg-white has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/5 has-[:checked]:shadow-[0_10px_30px_rgba(16,185,129,0.12)]">
+        <label class="group relative flex cursor-pointer items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 transition-all hover:border-emerald-600/60 hover:bg-white has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-600/5 has-[:checked]:shadow-[0_10px_30px_rgba(5,150,105,0.12)]">
           <input class="peer sr-only" name="translation_answer_{{ currentQuestion?.id }}" type="radio" [checked]="answersByQuestion[currentQuestion!.id] === opt.id" (change)="chooseAnswer(opt.id)"/>
-          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-white transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-focus:ring-2 peer-focus:ring-emerald-400/60 peer-focus:ring-offset-2 peer-focus:ring-offset-white">
+          <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-white transition-all peer-checked:border-emerald-600 peer-checked:bg-emerald-600 peer-focus:ring-2 peer-focus:ring-emerald-500/60 peer-focus:ring-offset-2 peer-focus:ring-offset-white">
             <svg aria-hidden="true" class="h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.25 7.25a1 1 0 01-1.42 0l-3.25-3.25a1 1 0 011.42-1.42l2.54 2.54 6.54-6.54a1 1 0 011.42 0z" clip-rule="evenodd" />
             </svg>
@@ -82,21 +82,21 @@
     </div>
 
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full pt-4 border-t border-slate-200">
-      <button (click)="prev()" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-slate-700 font-semibold transition-all hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400/50">
+      <button (click)="prev()" class="inline-flex items-center gap-2 px-6 py-3 rounded-full text-slate-700 font-semibold transition-all hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 18l-6-6 6-6" />
         </svg>
         <span>{{ selectedLanguage === 'FRANCÉS' ? 'Retour' : 'Return' }}</span>
       </button>
       @if (!isLastQuestion()) {
-      <button (click)="next()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-500 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
+      <button (click)="next()" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(5,150,105,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(5,150,105,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:ring-offset-2 focus:ring-offset-white">
         <span>{{ selectedLanguage === 'FRANCÉS' ? 'Suivant' : 'Advance' }}</span>
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6" />
         </svg>
       </button>
       } @else {
-      <button (click)="submitTest()" [disabled]="!isAllAnswered" [class.opacity-50]="!isAllAnswered" [class.cursor-not-allowed]="!isAllAnswered" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white disabled:hover:shadow-[0_4px_14px_rgba(16,185,129,0.35)] disabled:hover:translate-y-0">
+      <button (click)="submitTest()" [disabled]="!isAllAnswered" [class.opacity-50]="!isAllAnswered" [class.cursor-not-allowed]="!isAllAnswered" class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-emerald-700 text-white font-semibold shadow-[0_4px_14px_rgba(4,120,87,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(4,120,87,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-600/60 focus:ring-offset-2 focus:ring-offset-white disabled:hover:shadow-[0_4px_14px_rgba(4,120,87,0.35)] disabled:hover:translate-y-0">
         <span>{{ selectedLanguage === 'FRANCÉS' ? 'Soumettre le test' : 'Submit Test' }}</span>
         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6" />
@@ -112,15 +112,15 @@
 @if (showResults) {
 <section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
   <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl"></div>
-    <div class="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl"></div>
+    <div class="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-600/10 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-emerald-600/5 blur-3xl"></div>
   </div>
 
   <div class="relative w-full max-w-xl bg-white backdrop-blur rounded-3xl shadow-xl ring-1 ring-slate-200 overflow-hidden transition-all duration-300">
     <div class="h-40 w-full bg-gradient-to-br from-emerald-100 via-emerald-50 to-slate-100 relative">
       <div class="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
       <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg ring-4 ring-white">
-        <div class="flex h-full w-full items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+        <div class="flex h-full w-full items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700">
           <svg aria-hidden="true" class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8.5 3.5a1 1 0 00-1 .92l-.38 5.7a1 1 0 01-.27.64l-2.9 3.05a1 1 0 00.62 1.68l3.93.55a1 1 0 01.8.56l1.7 3.73a1 1 0 001.8 0l1.7-3.73a1 1 0 01.8-.56l3.93-.55a1 1 0 00.62-1.68l-2.9-3.05a1 1 0 01-.27-.64l-.38-5.7a1 1 0 00-1-.92h-6.44z" />
           </svg>
@@ -137,7 +137,7 @@
           <span class="text-sm font-medium text-slate-500">Tu Calificación</span>
           <div class="flex items-center gap-2 text-slate-900">
             <span class="text-2xl font-bold">{{ score }}<span class="text-slate-400 text-lg font-normal">/{{ questions.length }}</span></span>
-            <svg aria-hidden="true" class="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" class="h-5 w-5 text-emerald-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -145,11 +145,11 @@
 
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-slate-500">Clasificación</span>
-          <div class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-700">{{ classification }}</div>
+          <div class="inline-flex items-center rounded-full border border-emerald-600/40 bg-emerald-600/10 px-3 py-1 text-sm font-semibold text-emerald-800">{{ classification }}</div>
         </div>
       </div>
 
-      <button (click)="goToDashboard()" class="group relative w-full overflow-hidden rounded-full bg-emerald-500 p-4 text-center font-bold text-white shadow-[0_4px_14px_rgba(16,185,129,0.35)] transition-transform active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:ring-offset-2 focus:ring-offset-white">
+      <button (click)="goToDashboard()" class="group relative w-full overflow-hidden rounded-full bg-emerald-600 p-4 text-center font-bold text-white shadow-[0_4px_14px_rgba(5,150,105,0.35)] transition-transform active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(5,150,105,0.35)] focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:ring-offset-2 focus:ring-offset-white">
         <span class="relative z-10 flex items-center justify-center gap-2">
           Finalizar
           <svg aria-hidden="true" class="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
