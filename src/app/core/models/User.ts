@@ -10,4 +10,5 @@ export class User {
   colegio_id?: School;
   tipo_documento?: string;
   numero_documento?: string;
+  nivel_id?: string;
 }

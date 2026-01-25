@@ -138,6 +138,43 @@ export class ListMeet implements OnInit {
     this.selectedStudentForPromotion = null;
   }
 
+  promoteStudent(nivel: Nivel): void {
+    if (!this.selectedStudentForPromotion || !this.selectedStudentForPromotion.id) {
+      this.notificationService.showError('Error', 'No se ha seleccionado un estudiante válido.');
+      return;
+    }
+
+    this.isLoadingLevels = true;
+    const userId = this.selectedStudentForPromotion.id;
+
+    this.userService.updateUser(userId, { nivel_id: nivel.id }).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Éxito', 'Nivel del estudiante actualizado correctamente.');
+        
+        // Update local state
+        if (this.selectedStudentForPromotion) {
+            this.selectedStudentForPromotion.currentLevelId = nivel.id;
+        }
+        
+        // Update student in the main list
+        const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
+        if (studentIndex !== -1) {
+            this.attendanceList[studentIndex].currentLevelId = nivel.id;
+        }
+
+        this.isLoadingLevels = false;
+        this.closePromotionModal();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error updating student level:', error);
+        this.notificationService.showError('Error', 'No se pudo actualizar el nivel del estudiante.');
+        this.isLoadingLevels = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   initForm(): void {
     this.editForm = this.fb.group({
       fecha_inicio: [null, Validators.required],
@@ -652,6 +689,27 @@ export class ListMeet implements OnInit {
   verEstudiante(programa: ProgramaAyo) {
     const prog = programa as any;
     
+    // New Logic: Use estudiantes_id from id_nivel
+    if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
+        this.isLoadingStudents = false; 
+        this.showStudentPanel = true;
+        this.selectedProgramForFocus = programa;
+        
+        this.selectedStudents = prog.id_nivel.estudiantes_id;
+        this.attendanceList = this.selectedStudents.map(student => ({
+            id: student.id,
+            studentName: `${student.first_name} ${student.last_name}`,
+            email: student.email,
+            fecha: new Date(),
+            attended: false,
+            score: '',
+            currentLevelId: (student as any).nivel_id
+        }));
+        this.cdr.detectChanges();
+        return;
+    }
+
+    // Fallback: Old Logic using cuentas_cobrar_id
     if (prog.cuentas_cobrar_id && prog.cuentas_cobrar_id.length > 0) {
       const documents: {tipo: string, numero: string}[] = [];
       
@@ -685,6 +743,7 @@ export class ListMeet implements OnInit {
               if (response.data && response.data.length > 0) {
                 this.selectedStudents = response.data;
                 this.attendanceList = this.selectedStudents.map(student => ({
+                  id: student.id,
                   studentName: `${student.first_name} ${student.last_name}`,
                   email: student.email,
                   fecha: new Date(),
@@ -706,7 +765,7 @@ export class ListMeet implements OnInit {
             }
           });
       } else {
-        this.notificationService.showWarning('Información', 'Los estudiantes asociados no tienen documento registrado.');
+        this.notificationService.showWarning('Información', 'No hay estudiantes inscritos a este programa.');
       }
     } else {
         this.notificationService.showWarning('Información', 'No hay estudiantes asociados a este programa.');
@@ -717,6 +776,51 @@ export class ListMeet implements OnInit {
   }
 
   verTodosEstudiantes() {
+    // New Logic: Collect from id_nivel.estudiantes_id
+    const allStudentsMap = new Map<string, User>();
+    
+    this.programas.forEach((prog: any) => {
+        if (prog.id_nivel && prog.id_nivel.estudiantes_id && Array.isArray(prog.id_nivel.estudiantes_id)) {
+            prog.id_nivel.estudiantes_id.forEach((student: User) => {
+                if (student.id && !allStudentsMap.has(student.id)) {
+                    allStudentsMap.set(student.id, student);
+                }
+            });
+        }
+    });
+
+    if (allStudentsMap.size > 0) {
+        this.isLoadingStudents = false;
+        this.showStudentPanel = true;
+        
+        // Dummy object for view
+        this.selectedProgramForFocus = {
+            id_nivel: {
+                tematica: 'Listado General',
+                nivel: 'Todos los Niveles',
+                subcategoria: 'Todos los Estudiantes',
+                categoria: '',
+                id: '',
+                idioma: ''
+            },
+            fecha_finalizacion: '',
+            curso_id: ''
+        };
+
+        this.selectedStudents = Array.from(allStudentsMap.values());
+        this.attendanceList = this.selectedStudents.map(student => ({
+            id: student.id,
+            studentName: `${student.first_name} ${student.last_name}`,
+            email: student.email,
+            fecha: new Date(),
+            attended: false,
+            score: '',
+            currentLevelId: (student as any).nivel_id
+        }));
+        this.cdr.detectChanges();
+        return;
+    }
+
     const documents: { tipo: string; numero: string }[] = [];
     const seenDocs = new Set<string>();
 
@@ -763,6 +867,7 @@ export class ListMeet implements OnInit {
             if (response.data && response.data.length > 0) {
               this.selectedStudents = response.data;
               this.attendanceList = this.selectedStudents.map(student => ({
+                id: student.id,
                 studentName: `${student.first_name} ${student.last_name}`,
                 email: student.email,
                 fecha: new Date(),
