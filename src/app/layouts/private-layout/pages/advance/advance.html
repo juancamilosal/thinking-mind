@@ -233,9 +233,11 @@
                     </div>
                 </div>
 
-                <div class="relative h-[400px] w-full max-w-5xl mx-auto">
-            <canvas #progressChart></canvas>
-        </div>
+                <div class="overflow-x-auto pb-4">
+                    <div class="relative h-[400px]" [style.width]="chartWidth">
+                        <canvas #progressChart></canvas>
+                    </div>
+                </div>
             </div>
             }
         </div>

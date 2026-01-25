@@ -2,7 +2,9 @@ import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewI
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { StudentService } from '../../../../core/services/student.service';
+import { AttendanceService } from '../../../../core/services/attendance.service';
 import { StorageServices } from '../../../../core/services/storage.services';
+import { Attendance } from '../../../../core/models/Attendance';
 import { environment } from '../../../../../environments/environment';
 import { Chart, registerables } from 'chart.js';
 
@@ -20,6 +22,8 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('progressChart') progressChartRef!: ElementRef<HTMLCanvasElement>;
   private chart: Chart | null = null;
   isLoading = true;
+  attendanceList: Attendance[] = [];
+  chartWidth: string = '100%';
 
   assetsUrl = environment.assets;
   ayoStats = {
@@ -33,12 +37,14 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private studentService: StudentService,
+    private attendanceService: AttendanceService,
     private router: Router,
     private cd: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
     this.loadStats();
+    this.loadAttendances();
   }
 
   ngAfterViewInit(): void {
@@ -57,7 +63,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
 
   loadStats(): void {
     this.isLoading = true;
-    const user = StorageServices.getItemObjectFromSessionStorage('current_user');
+    const user = StorageServices.getCurrentUser();
     if (user) {
       // Inicializar con datos de sesión
       this.ayoStats = {
@@ -106,6 +112,31 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  loadAttendances(): void {
+    const user = StorageServices.getCurrentUser();
+    if (user && user.id) {
+      const filter = { estudiante_id: user.id };
+      // Limit set to 100 to get a good amount of history without pagination for now
+      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha').subscribe({
+        next: (response) => {
+          this.attendanceList = response.data || [];
+          // Una vez cargadas las asistencias, inicializamos el gráfico con los datos reales
+          setTimeout(() => {
+            this.initChart();
+          }, 0);
+        },
+        error: (error) => {
+          console.error('Error loading attendances', error);
+          // Si falla, inicializamos con datos vacíos o mock
+          this.attendanceList = [];
+          setTimeout(() => {
+            this.initChart();
+          }, 0);
+        }
+      });
+    }
+  }
+
   initChart(): void {
     if (!this.progressChartRef) return;
 
@@ -117,20 +148,46 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     const ctx = this.progressChartRef.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // Generar datos simulados basados en la calificación actual
-    // Si la calificación es 0, usamos datos aleatorios bajos
-    const currentGrade = this.ayoStats.calificacion || 0;
-    const mockData = this.generateMockHistory(currentGrade);
-    const average = mockData.reduce((a, b) => a + b, 0) / mockData.length;
+    // Procesar datos reales de asistencia
+    // Filtramos solo los que tienen calificación y están ordenados por fecha
+    const validAttendances = this.attendanceList
+      .filter(a => a.calificacion !== undefined && a.calificacion !== null)
+      // Asegurar orden cronológico
+      .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+    // Si no hay datos, usamos arrays vacíos para mostrar gráfico vacío
+    const labels = validAttendances.length > 0 
+      ? validAttendances.map((a, index) => `Sesión ${index + 1} - ${new Date(a.fecha).toLocaleDateString()}`)
+      : [];
+      
+    const dataPoints = validAttendances.length > 0 
+      ? validAttendances.map(a => Number(a.calificacion))
+      : [];
+
+    const average = dataPoints.length > 0 
+      ? dataPoints.reduce((a, b) => a + b, 0) / dataPoints.length 
+      : 0;
+
+    // Calcular ancho dinámico: mínimo 100% o 60px por punto
+    // Esto asegura que si hay muchos puntos, el gráfico se expanda y aparezca el scroll
+    const minWidthPerPoint = 100;
+    const calculatedWidth = Math.max(
+      this.progressChartRef.nativeElement.parentElement?.parentElement?.offsetWidth || 0,
+      labels.length * minWidthPerPoint
+    );
+    this.chartWidth = `${calculatedWidth}px`;
+    
+    // Forzar detección de cambios para aplicar el nuevo ancho antes de renderizar
+    this.cd.detectChanges();
 
     this.chart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Sesión 1', 'Sesión 2', 'Sesión 3', 'Sesión 4', 'Sesión 5', 'Sesión 6', 'Sesión 7', 'Sesión 8'],
+        labels: labels,
         datasets: [
           {
             label: 'Calificación por Sesión',
-            data: mockData,
+            data: dataPoints,
             borderColor: '#13486e',
             backgroundColor: 'rgba(19, 72, 110, 0.1)',
             borderWidth: 3,
@@ -144,7 +201,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
           },
           {
             label: 'Promedio General',
-            data: Array(8).fill(average),
+            data: Array(labels.length).fill(average),
             borderColor: '#d5ca25',
             borderWidth: 2,
             borderDash: [5, 5],
@@ -187,14 +244,16 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
         scales: {
           y: {
             beginAtZero: true,
-            max: 10,
-            grid: {
-              color: 'rgba(0, 0, 0, 0.05)',
-            },
+            max: 6, // Aumentamos un poco el max para que no se corte la linea en 5
+            min: 0,
             ticks: {
+              stepSize: 1,
               font: {
                 family: "'Plus Jakarta Sans', sans-serif"
               }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
             }
           },
           x: {
@@ -204,7 +263,9 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
             ticks: {
               font: {
                 family: "'Plus Jakarta Sans', sans-serif"
-              }
+              },
+              maxRotation: 45,
+              minRotation: 45
             }
           }
         }
@@ -213,29 +274,8 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private generateMockHistory(targetAverage: number): number[] {
-    // Generar 8 puntos de datos que promedien aproximadamente el targetAverage
-    // Variación aleatoria pero coherente
-    const data = [];
-    let current = Math.max(1, targetAverage - 2); // Empezar un poco más bajo
-
-    for (let i = 0; i < 8; i++) {
-      // Variación aleatoria entre -1.5 y +2.0
-      const variation = (Math.random() * 3.5) - 1.5;
-      let val = current + variation;
-      
-      // Mantener dentro de rangos lógicos (0-10)
-      val = Math.max(1, Math.min(10, val));
-      
-      // Ajustar el último valor para acercarse al promedio real si es necesario
-      if (i === 7) {
-        val = targetAverage; 
-      }
-      
-      data.push(Number(val.toFixed(1)));
-      current = val;
-    }
-    
-    return data;
+    // Método deprecado, se usan datos reales
+    return [];
   }
 
   goBack(): void {
