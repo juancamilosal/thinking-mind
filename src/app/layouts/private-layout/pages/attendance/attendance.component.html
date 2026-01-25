@@ -1,0 +1,128 @@
+<div class="attendance-page-container p-6 min-h-screen">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-[#13486e]">Control de Asistencia</h1>
+        <p class="text-gray-600 mt-2 font-medium">Gestión de asistencia del estudiante e histórico de calificaciones</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+            <!-- Start Date -->
+            <div>
+                <label for="startDate" class="block text-sm font-bold text-[#13486e] mb-2">Fecha Inicio</label>
+                <input type="date" id="startDate" [(ngModel)]="startDate" class="w-full px-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all duration-200 text-gray-700 bg-gray-50/50 hover:bg-white">
+            </div>
+
+            <!-- End Date -->
+            <div>
+                <label for="endDate" class="block text-sm font-bold text-[#13486e] mb-2">Fecha Fin</label>
+                <input type="date" id="endDate" [(ngModel)]="endDate" class="w-full px-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all duration-200 text-gray-700 bg-gray-50/50 hover:bg-white">
+            </div>
+
+            <!-- Attendance Status -->
+            <div>
+                <label for="status" class="block text-sm font-bold text-[#13486e] mb-2">Asistencia</label>
+                <div class="relative">
+                    <select id="status" [(ngModel)]="attendanceStatus" class="w-full px-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all duration-200 text-gray-700 bg-gray-50/50 hover:bg-white appearance-none cursor-pointer">
+                        <option value="all">Todos los registros</option>
+                        <option value="present">Asistió</option>
+                        <option value="absent">No Asistió</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-[#13486e]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex space-x-3">
+                <button (click)="applyFilters()" class="flex-1 bg-gradient-to-r from-[#13486e] to-[#1a5f8f] text-white px-6 py-3 rounded-xl font-semibold shadow-md shadow-blue-900/10 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filtrar
+                </button>
+                <button (click)="resetFilters()" class="px-6 py-3 border-2 border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-semibold flex items-center justify-center" title="Limpiar filtros">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        @if (isLoading) {
+            <div class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#13486e]"></div>
+            </div>
+        } @else if (attendanceList.length === 0) {
+            <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Sin Registros</h3>
+                <p class="text-center max-w-md text-gray-500">
+                    No se encontraron registros de asistencia para este estudiante.
+                </p>
+            </div>
+        } @else {
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-[#13486e]/5">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-[#13486e] uppercase tracking-wider">Fecha</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-[#13486e] uppercase tracking-wider">Asistencia</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-[#13486e] uppercase tracking-wider">Idioma</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-[#13486e] uppercase tracking-wider">Nivel</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-[#13486e] uppercase tracking-wider">Calificación</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-[#13486e] uppercase tracking-wider">Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @for (item of attendanceList; track item.id) {
+                            <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                                    {{ item.fecha | date:'mediumDate' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (item.asiste) {
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800 border border-green-200">
+                                            Asistió
+                                        </span>
+                                    } @else {
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                            No Asistió
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    {{ item['programa_ayo_id']?.idioma || '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    {{ item['programa_ayo_id']?.id_nivel?.nivel || '-' }} - {{ item['programa_ayo_id']?.id_nivel?.subcategoria || '-' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    @if (item.calificacion) {
+                                        <div class="flex items-center gap-1">
+                                            @for (star of getStars(item.calificacion); track $index) {
+                                                <img src="assets/icons/estrella.png" class="w-5 h-5 drop-shadow-sm transform hover:scale-110 transition-transform" alt="★">
+                                            }
+                                        </div>
+                                    } @else {
+                                        <span class="text-gray-400">-</span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title="{{ item.observaciones }}">
+                                    {{ item.observaciones || 'Sin observaciones' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

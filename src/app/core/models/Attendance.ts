@@ -5,5 +5,10 @@ export interface Attendance {
     date_updated?: string;
     user_created?: string;
     user_updated?: string;
+    fecha?: string;
+    calificacion?: number;
+    asiste?: boolean;
+    estudiante_id?: string;
+    observaciones?: string;
     [key: string]: any;
 }
