@@ -114,7 +114,11 @@ export class ListMeet implements OnInit {
     const languages = this.selectedLanguage ? [this.selectedLanguage] : undefined;
     this.nivelService.getNiveles(languages).subscribe({
       next: (response) => {
-        this.niveles = response.data || [];
+        const allLevels = response.data || [];
+        // Filter levels that have associated AYO programs
+        this.niveles = allLevels.filter(nivel => 
+            nivel.id_programas_ayo && nivel.id_programas_ayo.length > 0
+        );
         this.isLoadingLevels = false;
         this.cdr.detectChanges();
       },

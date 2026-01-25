@@ -434,7 +434,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                     const docType = this.paymentForm.get('tipoDocumento')?.value;
                     const docNum = this.paymentForm.get('numeroDocumento')?.value;
 
-                    this.clientService.searchClientPayment(docType, docNum).subscribe({
+                    this.clientService.searchClientPayment(docType, docNum, true).subscribe({
                         next: (data) => {
                             if (data.data && data.data.length > 0) {
                                 this.showConfirmation = false;
