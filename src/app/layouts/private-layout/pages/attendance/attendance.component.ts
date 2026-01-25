@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AttendanceService } from '../../../../core/services/attendance.service';
+import { NivelService } from '../../../../core/services/nivel.service';
 import { StorageServices } from '../../../../core/services/storage.services';
 import { Attendance } from '../../../../core/models/Attendance';
+import { Nivel } from '../../../../core/models/Meeting';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
@@ -27,14 +29,29 @@ export class AttendancePageComponent implements OnInit {
   endDate: string = '';
   attendanceStatus: string = 'all'; // 'all', 'present', 'absent'
   searchQuery: string = '';
+  selectedLevel: string = 'all';
+  levels: Nivel[] = [];
 
   constructor(
     private attendanceService: AttendanceService,
+    private nivelService: NivelService,
     private notificationService: NotificationService
   ) { }
 
   ngOnInit(): void {
+    this.loadLevels();
     this.loadAttendances();
+  }
+
+  loadLevels(): void {
+    this.nivelService.getNiveles().subscribe({
+      next: (response) => {
+        this.levels = response.data || [];
+      },
+      error: () => {
+        console.error('Error loading levels');
+      }
+    });
   }
 
   loadAttendances(): void {
@@ -62,6 +79,12 @@ export class AttendancePageComponent implements OnInit {
       filter.asiste = this.attendanceStatus === 'present';
     }
 
+    if (this.selectedLevel !== 'all') {
+      filter.programa_ayo_id = {
+        id_nivel: this.selectedLevel
+      };
+    }
+
     const sort = '-fecha';
     const fields = '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*';
 
@@ -87,6 +110,7 @@ export class AttendancePageComponent implements OnInit {
     this.startDate = '';
     this.endDate = '';
     this.attendanceStatus = 'all';
+    this.selectedLevel = 'all';
     this.searchQuery = '';
     this.currentPage = 1;
     this.loadAttendances();

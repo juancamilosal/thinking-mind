@@ -6,7 +6,7 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-6 items-end">
             <!-- Start Date -->
             <div>
                 <label for="startDate" class="block text-sm font-bold text-[#13486e] mb-2">Fecha Inicio</label>
@@ -36,8 +36,26 @@
                 </div>
             </div>
 
+            <!-- Level Filter -->
+            <div>
+                <label for="level" class="block text-sm font-bold text-[#13486e] mb-2">Nivel</label>
+                <div class="relative">
+                    <select id="level" [(ngModel)]="selectedLevel" class="w-full px-4 py-3 rounded-xl border border-gray-200 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all duration-200 text-gray-700 bg-gray-50/50 hover:bg-white appearance-none cursor-pointer">
+                        <option value="all">Todos los niveles</option>
+                        @for (level of levels; track level.id) {
+                            <option [value]="level.id">{{ level.nivel }} - {{ level.subcategoria }}</option>
+                        }
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-[#13486e]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <!-- Actions -->
-            <div class="flex space-x-3">
+            <div class="flex space-x-3 md:col-span-2">
                 <button (click)="applyFilters()" class="flex-1 bg-gradient-to-r from-[#13486e] to-[#1a5f8f] text-white px-6 py-3 rounded-xl font-semibold shadow-md shadow-blue-900/10 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
