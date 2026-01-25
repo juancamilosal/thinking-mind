@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NivelService } from '../../core/services/nivel.service';
@@ -20,8 +20,9 @@ export interface AttendanceItem {
   templateUrl: './attendance.component.html',
   styleUrls: ['./attendance.component.css']
 })
-export class AttendanceComponent implements OnInit {
+export class AttendanceComponent implements OnInit, OnChanges {
   @Input() attendanceList: AttendanceItem[] = [];
+  @Input() language: string | null = null;
   
   niveles: Nivel[] = [];
   showLevelModal = false;
@@ -34,9 +35,16 @@ export class AttendanceComponent implements OnInit {
     this.loadNiveles();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['language'] && !changes['language'].firstChange) {
+      this.loadNiveles();
+    }
+  }
+
   loadNiveles(): void {
     this.isLoadingLevels = true;
-    this.nivelService.getNiveles().subscribe({
+    const languages = this.language ? [this.language] : undefined;
+    this.nivelService.getNiveles(languages).subscribe({
       next: (response) => {
         this.niveles = response.data || [];
         this.isLoadingLevels = false;
