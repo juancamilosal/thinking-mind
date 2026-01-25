@@ -178,7 +178,23 @@ export class ListMeet implements OnInit {
                 // Update student in the main list
                 const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
                 if (studentIndex !== -1) {
-                    this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                    // If viewing a specific level (not "All Students"), remove the student if the new level doesn't match
+                    if (this.selectedProgramForFocus && 
+                        this.selectedProgramForFocus.id_nivel && 
+                        this.selectedProgramForFocus.id_nivel.id && 
+                        this.selectedProgramForFocus.id_nivel.id !== nivel.id) {
+                        
+                        this.attendanceList.splice(studentIndex, 1);
+                        
+                        // Also remove from selectedStudents source array
+                        const selectedIndex = this.selectedStudents.findIndex(s => s.id === userId);
+                        if (selectedIndex !== -1) {
+                            this.selectedStudents.splice(selectedIndex, 1);
+                        }
+                    } else {
+                        // Otherwise just update the level ID (e.g. in General List)
+                        this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                    }
                 }
 
                 this.closePromotionModal();
@@ -764,6 +780,12 @@ export class ListMeet implements OnInit {
                     this.isLoadingStudents = false;
                     if (response.data && response.data.length > 0) {
                         this.selectedStudents = response.data;
+
+                        // Filter students to ensure they belong to the current level
+                        if (prog.id_nivel && prog.id_nivel.id) {
+                            this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
+                        }
+
                         this.attendanceList = this.selectedStudents.map(student => ({
                             id: student.id,
                             studentName: `${student.first_name} ${student.last_name}`,
@@ -829,6 +851,12 @@ export class ListMeet implements OnInit {
               this.isLoadingStudents = false;
               if (response.data && response.data.length > 0) {
                 this.selectedStudents = response.data;
+
+                // Filter students to ensure they belong to the current level
+                if (prog.id_nivel && prog.id_nivel.id) {
+                    this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
+                }
+
                 this.attendanceList = this.selectedStudents.map(student => ({
                   id: student.id,
                   studentName: `${student.first_name} ${student.last_name}`,
