@@ -34,7 +34,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   loadMenuItems() {
     const user = StorageServices.getCurrentUser();
-    this.menuService.list(user?.role).subscribe({
+    this.menuService.list().subscribe({
       next: (response) => {
         this.menuItems = response.data.filter(item => item.activo);
       },
