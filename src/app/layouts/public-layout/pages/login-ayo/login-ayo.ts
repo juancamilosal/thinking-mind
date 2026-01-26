@@ -87,20 +87,11 @@ export class LoginAyo implements OnInit {
             mode: 'cookie'
         };
 
-        console.log('Login attempt with:', { email });
-
         this.loginServices.login(loginPayload).subscribe({
             next: (loginRes) => {
-                console.log('Login response:', loginRes);
-                console.log('Login response.data:', loginRes.data);
-                console.log('Login response full structure:', JSON.stringify(loginRes, null, 2));
-
                 this.loginServices.me().subscribe({
                     next: (userResponse) => {
-                        console.log('Me() response:', userResponse);
-
                         const currentUser = StorageServices.getCurrentUser();
-                        console.log('Current user from storage:', currentUser);
 
                         this.isLoading = false;
                         this.tokenRefreshService.startTokenRefreshService();
@@ -108,8 +99,6 @@ export class LoginAyo implements OnInit {
                         // Check if user is a student and hasn't completed the test
                         const isStudent = currentUser?.role === Roles.STUDENT;
                         const isTeacher = currentUser?.role === Roles.TEACHER;
-
-                        console.log('Role checks - isStudent:', isStudent, 'isTeacher:', isTeacher);
 
                         if (isStudent && (currentUser?.resultado_test === null || currentUser?.resultado_test === undefined)) {
                           // Student hasn't taken test yet, redirect to test
@@ -124,14 +113,12 @@ export class LoginAyo implements OnInit {
                     },
                     error: (userError) => {
                         this.isLoading = false;
-                        console.error('Error fetching user info:', userError);
                         this.showMessage('error', 'Error', 'Credenciales válidas, pero hubo un error al obtener la información del usuario.');
                     }
                 });
             },
             error: (loginErr) => {
                 this.isLoading = false;
-                console.error('Error logging in:', loginErr);
                 this.showMessage('error', 'Error', 'Credenciales inválidas o error en el inicio de sesión.');
             }
         });

@@ -36,23 +36,12 @@ export class MenuService {
       Roles.TEACHER
     ];
 
-    console.log('MenuService - Role received:', role);
-    console.log('MenuService - AYO Roles:', ayoRoles);
-    console.log('MenuService - Is AYO role?', role && ayoRoles.includes(role));
-
     if (role && ayoRoles.includes(role)) {
       url += '&filter[menu_ayo][_eq]=true';
     } else {
       url += '&filter[_or][0][menu_ayo][_neq]=true&filter[_or][1][nombre][_eq]=Dashboard';
     }
 
-    console.log('MenuService - Final URL:', url);
-
-    return this.http.get<ResponseAPI<Menu[]>>(url).pipe(
-      tap((response) => {
-        console.log('MenuService - Raw response from API:', response);
-        console.log('MenuService - Menu items received:', response.data);
-      })
-    );
+    return this.http.get<ResponseAPI<Menu[]>>(url);
   }
 }
