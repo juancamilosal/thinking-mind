@@ -6,11 +6,13 @@ import { CourseService } from '../../../../../core/services/course.service';
 import { Course } from '../../../../../core/models/Course';
 import {NotificationService} from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-form-course',
   imports: [
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AppButtonComponent
 ],
   templateUrl: './form-course.html'
 })

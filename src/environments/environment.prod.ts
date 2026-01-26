@@ -58,6 +58,7 @@ export const environment = {
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',
+  certificados: apiUrl + 'items/certificados',
 
   // Configuración de tasas de cambio
   exchangeRates: {

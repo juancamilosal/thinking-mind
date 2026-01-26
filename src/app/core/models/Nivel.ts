@@ -6,4 +6,6 @@ export class Nivel {
     idioma: string;
     tematica: string;
     imagen?: string;
+    estudiantes_id?: any[];
+    id_programas_ayo?: string[];
 }

@@ -1,4 +1,4 @@
-<div class="print:hidden min-h-screen w-full animate-gradient-bg relative overflow-hidden font-['Plus_Jakarta_Sans']">
+<div class="print:hidden h-screen w-full animate-gradient-bg relative overflow-y-auto font-['Plus_Jakarta_Sans']">
 
   <!-- Decorative background elements similar to payment-record -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -350,18 +350,20 @@
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                           <div class="flex gap-2 justify-center">
-                                            <button
-                                              type="button"
-                                              (click)="onPayCourse(courseData)"
-                                              class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                                            <app-button
+                                              variant="success"
+                                              size="sm"
+                                              (btnClick)="onPayCourse(courseData)"
+                                              customClass="shadow-md hover:shadow-lg transform hover:scale-105">
                                               Pagar
-                                            </button>
-                                            <button
-                                              type="button"
-                                              (click)="onViewPayments(courseData)"
-                                              class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                                            </app-button>
+                                            <app-button
+                                              variant="primary"
+                                              size="sm"
+                                              (btnClick)="onViewPayments(courseData)"
+                                              customClass="shadow-md hover:shadow-lg transform hover:scale-105">
                                               Ver Pagos
-                                            </button>
+                                            </app-button>
                                           </div>
                                         </td>
                                       </tr>
@@ -372,17 +374,18 @@
 
                             @if (!showAddCourseForm) {
                               <div class="flex justify-center mt-6">
-                                <button
-                                  type="button"
-                                  (click)="showAddCourseFormView()"
-                                  class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-2xl min-w-[250px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <app-button
+                                  variant="primary"
+                                  size="lg"
+                                  (btnClick)="showAddCourseFormView()"
+                                  customClass="min-w-[250px] shadow-lg hover:shadow-xl transform hover:scale-105">
                                   <span class="flex items-center justify-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
                                     <span>Registrar Otro Programa</span>
                                   </span>
-                                </button>
+                                </app-button>
                               </div>
                             }
                           </div>
@@ -609,22 +612,23 @@
                                     <!-- Main Submit Button -->
                                     <div class="mt-8 flex justify-center gap-4">
                                       @if (showRegisteredCourses && showAddCourseForm) {
-                                        <button
-                                          type="button"
-                                          (click)="cancelAddCourse()"
-                                          class="min-w-[200px] bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex justify-center items-center">
+                                        <app-button
+                                          variant="secondary"
+                                          size="lg"
+                                          (btnClick)="cancelAddCourse()"
+                                          customClass="min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105">
                                           Volver
-                                        </button>
+                                        </app-button>
                                       }
-                                      <button type="submit" [disabled]="paymentForm.invalid || isLoading"
-                                        class="min-w-[280px] bg-gradient-to-r from-[#13486e] to-[#1c6ea4] hover:from-[#0d324d] hover:to-[#13486e] text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center">
-                                        @if (!isLoading) {
-                                          <span>Continuar</span>
-                                        }
-                                        @if (isLoading) {
-                                          <div class="spinner border-t-white/100 border-white/30"></div>
-                                        }
-                                      </button>
+                                      <app-button
+                                        type="submit"
+                                        variant="primary"
+                                        size="lg"
+                                        [disabled]="paymentForm.invalid || isLoading"
+                                        [loading]="isLoading"
+                                        customClass="min-w-[280px] shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none">
+                                        Continuar
+                                      </app-button>
                                     </div>
                         }
 
@@ -777,41 +781,35 @@
 
                                 <!-- Botones de Acción -->
                                 <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-8 border-t border-gray-200">
-                                  <button
-                                    type="button"
-                                    (click)="onEdit()"
-                                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                  <app-button
+                                    variant="secondary"
+                                    size="lg"
+                                    (btnClick)="onEdit()"
+                                    customClass="min-w-[200px] shadow-lg hover:shadow-xl transform hover:scale-105">
                                     <span class="flex items-center justify-center space-x-2">
                                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
-                                        </svg>
-                                        <span>Volver a Editar</span>
-                                      </span>
-                                    </button>
+                                      </svg>
+                                      <span>Volver a Editar</span>
+                                    </span>
+                                  </app-button>
 
-                                    <button
-                                      type="button"
-                                      (click)="onSubmit()"
-                                      [disabled]="isLoading"
-                                      class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] shadow-lg hover:shadow-xl disabled:opacity-50  shadow-emerald-500/25">
-                                      <span class="flex items-center justify-center space-x-2">
-                                        @if (isLoading) {
-                                          <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor"
-                                            d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                          </svg>
-                                          <span>Procesando...</span>
-                                        } @else {
-                                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                            <span>Confirmar</span>
-                                          }
-                                        </span>
-                                      </button>
+                                  <app-button
+                                    variant="success"
+                                    size="lg"
+                                    (btnClick)="onSubmit()"
+                                    [disabled]="isLoading"
+                                    [loading]="isLoading"
+                                    customClass="min-w-[200px] shadow-lg hover:shadow-xl shadow-emerald-500/25">
+                                    <span class="flex items-center justify-center space-x-2">
+                                      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                      </svg>
+                                      Confirmar
+                                    </span>
+                                  </app-button>
                                     </div>
                                   </div>
                                 </div>
@@ -832,13 +830,15 @@
       <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 sm:px-6 py-4 flex-shrink-0">
         <div class="flex justify-between items-center">
           <h3 class="text-lg sm:text-xl font-semibold">Historial de Pagos</h3>
-          <button
-            (click)="closePaymentsModal()"
-            class="text-white hover:text-gray-200 transition-colors">
+          <app-button
+            variant="ghost"
+            size="icon"
+            (btnClick)="closePaymentsModal()"
+            customClass="text-white hover:text-gray-200">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
-          </button>
+          </app-button>
         </div>
         @if (selectedAccountData) {
           <div class="mt-2 text-xs sm:text-sm opacity-90">
@@ -1022,29 +1022,20 @@
 
       <!-- Footer del Modal -->
       <div class="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <button
-          type="button"
-          (click)="closePaymentModal()"
-          class="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors font-medium"
-        >
+        <app-button
+          variant="secondary"
+          (btnClick)="closePaymentModal()"
+          customClass="flex-1 bg-white border border-gray-300">
           Cancelar
-        </button>
-        <button
-          type="button"
-          (click)="confirmPayment()"
+        </app-button>
+        <app-button
+          variant="success"
+          (btnClick)="confirmPayment()"
           [disabled]="isLoading"
-          class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          @if (isLoading) {
-             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-             </svg>
-             Procesando...
-          } @else {
-             Confirmar Pago
-          }
-        </button>
+          [loading]="isLoading"
+          customClass="flex-1 shadow-lg">
+          Confirmar Pago
+        </app-button>
       </div>
     </div>
   </div>

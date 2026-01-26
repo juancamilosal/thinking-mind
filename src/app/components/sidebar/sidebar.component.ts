@@ -35,10 +35,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   loadMenuItems() {
     const user = StorageServices.getCurrentUser();
-    console.log('Loading menu for user:', user);
-    console.log('User role:', user?.role);
-    console.log('Is Student?', user?.role === Roles.STUDENT);
-    console.log('Is Teacher?', user?.role === Roles.TEACHER);
 
     this.menuService.list(user?.role).subscribe({
       next: (response) => {

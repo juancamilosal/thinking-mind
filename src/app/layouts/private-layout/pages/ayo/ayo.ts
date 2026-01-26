@@ -20,7 +20,7 @@ export class AyoComponent implements OnInit {
   isLoading: boolean = true;
   step: AyoStep = 'initial';
   selectedLanguage: string | null = null;
-  
+
   // Precio Programa AYO
   precioData: PrecioProgramaAyo | null = null;
   isLoadingPrice: boolean = true;

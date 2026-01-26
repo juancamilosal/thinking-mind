@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 
 import {User} from '../../../../../../core/models/User';
 import { NotificationService } from '../../../../../../core/services/notification.service';
+import { AppButtonComponent } from '../../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-rector-detail',
   standalone: true,
-  imports: [],
+  imports: [AppButtonComponent],
   templateUrl: './rector-detail.html'
 })
 export class RectorDetail implements OnInit {

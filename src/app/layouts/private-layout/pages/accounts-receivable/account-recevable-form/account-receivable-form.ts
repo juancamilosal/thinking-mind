@@ -10,10 +10,11 @@ import {NotificationService} from '../../../../../core/services/notification.ser
 import {CourseService} from '../../../../../core/services/course.service';
 import {Course} from '../../../../../core/models/Course';
 import {ResponseAPI} from '../../../../../core/models/ResponseAPI';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-account-receivable-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AppButtonComponent],
   templateUrl: './account-receivable-form.html',
   standalone: true
 })

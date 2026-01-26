@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 relative overflow-hidden print:hidden">
+<div class="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 relative overflow-y-auto print:hidden">
   <!-- Elementos decorativos de fondo -->
   <div class="absolute inset-0 overflow-hidden">
     <!-- Círculos grandes principales -->
@@ -410,18 +410,20 @@
                           <!-- Columna Acción (Mobile) -->
                           <td class="px-6 py-4 text-center md:hidden">
                             <div class="flex flex-col gap-2 justify-center">
-                              <button
-                                type="button"
-                                (click)="onPayCourse(courseData)"
-                                class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-xs">
+                              <app-button
+                                variant="success"
+                                size="sm"
+                                (btnClick)="onPayCourse(courseData)"
+                                customClass="w-full text-xs">
                                 Pagar
-                              </button>
-                              <button
-                                type="button"
-                                (click)="onViewPayments(courseData)"
-                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-xs whitespace-nowrap">
+                              </app-button>
+                              <app-button
+                                variant="primary"
+                                size="sm"
+                                (btnClick)="onViewPayments(courseData)"
+                                customClass="w-full text-xs whitespace-nowrap">
                                 Ver Pagos
-                              </button>
+                              </app-button>
                             </div>
                           </td>
                           <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
@@ -459,18 +461,19 @@
                           </td>
                           <td class="px-6 py-4 text-center hidden md:table-cell">
                             <div class="flex gap-2 justify-center">
-                              <button
-                                type="button"
-                                (click)="onPayCourse(courseData)"
-                                class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                              <app-button
+                                variant="success"
+                                size="sm"
+                                (btnClick)="onPayCourse(courseData)">
                                 Pagar
-                              </button>
-                              <button
-                                type="button"
-                                (click)="onViewPayments(courseData)"
-                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 whitespace-nowrap">
+                              </app-button>
+                              <app-button
+                                variant="primary"
+                                size="sm"
+                                (btnClick)="onViewPayments(courseData)"
+                                customClass="whitespace-nowrap">
                                 Ver Pagos
-                              </button>
+                              </app-button>
                             </div>
                           </td>
                         </tr>
@@ -482,17 +485,18 @@
               <!-- Botón Registrar Otro Curso -->
               @if (!showAddCourseForm) {
                 <div class="flex justify-center mt-6">
-                  <button
-                    type="button"
-                    (click)="showAddCourseFormView()"
-                    class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-2xl min-w-[250px] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <app-button
+                    variant="primary"
+                    size="lg"
+                    (btnClick)="showAddCourseFormView()"
+                    customClass="min-w-[250px] shadow-lg hover:shadow-xl">
                     <span class="flex items-center justify-center space-x-2">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                       </svg>
                       <span>Registrar Otro Programa</span>
                     </span>
-                  </button>
+                  </app-button>
                 </div>
               }
             </div>
@@ -729,14 +733,15 @@
                       class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
                       autocomplete="off">
                     @if (paymentForm.get('schoolSearchTerm')?.value) {
-                      <button
-                        type="button"
-                        (click)="clearSchoolSearch()"
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <app-button
+                        variant="ghost"
+                        size="icon"
+                        (btnClick)="clearSchoolSearch()"
+                        customClass="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
-                      </button>
+                      </app-button>
                     }
                   </div>
 
@@ -965,41 +970,36 @@
           <div class="flex flex-col sm:flex-row justify-center gap-4">
             <!-- Botón Volver (solo cuando showAddCourseForm es true) -->
             @if (showAddCourseForm) {
-              <button
-                type="button"
-                (click)="backToTableView()"
-                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-4 px-8 rounded-2xl min-w-[200px] w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <app-button
+                variant="secondary"
+                size="lg"
+                (btnClick)="backToTableView()"
+                customClass="min-w-[200px] w-full sm:w-auto shadow-lg hover:shadow-xl">
                 <span class="flex items-center justify-center space-x-2">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
                   </svg>
                   <span>Volver</span>
                 </span>
-              </button>
+              </app-button>
             }
 
             <!-- Botón de Envío -->
-            <button
+            <app-button
               type="submit"
+              variant="primary"
+              size="lg"
               [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError"
-              class="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:via-gray-500 disabled:to-gray-600 text-white font-semibold py-4 px-10 rounded-2xl min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl disabled:transform-none disabled:opacity-50 enabled:shadow-emerald-500/25">
+              [loading]="isSubmitting"
+              customClass="min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl">
               <span class="flex items-center justify-center space-x-2">
-                @if (isSubmitting) {
-                  <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                          d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Registrando...</span>
-                } @else {
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span>Registrar Información</span>
-                }
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Registrar Información</span>
               </span>
-            </button>
+            </app-button>
           </div>
           }
         </form>
@@ -1029,13 +1029,15 @@
       <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 sm:px-6 py-4 flex-shrink-0">
         <div class="flex justify-between items-center">
           <h3 class="text-lg sm:text-xl font-semibold">Historial de Pagos</h3>
-          <button
-            (click)="closePaymentsModal()"
-            class="text-white hover:text-gray-200 transition-colors">
+          <app-button
+            variant="ghost"
+            size="icon"
+            (btnClick)="closePaymentsModal()"
+            customClass="text-white hover:text-gray-200">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
-          </button>
+          </app-button>
         </div>
         @if (selectedAccountData) {
           <div class="mt-2 text-xs sm:text-sm opacity-90">
@@ -1103,19 +1105,23 @@
 
       <!-- Footer del Modal -->
       <div class="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 sm:justify-between flex-shrink-0">
-        <button
-          (click)="printPaymentHistory()"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 sm:py-2 sm:px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-          </svg>
-          <span class="text-sm sm:text-base">Imprimir Historial de Pagos</span>
-        </button>
-        <button
-          (click)="closePaymentsModal()"
-          class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 sm:py-2 sm:px-6 rounded-lg transition-colors w-full sm:w-auto">
+        <app-button
+          variant="primary"
+          (btnClick)="printPaymentHistory()"
+          customClass="w-full sm:w-auto">
+          <div class="flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            <span class="text-sm sm:text-base">Imprimir Historial de Pagos</span>
+          </div>
+        </app-button>
+        <app-button
+          variant="secondary"
+          (btnClick)="closePaymentsModal()"
+          customClass="w-full sm:w-auto">
           <span class="text-sm sm:text-base">Cerrar</span>
-        </button>
+        </app-button>
       </div>
     </div>
   </div>
@@ -1135,15 +1141,15 @@
           </div>
           <h3 class="text-xl font-bold text-gray-900">Realizar Pago</h3>
         </div>
-        <button
-          type="button"
-          (click)="closePaymentModal()"
-          class="text-gray-400 hover:text-gray-600 transition-colors"
-        >
+        <app-button
+          variant="ghost"
+          size="icon"
+          (btnClick)="closePaymentModal()"
+          customClass="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
-        </button>
+        </app-button>
       </div>
 
       <!-- Contenido del Modal -->
@@ -1223,20 +1229,18 @@
 
       <!-- Footer del Modal -->
       <div class="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <button
-          type="button"
-          (click)="closePaymentModal()"
-          class="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors font-medium"
-        >
+        <app-button
+          variant="secondary"
+          (btnClick)="closePaymentModal()"
+          customClass="flex-1 bg-white border border-gray-300">
           Cancelar
-        </button>
-        <button
-          type="button"
-          (click)="confirmPayment()"
-          class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors font-medium shadow-lg"
-        >
+        </app-button>
+        <app-button
+          variant="success"
+          (btnClick)="confirmPayment()"
+          customClass="flex-1 shadow-lg">
           Confirmar Pago
-        </button>
+        </app-button>
       </div>
     </div>
   </div>

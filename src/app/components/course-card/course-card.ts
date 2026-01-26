@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppButtonComponent } from '../app-button/app-button.component';
 
 export class Course {
   id: string;
@@ -12,7 +13,7 @@ export class Course {
 @Component({
   selector: 'app-course-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppButtonComponent],
   templateUrl: './course-card.html'
 })
 export class CourseCardComponent {

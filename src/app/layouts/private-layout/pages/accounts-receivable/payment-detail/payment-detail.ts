@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-payment-detail',
-  imports: [],
+  imports: [AppButtonComponent],
   templateUrl: './payment-detail.html',
   standalone: true
 })
