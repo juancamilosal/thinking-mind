@@ -7,6 +7,7 @@ import {environment} from '../../../environments/environment';
 import {StorageServices} from './storage.services';
 import {Login} from '../models/Login';
 import {ResponseAPI} from '../models/ResponseAPI';
+import {Roles} from '../const/Roles';
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +18,20 @@ export class LoginService {
 
   constructor(private http: HttpClient) {
 
+  }
+
+  // Helper method to decode JWT token
+  private decodeToken(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      return null;
+    }
   }
 
   login(login: Login): Observable<ResponseAPI<any>> {
@@ -45,17 +60,23 @@ export class LoginService {
             };
 
             // Si el rol es rector, agregar celular y colegio_id
-            if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+            if (userData.role === Roles.RECTOR) {
               filteredUserData.celular = userData.celular;
               filteredUserData.colegio_id = userData.colegio_id;
             }
 
             // Si el rol es AYO (Estudiante), agregar campos específicos
-            if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+            if (userData.role === Roles.STUDENT) {
               filteredUserData.calificacion = userData.calificacion;
               filteredUserData.creditos = userData.creditos;
               filteredUserData.resultado_test = userData.resultado_test;
               filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+              filteredUserData.tipo_documento = userData.tipo_documento;
+              filteredUserData.numero_documento = userData.numero_documento;
+            }
+
+            // Si el rol es AYO (Teacher), agregar campos específicos
+            if (userData.role === Roles.TEACHER) {
               filteredUserData.tipo_documento = userData.tipo_documento;
               filteredUserData.numero_documento = userData.numero_documento;
             }
@@ -136,18 +157,23 @@ export class LoginService {
           };
 
           // Si el rol es rector, agregar celular y colegio_id
-          if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+          if (userData.role === Roles.RECTOR) {
             filteredUserData.celular = userData.celular;
             filteredUserData.colegio_id = userData.colegio_id;
           }
           // Para estudiantes, incluir resultado_test si existe
           filteredUserData.resultado_test = userData.resultado_test || null;
           // Si el rol es AYO (Estudiante), agregar campos específicos
-          if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+          if (userData.role === Roles.STUDENT) {
             filteredUserData.calificacion = userData.calificacion;
             filteredUserData.creditos = userData.creditos;
             filteredUserData.resultado_test = userData.resultado_test;
             filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+          }
+          // Si el rol es AYO (Teacher), agregar campos específicos
+          if (userData.role === Roles.TEACHER) {
+            filteredUserData.tipo_documento = userData.tipo_documento;
+            filteredUserData.numero_documento = userData.numero_documento;
           }
 
           StorageServices.setUserData(filteredUserData);
@@ -164,6 +190,18 @@ export class LoginService {
     return this.http.get<ResponseAPI<any>>(this.apiSecurity.security.me).pipe(
       tap((response: any) => {
         const userData = response.data || response;
+
+        // If the API doesn't return role, try to get it from the JWT token
+        if (userData && !userData.role) {
+          const accessToken = StorageServices.getAccessToken();
+          if (accessToken) {
+            const decodedToken = this.decodeToken(accessToken);
+            if (decodedToken && decodedToken.role) {
+              userData.role = decodedToken.role;
+            }
+          }
+        }
+
         if (userData) {
           const filteredUserData: any = {
             email: userData.email,
@@ -174,19 +212,25 @@ export class LoginService {
           };
 
           // Si el rol es rector, agregar celular y colegio_id
-          if (userData.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+          if (userData.role === Roles.RECTOR) {
             filteredUserData.celular = userData.celular;
             filteredUserData.colegio_id = userData.colegio_id;
           }
 
           // Si el rol es AYO (Estudiante), agregar campos específicos
-          if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+          if (userData.role === Roles.STUDENT) {
             filteredUserData.calificacion = userData.calificacion;
             filteredUserData.creditos = userData.creditos;
             filteredUserData.resultado_test = userData.resultado_test;
             filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
-            filteredUserData.tipo_documento = userData.tipo_documento || userData.tipo_documento;
-            filteredUserData.numero_documento = userData.numero_documento || userData.numero_documento;
+            filteredUserData.tipo_documento = userData.tipo_documento;
+            filteredUserData.numero_documento = userData.numero_documento;
+          }
+
+          // Si el rol es AYO (Teacher), agregar campos específicos si los hay
+          if (userData.role === Roles.TEACHER) {
+            filteredUserData.tipo_documento = userData.tipo_documento;
+            filteredUserData.numero_documento = userData.numero_documento;
           }
 
           StorageServices.setUserData(filteredUserData);
