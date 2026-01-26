@@ -28,6 +28,7 @@ export const environment = {
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',
+  certificados: apiUrl + 'items/certificados',
   security: {
     login: apiUrl + 'auth/login',
     logout: apiUrl + 'auth/logout',
