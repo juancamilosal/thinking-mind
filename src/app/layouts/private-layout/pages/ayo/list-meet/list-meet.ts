@@ -13,6 +13,7 @@ import { environment } from '../../../../../../environments/environment';
 import { AttendanceComponent, AttendanceItem } from '../../../../../components/attendance/attendance.component';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Nivel';
+import { CertificacionService } from '../../../../../core/services/certificacion.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -85,6 +86,7 @@ export class ListMeet implements OnInit {
     private elementRef: ElementRef,
     private cdr: ChangeDetectorRef,
     private nivelService: NivelService,
+    private certificacionService: CertificacionService,
     private ngZone: NgZone
   ) { }
 
@@ -174,6 +176,17 @@ export class ListMeet implements OnInit {
                 const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
                 this.notificationService.showSuccess('Éxito', message);
                 
+                // Create certificate for the completed level
+                if (currentLevelId) {
+                    this.certificacionService.createCertificado({
+                        estudiante_id: userId,
+                        nivel_id: currentLevelId
+                    }).subscribe({
+                        next: (res) => console.log('Certificado creado exitosamente', res),
+                        error: (err) => console.error('Error al crear certificado', err)
+                    });
+                }
+
                 // Update local state
                 if (this.selectedStudentForPromotion) {
                     this.selectedStudentForPromotion.currentLevelId = nivel.id;
