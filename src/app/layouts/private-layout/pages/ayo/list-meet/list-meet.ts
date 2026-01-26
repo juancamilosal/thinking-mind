@@ -810,7 +810,8 @@ export class ListMeet implements OnInit {
                             fecha: new Date(),
                             attended: false,
                             score: '',
-                            currentLevelId: (student as any).nivel_id
+                            currentLevelId: (student as any).nivel_id,
+                            subcategoria: prog.id_nivel?.subcategoria || ''
                         }));
                         this.cdr.detectChanges();
                     } else {
@@ -881,7 +882,8 @@ export class ListMeet implements OnInit {
                   fecha: new Date(),
                   attended: false,
                   score: '',
-                  currentLevelId: (student as any).nivel_id
+                  currentLevelId: (student as any).nivel_id,
+                  subcategoria: prog.id_nivel?.subcategoria || ''
                 }));
                 this.cdr.detectChanges();
               } else {
@@ -910,6 +912,7 @@ export class ListMeet implements OnInit {
   verTodosEstudiantes(suppressWarnings: boolean = false) {
     const documents: { tipo: string; numero: string }[] = [];
     const seenDocs = new Set<string>();
+    const studentSubcategoryMap = new Map<string, string>();
 
     // 1. Collect from id_nivel.estudiantes_id
     this.programas.forEach((prog: any) => {
@@ -923,6 +926,7 @@ export class ListMeet implements OnInit {
                             tipo: student.tipo_documento,
                             numero: student.numero_documento
                         });
+                        studentSubcategoryMap.set(docKey, prog.id_nivel.subcategoria || '');
                     }
                 }
             });
@@ -943,6 +947,7 @@ export class ListMeet implements OnInit {
                     tipo: est.tipo_documento,
                     numero: est.numero_documento
                   });
+                  studentSubcategoryMap.set(key, programa.id_nivel?.subcategoria || '');
                 }
               }
             });
@@ -974,15 +979,19 @@ export class ListMeet implements OnInit {
             this.isLoadingStudents = false;
             if (response.data && response.data.length > 0) {
               this.selectedStudents = response.data;
-              this.attendanceList = this.selectedStudents.map(student => ({
-                id: student.id,
-                studentName: `${student.first_name} ${student.last_name}`,
-                email: student.email,
-                fecha: new Date(),
-                attended: false,
-                score: '',
-                currentLevelId: (student as any).nivel_id
-              }));
+              this.attendanceList = this.selectedStudents.map(student => {
+                const docKey = `${student.tipo_documento}-${student.numero_documento}`;
+                return {
+                    id: student.id,
+                    studentName: `${student.first_name} ${student.last_name}`,
+                    email: student.email,
+                    fecha: new Date(),
+                    attended: false,
+                    score: '',
+                    currentLevelId: (student as any).nivel_id,
+                    subcategoria: studentSubcategoryMap.get(docKey) || ''
+                };
+              });
               this.cdr.detectChanges();
             } else {
               if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');

@@ -10,6 +10,7 @@ export interface AttendanceItem {
   attended: boolean;
   score: string | number;
   currentLevelId?: string;
+  subcategoria?: string;
 }
 
 @Component({
