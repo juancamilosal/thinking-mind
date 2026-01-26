@@ -121,7 +121,7 @@ export class EntryValidation implements OnInit {
     }
 
     async createMeeting() {
-        // Auto-add participant if user forgot to click add button
+        // Auto-add participant if user forgot to click add app-button
         const emailControl = this.meetingForm.get('participantEmail');
         if (emailControl?.value && emailControl.valid) {
             this.addParticipant();
