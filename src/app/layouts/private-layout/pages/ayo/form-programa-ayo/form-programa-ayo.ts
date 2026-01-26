@@ -8,7 +8,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { UserService } from '../../../../../core/services/user.service';
 import { User } from '../../../../../core/models/User';
 import { NivelService } from '../../../../../core/services/nivel.service';
-import { Nivel } from '../../../../../core/models/Meeting';
+import { Nivel } from '../../../../../core/models/Nivel';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 import { FileService, DirectusFile } from '../../../../../core/services/file.service';
 import {environment} from '../../../../../../environments/environment';
@@ -63,7 +63,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
   // Google Calendar Integration
   showGoogleCalendarOption = true; // Always true for AYO
-  private CLIENT_ID = '996133721948-6rim847cd71sknq58u3tcov5drtag7vv.apps.googleusercontent.com';
+  private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';
   private DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
   private SCOPES = 'https://www.googleapis.com/auth/calendar.events';
   tokenClient: any;
@@ -636,6 +636,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         const rawFechaFinalizacion = this.fechaFinalizacionForm.get('fecha_finalizacion')?.value;
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
         let imageId = this.selectedDirectusFileId;
+
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,

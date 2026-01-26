@@ -7,12 +7,15 @@ import { SchoolService } from '../../../../../core/services/school.service';
 import { School } from '../../../../../core/models/School';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ColegioCursosService } from '../../../../../core/services/colegio-cursos.service';
+import {AppButtonComponent} from '../../../../../components/app-button/app-button.component';
+
 
 @Component({
   selector: 'app-form-colegio-cursos',
   standalone: true,
   imports: [
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AppButtonComponent
 ],
   templateUrl: './form-colegio-cursos.html',
   styleUrl: './form-colegio-cursos.css'
@@ -84,7 +87,7 @@ export class ColegioCursosComponent implements OnInit {
     // Escuchar cambios en el checkbox de programa independiente
     this.fechaFinalizacionForm.get('programa_independiente')?.valueChanges.subscribe(value => {
       const colegioControl = this.fechaFinalizacionForm.get('colegio_id');
-      
+
       if (value) {
         // Si se marca programa independiente, establecer el valor específico y limpiar búsqueda
         colegioControl?.setValue('dfdc71c9-20ab-4981-865f-f5e93fa3efc7');
@@ -100,7 +103,7 @@ export class ColegioCursosComponent implements OnInit {
         this.isSchoolSelected = false;
         this.filteredSchools = [];
       }
-      
+
       colegioControl?.updateValueAndValidity(); // Actualizar estado de validación
     });
   }
@@ -222,11 +225,11 @@ export class ColegioCursosComponent implements OnInit {
         precio_curso: this.unformatPrice(this.fechaFinalizacionForm.get('precio_curso')?.value),
         // Campos de inscripción (solo si el checkbox está marcado)
         programa_con_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value || false,
-        precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value 
-          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value) 
+        precio_inscripcion: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('precio_inscripcion')?.value
+          ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_inscripcion')?.value)
           : null,
-        moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value 
-          ? this.fechaFinalizacionForm.get('moneda')?.value 
+        moneda: this.fechaFinalizacionForm.get('programa_con_inscripcion')?.value && this.fechaFinalizacionForm.get('moneda')?.value
+          ? this.fechaFinalizacionForm.get('moneda')?.value
           : null,
         // Nuevo: precio especial para Directus
         tiene_precio_especial: precioEspecialLanzamiento ? 'TRUE' : 'FALSE',
@@ -242,8 +245,8 @@ export class ColegioCursosComponent implements OnInit {
         next: (response) => {
           // Obtener nombres para mostrar en la notificación
           const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-          const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value 
-            ? 'Programa Independiente' 
+          const colegioNombre = this.fechaFinalizacionForm.get('programa_independiente')?.value
+            ? 'Programa Independiente'
             : this.fechaFinalizacionForm.get('schoolSearchTerm')?.value;
 
           this.notificationService.showSuccess(
@@ -280,16 +283,16 @@ export class ColegioCursosComponent implements OnInit {
   onInscriptionPriceInput(event: any): void {
     const input = event.target;
     const value = input.value;
-    
+
     // Remover todo lo que no sea dígito
     const numericValue = value.replace(/\D/g, '');
-    
+
     // Formatear con puntos como separadores de miles
     const formattedValue = this.formatPrice(numericValue);
-    
+
     // Actualizar el valor del input
     input.value = formattedValue;
-    
+
     // Actualizar el FormControl
     this.fechaFinalizacionForm.get('precio_inscripcion')?.setValue(formattedValue, { emitEvent: false });
   }
@@ -334,15 +337,15 @@ export class ColegioCursosComponent implements OnInit {
   // Método para calcular días entre dos fechas
   calculateDaysBetweenDates(startDate: string, endDate: string): number {
     if (!startDate || !endDate) return 0;
-    
+
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-    
+
     const timeDifference = end.getTime() - start.getTime();
     const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
-    
+
     return daysDifference > 0 ? daysDifference : 0;
   }
 }

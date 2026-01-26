@@ -1,4 +1,5 @@
-import {Meeting, Nivel} from './Meeting';
+import {Meeting} from './Meeting';
+import {Nivel} from './Nivel';
 
 export class Course {
   id?: string;
@@ -32,6 +33,7 @@ export interface ProgramaAyo {
   id_nivel?: Nivel;
   id_reuniones_meet?: Meeting[];
   img?: any;
+  cuentas_cobrar_id?: any[];
 }
 
 export interface ProgramGroup {

@@ -93,7 +93,16 @@ export class LoginAyo implements OnInit {
                     next: (userResponse) => {
                         this.isLoading = false;
                         this.tokenRefreshService.startTokenRefreshService();
-                        this.router.navigateByUrl('/private');
+
+                        // Check if student has completed the test
+                        const currentUser = StorageServices.getCurrentUser();
+                        if (currentUser?.resultado_test === null || currentUser?.resultado_test === undefined) {
+                          // Student hasn't taken test yet, redirect to test
+                          this.router.navigateByUrl('/private/langTest');
+                        } else {
+                          // Student already took test, go to dashboard
+                          this.router.navigateByUrl('/private');
+                        }
                     },
                     error: (userError) => {
                         this.isLoading = false;

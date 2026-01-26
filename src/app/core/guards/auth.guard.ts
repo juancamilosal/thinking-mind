@@ -4,13 +4,11 @@ import { CanActivateFn } from '@angular/router';
 import { StorageServices } from '../services/storage.services';
 import { LoginService } from '../services/login.service';
 import { Observable, of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
-import { StudentService } from '../services/student.service';
+import { map, catchError } from 'rxjs/operators';
 
 export const authGuard: CanActivateFn = (route, state): Observable<boolean> | boolean => {
   const router = inject(Router);
   const loginService = inject(LoginService);
-  const studentService = inject(StudentService);
 
   // Verificar si hay un token de acceso válido
   const accessToken = StorageServices.getAccessToken();
@@ -30,50 +28,15 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
   }
 
   if (currentUser) {
-    // Si hay token y usuario, validar si el estudiante tiene pendiente el test
-    const email = currentUser.email;
-    if (!email) {
-      return true;
-    }
-
-    return studentService.getStudentByEmail(email).pipe(
-      map((res) => {
-        const student = (res.data || [])[0];
-        const isLangTestRoute = state.url.includes('/private/langTest');
-
-        if (student && student.test_completado !== true && !isLangTestRoute) {
-          router.navigate(['/private/langTest']);
-          return false;
-        }
-        return true;
-      }),
-      catchError(() => of(true))
-    );
+    // Token y usuario están presentes, permitir acceso
+    return true;
   }
 
   // Si hay token pero no hay datos de usuario, verificar con el servidor
   return loginService.me().pipe(
-    switchMap(() => {
-      // Después de obtener datos del usuario, validar test del estudiante si aplica
-      const user = StorageServices.getCurrentUser();
-      const email = user?.email;
-      if (!email) {
-        return of(true);
-      }
-
-      return studentService.getStudentByEmail(email).pipe(
-        map((res) => {
-          const student = (res.data || [])[0];
-          const isLangTestRoute = state.url.includes('/private/langTest');
-
-          if (student && student.test_completado !== true && !isLangTestRoute) {
-            router.navigate(['/private/langTest']);
-            return false;
-          }
-          return true;
-        }),
-        catchError(() => of(true))
-      );
+    map(() => {
+      // Si el me() fue exitoso, el usuario está autenticado
+      return true;
     }),
     catchError((error) => {
       // Si hay error, limpiar tokens y redirigir al login correspondiente

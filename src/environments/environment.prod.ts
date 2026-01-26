@@ -22,6 +22,7 @@ export const environment = {
   colegio_cursos: apiUrl + 'items/colegios_cursos',
   historial_programas: apiUrl + 'items/historial_programas',
   reuniones_meet: apiUrl + 'items/reuniones_meet',
+  attendance: apiUrl + 'items/asistencia',
   programa_ayo: apiUrl + 'items/programas_ayo',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   security: {
@@ -57,6 +58,7 @@ export const environment = {
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',
+  certificados: apiUrl + 'items/certificados',
 
   // Configuración de tasas de cambio
   exchangeRates: {

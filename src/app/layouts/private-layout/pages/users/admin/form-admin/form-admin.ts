@@ -4,11 +4,12 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractContro
 import { UserService } from '../../../../../../core/services/user.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { User } from '../../../../../../core/models/User';
+import { AppButtonComponent } from '../../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-form-admin',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AppButtonComponent],
   templateUrl: './form-admin.html'
 })
 export class FormAdmin implements OnInit {

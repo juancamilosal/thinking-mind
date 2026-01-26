@@ -6,11 +6,12 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { User } from '../../../../../core/models/User';
 import { School } from '../../../../../core/models/School';
 import { Role } from '../../../../../core/services/role.service';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-form-user',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AppButtonComponent],
   templateUrl: './form-user.html'
 })
 export class FormUser implements OnInit {

@@ -11,12 +11,13 @@ import { SchoolService } from '../../../../core/services/school.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RoleService, Role } from '../../../../core/services/role.service';
 import { User } from '../../../../core/models/User';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail, FormUser],
+  imports: [FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail, FormUser, AppButtonComponent],
   templateUrl: './users.html'
 })
 export class Users implements OnInit {

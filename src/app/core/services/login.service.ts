@@ -56,7 +56,12 @@ export class LoginService {
               filteredUserData.creditos = userData.creditos;
               filteredUserData.resultado_test = userData.resultado_test;
               filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+              filteredUserData.tipo_documento = userData.tipo_documento;
+              filteredUserData.numero_documento = userData.numero_documento;
             }
+
+            // Para estudiantes regulares (Estudiantes role), incluir resultado_test si existe
+            filteredUserData.resultado_test = userData.resultado_test || null;
 
             StorageServices.setUserData(filteredUserData);
 
@@ -135,7 +140,8 @@ export class LoginService {
             filteredUserData.celular = userData.celular;
             filteredUserData.colegio_id = userData.colegio_id;
           }
-
+          // Para estudiantes, incluir resultado_test si existe
+          filteredUserData.resultado_test = userData.resultado_test || null;
           // Si el rol es AYO (Estudiante), agregar campos específicos
           if (userData.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
             filteredUserData.calificacion = userData.calificacion;
@@ -179,6 +185,8 @@ export class LoginService {
             filteredUserData.creditos = userData.creditos;
             filteredUserData.resultado_test = userData.resultado_test;
             filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+            filteredUserData.tipo_documento = userData.tipo_documento || userData.tipo_documento;
+            filteredUserData.numero_documento = userData.numero_documento || userData.numero_documento;
           }
 
           StorageServices.setUserData(filteredUserData);

@@ -6,11 +6,14 @@ import { School } from '../../../../../../core/models/School';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../../core/services/confirmation.service';
 import {User} from '../../../../../../core/models/User';
+import { AppButtonComponent } from '../../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-form-rector',
+  standalone: true,
   imports: [
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AppButtonComponent
   ],
   templateUrl: './form-rector.html',
 })
@@ -263,6 +266,10 @@ export class FormRector implements OnInit, OnChanges {
       if (word.length === 0) return word;
       return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
+  }
+
+  onGoBack(): void {
+    this.goBack.emit();
   }
 
   onFirstNameChange(event: any): void {

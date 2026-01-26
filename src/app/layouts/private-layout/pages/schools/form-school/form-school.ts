@@ -4,11 +4,13 @@ import {SchoolService} from '../../../../../core/services/school.service';
 import {School} from '../../../../../core/models/School';
 import {NotificationService} from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-form-school',
   imports: [
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AppButtonComponent
   ],
   templateUrl: './form-school.html',
 })

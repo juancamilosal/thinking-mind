@@ -44,4 +44,26 @@ export class UserService {
     };
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
   }
+
+  getUsersByDocument(tipoDocumento: string, numeroDocumento: string): Observable<ResponseAPI<User[]>> {
+    const params = {
+      'filter[tipo_documento][_eq]': tipoDocumento,
+      'filter[numero_documento][_eq]': numeroDocumento,
+      'fields': '*'
+    };
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
+
+  getUsersByMultipleDocuments(documents: {tipo: string, numero: string}[]): Observable<ResponseAPI<User[]>> {
+    let params: any = {
+      'fields': '*'
+    };
+
+    documents.forEach((doc, index) => {
+      params[`filter[_or][${index}][_and][0][tipo_documento][_eq]`] = doc.tipo;
+      params[`filter[_or][${index}][_and][1][numero_documento][_eq]`] = doc.numero;
+    });
+
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
 }

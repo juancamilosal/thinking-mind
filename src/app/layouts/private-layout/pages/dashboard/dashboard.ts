@@ -61,7 +61,7 @@ export class Dashboard implements OnInit {
     idioma: '',
     subcategoria: '',
     tematica: '',
-    reuniones_meet: ''
+    reuniones_meet: []
   };
 
   constructor(
@@ -78,12 +78,21 @@ export class Dashboard implements OnInit {
     this.loadDashboardData();
   }
 
+  private sortReuniones(reuniones: any[]): any[] {
+    const weekdayOrder = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
+    return reuniones.sort((a, b) => {
+        const dayA = a.DIA ? a.DIA.toUpperCase() : '';
+        const dayB = b.DIA ? b.DIA.toUpperCase() : '';
+        return weekdayOrder.indexOf(dayA) - weekdayOrder.indexOf(dayB);
+    });
+  }
+
   private loadDashboardData(): void {
     this.isLoading = true;
 
     // Obtener información del usuario desde sessionStorage usando StorageServices
     const user = StorageServices.getItemObjectFromSessionStorage('current_user');
-    
+
     if (user) {
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
@@ -96,11 +105,16 @@ export class Dashboard implements OnInit {
         this.loadSalesData();
         return;
       }
-      
-      if (this.isAyoStudent) {
-        // Para estudiantes AYO, cargamos los datos desde la sesión inicialmente
+
+      // Check if user is a regular student (has resultado_test or student_id field)
+      const isRegularStudent = user.resultado_test !== undefined || user.student_id !== undefined;
+
+      if (this.isAyoStudent || isRegularStudent) {
+        // Para estudiantes (AYO o regulares), cargamos los datos desde la sesión inicialmente
         this.ayoStats.creditos = user.creditos || 0;
         this.ayoStats.calificacion = user.calificacion || 0;
+        this.ayoStats.nivel_idioma = user.nivel_idioma || 'N/A';
+        this.ayoStats.resultado_test = user.resultado_test || 'N/A';
 
         // Consumir servicio dashboardStudent para obtener datos actualizados
         this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
@@ -109,24 +123,24 @@ export class Dashboard implements OnInit {
             if (data) {
               this.ayoStats = {
                 creditos: data.creditos ?? 0,
-                nivel: data.nivel || 'N/A',
+                nivel: data.nivel || data.nivel_idioma || 'N/A',
                 calificacion: data.calificacion ?? 0,
                 resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
                 estado_cuenta: data.estado_cuenta || 'N/A',
                 idioma: data.idioma || 'N/A',
                 subcategoria: data.subcategoria || 'N/A',
                 tematica: data.tematica || 'N/A',
-                reuniones_meet: data.reuniones_meet
+                reuniones_meet: data.reuniones_meet ? this.sortReuniones(data.reuniones_meet) : []
               };
             }
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error loading AYO dashboard data', error);
+            console.error('Error loading student dashboard data', error);
             this.isLoading = false;
           }
         });
-        
+
         return;
       }
     }

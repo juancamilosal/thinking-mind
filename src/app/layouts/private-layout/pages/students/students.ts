@@ -5,11 +5,12 @@ import {StudentService} from '../../../../core/services/student.service';
 import {Student} from '../../../../core/models/Student';
 import {FormStudent} from './form-student/form-student';
 import {StudentDetail} from './student-detail/student-detail';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [FormStudent, StudentDetail],
+  imports: [FormStudent, StudentDetail, AppButtonComponent],
   templateUrl: './students.html'
 })
 export class Students implements OnInit {

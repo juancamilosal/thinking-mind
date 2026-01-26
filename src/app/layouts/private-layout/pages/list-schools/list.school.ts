@@ -19,11 +19,12 @@ import {
   CourseWithSchools,
   SchoolInCourse
 } from '../../../../core/models/SchoolModels';
+import {AppButtonComponent} from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-list-schools',
   standalone: true,
-  imports: [StudentDetail],
+  imports: [StudentDetail, AppButtonComponent],
   templateUrl: './list.school.html'
 })
 

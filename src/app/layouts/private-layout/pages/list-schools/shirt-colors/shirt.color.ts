@@ -5,8 +5,8 @@ import { AccountReceivableService } from '../../../../../core/services/account-r
 import { SchoolWithPaymentsService } from '../../../../../core/services/school-with-payments.service';
 import { Student } from '../../../../../core/models/Student';
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
-import { map } from 'rxjs/operators';
-import { ResponseAPI } from '../../../../../core/models/ResponseAPI';
+
+import {AppButtonComponent} from '../../../../../components/app-button/app-button.component';
 
 class GradeCategory {
   color: string;
@@ -19,7 +19,7 @@ class GradeCategory {
 @Component({
   selector: 'app-shirt-colors',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppButtonComponent],
 
   templateUrl: './shirt.color.html'
 })

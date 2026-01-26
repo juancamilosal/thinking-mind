@@ -15,14 +15,17 @@
     <!-- Header con botón de regreso -->
     <div class="flex item-center justify-between my-5">
       <h1 class="text-xl font-bold text-gray-800">Detalle de Cuenta por Cobrar</h1>
-      <button
-        (click)="onBack()"
-        class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-        </svg>
-        <span>Regresar</span>
-      </button>
+      <app-button
+        (btnClick)="onBack()"
+        variant="secondary"
+        customClass="font-semibold shadow-lg">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          <span>Regresar</span>
+        </div>
+      </app-button>
     </div>
 
     <!-- Información Principal de la Cuenta -->
@@ -278,21 +281,25 @@
         </h3>
 
         <div class="flex space-x-3">
-          <button (click)="toggleAddPaymentForm()"
-                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+          <app-button
+            (btnClick)="toggleAddPaymentForm()"
+            variant="success"
+            customClass="flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
             <span>Agregar Pago</span>
-          </button>
+          </app-button>
 
-          <button (click)="openRefundModal()"
-                  class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2">
+          <app-button
+            (btnClick)="openRefundModal()"
+            variant="warning"
+            customClass="flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
             </svg>
             <span>Devolución</span>
-          </button>
+          </app-button>
         </div>
       </div>
 
@@ -364,23 +371,27 @@
           }
 
           <div class="flex justify-end space-x-3 mt-4">
-            <button (click)="toggleAddPaymentForm()"
-                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <app-button
+              (btnClick)="toggleAddPaymentForm()"
+              variant="secondary"
+              size="sm">
               Cancelar
-            </button>
-            <button (click)="addNewPayment()"
-                    [disabled]="!newPaymentAmount || !newPaymentMethod || !newPayerName || isSubmittingPayment || (newPaymentMethod === 'TRANSFERENCIA' && !newPaymentImage)"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2">
-              @if (isSubmittingPayment) {
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Procesando...</span>
-              } @else {
-                <span>Registrar Pago</span>
-              }
-            </button>
+            </app-button>
+            <app-button
+              (btnClick)="addNewPayment()"
+              [disabled]="!newPaymentAmount || !newPaymentMethod || !newPayerName || isSubmittingPayment || (newPaymentMethod === 'TRANSFERENCIA' && !newPaymentImage)"
+              [loading]="isSubmittingPayment"
+              variant="primary"
+              size="sm">
+              <div class="flex items-center space-x-2">
+                @if (!isSubmittingPayment) {
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                }
+                <span>{{ isSubmittingPayment ? 'Procesando...' : 'Registrar Pago' }}</span>
+              </div>
+            </app-button>
           </div>
         </div>
       }
@@ -473,39 +484,35 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   @if (hasPaymentImage(payment)) {
-                    <button (click)="viewPaymentImage(payment)"
-                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-lg transition-colors duration-200"
-                            title="Ver comprobante de pago">
+                    <app-button
+                      (btnClick)="viewPaymentImage(payment)"
+                      variant="primary"
+                      size="sm"
+                      title="Ver comprobante de pago">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                       </svg>
-                    </button>
+                    </app-button>
                   } @else {
                     <span class="text-sm text-gray-500 italic">Sin Comprobante</span>
                   }
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <button (click)="deletePayment(payment)"
-                          [disabled]="!canDeletePayment(payment) || isDeletingPayment"
-                          [class]="canDeletePayment(payment) && !isDeletingPayment ?
-                            'text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors duration-200 cursor-pointer' :
-                            'text-gray-400 p-2 rounded-lg cursor-not-allowed'"
-                          [title]="!canDeletePayment(payment) ? 'Solo se pueden eliminar pagos con método EFECTIVO, TRANSFERENCIA, DATÁFONO, CHEQUE o TRANSACCIÓN con estado DEVOLUCION' :
-                                   isDeletingPayment && deletingPaymentId === payment.id ? 'Eliminando pago...' :
-                                   isDeletingPayment ? 'Espera a que termine la eliminación actual' : 'Eliminar pago'">
-                    @if (isDeletingPayment && deletingPaymentId === payment.id) {
-                      <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    } @else {
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    }
-                  </button>
+                  <app-button
+                    (btnClick)="deletePayment(payment)"
+                    [disabled]="!canDeletePayment(payment) || isDeletingPayment"
+                    [loading]="isDeletingPayment && deletingPaymentId === payment.id"
+                    variant="danger"
+                    size="sm"
+                    [title]="!canDeletePayment(payment) ? 'Solo se pueden eliminar pagos con método EFECTIVO, TRANSFERENCIA, DATÁFONO, CHEQUE o TRANSACCIÓN con estado DEVOLUCION' :
+                             isDeletingPayment && deletingPaymentId === payment.id ? 'Eliminando pago...' :
+                             isDeletingPayment ? 'Espera a que termine la eliminación actual' : 'Eliminar pago'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </app-button>
                 </td>
               </tr>
             }
@@ -623,23 +630,20 @@
 
           <!-- Botones de Acción -->
           <div class="flex space-x-3 pt-4">
-            <button (click)="closeRefundModal()"
-                    class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+            <app-button
+              (btnClick)="closeRefundModal()"
+              variant="secondary"
+              customClass="flex-1">
               Cancelar
-            </button>
-            <button (click)="processRefund()"
-                    [disabled]="!refundAmount || refundAmount <= 0 || !refundFile || isProcessingRefund"
-                    class="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2">
-              @if (isProcessingRefund) {
-                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Procesando...</span>
-              } @else {
-                <span>Procesar Devolución</span>
-              }
-            </button>
+            </app-button>
+            <app-button
+              (btnClick)="processRefund()"
+              [disabled]="!refundAmount || refundAmount <= 0 || !refundFile || isProcessingRefund"
+              [loading]="isProcessingRefund"
+              variant="danger"
+              customClass="flex-1 justify-center">
+              <span>{{ isProcessingRefund ? 'Procesando...' : 'Procesar Devolución' }}</span>
+            </app-button>
           </div>
         </div>
       </div>

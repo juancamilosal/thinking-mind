@@ -7,4 +7,5 @@ export class Menu {
   orden: number
   ruta: string
   activo: boolean;
+  menu_ayo?: boolean;
 }

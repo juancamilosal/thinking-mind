@@ -6,12 +6,12 @@ import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
 import { CourseCardComponent } from '../../../../components/course-card/course-card';
 import { CourseInfoComponent } from '../../../../components/course-info/course-info';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 import { FormCourse } from './form-course/form-course';
 import { ColegioCursosComponent } from './form-colegio-cursos/form-colegio-cursos';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ColegioCursosService } from '../../../../core/services/colegio-cursos.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
-import { HistorialProgramasService } from '../../../../core/services/historial-programas.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -25,6 +25,7 @@ declare var google: any;
     ReactiveFormsModule,
     CourseCardComponent,
     CourseInfoComponent,
+    AppButtonComponent,
     FormCourse,
     ColegioCursosComponent
   ],
@@ -44,16 +45,6 @@ export class Courses {
   searchTerm = '';
   private searchTimeout: any;
 
-  // Historial de Programas
-  showHistory = false;
-  isLoadingHistorial = false;
-  historialItems: any[] = [];
-  // Búsqueda y paginación para Historial
-  historialSearchTerm: string = '';
-  historialCurrentPage: number = 1;
-  historialItemsPerPage: number = 10;
-  historialTotalCount: number = 0;
-  historialTotalPages: number = 1;
   // Utility method for Math functions in template
   Math = Math;
 
@@ -79,7 +70,6 @@ export class Courses {
     private colegioCursosService: ColegioCursosService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
-    private historialService: HistorialProgramasService,
     private ngZone: NgZone
   ) {
     this.initEditForm();
@@ -294,140 +284,6 @@ export class Courses {
   clearSearch() {
     this.searchTerm = '';
     this.getCourse();
-  }
-
-  // Toggle Historial de Programas
-  toggleHistory() {
-    this.showHistory = !this.showHistory;
-    if (this.showHistory) {
-      this.loadHistorialProgramas();
-    }
-  }
-
-  loadHistorialProgramas(page: number = this.historialCurrentPage) {
-    this.isLoadingHistorial = true;
-    const limit = this.historialItemsPerPage;
-    const search = this.historialSearchTerm?.trim() || undefined;
-    this.historialService.getHistorialProgramas(search, page, limit).subscribe({
-      next: (response) => {
-        const allItems = response.data || [];
-        // meta puede traer total_count del paginador de Directus
-        const totalCount = response.meta?.total_count ?? allItems.length;
-        this.historialTotalCount = totalCount;
-        this.historialTotalPages = Math.max(1, Math.ceil(totalCount / this.historialItemsPerPage));
-        this.historialCurrentPage = page;
-        const invalidItems = allItems.filter((item: any) => {
-          const rel = item?.id_colegios_cursos;
-          return Array.isArray(rel) ? rel.length === 0 : !rel;
-        });
-        const validItems = allItems.filter((item: any) => {
-          const rel = item?.id_colegios_cursos;
-          return Array.isArray(rel) ? rel.length > 0 : !!rel;
-        });
-
-        if (invalidItems.length > 0) {
-          // Mantener el spinner activo durante las eliminaciones
-          this.isLoadingHistorial = true;
-          let completed = 0;
-          invalidItems.forEach((item: any) => {
-            this.historialService.deleteHistorialProgramas(item.id).subscribe({
-              next: () => {
-                completed++;
-                if (completed === invalidItems.length) {
-                  this.historialItems = validItems.sort((a: any, b: any) => {
-                    const nameA = (a?.curso_id?.nombre ?? a?.nombre ?? '').toString().toLowerCase();
-                    const nameB = (b?.curso_id?.nombre ?? b?.nombre ?? '').toString().toLowerCase();
-                    return nameA.localeCompare(nameB);
-                  });
-                  this.isLoadingHistorial = false;
-                }
-              },
-              error: () => {
-                completed++;
-                if (completed === invalidItems.length) {
-                  this.historialItems = validItems.sort((a: any, b: any) => {
-                    const nameA = (a?.curso_id?.nombre ?? a?.nombre ?? '').toString().toLowerCase();
-                    const nameB = (b?.curso_id?.nombre ?? b?.nombre ?? '').toString().toLowerCase();
-                    return nameA.localeCompare(nameB);
-                  });
-                  this.isLoadingHistorial = false;
-                }
-              }
-            });
-          });
-        } else {
-          // Ordenar por fecha_finalizacion descendente si existe
-          this.historialItems = validItems.sort((a: any, b: any) => {
-            const nameA = (a?.curso_id?.nombre ?? a?.nombre ?? '').toString().toLowerCase();
-            const nameB = (b?.curso_id?.nombre ?? b?.nombre ?? '').toString().toLowerCase();
-            return nameA.localeCompare(nameB);
-          });
-          this.isLoadingHistorial = false;
-        }
-      },
-      error: (error) => {
-        console.error('Error cargando historial_programas:', error);
-        this.notificationService.showError('Error', 'No se pudo cargar el historial de programas');
-      },
-      complete: () => {
-      }
-    });
-  }
-
-  onHistorialSearchInputChange(event: Event) {
-    const target = event.target as HTMLInputElement;
-    this.historialSearchTerm = target.value;
-    if (this.searchTimeout) clearTimeout(this.searchTimeout);
-    this.searchTimeout = setTimeout(() => {
-      this.historialCurrentPage = 1;
-      this.loadHistorialProgramas(1);
-    }, 300);
-  }
-
-  onHistorialSearch() {
-    this.historialCurrentPage = 1;
-    this.loadHistorialProgramas(1);
-  }
-
-  clearHistorialSearch() {
-    this.historialSearchTerm = '';
-    this.historialCurrentPage = 1;
-    this.loadHistorialProgramas(1);
-  }
-
-  goToHistorialPage(page: number) {
-    if (page >= 1 && page <= this.historialTotalPages) {
-      this.historialCurrentPage = page;
-      this.loadHistorialProgramas(page);
-    }
-  }
-
-  previousHistorialPage() {
-    this.goToHistorialPage(this.historialCurrentPage - 1);
-  }
-
-  nextHistorialPage() {
-    this.goToHistorialPage(this.historialCurrentPage + 1);
-  }
-
-  onHistorialItemsPerPageChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    const newLimit = parseInt(target.value);
-    this.historialItemsPerPage = isNaN(newLimit) ? 10 : newLimit;
-    this.historialCurrentPage = 1;
-    this.loadHistorialProgramas(1);
-  }
-
-  getHistorialPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, this.historialCurrentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(this.historialTotalPages, startPage + maxVisiblePages - 1);
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    for (let i = startPage; i <= endPage; i++) pages.push(i);
-    return pages;
   }
 
   closeCourseInfo() {

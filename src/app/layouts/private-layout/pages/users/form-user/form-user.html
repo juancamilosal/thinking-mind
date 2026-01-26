@@ -305,46 +305,56 @@
       </div>
     }
 
-    <!-- Botones de Acción -->
-    <div class="flex flex-col sm:flex-row gap-4 pt-6">
-      <button
+    <!-- Botones -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+          <app-button
         type="submit"
         [disabled]="isSubmitting"
-        class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center justify-center space-x-2">
-        @if (isSubmitting) {
-          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span>{{ editMode ? 'Actualizando...' : 'Creando...' }}</span>
-        } @else {
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          <span>{{ editMode ? 'Actualizar ' + (selectedRole?.name || 'Usuario') : 'Crear ' + (selectedRole?.name || 'Usuario') }}</span>
-        }
-      </button>
+        [loading]="isSubmitting"
+        variant="primary"
+        class="shadow-lg">
+        <div class="flex items-center justify-center space-x-2">
+          @if (!isSubmitting) {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          }
+          <span>
+            @if (isSubmitting) {
+              {{ editMode ? 'Actualizando...' : 'Creando...' }}
+            } @else {
+              {{ editMode ? 'Actualizar ' + (selectedRole?.name || 'Usuario') : 'Crear ' + (selectedRole?.name || 'Usuario') }}
+            }
+          </span>
+        </div>
+      </app-button>
 
-      <button
+      <app-button
         type="button"
-        (click)="onCancel()"
-        class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center justify-center space-x-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-        <span>Cancelar</span>
-      </button>
+        (btnClick)="onCancel()"
+        variant="secondary"
+        class="shadow-lg">
+        <div class="flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          <span>Cancelar</span>
+        </div>
+      </app-button>
 
       @if (editMode && userData) {
-        <button
+        <app-button
           type="button"
-          (click)="deleteUser()"
-          class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center justify-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-          <span>Eliminar {{ selectedRole?.name || 'Usuario' }}</span>
-        </button>
+          (btnClick)="deleteUser()"
+          variant="danger"
+          class="shadow-lg">
+          <div class="flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <span>Eliminar {{ selectedRole?.name || 'Usuario' }}</span>
+          </div>
+        </app-button>
       }
     </div>
   </form>
@@ -367,27 +377,22 @@
       </p>
 
       <div class="flex gap-4">
-        <button
-          (click)="confirmDelete()"
+        <app-button
+          (btnClick)="confirmDelete()"
           [disabled]="isDeleting"
-          class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
-          @if (isDeleting) {
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Eliminando...
-          } @else {
-            Eliminar
-          }
-        </button>
+          [loading]="isDeleting"
+          variant="danger"
+          class="flex-1">
+          {{ isDeleting ? 'Eliminando...' : 'Eliminar' }}
+        </app-button>
 
-        <button
-          (click)="cancelDelete()"
+        <app-button
+          (btnClick)="cancelDelete()"
           [disabled]="isDeleting"
-          class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          variant="secondary"
+          class="flex-1">
           Cancelar
-        </button>
+        </app-button>
       </div>
     </div>
   </div>

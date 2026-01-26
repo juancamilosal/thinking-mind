@@ -35,23 +35,24 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
         </div>
-        <button
-          (click)="onSortByInscriptionChange()"
-          [class]="sortByInscriptionDate ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'"
-          class="px-6 py-4 rounded-lg border border-gray-300 shadow-sm hover:bg-purple-700 hover:text-white focus:ring-2 focus:ring-purple-200 transition-all duration-200 font-semibold flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <app-button
+          (btnClick)="onSortByInscriptionChange()"
+          variant="secondary"
+          [customClass]="(sortByInscriptionDate ? '!bg-purple-600 !text-white hover:!bg-purple-700' : '!bg-gray-200 !text-gray-700') + ' px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-purple-200 transition-all duration-200 font-semibold flex items-center space-x-2'">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
           </svg>
           <span>{{ sortByInscriptionDate ? 'Más Recientes' : 'Ordenar por Fecha' }}</span>
-        </button>
-        <button
-          (click)="onSearch()"
-          class="btn-primary transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        </app-button>
+        <app-button
+          (btnClick)="onSearch()"
+          variant="primary"
+          customClass="transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2 h-full">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
           <span>Buscar</span>
-        </button>
+        </app-button>
       </div>
     </div>
   }
@@ -74,23 +75,24 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"/>
           </svg>
         </div>
-        <button
-          (click)="onSortByInscriptionChange()"
-          [class]="sortByInscriptionDate ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700'"
-          class="px-6 py-4 rounded-lg border border-gray-300 shadow-sm hover:bg-purple-700 hover:text-white focus:ring-2 focus:ring-purple-200 transition-all duration-200 font-semibold flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <app-button
+          (btnClick)="onSortByInscriptionChange()"
+          variant="secondary"
+          [customClass]="(sortByInscriptionDate ? '!bg-purple-600 !text-white hover:!bg-purple-700' : '!bg-gray-200 !text-gray-700') + ' px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-purple-200 transition-all duration-200 font-semibold flex items-center space-x-2'">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
           </svg>
           <span>{{ sortByInscriptionDate ? 'Más Recientes' : 'Ordenar por Fecha' }}</span>
-        </button>
-        <button
-          (click)="onSearch()"
-          class="btn-primary transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        </app-button>
+        <app-button
+          (btnClick)="onSearch()"
+          variant="primary"
+          customClass="transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-2 h-full">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
           <span>Aplicar Filtros</span>
-        </button>
+        </app-button>
       </div>
     </div>
   }
@@ -100,11 +102,11 @@
     <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
       <h2 class="text-xl font-semibold text-gray-800">Listado Completo de Colegios</h2>
       <div class="flex flex-col md:flex-row gap-2 md:gap-3 w-full md:w-auto">
-        <button
-          type="button"
-          (click)="toggleViewMode()"
-          class="w-full md:w-auto px-3 md:px-4 py-2 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center justify-center space-x-2 text-sm md:text-base">
-          <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <app-button
+          (btnClick)="toggleViewMode()"
+          variant="primary"
+          customClass="w-full md:w-auto px-3 md:px-4 py-2 !bg-gradient-to-br !from-blue-500 !to-purple-600 text-white rounded-lg hover:!from-purple-600 hover:!to-blue-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center justify-center space-x-2 text-sm md:text-base">
+          <svg class="w-4 h-4 md:w-5 md:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             @if (viewMode === 'table') {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-7H5m14 14H5"/>
             } @else {
@@ -112,16 +114,16 @@
             }
           </svg>
           <span>{{ viewMode === 'table' ? 'Vista Por Programas' : 'Vista Por Estudiantes' }}</span>
-        </button>
-        <button
-          type="button"
-          (click)="navigateToShirts()"
-          class="w-full md:w-auto px-3 md:px-4 py-2 bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 text-white rounded-lg hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center justify-center space-x-2 text-sm md:text-base">
-          <svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
+        </app-button>
+        <app-button
+          (btnClick)="navigateToShirts()"
+          variant="warning"
+          customClass="w-full md:w-auto px-3 md:px-4 py-2 !bg-gradient-to-br !from-yellow-300 !via-orange-400 !to-red-500 text-white rounded-lg hover:!from-red-600 hover:!to-orange-700 transition-all transform hover:scale-105 shadow-md font-semibold flex items-center justify-center space-x-2 text-sm md:text-base">
+          <svg class="w-4 h-4 md:w-5 md:h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
             <path d="M16 2l-3 1.5L12 3l-1 .5L8 2 4 4v4l2-1v13h12V7l2 1V4l-4-2z"/>
           </svg>
           <span>Camisetas</span>
-        </button>
+        </app-button>
       </div>
     </div>
 
@@ -232,12 +234,13 @@
                   }
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                  <button
-                    type="button"
+                  <app-button
+                    variant="ghost"
+                    size="icon"
                     aria-label="Descargar Excel"
-                    (click)="$event.stopPropagation(); downloadSchoolExcel(schoolData)">
+                    (btnClick)="$event.stopPropagation(); downloadSchoolExcel(schoolData)">
                     <img src="assets/icons/excel.png" alt="Excel" class="h-5" />
-                  </button>
+                  </app-button>
                 </td>
               </tr>
 
@@ -257,12 +260,12 @@
                             <h4 class="text-lg font-semibold text-gray-900">
                               Estudiantes de {{ schoolData.school.nombre }}
                             </h4>
-                            <button
-                              type="button"
-                              (click)="navigateToShirtsForSchool(schoolData.school.id)"
-                              class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md flex items-center justify-center">
+                            <app-button
+                              (btnClick)="navigateToShirtsForSchool(schoolData.school.id)"
+                              variant="ghost"
+                              customClass="w-8 h-8 rounded-full !bg-gradient-to-br !from-yellow-300 !via-orange-400 !to-red-500 hover:!from-red-600 hover:!to-orange-700 transition-all transform hover:scale-105 shadow-md flex items-center justify-center">
                               <span class="text-white font-bold text-base leading-none">👕</span>
-                            </button>
+                            </app-button>
                           </div>
                           <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -352,16 +355,17 @@
                                       </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <button
-                                        (click)="viewStudent(studentWithAccount.student, studentWithAccount.account)"
-                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                      <app-button
+                                        (btnClick)="viewStudent(studentWithAccount.student, studentWithAccount.account)"
+                                        variant="ghost"
+                                        customClass="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md !text-blue-600 !bg-blue-100 hover:!bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                                       >
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                         </svg>
                                         Ver
-                                      </button>
+                                      </app-button>
                                     </td>
                                   </tr>
                                 }
@@ -468,12 +472,13 @@
                   }
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                  <button
-                    type="button"
+                  <app-button
+                    variant="ghost"
+                    size="icon"
                     aria-label="Descargar Excel"
-                    (click)="$event.stopPropagation(); downloadSchoolExcelById(schoolData.school.id)">
+                    (btnClick)="$event.stopPropagation(); downloadSchoolExcelById(schoolData.school.id)">
                     <img src="assets/icons/excel.png" alt="Excel" class="h-5" />
-                  </button>
+                  </app-button>
                 </td>
               </tr>
 
@@ -487,20 +492,21 @@
                           <h4 class="text-lg font-semibold text-gray-900">
                             Cursos de {{ schoolData.school.nombre }}
                           </h4>
-                          <button
-                            type="button"
-                            (click)="navigateToShirtsForSchool(schoolData.school.id)"
-                            class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-orange-400 to-red-500 hover:from-red-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md flex items-center justify-center">
+                          <app-button
+                            (btnClick)="navigateToShirtsForSchool(schoolData.school.id)"
+                            variant="ghost"
+                            customClass="w-8 h-8 rounded-full !bg-gradient-to-br !from-yellow-300 !via-orange-400 !to-red-500 hover:!from-red-600 hover:!to-orange-700 transition-all transform hover:scale-105 shadow-md flex items-center justify-center">
                             <span class="text-white font-bold text-sm leading-none">👕</span>
-                          </button>
+                          </app-button>
                         </div>
                         <div class="space-y-4">
                           @for (courseData of schoolData.courses; track courseData.course.id; let courseIndex = $index) {
                             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                               <!-- Header del curso -->
-                              <button
-                                (click)="toggleCourse(schoolIndex, courseIndex)"
-                                class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:bg-gray-50 border-b border-gray-200">
+                              <app-button
+                                (btnClick)="toggleCourse(schoolIndex, courseIndex)"
+                                variant="ghost"
+                                customClass="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:bg-gray-50 border-b border-gray-200 block">
                                 <div class="flex items-center justify-between">
                                   <div class="flex items-center space-x-3">
                                     <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -527,7 +533,7 @@
                                     </svg>
                                   </div>
                                 </div>
-                              </button>
+                              </app-button>
 
                               <!-- Tabla de estudiantes del curso -->
                               @if (courseData.isExpanded) {
@@ -608,16 +614,17 @@
                                               </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                              <button
-                                                (click)="viewStudent(studentWithAccount.student, studentWithAccount.account)"
-                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                              <app-button
+                                                (btnClick)="viewStudent(studentWithAccount.student, studentWithAccount.account)"
+                                                variant="ghost"
+                                                customClass="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md !text-blue-600 !bg-blue-100 hover:!bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                                               >
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                 </svg>
                                                 Ver
-                                              </button>
+                                              </app-button>
                                             </td>
                                           </tr>
                                         }
@@ -648,24 +655,26 @@
       <div class="flex flex-col sm:hidden space-y-4">
         @if (totalPages > 1) {
           <div class="flex justify-between items-center">
-            <button
-              (click)="goToPreviousPage()"
+            <app-button
+              (btnClick)="goToPreviousPage()"
               [disabled]="currentPage === 1"
-              class="btn-primary flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
+              variant="primary"
+              customClass="flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
               Anterior
-            </button>
-            <button
-              (click)="goToNextPage()"
+            </app-button>
+            <app-button
+              (btnClick)="goToNextPage()"
               [disabled]="currentPage === totalPages"
-              class="btn-primary flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
+              variant="primary"
+              customClass="flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-md">
               Siguiente
               <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
-            </button>
+            </app-button>
           </div>
         }
 
@@ -731,37 +740,40 @@
         @if (totalPages > 1) {
           <!-- Page Navigation -->
           <div class="flex items-center space-x-2">
-            <button
-              (click)="goToPreviousPage()"
+            <app-button
+              (btnClick)="goToPreviousPage()"
               [disabled]="currentPage === 1"
-              class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
+              variant="secondary"
+              customClass="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
               Anterior
-            </button>
+            </app-button>
 
             <div class="flex items-center space-x-1">
               @for (page of getPageNumbers(); track page) {
-                <button
-                  (click)="goToPage(page)"
-                  [class]="page === currentPage ?
-                    'px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md transform scale-105' :
-                    'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md'">
+                <app-button
+                  (btnClick)="goToPage(page)"
+                  variant="ghost"
+                  [customClass]="(page === currentPage ?
+                    '!px-4 !py-2 !text-sm !font-bold !text-white !bg-gradient-to-r !from-blue-500 !to-blue-600 !rounded-lg !shadow-md transform !scale-105' :
+                    '!px-4 !py-2 !text-sm !font-medium !text-gray-700 !bg-white !border !border-gray-300 !rounded-lg hover:!bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md')">
                   {{ page }}
-                </button>
+                </app-button>
               }
             </div>
 
-            <button
-              (click)="goToNextPage()"
+            <app-button
+              (btnClick)="goToNextPage()"
               [disabled]="currentPage === totalPages"
-              class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
+              variant="secondary"
+              customClass="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md">
               Siguiente
               <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
-            </button>
+            </app-button>
           </div>
         }
       </div>

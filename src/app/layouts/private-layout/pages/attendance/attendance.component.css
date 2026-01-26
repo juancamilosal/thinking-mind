@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:host {
+    --ayo-primary: #13486e;
+    --ayo-secondary: #d5ca25;
+    --ayo-primary-light: #1a5f8f;
+    --ayo-primary-dark: #0d3450;
+    --ayo-secondary-light: #e8dd5f;
+    --ayo-secondary-dark: #b8ae1f;
+    --ayo-gradient: linear-gradient(135deg, #13486e 0%, #1a5f8f 100%);
+    display: block;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.attendance-page-container {
+    background-color: #f8fafc; /* Slate-50 equivalent */
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.page-title {
+    color: var(--ayo-primary);
+}

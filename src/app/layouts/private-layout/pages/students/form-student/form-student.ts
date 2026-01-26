@@ -9,11 +9,13 @@ import {School} from '../../../../../core/models/School';
 import {DOCUMENT_TYPE} from '../../../../../core/const/DocumentTypeConst';
 import {NotificationService} from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-form-student',
   imports: [
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AppButtonComponent
 ],
   templateUrl: './form-student.html',
   styleUrl: './form-student.css'

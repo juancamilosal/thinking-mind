@@ -23,6 +23,7 @@ import { ExchangeRateService } from '../../../../core/services/exchange-rate.ser
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { Grupo } from '../../../../core/models/School';
 import { environment } from '../../../../../environments/environment';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 import * as CryptoJS from 'crypto-js';
 
 declare var WidgetCheckout: any;
@@ -30,7 +31,7 @@ declare var WidgetCheckout: any;
 @Component({
   selector: 'app-payment-record',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent, AppButtonComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })

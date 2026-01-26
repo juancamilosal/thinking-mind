@@ -9,10 +9,11 @@ import {AccountReceivableService} from '../../../../../core/services/account-rec
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { StorageServices } from '../../../../../core/services/storage.services';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-account-receivable-detail',
-  imports: [CommonModule, FormsModule, PaymentDetailComponent],
+  imports: [CommonModule, FormsModule, PaymentDetailComponent, AppButtonComponent],
   templateUrl: './account-receivable-detail.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.Default

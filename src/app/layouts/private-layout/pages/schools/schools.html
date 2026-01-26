@@ -8,13 +8,15 @@
 
     <!-- Botón Ingresar Colegio -->
     <div class="flex justify-center mb-8">
-      <button (click)="toggleForm()"
-              class="btn-primary px-8 py-4 transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-3">
+      <app-button
+        (btnClick)="toggleForm()"
+        variant="primary"
+        customClass="px-8 py-4 font-semibold flex items-center space-x-3">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
         </svg>
         <span>Ingresar Colegio</span>
-      </button>
+      </app-button>
     </div>
 
     <!-- Barra de Búsqueda -->
@@ -27,11 +29,12 @@
           (input)="onSearchInputChange($event)"
           (keyup.enter)="onSearch()"
           class="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-        <button
-          (click)="onSearch()"
-          class="btn-primary w-full sm:w-auto transform hover:scale-105 shadow-md font-semibold">
+        <app-button
+          (btnClick)="onSearch()"
+          variant="primary"
+          customClass="w-full sm:w-auto font-semibold">
           Buscar
-        </button>
+        </app-button>
       </div>
     </div>
 
@@ -96,19 +99,19 @@
                 <td class="px-6 py-4 text-xs text-gray-700">{{ school.celular }}</td>
                   <td class="px-6 py-4 text-xs font-medium">
                     <div class="flex space-x-2">
-                      <button (click)="viewSchool(school)" class="btn-primary text-xs transform hover:scale-105">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    Ver
-                  </button>
-                  <button (click)="editSchool(school)" class="btn-success text-xs transform hover:scale-105">
+                      <app-button variant="primary" size="sm" (btnClick)="viewSchool(school)">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Ver
+                      </app-button>
+                      <app-button variant="success" size="sm" (btnClick)="editSchool(school)">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         Editar
-                      </button>
+                      </app-button>
                     </div>
                   </td>
                 </tr>
@@ -123,24 +126,26 @@
         <div class="bg-gradient-to-r from-white to-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-8 shadow-inner">
           @if (totalPages > 1) {
             <div class="flex-1 flex justify-between sm:hidden">
-              <button
-            (click)="onPageChange(currentPage - 1)"
-            [disabled]="currentPage === 1"
-            class="btn-primary relative inline-flex items-center text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Anterior
-          </button>
-          <button
-            (click)="onPageChange(currentPage + 1)"
-            [disabled]="currentPage === totalPages"
-            class="btn-primary relative inline-flex items-center text-sm font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+              <app-button
+                (btnClick)="onPageChange(currentPage - 1)"
+                [disabled]="currentPage === 1"
+                variant="primary"
+                size="sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Anterior
+              </app-button>
+              <app-button
+                (btnClick)="onPageChange(currentPage + 1)"
+                [disabled]="currentPage === totalPages"
+                variant="primary"
+                size="sm">
                 Siguiente
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-              </button>
+              </app-button>
             </div>
           }
           <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
@@ -170,36 +175,35 @@
               </div>
             </div>
             @if (totalPages > 1) {
-               <div>
-                 <nav class="relative z-0 inline-flex rounded-xl shadow-lg bg-white border border-gray-200 overflow-hidden" aria-label="Pagination">
-                   <button
-                     (click)="onPageChange(currentPage - 1)"
-                     [disabled]="currentPage === 1"
-                     class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 border-r border-gray-200">
-                     <span class="sr-only">Anterior</span>
-                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                     </svg>
-                   </button>
-                   @for (page of getPaginationArray(); track page) {
-                     <button
-                       (click)="onPageChange(page)"
-                       [class]="page === currentPage ? 
-                         'z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white relative inline-flex items-center px-4 py-2 text-sm font-bold shadow-inner border-r border-indigo-400' :
-                         'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 relative inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 border-r border-gray-200'">
-                       {{ page }}
-                     </button>
-                   }
-                   <button
-                     (click)="onPageChange(currentPage + 1)"
-                     [disabled]="currentPage === totalPages"
-                     class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200">
-                     <span class="sr-only">Siguiente</span>
-                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                     </svg>
-                   </button>
-                 </nav>
+               <div class="flex gap-1">
+                 <app-button
+                   variant="ghost"
+                   size="sm"
+                   (btnClick)="onPageChange(currentPage - 1)"
+                   [disabled]="currentPage === 1">
+                   <span class="sr-only">Anterior</span>
+                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                   </svg>
+                 </app-button>
+                 @for (page of getPaginationArray(); track page) {
+                   <app-button
+                     [variant]="page === currentPage ? 'primary' : 'ghost'"
+                     size="sm"
+                     (btnClick)="onPageChange(page)">
+                     {{ page }}
+                   </app-button>
+                 }
+                 <app-button
+                   variant="ghost"
+                   size="sm"
+                   (btnClick)="onPageChange(currentPage + 1)"
+                   [disabled]="currentPage === totalPages">
+                   <span class="sr-only">Siguiente</span>
+                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                   </svg>
+                 </app-button>
                </div>
              }
           </div>
@@ -227,14 +231,15 @@
             <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ editMode ? 'Editar Colegio' : 'Registro de Colegio' }}</h1>
             <p class="text-sm text-gray-600">{{ editMode ? 'Actualiza la información del colegio' : 'Completa la información del colegio' }}</p>
           </div>
-          <button
-            (click)="toggleForm()"
-            class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center justify-center space-x-2">
+          <app-button
+            (btnClick)="toggleForm()"
+            variant="secondary"
+            customClass="w-full sm:w-auto flex items-center justify-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             <span>Regresar</span>
-          </button>
+          </app-button>
         </div>
 
         <app-form-school

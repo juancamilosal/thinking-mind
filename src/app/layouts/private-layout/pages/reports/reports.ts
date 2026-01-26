@@ -10,10 +10,11 @@ import { PaymentService } from '../../../../core/services/payment.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import {SchoolService} from '../../../../core/services/school.service';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-reports',
-  imports: [FormsModule, ReactiveFormsModule, CommonModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, AppButtonComponent],
   templateUrl: './reports.html',
   standalone: true
 })
