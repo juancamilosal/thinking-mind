@@ -435,16 +435,20 @@
         </div>
 
         <!-- Botón de envío -->
-        <div class="flex justify-end pt-6 border-t border-gray-200">
-          <button
-            type="submit"
-            [disabled]="fechaFinalizacionForm.invalid"
-            class="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-blue-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
-            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Guardar Fecha de Finalización
-          </button>
+        <div class="flex flex-col md:flex-row justify-end pt-6 border-t border-gray-200">
+          <div class="w-full md:w-auto">
+            <app-button
+              type="submit"
+              [disabled]="fechaFinalizacionForm.invalid"
+              variant="primary"
+              size="lg"
+              [fullWidth]="true">
+              <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span>Guardar Fecha de Finalización</span>
+            </app-button>
+          </div>
         </div>
       </form>
     </div>

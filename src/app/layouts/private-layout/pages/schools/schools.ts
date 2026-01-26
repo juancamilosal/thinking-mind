@@ -5,11 +5,12 @@ import { School } from '../../../../core/models/School';
 import {SchoolService} from '../../../../core/services/school.service';
 import {FormSchool} from './form-school/form-school';
 import {SchoolDetail} from './school-detail/school-detail';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-schools',
   standalone: true,
-  imports: [ReactiveFormsModule, FormSchool, SchoolDetail],
+  imports: [ReactiveFormsModule, FormSchool, SchoolDetail, AppButtonComponent],
   templateUrl: './schools.html'
 })
 export class Schools implements OnInit {

@@ -55,13 +55,17 @@
         </div>
 
         <!-- Botón de Limpiar Filtros -->
-        <div class="flex items-end">
-          <button
-            (click)="clearFilters()"
-            class="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-          >
-            Limpiar Filtros
-          </button>
+        <div>
+          <label class="block text-xs font-medium text-transparent mb-2">Acciones</label>
+          <app-button
+            (btnClick)="clearFilters()"
+            variant="secondary-filled"
+            customClass="w-full font-medium flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Limpiar Filtros</span>
+          </app-button>
         </div>
       </div>
     </div>
@@ -78,11 +82,12 @@
             (input)="onSearchChange(($any($event.target)).value)"
             (keyup.enter)="onSearch()"
             class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-          <button
-            (click)="onSearch()"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto font-medium">
+          <app-button
+            (btnClick)="onSearch()"
+            variant="primary"
+            customClass="w-full sm:w-auto font-medium">
             Buscar
-          </button>
+          </app-button>
         </div>
       </div>
       <div class="px-6 py-4 border-b border-gray-200">
@@ -207,21 +212,23 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
                       <div class="flex space-x-2 justify-end">
-                        <button (click)="viewDetail(account)"
-                                class="btn-primary text-xs transform hover:scale-105">
+                        <app-button (btnClick)="viewDetail(account)"
+                                variant="primary"
+                                size="sm">
                           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                           </svg>
                           Ver
-                        </button>
-                        <button (click)="deleteAccount(account.id)"
-                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-medium transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-1">
+                        </app-button>
+                        <app-button (btnClick)="deleteAccount(account.id)"
+                                variant="danger"
+                                size="sm">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                           </svg>
                           <span>Eliminar</span>
-                        </button>
+                        </app-button>
                       </div>
                     </td>
                   </tr>
@@ -236,24 +243,26 @@
           <div class="bg-gradient-to-r from-white to-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-8 shadow-inner">
             @if (totalPages > 1) {
               <div class="flex-1 flex justify-between sm:hidden">
-                <button
-                  (click)="onPageChange(currentPage - 1)"
+                <app-button
+                  (btnClick)="onPageChange(currentPage - 1)"
                   [disabled]="currentPage === 1"
-                  class="relative inline-flex items-center px-5 py-2.5 border-0 text-xs font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                  variant="primary"
+                  size="sm">
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                   </svg>
                   Anterior
-                </button>
-                <button
-                  (click)="onPageChange(currentPage + 1)"
+                </app-button>
+                <app-button
+                  (btnClick)="onPageChange(currentPage + 1)"
                   [disabled]="currentPage === totalPages"
-                  class="relative inline-flex items-center px-5 py-2.5 border-0 text-xs font-semibold rounded-xl text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                  variant="primary"
+                  size="sm">
                   Siguiente
                   <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
-                </button>
+                </app-button>
               </div>
             }
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
@@ -283,36 +292,37 @@
                 </div>
               </div>
               @if (totalPages > 1) {
-                 <div>
+                 <div class="flex gap-1">
                    <nav class="relative z-0 inline-flex rounded-xl shadow-lg bg-white border border-gray-200 overflow-hidden" aria-label="Pagination">
                      @if (currentPage > 1) {
-                       <button
-                         (click)="onPageChange(currentPage - 1)"
-                         class="relative inline-flex items-center px-3 py-2 text-xs font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 transition-all duration-200 border-r border-gray-200">
+                       <app-button
+                         (btnClick)="onPageChange(currentPage - 1)"
+                         variant="ghost"
+                         size="sm">
                          <span class="sr-only">Anterior</span>
                          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                          </svg>
-                       </button>
+                       </app-button>
                      }
                      @for (page of getPaginationArray(); track page) {
-                       <button
-                         (click)="onPageChange(page)"
-                         [class]="page === currentPage ?
-                           'z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white relative inline-flex items-center px-4 py-2 text-xs font-bold shadow-inner border-r border-indigo-400' :
-                           'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 relative inline-flex items-center px-4 py-2 text-xs font-medium transition-all duration-200 border-r border-gray-200'">
+                       <app-button
+                         (btnClick)="onPageChange(page)"
+                         [variant]="page === currentPage ? 'primary' : 'ghost'"
+                         size="sm">
                          {{ page }}
-                       </button>
+                       </app-button>
                      }
                      @if (currentPage < totalPages) {
-                       <button
-                         (click)="onPageChange(currentPage + 1)"
-                         class="relative inline-flex items-center px-3 py-2 text-xs font-medium text-gray-600 bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 transition-all duration-200">
+                       <app-button
+                         (btnClick)="onPageChange(currentPage + 1)"
+                         variant="ghost"
+                         size="sm">
                          <span class="sr-only">Siguiente</span>
                          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                          </svg>
-                       </button>
+                       </app-button>
                      }
                    </nav>
                  </div>

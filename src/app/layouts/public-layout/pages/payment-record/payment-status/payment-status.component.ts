@@ -3,11 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '../../../../../core/services/payment.service';
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-payment-status',
   standalone: true,
-  imports: [],
+  imports: [AppButtonComponent],
   templateUrl: './payment-status.component.html',
   styleUrl: './payment-status.component.css'
 })

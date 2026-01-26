@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { Client } from '../../../../../core/models/Clients';
+import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [],
+  imports: [AppButtonComponent],
   templateUrl: './client-detail.html'
 })
 export class ClientDetail {

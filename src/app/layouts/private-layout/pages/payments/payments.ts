@@ -7,11 +7,12 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ResponseAPI } from '../../../../core/models/ResponseAPI';
 import {PaymentModel} from '../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../accounts-receivable/payment-detail/payment-detail';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [FormsModule, PaymentDetailComponent],
+  imports: [FormsModule, PaymentDetailComponent, AppButtonComponent],
   templateUrl: './payments.html',
   styleUrl: './payments.scss'
 })

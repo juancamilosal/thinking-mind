@@ -8,10 +8,11 @@ import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountR
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 import {ConfirmationService} from '../../../../core/services/confirmation.service';
 import {NotificationService} from '../../../../core/services/notification.service';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-accounts-receivable',
-  imports: [CommonModule, FormsModule, AccountReceivableFormComponent, AccountReceivableDetailComponent],
+  imports: [CommonModule, FormsModule, AccountReceivableFormComponent, AccountReceivableDetailComponent, AppButtonComponent],
   templateUrl: './accounts-receivable.html',
   standalone: true
 })
