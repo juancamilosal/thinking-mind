@@ -78,8 +78,8 @@ export class AppButtonComponent {
            classes += ' bg-red-600 text-white hover:bg-red-700 shadow-sm';
            break;
          case 'warning':
-           classes += ' bg-amber-500 text-white hover:bg-amber-600 shadow-sm';
-           break;
+          classes += ' bg-orange-600 text-white hover:bg-orange-700 shadow-sm';
+          break;
          case 'ghost':
            classes += ' text-gray-600 hover:text-gray-900 hover:bg-gray-100';
            break;
