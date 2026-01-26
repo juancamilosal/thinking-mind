@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 
@@ -9,7 +10,7 @@ declare var google: any;
 @Component({
     selector: 'app-entry-validation',
     standalone: true,
-    imports: [ReactiveFormsModule],
+    imports: [ReactiveFormsModule, AppButtonComponent],
     templateUrl: './entry-validation.html',
     styleUrls: ['./entry-validation.css']
 })

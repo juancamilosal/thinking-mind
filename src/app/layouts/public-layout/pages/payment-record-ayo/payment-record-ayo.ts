@@ -17,13 +17,14 @@ import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import {PaymentModalData} from '../../../../core/models/PaymentModalData';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 declare var WidgetCheckout: any;
 
 @Component({
     selector: 'app-payment-record-ayo',
     standalone: true,
-    imports: [ReactiveFormsModule, CommonModule, RouterModule, NotificationModalComponent],
+    imports: [ReactiveFormsModule, CommonModule, RouterModule, NotificationModalComponent, AppButtonComponent],
     templateUrl: './payment-record-ayo.html',
     styleUrls: ['./payment-record-ayo.css']
 })
