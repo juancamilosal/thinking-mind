@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {ResponseAPI} from '../models/ResponseAPI';
 import {Menu} from '../models/Menu';
+import {Roles} from '../const/Roles';
 
 export interface MenuItem {
   id: string;
@@ -30,9 +32,13 @@ export class MenuService {
   list(role?: string): Observable<ResponseAPI<Menu[]>> {
     let url = this.menuListUrl;
     const ayoRoles = [
-      'ca8ffc29-c040-439f-8017-0dcb141f0fd3',
-      'fe83d2f3-1b89-477d-984a-de3b56e12001'
+      Roles.STUDENT,
+      Roles.TEACHER
     ];
+
+    console.log('MenuService - Role received:', role);
+    console.log('MenuService - AYO Roles:', ayoRoles);
+    console.log('MenuService - Is AYO role?', role && ayoRoles.includes(role));
 
     if (role && ayoRoles.includes(role)) {
       url += '&filter[menu_ayo][_eq]=true';
@@ -40,6 +46,13 @@ export class MenuService {
       url += '&filter[_or][0][menu_ayo][_neq]=true&filter[_or][1][nombre][_eq]=Dashboard';
     }
 
-    return this.http.get<ResponseAPI<Menu[]>>(url);
+    console.log('MenuService - Final URL:', url);
+
+    return this.http.get<ResponseAPI<Menu[]>>(url).pipe(
+      tap((response) => {
+        console.log('MenuService - Raw response from API:', response);
+        console.log('MenuService - Menu items received:', response.data);
+      })
+    );
   }
 }

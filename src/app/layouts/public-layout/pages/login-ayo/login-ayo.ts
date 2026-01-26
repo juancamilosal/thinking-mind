@@ -5,7 +5,7 @@ import { StudentService } from '../../../../core/services/student.service';
 import { LoginService } from '../../../../core/services/login.service';
 import { TokenRefreshService } from '../../../../core/services/token-refresh.service';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
-
+import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
 
 @Component({
@@ -87,20 +87,38 @@ export class LoginAyo implements OnInit {
             mode: 'cookie'
         };
 
+        console.log('Login attempt with:', { email });
+
         this.loginServices.login(loginPayload).subscribe({
             next: (loginRes) => {
+                console.log('Login response:', loginRes);
+                console.log('Login response.data:', loginRes.data);
+                console.log('Login response full structure:', JSON.stringify(loginRes, null, 2));
+
                 this.loginServices.me().subscribe({
                     next: (userResponse) => {
+                        console.log('Me() response:', userResponse);
+
+                        const currentUser = StorageServices.getCurrentUser();
+                        console.log('Current user from storage:', currentUser);
+
                         this.isLoading = false;
                         this.tokenRefreshService.startTokenRefreshService();
 
-                        // Check if student has completed the test
-                        const currentUser = StorageServices.getCurrentUser();
-                        if (currentUser?.resultado_test === null || currentUser?.resultado_test === undefined) {
+                        // Check if user is a student and hasn't completed the test
+                        const isStudent = currentUser?.role === Roles.STUDENT;
+                        const isTeacher = currentUser?.role === Roles.TEACHER;
+
+                        console.log('Role checks - isStudent:', isStudent, 'isTeacher:', isTeacher);
+
+                        if (isStudent && (currentUser?.resultado_test === null || currentUser?.resultado_test === undefined)) {
                           // Student hasn't taken test yet, redirect to test
                           this.router.navigateByUrl('/private/langTest');
+                        } else if (isTeacher) {
+                          // Teacher goes to dashboard
+                          this.router.navigateByUrl('/private');
                         } else {
-                          // Student already took test, go to dashboard
+                          // Student who already took test, go to dashboard
                           this.router.navigateByUrl('/private');
                         }
                     },
@@ -153,8 +171,22 @@ export class LoginAyo implements OnInit {
                                             next: (userResponse) => {
                                                 this.isLoading = false;
                                                 this.tokenRefreshService.startTokenRefreshService();
-                                                // After successful registration + login, go to Language Test
-                                                this.router.navigateByUrl('/private/langTest');
+
+                                                // Check if user is a student before redirecting to langTest
+                                                const currentUser = StorageServices.getCurrentUser();
+                                                const isStudent = currentUser?.role === Roles.STUDENT;
+                                                const isTeacher = currentUser?.role === Roles.TEACHER;
+
+                                                if (isStudent) {
+                                                  // After successful registration + login, students go to Language Test
+                                                  this.router.navigateByUrl('/private/langTest');
+                                                } else if (isTeacher) {
+                                                  // Teachers go to dashboard
+                                                  this.router.navigateByUrl('/private');
+                                                } else {
+                                                  // Other roles go to dashboard
+                                                  this.router.navigateByUrl('/private');
+                                                }
                                             },
                                             error: (userError) => {
                                                 this.isLoading = false;
