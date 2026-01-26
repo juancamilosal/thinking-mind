@@ -6,11 +6,12 @@ import {Client} from '../../../../core/models/Clients';
 import {FormClient} from './form-client/form-client';
 import {ClientDetail} from './client-detail/client-detail';
 import {NotificationService} from '../../../../core/services/notification.service';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, FormClient, ClientDetail],
+  imports: [ReactiveFormsModule, FormClient, ClientDetail, AppButtonComponent],
   templateUrl: './clients.html'
 })
 export class Clients implements OnInit {
