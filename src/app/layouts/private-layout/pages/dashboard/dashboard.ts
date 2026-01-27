@@ -49,6 +49,7 @@ export class Dashboard implements OnInit {
   isRector: boolean = false;
   isSales: boolean = false;
   isAyoStudent: boolean = false;
+  isAyoTeacher: boolean = false;
   rol = Roles;
 
   // AYO Student Stats
@@ -62,6 +63,19 @@ export class Dashboard implements OnInit {
     subcategoria: '',
     tematica: '',
     reuniones_meet: []
+  };
+
+  // AYO Teacher Stats (hardcoded for now)
+  teacherStats: any = {
+    idioma: 'Inglés',
+    nivel: 'Seeker',
+    subcategoria: 'A1.3',
+    tematica: 'Ireland',
+    reuniones_meet: [
+      { DIA: 'LUNES', HORA_INICIO: '10:00', HORA_FIN: '11:00' },
+      { DIA: 'MIÉRCOLES', HORA_INICIO: '14:00', HORA_FIN: '15:00' },
+      { DIA: 'VIERNES', HORA_INICIO: '16:00', HORA_FIN: '17:00' }
+    ]
   };
 
   constructor(
@@ -98,11 +112,18 @@ export class Dashboard implements OnInit {
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === this.rol.RECTOR;
       this.isSales = user.role === this.rol.VENTAS;
-      this.isAyoStudent = user.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+      this.isAyoStudent = user.role === Roles.STUDENT;
+      this.isAyoTeacher = user.role === Roles.TEACHER;
 
       if (this.isSales) {
         // Consumir el servicio dashboardSale para el rol específico
         this.loadSalesData();
+        return;
+      }
+
+      // If teacher, don't load dashboard data - they should be on teacher page
+      if (this.isAyoTeacher) {
+        this.isLoading = false;
         return;
       }
 

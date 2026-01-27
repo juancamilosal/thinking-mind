@@ -1,9 +1,9 @@
 import { Component, OnInit, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
-
 import { Router } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
+import { Roles } from '../../core/const/Roles';
 
 class CurrentUser {
   email: string;
@@ -25,8 +25,8 @@ export class HeaderComponent implements OnInit {
   isUserMenuOpen = false;
 
   constructor(
-    private elementRef: ElementRef, 
-    private router: Router, 
+    private elementRef: ElementRef,
+    private router: Router,
     private loginService: LoginService,
     private tokenRefreshService: TokenRefreshService
   ) {}
@@ -45,9 +45,20 @@ export class HeaderComponent implements OnInit {
 
   getInitials(): string {
     if (!this.currentUser) return '';
-    const firstInitial = this.currentUser.first_name?.charAt(0) || '';
-    const lastInitial = this.currentUser.last_name?.charAt(0) || '';
-    return (firstInitial + lastInitial).toUpperCase();
+
+    // If we have first and last name, use them
+    if (this.currentUser.first_name && this.currentUser.last_name) {
+      const firstInitial = this.currentUser.first_name.charAt(0) || '';
+      const lastInitial = this.currentUser.last_name.charAt(0) || '';
+      return (firstInitial + lastInitial).toUpperCase();
+    }
+
+    // Otherwise, use first two letters of email
+    if (this.currentUser.email) {
+      return this.currentUser.email.substring(0, 2).toUpperCase();
+    }
+
+    return '';
   }
 
   onToggleSidebar() {
@@ -78,13 +89,13 @@ export class HeaderComponent implements OnInit {
     this.tokenRefreshService.stopTokenRefreshService();
 
     const user = StorageServices.getCurrentUser();
-    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
-    
+    const isAyoRole = user?.role === Roles.STUDENT || user?.role === Roles.TEACHER;
+
     // Asegurar que last_user_role esté actualizado antes de borrar la sesión
     if (user?.role && typeof localStorage !== 'undefined') {
       localStorage.setItem('last_user_role', user.role);
     }
-    
+
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
