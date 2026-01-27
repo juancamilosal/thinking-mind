@@ -25,11 +25,17 @@
             <!-- Información del usuario -->
             <div class="flex flex-col text-left">
               <span class="text-sm font-semibold text-white">
-                {{ currentUser.first_name }} {{ currentUser.last_name }}
+                @if (currentUser.first_name || currentUser.last_name) {
+                  {{ currentUser.first_name }} {{ currentUser.last_name }}
+                } @else {
+                  {{ currentUser.email }}
+                }
               </span>
-              <span class="text-xs text-gray-300">
-                {{ currentUser.email }}
-              </span>
+              @if (currentUser.first_name || currentUser.last_name) {
+                <span class="text-xs text-gray-300">
+                  {{ currentUser.email }}
+                </span>
+              }
             </div>
 
             <!-- Icono de flecha -->
