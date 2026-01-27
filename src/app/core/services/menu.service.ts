@@ -29,19 +29,7 @@ export class MenuService {
 
   constructor(private http: HttpClient) {}
 
-  list(role?: string): Observable<ResponseAPI<Menu[]>> {
-    let url = this.menuListUrl;
-    const ayoRoles = [
-      Roles.STUDENT,
-      Roles.TEACHER
-    ];
-
-    if (role && ayoRoles.includes(role)) {
-      url += '&filter[menu_ayo][_eq]=true';
-    } else {
-      url += '&filter[_or][0][menu_ayo][_neq]=true&filter[_or][1][nombre][_eq]=Dashboard';
-    }
-
-    return this.http.get<ResponseAPI<Menu[]>>(url);
+  list(): Observable<ResponseAPI<Menu[]>> {
+    return this.http.get<ResponseAPI<Menu[]>>(this.menuListUrl);
   }
 }
