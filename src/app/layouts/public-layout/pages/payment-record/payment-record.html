@@ -961,15 +961,11 @@
                  </div>
                }
             </div>
-          </div>
-          }
 
-
-          <!-- Botones de Acción -->
-          @if (!showRegisteredCourses || showAddCourseForm) {
-          <div class="flex flex-col sm:flex-row justify-center gap-4">
-            <!-- Botón Volver (solo cuando showAddCourseForm es true) -->
-            @if (showAddCourseForm) {
+            <!-- Botones de Acción -->
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8 pt-6 border-t border-violet-200/50">
+              <!-- Botón Volver (solo cuando showAddCourseForm es true) -->
+              @if (showAddCourseForm) {
               <app-button
                 variant="secondary"
                 size="lg"
@@ -977,29 +973,31 @@
                 customClass="min-w-[200px] w-full sm:w-auto shadow-lg hover:shadow-xl">
                 <span class="flex items-center justify-center space-x-2">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                   </svg>
                   <span>Volver</span>
                 </span>
               </app-button>
-            }
+              }
 
-            <!-- Botón de Envío -->
-            <app-button
-              type="submit"
-              variant="primary"
-              size="lg"
-              [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError"
-              [loading]="isSubmitting"
-              customClass="min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl">
-              <span class="flex items-center justify-center space-x-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Registrar Información</span>
-              </span>
-            </app-button>
+              <!-- Botón de Envío -->
+              <app-button
+                type="submit"
+                variant="primary"
+                size="lg"
+                [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError"
+                [loading]="isSubmitting"
+                customClass="min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl">
+                <span class="flex items-center justify-center space-x-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Registrar Información</span>
+                </span>
+              </app-button>
+            </div>
           </div>
           }
         </form>
