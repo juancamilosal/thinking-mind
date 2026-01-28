@@ -19,11 +19,11 @@ interface StudentEvaluation {
 }
 
 @Component({
-  selector: 'app-meetings-teacher',
+  selector: 'app-meet-teacher',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './teacher-meetings.html',
-  styleUrl: './teacher-meetings.css'
+  templateUrl: './meet-teacher.html',
+  styleUrl: './meet-teacher.css'
 })
 export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   programas: ProgramaAyo[] = [];

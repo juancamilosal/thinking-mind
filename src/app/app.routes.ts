@@ -29,7 +29,7 @@ import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/for
 import { MeetStudent } from './layouts/private-layout/pages/meet/meet-students/meet-student';
 import { Advance } from './layouts/private-layout/pages/advance/advance';
 import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
-import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/meetings-teacher/teacher-meetings';
+import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/meet-teacher/meet-teacher';
 import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
 
 

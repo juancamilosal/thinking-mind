@@ -7,7 +7,7 @@ import { ProgramaAyo } from '../../../../../core/models/Course';
 import { environment } from '../../../../../../environments/environment';
 
 @Component({
-  selector: 'app-meet',
+  selector: 'app-meet-student',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './meet-student.html',
