@@ -7,7 +7,6 @@ import { StorageServices } from '../../core/services/storage.services';
 import { MenuService, MenuItem } from '../../core/services/menu.service';
 import { Subscription } from 'rxjs';
 import {Menu} from '../../core/models/Menu';
-import { Roles } from '../../core/const/Roles';
 
 @Component({
   selector: 'app-sidebar',
@@ -64,26 +63,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarClose.emit();
   }
 
-  // Get the appropriate route based on user role and menu item
-  getRouteForMenuItem(item: Menu): string {
-    const user = StorageServices.getCurrentUser();
-
-    // If the menu item is "Reuniones", route based on user role
-    if (item.nombre === 'Reuniones') {
-      if (user?.role === Roles.TEACHER) {
-        return '/private/teacher';
-      } else if (user?.role === Roles.STUDENT) {
-        return '/private/meet-student';
-      }
-    }
-
-    // Default: use the route from the menu item
-    return item.ruta;
-  }
-
   logout() {
     const user = StorageServices.getCurrentUser();
-    const isAyoRole = user?.role === Roles.STUDENT || user?.role === Roles.TEACHER;
+    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
 
     // Asegurar que last_user_role esté actualizado antes de borrar la sesión
     if (user?.role && typeof localStorage !== 'undefined') {
