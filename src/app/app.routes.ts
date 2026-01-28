@@ -31,6 +31,7 @@ import { Advance } from './layouts/private-layout/pages/advance/advance';
 import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
 import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/meet-teacher/meet-teacher';
 import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
+import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
 
 
 export const routes: Routes = [
@@ -173,7 +174,7 @@ export const routes: Routes = [
       {
         path: 'meetings',
         title: 'Thinking Mind | Reuniones Estudiante',
-        component: MeetStudent
+        component: MeetComponent
       },
       {
         path: 'teacher',
