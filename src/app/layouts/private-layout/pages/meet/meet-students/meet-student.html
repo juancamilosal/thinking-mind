@@ -166,7 +166,7 @@
                                 </div>
                                 <div class="flex items-center gap-5">
                                     @if (reunion.link_reunion) {
-                                    <a [href]="reunion.link_reunion" target="_blank" class="meeting-link" title="Unirse a reunión">
+                                    <a href="javascript:void(0)" class="meeting-link" title="Unirse a reunión" (click)="handleTestAndJoin($event, reunion)">
                                         <img src="../../../../../../assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
                                     </a>
                                     }
@@ -176,6 +176,12 @@
                         </div>
                     </div>
                     }
+
+                    <div class="mt-4 flex justify-center w-full">
+                        <button (click)="runManualTest()" class="px-4 py-2 bg-yellow-500 text-white font-bold rounded hover:bg-yellow-600 transition-colors shadow-md w-full max-w-[200px]">
+                            PRUEBA
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
