@@ -33,56 +33,52 @@
 
       @if (!showConfirmation) {
       <!-- Sección principal de información -->
-      <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-3xl p-8 mb-8 text-white shadow-2xl border border-blue-700/50">
-        <div class="text-center">
-          <div class="flex justify-center mb-6">
-            <div class="bg-white bg-opacity-20 rounded-full p-4">
-              <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-          </div>
-          <h1 class="text-6xl font-bold mb-5 text-white">Portal de Pagos</h1>
-          <div class="flex justify-center mb-6">
-            <div class="bg-white rounded-xl p-3 shadow-md">
-              <img src="assets/images/logo.png" alt="Logo" class="h-20 w-auto" />
-            </div>
-          </div>
-          <p class="text-xl mb-6 text-slate-200">Aquí podrás consultar y pagar los servicios educativos
-            de manera fácil y segura</p>
+      <!-- Imagen Banner -->
+      <div class="rounded-3xl mb-12 shadow-2xl border border-blue-700/50 bg-cover bg-[center_15%] bg-no-repeat min-h-[500px] md:min-h-[800px]"
+           style="background-image: url('assets/images/Mesa de trabajo 2.png');">
+      </div>
+
+      <!-- Contenido Portal de Pagos -->
+      <div class="text-center w-full mb-12">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div class="bg-blue-700/60 backdrop-blur-sm rounded-lg p-4 border border-blue-600/40 shadow-lg">
-              <div class="flex justify-center mb-3">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+            <div class="bg-blue-900/30 backdrop-blur-md rounded-2xl p-6 border border-blue-400/20 shadow-xl hover:bg-blue-900/40 transition-all duration-300 transform hover:-translate-y-1">
+              <div class="flex justify-center mb-4">
+                <div class="p-3 bg-blue-500/20 rounded-full">
+                  <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
               </div>
-              <h3 class="font-semibold mb-2 text-white">Registro Seguro</h3>
-              <p class="text-sm text-slate-200">Información protegida y encriptada</p>
+              <h3 class="font-bold mb-2 text-white text-lg">Registro Seguro</h3>
+              <p class="text-sm text-blue-100">Información protegida y encriptada</p>
             </div>
-            <div class="bg-indigo-700/60 backdrop-blur-sm rounded-lg p-4 border border-indigo-600/40 shadow-lg">
-              <div class="flex justify-center mb-3">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
+
+            <div class="bg-indigo-900/30 backdrop-blur-md rounded-2xl p-6 border border-indigo-400/20 shadow-xl hover:bg-indigo-900/40 transition-all duration-300 transform hover:-translate-y-1">
+              <div class="flex justify-center mb-4">
+                <div class="p-3 bg-indigo-500/20 rounded-full">
+                  <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
               </div>
-              <h3 class="font-semibold mb-2 text-white">Proceso Rápido</h3>
-              <p class="text-sm text-slate-200">Consulta y pago en minutos</p>
+              <h3 class="font-bold mb-2 text-white text-lg">Proceso Rápido</h3>
+              <p class="text-sm text-indigo-100">Consulta y pago en minutos</p>
             </div>
-            <div class="bg-purple-700/60 backdrop-blur-sm rounded-lg p-4 border border-purple-600/40 shadow-lg">
-              <div class="flex justify-center mb-3">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"/>
-                </svg>
+
+            <div class="bg-purple-900/30 backdrop-blur-md rounded-2xl p-6 border border-purple-400/20 shadow-xl hover:bg-purple-900/40 transition-all duration-300 transform hover:-translate-y-1">
+              <div class="flex justify-center mb-4">
+                <div class="p-3 bg-purple-500/20 rounded-full">
+                  <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"/>
+                  </svg>
+                </div>
               </div>
-              <h3 class="font-semibold mb-2 text-white">Consultas 24/7</h3>
-              <p class="text-sm text-slate-200">Consulta sus estados de cuenta cuando la necesites</p>
+              <h3 class="font-bold mb-2 text-white text-lg">Consultas 24/7</h3>
+              <p class="text-sm text-purple-100">Consulta sus estados de cuenta cuando la necesites</p>
             </div>
           </div>
-        </div>
       </div>
 
       <!-- Instrucciones -->

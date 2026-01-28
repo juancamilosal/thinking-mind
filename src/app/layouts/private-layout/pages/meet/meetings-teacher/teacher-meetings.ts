@@ -19,7 +19,7 @@ interface StudentEvaluation {
 }
 
 @Component({
-  selector: 'app-teacher-meetings',
+  selector: 'app-meetings-teacher',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './teacher-meetings.html',

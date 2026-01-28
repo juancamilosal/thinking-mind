@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
-import { StorageServices } from '../../../../core/services/storage.services';
-import { ProgramaAyo } from '../../../../core/models/Course';
-import { environment } from '../../../../../environments/environment';
+import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
+import { StorageServices } from '../../../../../core/services/storage.services';
+import { ProgramaAyo } from '../../../../../core/models/Course';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
-  selector: 'app-meet-student',
+  selector: 'app-meet',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './meet-student.html',
@@ -41,7 +41,7 @@ export class MeetStudent implements OnInit {
       this.programaAyoService.getProgramaAyo().subscribe({
         next: (response) => {
           const allPrograms = response.data || [];
-          
+
           // Filter programs where the user is in the students list of the level
           const userPrograms = allPrograms.filter(program => {
             if (program.id_nivel && program.id_nivel.estudiantes_id && Array.isArray(program.id_nivel.estudiantes_id)) {

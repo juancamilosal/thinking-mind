@@ -118,7 +118,7 @@
                 <div class="program-details">
                     <div class="detail-item">
                         <div class="detail-icon">
-                            <img src="assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
+                            <img src="../../../../../../assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Fecha Finalización</span>
@@ -129,7 +129,7 @@
                     @if (account.programa_ayo_id?.id_nivel) {
                     <div class="detail-item">
                         <div class="detail-icon">
-                            <img src="assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
+                            <img src="../../../../../../assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Nivel</span>
@@ -142,7 +142,7 @@
                     @if (account.programa_ayo_id?.id_reuniones_meet && account.programa_ayo_id.id_reuniones_meet.length > 0) {
                     <div class="meetings-section">
                         <h4 class="meetings-title">
-                            <img src="assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
+                            <img src="../../../../../../assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
                             Reuniones Programadas
                         </h4>
                         <div class="meetings-list">
@@ -167,7 +167,7 @@
                                 <div class="flex items-center gap-5">
                                     @if (reunion.link_reunion) {
                                     <a [href]="reunion.link_reunion" target="_blank" class="meeting-link" title="Unirse a reunión">
-                                        <img src="assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                        <img src="../../../../../../assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
                                     </a>
                                     }
                                 </div>
@@ -182,5 +182,5 @@
         }
     </div>
     }
-    
+
 </div>
