@@ -417,6 +417,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 nombre: formData.studentNombre,
                 apellido: formData.studentApellido,
                 email: formData.studentEmail,
+                grado: formData.studentGrado,
                 colegio: colegioValue
             }),
             precio_programa: (this.precioPrograma?.tiene_precio_especial && this.precioPrograma?.precio_especial)
