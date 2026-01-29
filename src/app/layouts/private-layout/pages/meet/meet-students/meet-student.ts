@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 import { StorageServices } from '../../../../../core/services/storage.services';
 import { ProgramaAyo } from '../../../../../core/models/Course';
@@ -13,7 +15,7 @@ declare var google: any;
 @Component({
   selector: 'app-meet-student',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HttpClientModule],
   templateUrl: './meet-student.html',
   styleUrl: './meet-student.css'
 })
@@ -35,7 +37,8 @@ export class MeetStudent implements OnInit {
   constructor(
     private programaAyoService: ProgramaAyoService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private http: HttpClient
   ) { }
 
   ngOnInit(): void {
@@ -130,142 +133,117 @@ export class MeetStudent implements OnInit {
     return new Promise((resolve, reject) => {
       this.tokenClient.callback = (resp: any) => {
         if (resp.error) {
+          console.error('Token Error:', resp);
           reject(resp);
         } else {
           // Update gapi client with new token
           if (gapi.client) {
             gapi.client.setToken(resp);
           }
+          console.log('Token Received (Safe):', resp.access_token ? 'YES (Length: ' + resp.access_token.length + ')' : 'NO');
           resolve(resp.access_token);
         }
       };
 
-      // If we don't have a token yet, prompt for consent to ensure we get a valid one
-      if (gapi.client.getToken() === null) {
-        this.tokenClient.requestAccessToken({ prompt: 'consent' });
-      } else {
-        this.tokenClient.requestAccessToken({ prompt: '' });
-      }
+      // Always request a fresh token to avoid 401 from stale/mismatched credentials
+      // Using 'consent' forces the popup to ensure we get a valid token for THIS Client ID
+      console.log('Requesting fresh access token (prompt: consent)...');
+      this.tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   }
 
-  async addTestParticipants(reunion: any): Promise<void> {
+  async addParticipantsToMeetingBatch(reunion: any, emailsToAdd: string[]): Promise<void> {
+    console.log('--> addParticipantsToMeetingBatch START', reunion.id_reunion, emailsToAdd);
+
     if (!reunion.id_reunion) {
-        console.warn('Meeting has no Google Calendar ID');
+        this.notificationService.showError('Error', 'Reunión sin ID');
         return;
     }
 
-    console.log('Adding test participants to meeting:', reunion.id_reunion);
-
     try {
-        await this.ensureCalendarToken();
+        console.log('1. Getting Token...');
+        const token = await this.ensureCalendarToken();
+        console.log('Token received (len):', token ? token.length : 0);
 
-        // 1. Get existing event to preserve attendees
-        const eventResult = await gapi.client.calendar.events.get({
-            calendarId: 'primary',
-            eventId: reunion.id_reunion
-        });
+        if (!token) {
+            throw new Error('No se obtuvo un token válido.');
+        }
 
-        const event = eventResult.result;
+        // Explicitly construct headers as requested
+        let headers = new HttpHeaders();
+        headers = headers.set('Authorization', `Bearer ${token}`);
+        headers = headers.set('Content-Type', 'application/json');
+
+        const baseUrl = `https://content.googleapis.com/calendar/v3/calendars/primary/events/${reunion.id_reunion}?alt=json`;
+
+        // 1. Get existing event
+        console.log('2. GET event details...');
+        const event: any = await lastValueFrom(this.http.get(baseUrl, { headers }));
+        console.log('Event details received:', event);
+
         const existingAttendees = event.attendees || [];
-        const newEmails = ['juancamilosalazarrojas@gmail.com', 'juan.salazar@digitalabus.com'];
 
-        let needsUpdate = false;
+        // 2. Simple merge: existing + new
+        const newAttendees = emailsToAdd
+            .filter(email => !existingAttendees.some((a: any) => a.email === email))
+            .map(email => ({ email }));
 
-        // Process existing attendees: if one of our target emails has 'declined', reset to 'needsAction'
-        const updatedAttendees = existingAttendees.map((a: any) => {
-            if (newEmails.includes(a.email) && a.responseStatus === 'declined') {
-                console.log(`Resetting status for declined participant: ${a.email}`);
-                needsUpdate = true;
-                return { ...a, responseStatus: 'needsAction' };
-            }
-            return a;
-        });
+        const finalAttendees = [...existingAttendees, ...newAttendees];
+        console.log(`Merging attendees: ${existingAttendees.length} existing + ${newAttendees.length} new = ${finalAttendees.length} total`);
 
-        // Identify completely new participants
-        const newOnes = newEmails.filter(email => 
-            !existingAttendees.some((a: any) => a.email === email)
-        );
+        // 3. PATCH
+        const patchUrl = `${baseUrl}&sendUpdates=all`;
+        console.log('3. PATCHing event...');
 
-        if (newOnes.length > 0) {
-            needsUpdate = true;
-            updatedAttendees.push(...newOnes.map(email => ({ email })));
-        }
+        await lastValueFrom(this.http.patch(patchUrl, {
+            attendees: finalAttendees
+        }, { headers }));
 
-        if (!needsUpdate) {
-            console.log('Participants already added and active.');
-            this.notificationService.showSuccess('Info', 'Los participantes de prueba ya estaban agregados y activos.');
-            return;
-        }
+        console.log('--> PATCH success');
+        this.notificationService.showSuccess('Éxito', `Reunión ${reunion.id_reunion}: Agregados ${newAttendees.length} participantes.`);
 
-        // 2. Patch the event
-        await gapi.client.calendar.events.patch({
-            calendarId: 'primary',
-            eventId: reunion.id_reunion,
-            resource: {
-                attendees: updatedAttendees
-            },
-            sendUpdates: 'all'
-        });
-
-        this.notificationService.showSuccess('Éxito', 'Participantes de prueba agregados a la reunión.');
-
-    } catch (error) {
-        console.error('Error adding participants:', error);
-        this.notificationService.showError('Error', 'No se pudieron agregar los participantes de prueba.');
+    } catch (error: any) {
+        console.error('--> Error in addParticipantsToMeetingBatch:', error);
+        const msg = error?.error?.error?.message || error.message || 'Error desconocido';
+        this.notificationService.showError('Error API Google', msg);
     }
   }
 
-  async handleTestAndJoin(event: Event, reunion: any): Promise<void> {
-    event.preventDefault();
-    
-    // 1. Open window immediately to avoid popup blocker (blank initially)
-    let win: Window | null = null;
-    if (reunion.link_reunion) {
-        win = window.open('', '_blank');
+   handleTestAndJoin(event: Event, reunion: any): void {
+     event.preventDefault();
+     if (reunion.link_reunion) {
+         window.open(reunion.link_reunion, '_blank');
+     }
+   }
+
+   async runManualTest(account: any): Promise<void> {
+    console.log('=== RUNNING MANUAL TEST (SPECIFIC EMAILS) ===');
+
+    // 1. Hardcoded emails as requested
+    const emails = ['juancamilsalazarrojas@gmail.com', 'martin@gmail.com'];
+    console.log('Target Emails:', emails);
+
+    // 2. Try to find meetings loosely, or use a hardcoded test ID
+    let meetings: any[] = [];
+
+    if (account?.programa_ayo_id?.id_reuniones_meet) {
+        meetings = account.programa_ayo_id.id_reuniones_meet;
+    } else {
+        console.warn('Structure not found. Using HARDCODED test meeting ID.');
+        meetings = [{ id_reunion: 't1gbfhg098u82gr79kashf95sg' }]; // Fallback ID from previous context
     }
 
-    try {
-        // 2. Run the manual test (add participants to hardcoded meeting) and WAIT
-        await this.runManualTest();
-        
-        // 3. Also add participants to the CURRENT meeting (if different) and WAIT
+    console.log(`Processing ${meetings.length} meetings...`);
+
+    // 3. Just Run It
+    for (const reunion of meetings) {
         if (reunion.id_reunion) {
-             await this.addTestParticipants(reunion);
+             await this.addParticipantsToMeetingBatch(reunion, emails);
+        } else {
+            console.log('Skipping object without id_reunion:', reunion);
         }
-
-    } catch (error) {
-        console.error('Error adding participants during join:', error);
     }
 
-    // 4. Redirect the window to the meeting link
-    if (win && reunion.link_reunion) {
-        win.location.href = reunion.link_reunion;
-    }
-  }
-
-  handleMeetingClick(event: Event, reunion: any): void {
-    event.preventDefault();
-    console.log('Meeting click detected for:', reunion.id_reunion);
-    
-    // 1. Open Meet in new tab immediately
-    if (reunion.link_reunion) {
-        window.open(reunion.link_reunion, '_blank');
-    }
-
-    // 2. Add participants in background
-    this.addTestParticipants(reunion);
-  }
-
-  async runManualTest(): Promise<void> {
-    const meetingId = 't1gbfhg098u82gr79kashf95sg';
-    console.log('Running manual test for meeting:', meetingId);
-    
-    // Create a mock reunion object with the specific ID
-    const mockReunion = {
-        id_reunion: meetingId
-    };
-    
-    await this.addTestParticipants(mockReunion);
+    console.log('=== TEST FINISHED ===');
   }
 }
