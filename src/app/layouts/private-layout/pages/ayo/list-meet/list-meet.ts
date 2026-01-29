@@ -50,7 +50,7 @@ export class ListMeet implements OnInit {
   isTeacherSelected = false;
 
   // Google Calendar Integration
-  private CLIENT_ID = '996133721948-6rim847cd71sknq58u3tcov5drtag7vv.apps.googleusercontent.com';
+  private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';
   private DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
   private SCOPES = 'https://www.googleapis.com/auth/calendar.events';
   tokenClient: any;
