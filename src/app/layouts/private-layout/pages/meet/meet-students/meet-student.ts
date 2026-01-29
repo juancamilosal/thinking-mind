@@ -217,32 +217,22 @@ export class MeetStudent implements OnInit {
    }
 
    async runManualTest(account: any): Promise<void> {
-    console.log('=== RUNNING MANUAL TEST (SPECIFIC EMAILS) ===');
+    console.log('=== RUNNING MANUAL TEST (SPECIFIC MEETING) ===');
 
-    // 1. Hardcoded emails as requested
+    // 1. Define Emails
     const emails = ['juancamilsalazarrojas@gmail.com', 'martin@gmail.com'];
     console.log('Target Emails:', emails);
 
-    // 2. Try to find meetings loosely, or use a hardcoded test ID
-    let meetings: any[] = [];
+    // 2. Define Specific Test Meeting
+    const testMeeting = {
+        id_reunion: 'f3bjp56e93p07j7ol1docnmmso',
+        link_reunion: 'https://meet.google.com/scs-hizx-cfg'
+    };
 
-    if (account?.programa_ayo_id?.id_reuniones_meet) {
-        meetings = account.programa_ayo_id.id_reuniones_meet;
-    } else {
-        console.warn('Structure not found. Using HARDCODED test meeting ID.');
-        meetings = [{ id_reunion: 't1gbfhg098u82gr79kashf95sg' }]; // Fallback ID from previous context
-    }
+    console.log('Processing specific meeting:', testMeeting);
 
-    console.log(`Processing ${meetings.length} meetings...`);
-
-    // 3. Just Run It
-    for (const reunion of meetings) {
-        if (reunion.id_reunion) {
-             await this.addParticipantsToMeetingBatch(reunion, emails);
-        } else {
-            console.log('Skipping object without id_reunion:', reunion);
-        }
-    }
+    // 3. Execute
+    await this.addParticipantsToMeetingBatch(testMeeting, emails);
 
     console.log('=== TEST FINISHED ===');
   }
