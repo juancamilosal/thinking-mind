@@ -1,0 +1,35 @@
+<div class="p-6">
+  <h1 class="text-2xl font-bold mb-6 text-gray-800">Mis Certificados</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    @for (cert of certificates; track cert.programName) {
+      <div class="flex flex-col items-center gap-6">
+        <div class="cert-medal shadow-2xl">
+          <div class="cert-medal-inner">
+            <div class="text-3xl font-extrabold tracking-wide text-[#13486e]">{{ cert.programName }}</div>
+            <div class="text-gray-700 font-semibold">{{ cert.theme }}</div>
+            <div class="text-sm font-bold text-[#13486e] uppercase tracking-wider">{{ cert.rank }}</div>
+            <div class="text-yellow-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 fill-current" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            </div>
+            <div class="text-sm text-gray-500">Nivel</div>
+            <div class="text-lg font-bold text-gray-900">{{ cert.level }}</div>
+          </div>
+          <div class="cert-medal-ribbon">Completado</div>
+        </div>
+        <app-button
+          variant="primary"
+          [fullWidth]="true"
+          (btnClick)="downloadCertificate(cert)">
+          <div class="flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Descargar Certificado
+          </div>
+        </app-button>
+      </div>
+    }
+  </div>
+</div>
