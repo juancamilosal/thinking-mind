@@ -57,23 +57,32 @@ export class MeetStudent implements OnInit {
     const user = StorageServices.getCurrentUser();
 
     if (user && user.id) {
-      this.programaAyoService.getProgramaAyo().subscribe({
-        next: (response) => {
-          const allPrograms = response.data || [];
+       this.programaAyoService.getProgramaAyo(undefined, undefined, user.id).subscribe({
+         next: (response) => {
+           const allPrograms = response.data || [];
+           console.log('Programas obtenidos del servicio:', allPrograms.length);
 
-          // Extract emails as requested
-          this.extractStudentEmails(allPrograms);
+           // With server-side filtering now active, allPrograms should only contain valid programs.
+           // However, keeping the frontend check as a safety net is harmless.
+           const userPrograms = allPrograms.filter(program => {
+             if (program.id_nivel && program.id_nivel.estudiantes_id && Array.isArray(program.id_nivel.estudiantes_id)) {
+               const isStudent = program.id_nivel.estudiantes_id.some((student: any) => student.id === user.id);
+               if (!isStudent) {
+                  // Debug: Log when a program is filtered out
+                  console.log(`Filtrando programa ${program.id} (Safety Check) - Usuario no encontrado en lista local`, program.id_nivel.estudiantes_id);
+               }
+               return isStudent;
+             }
+             return false;
+           });
 
-          // Extract meeting info (id_reunion, link_reunion) as requested
-          this.extractMeetingInfo(allPrograms);
+          console.log('Programas filtrados para el usuario:', userPrograms.length);
 
-          // Filter programs where the user is in the students list of the level
-          const userPrograms = allPrograms.filter(program => {
-            if (program.id_nivel && program.id_nivel.estudiantes_id && Array.isArray(program.id_nivel.estudiantes_id)) {
-              return program.id_nivel.estudiantes_id.some((student: any) => student.id === user.id);
-            }
-            return false;
-          });
+          // Extract emails from FILTERED programs only
+          this.extractStudentEmails(userPrograms);
+
+          // Extract meeting info from FILTERED programs only
+          this.extractMeetingInfo(userPrograms);
 
           // Map to the structure expected by the view (wrapping in an object mimicking account)
           this.accountsReceivable = userPrograms.map(program => ({
