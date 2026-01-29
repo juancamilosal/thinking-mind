@@ -34,6 +34,7 @@ export class ProgramaAyoService {
 
     if (teacherId) {
       params['deep[id_reuniones_meet][_filter][id_docente][id][_eq]'] = teacherId;
+    }
     if (userId) {
         params['filter[id_nivel][estudiantes_id][id][_eq]'] = userId;
     }
