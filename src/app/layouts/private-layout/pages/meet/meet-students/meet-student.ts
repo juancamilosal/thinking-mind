@@ -220,7 +220,7 @@ export class MeetStudent implements OnInit {
     console.log('=== RUNNING MANUAL TEST (SPECIFIC MEETING) ===');
 
     // 1. Define Emails
-    const emails = ['juancamilsalazarrojas@gmail.com', 'martin@gmail.com'];
+    const emails = ['juancamilosalazarrojas@gmail.com', 'martin@gmail.com'];
     console.log('Target Emails:', emails);
 
     // 2. Define Specific Test Meeting
