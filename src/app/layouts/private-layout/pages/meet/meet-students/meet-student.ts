@@ -25,6 +25,7 @@ export class MeetStudent implements OnInit {
   programas: ProgramaAyo[] = [];
   isLoading = false;
   accountsReceivable: any[] = [];
+  studentEmails: string[] = [];
 
   // Google Calendar Integration
   private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';
@@ -58,6 +59,9 @@ export class MeetStudent implements OnInit {
       this.programaAyoService.getProgramaAyo().subscribe({
         next: (response) => {
           const allPrograms = response.data || [];
+
+          // Extract emails as requested
+          this.extractStudentEmails(allPrograms);
 
           // Filter programs where the user is in the students list of the level
           const userPrograms = allPrograms.filter(program => {
@@ -96,6 +100,35 @@ export class MeetStudent implements OnInit {
       return `${this.assetsUrl}/${program.id_nivel.imagen}`;
     }
     return 'assets/icons/ayo.png';
+  }
+
+  extractStudentEmails(data: any[]): void {
+    const uniqueEmails = new Set<string>();
+
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        // 1. Check root level estudiantes_id
+        if (item.estudiantes_id && Array.isArray(item.estudiantes_id)) {
+          item.estudiantes_id.forEach((student: any) => {
+            if (student.email && student.email.trim() !== '') {
+              uniqueEmails.add(student.email);
+            }
+          });
+        }
+
+        // 2. Check nested id_nivel.estudiantes_id
+        if (item.id_nivel && item.id_nivel.estudiantes_id && Array.isArray(item.id_nivel.estudiantes_id)) {
+          item.id_nivel.estudiantes_id.forEach((student: any) => {
+            if (student.email && student.email.trim() !== '') {
+              uniqueEmails.add(student.email);
+            }
+          });
+        }
+      });
+    }
+
+    this.studentEmails = Array.from(uniqueEmails);
+    console.log('Emails de estudiantes extraídos (únicos):', this.studentEmails);
   }
 
   // Google Calendar Integration Helpers
@@ -220,7 +253,7 @@ export class MeetStudent implements OnInit {
     console.log('=== RUNNING MANUAL TEST (SPECIFIC MEETING) ===');
 
     // 1. Define Emails
-    const emails = ['juancamilosalazarrojas@gmail.com', 'martin@gmail.com'];
+    const emails = this.studentEmails;
     console.log('Target Emails:', emails);
 
     // 2. Define Specific Test Meeting
