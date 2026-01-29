@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
+import { StorageServices } from '../../../../../core/services/storage.services';
 import { ProgramaAyo } from '../../../../../core/models/Course';
 import { MeetingTimerService } from '../../../../../core/services/meeting-timer.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
@@ -41,9 +42,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   showEvaluationModal: boolean = false;
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
-
-  // Temporary hardcoded teacher ID for testing
-  private readonly TEMP_TEACHER_ID = 'temp-teacher-id-123'; // TODO: Replace with actual teacher ID from auth
 
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
@@ -88,25 +86,28 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   loadTeacherMeetings(): void {
     this.isLoading = true;
 
-    // Fetch programs with expanded relations
-    this.programaAyoService.getProgramaAyo(this.selectedLanguage).subscribe({
+    // Get authenticated teacher ID
+    const currentUser = StorageServices.getCurrentUser();
+    const teacherId = currentUser?.id;
+
+    if (!teacherId) {
+      console.error('No teacher ID found in session');
+      this.isLoading = false;
+      return;
+    }
+
+    // Fetch programs with expanded relations, filtered by teacher ID
+    this.programaAyoService.getProgramaAyo(this.selectedLanguage, undefined, teacherId).subscribe({
       next: (response) => {
         if (response.data) {
-          // TODO: Filter programs by teacher ID once Docente model includes id field
-          // For now, showing all programs with meetings
+          // Filter programs that have meetings (service already filters by teacher)
           this.programas = response.data
             .filter(p => p.id_reuniones_meet && p.id_reuniones_meet.length > 0);
 
-          /* Uncomment when Docente model has id field:
-          this.programas = response.data
-            .map(programa => ({
-              ...programa,
-              id_reuniones_meet: programa.id_reuniones_meet?.filter(
-                meeting => meeting.id_docente?.id === this.TEMP_TEACHER_ID
-              ) || []
-            }))
-            .filter(p => p.id_reuniones_meet && p.id_reuniones_meet.length > 0);
-          */
+          // Auto-detect language from programs if not already set
+          if (!this.selectedLanguage && this.programas.length > 0) {
+            this.selectedLanguage = this.programas[0].idioma?.toUpperCase() || null;
+          }
         }
         this.isLoading = false;
       },
@@ -191,23 +192,25 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   initializeStudentEvaluations(): void {
-    // Hardcoded 2 students for testing
-    this.students = [
-      {
-        id: 'student-1',
-        name: 'María García',
+    // Find the program that contains the current meeting
+    const currentProgram = this.programas.find(p =>
+      p.id_reuniones_meet?.some(m => m.id === this.currentSession?.meetingId)
+    );
+
+    if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
+      // Map students from id_nivel to evaluation objects
+      this.students = currentProgram.id_nivel.estudiantes_id.map((student: any) => ({
+        id: student.id || student.directus_users_id || '',
+        name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
         rating: 0,
         comment: ''
-      },
-      {
-        id: 'student-2',
-        name: 'Juan Pérez',
-        attended: true,
-        rating: 0,
-        comment: ''
-      }
-    ];
+      }));
+    } else {
+      // Fallback to empty array if no students found
+      this.students = [];
+      console.warn('No students found for current meeting');
+    }
   }
 
   setRating(student: StudentEvaluation, rating: number): void {
