@@ -26,6 +26,7 @@ export class MeetStudent implements OnInit {
   isLoading = false;
   accountsReceivable: any[] = [];
   studentEmails: string[] = [];
+  meetingInfos: any[] = []; // Stores { id_reunion, link_reunion }
 
   // Google Calendar Integration
   private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';
@@ -62,6 +63,9 @@ export class MeetStudent implements OnInit {
 
           // Extract emails as requested
           this.extractStudentEmails(allPrograms);
+
+          // Extract meeting info (id_reunion, link_reunion) as requested
+          this.extractMeetingInfo(allPrograms);
 
           // Filter programs where the user is in the students list of the level
           const userPrograms = allPrograms.filter(program => {
@@ -129,6 +133,28 @@ export class MeetStudent implements OnInit {
 
     this.studentEmails = Array.from(uniqueEmails);
     console.log('Emails de estudiantes extraídos (únicos):', this.studentEmails);
+  }
+
+  extractMeetingInfo(data: any[]): void {
+      const meetings: any[] = [];
+
+      if (Array.isArray(data)) {
+          data.forEach(program => {
+              if (program.id_reuniones_meet && Array.isArray(program.id_reuniones_meet)) {
+                  program.id_reuniones_meet.forEach((reunion: any) => {
+                      if (reunion.id_reunion) {
+                          meetings.push({
+                              id_reunion: reunion.id_reunion,
+                              link_reunion: reunion.link_reunion || ''
+                          });
+                      }
+                  });
+              }
+          });
+      }
+
+      this.meetingInfos = meetings;
+      console.log('Información de reuniones extraída:', this.meetingInfos);
   }
 
   // Google Calendar Integration Helpers
