@@ -32,6 +32,7 @@ import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
 import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/meet-teacher/meet-teacher';
 import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
 import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
+import { CertificatesComponent } from './layouts/private-layout/pages/certificates/certificates';
 
 
 export const routes: Routes = [
@@ -195,6 +196,11 @@ export const routes: Routes = [
         path: 'attendance',
         title: 'Thinking Mind | Asistencia',
         component: AttendancePageComponent
+      },
+      {
+        path: 'certificates',
+        title: 'Thinking Mind | Certificados',
+        component: CertificatesComponent
       },
       {
         path: '**',
