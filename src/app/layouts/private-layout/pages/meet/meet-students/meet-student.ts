@@ -276,23 +276,49 @@ export class MeetStudent implements OnInit {
    }
 
    async runManualTest(account: any): Promise<void> {
-    console.log('=== RUNNING MANUAL TEST (SPECIFIC MEETING) ===');
+    console.log('=== RUNNING MANUAL TEST (ALL STORED MEETINGS) ===');
 
-    // 1. Define Emails
+    // 1. Get Emails
     const emails = this.studentEmails;
-    console.log('Target Emails:', emails);
+    console.log('Target Emails (Unique):', emails);
 
-    // 2. Define Specific Test Meeting
-    const testMeeting = {
-        id_reunion: 'f3bjp56e93p07j7ol1docnmmso',
-        link_reunion: 'https://meet.google.com/scs-hizx-cfg'
-    };
+    if (!emails || emails.length === 0) {
+        this.notificationService.showWarning('Aviso', 'No hay emails de estudiantes para agregar.');
+    }
 
-    console.log('Processing specific meeting:', testMeeting);
+    // 2. Use Stored Meeting Infos
+    const meetings = this.meetingInfos;
+    
+    if (!meetings || meetings.length === 0) {
+        console.warn('No meetings found in meetingInfos.');
+        this.notificationService.showWarning('Aviso', 'No hay información de reuniones almacenada.');
+        return;
+    }
 
-    // 3. Execute
-    await this.addParticipantsToMeetingBatch(testMeeting, emails);
+    console.log(`Found ${meetings.length} stored meetings. Processing...`);
 
-    console.log('=== TEST FINISHED ===');
+    // 3. Execute Loop
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const reunion of meetings) {
+        if (reunion.id_reunion) {
+             console.log(`>>> Processing Meeting ID: ${reunion.id_reunion} (Link: ${reunion.link_reunion})`);
+             try {
+                await this.addParticipantsToMeetingBatch(reunion, emails);
+                successCount++;
+             } catch (e) {
+                console.error(`Failed to process meeting ${reunion.id_reunion}`, e);
+                failCount++;
+             }
+        } else {
+            console.warn('Skipping meeting object without id_reunion:', reunion);
+        }
+    }
+
+    console.log(`=== TEST FINISHED: ${successCount} OK, ${failCount} Failed ===`);
+    if (successCount > 0) {
+        this.notificationService.showSuccess('Proceso Finalizado', `Se procesaron ${successCount} reuniones correctamente.`);
+    }
   }
 }
