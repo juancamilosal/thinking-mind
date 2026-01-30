@@ -67,10 +67,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
 
   ngOnInit(): void {
-    // Load Google Scripts
     this.loadGoogleScripts();
 
-    // Get language from query params
     this.route.queryParams.subscribe(params => {
       if (params['idioma']) {
         this.selectedLanguage = params['idioma'].toUpperCase();
@@ -78,13 +76,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       this.loadTeacherMeetings();
     });
 
-    // Subscribe to timer updates
     this.timerSubscription = this.timerService.session$.subscribe(session => {
       this.currentSession = session;
       if (session && session.isActive) {
         this.elapsedTime = this.timerService.getFormattedElapsedTime();
-
-        // Show notification banner if 45 minutes reached
         if (session.elapsedMinutes >= 45 && !this.showNotificationBanner) {
           this.showNotificationBanner = true;
         }
@@ -103,37 +98,27 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   loadTeacherMeetings(): void {
     this.isLoading = true;
-
-    // Get authenticated teacher ID
     const currentUser = StorageServices.getCurrentUser();
     const teacherId = currentUser?.id;
 
     if (!teacherId) {
-      console.error('No teacher ID found in session');
       this.isLoading = false;
       return;
     }
 
-    // Fetch programs with expanded relations, filtered by teacher ID
     this.programaAyoService.getProgramaAyoDocente(teacherId, this.selectedLanguage || undefined).subscribe({
       next: (response) => {
         if (response.data) {
-          // Filter programs that have meetings (service already filters by teacher)
           this.programas = response.data
             .filter(p => p.id_reuniones_meet && p.id_reuniones_meet.length > 0);
-
-          // Auto-detect language from programs if not already set
           if (!this.selectedLanguage && this.programas.length > 0) {
             this.selectedLanguage = this.programas[0].idioma?.toUpperCase() || null;
           }
 
-          // Extract meeting info
-          this.extractMeetingInfo(this.programas);
         }
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading teacher meetings:', error);
         this.isLoading = false;
       }
     });
@@ -217,8 +202,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       try {
         await this.addParticipantsToMeeting(meeting, currentProgramStudents);
       } catch (error) {
-        console.error('Error adding participants (non-blocking for meeting access):', error);
-        // We continue even if this fails, so the teacher can still enter
+
       }
     }
 
@@ -255,7 +239,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     } else {
       // Fallback to empty array if no students found
       this.students = [];
-      console.warn('No students found for current meeting');
     }
   }
 
@@ -279,9 +262,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       );
       return;
     }
-
-    // TODO: Send evaluations to backend
-    console.log('Evaluaciones:', this.students);
 
     // Close modal and end session
     this.showEvaluationModal = false;
@@ -326,27 +306,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     return this.timerService.hasActiveSession(meetingId);
   }
 
-  extractMeetingInfo(data: any[]): void {
-    const meetings: any[] = [];
-
-    if (Array.isArray(data)) {
-        data.forEach(program => {
-            if (program.id_reuniones_meet && Array.isArray(program.id_reuniones_meet)) {
-                program.id_reuniones_meet.forEach((reunion: any) => {
-                    if (reunion.id_reunion) {
-                        meetings.push({
-                            id_reunion: reunion.id_reunion,
-                            link_reunion: reunion.link_reunion || ''
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    this.meetingInfos = meetings;
-    console.log('Información de reuniones extraída:', this.meetingInfos);
-}
 
   // Google Calendar Integration Helpers
   loadGoogleScripts() {
@@ -383,63 +342,42 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     return new Promise((resolve, reject) => {
       this.tokenClient.callback = (resp: any) => {
         if (resp.error) {
-          console.error('Token Error:', resp);
           reject(resp);
         } else {
-          // Update gapi client with new token
           if (gapi.client) {
             gapi.client.setToken(resp);
           }
-          console.log('Token Received (Safe):', resp.access_token ? 'YES (Length: ' + resp.access_token.length + ')' : 'NO');
           resolve(resp.access_token);
         }
       };
-
-      // Always request a fresh token to avoid 401 from stale/mismatched credentials
-      // Using 'consent' forces the popup to ensure we get a valid token for THIS Client ID
-      console.log('Requesting fresh access token (prompt: consent)...');
       this.tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   }
 
   async addParticipantsToMeeting(reunion: any, emailsToAdd: string[]): Promise<void> {
-    console.log('--> addParticipantsToMeeting START', reunion.id_reunion, emailsToAdd);
-
     if (!reunion.id_reunion) {
         this.notificationService.showError('Error', 'Reunión sin ID');
         return;
     }
 
     try {
-        console.log('1. Getting Token...');
         const token = await this.ensureCalendarToken();
-        console.log('Token received (len):', token ? token.length : 0);
-
         if (!token) {
             throw new Error('No se obtuvo un token válido.');
         }
 
-        // Explicitly construct headers as requested
         let headers = new HttpHeaders();
         headers = headers.set('Authorization', `Bearer ${token}`);
         headers = headers.set('Content-Type', 'application/json');
 
         const baseUrl = `https://content.googleapis.com/calendar/v3/calendars/primary/events/${reunion.id_reunion}?alt=json`;
-
-        // 1. Get existing event
-        console.log('2. GET event details...');
         const event: any = await lastValueFrom(this.http.get(baseUrl, { headers }));
-        console.log('Event details received:', event);
-
         const existingAttendees = event.attendees || [];
-
-        // 2. Simple merge: existing + new
         const newAttendees = emailsToAdd
             .filter(email => !existingAttendees.some((a: any) => a.email === email))
             .map(email => ({ email }));
 
         if (newAttendees.length === 0) {
-            console.log('No hay nuevos participantes para agregar.');
             return;
         }
         const finalAttendees = [...existingAttendees, ...newAttendees];
@@ -449,10 +387,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         }, { headers }));
 
     } catch (error: any) {
-        console.error('--> Error in addParticipantsToMeeting:', error);
         const msg = error?.error?.error?.message || error.message || 'Error desconocido';
         this.notificationService.showError('Error API Google', msg);
-        throw error; // Re-throw to handle in calling method if needed
+        throw error;
     }
   }
 }
