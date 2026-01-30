@@ -31,6 +31,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   selectedLanguage: string | null = null;
   assetsUrl: string = environment.assets;
+  studentEmails: string[] = [];
+  meetingInfos: any[] = [];
 
   // Timer related
   currentSession: any = null;
@@ -108,6 +110,12 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           if (!this.selectedLanguage && this.programas.length > 0) {
             this.selectedLanguage = this.programas[0].idioma?.toUpperCase() || null;
           }
+
+          // Extract student emails
+          this.extractStudentEmails(this.programas);
+          
+          // Extract meeting info
+          this.extractMeetingInfo(this.programas);
         }
         this.isLoading = false;
       },
@@ -279,4 +287,55 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   hasActiveSession(meetingId: string): boolean {
     return this.timerService.hasActiveSession(meetingId);
   }
+
+  extractStudentEmails(data: any[]): void {
+    const uniqueEmails = new Set<string>();
+
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        // 1. Check root level estudiantes_id
+        if (item.estudiantes_id && Array.isArray(item.estudiantes_id)) {
+          item.estudiantes_id.forEach((student: any) => {
+            if (student.email && student.email.trim() !== '') {
+              uniqueEmails.add(student.email);
+            }
+          });
+        }
+
+        // 2. Check nested id_nivel.estudiantes_id
+        if (item.id_nivel && item.id_nivel.estudiantes_id && Array.isArray(item.id_nivel.estudiantes_id)) {
+          item.id_nivel.estudiantes_id.forEach((student: any) => {
+            if (student.email && student.email.trim() !== '') {
+              uniqueEmails.add(student.email);
+            }
+          });
+        }
+      });
+    }
+
+    this.studentEmails = Array.from(uniqueEmails);
+    console.log('Emails de estudiantes extraídos (únicos):', this.studentEmails);
+  }
+
+  extractMeetingInfo(data: any[]): void {
+    const meetings: any[] = [];
+
+    if (Array.isArray(data)) {
+        data.forEach(program => {
+            if (program.id_reuniones_meet && Array.isArray(program.id_reuniones_meet)) {
+                program.id_reuniones_meet.forEach((reunion: any) => {
+                    if (reunion.id_reunion) {
+                        meetings.push({
+                            id_reunion: reunion.id_reunion,
+                            link_reunion: reunion.link_reunion || ''
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    this.meetingInfos = meetings;
+    console.log('Información de reuniones extraída:', this.meetingInfos);
+}
 }
