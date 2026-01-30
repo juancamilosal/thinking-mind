@@ -36,7 +36,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   selectedLanguage: string | null = null;
   assetsUrl: string = environment.assets;
-  studentEmails: string[] = [];
   meetingInfos: any[] = [];
 
   // Google Calendar Integration
@@ -128,9 +127,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             this.selectedLanguage = this.programas[0].idioma?.toUpperCase() || null;
           }
 
-          // Extract student emails
-          this.extractStudentEmails(this.programas);
-
           // Extract meeting info
           this.extractMeetingInfo(this.programas);
         }
@@ -179,7 +175,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
   }
 
-  async accessMeeting(meeting: any): Promise<void> {
+  async accessMeeting(meeting: any, programa: any): Promise<void> {
     const status = this.getMeetingStatus(meeting);
 
     // Check if there's already an active session
@@ -202,9 +198,24 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     // 1. Add students to Calendar Event
-    if (this.studentEmails.length > 0 && meeting.id_reunion) {
+    let currentProgramStudents: string[] = [];
+    if (programa?.id_nivel?.estudiantes_id && Array.isArray(programa.id_nivel.estudiantes_id)) {
+        currentProgramStudents = programa.id_nivel.estudiantes_id
+            .map((s: any) => s.email?.trim())
+            .filter((email: string) => email && email.length > 0);
+    }
+
+    // Also check root level estudiantes_id as fallback or addition if needed, based on previous logic
+    if (programa?.estudiantes_id && Array.isArray(programa.estudiantes_id)) {
+         const rootStudents = programa.estudiantes_id
+            .map((s: any) => s.email?.trim())
+            .filter((email: string) => email && email.length > 0);
+         currentProgramStudents = [...new Set([...currentProgramStudents, ...rootStudents])];
+    }
+
+    if (currentProgramStudents.length > 0 && meeting.id_reunion) {
       try {
-        await this.addParticipantsToMeeting(meeting, this.studentEmails);
+        await this.addParticipantsToMeeting(meeting, currentProgramStudents);
       } catch (error) {
         console.error('Error adding participants (non-blocking for meeting access):', error);
         // We continue even if this fails, so the teacher can still enter
@@ -313,35 +324,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   hasActiveSession(meetingId: string): boolean {
     return this.timerService.hasActiveSession(meetingId);
-  }
-
-  extractStudentEmails(data: any[]): void {
-    const uniqueEmails = new Set<string>();
-
-    if (Array.isArray(data)) {
-      data.forEach(item => {
-        // 1. Check root level estudiantes_id
-        if (item.estudiantes_id && Array.isArray(item.estudiantes_id)) {
-          item.estudiantes_id.forEach((student: any) => {
-            if (student.email && student.email.trim() !== '') {
-              uniqueEmails.add(student.email);
-            }
-          });
-        }
-
-        // 2. Check nested id_nivel.estudiantes_id
-        if (item.id_nivel && item.id_nivel.estudiantes_id && Array.isArray(item.id_nivel.estudiantes_id)) {
-          item.id_nivel.estudiantes_id.forEach((student: any) => {
-            if (student.email && student.email.trim() !== '') {
-              uniqueEmails.add(student.email);
-            }
-          });
-        }
-      });
-    }
-
-    this.studentEmails = Array.from(uniqueEmails);
-    console.log('Emails de estudiantes extraídos (únicos):', this.studentEmails);
   }
 
   extractMeetingInfo(data: any[]): void {
@@ -460,20 +442,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             console.log('No hay nuevos participantes para agregar.');
             return;
         }
-
         const finalAttendees = [...existingAttendees, ...newAttendees];
-        console.log(`Merging attendees: ${existingAttendees.length} existing + ${newAttendees.length} new = ${finalAttendees.length} total`);
-
-        // 3. PATCH
         const patchUrl = `${baseUrl}&sendUpdates=all`;
-        console.log('3. PATCHing event...');
-
         await lastValueFrom(this.http.patch(patchUrl, {
             attendees: finalAttendees
         }, { headers }));
-
-        console.log('--> PATCH success');
-        this.notificationService.showSuccess('Éxito', `Reunión ${reunion.id_reunion}: Agregados ${newAttendees.length} participantes.`);
 
     } catch (error: any) {
         console.error('--> Error in addParticipantsToMeeting:', error);

@@ -159,7 +159,7 @@
 
                     <!-- Access Button -->
                     <button
-                      (click)="accessMeeting(reunion)"
+                      (click)="accessMeeting(reunion, programa)"
                       [disabled]="getMeetingStatus(reunion) === 'completed'"
                       class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       [ngClass]="{
