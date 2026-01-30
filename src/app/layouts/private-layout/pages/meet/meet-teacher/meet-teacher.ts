@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -68,6 +68,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
   private http = inject(HttpClient);
+  private ngZone = inject(NgZone);
 
   ngOnInit(): void {
     this.loadGoogleScripts();
@@ -209,13 +210,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Start timer session
-    this.timerService.startSession(meeting.id);
+    // Start timer session and open meeting in Angular Zone
+    this.ngZone.run(() => {
+      this.timerService.startSession(meeting.id);
 
-    // Open meeting in new tab
-    if (meeting.link_reunion) {
-      window.open(meeting.link_reunion, '_blank');
-    }
+      // Open meeting in new tab
+      if (meeting.link_reunion) {
+        window.open(meeting.link_reunion, '_blank');
+      }
+    });
   }
 
   endSession(): void {
@@ -280,7 +283,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       const evaluationData: any = {
         calificacion: student.rating,
         estudiante_id: student.id,
-        id_programas_ayo: this.currentProgramId,
+        programa_ayo_id: this.currentProgramId,
         asiste: student.attended,
         observaciones: student.comment,
         fecha: new Date().toISOString().split('T')[0]
@@ -379,14 +382,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   ensureCalendarToken(): Promise<string> {
     return new Promise((resolve, reject) => {
       this.tokenClient.callback = (resp: any) => {
-        if (resp.error) {
-          reject(resp);
-        } else {
-          if (gapi.client) {
-            gapi.client.setToken(resp);
+        this.ngZone.run(() => {
+          if (resp.error) {
+            reject(resp);
+          } else {
+            if (gapi.client) {
+              gapi.client.setToken(resp);
+            }
+            resolve(resp.access_token);
           }
-          resolve(resp.access_token);
-        }
+        });
       };
       this.tokenClient.requestAccessToken({ prompt: 'consent' });
     });

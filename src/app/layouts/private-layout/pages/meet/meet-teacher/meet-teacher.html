@@ -26,13 +26,13 @@
     <div class="mb-6 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl shadow-lg p-4 flex items-center justify-between animate-pulse-slow">
       <div class="flex items-center gap-3">
         <div class="bg-white/20 p-2 rounded-lg">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 animate-spin-clock" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         <div>
           <p class="font-semibold">Sesión Activa</p>
-          <p class="text-sm opacity-90">Tiempo transcurrido: {{ elapsedTime }} min</p>
+          <p class="text-sm opacity-90">Tiempo transcurrido: {{ elapsedTime }}</p>
         </div>
       </div>
       <button (click)="endSession()"

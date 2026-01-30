@@ -79,14 +79,21 @@ export class MeetingTimerService {
     const session = this.getSession();
     if (!session) return '00:00';
 
-    const totalMinutes = session.elapsedMinutes;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
+    const now = Date.now();
+    const elapsedMs = now - session.startTime;
+    const totalSeconds = Math.floor(elapsedMs / 1000);
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const formattedSeconds = seconds.toString().padStart(2, '0');
 
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}`;
+      return `${hours}:${formattedMinutes}:${formattedSeconds}`;
     }
-    return `${minutes}:00`;
+    return `${formattedMinutes}:${formattedSeconds}`;
   }
 
   /**
@@ -119,11 +126,11 @@ export class MeetingTimerService {
   }
 
   /**
-   * Start the timer that updates every minute
+   * Start the timer that updates every second
    */
   private startTimer(): void {
-    // Update every minute (60000ms)
-    this.timerSubscription = interval(60000).subscribe(() => {
+    // Update every second (1000ms)
+    this.timerSubscription = interval(1000).subscribe(() => {
       const session = this.getSession();
 
       if (session && session.isActive) {
@@ -137,6 +144,12 @@ export class MeetingTimerService {
           session.notified = true;
         }
 
+        // Save session less frequently to avoid excessive writes? 
+        // Or just save every second? LocalStorage is fast enough usually.
+        // Let's optimize to save only if minutes changed or every 10 seconds if needed, 
+        // but for now simple is better. 
+        // However, we MUST emit sessionSubject to trigger UI updates every second.
+        
         this.saveSession(session);
         this.sessionSubject.next(session);
       }
