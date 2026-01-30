@@ -45,6 +45,13 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl, { params });
   }
 
+  getProgramaAyoDocente(teacherId: string, idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
+    let params: any = {
+      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*'
+    };
+    return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl, {params});
+  }
+
   getProgramaAyoById(id: string | number): Observable<ResponseAPI<ProgramaAyo>> {
     const params = {
       'fields': '*,id_nivel.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*'

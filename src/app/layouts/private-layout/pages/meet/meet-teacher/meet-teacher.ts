@@ -97,7 +97,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     // Fetch programs with expanded relations, filtered by teacher ID
-    this.programaAyoService.getProgramaAyo(this.selectedLanguage, undefined, teacherId).subscribe({
+    this.programaAyoService.getProgramaAyoDocente(teacherId, this.selectedLanguage || undefined).subscribe({
       next: (response) => {
         if (response.data) {
           // Filter programs that have meetings (service already filters by teacher)
