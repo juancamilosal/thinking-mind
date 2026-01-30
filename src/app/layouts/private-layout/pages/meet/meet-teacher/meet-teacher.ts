@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
 import { StorageServices } from '../../../../../core/services/storage.services';
 import { ProgramaAyo } from '../../../../../core/models/Course';
@@ -10,6 +12,9 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
 import { Subscription } from 'rxjs';
+
+declare var gapi: any;
+declare var google: any;
 
 interface StudentEvaluation {
   id: string;
@@ -22,7 +27,7 @@ interface StudentEvaluation {
 @Component({
   selector: 'app-meet-teacher',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './meet-teacher.html',
   styleUrl: './meet-teacher.css'
 })
@@ -33,6 +38,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   assetsUrl: string = environment.assets;
   studentEmails: string[] = [];
   meetingInfos: any[] = [];
+
+  // Google Calendar Integration
+  private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';
+  private DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+  private SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+  tokenClient: any;
+  gapiInited = false;
+  gisInited = false;
 
   // Timer related
   currentSession: any = null;
@@ -52,8 +65,12 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   public timerService = inject(MeetingTimerService);
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
+  private http = inject(HttpClient);
 
   ngOnInit(): void {
+    // Load Google Scripts
+    this.loadGoogleScripts();
+
     // Get language from query params
     this.route.queryParams.subscribe(params => {
       if (params['idioma']) {
@@ -113,7 +130,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
           // Extract student emails
           this.extractStudentEmails(this.programas);
-          
+
           // Extract meeting info
           this.extractMeetingInfo(this.programas);
         }
@@ -162,7 +179,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
   }
 
-  accessMeeting(meeting: any): void {
+  async accessMeeting(meeting: any): Promise<void> {
     const status = this.getMeetingStatus(meeting);
 
     // Check if there's already an active session
@@ -182,6 +199,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         'Esta reunión ya ha finalizado.'
       );
       return;
+    }
+
+    // 1. Add students to Calendar Event
+    if (this.studentEmails.length > 0 && meeting.id_reunion) {
+      try {
+        await this.addParticipantsToMeeting(meeting, this.studentEmails);
+      } catch (error) {
+        console.error('Error adding participants (non-blocking for meeting access):', error);
+        // We continue even if this fails, so the teacher can still enter
+      }
     }
 
     // Start timer session
@@ -338,4 +365,121 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.meetingInfos = meetings;
     console.log('Información de reuniones extraída:', this.meetingInfos);
 }
+
+  // Google Calendar Integration Helpers
+  loadGoogleScripts() {
+    const script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    script.onload = () => this.gapiLoaded();
+    document.body.appendChild(script);
+
+    const gisScript = document.createElement('script');
+    gisScript.src = 'https://accounts.google.com/gsi/client';
+    gisScript.onload = () => this.gisLoaded();
+    document.body.appendChild(gisScript);
+  }
+
+  gapiLoaded() {
+    gapi.load('client', async () => {
+      await gapi.client.init({
+        discoveryDocs: [this.DISCOVERY_DOC],
+      });
+      this.gapiInited = true;
+    });
+  }
+
+  gisLoaded() {
+    this.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: this.CLIENT_ID,
+      scope: this.SCOPES,
+      callback: '',
+    });
+    this.gisInited = true;
+  }
+
+  ensureCalendarToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.tokenClient.callback = (resp: any) => {
+        if (resp.error) {
+          console.error('Token Error:', resp);
+          reject(resp);
+        } else {
+          // Update gapi client with new token
+          if (gapi.client) {
+            gapi.client.setToken(resp);
+          }
+          console.log('Token Received (Safe):', resp.access_token ? 'YES (Length: ' + resp.access_token.length + ')' : 'NO');
+          resolve(resp.access_token);
+        }
+      };
+
+      // Always request a fresh token to avoid 401 from stale/mismatched credentials
+      // Using 'consent' forces the popup to ensure we get a valid token for THIS Client ID
+      console.log('Requesting fresh access token (prompt: consent)...');
+      this.tokenClient.requestAccessToken({ prompt: 'consent' });
+    });
+  }
+
+  async addParticipantsToMeeting(reunion: any, emailsToAdd: string[]): Promise<void> {
+    console.log('--> addParticipantsToMeeting START', reunion.id_reunion, emailsToAdd);
+
+    if (!reunion.id_reunion) {
+        this.notificationService.showError('Error', 'Reunión sin ID');
+        return;
+    }
+
+    try {
+        console.log('1. Getting Token...');
+        const token = await this.ensureCalendarToken();
+        console.log('Token received (len):', token ? token.length : 0);
+
+        if (!token) {
+            throw new Error('No se obtuvo un token válido.');
+        }
+
+        // Explicitly construct headers as requested
+        let headers = new HttpHeaders();
+        headers = headers.set('Authorization', `Bearer ${token}`);
+        headers = headers.set('Content-Type', 'application/json');
+
+        const baseUrl = `https://content.googleapis.com/calendar/v3/calendars/primary/events/${reunion.id_reunion}?alt=json`;
+
+        // 1. Get existing event
+        console.log('2. GET event details...');
+        const event: any = await lastValueFrom(this.http.get(baseUrl, { headers }));
+        console.log('Event details received:', event);
+
+        const existingAttendees = event.attendees || [];
+
+        // 2. Simple merge: existing + new
+        const newAttendees = emailsToAdd
+            .filter(email => !existingAttendees.some((a: any) => a.email === email))
+            .map(email => ({ email }));
+
+        if (newAttendees.length === 0) {
+            console.log('No hay nuevos participantes para agregar.');
+            return;
+        }
+
+        const finalAttendees = [...existingAttendees, ...newAttendees];
+        console.log(`Merging attendees: ${existingAttendees.length} existing + ${newAttendees.length} new = ${finalAttendees.length} total`);
+
+        // 3. PATCH
+        const patchUrl = `${baseUrl}&sendUpdates=all`;
+        console.log('3. PATCHing event...');
+
+        await lastValueFrom(this.http.patch(patchUrl, {
+            attendees: finalAttendees
+        }, { headers }));
+
+        console.log('--> PATCH success');
+        this.notificationService.showSuccess('Éxito', `Reunión ${reunion.id_reunion}: Agregados ${newAttendees.length} participantes.`);
+
+    } catch (error: any) {
+        console.error('--> Error in addParticipantsToMeeting:', error);
+        const msg = error?.error?.error?.message || error.message || 'Error desconocido';
+        this.notificationService.showError('Error API Google', msg);
+        throw error; // Re-throw to handle in calling method if needed
+    }
+  }
 }
