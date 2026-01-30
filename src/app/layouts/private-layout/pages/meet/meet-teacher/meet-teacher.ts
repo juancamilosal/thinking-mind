@@ -36,7 +36,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   selectedLanguage: string | null = null;
   assetsUrl: string = environment.assets;
-  meetingInfos: any[] = [];
+
 
   // Google Calendar Integration
   private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';

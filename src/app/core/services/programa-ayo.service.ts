@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
 import { ProgramaAyo, PrecioProgramaAyo } from '../models/Course';
@@ -49,7 +50,31 @@ export class ProgramaAyoService {
     let params: any = {
       'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*'
     };
-    return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl, {params});
+
+    if (teacherId) {
+      params['deep[id_reuniones_meet][_filter][id_docente][id][_eq]'] = teacherId;
+    }
+
+    if (idioma) {
+      params['filter[idioma][_eq]'] = idioma;
+    }
+
+    params['filter[id_nivel][estudiantes_id][id][_nnull]'] = true;
+
+    return this.http.get<ResponseAPI<ProgramaAyo[]>>(this.apiUrl, {params}).pipe(
+      map(response => {
+        if (response.data) {
+          const filteredData = response.data.filter(programa =>
+            programa.id_nivel &&
+            programa.id_nivel.estudiantes_id &&
+            Array.isArray(programa.id_nivel.estudiantes_id) &&
+            programa.id_nivel.estudiantes_id.length > 0
+          );
+          return { ...response, data: filteredData };
+        }
+        return response;
+      })
+    );
   }
 
   getProgramaAyoById(id: string | number): Observable<ResponseAPI<ProgramaAyo>> {
@@ -67,7 +92,7 @@ export class ProgramaAyoService {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }
 
-  // Precio Programa AYO
+
   getPrecioProgramaAyo(): Observable<ResponseAPI<PrecioProgramaAyo[]>> {
     return this.http.get<ResponseAPI<PrecioProgramaAyo[]>>(this.precioUrl);
   }
