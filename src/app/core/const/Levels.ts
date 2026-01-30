@@ -1,7 +1,7 @@
 import { Certificate } from "../models/Certificate";
 
 export const LEVELS: Certificate[] = [
-    { programName: 'AYO', level: 'Placement', theme: 'GENERAL', rank: 'EXPLORER', rating: 1 },
+    { programName: 'AYO', level: 'AYO', theme: 'GENERAL', rank: 'AYO', rating: 1 },
     { programName: 'AYO', level: 'A1.1', theme: 'SCOTLAND', rank: 'EXPLORER', rating: 1 },
     { programName: 'AYO', level: 'A1.2', theme: 'SOUTH AFRICA', rank: 'EXPLORER', rating: 1 },
     { programName: 'AYO', level: 'A1.3', theme: 'IRELAND', rank: 'SEEKER', rating: 1 },

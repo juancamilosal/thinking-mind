@@ -4,4 +4,6 @@ export interface Certificate {
   theme: string;
   rank: string;
   rating: number;
+  file?: string;
+  isUnlocked?: boolean;
 }

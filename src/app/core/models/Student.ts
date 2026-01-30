@@ -22,3 +22,8 @@ export class Student {
   test_resultado?: any;
 }
 
+export class Certification {
+  estudiante_id?: string;
+  nivel_id?: string;
+}
+
