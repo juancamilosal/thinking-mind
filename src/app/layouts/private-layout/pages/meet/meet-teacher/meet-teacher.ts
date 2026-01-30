@@ -11,7 +11,8 @@ import { MeetingTimerService } from '../../../../../core/services/meeting-timer.
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
+import { AttendanceService } from '../../../../../core/services/attendance.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -56,9 +57,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   showEvaluationModal: boolean = false;
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
+  currentProgramId: string | null = null;
 
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
+  private attendanceService = inject(AttendanceService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public timerService = inject(MeetingTimerService);
@@ -227,6 +230,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       p.id_reuniones_meet?.some(m => m.id === this.currentSession?.meetingId)
     );
 
+    this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
+
     if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
       // Map students from id_nivel to evaluation objects
       this.students = currentProgram.id_nivel.estudiantes_id.map((student: any) => ({
@@ -263,17 +268,50 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Close modal and end session
-    this.showEvaluationModal = false;
-    this.timerService.endSession();
-    this.showNotificationBanner = false;
+    if (!this.currentProgramId) {
+      this.notificationService.showError('Error', 'No se identificó el programa asociado.');
+      return;
+    }
 
-    // Show success notification
-    this.notificationService.showSuccess(
-      'Evaluación Guardada',
-      'Las evaluaciones han sido guardadas exitosamente.',
-      3000
-    );
+    this.isLoading = true;
+
+    // Create observables for each student evaluation
+    const evaluationRequests = this.students.map(student => {
+      const evaluationData: any = {
+        calificacion: student.rating,
+        estudiante_id: student.id,
+        id_programas_ayo: this.currentProgramId,
+        asiste: student.attended,
+        observaciones: student.comment,
+        fecha: new Date().toISOString().split('T')[0]
+      };
+      return this.attendanceService.createAttendance(evaluationData);
+    });
+
+    forkJoin(evaluationRequests).subscribe({
+      next: (responses) => {
+        this.isLoading = false;
+        // Close modal and end session
+        this.showEvaluationModal = false;
+        this.timerService.endSession();
+        this.showNotificationBanner = false;
+
+        // Show success notification
+        this.notificationService.showSuccess(
+          'Evaluación Guardada',
+          'Las evaluaciones han sido guardadas exitosamente.',
+          3000
+        );
+      },
+      error: (error) => {
+        this.isLoading = false;
+        console.error('Error submitting evaluations', error);
+        this.notificationService.showError(
+          'Error',
+          'Hubo un problema al guardar las evaluaciones. Por favor intenta de nuevo.'
+        );
+      }
+    });
   }
 
   cancelEvaluation(): void {
