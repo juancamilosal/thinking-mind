@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
 import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 import { Certificate } from '../../../../core/models/Certificate';
 import { StorageServices } from '../../../../core/services/storage.services';
@@ -31,6 +32,7 @@ export class CertificatesComponent implements OnInit {
   selectedTheme: string = '';
   selectedCategory: string = '';
   selectedSubcategory: string = '';
+  selectedLanguage: 'es' | 'en' = 'es';
 
   @ViewChild(CertificateFormatComponent) certificateFormat!: CertificateFormatComponent;
 
@@ -79,7 +81,7 @@ export class CertificatesComponent implements OnInit {
 
   getFlagPath(theme: string): string {
     if (!theme || theme === 'GENERAL') {
-      return 'assets/images/Logo Thinking Mind.png';
+      return 'assets/images/Logo_Thinking_Mind.png';
     }
     const formattedTheme = theme.toLowerCase().replace(/ /g, '_');
     return `assets/images/flags/${formattedTheme}.png`;
@@ -87,25 +89,62 @@ export class CertificatesComponent implements OnInit {
 
   downloadCertificate(cert: Certificate) {
     if (cert.isUnlocked && cert.fullData) {
-      // Extract data from fullData
-      const data = cert.fullData;
-      const student = data.estudiante_id;
-      const level = data.nivel_id;
-      
-      this.selectedStudentName = `${student.first_name} ${student.last_name}`;
-      this.selectedProgramName = `Programa de ${level.idioma || 'Idiomas'}`;
-      this.selectedLevel = level.nivel;
-      this.selectedCategory = level.categoria;
-      this.selectedSubcategory = level.subcategoria;
-      this.selectedTheme = level.tematica;
-      this.selectedCredits = data.creditos || 0;
-      
-      // Use current date or date from certificate if available
-      const dateObj = new Date();
-      this.selectedDate = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-      
-      // Trigger PDF generation
-      this.certificateFormat.generatePDF();
+      Swal.fire({
+        title: 'Generar Certificado / Generate Certificate',
+        text: 'Seleccione el idioma / Select language',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Español',
+        cancelButtonText: 'English',
+        confirmButtonColor: '#13486e',
+        cancelButtonColor: '#13486e',
+        reverseButtons: true
+      }).then((result) => {
+        if (!result.isConfirmed && result.dismiss !== Swal.DismissReason.cancel) {
+          return;
+        }
+
+        const data = cert.fullData;
+        const student = data.estudiante_id;
+        const level = data.nivel_id;
+        
+        this.selectedStudentName = `${student.first_name} ${student.last_name}`;
+        this.selectedLevel = level.nivel;
+        this.selectedCategory = level.categoria;
+        this.selectedSubcategory = level.subcategoria;
+        this.selectedTheme = level.tematica;
+        this.selectedCredits = data.creditos || 0;
+        
+        const dateObj = new Date();
+        
+        if (result.isConfirmed) {
+          // Español
+          this.selectedLanguage = 'es';
+          this.selectedProgramName = `Programa de ${level.idioma || 'Idiomas'}`;
+          this.selectedDate = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        } else {
+          // English
+          this.selectedLanguage = 'en';
+          
+          // Map common languages
+          let langName = level.idioma || 'Language';
+          const upperLang = langName.toUpperCase();
+          if (upperLang === 'INGLES' || upperLang === 'INGLÉS') langName = 'English';
+          else if (upperLang === 'ESPAÑOL') langName = 'Spanish';
+          else if (upperLang === 'FRANCES' || upperLang === 'FRANCÉS') langName = 'French';
+          else if (upperLang === 'ALEMAN' || upperLang === 'ALEMÁN') langName = 'German';
+          else if (upperLang === 'ITALIANO') langName = 'Italian';
+          else if (upperLang === 'PORTUGUES' || upperLang === 'PORTUGUÉS') langName = 'Portuguese';
+          
+          this.selectedProgramName = `${langName} Program`;
+          this.selectedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        // Trigger PDF generation after a short delay to allow bindings to update
+        setTimeout(() => {
+          this.certificateFormat.generatePDF();
+        }, 50);
+      });
     } else if (cert.file) {
       // Fallback to existing file download if available
       const url = `${environment.assets}/${cert.file}?download`;

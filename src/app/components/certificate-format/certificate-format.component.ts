@@ -19,6 +19,7 @@ export class CertificateFormatComponent {
   @Input() theme: string = '';
   @Input() category: string = '';
   @Input() subcategory: string = '';
+  @Input() language: 'es' | 'en' = 'es';
   
   @ViewChild('certificateContent') certificateContent!: ElementRef;
 
@@ -33,10 +34,12 @@ export class CertificateFormatComponent {
       // The CSS handles positioning it off-screen but visible to the DOM renderer
       
       html2canvas(data, { 
-        scale: 3, // Higher scale for better quality
-        useCORS: true, // Allow loading cross-origin images
-        logging: false,
-        backgroundColor: '#ffffff'
+        scale: 3, 
+        useCORS: true, 
+        logging: false, 
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0
       }).then(canvas => {
         const imgWidth = 297; // A4 landscape width in mm
         const pageHeight = 210; // A4 landscape height in mm
@@ -46,7 +49,9 @@ export class CertificateFormatComponent {
         const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
         
         pdf.addImage(contentDataURL, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`Certificado_${this.studentName.replace(/\s+/g, '_')}_${this.programName}.pdf`);
+        
+        const prefix = this.language === 'en' ? 'Certificate' : 'Certificado';
+        pdf.save(`${prefix}_${this.studentName.replace(/\s+/g, '_')}_${this.programName}.pdf`);
       });
     }, 100);
   }

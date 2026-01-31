@@ -10,79 +10,79 @@
 
         <!-- Header -->
         <div class="header">
-          <img src="assets/images/Logo%20Thinking%20Mind.png" alt="Thinking Mind Logo" class="logo">
+          <img src="assets/images/Logo_Thinking_Mind.png" alt="Thinking Mind Logo" class="logo">
           <div class="brand-name">THINKING MIND</div>
-          <div class="brand-subtitle">System of Management</div>
+          <div class="brand-subtitle">Management System</div>
         </div>
-        
+
         <!-- Title -->
         <div class="title-section">
-          <h1>CERTIFICADO DE LOGRO</h1>
+          <h1>{{ language === 'en' ? 'CERTIFICATE OF ACHIEVEMENT' : 'CERTIFICADO DE LOGRO' }}</h1>
           <div class="separator">
             <span class="star">★</span>
             <span class="line"></span>
             <span class="star">★</span>
           </div>
         </div>
-        
+
         <!-- Body -->
         <div class="content">
-          <p class="certifies-text">Este documento certifica que</p>
-          
+          <p class="certifies-text">{{ language === 'en' ? 'This certifies that' : 'Este documento certifica que' }}</p>
+
           <h2 class="student-name">{{ studentName }}</h2>
-          
-          <p class="has-completed">ha completado satisfactoriamente los requisitos del programa</p>
-          
+
+          <p class="has-completed">{{ language === 'en' ? 'has satisfactorily completed the program requirements' : 'ha completado satisfactoriamente los requisitos del programa' }}</p>
+
           <h3 class="program-name">{{ programName }}</h3>
-          
+
           <div class="details-grid">
             <div class="detail-item" *ngIf="level">
-              <span class="label">Nivel</span>
+              <span class="label">{{ language === 'en' ? 'Level' : 'Nivel' }}</span>
               <span class="value">{{ level }}</span>
             </div>
             <div class="detail-item" *ngIf="category">
-              <span class="label">Categoría</span>
+              <span class="label">{{ language === 'en' ? 'Category' : 'Categoría' }}</span>
               <span class="value">{{ category }}</span>
             </div>
             <div class="detail-item" *ngIf="subcategory">
-              <span class="label">Subcategoría</span>
+              <span class="label">{{ language === 'en' ? 'Subcategory' : 'Subcategoría' }}</span>
               <span class="value">{{ subcategory }}</span>
             </div>
             <div class="detail-item" *ngIf="theme">
-              <span class="label">Temática</span>
+              <span class="label">{{ language === 'en' ? 'Theme' : 'Temática' }}</span>
               <span class="value">{{ theme }}</span>
             </div>
              <div class="detail-item" *ngIf="credits">
-              <span class="label">Créditos</span>
+              <span class="label">{{ language === 'en' ? 'Credits' : 'Créditos' }}</span>
               <span class="value">{{ credits }}</span>
             </div>
           </div>
-          
-          <p class="date-text">Otorgado el día {{ date }}</p>
+
+          <p class="date-text">{{ language === 'en' ? 'Awarded on' : 'Otorgado el día' }} {{ date }}</p>
         </div>
-        
+
         <!-- Footer / Signatures -->
         <div class="footer">
           <div class="signature-block">
             <div class="signature-line"></div>
-            <p class="signature-title">Director Académico</p>
+            <p class="signature-title">{{ language === 'en' ? 'Academic Director' : 'Director Académico' }}</p>
           </div>
-          
+
           <div class="seal-container">
             <div class="seal-outer">
               <div class="seal-inner">
                 <img src="assets/icons/birrete.png" alt="Sello" class="seal-icon">
-                <span class="seal-text">CERTIFICADO OFICIAL</span>
+                <span class="seal-text">{{ language === 'en' ? 'OFFICIAL CERTIFICATE' : 'CERTIFICADO OFICIAL' }}</span>
               </div>
             </div>
           </div>
-          
+
           <div class="signature-block">
             <div class="signature-line"></div>
-            <p class="signature-title">Instructor Principal</p>
+            <p class="signature-title">{{ language === 'en' ? 'Head Instructor' : 'Instructor Principal' }}</p>
           </div>
         </div>
-        
+
         <div class="certificate-id">
           ID: {{ date | date:'yyyyMMdd' }}-{{ credits }}-TM
         </div>
