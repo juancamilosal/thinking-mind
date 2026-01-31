@@ -338,7 +338,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/private/teacher'], {
+    this.router.navigate(['/private/dashboard'], {
       queryParams: { idioma: this.selectedLanguage }
     });
   }
@@ -417,10 +417,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         const event: any = await lastValueFrom(this.http.get(baseUrl, { headers }));
         const currentAttendees = event.attendees || [];
         const organizerEmail = event.organizer?.email?.toLowerCase();
-        
+
         // Lista autoritativa de estudiantes (Normalizamos a minúsculas)
         const targetEmails = new Set(emailsToAdd.map(e => e.toLowerCase()));
-        
+
         const finalAttendees: any[] = [];
         let changesNeeded = false;
 
@@ -451,7 +451,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         // 3. Detectar si hay eliminaciones (Gente en calendar que NO está en finalAttendees)
         const finalEmailsSet = new Set(finalAttendees.map(a => a.email?.toLowerCase()));
         const attendeesToRemove = currentAttendees.filter((a: any) => !finalEmailsSet.has(a.email?.toLowerCase()));
-        
+
         if (attendeesToRemove.length > 0) {
             changesNeeded = true;
             console.log('Eliminando asistentes obsoletos:', attendeesToRemove.map((a:any) => a.email));
