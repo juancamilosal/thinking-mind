@@ -1,5 +1,29 @@
 <div class="p-6">
-  <h1 class="text-2xl font-bold mb-6 text-gray-800">Mis Certificados</h1>
+  <!-- Header Llamativo -->
+  <div class="mb-12 text-center relative overflow-hidden">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
+    
+    <div class="inline-block p-4 rounded-2xl bg-white shadow-xl mb-6 transform hover:scale-110 transition-transform duration-300 border-2 border-blue-100">
+      <img src="assets/icons/birrete.png" class="w-16 h-16 object-contain drop-shadow-md" alt="Logros Académicos">
+    </div>
+    
+    <h1 class="text-4xl md:text-6xl font-black bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4 tracking-tight drop-shadow-sm">
+      Mis Certificados
+    </h1>
+    
+    <p class="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
+      Colecciona tus logros y celebra tu progreso académico.
+      <br>
+      <span class="text-indigo-500 font-semibold">¡Cada certificado es un paso hacia la excelencia!</span>
+    </p>
+    
+    <div class="flex items-center justify-center gap-2 mt-8">
+      <div class="h-1.5 w-16 bg-blue-200 rounded-full"></div>
+      <div class="h-1.5 w-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg"></div>
+      <div class="h-1.5 w-16 bg-purple-200 rounded-full"></div>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
     @for (cert of certificates; track cert.programName) {
       <div class="flex flex-col items-center gap-10">
