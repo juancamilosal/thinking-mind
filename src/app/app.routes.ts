@@ -33,6 +33,7 @@ import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/me
 import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
 import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
 import { CertificatesComponent } from './layouts/private-layout/pages/certificates/certificates';
+import { PayrollTeacher } from './layouts/private-layout/pages/payroll-teacher/payroll-teacher';
 
 
 export const routes: Routes = [
@@ -201,6 +202,11 @@ export const routes: Routes = [
         path: 'certificates',
         title: 'Thinking Mind | Certificados',
         component: CertificatesComponent
+      },
+      {
+        path: 'payroll-teacher',
+        title: 'Thinking Mind | Nómina Docentes',
+        component: PayrollTeacher
       },
       {
         path: '**',
