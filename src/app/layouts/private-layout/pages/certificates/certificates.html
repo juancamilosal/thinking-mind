@@ -73,4 +73,16 @@
       </div>
     }
   </div>
+  
+  <!-- Certificate Generator Component (Hidden) -->
+  <app-certificate-format
+    [studentName]="selectedStudentName"
+    [programName]="selectedProgramName"
+    [level]="selectedLevel"
+    [date]="selectedDate"
+    [credits]="selectedCredits"
+    [theme]="selectedTheme"
+    [category]="selectedCategory"
+    [subcategory]="selectedSubcategory">
+  </app-certificate-format>
 </div>

@@ -1,17 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 import { Certificate } from '../../../../core/models/Certificate';
 import { StorageServices } from '../../../../core/services/storage.services';
 import { environment } from '../../../../../environments/environment';
 import {CertificacionService} from '../../../../core/services/certificacion.service';
+import { CertificateFormatComponent } from '../../../../components/certificate-format/certificate-format.component';
 
 import { LEVELS } from '../../../../core/const/Levels';
 
 @Component({
   selector: 'app-certificates',
   standalone: true,
-  imports: [CommonModule, AppButtonComponent],
+  imports: [CommonModule, AppButtonComponent, CertificateFormatComponent],
   templateUrl: './certificates.html',
   styleUrls: ['./certificates.css']
 })
@@ -20,6 +21,18 @@ export class CertificatesComponent implements OnInit {
     ...c,
     isUnlocked: false // Initialize all as locked
   }));
+
+  // Properties for the certificate component
+  selectedStudentName: string = '';
+  selectedProgramName: string = '';
+  selectedLevel: string = '';
+  selectedDate: string = '';
+  selectedCredits: number = 0;
+  selectedTheme: string = '';
+  selectedCategory: string = '';
+  selectedSubcategory: string = '';
+
+  @ViewChild(CertificateFormatComponent) certificateFormat!: CertificateFormatComponent;
 
   constructor(
     private certificacionService: CertificacionService
@@ -59,6 +72,7 @@ export class CertificatesComponent implements OnInit {
         match.rating = earned.calificacion || match.rating;
         match.rank = earned.rango || match.rank;
         match.isUnlocked = true; // Mark as unlocked
+        match.fullData = earned; // Store full data for PDF generation
       }
     });
   }
@@ -72,11 +86,32 @@ export class CertificatesComponent implements OnInit {
   }
 
   downloadCertificate(cert: Certificate) {
-    if (cert.file) {
+    if (cert.isUnlocked && cert.fullData) {
+      // Extract data from fullData
+      const data = cert.fullData;
+      const student = data.estudiante_id;
+      const level = data.nivel_id;
+      
+      this.selectedStudentName = `${student.first_name} ${student.last_name}`;
+      this.selectedProgramName = `Programa de ${level.idioma || 'Idiomas'}`;
+      this.selectedLevel = level.nivel;
+      this.selectedCategory = level.categoria;
+      this.selectedSubcategory = level.subcategoria;
+      this.selectedTheme = level.tematica;
+      this.selectedCredits = data.creditos || 0;
+      
+      // Use current date or date from certificate if available
+      const dateObj = new Date();
+      this.selectedDate = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      
+      // Trigger PDF generation
+      this.certificateFormat.generatePDF();
+    } else if (cert.file) {
+      // Fallback to existing file download if available
       const url = `${environment.assets}/${cert.file}?download`;
       window.open(url, '_blank');
     } else {
-      console.warn('No file associated with this certificate');
+      console.warn('No data available to generate certificate');
     }
   }
 }

@@ -6,4 +6,5 @@ export interface Certificate {
   rating: number;
   file?: string;
   isUnlocked?: boolean;
+  fullData?: any;
 }

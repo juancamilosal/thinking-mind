@@ -36,7 +36,7 @@ export class CertificacionService {
   getCertificatesByStudentId(studentId: string): Observable<ResponseAPI<Certification[]>> {
     const params: any = {
       'filter[estudiante_id][_eq]': studentId,
-      'fields': '*, nivel_id.*'
+      'fields': '*, nivel_id.*, estudiante_id.*',
     };
     return this.http.get<ResponseAPI<Certification[]>>(this.apiUrl, { params });
   }
