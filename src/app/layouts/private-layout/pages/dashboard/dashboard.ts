@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { CourseService } from '../../../../core/services/course.service';
@@ -9,14 +10,14 @@ import { StudentService } from '../../../../core/services/student.service';
 import { Course } from '../../../../core/models/Course';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { forkJoin } from 'rxjs';
-import { DashboardStats, RectorDashboardStats, CourseWithStudents } from '../../../../core/models/DashboardModels';
+import { DashboardStats, RectorDashboardStats, CourseWithStudents, TeacherDashboardStats } from '../../../../core/models/DashboardModels';
 import {Roles} from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './dashboard.html'
 })
 export class Dashboard implements OnInit {
@@ -65,17 +66,10 @@ export class Dashboard implements OnInit {
     reuniones_meet: []
   };
 
-  // AYO Teacher Stats (hardcoded for now)
-  teacherStats: any = {
-    idioma: 'Inglés',
-    nivel: 'Seeker',
-    subcategoria: 'A1.3',
-    tematica: 'Ireland',
-    reuniones_meet: [
-      { DIA: 'LUNES', HORA_INICIO: '10:00', HORA_FIN: '11:00' },
-      { DIA: 'MIÉRCOLES', HORA_INICIO: '14:00', HORA_FIN: '15:00' },
-      { DIA: 'VIERNES', HORA_INICIO: '16:00', HORA_FIN: '17:00' }
-    ]
+  // AYO Teacher Stats
+  teacherStats: TeacherDashboardStats = {
+    horas_trabajadas: 0,
+    reuniones_meet_id: []
   };
 
   constructor(
@@ -121,23 +115,18 @@ export class Dashboard implements OnInit {
         return;
       }
 
-      // If teacher, don't load dashboard data - they should be on teacher page
       if (this.isAyoTeacher) {
-        this.isLoading = false;
+        this.loadTeacherData();
         return;
       }
 
-      // Check if user is a regular student (has resultado_test or student_id field)
       const isRegularStudent = user.resultado_test !== undefined || user.student_id !== undefined;
 
       if (this.isAyoStudent || isRegularStudent) {
-        // Para estudiantes (AYO o regulares), cargamos los datos desde la sesión inicialmente
         this.ayoStats.creditos = user.creditos || 0;
         this.ayoStats.calificacion = user.calificacion || 0;
         this.ayoStats.nivel_idioma = user.nivel_idioma || 'N/A';
         this.ayoStats.resultado_test = user.resultado_test || 'N/A';
-
-        // Consumir servicio dashboardStudent para obtener datos actualizados
         this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
           next: (response) => {
             const data = response.data || response;
@@ -157,7 +146,6 @@ export class Dashboard implements OnInit {
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error loading student dashboard data', error);
             this.isLoading = false;
           }
         });
@@ -176,10 +164,8 @@ export class Dashboard implements OnInit {
   }
 
   private loadRectorData(): void {
-    // Usar el nuevo servicio de dashboard rector
     this.dashboardService.dashboardRector().subscribe({
       next: (response) => {
-        // El servicio ahora retorna directamente las estadísticas calculadas
         if (response.data) {
           this.rectorStats.totalStudentsEnrolled = response.data.total_estudiantes || 0;
           this.rectorStats.totalStudentsWithPendingStatus = response.data.cuentas_pendientes || 0;
@@ -412,6 +398,21 @@ export class Dashboard implements OnInit {
   getPaymentProgress(): number {
     if (this.stats.totalAmountReceivable === 0) return 0;
     return (this.stats.totalPaidAmount / this.stats.totalAmountReceivable) * 100;
+  }
+
+  private loadTeacherData(): void {
+    this.dashboardService.dashboardTeacher().subscribe({
+      next: (response) => {
+        if (response && response.data && response.data.length > 0) {
+          this.teacherStats = response.data[0];
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading teacher dashboard', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   private loadSalesData(): void {

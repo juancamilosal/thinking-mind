@@ -1,4 +1,4 @@
-<div class="h-screen md:overflow-hidden md:flex">
+<div class="min-h-screen md:flex">
 
       @if (isDesktop) {
         <!-- Sidebar para desktop -->
@@ -20,9 +20,9 @@
         </div>
       }
 
-    <div class="flex-1 flex flex-col md:overflow-hidden">
+    <div class="flex-1 flex flex-col">
         <app-header class="flex-shrink-0" (toggleSidebar)="onToggleSidebar()" />
-        <div class="flex-1 overflow-auto bg-gray-50">
+        <div class="flex-1 bg-gray-50">
             <router-outlet />
         </div>
     </div>

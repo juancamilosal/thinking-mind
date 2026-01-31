@@ -18,9 +18,36 @@ export interface DashboardRectorData {
 export class DashboardService {
   private dashboardRectorUrl: string = environment.dashboardRector;
   private dashboardSaleUrl: string = environment.dashboardSale;
+  private dashboardTeacherUrl: string = environment.dashboardTeacher;
   private dashboardUrl: string = environment.dashboard;
 
   constructor(private http: HttpClient) {}
+
+  dashboardTeacher(): Observable<any> {
+    const currentUser = sessionStorage.getItem('current_user');
+    let userId = '';
+    let role = '';
+
+    if (currentUser) {
+      try {
+        const user = JSON.parse(currentUser);
+        userId = user.id || '';
+        role = user.role || '';
+      } catch (error) {
+        console.error('Error parsing current_user from sessionStorage:', error);
+      }
+    }
+
+    if (role === 'fe83d2f3-1b89-477d-984a-de3b56e12001') {
+      const params = userId ? { userId } : {};
+      return this.http.get<any>(this.dashboardTeacherUrl, { params });
+    }
+
+    return new Observable(observer => {
+      observer.next(null);
+      observer.complete();
+    });
+  }
 
   dashboardRector(): Observable<ResponseAPI<DashboardRectorData>> {
     // Obtener el usuario autenticado del sessionStorage

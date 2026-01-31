@@ -415,18 +415,62 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         const baseUrl = `https://content.googleapis.com/calendar/v3/calendars/primary/events/${reunion.id_reunion}?alt=json`;
         const event: any = await lastValueFrom(this.http.get(baseUrl, { headers }));
-        const existingAttendees = event.attendees || [];
-        const newAttendees = emailsToAdd
-            .filter(email => !existingAttendees.some((a: any) => a.email === email))
-            .map(email => ({ email }));
+        const currentAttendees = event.attendees || [];
+        const organizerEmail = event.organizer?.email?.toLowerCase();
+        
+        // Lista autoritativa de estudiantes (Normalizamos a minúsculas)
+        const targetEmails = new Set(emailsToAdd.map(e => e.toLowerCase()));
+        
+        const finalAttendees: any[] = [];
+        let changesNeeded = false;
 
-        if (newAttendees.length === 0) {
+        // 1. Construir lista final basada SOLO en estudiantes activos (Forzando 'accepted')
+        for (const email of emailsToAdd) {
+            const existing = currentAttendees.find((a: any) => a.email?.toLowerCase() === email.toLowerCase());
+            if (existing) {
+                // Si existe, preservamos info pero forzamos accepted
+                if (existing.responseStatus !== 'accepted') {
+                    changesNeeded = true;
+                }
+                finalAttendees.push({ ...existing, responseStatus: 'accepted' });
+            } else {
+                // Nuevo estudiante
+                finalAttendees.push({ email, responseStatus: 'accepted' });
+                changesNeeded = true;
+            }
+        }
+
+        // 2. Preservar al organizador si estaba en la lista y no es un estudiante
+        if (organizerEmail && !targetEmails.has(organizerEmail)) {
+            const organizerEntry = currentAttendees.find((a: any) => a.email?.toLowerCase() === organizerEmail);
+            if (organizerEntry) {
+                finalAttendees.push(organizerEntry);
+            }
+        }
+
+        // 3. Detectar si hay eliminaciones (Gente en calendar que NO está en finalAttendees)
+        const finalEmailsSet = new Set(finalAttendees.map(a => a.email?.toLowerCase()));
+        const attendeesToRemove = currentAttendees.filter((a: any) => !finalEmailsSet.has(a.email?.toLowerCase()));
+        
+        if (attendeesToRemove.length > 0) {
+            changesNeeded = true;
+            console.log('Eliminando asistentes obsoletos:', attendeesToRemove.map((a:any) => a.email));
+        }
+
+        console.log('Sincronización de asistentes:', {
+            totalEstudiantes: emailsToAdd.length,
+            asistentesFinales: finalAttendees.length,
+            cambiosDetectados: changesNeeded
+        });
+
+        if (!changesNeeded) {
             return;
         }
-        const finalAttendees = [...existingAttendees, ...newAttendees];
+
         const patchUrl = `${baseUrl}&sendUpdates=all`;
         await lastValueFrom(this.http.patch(patchUrl, {
-            attendees: finalAttendees
+            attendees: finalAttendees,
+            guestsCanSeeOtherGuests: true
         }, { headers }));
 
     } catch (error: any) {
