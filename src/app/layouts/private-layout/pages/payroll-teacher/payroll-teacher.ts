@@ -73,7 +73,7 @@ export class PayrollTeacher implements OnInit {
           id: '1',
           horasTrabajadas: 45,
           valorPorHora: 50000,
-          fechaPago: '2026-01-25',
+          fechaPago: '',
           metodoPago: 'TRANSFERENCIA',
           estado: 'Pendiente'
         },
@@ -106,7 +106,7 @@ export class PayrollTeacher implements OnInit {
           horasTrabajadas: 44,
           valorPorHora: 45000,
           fechaPago: '2025-09-25',
-          metodoPago: 'DATÁFONO',
+          metodoPago: 'TRANSFERENCIA',
           estado: 'Pagado'
         }
       ];

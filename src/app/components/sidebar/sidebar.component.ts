@@ -1,6 +1,5 @@
 import { Component, HostListener, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-
 import { LoginService } from '../../core/services/login.service';
 import { User } from '../../core/models/User';
 import { StorageServices } from '../../core/services/storage.services';
@@ -65,7 +64,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   logout() {
     const user = StorageServices.getCurrentUser();
-    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3' || user?.role === 'fe83d2f3-1b89-477d-984a-de3b56e12001';
 
     // Asegurar que last_user_role esté actualizado antes de borrar la sesión
     if (user?.role && typeof localStorage !== 'undefined') {
