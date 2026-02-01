@@ -57,6 +57,10 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   // PDF File Selection
   selectedPdfFile: File | null = null;
   public isPdfDragging: boolean = false;
+  
+  // PDF Text Extraction
+  studyPlan: string[] = [];
+  isReadingPdf: boolean = false;
 
   // File Selection Modal
   showFileModal = false;
@@ -385,11 +389,84 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
     this.selectedPdfFile = file;
     this.fechaFinalizacionForm.patchValue({ archivo: file });
+    
+    // Extract text content
+    this.extractPdfContent(file);
+  }
+
+  async extractPdfContent(file: File) {
+    this.isReadingPdf = true;
+    this.studyPlan = [];
+    
+    try {
+      // Dynamically import pdfjs-dist to avoid SSR issues
+      const pdfjsLib = await import('pdfjs-dist');
+      (pdfjsLib.GlobalWorkerOptions as any).workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      let fullText = '';
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        // Join items with a space. This is a basic extraction.
+        // For more complex layouts, we'd need to sort by coordinates.
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + ' ';
+      }
+
+      this.ngZone.run(() => {
+        this.parseStudyPlan(fullText);
+        this.isReadingPdf = false;
+      });
+
+    } catch (error) {
+      console.error('Error reading PDF:', error);
+      this.ngZone.run(() => {
+        this.notificationService.showError('Error', 'No se pudo leer el contenido del PDF.');
+        this.isReadingPdf = false;
+      });
+    }
+  }
+
+  parseStudyPlan(text: string) {
+    // Regex to find "1. Topic", "2. Topic", etc.
+    // We look for a number, a dot, space, and then content until the next number-dot-space pattern.
+    const regex = /(\d+\.\s+[^0-9]+?)(?=\s\d+\.\s|$)/g;
+    
+    // Alternative approach: Split by the pattern
+    // Let's try to match all occurrences
+    
+    const matches = text.match(/(\d+\.\s+.*?)(?=\s\d+\.\s|$)/g);
+    
+    if (matches && matches.length > 0) {
+        this.studyPlan = matches.map(m => m.trim());
+    } else {
+        // Fallback: If strict regex fails, try to just split by newlines if we had them, 
+        // but since we joined with spaces, we rely on the numbering.
+        // Let's try a looser regex if the first one returns nothing, 
+        // or maybe the text isn't cleanly separated.
+        
+        // Let's just try to find anything that looks like a numbered list item
+        const looseMatches = text.match(/\d+\.\s+[^\.]+/g);
+        if (looseMatches) {
+             this.studyPlan = looseMatches.map(m => m.trim());
+        }
+    }
+    
+    // Clean up: Ensure unique and sorted if needed, but usually we want preservation of order.
+    // Also handle case where "1. " matches "1.5" inside text.
+    // The requirement is "1. Tema, 2. Tema".
   }
 
   removePdf() {
     this.selectedPdfFile = null;
     this.fechaFinalizacionForm.patchValue({ archivo: null });
+    this.studyPlan = [];
   }
 
   onPdfDragOver(event: DragEvent): void {
