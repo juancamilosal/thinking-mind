@@ -19,7 +19,7 @@ import { BudgetReport } from './layouts/private-layout/pages/reports/budget-repo
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
-import { DashboardAyo } from './layouts/private-layout-ayo/pages/dashboard/dashboard';
+import { DashboardAyo } from './layouts/private-layout-ayo/pages/dashboard/dashboard-ayo';
 import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
@@ -183,10 +183,10 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'dashboard'
+        redirectTo: 'dashboard-ayo'
       },
       {
-        path: 'dashboard',
+        path: 'dashboard-ayo',
         title: 'Thinking Mind | Dashboard',
         component: DashboardAyo
       },

@@ -30,6 +30,13 @@ export class MenuService {
   constructor(private http: HttpClient) {}
 
   list(): Observable<ResponseAPI<Menu[]>> {
+    const params = {
+      'filter[menu_ayo][_eq]': 'false'
+    };
+    return this.http.get<ResponseAPI<Menu[]>>(this.menuListUrl, { params });
+  }
+
+  listAyo(): Observable<ResponseAPI<Menu[]>> {
     return this.http.get<ResponseAPI<Menu[]>>(this.menuListUrl);
   }
 }

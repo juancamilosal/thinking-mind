@@ -10,8 +10,8 @@ import { StorageServices } from '../../../../core/services/storage.services';
   selector: 'app-dashboard-ayo',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css'
+  templateUrl: './dashboard-ayo.html',
+  styleUrl: './dashboard-ayo.css'
 })
 export class DashboardAyo implements OnInit {
   isLoading = true;

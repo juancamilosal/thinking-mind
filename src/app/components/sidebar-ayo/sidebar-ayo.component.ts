@@ -35,19 +35,9 @@ export class SidebarAyoComponent implements OnInit, OnDestroy {
   loadMenuItems() {
     const user = StorageServices.getCurrentUser();
 
-    this.menuService.list().subscribe({
+    this.menuService.listAyo().subscribe({
       next: (response) => {
-        let items = response.data.filter(item => item.activo);
-
-        // Check if we are in private-ayo context and replace routes
-        if (this.router.url.includes('/private-ayo')) {
-             items = items.map(item => ({
-                 ...item,
-                 ruta: item.ruta.replace('/private/', '/private-ayo/')
-             }));
-        }
-
-        this.menuItems = items;
+        this.menuItems = response.data;
       },
       error: (error) => {
       }
