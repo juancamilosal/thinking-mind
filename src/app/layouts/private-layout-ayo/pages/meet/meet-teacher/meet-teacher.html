@@ -22,6 +22,53 @@
   </div>
 
   <!-- Active Session Timer Banner -->
+  @if (showStudyPlanModal) {
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4" (click)="closeStudyPlanModal()">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn" (click)="$event.stopPropagation()">
+            <!-- Header -->
+            <div class="bg-[#13486e] p-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <img src="assets/icons/plan.png" class="w-10 h-10 object-contain" alt="Plan">
+                    Plan de Estudio
+                </h3>
+                <button (click)="closeStudyPlanModal()" class="text-white/80 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                @if (selectedStudyPlan.length > 0) {
+                    <ul class="space-y-3">
+                        @for (item of selectedStudyPlan; track $index) {
+                        <li class="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
+                                    {{ item.displayNumber || ($index + 1) }}
+                                </span>
+                                <span class="text-gray-700 leading-relaxed">{{ item.text }}</span>
+                            </div>
+                            @if (item.original.realizado) {
+                                <img src="assets/icons/check.png" class="w-6 h-6 object-contain flex-shrink-0" alt="Realizado" title="Realizado">
+                            }
+                        </li>
+                        }
+                    </ul>
+                } @else {
+                    <div class="flex flex-col items-center justify-center py-8 text-gray-500">
+                        <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p class="text-lg font-medium">No hay plan de estudio disponible</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    }
+
   @if (currentSession && currentSession.isActive) {
     <div class="mb-6 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl shadow-lg p-4 flex items-center justify-between animate-pulse-slow">
       <div class="flex items-center gap-3">
@@ -184,6 +231,13 @@
                 <p>No hay reuniones programadas para este programa</p>
               </div>
             }
+
+            <div class="flex justify-center mt-6 pt-4 border-t border-gray-100">
+                <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudyPlanModal(programa)">
+                    <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Plan">
+                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Plan de Estudio</span>
+                </div>
+            </div>
           </div>
         </div>
       }
@@ -293,6 +347,46 @@
             </div>
           }
         </div>
+
+        <!-- Study Plan Evaluation Section -->
+        @if (evaluationStudyPlan.length > 0) {
+            <div class="px-6 pb-6 border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <img src="assets/icons/plan.png" class="w-6 h-6 object-contain" alt="Plan">
+                    Temas del Plan de Estudio
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Selecciona el tema que se cubrió en esta sesión:</p>
+                <div class="bg-gray-50 rounded-xl p-4 max-h-60 overflow-y-auto custom-scrollbar border border-gray-200">
+                     <ul class="space-y-3">
+                        @for (item of evaluationStudyPlan; track $index) {
+                        <li class="flex items-center justify-between gap-3 p-3 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer" 
+                            (click)="!item.original.realizado ? togglePlanItemSelection(item) : null"
+                            [ngClass]="{'ring-2 ring-blue-400': selectedPlanItemForEvaluation === item}">
+                            <div class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
+                                    {{ item.displayNumber || ($index + 1) }}
+                                </span>
+                                <span class="text-gray-700 leading-relaxed text-sm" [ngClass]="{'font-semibold text-blue-700': selectedPlanItemForEvaluation === item}">{{ item.text }}</span>
+                            </div>
+                            @if (item.original.realizado) {
+                                <div class="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium">
+                                    <img src="assets/icons/check.png" class="w-4 h-4 object-contain" alt="Realizado">
+                                    <span>Completado</span>
+                                </div>
+                            } @else {
+                                <div class="relative flex items-center" (click)="$event.stopPropagation()">
+                                    <input type="checkbox" 
+                                           [checked]="selectedPlanItemForEvaluation === item" 
+                                           (change)="togglePlanItemSelection(item)"
+                                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                                </div>
+                            }
+                        </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
 
         <!-- Modal Footer -->
         <div class="bg-gray-50 p-6 rounded-b-2xl flex justify-end gap-3 border-t border-gray-200">

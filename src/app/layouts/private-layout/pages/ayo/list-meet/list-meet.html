@@ -28,11 +28,16 @@
             @if (selectedStudyPlan.length > 0) {
                 <ul class="space-y-3">
                     @for (item of selectedStudyPlan; track $index) {
-                    <li class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
-                            {{ item.displayNumber || ($index + 1) }}
-                        </span>
-                        <span class="text-gray-700 leading-relaxed">{{ item.text }}</span>
+                    <li class="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-start gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
+                                {{ item.displayNumber || ($index + 1) }}
+                            </span>
+                            <span class="text-gray-700 leading-relaxed">{{ item.text }}</span>
+                        </div>
+                        @if (item.original.realizado) {
+                            <img src="assets/icons/check.png" class="w-6 h-6 object-contain flex-shrink-0" alt="Realizado" title="Realizado">
+                        }
                     </li>
                     }
                 </ul>

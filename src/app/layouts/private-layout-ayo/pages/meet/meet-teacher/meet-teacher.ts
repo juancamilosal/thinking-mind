@@ -38,6 +38,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   selectedLanguage: string | null = null;
   assetsUrl: string = environment.assets;
 
+  // Study Plan Modal Properties
+  showStudyPlanModal = false;
+  selectedStudyPlan: any[] = [];
+  selectedProgramForStudyPlan: ProgramaAyo | null = null;
+
 
   // Google Calendar Integration
   private CLIENT_ID = '879608095413-95f61hvhukdqfba7app9fhmd5g32qho8.apps.googleusercontent.com';
@@ -58,6 +63,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
   currentProgramId: string | null = null;
+  evaluationStudyPlan: any[] = [];
+  selectedPlanItemForEvaluation: any = null;
 
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
@@ -248,6 +255,43 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       // Fallback to empty array if no students found
       this.students = [];
     }
+
+    // Populate evaluationStudyPlan
+    if (currentProgram && Array.isArray(currentProgram.plan_estudio_id)) {
+      const rawPlan = currentProgram.plan_estudio_id as any[];
+      this.evaluationStudyPlan = rawPlan.map(item => {
+        const text = item.plan || '';
+        const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
+        if (match) {
+          return {
+            number: parseInt(match[1], 10),
+            displayNumber: match[1],
+            text: match[2],
+            original: item
+          };
+        } else {
+          return {
+            number: 999999,
+            displayNumber: '',
+            text: text,
+            original: item
+          };
+        }
+      }).sort((a, b) => a.number - b.number);
+    } else {
+      this.evaluationStudyPlan = [];
+    }
+    this.selectedPlanItemForEvaluation = null;
+  }
+
+  togglePlanItemSelection(item: any): void {
+    if (item.original.realizado) return;
+
+    if (this.selectedPlanItemForEvaluation === item) {
+      this.selectedPlanItemForEvaluation = null;
+    } else {
+      this.selectedPlanItemForEvaluation = item;
+    }
   }
 
   setRating(student: StudentEvaluation, rating: number): void {
@@ -276,45 +320,74 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate Study Plan Selection
+    if (!this.selectedPlanItemForEvaluation && this.evaluationStudyPlan.some(i => !i.original.realizado)) {
+      this.notificationService.showWarning(
+        'Plan de Estudio',
+        'Debe seleccionar un tema del plan de estudio como realizado para finalizar.'
+      );
+      return;
+    }
+
     this.isLoading = true;
 
-    // Create observables for each student evaluation
-    const evaluationRequests = this.students.map(student => {
-      const evaluationData: any = {
-        calificacion: student.rating,
-        estudiante_id: student.id,
-        programa_ayo_id: this.currentProgramId,
-        asiste: student.attended,
-        observaciones: student.comment,
-        fecha: new Date().toISOString().split('T')[0]
-      };
-      return this.attendanceService.createAttendance(evaluationData);
-    });
+    const processAttendance = () => {
+      // Create observables for each student evaluation
+      const evaluationRequests = this.students.map(student => {
+        const evaluationData: any = {
+          calificacion: student.rating,
+          estudiante_id: student.id,
+          programa_ayo_id: this.currentProgramId,
+          asiste: student.attended,
+          observaciones: student.comment,
+          fecha: new Date().toISOString().split('T')[0]
+        };
+        return this.attendanceService.createAttendance(evaluationData);
+      });
 
-    forkJoin(evaluationRequests).subscribe({
-      next: (responses) => {
-        this.isLoading = false;
-        // Close modal and end session
-        this.showEvaluationModal = false;
-        this.timerService.endSession();
-        this.showNotificationBanner = false;
+      forkJoin(evaluationRequests).subscribe({
+        next: (responses) => {
+          this.isLoading = false;
+          // Close modal and end session
+          this.showEvaluationModal = false;
+          this.timerService.endSession();
+          this.showNotificationBanner = false;
 
-        // Show success notification
-        this.notificationService.showSuccess(
-          'Evaluación Guardada',
-          'Las evaluaciones han sido guardadas exitosamente.',
-          3000
-        );
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Error submitting evaluations', error);
-        this.notificationService.showError(
-          'Error',
-          'Hubo un problema al guardar las evaluaciones. Por favor intenta de nuevo.'
-        );
-      }
-    });
+          // Refresh data to reflect study plan changes
+          this.loadTeacherMeetings();
+
+          // Show success notification
+          this.notificationService.showSuccess(
+            'Evaluación Guardada',
+            'Las evaluaciones han sido guardadas exitosamente.',
+            3000
+          );
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Error submitting evaluations', error);
+          this.notificationService.showError(
+            'Error',
+            'Hubo un problema al guardar las evaluaciones. Por favor intenta de nuevo.'
+          );
+        }
+      });
+    };
+
+    if (this.selectedPlanItemForEvaluation) {
+      this.programaAyoService.updatePlanEstudio(this.selectedPlanItemForEvaluation.original.id, { realizado: true })
+        .subscribe({
+          next: () => {
+            processAttendance();
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.notificationService.showError('Error', 'No se pudo actualizar el plan de estudio.');
+          }
+        });
+    } else {
+      processAttendance();
+    }
   }
 
   cancelEvaluation(): void {
@@ -345,6 +418,41 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   hasActiveSession(meetingId: string): boolean {
     return this.timerService.hasActiveSession(meetingId);
+  }
+
+  openStudyPlanModal(programa: ProgramaAyo): void {
+    this.selectedProgramForStudyPlan = programa;
+    if (Array.isArray(programa.plan_estudio_id)) {
+      const rawPlan = programa.plan_estudio_id as any[];
+      this.selectedStudyPlan = rawPlan.map(item => {
+        const text = item.plan || '';
+        const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
+        if (match) {
+          return {
+            number: parseInt(match[1], 10),
+            displayNumber: match[1],
+            text: match[2],
+            original: item
+          };
+        } else {
+          return {
+            number: 999999, // Push non-numbered items to the end
+            displayNumber: '',
+            text: text,
+            original: item
+          };
+        }
+      }).sort((a, b) => a.number - b.number);
+    } else {
+      this.selectedStudyPlan = [];
+    }
+    this.showStudyPlanModal = true;
+  }
+
+  closeStudyPlanModal(): void {
+    this.showStudyPlanModal = false;
+    this.selectedStudyPlan = [];
+    this.selectedProgramForStudyPlan = null;
   }
 
 

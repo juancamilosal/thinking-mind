@@ -20,6 +20,10 @@ export class ProgramaAyoService {
     return this.http.post<ResponseAPI<any>>(this.planEstudioUrl, data);
   }
 
+  updatePlanEstudio(id: string | number, data: any): Observable<ResponseAPI<any>> {
+    return this.http.patch<ResponseAPI<any>>(`${this.planEstudioUrl}/${id}`, data);
+  }
+
   createProgramaAyo(programaAyo: ProgramaAyo): Observable<ResponseAPI<ProgramaAyo>> {
     return this.http.post<ResponseAPI<ProgramaAyo>>(this.apiUrl, programaAyo);
   }
@@ -53,7 +57,7 @@ export class ProgramaAyoService {
 
   getProgramaAyoDocente(teacherId: string, idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*'
+      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*, plan_estudio_id.*'
     };
 
     if (teacherId) {

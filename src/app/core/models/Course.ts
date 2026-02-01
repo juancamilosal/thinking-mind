@@ -69,7 +69,8 @@ export class ColegioCurso {
   idioma?: string;
 }
 
-export class PlanEstudio {
+export interface PlanEstudio {
+  id?: number | string;
   plan: string;
   realizado: boolean;
 }
