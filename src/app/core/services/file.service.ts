@@ -31,4 +31,10 @@ export class FileService {
   getFiles(params?: any): Observable<{ data: DirectusFile[] }> {
     return this.http.get<{ data: DirectusFile[] }>(this.apiUrl, { params });
   }
+
+  uploadFile(file: File): Observable<{ data: DirectusFile }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ data: DirectusFile }>(this.apiUrl, formData);
+  }
 }

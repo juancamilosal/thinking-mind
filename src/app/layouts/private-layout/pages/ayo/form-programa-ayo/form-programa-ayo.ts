@@ -637,6 +637,20 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
         let imageId = this.selectedDirectusFileId;
 
+        if (this.selectedFile) {
+          try {
+            const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedFile));
+            if (uploadRes?.data?.id) {
+              imageId = uploadRes.data.id;
+            }
+          } catch (error) {
+            console.error('Error uploading file', error);
+            this.notificationService.showError('Error', 'No se pudo subir la imagen.');
+            this.isSubmitting = false;
+            return;
+          }
+        }
+
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
