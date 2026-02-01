@@ -639,9 +639,13 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
         if (this.selectedFile) {
           try {
+            // First upload the file
             const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedFile));
             if (uploadRes?.data?.id) {
               imageId = uploadRes.data.id;
+              
+              // Then update with metadata to ensure boolean values are correct
+              await firstValueFrom(this.fileService.updateFile(imageId, { tematica: true }));
             }
           } catch (error) {
             console.error('Error uploading file', error);
