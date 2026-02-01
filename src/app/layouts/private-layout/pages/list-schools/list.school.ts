@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+ import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+ import { isPlatformBrowser } from '@angular/common';
 
 import { Router } from '@angular/router';
 import { SchoolService } from '../../../../core/services/school.service';
@@ -11,6 +12,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { StudentDetail } from '../students/student-detail/student-detail';
 import { Client } from '../../../../core/models/Clients';
 import { Roles } from '../../../../core/const/Roles';
+ import { StorageServices } from '../../../../core/services/storage.services';
 import {
   SchoolWithAccounts,
   StudentWithAccount,
@@ -63,7 +65,8 @@ export class ListSchool implements OnInit {
     private accountReceivableService: AccountReceivableService,
     private schoolWithPaymentsService: SchoolWithPaymentsService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   // Método público para usar en el template
@@ -97,16 +100,17 @@ export class ListSchool implements OnInit {
   }
 
   ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     this.loadSchools();
   }
 
   loadSchools(): void {
     this.isLoading = true;
 
-    // Verificar si el usuario es rector o ventas
-    const userData = sessionStorage.getItem('current_user');
-    if (userData) {
-      const user = JSON.parse(userData);
+    const user = StorageServices.getCurrentUser();
+    if (user) {
 
       // Si es rector, filtrar por su colegio_id
       if (user.role === Roles.RECTOR && user.colegio_id) {

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {ResponseAPI} from '../models/ResponseAPI';
+import { StorageServices } from './storage.services';
 
 
 export interface DashboardRectorData {
@@ -24,19 +25,9 @@ export class DashboardService {
   constructor(private http: HttpClient) {}
 
   dashboardTeacher(): Observable<any> {
-    const currentUser = sessionStorage.getItem('current_user');
-    let userId = '';
-    let role = '';
-
-    if (currentUser) {
-      try {
-        const user = JSON.parse(currentUser);
-        userId = user.id || '';
-        role = user.role || '';
-      } catch (error) {
-        console.error('Error parsing current_user from sessionStorage:', error);
-      }
-    }
+    const user = StorageServices.getCurrentUser();
+    const userId = user?.id || '';
+    const role = user?.role || '';
 
     if (role === 'fe83d2f3-1b89-477d-984a-de3b56e12001') {
       const params = userId ? { userId } : {};
@@ -50,18 +41,8 @@ export class DashboardService {
   }
 
   dashboardRector(): Observable<ResponseAPI<DashboardRectorData>> {
-    // Obtener el usuario autenticado del sessionStorage
-    const currentUser = sessionStorage.getItem('current_user');
-    let userId = '';
-
-    if (currentUser) {
-      try {
-        const user = JSON.parse(currentUser);
-        userId = user.id || '';
-      } catch (error) {
-        console.error('Error parsing current_user from sessionStorage:', error);
-      }
-    }
+    const user = StorageServices.getCurrentUser();
+    const userId = user?.id || '';
 
     // Enviar el userId como parámetro en la petición
     const params = userId ? { userId } : {};
@@ -70,18 +51,8 @@ export class DashboardService {
   }
 
   dashboardSale(): Observable<any> {
-    // Obtener el usuario autenticado del sessionStorage
-    const currentUser = sessionStorage.getItem('current_user');
-    let userId = '';
-
-    if (currentUser) {
-      try {
-        const user = JSON.parse(currentUser);
-        userId = user.id || '';
-      } catch (error) {
-        console.error('Error parsing current_user from sessionStorage:', error);
-      }
-    }
+    const user = StorageServices.getCurrentUser();
+    const userId = user?.id || '';
 
     // Enviar el userId como parámetro en la petición
     const params = userId ? { userId } : {};
