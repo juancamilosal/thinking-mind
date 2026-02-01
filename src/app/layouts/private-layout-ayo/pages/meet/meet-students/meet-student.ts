@@ -37,7 +37,7 @@ export class MeetStudent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/private/dashboard']);
+    this.router.navigate(['/private-ayo/dashboard']);
   }
 
   loadAccountsReceivable(): void {

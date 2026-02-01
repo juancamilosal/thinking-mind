@@ -4,6 +4,7 @@ import { LoginAyo } from './layouts/public-layout/pages/login-ayo/login-ayo';
 import { PaymentRecordAyoComponent } from './layouts/public-layout/pages/payment-record-ayo/payment-record-ayo';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
+import { PrivateLayoutAyo } from './layouts/private-layout-ayo/private-layout-ayo';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
 import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
@@ -18,21 +19,22 @@ import { BudgetReport } from './layouts/private-layout/pages/reports/budget-repo
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
+import { Dashboard as DashboardAyo } from './layouts/private-layout-ayo/pages/dashboard/dashboard';
 import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
-import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
+import { LangTest } from './layouts/private-layout-ayo/pages/langTest/langTest';
 import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
-import { MeetStudent } from './layouts/private-layout/pages/meet/meet-students/meet-student';
-import { Advance } from './layouts/private-layout/pages/advance/advance';
-import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
-import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/meet-teacher/meet-teacher';
-import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
-import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
-import { CertificatesComponent } from './layouts/private-layout/pages/certificates/certificates';
+import { MeetStudent } from './layouts/private-layout-ayo/pages/meet/meet-students/meet-student';
+import { Advance } from './layouts/private-layout-ayo/pages/advance/advance';
+import { Teacher } from './layouts/private-layout-ayo/pages/teacher/teacher';
+import { TeacherMeetingsComponent } from './layouts/private-layout-ayo/pages/meet/meet-teacher/meet-teacher';
+import { AttendancePageComponent } from './layouts/private-layout-ayo/pages/attendance/attendance.component';
+import { MeetComponent } from './layouts/private-layout-ayo/pages/meet/meet';
+import { CertificatesComponent } from './layouts/private-layout-ayo/pages/certificates/certificates';
 
 
 export const routes: Routes = [
@@ -153,11 +155,6 @@ export const routes: Routes = [
         component: ColegioCursosComponent
       },
       {
-        path: 'langTest',
-        title: 'Thinking Mind | Language Test',
-        component: LangTest
-      },
-      {
         path: 'ayo',
         title: 'Thinking Mind | AYO',
         component: AyoComponent
@@ -171,6 +168,32 @@ export const routes: Routes = [
         path: 'ayo/list-meet',
         title: 'Thinking Mind | Reuniones AYO',
         component: ListMeet
+      },
+      {
+        path: '**',
+        redirectTo: '/login'
+      }
+    ]
+  },
+  {
+    path: 'private-ayo',
+    component: PrivateLayoutAyo,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard'
+      },
+      {
+        path: 'dashboard',
+        title: 'Thinking Mind | Dashboard',
+        component: DashboardAyo
+      },
+      {
+        path: 'langTest',
+        title: 'Thinking Mind | Language Test',
+        component: LangTest
       },
       {
         path: 'meetings',
@@ -204,7 +227,7 @@ export const routes: Routes = [
       },
       {
         path: '**',
-        redirectTo: '/login'
+        redirectTo: '/login-ayo'
       }
     ]
   },

@@ -375,7 +375,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/private/dashboard']);
+    this.router.navigate(['/private-ayo/dashboard']);
   }
 
   getStarArray(score: number): number[] {

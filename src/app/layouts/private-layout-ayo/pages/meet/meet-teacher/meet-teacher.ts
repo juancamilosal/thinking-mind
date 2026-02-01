@@ -338,7 +338,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/private/teacher'], {
+    this.router.navigate(['/private-ayo/teacher'], {
       queryParams: { idioma: this.selectedLanguage }
     });
   }

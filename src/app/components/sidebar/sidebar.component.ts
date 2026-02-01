@@ -37,7 +37,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     this.menuService.list().subscribe({
       next: (response) => {
-        this.menuItems = response.data.filter(item => item.activo);
+        let items = response.data.filter(item => item.activo);
+        
+        // Check if we are in private-ayo context and replace routes
+        if (this.router.url.includes('/private-ayo')) {
+             items = items.map(item => ({
+                 ...item,
+                 ruta: item.ruta.replace('/private/', '/private-ayo/')
+             }));
+        }
+        
+        this.menuItems = items;
       },
       error: (error) => {
       }
