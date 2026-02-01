@@ -1,17 +1,17 @@
 import { Component, HostListener, OnInit, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { HeaderComponent } from '../../components/header/header.component';
 import { NgClass, isPlatformBrowser } from "@angular/common";
 import { NotificationModalComponent, NotificationData } from '../../components/notification-modal/notification-modal';
 import { ConfirmationModalComponent, ConfirmationData } from '../../components/confirmation-modal/confirmation-modal';
 import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmationService } from '../../core/services/confirmation.service';
+import {SidebarAyoComponent} from '../../components/sidebar-ayo/sidebar-ayo.component';
 
 @Component({
   selector: 'app-private-layout-ayo',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent, NgClass],
+  imports: [RouterOutlet, SidebarAyoComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent, NgClass],
   templateUrl: './private-layout-ayo.html'
 })
 export class PrivateLayoutAyo implements OnInit, AfterViewInit {

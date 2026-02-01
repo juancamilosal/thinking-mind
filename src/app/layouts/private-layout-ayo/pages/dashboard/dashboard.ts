@@ -2,23 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
-import { Course } from '../../../../core/models/Course';
 import { TeacherDashboardStats } from '../../../../core/models/DashboardModels';
-import {Roles} from '../../../../core/const/Roles';
+import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-dashboard-ayo',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './dashboard.html'
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.css'
 })
-export class Dashboard implements OnInit {
-
+export class DashboardAyo implements OnInit {
   isLoading = true;
-  courses: Course[] = [];
-  students: any[] = [];
-  accounts: any[] = [];
   currentDate = new Date();
   userRole: string = '';
   isAyoStudent: boolean = false;
