@@ -1,4 +1,4 @@
-import { inject } from '@angular/core';
+import { inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { CanActivateFn } from '@angular/router';
 import { StorageServices } from '../services/storage.services';
@@ -6,10 +6,18 @@ import { LoginService } from '../services/login.service';
 import { Roles } from '../const/Roles';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { isPlatformBrowser } from '@angular/common';
 
 export const authGuard: CanActivateFn = (route, state): Observable<boolean> | boolean => {
   const router = inject(Router);
   const loginService = inject(LoginService);
+  const platformId = inject(PLATFORM_ID);
+
+  // Si estamos en el servidor (SSR), permitimos la renderización inicial para evitar parpadeos
+  // La validación real ocurrirá en el cliente cuando se hidrate la aplicación
+  if (!isPlatformBrowser(platformId)) {
+    return true;
+  }
 
   // Verificar si hay un token de acceso válido
   const accessToken = StorageServices.getAccessToken();

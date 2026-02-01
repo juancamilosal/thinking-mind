@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { CourseService } from '../../../../core/services/course.service';
@@ -79,11 +79,14 @@ export class Dashboard implements OnInit {
     private paymentService: PaymentService,
     private notificationService: NotificationService,
     private dashboardService: DashboardService,
-    private studentService: StudentService
+    private studentService: StudentService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    this.loadDashboardData();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadDashboardData();
+    }
   }
 
   private sortReuniones(reuniones: any[]): any[] {

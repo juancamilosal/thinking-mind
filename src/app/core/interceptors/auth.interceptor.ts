@@ -1,11 +1,12 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
-import { inject } from '@angular/core';
+import { inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginService } from '../services/login.service';
 import { StorageServices } from '../services/storage.services';
 import { TokenRefreshService } from '../services/token-refresh.service';
+import { isPlatformBrowser } from '@angular/common';
 
 // Variables globales para el estado del refresh
 let isRefreshing = false;
@@ -15,7 +16,13 @@ export const AuthInterceptor: HttpInterceptorFn = (request: HttpRequest<any>, ne
   const router = inject(Router);
   const loginService = inject(LoginService);
   const tokenRefreshService = inject(TokenRefreshService);
+  const platformId = inject(PLATFORM_ID);
   
+  // No interceptar en el servidor (SSR) para evitar redirecciones prematuras
+  if (!isPlatformBrowser(platformId)) {
+    return next(request);
+  }
+
   // No interceptar las peticiones de login y refresh
   if (shouldSkipInterceptor(request)) {
     return next(request);

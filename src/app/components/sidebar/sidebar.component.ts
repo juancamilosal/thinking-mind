@@ -1,5 +1,6 @@
-import { Component, HostListener, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, Output, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 
 import { LoginService } from '../../core/services/login.service';
 import { User } from '../../core/models/User';
@@ -20,26 +21,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private userSubscription: Subscription = new Subscription();
   @Output() sidebarClose = new EventEmitter<void>();
   menuItems: Menu[] = [];
+  isLoading = true;
 
   constructor(
     private router: Router,
     private loginService: LoginService,
-    private menuService: MenuService
+    private menuService: MenuService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit() {
-    this.loadMenuItems();
-    this.checkAuthentication();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadMenuItems();
+      this.checkAuthentication();
+    }
   }
 
   loadMenuItems() {
     const user = StorageServices.getCurrentUser();
+    this.isLoading = true;
 
     this.menuService.list().subscribe({
       next: (response) => {
         this.menuItems = response.data.filter(item => item.activo);
+        this.isLoading = false;
       },
       error: (error) => {
+        this.isLoading = false;
       }
     });
   }
