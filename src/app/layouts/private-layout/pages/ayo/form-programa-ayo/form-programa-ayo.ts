@@ -54,6 +54,10 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   selectedFile: File | null = null;
   isDragging: boolean = false;
 
+  // PDF File Selection
+  selectedPdfFile: File | null = null;
+  public isPdfDragging: boolean = false;
+
   // File Selection Modal
   showFileModal = false;
   directusFiles: DirectusFile[] = [];
@@ -225,7 +229,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       teacherSearchTermJueves: [''],
       evento_inicio_jueves: [null, Validators.required],
       evento_fin_jueves: [null, Validators.required],
-      idioma: [null]
+      idioma: [null],
+      archivo: [null]
     });
 
     // Listen for Google Calendar checkbox changes (Martes)
@@ -357,6 +362,58 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.selectedFile = null;
     this.previewImage = null;
     this.selectedDirectusFileId = null;
+  }
+
+  // PDF Methods
+  onPdfFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.handlePdfFile(file);
+    }
+  }
+
+  handlePdfFile(file: File) {
+    if (file.type !== 'application/pdf') {
+      this.notificationService.showError('Error', 'Solo se permiten archivos PDF.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      this.notificationService.showError('Error', 'El archivo no debe superar los 10MB.');
+      return;
+    }
+
+    this.selectedPdfFile = file;
+    this.fechaFinalizacionForm.patchValue({ archivo: file });
+  }
+
+  removePdf() {
+    this.selectedPdfFile = null;
+    this.fechaFinalizacionForm.patchValue({ archivo: null });
+  }
+
+  onPdfDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPdfDragging = true;
+  }
+
+  onPdfDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPdfDragging = false;
+  }
+
+  onPdfDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPdfDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      this.handlePdfFile(file);
+    }
   }
 
   // File Modal Methods
@@ -655,6 +712,21 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           }
         }
 
+        let pdfId = null;
+        if (this.selectedPdfFile) {
+          try {
+            const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedPdfFile));
+            if (uploadRes?.data?.id) {
+              pdfId = uploadRes.data.id;
+            }
+          } catch (error) {
+            console.error('Error uploading PDF', error);
+            this.notificationService.showError('Error', 'No se pudo subir el archivo PDF.');
+            this.isSubmitting = false;
+            return;
+          }
+        }
+
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
@@ -673,7 +745,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           idioma: this.fechaFinalizacionForm.get('idioma')?.value,
           id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
           id_reuniones_meet: meetingIds,
-          img: imageId // Add image ID to payload
+          img: imageId, // Add image ID to payload
+          archivo: pdfId
         };
 
         // 3. Create Program
