@@ -427,28 +427,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     }
   }
 
-  testCreatePlanEstudio() {
-    if (!this.studyPlan || this.studyPlan.length === 0) {
-      this.notificationService.showError('Error', 'No hay items en el plan de estudio para guardar.');
-      return;
-    }
-
-    const payload = this.studyPlan.map(item => ({
-      plan: item
-    }));
-
-    this.programaAyoService.createPlanEstudio(payload).subscribe({
-      next: (response) => {
-        console.log('Plan estudio creado:', response);
-        this.notificationService.showSuccess('Éxito', 'Plan de estudio guardado correctamente.');
-      },
-      error: (error) => {
-        console.error('Error al crear plan estudio:', error);
-        this.notificationService.showError('Error', 'No se pudo guardar el plan de estudio.');
-      }
-    });
-  }
-
   parseStudyPlan(text: string) {
 
     const regex = /(\d+\.\s+[^0-9]+?)(?=\s\d+\.\s|$)/g;
@@ -828,33 +806,42 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         };
 
         // 3. Create Program
-        this.programaAyoService.createProgramaAyo(formData).subscribe({
-          next: (response) => {
-            this.ngZone.run(() => {
-              const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-              this.notificationService.showSuccess(
-                'Programa AYO guardado',
-                `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
-                0,
-                () => {
-                   this.goBackAction();
-                }
-              );
+        const response = await firstValueFrom(this.programaAyoService.createProgramaAyo(formData));
+        
+        if (response?.data?.id) {
+          const programId = response.data.id;
 
-              this.isSubmitting = false;
-            });
-          },
-          error: (error) => {
-            this.ngZone.run(() => {
-              this.notificationService.showError(
-                'Error al guardar',
-                'No se pudo guardar la información del programa. Sin embargo, las reuniones pueden haberse creado.'
-              );
-              this.isSubmitting = false;
-            });
+          // 4. Create Study Plan if exists
+          if (this.studyPlan && this.studyPlan.length > 0) {
+            try {
+              const studyPlanPayload = this.studyPlan.map(item => ({
+                plan: item,
+                programa_ayo_id: programId
+              }));
+              
+              await firstValueFrom(this.programaAyoService.createPlanEstudio(studyPlanPayload));
+            } catch (error) {
+              console.error('Error creating study plan:', error);
+              this.ngZone.run(() => {
+                this.notificationService.showError('Advertencia', 'El programa se creó pero hubo un error al guardar el plan de estudio.');
+              });
+            }
           }
-        });
 
+          this.ngZone.run(() => {
+            const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
+            this.notificationService.showSuccess(
+              'Programa AYO guardado',
+              `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
+              0,
+              () => {
+                 this.goBackAction();
+              }
+            );
+
+            this.isSubmitting = false;
+          });
+        }
       } catch (error: any) {
         this.ngZone.run(() => {
           this.notificationService.showError('Error', `No se pudo completar el proceso. Detalles: ${error.message || error}`);
