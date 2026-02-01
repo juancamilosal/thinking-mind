@@ -25,6 +25,7 @@ export const environment = {
   attendance: apiUrl + 'items/asistencia',
   programa_ayo: apiUrl + 'items/programas_ayo',
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
+  plan_estudio: apiUrl + 'items/plan_estudio',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',

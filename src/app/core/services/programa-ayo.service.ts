@@ -12,8 +12,13 @@ import { ProgramaAyo, PrecioProgramaAyo } from '../models/Course';
 export class ProgramaAyoService {
   private apiUrl: string = environment.programa_ayo;
   private precioUrl: string = environment.precio_programa_ayo;
+  private planEstudioUrl: string = environment.plan_estudio;
 
   constructor(private http: HttpClient) {}
+
+  createPlanEstudio(data: any): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(this.planEstudioUrl, data);
+  }
 
   createProgramaAyo(programaAyo: ProgramaAyo): Observable<ResponseAPI<ProgramaAyo>> {
     return this.http.post<ResponseAPI<ProgramaAyo>>(this.apiUrl, programaAyo);

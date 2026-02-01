@@ -57,7 +57,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   // PDF File Selection
   selectedPdfFile: File | null = null;
   public isPdfDragging: boolean = false;
-  
+
   // PDF Text Extraction
   studyPlan: string[] = [];
   isReadingPdf: boolean = false;
@@ -368,7 +368,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.selectedDirectusFileId = null;
   }
 
-  // PDF Methods
   onPdfFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
@@ -382,37 +381,32 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) { // 10MB
+    if (file.size > 10 * 1024 * 1024) {
       this.notificationService.showError('Error', 'El archivo no debe superar los 10MB.');
       return;
     }
 
     this.selectedPdfFile = file;
     this.fechaFinalizacionForm.patchValue({ archivo: file });
-    
-    // Extract text content
     this.extractPdfContent(file);
   }
 
   async extractPdfContent(file: File) {
     this.isReadingPdf = true;
     this.studyPlan = [];
-    
+
     try {
-      // Dynamically import pdfjs-dist to avoid SSR issues
       const pdfjsLib = await import('pdfjs-dist');
       (pdfjsLib.GlobalWorkerOptions as any).workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      
+
       let fullText = '';
-      
+
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        // Join items with a space. This is a basic extraction.
-        // For more complex layouts, we'd need to sort by coordinates.
         const pageText = textContent.items
           .map((item: any) => item.str)
           .join(' ');
@@ -433,34 +427,43 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     }
   }
 
+  testCreatePlanEstudio() {
+    if (!this.studyPlan || this.studyPlan.length === 0) {
+      this.notificationService.showError('Error', 'No hay items en el plan de estudio para guardar.');
+      return;
+    }
+
+    const payload = this.studyPlan.map(item => ({
+      plan: item
+    }));
+
+    this.programaAyoService.createPlanEstudio(payload).subscribe({
+      next: (response) => {
+        console.log('Plan estudio creado:', response);
+        this.notificationService.showSuccess('Éxito', 'Plan de estudio guardado correctamente.');
+      },
+      error: (error) => {
+        console.error('Error al crear plan estudio:', error);
+        this.notificationService.showError('Error', 'No se pudo guardar el plan de estudio.');
+      }
+    });
+  }
+
   parseStudyPlan(text: string) {
-    // Regex to find "1. Topic", "2. Topic", etc.
-    // We look for a number, a dot, space, and then content until the next number-dot-space pattern.
+
     const regex = /(\d+\.\s+[^0-9]+?)(?=\s\d+\.\s|$)/g;
-    
-    // Alternative approach: Split by the pattern
-    // Let's try to match all occurrences
-    
+
     const matches = text.match(/(\d+\.\s+.*?)(?=\s\d+\.\s|$)/g);
-    
+
     if (matches && matches.length > 0) {
         this.studyPlan = matches.map(m => m.trim());
     } else {
-        // Fallback: If strict regex fails, try to just split by newlines if we had them, 
-        // but since we joined with spaces, we rely on the numbering.
-        // Let's try a looser regex if the first one returns nothing, 
-        // or maybe the text isn't cleanly separated.
-        
-        // Let's just try to find anything that looks like a numbered list item
         const looseMatches = text.match(/\d+\.\s+[^\.]+/g);
         if (looseMatches) {
              this.studyPlan = looseMatches.map(m => m.trim());
         }
     }
-    
-    // Clean up: Ensure unique and sorted if needed, but usually we want preservation of order.
-    // Also handle case where "1. " matches "1.5" inside text.
-    // The requirement is "1. Tema, 2. Tema".
+
   }
 
   removePdf() {
@@ -651,7 +654,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         }
       },
       error: (error) => {
-        console.error('Error loading niveles:', error);
         this.niveles = [];
         this.isLoadingNiveles = false;
       }
@@ -777,8 +779,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
             const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedFile));
             if (uploadRes?.data?.id) {
               imageId = uploadRes.data.id;
-              
-              // Then update with metadata to ensure boolean values are correct
+
               await firstValueFrom(this.fileService.updateFile(imageId, { tematica: true }));
             }
           } catch (error) {
@@ -822,7 +823,7 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           idioma: this.fechaFinalizacionForm.get('idioma')?.value,
           id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
           id_reuniones_meet: meetingIds,
-          img: imageId, // Add image ID to payload
+          img: imageId,
           archivo: pdfId
         };
 
@@ -845,7 +846,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           },
           error: (error) => {
             this.ngZone.run(() => {
-              console.error('Error al crear programa ayo:', error);
               this.notificationService.showError(
                 'Error al guardar',
                 'No se pudo guardar la información del programa. Sin embargo, las reuniones pueden haberse creado.'
@@ -857,9 +857,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
 
       } catch (error: any) {
         this.ngZone.run(() => {
-          console.error('Error creating calendar events or meetings:', error);
-          // Check if meetings were actually created (user feedback suggests they are)
-          // We'll show the specific error to help debugging
           this.notificationService.showError('Error', `No se pudo completar el proceso. Detalles: ${error.message || error}`);
           this.isSubmitting = false;
         });

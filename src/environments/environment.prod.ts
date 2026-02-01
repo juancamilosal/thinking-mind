@@ -24,6 +24,7 @@ export const environment = {
   reuniones_meet: apiUrl + 'items/reuniones_meet',
   attendance: apiUrl + 'items/asistencia',
   programa_ayo: apiUrl + 'items/programas_ayo',
+  plan_estudio: apiUrl + 'items/plan_estudio',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   security: {
     login: apiUrl + 'auth/login',
