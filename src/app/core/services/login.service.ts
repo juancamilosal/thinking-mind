@@ -234,6 +234,11 @@ export class LoginService {
           }
 
           StorageServices.setUserData(filteredUserData);
+
+          // Guardar el rol en localStorage para redirecciones futuras (ej: auth guard)
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('last_user_role', userData.role);
+          }
         }
       })
     );

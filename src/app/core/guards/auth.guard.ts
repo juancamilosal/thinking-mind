@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CanActivateFn } from '@angular/router';
 import { StorageServices } from '../services/storage.services';
 import { LoginService } from '../services/login.service';
+import { Roles } from '../const/Roles';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -17,7 +18,7 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
   if (!accessToken) {
     // Verificar si el último usuario fue de AYO para redirigir correctamente
     const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-    const isAyoRole = lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+    const isAyoRole = lastRole === Roles.STUDENT || lastRole === Roles.TEACHER;
 
     if (isAyoRole) {
       router.navigate(['/login-ayo']);
@@ -43,7 +44,7 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
       StorageServices.clearSession();
 
       const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-      const isAyoRole = lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+      const isAyoRole = lastRole === Roles.STUDENT || lastRole === Roles.TEACHER;
 
       if (isAyoRole) {
         router.navigate(['/login-ayo']);

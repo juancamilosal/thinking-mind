@@ -33,6 +33,7 @@ import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/me
 import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
 import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
 import { CertificatesComponent } from './layouts/private-layout/pages/certificates/certificates';
+import { NotFoundComponent } from './layouts/public-layout/pages/not-found/not-found.component';
 
 
 export const routes: Routes = [
@@ -204,12 +205,12 @@ export const routes: Routes = [
       },
       {
         path: '**',
-        redirectTo: '/login'
+        component: NotFoundComponent
       }
     ]
   },
   {
     path: '**',
-    redirectTo: '/login'
+    component: NotFoundComponent
   }
 ];
