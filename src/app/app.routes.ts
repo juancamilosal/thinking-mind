@@ -1,10 +1,7 @@
 import { Routes, UrlSegment } from '@angular/router';
 import { PublicLayout } from './layouts/public-layout/public-layout';
-import { LoginAyo } from './layouts/public-layout/pages/login-ayo/login-ayo';
-import { PaymentRecordAyoComponent } from './layouts/public-layout/pages/payment-record-ayo/payment-record-ayo';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
-import { PrivateLayoutAyo } from './layouts/private-layout-ayo/private-layout-ayo';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
 import { Students } from './layouts/private-layout/pages/students/students';
 import { Schools } from './layouts/private-layout/pages/schools/schools';
@@ -19,26 +16,19 @@ import { BudgetReport } from './layouts/private-layout/pages/reports/budget-repo
 import { ListSchool } from './layouts/private-layout/pages/list-schools/list.school';
 import { StudentsSchool } from './layouts/private-layout/pages/students-school/students-school';
 import { Dashboard } from './layouts/private-layout/pages/dashboard/dashboard';
-import { DashboardAyo } from './layouts/private-layout-ayo/pages/dashboard/dashboard-ayo';
 import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
-import { LangTest } from './layouts/private-layout-ayo/pages/langTest/langTest';
 import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
-import { MeetStudent } from './layouts/private-layout-ayo/pages/meet/meet-students/meet-student';
-import { Advance } from './layouts/private-layout-ayo/pages/advance/advance';
-import { Teacher } from './layouts/private-layout-ayo/pages/teacher/teacher';
-import { TeacherMeetingsComponent } from './layouts/private-layout-ayo/pages/meet/meet-teacher/meet-teacher';
-import { AttendancePageComponent } from './layouts/private-layout-ayo/pages/attendance/attendance.component';
-import { MeetComponent } from './layouts/private-layout-ayo/pages/meet/meet';
-import { CertificatesComponent } from './layouts/private-layout-ayo/pages/certificates/certificates';
 import { SessionExpiredComponent } from './layouts/public-layout/pages/session-expired/session-expired';
+import { ayoRoutes } from './ayo.routes';
 
 
 export const routes: Routes = [
+  ...ayoRoutes,
   {
     path: '',
     pathMatch: 'full',
@@ -50,19 +40,9 @@ export const routes: Routes = [
     component: Login
   },
   {
-    path: 'login-ayo',
-    title: 'Thinking Mind | Validación de Ingreso',
-    component: LoginAyo
-  },
-  {
     path: 'session-expired',
     title: 'Thinking Mind | Sesión Expirada',
     component: SessionExpiredComponent
-  },
-  {
-    path: 'payment-record-ayo',
-    title: 'Thinking Mind | Registro de Pago AYO',
-    component: PaymentRecordAyoComponent
   },
   {
     path: 'payment-record',
@@ -180,78 +160,5 @@ export const routes: Routes = [
         redirectTo: '/login'
       }
     ]
-  },
-  {
-    path: 'private-ayo',
-    component: PrivateLayoutAyo,
-    canActivate: [authGuard],
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'dashboard-ayo'
-      },
-      {
-        path: 'dashboard-ayo',
-        title: 'Thinking Mind | Dashboard',
-        component: DashboardAyo
-      },
-      {
-        path: 'langTest',
-        title: 'Thinking Mind | Language Test',
-        component: LangTest
-      },
-      {
-        path: 'meetings',
-        title: 'Thinking Mind | Reuniones Estudiante',
-        component: MeetComponent
-      },
-      {
-        path: 'teacher',
-        title: 'Thinking Mind | Pantalla Profesor',
-        component: Teacher
-      },
-      {
-        path: 'teacher/meetings',
-        title: 'Thinking Mind | Mis Reuniones',
-        component: TeacherMeetingsComponent
-      },
-      {
-        path: 'advance',
-        title: 'Thinking Mind | Advance',
-        component: Advance
-      },
-      {
-        path: 'attendance',
-        title: 'Thinking Mind | Asistencia',
-        component: AttendancePageComponent
-      },
-      {
-        path: 'certificates',
-        title: 'Thinking Mind | Certificados',
-        component: CertificatesComponent
-      },
-      {
-        path: '**',
-        redirectTo: '/login-ayo'
-      }
-    ]
-  },
-  {
-    path: '**',
-    redirectTo: ({url}: {url: UrlSegment[]}) => {
-      // Check if the requested URL indicates AYO context
-      const path = url.join('/');
-      if (path.toLowerCase().includes('ayo')) {
-        return '/login-ayo';
-      }
-
-      // Fallback to stored context
-      const context = typeof localStorage !== 'undefined' ? localStorage.getItem('app_context') : null;
-      if (context === 'ayo') {
-        return '/login-ayo';
-      }
-      return '/login';
-    }
   }
 ];

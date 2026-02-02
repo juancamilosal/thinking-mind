@@ -18,7 +18,7 @@ interface LevelAnalysis {
   totalSessions: number;
   attendedSessions: number;
   lastObservation: string;
-  observations: { date: string, text: string, score: number }[];
+  observations: { date: string, text: string, score: number, isDefault: boolean }[];
   trend: 'up' | 'down' | 'stable';
 }
 
@@ -158,7 +158,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       // att.programa_ayo_id puede ser un objeto o string, pero con el 'fields' que pedimos debería ser objeto
       const programa = att['programa_ayo_id'] as any;
       const nivel = programa?.id_nivel;
-      
+
       if (nivel && typeof nivel === 'object' && nivel.id) {
         const levelKey = nivel.id; // Usamos el ID para agrupar
         if (!groupedByLevel[levelKey]) {
@@ -194,12 +194,12 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       // Última observación
       const lastObservation = attendances[attendances.length - 1].observaciones || 'Sin observaciones recientes';
 
-      // Todas las observaciones (filtrando las vacías)
+      // Todas las observaciones (sin filtrar vacías)
       const observations = attendances
-        .filter(a => a.observaciones)
         .map(a => ({
           date: a.fecha || '',
-          text: a.observaciones || '',
+          text: a.observaciones || 'Sin observaciones',
+          isDefault: !a.observaciones,
           score: a.calificacion || 0
         }))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Ordenar por fecha descendente
@@ -209,11 +209,11 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       if (gradedSessions.length >= 2) {
         const recent = gradedSessions.slice(-2); // Últimos 2
         const previous = gradedSessions.slice(0, -2); // Anteriores
-        
+
         if (previous.length > 0) {
             const avgRecent = recent.reduce((s, a) => s + Number(a.calificacion), 0) / recent.length;
             const avgPrev = previous.reduce((s, a) => s + Number(a.calificacion), 0) / previous.length;
-            
+
             if (avgRecent > avgPrev + 0.5) trend = 'up';
             else if (avgRecent < avgPrev - 0.5) trend = 'down';
         }

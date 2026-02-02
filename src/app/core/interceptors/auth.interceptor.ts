@@ -56,37 +56,32 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    const refreshToken = StorageServices.getRefreshToken();
-     if (refreshToken) {
-       return loginService.refreshToken().pipe(
-        switchMap((response: any) => {
-          const newAccessToken = response?.access_token || response?.data?.access_token;
-          if (newAccessToken) {
-            StorageServices.setAccessToken(newAccessToken);
-            // Notificar a todas las peticiones en espera que el token está listo
-            refreshTokenSubject.next(newAccessToken);
-            // Reprogramar la renovación automática con el nuevo token
-            tokenRefreshService.startTokenRefreshService();
-            // Reintentar la petición original con el nuevo token
-            const retryRequest = addTokenToRequest(request, newAccessToken);
-            // Resetear el estado después de un pequeño delay para permitir que otras peticiones se procesen
-            setTimeout(() => {
-              isRefreshing = false;
-            }, 100);
-            return next(retryRequest);
-          }
-          isRefreshing = false;
-          return redirectToLogin(router, tokenRefreshService);
-        }),
-        catchError((error) => {
-          isRefreshing = false;
-          refreshTokenSubject.next(null);
-          return redirectToLogin(router, tokenRefreshService);
-        })
-      );
-    } else {
-       return redirectToLogin(router, tokenRefreshService);
-     }
+    return loginService.refreshToken().pipe(
+      switchMap((response: any) => {
+        const newAccessToken = response?.access_token || response?.data?.access_token;
+        if (newAccessToken) {
+          StorageServices.setAccessToken(newAccessToken);
+          // Notificar a todas las peticiones en espera que el token está listo
+          refreshTokenSubject.next(newAccessToken);
+          // Reprogramar la renovación automática con el nuevo token
+          tokenRefreshService.startTokenRefreshService();
+          // Reintentar la petición original con el nuevo token
+          const retryRequest = addTokenToRequest(request, newAccessToken);
+          // Resetear el estado después de un pequeño delay para permitir que otras peticiones se procesen
+          setTimeout(() => {
+            isRefreshing = false;
+          }, 100);
+          return next(retryRequest);
+        }
+        isRefreshing = false;
+        return redirectToLogin(router, tokenRefreshService);
+      }),
+      catchError((error) => {
+        isRefreshing = false;
+        refreshTokenSubject.next(null);
+        return redirectToLogin(router, tokenRefreshService);
+      })
+    );
   } else {
     // Si ya se está refrescando el token, esperar a que termine
     return refreshTokenSubject.pipe(

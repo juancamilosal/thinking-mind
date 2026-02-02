@@ -126,13 +126,18 @@ export class LoginService {
 
   refreshToken(): Observable<any> {
     const refreshToken = StorageServices.getRefreshToken();
-    if (!refreshToken) {
-      return throwError(() => new Error('No hay refresh token disponible'));
+    
+    let request$: Observable<any>;
+
+    if (refreshToken) {
+      const payload = { refresh_token: refreshToken };
+      request$ = this.http.post(environment.security.refresh, payload);
+    } else {
+      // Si no hay refresh token, intentar con cookies (modo AYO)
+      request$ = this.http.post(environment.security.refresh, { mode: 'cookie' }, { withCredentials: true });
     }
 
-    const payload = { refresh_token: refreshToken };
-
-    return this.http.post(environment.security.refresh, payload).pipe(
+    return request$.pipe(
       tap((response: any) => {
 
         const newAccessToken = response.access_token || response.data?.access_token;

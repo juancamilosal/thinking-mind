@@ -296,7 +296,13 @@
                                                 </span>
                                                         }
                                                     </div>
-                                                    <p class="text-gray-600 italic text-sm leading-relaxed">"{{ obs.text }}"</p>
+                                                    <p class="text-sm leading-relaxed" [ngClass]="obs.isDefault ? 'text-gray-400' : 'text-gray-600 italic'">
+                                                        @if (obs.isDefault) {
+                                                            {{ obs.text }}
+                                                        } @else {
+                                                            "{{ obs.text }}"
+                                                        }
+                                                    </p>
                                                 </div>
                                             } @empty {
                                                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-400 italic text-sm text-center">
