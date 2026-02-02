@@ -23,8 +23,19 @@ import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/f
 import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
+<<<<<<< HEAD
+import { MeetStudent } from './layouts/private-layout/pages/meet/meet-students/meet-student';
+import { Advance } from './layouts/private-layout/pages/advance/advance';
+import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
+import { TeacherMeetingsComponent } from './layouts/private-layout/pages/meet/meet-teacher/meet-teacher';
+import {AttendancePageComponent} from './layouts/private-layout/pages/attendance/attendance.component';
+import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
+import { CertificatesComponent } from './layouts/private-layout/pages/certificates/certificates';
+import { PayrollTeacher } from './layouts/private-layout/pages/payroll-teacher/payroll-teacher';
+=======
 import { SessionExpiredComponent } from './layouts/public-layout/pages/session-expired/session-expired';
 import { ayoRoutes } from './ayo.routes';
+>>>>>>> origin/develop
 
 
 export const routes: Routes = [
@@ -156,6 +167,44 @@ export const routes: Routes = [
         component: ListMeet
       },
       {
+<<<<<<< HEAD
+        path: 'meetings',
+        title: 'Thinking Mind | Reuniones Estudiante',
+        component: MeetComponent
+      },
+      {
+        path: 'teacher',
+        title: 'Thinking Mind | Pantalla Profesor',
+        component: Teacher
+      },
+      {
+        path: 'teacher/meetings',
+        title: 'Thinking Mind | Mis Reuniones',
+        component: TeacherMeetingsComponent
+      },
+      {
+        path: 'advance',
+        title: 'Thinking Mind | Advance',
+        component: Advance
+      },
+      {
+        path: 'attendance',
+        title: 'Thinking Mind | Asistencia',
+        component: AttendancePageComponent
+      },
+      {
+        path: 'certificates',
+        title: 'Thinking Mind | Certificados',
+        component: CertificatesComponent
+      },
+      {
+        path: 'payroll-teacher',
+        title: 'Thinking Mind | Nómina Docentes',
+        component: PayrollTeacher
+      },
+      {
+=======
+>>>>>>> origin/develop
         path: '**',
         redirectTo: '/login'
       }

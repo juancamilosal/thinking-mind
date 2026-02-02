@@ -1,0 +1,281 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          Nómina Docente
+        </h1>
+        <p class="text-gray-600 mt-2">Información de pagos y horas trabajadas</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Última actualización</p>
+        <p class="text-lg font-semibold text-gray-700">{{ currentDate | date:'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="flex items-center justify-center min-h-96">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600 text-lg">Cargando información de nómina...</p>
+      </div>
+    </div>
+  } @else {
+    <!-- Summary Card -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border-t-4 border-indigo-600 relative overflow-hidden">
+      <div class="absolute top-0 right-0 p-4 opacity-5">
+        <svg class="w-40 h-40 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center relative z-10">
+        <span class="bg-indigo-100 p-2 rounded-lg mr-3">
+          <img src="assets/icons/calendario.png" class="w-16 h-16 object-contain" alt="Icono Resumen">
+        </span>
+        Resumen del Mes Actual
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+        <!-- Valor por Hora -->
+        <div class="group p-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-100 hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between mb-3">
+            <div class="bg-blue-500 p-3 rounded-lg shadow-md">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">Valor por Hora</span>
+            <span class="text-3xl font-bold text-gray-900">{{ formatCurrency(payrollSummary.valorPorHora) }}</span>
+          </div>
+        </div>
+
+        <!-- Horas Trabajadas este Mes -->
+        <div class="group p-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100 hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between mb-3">
+            <div class="bg-purple-500 p-3 rounded-lg shadow-md">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1 block">Horas Trabajadas este Mes</span>
+            <span class="text-3xl font-bold text-gray-900">{{ payrollSummary.horasTrabajadasMes }} <span class="text-lg text-gray-500">hrs</span></span>
+          </div>
+        </div>
+
+        <!-- Pago Total del Mes -->
+        <div class="group p-6 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-100 hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between mb-3">
+            <div class="bg-green-500 p-3 rounded-lg shadow-md">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-green-600 uppercase tracking-wider mb-1 block">Pago Total del Mes</span>
+            <span class="text-3xl font-bold text-gray-900">{{ formatCurrency(payrollSummary.pagoTotalMes) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment History Table -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <h2 class="text-xl font-bold text-gray-800">Historial de Pagos</h2>
+        <p class="text-sm text-gray-600 mt-1">Registro completo de pagos realizados</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Trabajadas</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor por Hora</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Pago</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método de Pago</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @if (paymentHistory.length === 0) {
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                  <div class="flex flex-col items-center justify-center space-y-3">
+                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-500">No hay registros de pagos</p>
+                    <p class="text-xs text-gray-400">Los pagos aparecerán aquí cuando sean procesados</p>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (payment of getPaginatedHistory(); track payment.id) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <svg class="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      <span class="text-sm font-semibold text-gray-900">{{ payment.horasTrabajadas }} hrs</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-medium">{{ formatCurrency(payment.valorPorHora) }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-bold text-green-600">{{ formatCurrency(payment.horasTrabajadas * payment.valorPorHora) }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <span class="text-sm text-gray-900">{{ payment.fechaPago | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                      </svg>
+                      {{ payment.metodoPago }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border" [ngClass]="getEstadoBadgeClass(payment.estado)">
+                      @if (payment.estado === 'Pagado') {
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      } @else {
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      }
+                      {{ payment.estado }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (paymentHistory.length > 0 && totalPages > 1) {
+        <div class="bg-gradient-to-r from-white to-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-8 shadow-inner">
+          <div class="flex-1 flex justify-between sm:hidden">
+            <button
+              (click)="onPageChange(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              [class.cursor-not-allowed]="currentPage === 1"
+              class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              Anterior
+            </button>
+            <button
+              (click)="onPageChange(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              [class.opacity-50]="currentPage === totalPages"
+              [class.cursor-not-allowed]="currentPage === totalPages"
+              class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              Siguiente
+            </button>
+          </div>
+          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div class="flex items-center space-x-6">
+              <div class="bg-white rounded-lg px-4 py-2 shadow-md border border-gray-100">
+                <p class="text-sm text-gray-600">
+                  Mostrando
+                  <span class="font-bold text-indigo-600 mx-1">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+                  a
+                  <span class="font-bold text-indigo-600 mx-1">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
+                  de
+                  <span class="font-bold text-purple-600 mx-1">{{ totalItems }}</span>
+                  resultados
+                </p>
+              </div>
+              <div class="flex items-center space-x-3">
+                <label for="itemsPerPage" class="text-sm font-medium text-gray-700">Mostrar:</label>
+                <select
+                  id="itemsPerPage"
+                  [value]="itemsPerPage"
+                  (change)="onItemsPerPageChange($event)"
+                  class="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm hover:border-indigo-300 transition-all duration-200">
+                  @for (option of itemsPerPageOptions; track option) {
+                    <option [value]="option" [selected]="option === itemsPerPage">{{ option }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="flex gap-1">
+              <button
+                (click)="onPageChange(1)"
+                [disabled]="currentPage === 1"
+                [class.opacity-50]="currentPage === 1"
+                [class.cursor-not-allowed]="currentPage === 1"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+              </button>
+              <button
+                (click)="onPageChange(currentPage - 1)"
+                [disabled]="currentPage === 1"
+                [class.opacity-50]="currentPage === 1"
+                [class.cursor-not-allowed]="currentPage === 1"
+                class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              @for (page of getPaginationArray(); track page) {
+                <button
+                  (click)="onPageChange(page)"
+                  [class.bg-indigo-50]="currentPage === page"
+                  [class.border-indigo-500]="currentPage === page"
+                  [class.text-indigo-600]="currentPage === page"
+                  [class.z-10]="currentPage === page"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  {{ page }}
+                </button>
+              }
+              <button
+                (click)="onPageChange(currentPage + 1)"
+                [disabled]="currentPage === totalPages"
+                [class.opacity-50]="currentPage === totalPages"
+                [class.cursor-not-allowed]="currentPage === totalPages"
+                class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+              <button
+                (click)="onPageChange(totalPages)"
+                [disabled]="currentPage === totalPages"
+                [class.opacity-50]="currentPage === totalPages"
+                [class.cursor-not-allowed]="currentPage === totalPages"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
