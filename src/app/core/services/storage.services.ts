@@ -37,14 +37,14 @@ export class StorageServices {
 
   static getItemFromSessionStorage(name: string): string | null {
     if (this.isBrowser) {
-      return localStorage.getItem(name) || sessionStorage.getItem(name);
+      return sessionStorage.getItem(name) || localStorage.getItem(name);
     }
     return null;
   }
 
   static getItemObjectFromSessionStorage(name: string): any {
     if (this.isBrowser) {
-      const item: string | null = localStorage.getItem(name) || sessionStorage.getItem(name);
+      const item: string | null = sessionStorage.getItem(name) || localStorage.getItem(name);
       return item != null ? JSON.parse(item) : null;
     }
     return null;

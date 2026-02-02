@@ -75,7 +75,7 @@ export const ayoRoutes: Routes = [
       },
       {
         path: '**',
-        redirectTo: '/login-ayo'
+        redirectTo: 'dashboard-ayo'
       }
     ]
   }
