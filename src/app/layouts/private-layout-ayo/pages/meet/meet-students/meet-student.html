@@ -24,7 +24,7 @@
                     </svg>
                 </button>
             </div>
-            
+
             <!-- Body -->
             <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 @if (selectedStudyPlan.length > 0) {
@@ -116,6 +116,8 @@
                         }
                     </div>
                 </div>
+
+                <!-- Footer (Optional or Removed) -->
             </div>
         </div>
         }
@@ -131,105 +133,171 @@
     } @else {
     <div class="programs-grid">
         @for (account of accountsReceivable; track account.id) {
-        <div class="program-card">
-            <!-- Header with gradient -->
-            <div class="card-header relative">
-                <div class="gradient-overlay"></div>
-                <div class="header-content">
-                    <div class="icon-wrapper">
-                        <!-- Icono basado en la temática o uno por defecto -->
-                        <img [src]="getProgramImage(account)"
-                             class="program-icon-img"
-                             alt="Icono Programa"
-                             onError="this.src='assets/icons/ayo.png'">
+        <!-- Main Container for Card + Side Panel -->
+        <div class="flex flex-col xl:flex-row gap-6 mb-8">
+
+            <!-- Program Card (Left Side on Desktop) -->
+            <div class="program-card flex-1 h-full">
+                <!-- Header with gradient -->
+                <div class="card-header relative">
+                    <div class="gradient-overlay"></div>
+                    <div class="header-content">
+                        <div class="icon-wrapper">
+                            <!-- Icono basado en la temática o uno por defecto -->
+                            <img [src]="getProgramImage(account)"
+                                 class="program-icon-img"
+                                 alt="Icono Programa"
+                                 onError="this.src='assets/icons/ayo.png'">
+                        </div>
+                    </div>
+
+                    <!-- Status Badge (Optional) -->
+                    <div class="absolute top-4 right-4">
+                        <div class="status-badge">
+                            <span class="status-dot"></span>
+                            Activo
+                        </div>
                     </div>
                 </div>
 
-                <!-- Status Badge (Optional) -->
-                <div class="absolute top-4 right-4">
-                    <div class="status-badge">
-                        <span class="status-dot"></span>
-                        Activo
-                    </div>
-                </div>
-            </div>
-
-            <!-- Program Title -->
-            <div class="card-body">
-                <div class="program-title-section">
-                    <h3 class="program-language">{{ account.programa_ayo_id?.id_nivel?.tematica }}</h3>
-                    <p class="program-label">Programa AYO</p>
-                </div>
-
-                <!-- Program Details -->
-                <div class="program-details">
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <img src="../../../../../../assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
+                <!-- Program Title & Details -->
+                <div class="card-body">
+                    <div class="flex flex-col h-full">
+                        <div class="program-title-section">
+                            <h3 class="program-language">{{ account.programa_ayo_id?.id_nivel?.tematica }}</h3>
+                            <p class="program-label">Programa AYO</p>
                         </div>
-                        <div class="detail-content">
-                            <span class="detail-label">Fecha Finalización</span>
-                            <span class="detail-value">{{ account.programa_ayo_id?.fecha_finalizacion | date:'mediumDate' }}</span>
-                        </div>
-                    </div>
 
-                    @if (account.programa_ayo_id?.id_nivel) {
-                    <div class="detail-item">
-                        <div class="detail-icon">
-                            <img src="../../../../../../assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
-                        </div>
-                        <div class="detail-content">
-                            <span class="detail-label">Nivel</span>
-                            <span class="detail-value">{{ account.programa_ayo_id.id_nivel?.nivel }} | {{
-                                account.programa_ayo_id.id_nivel?.subcategoria}}</span>
-                        </div>
-                    </div>
-                    }
-
-                    @if (account.programa_ayo_id?.id_reuniones_meet && account.programa_ayo_id.id_reuniones_meet.length > 0) {
-                    <div class="meetings-section">
-                        <h4 class="meetings-title">
-                            <img src="../../../../../../assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
-                            Reuniones Programadas
-                        </h4>
-                        <div class="meetings-list">
-                            @for (reunion of account.programa_ayo_id.id_reuniones_meet; track reunion.id) {
-                            <div class="meeting-item">
-                                <div class="meeting-info">
-                                    <span class="meeting-day">
-                                        <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
-                                        {{ reunion.fecha_inicio | date:'EEEE' | titlecase }}
-                                    </span>
-                                    @if (reunion.id_docente) {
-                                    <span class="meeting-teacher">
-                                        <span class="text-gray-500 font-semibold text-sm mr-1">Docente:</span>
-                                        {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
-                                    </span>
-                                    }
-                                    <span class="meeting-time">
-                                        <span class="text-gray-500 font-semibold text-sm mr-1">Horario:</span>
-                                        {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion | date:'shortTime' }}
-                                    </span>
+                        <!-- Program Details -->
+                        <div class="program-details flex-1">
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <img src="../../../../../../assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
                                 </div>
-                                <div class="flex items-center gap-5">
-                                    @if (reunion.link_reunion) {
-                                    <a href="javascript:void(0)" class="meeting-link" title="Unirse a reunión" (click)="handleTestAndJoin($event, reunion)">
-                                        <img src="../../../../../../assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
-                                    </a>
+                                <div class="detail-content">
+                                    <span class="detail-label">Fecha Finalización</span>
+                                    <span class="detail-value">{{ account.programa_ayo_id?.fecha_finalizacion | date:'mediumDate' }}</span>
+                                </div>
+                            </div>
+
+                            @if (account.programa_ayo_id?.id_nivel) {
+                            <div class="detail-item">
+                                <div class="detail-icon">
+                                    <img src="../../../../../../assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
+                                </div>
+                                <div class="detail-content">
+                                    <span class="detail-label">Nivel</span>
+                                    <span class="detail-value">{{ account.programa_ayo_id.id_nivel?.nivel }} | {{
+                                        account.programa_ayo_id.id_nivel?.subcategoria}}</span>
+                                </div>
+                            </div>
+                            }
+
+                            @if (account.programa_ayo_id?.id_reuniones_meet && account.programa_ayo_id.id_reuniones_meet.length > 0) {
+                            <div class="meetings-section">
+                                <h4 class="meetings-title">
+                                    <img src="../../../../../../assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
+                                    Reuniones Programadas
+                                </h4>
+                                <div class="meetings-list">
+                                    @for (reunion of account.programa_ayo_id.id_reuniones_meet; track reunion.id) {
+                                    <div class="meeting-item">
+                                        <div class="meeting-info">
+                                            <span class="meeting-day">
+                                                <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
+                                                {{ reunion.fecha_inicio | date:'EEEE' | titlecase }}
+                                            </span>
+                                            @if (reunion.id_docente) {
+                                            <span class="meeting-teacher">
+                                                <span class="text-gray-500 font-semibold text-sm mr-1">Docente:</span>
+                                                {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
+                                            </span>
+                                            }
+                                            <span class="meeting-time">
+                                                <span class="text-gray-500 font-semibold text-sm mr-1">Horario:</span>
+                                                {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion | date:'shortTime' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-5">
+                                            @if (reunion.link_reunion) {
+                                            <a href="javascript:void(0)" class="meeting-link" title="Unirse a reunión" (click)="handleTestAndJoin($event, reunion)">
+                                                <img src="../../../../../../assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                            </a>
+                                            }
+                                        </div>
+                                    </div>
                                     }
                                 </div>
                             </div>
                             }
-                        </div>
-                    </div>
-                    }
 
-                    <div class="flex justify-center mt-6 pt-4 border-t border-gray-100">
-                        <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudyPlanModal(account.programa_ayo_id)">
-                            <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Plan">
-                            <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Plan de Estudio</span>
+                            <!-- Mobile Study Plan Button (Hidden on Desktop) -->
+                            <div class="flex xl:hidden justify-center mt-6 pt-4 border-t border-gray-100">
+                                <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudyPlanModal(account.programa_ayo_id)">
+                                    <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Plan">
+                                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Plan de Estudio</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Side Panel: Study Plan (Desktop Only) -->
+            <div class="hidden xl:flex flex-col w-[600px] bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0 self-start sticky top-6">
+                <div class="bg-[#13486e] p-4 text-white font-bold flex items-center gap-3">
+                    <div class=" p-1.5 rounded-lg">
+                        <img src="assets/icons/plan.png" class="w-10 h-10" alt="Plan">
+                    </div>
+                    <span>Plan de Estudio</span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto max-h-[600px] p-4 custom-scrollbar bg-gray-50/50">
+                    @if (getParsedStudyPlan(account.programa_ayo_id.id).length > 0) {
+                        <ul class="space-y-3">
+                            @for (item of getParsedStudyPlan(account.programa_ayo_id.id); track $index) {
+                            <li class="flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 bg-white shadow-sm"
+                                [ngClass]="{
+                                    'border-gray-100 hover:border-gray-200': !item.original.realizado,
+                                    'bg-green-50/50 border-green-100': item.original.realizado
+                                }">
+
+                                <!-- Icon: Check (completed) or Book (incomplete) -->
+                                 <div class="flex-shrink-0 mt-0.5">
+                                     @if (item.original.realizado) {
+                                         <div class="w-6 h-6 flex items-center justify-center">
+                                             <img src="assets/icons/check.png" class="w-5 h-5 object-contain" alt="Realizado">
+                                         </div>
+                                     } @else {
+                                         <div class="w-6 h-6 flex items-center justify-center">
+                                             <img src="assets/icons/libro.png" class="w-5 h-5 object-contain opacity-70" alt="Libro">
+                                         </div>
+                                     }
+                                 </div>
+
+                                <!-- Text -->
+                                <div class="flex-1">
+                                    <div class="flex items-start gap-2">
+                                        <span class="flex-shrink-0 text-xs font-bold text-[#13486e] bg-[#13486e]/10 px-2 py-0.5 rounded-full mt-0.5">
+                                            {{ item.displayNumber || ($index + 1) }}
+                                        </span>
+                                        <span class="text-gray-700 text-sm leading-relaxed" [class.text-gray-500]="item.original.realizado">{{ item.text }}</span>
+                                    </div>
+                                    @if (item.original.realizado) {
+                                        <span class="inline-block mt-1 text-[10px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                            Completado
+                                        </span>
+                                    }
+                                </div>
+                            </li>
+                            }
+                        </ul>
+                    } @else {
+                        <div class="flex flex-col items-center justify-center py-12 text-gray-500 h-full">
+                            <img src="assets/icons/plan.png" class="w-16 h-16 object-contain mb-3 opacity-50" alt="Plan">
+                            <p class="text-sm font-medium">No hay plan disponible</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

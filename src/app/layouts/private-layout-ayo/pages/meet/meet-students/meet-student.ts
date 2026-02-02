@@ -30,11 +30,16 @@ export class MeetStudent implements OnInit {
   showStudyPlanModal = false;
   selectedStudyPlan: any[] = [];
   selectedProgramForStudyPlan: ProgramaAyo | null = null;
+  
+  // Maps for efficient state management
+  parsedStudyPlans = new Map<string, any[]>();
+  selectedPlanItems = new Map<string, any>();
 
 
   constructor(
     private programaAyoService: ProgramaAyoService,
     private router: Router,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit(): void {
@@ -61,10 +66,17 @@ export class MeetStudent implements OnInit {
              return false;
            });
 
-          this.accountsReceivable = userPrograms.map(program => ({
-            id: program.id,
-            programa_ayo_id: program,
-          }));
+          this.accountsReceivable = userPrograms.map(program => {
+            // Parse study plan immediately for side panel view
+            if (Array.isArray(program.plan_estudio_id)) {
+                this.parsedStudyPlans.set(String(program.id), this.parseStudyPlan(program.plan_estudio_id));
+            }
+
+            return {
+                id: program.id,
+                programa_ayo_id: program,
+            };
+          });
 
           this.isLoading = false;
         },
@@ -89,29 +101,93 @@ export class MeetStudent implements OnInit {
     return 'assets/icons/ayo.png';
   }
 
+  parseStudyPlan(rawPlan: any[]): any[] {
+    return rawPlan.map(item => {
+      const text = item.plan || '';
+      const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
+      if (match) {
+        return {
+          number: parseInt(match[1], 10),
+          displayNumber: match[1],
+          text: match[2],
+          original: item
+        };
+      } else {
+        return {
+          number: 999999, // Push non-numbered items to the end
+          displayNumber: '',
+          text: text,
+          original: item
+        };
+      }
+    }).sort((a, b) => a.number - b.number);
+  }
+
+  getParsedStudyPlan(programId: string | number): any[] {
+    return this.parsedStudyPlans.get(String(programId)) || [];
+  }
+
+  togglePlanItemSelection(programId: string | number, item: any): void {
+    const id = String(programId);
+    if (item.original.realizado) return;
+
+    const currentSelected = this.selectedPlanItems.get(id);
+    if (currentSelected === item) {
+      this.selectedPlanItems.delete(id);
+    } else {
+      this.selectedPlanItems.set(id, item);
+    }
+  }
+
+  isPlanItemSelected(programId: string | number, item: any): boolean {
+    return this.selectedPlanItems.get(String(programId)) === item;
+  }
+
+  hasSelection(programId: string | number): boolean {
+    return !!this.selectedPlanItems.get(String(programId));
+  }
+
+  saveStudyPlan(program: ProgramaAyo): void {
+    const programId = String(program.id);
+    const selectedItem = this.selectedPlanItems.get(programId);
+
+    if (!selectedItem) {
+      this.notificationService.showError('Error', 'Debe seleccionar un ítem del plan de estudio para guardar.');
+      return;
+    }
+
+    // Optimistic update handled in subscription or refresh
+    this.programaAyoService.updatePlanEstudio(selectedItem.original.id, { realizado: true }).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Éxito', 'Plan de estudio actualizado correctamente.');
+        
+        // Update local state
+        selectedItem.original.realizado = true;
+        this.selectedPlanItems.delete(programId);
+        
+        // Re-parse to update view (or just rely on object reference if binding is deep, but sort might be affected if we change things? No, sort is by number)
+        // Actually, since we modified the original item object which is referenced in the parsed array, the view should update automatically if change detection runs.
+        // But to be safe and cleaner:
+        // The parsed array items contain 'original' which is the raw item. 
+      },
+      error: (err) => {
+        console.error('Error updating study plan', err);
+        this.notificationService.showError('Error', 'Error al actualizar el plan de estudio.');
+      }
+    });
+  }
+
   openStudyPlanModal(programa: ProgramaAyo): void {
     this.selectedProgramForStudyPlan = programa;
     if (Array.isArray(programa.plan_estudio_id)) {
-      const rawPlan = programa.plan_estudio_id as any[];
-      this.selectedStudyPlan = rawPlan.map(item => {
-        const text = item.plan || '';
-        const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
-        if (match) {
-          return {
-            number: parseInt(match[1], 10),
-            displayNumber: match[1],
-            text: match[2],
-            original: item
-          };
+        // Use the pre-parsed plan if available, or parse it
+        const existing = this.parsedStudyPlans.get(String(programa.id));
+        if (existing) {
+            this.selectedStudyPlan = existing;
         } else {
-          return {
-            number: 999999, // Push non-numbered items to the end
-            displayNumber: '',
-            text: text,
-            original: item
-          };
+            this.selectedStudyPlan = this.parseStudyPlan(programa.plan_estudio_id);
+            this.parsedStudyPlans.set(String(programa.id), this.selectedStudyPlan);
         }
-      }).sort((a, b) => a.number - b.number);
     } else {
       this.selectedStudyPlan = [];
     }

@@ -37,7 +37,7 @@
                     </svg>
                 </button>
             </div>
-            
+
             <!-- Body -->
             <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 @if (selectedStudyPlan.length > 0) {
@@ -359,7 +359,7 @@
                 <div class="bg-gray-50 rounded-xl p-4 max-h-60 overflow-y-auto custom-scrollbar border border-gray-200">
                      <ul class="space-y-3">
                         @for (item of evaluationStudyPlan; track $index) {
-                        <li class="flex items-center justify-between gap-3 p-3 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer" 
+                        <li class="flex items-center justify-between gap-3 p-3 bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                             (click)="!item.original.realizado ? togglePlanItemSelection(item) : null"
                             [ngClass]="{'ring-2 ring-blue-400': selectedPlanItemForEvaluation === item}">
                             <div class="flex items-start gap-3">
@@ -375,8 +375,8 @@
                                 </div>
                             } @else {
                                 <div class="relative flex items-center" (click)="$event.stopPropagation()">
-                                    <input type="checkbox" 
-                                           [checked]="selectedPlanItemForEvaluation === item" 
+                                    <input type="checkbox"
+                                           [checked]="selectedPlanItemForEvaluation === item"
                                            (change)="togglePlanItemSelection(item)"
                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
                                 </div>
