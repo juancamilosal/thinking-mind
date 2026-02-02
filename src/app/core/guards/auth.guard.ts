@@ -18,7 +18,7 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
   if (!accessToken) {
     // Verificar si el último usuario fue de AYO para redirigir correctamente
     const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-    
+
     // Si hay un rol guardado, asumimos que la sesión expiró
     if (lastRole) {
       router.navigate(['/session-expired']);
@@ -27,7 +27,7 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
       if (state.url.includes('/private-ayo')) {
         router.navigate(['/login-ayo']);
       } else {
-        router.navigate(['/login']);
+        router.navigate(['/session-expired']);
       }
     }
     return false;
@@ -49,11 +49,11 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
       StorageServices.clearSession();
 
       const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-      
+
       if (lastRole) {
         router.navigate(['/session-expired']);
       } else {
-        router.navigate(['/login']);
+        router.navigate(['/session-expired']);
       }
       return of(false);
     })

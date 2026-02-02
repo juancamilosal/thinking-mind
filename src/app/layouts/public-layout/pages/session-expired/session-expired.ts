@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 import { Roles } from '../../../../core/const/Roles';
+import {StorageServices} from '../../../../core/services/storage.services';
 
 @Component({
   selector: 'app-session-expired',
@@ -11,11 +12,11 @@ import { Roles } from '../../../../core/const/Roles';
   templateUrl: './session-expired.html'
 })
 export class SessionExpiredComponent {
-  
+
   constructor(private router: Router) {}
 
   loginAgain() {
-    const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
+    const lastRole = StorageServices.getItemObjectFromSessionStorage('current_user').role;
     const isAyoRole = lastRole === Roles.STUDENT || lastRole === Roles.TEACHER;
 
     if (isAyoRole) {
