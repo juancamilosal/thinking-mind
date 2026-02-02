@@ -8,6 +8,7 @@ import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountR
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 import {ConfirmationService} from '../../../../core/services/confirmation.service';
 import {NotificationService} from '../../../../core/services/notification.service';
+import { StorageServices } from '../../../../core/services/storage.services';
 import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 @Component({
@@ -63,10 +64,9 @@ export class AccountsReceivable implements OnInit {
   }
 
   ngOnInit(): void {
-    // Obtener información del usuario desde sessionStorage
-    const userData = sessionStorage.getItem('current_user');
-    if (userData) {
-      const user = JSON.parse(userData);
+    // Obtener información del usuario desde StorageServices
+    const user = StorageServices.getCurrentUser();
+    if (user) {
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc';

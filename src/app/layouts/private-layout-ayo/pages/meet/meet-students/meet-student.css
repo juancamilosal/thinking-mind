@@ -114,10 +114,17 @@
    ======================================== */
 .programs-grid {
     display: grid;
+    /* On large screens where we show side-by-side, we need more width */
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     gap: 2rem;
     position: relative;
     z-index: 1;
+}
+
+@media (min-width: 1024px) {
+    .programs-grid {
+        grid-template-columns: 1fr; /* Full width cards on desktop to accommodate side-by-side layout */
+    }
 }
 
 /* ========================================

@@ -69,8 +69,9 @@ export class AyoComponent implements OnInit {
     this.isLoadingPrice = true;
     this.programaAyoService.getPrecioProgramaAyo().subscribe({
       next: (response) => {
-        if (response.data && response.data.length > 0) {
-          this.precioData = response.data[0];
+        if (response.data) {
+          // If response.data is an array (legacy check), take first item, otherwise use it directly
+          this.precioData = Array.isArray(response.data) ? response.data[0] : response.data;
         }
         this.isLoadingPrice = false;
       },

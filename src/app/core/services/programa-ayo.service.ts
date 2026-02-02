@@ -12,8 +12,17 @@ import { ProgramaAyo, PrecioProgramaAyo } from '../models/Course';
 export class ProgramaAyoService {
   private apiUrl: string = environment.programa_ayo;
   private precioUrl: string = environment.precio_programa_ayo;
+  private planEstudioUrl: string = environment.plan_estudio;
 
   constructor(private http: HttpClient) {}
+
+  createPlanEstudio(data: any): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(this.planEstudioUrl, data);
+  }
+
+  updatePlanEstudio(id: string | number, data: any): Observable<ResponseAPI<any>> {
+    return this.http.patch<ResponseAPI<any>>(`${this.planEstudioUrl}/${id}`, data);
+  }
 
   createProgramaAyo(programaAyo: ProgramaAyo): Observable<ResponseAPI<ProgramaAyo>> {
     return this.http.post<ResponseAPI<ProgramaAyo>>(this.apiUrl, programaAyo);
@@ -21,7 +30,7 @@ export class ProgramaAyoService {
 
   getProgramaAyo(idioma?: string, search?: string, userId?: string, teacherId?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*'
+      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*'
     };
     if (idioma) {
       params['filter[idioma][_eq]'] = idioma;
@@ -48,7 +57,7 @@ export class ProgramaAyoService {
 
   getProgramaAyoDocente(teacherId: string, idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*'
+      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*, plan_estudio_id.*'
     };
 
     if (teacherId) {
@@ -93,11 +102,25 @@ export class ProgramaAyoService {
   }
 
 
-  getPrecioProgramaAyo(): Observable<ResponseAPI<PrecioProgramaAyo[]>> {
-    return this.http.get<ResponseAPI<PrecioProgramaAyo[]>>(this.precioUrl);
+  getPrecioProgramaAyo(): Observable<ResponseAPI<PrecioProgramaAyo>> {
+    const params = {
+      'fields': '*'
+    };
+    return this.http.get<ResponseAPI<PrecioProgramaAyo>>(this.precioUrl, { params }).pipe(
+      map((response: any) => {
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+              return { ...response, data: response.data[0] };
+          }
+          return response;
+      })
+    );
   }
 
-  updatePrecioProgramaAyo(id: string, data: Partial<PrecioProgramaAyo>): Observable<ResponseAPI<PrecioProgramaAyo>> {
-    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, data);
+  updatePrecioProgramaAyo(id: string | number, precioData: Partial<PrecioProgramaAyo>): Observable<ResponseAPI<PrecioProgramaAyo>> {
+    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, precioData);
+  }
+
+  sendNovedad(novedad: string): Observable<any> {
+    return this.http.post<any>(environment.send_novedad, { novedad });
   }
 }

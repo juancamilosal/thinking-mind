@@ -57,9 +57,7 @@ export class Teacher implements OnInit {
     }
 
     openMeetings(): void {
-      // Navigate directly without language query params
-      // Language will be auto-detected in the meetings component
-      this.router.navigate(['/private/teacher/meetings']);
+      this.router.navigate(['/private-ayo/teacher/meetings']);
     }
 
     goBack(): void {

@@ -29,10 +29,9 @@
       <div class="flex flex-col items-center gap-10">
         <div class="cert-medal shadow-2xl transition-all duration-300" 
              [class.grayscale]="!cert.isUnlocked" 
-             [class.opacity-50]="!cert.isUnlocked"
-             [class.hover:scale-105]="cert.isUnlocked">
+             [class.opacity-50]="!cert.isUnlocked">
           <div class="cert-medal-inner"
-               [style.backgroundImage]="'linear-gradient(rgba(255, 255, 255, ' + (cert.isUnlocked ? '0.3' : '0.8') + '), rgba(255, 255, 255, ' + (cert.isUnlocked ? '0.3' : '0.8') + ')), url(' + getFlagPath(cert.theme) + ')'"
+               [style.backgroundImage]="'linear-gradient(rgba(255, 255, 255, ' + (cert.isUnlocked ? '0.3' : '0.8') + '), rgba(255, 255, 255, ' + (cert.isUnlocked ? '0.3' : '0.8') + ')), url(\'' + getFlagPath(cert.theme) + '\')'"
                style="background-size: cover; background-position: center;">
             <div class="text-2xl font-extrabold tracking-wide text-[#13486e]">{{ cert.programName }}</div>
             <div class="text-gray-700 font-semibold text-sm">{{ cert.theme }}</div>
@@ -83,6 +82,7 @@
     [credits]="selectedCredits"
     [theme]="selectedTheme"
     [category]="selectedCategory"
-    [subcategory]="selectedSubcategory">
+    [subcategory]="selectedSubcategory"
+    [language]="selectedLanguage">
   </app-certificate-format>
 </div>

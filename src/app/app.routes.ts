@@ -1,7 +1,5 @@
-import { Routes } from '@angular/router';
+import { Routes, UrlSegment } from '@angular/router';
 import { PublicLayout } from './layouts/public-layout/public-layout';
-import { LoginAyo } from './layouts/public-layout/pages/login-ayo/login-ayo';
-import { PaymentRecordAyoComponent } from './layouts/public-layout/pages/payment-record-ayo/payment-record-ayo';
 import { Login } from './layouts/public-layout/pages/login/login';
 import { PrivateLayout } from './layouts/private-layout/private-layout';
 import { Clients } from './layouts/private-layout/pages/clients/clients';
@@ -22,10 +20,10 @@ import { Users } from './layouts/private-layout/pages/users/users';
 import { authGuard } from './core/guards/auth.guard';
 import { ShirtColor } from './layouts/private-layout/pages/list-schools/shirt-colors/shirt.color';
 import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/form-colegio-cursos/form-colegio-cursos';
-import { LangTest } from './layouts/private-layout/pages/langTest/langTest';
 import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
+<<<<<<< HEAD
 import { MeetStudent } from './layouts/private-layout/pages/meet/meet-students/meet-student';
 import { Advance } from './layouts/private-layout/pages/advance/advance';
 import { Teacher } from './layouts/private-layout/pages/teacher/teacher';
@@ -34,9 +32,14 @@ import {AttendancePageComponent} from './layouts/private-layout/pages/attendance
 import {MeetComponent} from './layouts/private-layout/pages/meet/meet';
 import { CertificatesComponent } from './layouts/private-layout/pages/certificates/certificates';
 import { PayrollTeacher } from './layouts/private-layout/pages/payroll-teacher/payroll-teacher';
+=======
+import { SessionExpiredComponent } from './layouts/public-layout/pages/session-expired/session-expired';
+import { ayoRoutes } from './ayo.routes';
+>>>>>>> origin/develop
 
 
 export const routes: Routes = [
+  ...ayoRoutes,
   {
     path: '',
     pathMatch: 'full',
@@ -48,14 +51,9 @@ export const routes: Routes = [
     component: Login
   },
   {
-    path: 'login-ayo',
-    title: 'Thinking Mind | Validación de Ingreso',
-    component: LoginAyo
-  },
-  {
-    path: 'payment-record-ayo',
-    title: 'Thinking Mind | Registro de Pago AYO',
-    component: PaymentRecordAyoComponent
+    path: 'session-expired',
+    title: 'Thinking Mind | Sesión Expirada',
+    component: SessionExpiredComponent
   },
   {
     path: 'payment-record',
@@ -154,11 +152,6 @@ export const routes: Routes = [
         component: ColegioCursosComponent
       },
       {
-        path: 'langTest',
-        title: 'Thinking Mind | Language Test',
-        component: LangTest
-      },
-      {
         path: 'ayo',
         title: 'Thinking Mind | AYO',
         component: AyoComponent
@@ -174,6 +167,7 @@ export const routes: Routes = [
         component: ListMeet
       },
       {
+<<<<<<< HEAD
         path: 'meetings',
         title: 'Thinking Mind | Reuniones Estudiante',
         component: MeetComponent
@@ -209,13 +203,11 @@ export const routes: Routes = [
         component: PayrollTeacher
       },
       {
+=======
+>>>>>>> origin/develop
         path: '**',
         redirectTo: '/login'
       }
     ]
-  },
-  {
-    path: '**',
-    redirectTo: '/login'
   }
 ];
