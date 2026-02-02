@@ -4,6 +4,7 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { User } from '../../core/models/User';
 import { StorageServices } from '../../core/services/storage.services';
+import { Roles } from '../../core/const/Roles';
 import { MenuService, MenuItem } from '../../core/services/menu.service';
 import { Subscription } from 'rxjs';
 import {Menu} from '../../core/models/Menu';
@@ -73,7 +74,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   logout() {
     const user = StorageServices.getCurrentUser();
-    const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+    const isAyoRole = user?.role === Roles.STUDENT || user?.role === Roles.TEACHER;
 
     // Asegurar que last_user_role esté actualizado antes de borrar la sesión
     if (user?.role && typeof localStorage !== 'undefined') {

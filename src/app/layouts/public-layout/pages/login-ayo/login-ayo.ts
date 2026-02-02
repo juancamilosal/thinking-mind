@@ -39,6 +39,10 @@ export class LoginAyo implements OnInit {
     ) { }
 
     ngOnInit(): void {
+        // Set context for routing redirects
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('app_context', 'ayo');
+        }
 
         const accessToken = StorageServices.getAccessToken();
         const currentUser = StorageServices.getCurrentUser();
@@ -90,6 +94,7 @@ export class LoginAyo implements OnInit {
             next: () => {
                 this.loginServices.me().subscribe({
                     next: () => {
+                        this.persistSession();
                         const currentUser = StorageServices.getCurrentUser();
                         this.isLoading = false;
                         this.tokenRefreshService.startTokenRefreshService();
@@ -148,6 +153,7 @@ export class LoginAyo implements OnInit {
                                     next: (loginRes) => {
                                         this.loginServices.me().subscribe({
                                             next: (userResponse) => {
+                                                this.persistSession();
                                                 this.isLoading = false;
                                                 this.tokenRefreshService.startTokenRefreshService();
 
@@ -194,6 +200,23 @@ export class LoginAyo implements OnInit {
                         this.showMessage('error', 'Error', 'Error al verificar la información del estudiante');
                 }
             });
+    }
+
+    private persistSession() {
+        if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined' && typeof localStorage !== 'undefined') {
+            const accessToken = sessionStorage.getItem('access_token');
+            const refreshToken = sessionStorage.getItem('refresh_token');
+            const currentUser = sessionStorage.getItem(StorageServices.CURRENT_USER);
+
+            if (accessToken) localStorage.setItem('access_token', accessToken);
+            if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
+            if (currentUser) localStorage.setItem(StorageServices.CURRENT_USER, currentUser);
+            
+            // Clear session storage to avoid duplicates
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('refresh_token');
+            sessionStorage.removeItem(StorageServices.CURRENT_USER);
+        }
     }
 
     onNotificationClose() {

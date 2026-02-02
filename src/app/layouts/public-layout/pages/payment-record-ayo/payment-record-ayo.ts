@@ -84,6 +84,9 @@ export class PaymentRecordAyoComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('app_context', 'ayo');
+        }
         this.loadPrecioPrograma();
         this.loadGrupos();
         this.paymentForm = this.formBuilder.group({
