@@ -12,7 +12,9 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
 import { Subscription, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
+import { UserService } from '../../../../../core/services/user.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -23,6 +25,7 @@ interface StudentEvaluation {
   attended: boolean;
   rating: number;
   comment: string;
+  currentRating: number;
 }
 
 @Component({
@@ -74,6 +77,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
   private attendanceService = inject(AttendanceService);
+  private userService = inject(UserService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public timerService = inject(MeetingTimerService);
@@ -270,7 +274,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
         rating: 0,
-        comment: ''
+        comment: '',
+        currentRating: student.calificacion ? Number(student.calificacion) : 0
       }));
     } else {
       // Fallback to empty array if no students found
@@ -363,7 +368,21 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           observaciones: student.comment,
           fecha: new Date().toISOString().split('T')[0]
         };
-        return this.attendanceService.createAttendance(evaluationData);
+
+        const attendanceObs = this.attendanceService.createAttendance(evaluationData);
+
+        // Update student cumulative grade if they attended and have a rating
+        if (student.attended && student.rating > 0) {
+          const newRating = (student.currentRating || 0) + student.rating;
+          const updateData: any = { calificacion: newRating };
+          const updateUserObs = this.userService.updateUser(student.id, updateData);
+          
+          // Combine both requests
+          return forkJoin([attendanceObs, updateUserObs]);
+        }
+        
+        // If no rating update needed, just return attendance wrapped in array
+        return attendanceObs.pipe(map(res => [res, null]));
       });
 
       forkJoin(evaluationRequests).subscribe({
@@ -373,24 +392,21 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           this.showEvaluationModal = false;
           this.timerService.endSession();
           this.showNotificationBanner = false;
-
-          // Refresh data to reflect study plan changes
-          this.loadTeacherMeetings();
-
-          // Show success notification
+          
           this.notificationService.showSuccess(
-            'Evaluación Guardada',
-            'Las evaluaciones han sido guardadas exitosamente.',
-            3000
+            'Sesión Finalizada',
+            'La evaluación y calificaciones han sido guardadas exitosamente.'
           );
+
+          // Redirect or refresh logic if needed
+          setTimeout(() => {
+             this.router.navigate(['/private-ayo/dashboard']);
+          }, 1500);
         },
-        error: (error) => {
+        error: (err) => {
+          console.error('Error submitting evaluations:', err);
           this.isLoading = false;
-          console.error('Error submitting evaluations', error);
-          this.notificationService.showError(
-            'Error',
-            'Hubo un problema al guardar las evaluaciones. Por favor intenta de nuevo.'
-          );
+          this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
         }
       });
     };
