@@ -7,6 +7,7 @@ import { ConfirmationModalComponent, ConfirmationData } from '../../components/c
 import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmationService } from '../../core/services/confirmation.service';
 import {SidebarAyoComponent} from '../../components/sidebar-ayo/sidebar-ayo.component';
+import { TokenRefreshService } from '../../core/services/token-refresh.service';
 
 @Component({
   selector: 'app-private-layout-ayo',
@@ -35,12 +36,18 @@ export class PrivateLayoutAyo implements OnInit, AfterViewInit {
     @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
+    private tokenRefreshService: TokenRefreshService,
     private cdr: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit() {
+    // Start token refresh service to ensure session stays active
+    if (this.isBrowser) {
+        this.tokenRefreshService.startTokenRefreshService();
+    }
+
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
       this.isDesktop = this.windowWidth >= 768;

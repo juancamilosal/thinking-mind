@@ -66,6 +66,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   evaluationStudyPlan: any[] = [];
   selectedPlanItemForEvaluation: any = null;
 
+  // Students List Modal Properties
+  showStudentsModal = false;
+  selectedStudents: any[] = [];
+  selectedProgramForStudents: ProgramaAyo | null = null;
+
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
   private attendanceService = inject(AttendanceService);
@@ -76,6 +81,22 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
+
+  openStudentsModal(programa: ProgramaAyo): void {
+    this.selectedProgramForStudents = programa;
+    if (programa.id_nivel && Array.isArray(programa.id_nivel.estudiantes_id)) {
+      this.selectedStudents = programa.id_nivel.estudiantes_id;
+    } else {
+      this.selectedStudents = [];
+    }
+    this.showStudentsModal = true;
+  }
+
+  closeStudentsModal(): void {
+    this.showStudentsModal = false;
+    this.selectedStudents = [];
+    this.selectedProgramForStudents = null;
+  }
 
   ngOnInit(): void {
     this.loadGoogleScripts();
