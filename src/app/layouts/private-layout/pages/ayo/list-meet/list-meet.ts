@@ -79,6 +79,10 @@ export class ListMeet implements OnInit {
   selectedStudyPlan: any[] = [];
   selectedProgramForStudyPlan: ProgramaAyo | null = null;
 
+  // Novedad Modal Properties
+  showNovedadModal = false;
+  novedadText: string = '';
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private notificationService: NotificationService,
@@ -128,6 +132,37 @@ export class ListMeet implements OnInit {
     this.showStudyPlanModal = false;
     this.selectedStudyPlan = [];
     this.selectedProgramForStudyPlan = null;
+  }
+
+  openNovedadModal(): void {
+    this.showNovedadModal = true;
+    this.novedadText = '';
+  }
+
+  closeNovedadModal(): void {
+    this.showNovedadModal = false;
+    this.novedadText = '';
+  }
+
+  sendNovedad(): void {
+    if (!this.novedadText.trim()) {
+      this.notificationService.showError('Error', 'La novedad no puede estar vacía.');
+      return;
+    }
+
+    this.isLoading = true;
+    this.programaAyoService.sendNovedad(this.novedadText).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Éxito', 'Novedad enviada correctamente.');
+        this.closeNovedadModal();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error enviando novedad:', error);
+        this.notificationService.showError('Error', 'No se pudo enviar la novedad.');
+        this.isLoading = false;
+      }
+    });
   }
 
   ngOnInit(): void {

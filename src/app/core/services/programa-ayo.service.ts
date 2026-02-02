@@ -102,11 +102,25 @@ export class ProgramaAyoService {
   }
 
 
-  getPrecioProgramaAyo(): Observable<ResponseAPI<PrecioProgramaAyo[]>> {
-    return this.http.get<ResponseAPI<PrecioProgramaAyo[]>>(this.precioUrl);
+  getPrecioProgramaAyo(): Observable<ResponseAPI<PrecioProgramaAyo>> {
+    const params = {
+      'fields': '*'
+    };
+    return this.http.get<ResponseAPI<PrecioProgramaAyo>>(this.precioUrl, { params }).pipe(
+      map((response: any) => {
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+              return { ...response, data: response.data[0] };
+          }
+          return response;
+      })
+    );
   }
 
-  updatePrecioProgramaAyo(id: string, data: Partial<PrecioProgramaAyo>): Observable<ResponseAPI<PrecioProgramaAyo>> {
-    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, data);
+  updatePrecioProgramaAyo(id: string | number, precioData: Partial<PrecioProgramaAyo>): Observable<ResponseAPI<PrecioProgramaAyo>> {
+    return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, precioData);
+  }
+
+  sendNovedad(novedad: string): Observable<any> {
+    return this.http.post<any>(environment.send_novedad, { novedad });
   }
 }

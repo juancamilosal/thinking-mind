@@ -187,12 +187,17 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   loadPrecioPrograma(): void {
     this.programaAyoService.getPrecioProgramaAyo().subscribe({
       next: (response) => {
-        if (response.data && response.data.length > 0) {
-          const precio = response.data[0].precio;
-          const precioControl = this.fechaFinalizacionForm.get('precio_curso');
-          if (precioControl) {
-            precioControl.setValue(precio);
-            precioControl.disable();
+        if (response.data) {
+          // Handle both single object and array response
+          const data = Array.isArray(response.data) ? response.data[0] : response.data;
+          
+          if (data) {
+            const precio = data.precio;
+            const precioControl = this.fechaFinalizacionForm.get('precio_curso');
+            if (precioControl) {
+              precioControl.setValue(precio);
+              precioControl.disable();
+            }
           }
         }
       },
