@@ -82,6 +82,7 @@ export class ListMeet implements OnInit {
   // Novedad Modal Properties
   showNovedadModal = false;
   novedadText: string = '';
+  selectedProgramForNovedad: any = null;
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -134,7 +135,8 @@ export class ListMeet implements OnInit {
     this.selectedProgramForStudyPlan = null;
   }
 
-  openNovedadModal(): void {
+  openNovedadModal(program: any): void {
+    this.selectedProgramForNovedad = program;
     this.showNovedadModal = true;
     this.novedadText = '';
   }
@@ -142,16 +144,39 @@ export class ListMeet implements OnInit {
   closeNovedadModal(): void {
     this.showNovedadModal = false;
     this.novedadText = '';
+    this.selectedProgramForNovedad = null;
   }
 
-  sendNovedad(): void {
+  sendNovedad(program?: any): void {
+    // If program is not passed as argument, use the stored one
+    const targetProgram = program || this.selectedProgramForNovedad;
+
     if (!this.novedadText.trim()) {
       this.notificationService.showError('Error', 'La novedad no puede estar vacía.');
       return;
     }
 
+    if (!targetProgram) {
+        this.notificationService.showError('Error', 'No se ha seleccionado un programa.');
+        return;
+    }
+
+    const emails = [];
+    if (targetProgram.id_nivel && Array.isArray(targetProgram.id_nivel.estudiantes_id)) {
+        for (const estudiante of targetProgram.id_nivel.estudiantes_id) {
+            if (estudiante.email_acudiente) {
+                emails.push(estudiante.email_acudiente);
+            }
+        }
+    }
+
+    if (emails.length === 0) {
+        this.notificationService.showError('Error', 'No se encontraron correos de acudientes para este programa.');
+        return;
+    }
+
     this.isLoading = true;
-    this.programaAyoService.sendNovedad(this.novedadText).subscribe({
+    this.programaAyoService.sendNovedad(this.novedadText, emails).subscribe({
       next: () => {
         this.notificationService.showSuccess('Éxito', 'Novedad enviada correctamente.');
         this.closeNovedadModal();

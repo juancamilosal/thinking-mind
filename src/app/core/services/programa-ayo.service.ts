@@ -120,7 +120,7 @@ export class ProgramaAyoService {
     return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, precioData);
   }
 
-  sendNovedad(novedad: string): Observable<any> {
-    return this.http.post<any>(environment.send_novedad, { novedad });
+  sendNovedad(novedad: string, emails: string[]): Observable<any> {
+    return this.http.post<any>(environment.send_novedad, { novedad, emails });
   }
 }
