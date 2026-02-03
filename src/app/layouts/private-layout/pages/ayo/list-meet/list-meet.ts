@@ -135,6 +135,12 @@ export class ListMeet implements OnInit {
     this.selectedProgramForStudyPlan = null;
   }
 
+  openNovedadModalGlobal(): void {
+    this.selectedProgramForNovedad = null;
+    this.showNovedadModal = true;
+    this.novedadText = '';
+  }
+
   openNovedadModal(program: any): void {
     this.selectedProgramForNovedad = program;
     this.showNovedadModal = true;
@@ -156,24 +162,43 @@ export class ListMeet implements OnInit {
       return;
     }
 
-    if (!targetProgram) {
-        this.notificationService.showError('Error', 'No se ha seleccionado un programa.');
-        return;
-    }
+    let emails: string[] = [];
 
-    const emails = [];
-    if (targetProgram.id_nivel && Array.isArray(targetProgram.id_nivel.estudiantes_id)) {
-        for (const estudiante of targetProgram.id_nivel.estudiantes_id) {
-            if (estudiante.email_acudiente) {
-                emails.push(estudiante.email_acudiente);
-            }
+    if (targetProgram) {
+         if (targetProgram.id_nivel && Array.isArray(targetProgram.id_nivel.estudiantes_id)) {
+             for (const estudiante of targetProgram.id_nivel.estudiantes_id) {
+                 if (estudiante.email_acudiente) {
+                     emails.push(estudiante.email_acudiente);
+                 }
+             }
+         }
+         
+         if (emails.length === 0) {
+             this.notificationService.showError('Error', 'No se encontraron correos de acudientes para este programa.');
+             return;
+         }
+    } else {
+        // Global send - collect from all programs
+        if (this.programas && this.programas.length > 0) {
+             for (const prog of this.programas) {
+                 if (prog.id_nivel && Array.isArray(prog.id_nivel.estudiantes_id)) {
+                     for (const estudiante of prog.id_nivel.estudiantes_id) {
+                         if (estudiante.email_acudiente) {
+                             emails.push(estudiante.email_acudiente);
+                         }
+                     }
+                 }
+             }
+        }
+
+        if (emails.length === 0) {
+            this.notificationService.showError('Error', 'No se encontraron correos de acudientes en ningún programa.');
+            return;
         }
     }
 
-    if (emails.length === 0) {
-        this.notificationService.showError('Error', 'No se encontraron correos de acudientes para este programa.');
-        return;
-    }
+    // Deduplicate emails
+    emails = [...new Set(emails)];
 
     this.isLoading = true;
     this.programaAyoService.sendNovedad(this.novedadText, emails).subscribe({
