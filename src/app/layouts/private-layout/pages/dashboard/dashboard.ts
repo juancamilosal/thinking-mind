@@ -407,7 +407,7 @@ export class Dashboard implements OnInit {
           // Si es un array, tomamos el primer elemento (el más reciente o relevante)
           if (Array.isArray(response.data) && response.data.length > 0) {
             this.teacherStats = response.data[0];
-          } 
+          }
           // Si es un objeto directo (no array), lo asignamos directamente
           else if (!Array.isArray(response.data) && typeof response.data === 'object') {
             this.teacherStats = response.data;

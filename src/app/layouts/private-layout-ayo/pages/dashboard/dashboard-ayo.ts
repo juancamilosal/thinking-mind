@@ -82,23 +82,29 @@ export class DashboardAyo implements OnInit {
         this.ayoStats.resultado_test = user.resultado_test || 'N/A';
         this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
           next: (response) => {
-            const data = response.data || response;
-            if (data) {
-              this.ayoStats = {
-                creditos: data.creditos ?? 0,
-                nivel: data.nivel || data.nivel_idioma || 'N/A',
-                calificacion: data.calificacion ?? 0,
-                resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
-                estado_cuenta: data.estado_cuenta || 'N/A',
-                idioma: data.idioma || 'N/A',
-                subcategoria: data.subcategoria || 'N/A',
-                tematica: data.tematica || 'N/A',
-                reuniones_meet: data.reuniones_meet ? this.sortReuniones(data.reuniones_meet) : []
-              };
+            try {
+              const data = response.data || response;
+              if (data) {
+                this.ayoStats = {
+                  creditos: data.creditos ?? 0,
+                  nivel: data.nivel || data.nivel_idioma || 'N/A',
+                  calificacion: data.calificacion ?? 0,
+                  resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
+                  estado_cuenta: data.estado_cuenta || 'N/A',
+                  idioma: data.idioma || 'N/A',
+                  subcategoria: data.subcategoria || 'N/A',
+                  tematica: data.tematica || 'N/A',
+                  reuniones_meet: (data.reuniones_meet && Array.isArray(data.reuniones_meet)) ? this.sortReuniones(data.reuniones_meet) : []
+                };
+              }
+            } catch (e) {
+              console.error('Error processing dashboard data:', e);
+            } finally {
+              this.isLoading = false;
             }
-            this.isLoading = false;
           },
           error: (error) => {
+            console.error('Error loading student dashboard:', error);
             this.isLoading = false;
           }
         });

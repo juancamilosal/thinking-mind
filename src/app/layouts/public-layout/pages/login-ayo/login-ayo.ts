@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { StudentService } from '../../../../core/services/student.service';
 import { LoginService } from '../../../../core/services/login.service';
 import { TokenRefreshService } from '../../../../core/services/token-refresh.service';
+import { ClientService } from '../../../../core/services/client.service';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
@@ -33,6 +34,7 @@ export class LoginAyo implements OnInit {
         private studentService: StudentService,
         private loginServices: LoginService,
         private tokenRefreshService: TokenRefreshService,
+        private clientService: ClientService,
         private router: Router,
         private cdr: ChangeDetectorRef,
         private ngZone: NgZone
@@ -131,71 +133,87 @@ export class LoginAyo implements OnInit {
             .subscribe({
                 next: (response) => {
                     if (response.data && response.data.length > 0) {
-                        const studentData = { ...response.data[0], password };
-                        this.studentService.registerStudentFlow(studentData).subscribe({
-                            next: (flowResponse) => {
-                                if (flowResponse.status === 'ERROR') {
-                                    this.isLoading = false;
-                                    this.showMessage('error', 'Error', flowResponse.message || 'Error desconocido en el registro');
-                                    return;
+                        const studentData: any = { ...response.data[0], password };
+
+                        this.clientService.getClientByStudent(tipoDocumento, numeroDocumento).subscribe({
+                            next: (clientRes) => {
+                                if (clientRes.data && clientRes.data.length > 0) {
+                                    studentData.email_acudiente = clientRes.data[0].email;
                                 }
-
-                                const loginPayload = {
-                                    email: email,
-                                    password: password,
-                                    mode: 'cookie'
-                                };
-
-                                this.loginServices.login(loginPayload).subscribe({
-                                    next: (loginRes) => {
-                                        this.loginServices.me().subscribe({
-                                            next: (userResponse) => {
-                                                this.isLoading = false;
-                                                this.tokenRefreshService.startTokenRefreshService();
-
-                                                // Check if user is a student before redirecting to langTest
-                                                const currentUser = StorageServices.getCurrentUser();
-                                                const isStudent = currentUser?.role === Roles.STUDENT;
-                                                const isTeacher = currentUser?.role === Roles.TEACHER;
-
-                                                if (isStudent) {
-                                                  // After successful registration + login, students go to Language Test
-                                                  this.router.navigateByUrl('/private-ayo/langTest');
-                                                } else if (isTeacher) {
-                                                  // Teachers go to dashboard
-                                                  this.router.navigateByUrl('/private-ayo');
-                                                } else {
-                                                  // Other roles go to dashboard
-                                                  this.router.navigateByUrl('/private-ayo');
-                                                }
-                                            },
-                                            error: (userError) => {
-                                                this.isLoading = false;
-                                                    this.showMessage('warning', 'Atención', 'Registro exitoso, pero hubo un error al obtener la información del usuario.');
-                                            }
-                                        });
-                                    },
-                                    error: (loginErr) => {
-                                        this.isLoading = false;
-                                            this.showMessage('warning', 'Atención', 'Registro exitoso, pero hubo un error al iniciar sesión automáticamente.');
-                                    }
-                                });
+                                this.processStudentRegistration(studentData, email, password);
                             },
-                            error: (flowErr) => {
-                                this.isLoading = false;
-                                    this.showMessage('error', 'Error', 'Estudiante validado, pero hubo un error en el proceso de registro');
+                            error: (err) => {
+                                console.error('Error fetching client info:', err);
+                                this.processStudentRegistration(studentData, email, password);
                             }
                         });
                     } else {
                         this.isLoading = false;
-                            this.showMessage('error', 'Error', 'No se encontró estudiante con estos datos o los datos no coinciden');
+                        this.showMessage('error', 'Error', 'No se encontró estudiante con estos datos o los datos no coinciden');
                     }
                 },
                 error: (err) => {
                     this.isLoading = false;
-                        this.showMessage('error', 'Error', 'Error al verificar la información del estudiante');
+                    this.showMessage('error', 'Error', 'Error al verificar la información del estudiante');
                 }
             });
+    }
+
+    private processStudentRegistration(studentData: any, email: string, password: string) {
+        this.studentService.registerStudentFlow(studentData).subscribe({
+            next: (flowResponse) => {
+                if (flowResponse.status === 'ERROR') {
+                    this.isLoading = false;
+                    this.showMessage('error', 'Error', flowResponse.message || 'Error desconocido en el registro');
+                    return;
+                }
+
+                const loginPayload = {
+                    email: email,
+                    password: password,
+                    mode: 'cookie'
+                };
+
+                this.loginServices.login(loginPayload).subscribe({
+                    next: (loginRes) => {
+                        this.loginServices.me().subscribe({
+                            next: (userResponse) => {
+                                this.isLoading = false;
+                                this.tokenRefreshService.startTokenRefreshService();
+
+                                // Check if user is a student before redirecting to langTest
+                                const currentUser = StorageServices.getCurrentUser();
+                                const isStudent = currentUser?.role === Roles.STUDENT;
+                                const isTeacher = currentUser?.role === Roles.TEACHER;
+
+                                if (isStudent) {
+                                    // After successful registration + login, students go to Language Test
+                                    this.router.navigateByUrl('/private-ayo/langTest');
+                                } else if (isTeacher) {
+                                    // Teachers go to dashboard
+                                    this.router.navigateByUrl('/private-ayo');
+                                } else {
+                                    // Other roles go to dashboard
+                                    this.router.navigateByUrl('/private-ayo');
+                                }
+                            },
+                            error: (userError) => {
+                                this.isLoading = false;
+                                this.showMessage('warning', 'Atención', 'Registro exitoso, pero hubo un error al obtener la información del usuario.');
+                            }
+                        });
+                    },
+                    error: (loginErr) => {
+                        this.isLoading = false;
+                        this.showMessage('warning', 'Atención', 'Registro exitoso, pero hubo un error al iniciar sesión automáticamente.');
+                    }
+                });
+            },
+            error: (flowErr) => {
+                this.isLoading = false;
+                this.showMessage('error', 'Error', 'Estudiante validado, pero hubo un error en el proceso de registro');
+            }
+        });
     }
 
     onNotificationClose() {
