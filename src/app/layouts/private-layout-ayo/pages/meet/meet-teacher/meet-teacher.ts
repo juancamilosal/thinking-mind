@@ -448,7 +448,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/private-ayo/teacher'], {
+    this.router.navigate(['/private-ayo/dashboard-ayo'], {
       queryParams: { idioma: this.selectedLanguage }
     });
   }

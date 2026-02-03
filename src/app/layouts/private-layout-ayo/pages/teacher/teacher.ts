@@ -9,7 +9,7 @@ import { environment } from '../../../../../environments/environment';
 export type TeacherStep = 'initial' | 'options';
 
 @Component({
-  selector: 'app-meet-teacher',
+  selector: 'app-teacher',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './teacher.html',
