@@ -54,6 +54,14 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   selectedFile: File | null = null;
   isDragging: boolean = false;
 
+  // PDF File Selection
+  selectedPdfFile: File | null = null;
+  public isPdfDragging: boolean = false;
+
+  // PDF Text Extraction
+  studyPlan: string[] = [];
+  isReadingPdf: boolean = false;
+
   // File Selection Modal
   showFileModal = false;
   directusFiles: DirectusFile[] = [];
@@ -179,12 +187,17 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
   loadPrecioPrograma(): void {
     this.programaAyoService.getPrecioProgramaAyo().subscribe({
       next: (response) => {
-        if (response.data && response.data.length > 0) {
-          const precio = response.data[0].precio;
-          const precioControl = this.fechaFinalizacionForm.get('precio_curso');
-          if (precioControl) {
-            precioControl.setValue(precio);
-            precioControl.disable();
+        if (response.data) {
+          // Handle both single object and array response
+          const data = Array.isArray(response.data) ? response.data[0] : response.data;
+          
+          if (data) {
+            const precio = data.precio;
+            const precioControl = this.fechaFinalizacionForm.get('precio_curso');
+            if (precioControl) {
+              precioControl.setValue(precio);
+              precioControl.disable();
+            }
           }
         }
       },
@@ -225,7 +238,8 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
       teacherSearchTermJueves: [''],
       evento_inicio_jueves: [null, Validators.required],
       evento_fin_jueves: [null, Validators.required],
-      idioma: [null]
+      idioma: [null],
+      archivo: [null]
     });
 
     // Listen for Google Calendar checkbox changes (Martes)
@@ -357,6 +371,112 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
     this.selectedFile = null;
     this.previewImage = null;
     this.selectedDirectusFileId = null;
+  }
+
+  onPdfFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.handlePdfFile(file);
+    }
+  }
+
+  handlePdfFile(file: File) {
+    if (file.type !== 'application/pdf') {
+      this.notificationService.showError('Error', 'Solo se permiten archivos PDF.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      this.notificationService.showError('Error', 'El archivo no debe superar los 10MB.');
+      return;
+    }
+
+    this.selectedPdfFile = file;
+    this.fechaFinalizacionForm.patchValue({ archivo: file });
+    this.extractPdfContent(file);
+  }
+
+  async extractPdfContent(file: File) {
+    this.isReadingPdf = true;
+    this.studyPlan = [];
+
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      (pdfjsLib.GlobalWorkerOptions as any).workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.624/build/pdf.worker.min.mjs';
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      let fullText = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + ' ';
+      }
+
+      this.ngZone.run(() => {
+        this.parseStudyPlan(fullText);
+        this.isReadingPdf = false;
+      });
+
+    } catch (error) {
+      console.error('Error reading PDF:', error);
+      this.ngZone.run(() => {
+        this.notificationService.showError('Error', 'No se pudo leer el contenido del PDF.');
+        this.isReadingPdf = false;
+      });
+    }
+  }
+
+  parseStudyPlan(text: string) {
+
+    const regex = /(\d+\.\s+[^0-9]+?)(?=\s\d+\.\s|$)/g;
+
+    const matches = text.match(/(\d+\.\s+.*?)(?=\s\d+\.\s|$)/g);
+
+    if (matches && matches.length > 0) {
+        this.studyPlan = matches.map(m => m.trim());
+    } else {
+        const looseMatches = text.match(/\d+\.\s+[^\.]+/g);
+        if (looseMatches) {
+             this.studyPlan = looseMatches.map(m => m.trim());
+        }
+    }
+
+  }
+
+  removePdf() {
+    this.selectedPdfFile = null;
+    this.fechaFinalizacionForm.patchValue({ archivo: null });
+    this.studyPlan = [];
+  }
+
+  onPdfDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPdfDragging = true;
+  }
+
+  onPdfDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPdfDragging = false;
+  }
+
+  onPdfDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isPdfDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      this.handlePdfFile(file);
+    }
   }
 
   // File Modal Methods
@@ -517,7 +637,6 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         }
       },
       error: (error) => {
-        console.error('Error loading niveles:', error);
         this.niveles = [];
         this.isLoadingNiveles = false;
       }
@@ -637,6 +756,38 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
         const fechaFinalizacion = rawFechaFinalizacion ? String(rawFechaFinalizacion).split('T')[0] : null;
         let imageId = this.selectedDirectusFileId;
 
+        if (this.selectedFile) {
+          try {
+            // First upload the file
+            const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedFile));
+            if (uploadRes?.data?.id) {
+              imageId = uploadRes.data.id;
+
+              await firstValueFrom(this.fileService.updateFile(imageId, { tematica: true }));
+            }
+          } catch (error) {
+            console.error('Error uploading file', error);
+            this.notificationService.showError('Error', 'No se pudo subir la imagen.');
+            this.isSubmitting = false;
+            return;
+          }
+        }
+
+        let pdfId = null;
+        if (this.selectedPdfFile) {
+          try {
+            const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedPdfFile));
+            if (uploadRes?.data?.id) {
+              pdfId = uploadRes.data.id;
+            }
+          } catch (error) {
+            console.error('Error uploading PDF', error);
+            this.notificationService.showError('Error', 'No se pudo subir el archivo PDF.');
+            this.isSubmitting = false;
+            return;
+          }
+        }
+
         const formData: any = {
           fecha_finalizacion: fechaFinalizacion,
           curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
@@ -655,43 +806,49 @@ export class FormProgramaAyoComponent implements OnInit, OnChanges {
           idioma: this.fechaFinalizacionForm.get('idioma')?.value,
           id_nivel: this.fechaFinalizacionForm.get('evento_nivel')?.value,
           id_reuniones_meet: meetingIds,
-          img: imageId // Add image ID to payload
+          img: imageId,
+          archivo: pdfId
         };
 
         // 3. Create Program
-        this.programaAyoService.createProgramaAyo(formData).subscribe({
-          next: (response) => {
-            this.ngZone.run(() => {
-              const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
-              this.notificationService.showSuccess(
-                'Programa AYO guardado',
-                `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
-                0,
-                () => {
-                   this.goBackAction();
-                }
-              );
+        const response = await firstValueFrom(this.programaAyoService.createProgramaAyo(formData));
+        
+        if (response?.data?.id) {
+          const programId = response.data.id;
 
-              this.isSubmitting = false;
-            });
-          },
-          error: (error) => {
-            this.ngZone.run(() => {
-              console.error('Error al crear programa ayo:', error);
-              this.notificationService.showError(
-                'Error al guardar',
-                'No se pudo guardar la información del programa. Sin embargo, las reuniones pueden haberse creado.'
-              );
-              this.isSubmitting = false;
-            });
+          // 4. Create Study Plan if exists
+          if (this.studyPlan && this.studyPlan.length > 0) {
+            try {
+              const studyPlanPayload = this.studyPlan.map(item => ({
+                plan: item,
+                programa_ayo_id: programId
+              }));
+              
+              await firstValueFrom(this.programaAyoService.createPlanEstudio(studyPlanPayload));
+            } catch (error) {
+              console.error('Error creating study plan:', error);
+              this.ngZone.run(() => {
+                this.notificationService.showError('Advertencia', 'El programa se creó pero hubo un error al guardar el plan de estudio.');
+              });
+            }
           }
-        });
 
+          this.ngZone.run(() => {
+            const cursoNombre = this.fechaFinalizacionForm.get('courseSearchTerm')?.value;
+            this.notificationService.showSuccess(
+              'Programa AYO guardado',
+              `Se ha establecido el programa y las reuniones de los Martes y Jueves`,
+              0,
+              () => {
+                 this.goBackAction();
+              }
+            );
+
+            this.isSubmitting = false;
+          });
+        }
       } catch (error: any) {
         this.ngZone.run(() => {
-          console.error('Error creating calendar events or meetings:', error);
-          // Check if meetings were actually created (user feedback suggests they are)
-          // We'll show the specific error to help debugging
           this.notificationService.showError('Error', `No se pudo completar el proceso. Detalles: ${error.message || error}`);
           this.isSubmitting = false;
         });

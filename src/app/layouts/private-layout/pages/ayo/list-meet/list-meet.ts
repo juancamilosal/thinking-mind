@@ -74,6 +74,15 @@ export class ListMeet implements OnInit {
   selectedStudentForPromotion: AttendanceItem | null = null;
   isLoadingLevels = false;
 
+  // Study Plan Modal Properties
+  showStudyPlanModal = false;
+  selectedStudyPlan: any[] = [];
+  selectedProgramForStudyPlan: ProgramaAyo | null = null;
+
+  // Novedad Modal Properties
+  showNovedadModal = false;
+  novedadText: string = '';
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private notificationService: NotificationService,
@@ -89,6 +98,72 @@ export class ListMeet implements OnInit {
     private certificacionService: CertificacionService,
     private ngZone: NgZone
   ) { }
+
+  openStudyPlanModal(programa: ProgramaAyo): void {
+    this.selectedProgramForStudyPlan = programa;
+    if (Array.isArray(programa.plan_estudio_id)) {
+      const rawPlan = programa.plan_estudio_id as any[];
+      this.selectedStudyPlan = rawPlan.map(item => {
+        const text = item.plan || '';
+        const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
+        if (match) {
+          return {
+            number: parseInt(match[1], 10),
+            displayNumber: match[1],
+            text: match[2],
+            original: item
+          };
+        } else {
+          return {
+            number: 999999, // Push non-numbered items to the end
+            displayNumber: '',
+            text: text,
+            original: item
+          };
+        }
+      }).sort((a, b) => a.number - b.number);
+    } else {
+      this.selectedStudyPlan = [];
+    }
+    this.showStudyPlanModal = true;
+  }
+
+  closeStudyPlanModal(): void {
+    this.showStudyPlanModal = false;
+    this.selectedStudyPlan = [];
+    this.selectedProgramForStudyPlan = null;
+  }
+
+  openNovedadModal(): void {
+    this.showNovedadModal = true;
+    this.novedadText = '';
+  }
+
+  closeNovedadModal(): void {
+    this.showNovedadModal = false;
+    this.novedadText = '';
+  }
+
+  sendNovedad(): void {
+    if (!this.novedadText.trim()) {
+      this.notificationService.showError('Error', 'La novedad no puede estar vacía.');
+      return;
+    }
+
+    this.isLoading = true;
+    this.programaAyoService.sendNovedad(this.novedadText).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Éxito', 'Novedad enviada correctamente.');
+        this.closeNovedadModal();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error enviando novedad:', error);
+        this.notificationService.showError('Error', 'No se pudo enviar la novedad.');
+        this.isLoading = false;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.initForm();

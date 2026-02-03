@@ -24,6 +24,7 @@ export const environment = {
   reuniones_meet: apiUrl + 'items/reuniones_meet',
   attendance: apiUrl + 'items/asistencia',
   programa_ayo: apiUrl + 'items/programas_ayo',
+  plan_estudio: apiUrl + 'items/plan_estudio',
   tarifa_wompi: apiUrl + 'items/tarifa_wompi',
   security: {
     login: apiUrl + 'auth/login',
@@ -56,6 +57,7 @@ export const environment = {
   resultado_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   submit_lang_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   register_student: apiUrl + 'flows/trigger/c27fe837-9095-43f2-bd18-c89dc4fbfdca',
+  send_novedad: apiUrl + 'flows/trigger/71db3b96-7928-401d-8250-a0d7fdae9b79',
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',

@@ -17,22 +17,34 @@ export class StorageServices {
     }
   }
 
+  static saveInLocalStorage(name: string, item: string): void {
+    if (this.isBrowser) {
+      localStorage.setItem(name, item);
+    }
+  }
+
   static saveObjectInSessionStorage(name: string, item: any): void {
     if (this.isBrowser) {
       sessionStorage.setItem(name, JSON.stringify(item));
     }
   }
 
+  static saveObjectInLocalStorage(name: string, item: any): void {
+    if (this.isBrowser) {
+      localStorage.setItem(name, JSON.stringify(item));
+    }
+  }
+
   static getItemFromSessionStorage(name: string): string | null {
     if (this.isBrowser) {
-      return sessionStorage.getItem(name);
+      return sessionStorage.getItem(name) || localStorage.getItem(name);
     }
     return null;
   }
 
   static getItemObjectFromSessionStorage(name: string): any {
     if (this.isBrowser) {
-      const item: string | null = sessionStorage.getItem(name);
+      const item: string | null = sessionStorage.getItem(name) || localStorage.getItem(name);
       return item != null ? JSON.parse(item) : null;
     }
     return null;
@@ -67,6 +79,8 @@ export class StorageServices {
     if (this.isBrowser) {
       sessionStorage.removeItem('access_token');
       sessionStorage.removeItem('refresh_token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
     }
   }
 
@@ -75,12 +89,16 @@ export class StorageServices {
       sessionStorage.removeItem('access_token');
       sessionStorage.removeItem('refresh_token');
       sessionStorage.removeItem(this.CURRENT_USER);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem(this.CURRENT_USER);
     }
   }
 
   static clearAllSession(): void {
     if (this.isBrowser) {
       sessionStorage.clear();
+      localStorage.clear();
     }
   }
 }

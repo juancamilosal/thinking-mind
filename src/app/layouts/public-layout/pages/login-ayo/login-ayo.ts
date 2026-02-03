@@ -39,14 +39,17 @@ export class LoginAyo implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        // Redirigir si ya hay sesión activa
+        // Set context for routing redirects
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('app_context', 'ayo');
+        }
+
         const accessToken = StorageServices.getAccessToken();
         const currentUser = StorageServices.getCurrentUser();
         if (accessToken && currentUser) {
-            this.router.navigate(['/private']);
+            this.router.navigate(['/private-ayo']);
         }
 
-        // Form for Registration (Existing)
         this.registerForm = this.formBuilder.group({
             tipoDocumento: ['', Validators.required],
             numeroDocumento: ['', Validators.required],
@@ -84,40 +87,31 @@ export class LoginAyo implements OnInit {
         const loginPayload = {
             email,
             password,
-            mode: 'cookie'
         };
-
         this.loginServices.login(loginPayload).subscribe({
-            next: (loginRes) => {
+            next: () => {
                 this.loginServices.me().subscribe({
-                    next: (userResponse) => {
+                    next: () => {
                         const currentUser = StorageServices.getCurrentUser();
-
                         this.isLoading = false;
                         this.tokenRefreshService.startTokenRefreshService();
-
-                        // Check if user is a student and hasn't completed the test
                         const isStudent = currentUser?.role === Roles.STUDENT;
                         const isTeacher = currentUser?.role === Roles.TEACHER;
-
                         if (isStudent && (currentUser?.resultado_test === null || currentUser?.resultado_test === undefined)) {
-                          // Student hasn't taken test yet, redirect to test
-                          this.router.navigateByUrl('/private/langTest');
+                          this.router.navigateByUrl('/private-ayo/langTest');
                         } else if (isTeacher) {
-                          // Teacher goes to dashboard
-                          this.router.navigateByUrl('/private');
+                          this.router.navigateByUrl('/private-ayo');
                         } else {
-                          // Student who already took test, go to dashboard
-                          this.router.navigateByUrl('/private');
+                          this.router.navigateByUrl('/private-ayo');
                         }
                     },
-                    error: (userError) => {
+                    error: () => {
                         this.isLoading = false;
                         this.showMessage('error', 'Error', 'Credenciales válidas, pero hubo un error al obtener la información del usuario.');
                     }
                 });
             },
-            error: (loginErr) => {
+            error: () => {
                 this.isLoading = false;
                 this.showMessage('error', 'Error', 'Credenciales inválidas o error en el inicio de sesión.');
             }
@@ -166,13 +160,13 @@ export class LoginAyo implements OnInit {
 
                                                 if (isStudent) {
                                                   // After successful registration + login, students go to Language Test
-                                                  this.router.navigateByUrl('/private/langTest');
+                                                  this.router.navigateByUrl('/private-ayo/langTest');
                                                 } else if (isTeacher) {
                                                   // Teachers go to dashboard
-                                                  this.router.navigateByUrl('/private');
+                                                  this.router.navigateByUrl('/private-ayo');
                                                 } else {
                                                   // Other roles go to dashboard
-                                                  this.router.navigateByUrl('/private');
+                                                  this.router.navigateByUrl('/private-ayo');
                                                 }
                                             },
                                             error: (userError) => {

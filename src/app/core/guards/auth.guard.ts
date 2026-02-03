@@ -5,6 +5,7 @@ import { StorageServices } from '../services/storage.services';
 import { LoginService } from '../services/login.service';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { Roles } from '../const/Roles';
 
 export const authGuard: CanActivateFn = (route, state): Observable<boolean> | boolean => {
   const router = inject(Router);
@@ -17,12 +18,17 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
   if (!accessToken) {
     // Verificar si el último usuario fue de AYO para redirigir correctamente
     const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-    const isAyoRole = lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
 
-    if (isAyoRole) {
-      router.navigate(['/login-ayo']);
+    // Si hay un rol guardado, asumimos que la sesión expiró
+    if (lastRole) {
+      router.navigate(['/session-expired']);
     } else {
-      router.navigate(['/login']);
+      // Si no hay rol previo, redirigir según la ruta intentada
+      if (state.url.includes('/private-ayo')) {
+        router.navigate(['/login-ayo']);
+      } else {
+        router.navigate(['/session-expired']);
+      }
     }
     return false;
   }
@@ -43,12 +49,11 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
       StorageServices.clearSession();
 
       const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-      const isAyoRole = lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
 
-      if (isAyoRole) {
-        router.navigate(['/login-ayo']);
+      if (lastRole) {
+        router.navigate(['/session-expired']);
       } else {
-        router.navigate(['/login']);
+        router.navigate(['/session-expired']);
       }
       return of(false);
     })

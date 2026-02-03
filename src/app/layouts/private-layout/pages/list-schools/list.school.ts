@@ -120,6 +120,8 @@ export class ListSchool implements OnInit {
         this.isSales = true;
       }
     }
+
+    // Si es ventas o admin/otro, cargar todas las cuentas
     this.loadAllAccountsReceivable();
   }
 
@@ -159,10 +161,10 @@ export class ListSchool implements OnInit {
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
-    // Filtrar cuentas por fecha de finalización para roles de Rector y Ventas
+    // Filtrar cuentas por fecha de finalización solo para Rector
     let filteredAccounts = accounts;
 
-    if (this.isRector || this.isSales) {
+    if (this.isRector) {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Establecer a medianoche para comparación exacta
 

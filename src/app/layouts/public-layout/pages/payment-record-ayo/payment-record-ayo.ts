@@ -84,6 +84,9 @@ export class PaymentRecordAyoComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('app_context', 'ayo');
+        }
         this.loadPrecioPrograma();
         this.loadGrupos();
         this.paymentForm = this.formBuilder.group({
@@ -162,8 +165,9 @@ export class PaymentRecordAyoComponent implements OnInit {
     loadPrecioPrograma(): void {
         this.programaAyoService.getPrecioProgramaAyo().subscribe({
             next: (response) => {
-                if (response.data && response.data.length > 0) {
-                    this.precioPrograma = response.data[0];
+                if (response.data) {
+                    // Handle both single object and array response
+                    this.precioPrograma = Array.isArray(response.data) ? response.data[0] : response.data;
                 }
             },
             error: (error) => {

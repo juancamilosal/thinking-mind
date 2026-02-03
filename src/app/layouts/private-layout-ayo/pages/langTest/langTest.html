@@ -1,6 +1,6 @@
 <!-- Welcome screen -->
 @if (!selectedLanguage && !showResults) {
-<section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-16 text-slate-900 font-sans">
+<section class="fixed inset-0 z-[9999] overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-16 text-slate-900 font-sans">
   <div class="absolute inset-0 pointer-events-none">
     <div class="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-emerald-600/10 blur-3xl"></div>
     <div class="absolute bottom-10 right-0 h-72 w-72 rounded-full bg-emerald-600/5 blur-3xl"></div>
@@ -37,7 +37,7 @@
 
 <!-- Question cards -->
 @if (selectedLanguage && !showResults) {
-<section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
+<section class="fixed inset-0 z-[9999] overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
   <div class="absolute inset-0 pointer-events-none">
     <div class="absolute -top-20 right-10 h-60 w-60 rounded-full bg-emerald-600/10 blur-3xl"></div>
     <div class="absolute bottom-10 left-0 h-72 w-72 rounded-full bg-emerald-600/5 blur-3xl"></div>
@@ -110,7 +110,7 @@
 
 <!-- Results screen -->
 @if (showResults) {
-<section class="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
+<section class="fixed inset-0 z-[9999] overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col items-center justify-center px-4 py-12 sm:px-8 text-slate-900 font-sans">
   <div class="absolute inset-0 pointer-events-none">
     <div class="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-emerald-600/10 blur-3xl"></div>
     <div class="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-emerald-600/5 blur-3xl"></div>

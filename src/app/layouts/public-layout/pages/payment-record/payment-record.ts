@@ -105,6 +105,9 @@ export class PaymentRecord implements OnInit {
   }
 
   ngOnInit(): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('app_context', 'general');
+    }
     this.initForm();
     this.loadCourses();
     this.loadExchangeRates();

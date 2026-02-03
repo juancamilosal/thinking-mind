@@ -1,0 +1,31 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg text-center">
+    <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-blue-100 mb-6">
+      <svg class="h-12 w-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </div>
+    
+    <div>
+      <h2 class="mt-2 text-3xl font-extrabold text-gray-900">
+        Sesión Expirada
+      </h2>
+      <p class="mt-4 text-lg text-gray-600">
+        Se cerró sesión por falta de actividad.
+      </p>
+      <p class="mt-2 text-sm text-gray-500">
+        Por favor dar click para ingresar nuevamente.
+      </p>
+    </div>
+
+    <div class="mt-8">
+      <app-button 
+        (btnClick)="loginAgain()" 
+        variant="primary" 
+        size="lg" 
+        [fullWidth]="true">
+        Ingresar nuevamente
+      </app-button>
+    </div>
+  </div>
+</div>

@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { LoginService } from '../services/login.service';
 import { StorageServices } from '../services/storage.services';
 import { TokenRefreshService } from '../services/token-refresh.service';
+import { Roles } from '../const/Roles';
 
 // Variables globales para el estado del refresh
 let isRefreshing = false;
@@ -55,37 +56,32 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    const refreshToken = StorageServices.getRefreshToken();
-     if (refreshToken) {
-       return loginService.refreshToken().pipe(
-        switchMap((response: any) => {
-          const newAccessToken = response?.access_token || response?.data?.access_token;
-          if (newAccessToken) {
-            StorageServices.setAccessToken(newAccessToken);
-            // Notificar a todas las peticiones en espera que el token está listo
-            refreshTokenSubject.next(newAccessToken);
-            // Reprogramar la renovación automática con el nuevo token
-            tokenRefreshService.startTokenRefreshService();
-            // Reintentar la petición original con el nuevo token
-            const retryRequest = addTokenToRequest(request, newAccessToken);
-            // Resetear el estado después de un pequeño delay para permitir que otras peticiones se procesen
-            setTimeout(() => {
-              isRefreshing = false;
-            }, 100);
-            return next(retryRequest);
-          }
-          isRefreshing = false;
-          return redirectToLogin(router, tokenRefreshService);
-        }),
-        catchError((error) => {
-          isRefreshing = false;
-          refreshTokenSubject.next(null);
-          return redirectToLogin(router, tokenRefreshService);
-        })
-      );
-    } else {
-       return redirectToLogin(router, tokenRefreshService);
-     }
+    return loginService.refreshToken().pipe(
+      switchMap((response: any) => {
+        const newAccessToken = response?.access_token || response?.data?.access_token;
+        if (newAccessToken) {
+          StorageServices.setAccessToken(newAccessToken);
+          // Notificar a todas las peticiones en espera que el token está listo
+          refreshTokenSubject.next(newAccessToken);
+          // Reprogramar la renovación automática con el nuevo token
+          tokenRefreshService.startTokenRefreshService();
+          // Reintentar la petición original con el nuevo token
+          const retryRequest = addTokenToRequest(request, newAccessToken);
+          // Resetear el estado después de un pequeño delay para permitir que otras peticiones se procesen
+          setTimeout(() => {
+            isRefreshing = false;
+          }, 100);
+          return next(retryRequest);
+        }
+        isRefreshing = false;
+        return redirectToLogin(router, tokenRefreshService);
+      }),
+      catchError((error) => {
+        isRefreshing = false;
+        refreshTokenSubject.next(null);
+        return redirectToLogin(router, tokenRefreshService);
+      })
+    );
   } else {
     // Si ya se está refrescando el token, esperar a que termine
     return refreshTokenSubject.pipe(
@@ -105,18 +101,10 @@ function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshServic
   // Detener el servicio de renovación de tokens
   tokenRefreshService.stopTokenRefreshService();
   
-  const user = StorageServices.getCurrentUser();
-  const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-  const isAyoRole = user?.role === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3' || lastRole === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
-
   // Limpiar tokens usando StorageServices
   StorageServices.clearTokens();
   
-  if (isAyoRole) {
-    router.navigate(['/login-ayo']);
-  } else {
-    router.navigate(['/login']);
-  }
+  router.navigate(['/session-expired']);
 
   return throwError(() => 'Token refresh failed');
 }

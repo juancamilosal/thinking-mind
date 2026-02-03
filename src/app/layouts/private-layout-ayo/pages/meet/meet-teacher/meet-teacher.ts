@@ -12,7 +12,9 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
 import { Subscription, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
+import { UserService } from '../../../../../core/services/user.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -23,6 +25,7 @@ interface StudentEvaluation {
   attended: boolean;
   rating: number;
   comment: string;
+  currentRating: number;
 }
 
 @Component({
@@ -37,6 +40,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   selectedLanguage: string | null = null;
   assetsUrl: string = environment.assets;
+
+  // Study Plan Modal Properties
+  showStudyPlanModal = false;
+  selectedStudyPlan: any[] = [];
+  selectedProgramForStudyPlan: ProgramaAyo | null = null;
 
 
   // Google Calendar Integration
@@ -58,10 +66,18 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
   currentProgramId: string | null = null;
+  evaluationStudyPlan: any[] = [];
+  selectedPlanItemForEvaluation: any = null;
+
+  // Students List Modal Properties
+  showStudentsModal = false;
+  selectedStudents: any[] = [];
+  selectedProgramForStudents: ProgramaAyo | null = null;
 
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
   private attendanceService = inject(AttendanceService);
+  private userService = inject(UserService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public timerService = inject(MeetingTimerService);
@@ -69,6 +85,22 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
+
+  openStudentsModal(programa: ProgramaAyo): void {
+    this.selectedProgramForStudents = programa;
+    if (programa.id_nivel && Array.isArray(programa.id_nivel.estudiantes_id)) {
+      this.selectedStudents = programa.id_nivel.estudiantes_id;
+    } else {
+      this.selectedStudents = [];
+    }
+    this.showStudentsModal = true;
+  }
+
+  closeStudentsModal(): void {
+    this.showStudentsModal = false;
+    this.selectedStudents = [];
+    this.selectedProgramForStudents = null;
+  }
 
   ngOnInit(): void {
     this.loadGoogleScripts();
@@ -242,11 +274,49 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
         rating: 0,
-        comment: ''
+        comment: '',
+        currentRating: student.calificacion ? Number(student.calificacion) : 0
       }));
     } else {
       // Fallback to empty array if no students found
       this.students = [];
+    }
+
+    // Populate evaluationStudyPlan
+    if (currentProgram && Array.isArray(currentProgram.plan_estudio_id)) {
+      const rawPlan = currentProgram.plan_estudio_id as any[];
+      this.evaluationStudyPlan = rawPlan.map(item => {
+        const text = item.plan || '';
+        const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
+        if (match) {
+          return {
+            number: parseInt(match[1], 10),
+            displayNumber: match[1],
+            text: match[2],
+            original: item
+          };
+        } else {
+          return {
+            number: 999999,
+            displayNumber: '',
+            text: text,
+            original: item
+          };
+        }
+      }).sort((a, b) => a.number - b.number);
+    } else {
+      this.evaluationStudyPlan = [];
+    }
+    this.selectedPlanItemForEvaluation = null;
+  }
+
+  togglePlanItemSelection(item: any): void {
+    if (item.original.realizado) return;
+
+    if (this.selectedPlanItemForEvaluation === item) {
+      this.selectedPlanItemForEvaluation = null;
+    } else {
+      this.selectedPlanItemForEvaluation = item;
     }
   }
 
@@ -276,45 +346,85 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate Study Plan Selection
+    if (!this.selectedPlanItemForEvaluation && this.evaluationStudyPlan.some(i => !i.original.realizado)) {
+      this.notificationService.showWarning(
+        'Plan de Estudio',
+        'Debe seleccionar un tema del plan de estudio como realizado para finalizar.'
+      );
+      return;
+    }
+
     this.isLoading = true;
 
-    // Create observables for each student evaluation
-    const evaluationRequests = this.students.map(student => {
-      const evaluationData: any = {
-        calificacion: student.rating,
-        estudiante_id: student.id,
-        programa_ayo_id: this.currentProgramId,
-        asiste: student.attended,
-        observaciones: student.comment,
-        fecha: new Date().toISOString().split('T')[0]
-      };
-      return this.attendanceService.createAttendance(evaluationData);
-    });
+    const processAttendance = () => {
+      // Create observables for each student evaluation
+      const evaluationRequests = this.students.map(student => {
+        const evaluationData: any = {
+          calificacion: student.rating,
+          estudiante_id: student.id,
+          programa_ayo_id: this.currentProgramId,
+          asiste: student.attended,
+          observaciones: student.comment,
+          fecha: new Date().toISOString().split('T')[0]
+        };
 
-    forkJoin(evaluationRequests).subscribe({
-      next: (responses) => {
-        this.isLoading = false;
-        // Close modal and end session
-        this.showEvaluationModal = false;
-        this.timerService.endSession();
-        this.showNotificationBanner = false;
+        const attendanceObs = this.attendanceService.createAttendance(evaluationData);
 
-        // Show success notification
-        this.notificationService.showSuccess(
-          'Evaluación Guardada',
-          'Las evaluaciones han sido guardadas exitosamente.',
-          3000
-        );
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Error submitting evaluations', error);
-        this.notificationService.showError(
-          'Error',
-          'Hubo un problema al guardar las evaluaciones. Por favor intenta de nuevo.'
-        );
-      }
-    });
+        // Update student cumulative grade if they attended and have a rating
+        if (student.attended && student.rating > 0) {
+          const newRating = (student.currentRating || 0) + student.rating;
+          const updateData: any = { calificacion: newRating };
+          const updateUserObs = this.userService.updateUser(student.id, updateData);
+
+          // Combine both requests
+          return forkJoin([attendanceObs, updateUserObs]);
+        }
+
+        // If no rating update needed, just return attendance wrapped in array
+        return attendanceObs.pipe(map(res => [res, null]));
+      });
+
+      forkJoin(evaluationRequests).subscribe({
+        next: (responses) => {
+          this.isLoading = false;
+          // Close modal and end session
+          this.showEvaluationModal = false;
+          this.timerService.endSession();
+          this.showNotificationBanner = false;
+
+          this.notificationService.showSuccess(
+            'Sesión Finalizada',
+            'La evaluación y calificaciones han sido guardadas exitosamente.'
+          );
+
+          // Redirect or refresh logic if needed
+          setTimeout(() => {
+             this.router.navigate(['/private-ayo/dashboard']);
+          }, 1500);
+        },
+        error: (err) => {
+          console.error('Error submitting evaluations:', err);
+          this.isLoading = false;
+          this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
+        }
+      });
+    };
+
+    if (this.selectedPlanItemForEvaluation) {
+      this.programaAyoService.updatePlanEstudio(this.selectedPlanItemForEvaluation.original.id, { realizado: true })
+        .subscribe({
+          next: () => {
+            processAttendance();
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.notificationService.showError('Error', 'No se pudo actualizar el plan de estudio.');
+          }
+        });
+    } else {
+      processAttendance();
+    }
   }
 
   cancelEvaluation(): void {
@@ -338,13 +448,48 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/private/teacher'], {
+    this.router.navigate(['/private-ayo/dashboard-ayo'], {
       queryParams: { idioma: this.selectedLanguage }
     });
   }
 
   hasActiveSession(meetingId: string): boolean {
     return this.timerService.hasActiveSession(meetingId);
+  }
+
+  openStudyPlanModal(programa: ProgramaAyo): void {
+    this.selectedProgramForStudyPlan = programa;
+    if (Array.isArray(programa.plan_estudio_id)) {
+      const rawPlan = programa.plan_estudio_id as any[];
+      this.selectedStudyPlan = rawPlan.map(item => {
+        const text = item.plan || '';
+        const match = text.match(/^(\d+)[.\)\-]?\s*(.*)$/);
+        if (match) {
+          return {
+            number: parseInt(match[1], 10),
+            displayNumber: match[1],
+            text: match[2],
+            original: item
+          };
+        } else {
+          return {
+            number: 999999, // Push non-numbered items to the end
+            displayNumber: '',
+            text: text,
+            original: item
+          };
+        }
+      }).sort((a, b) => a.number - b.number);
+    } else {
+      this.selectedStudyPlan = [];
+    }
+    this.showStudyPlanModal = true;
+  }
+
+  closeStudyPlanModal(): void {
+    this.showStudyPlanModal = false;
+    this.selectedStudyPlan = [];
+    this.selectedProgramForStudyPlan = null;
   }
 
 
@@ -417,10 +562,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         const event: any = await lastValueFrom(this.http.get(baseUrl, { headers }));
         const currentAttendees = event.attendees || [];
         const organizerEmail = event.organizer?.email?.toLowerCase();
-        
+
         // Lista autoritativa de estudiantes (Normalizamos a minúsculas)
         const targetEmails = new Set(emailsToAdd.map(e => e.toLowerCase()));
-        
+
         const finalAttendees: any[] = [];
         let changesNeeded = false;
 
@@ -451,7 +596,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         // 3. Detectar si hay eliminaciones (Gente en calendar que NO está en finalAttendees)
         const finalEmailsSet = new Set(finalAttendees.map(a => a.email?.toLowerCase()));
         const attendeesToRemove = currentAttendees.filter((a: any) => !finalEmailsSet.has(a.email?.toLowerCase()));
-        
+
         if (attendeesToRemove.length > 0) {
             changesNeeded = true;
             console.log('Eliminando asistentes obsoletos:', attendeesToRemove.map((a:any) => a.email));

@@ -41,6 +41,12 @@ export class TokenRefreshService implements OnDestroy {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
     }
+
+    // Si estamos en el navegador y hay una sesión activa que expiró, redirigir a session-expired
+    if (typeof window !== 'undefined' && StorageServices.getAccessToken()) {
+      StorageServices.clearSession();
+      this.router.navigate(['/session-expired']);
+    }
   }
 
   /**

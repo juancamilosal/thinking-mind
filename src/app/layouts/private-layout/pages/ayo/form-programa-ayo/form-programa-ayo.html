@@ -290,6 +290,92 @@
         </div>
       </div>
 
+      <!-- Sección de Archivo PDF -->
+      <div class="mt-6 space-y-3">
+        <label class="block text-md font-semibold text-gray-700 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+            </path>
+          </svg>
+          Archivo PDF
+        </label>
+
+        <div (drop)="onPdfDrop($event)" (dragover)="onPdfDragOver($event)" (dragleave)="onPdfDragLeave($event)"
+          [class.border-blue-500]="isPdfDragging" [class.bg-blue-50]="isPdfDragging"
+          class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-500 transition-colors duration-200">
+          <div class="space-y-1 text-center">
+            @if (selectedPdfFile) {
+            <div class="relative inline-block p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div class="flex items-center space-x-2">
+                <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0111.414 2.586L15 6.172A2 2 0 0115.586 7.586V18a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm font-medium text-gray-700">{{ selectedPdfFile.name }}</span>
+              </div>
+              <button type="button" (click)="removePdf()"
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            } @else {
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48"
+              aria-hidden="true">
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="flex flex-col items-center gap-2">
+              <div class="flex text-sm text-gray-600 justify-center">
+                <label for="pdf-upload"
+                  class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                  <span>Subir un archivo PDF</span>
+                  <input id="pdf-upload" name="pdf-upload" type="file" class="sr-only" accept="application/pdf"
+                    (change)="onPdfFileSelected($event)">
+                </label>
+                <p class="pl-1">o arrastrar y soltar</p>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">
+              PDF hasta 10MB
+            </p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Plan de Estudio -->
+      <div class="mt-6 space-y-3">
+        <label class="block text-md font-semibold text-gray-700 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Plan de Estudio
+        </label>
+
+        <div class="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          @if (isReadingPdf) {
+            <div class="flex items-center justify-center py-4">
+              <svg class="w-8 h-8 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="ml-2 text-gray-600">Leyendo contenido del PDF...</p>
+            </div>
+          } @else if (studyPlan.length > 0) {
+            <ul class="space-y-2">
+              @for (item of studyPlan; track $index) {
+                <li class="text-gray-700">{{ item }}</li>
+              }
+            </ul>
+          } @else if (selectedPdfFile) {
+            <p class="text-gray-500">No se encontraron items enumerados en el PDF.</p>
+          } @else {
+            <p class="text-gray-500">Carga un PDF para ver el plan de estudio.</p>
+          }
+        </div>
+      </div>
 
       <!-- Google Calendar Section -->
       <div class="mt-8 border-t pt-8">

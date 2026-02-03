@@ -30,6 +30,11 @@ export class Login implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Set context for routing redirects
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('app_context', 'general');
+    }
+
     // Resetear estados al inicializar el componente
     this.showPassword = false;
     this.isLoading = false;

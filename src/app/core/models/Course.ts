@@ -34,6 +34,8 @@ export interface ProgramaAyo {
   id_reuniones_meet?: Meeting[];
   img?: any;
   cuentas_cobrar_id?: any[];
+  plan_estudio_id?: PlanEstudio[] | string;
+
 }
 
 export interface ProgramGroup {
@@ -65,4 +67,10 @@ export class ColegioCurso {
   precio_especial?: number | null;
   programa_independiente?: boolean;
   idioma?: string;
+}
+
+export interface PlanEstudio {
+  id?: number | string;
+  plan: string;
+  realizado: boolean;
 }
