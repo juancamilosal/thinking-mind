@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
+import { PayrollService } from '../../../../core/services/payroll.service';
 import { TeacherDashboardStats } from '../../../../core/models/DashboardModels';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
@@ -41,7 +42,8 @@ export class DashboardAyo implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private studentService: StudentService
+    private studentService: StudentService,
+    private payrollService: PayrollService
   ) {}
 
   ngOnInit(): void {
@@ -115,6 +117,9 @@ export class DashboardAyo implements OnInit {
   }
 
   private loadTeacherData(): void {
+    const user = StorageServices.getItemObjectFromSessionStorage('current_user');
+    const teacherId = user?.id;
+
     this.dashboardService.dashboardTeacher().subscribe({
       next: (response) => {
         if (response && response.data) {
@@ -127,7 +132,22 @@ export class DashboardAyo implements OnInit {
             this.teacherStats = response.data;
           }
         }
-        this.isLoading = false;
+
+        // Load payroll hours for current month (only for teachers)
+        if (teacherId) {
+          this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
+            next: (payrollSummary) => {
+              this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes;
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading payroll hours', error);
+              this.isLoading = false;
+            }
+          });
+        } else {
+          this.isLoading = false;
+        }
       },
       error: (error) => {
         console.error('Error loading teacher dashboard', error);

@@ -7,6 +7,10 @@ export interface MeetingSession {
   elapsedMinutes: number;
   isActive: boolean;
   notified: boolean;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  actualStartTime?: string;
+  gradingDeadline?: string;
 }
 
 @Injectable({
@@ -28,7 +32,7 @@ export class MeetingTimerService {
   /**
    * Start a new meeting session
    */
-  startSession(meetingId: string): void {
+  startSession(meetingId: string, scheduledStart?: Date, scheduledEnd?: Date): void {
     const existingSession = this.getSession();
 
     // If there's already an active session for a different meeting, end it first
@@ -36,12 +40,21 @@ export class MeetingTimerService {
       this.endSession();
     }
 
+    const now = new Date();
+    // Always set actualStartTime to now - this is when the teacher actually started the session
+    const actualStart = now.toISOString();
+    const gradingDeadline = scheduledEnd ? new Date(scheduledEnd.getTime() + 10 * 60 * 1000).toISOString() : undefined;
+
     const session: MeetingSession = {
       meetingId,
       startTime: Date.now(),
       elapsedMinutes: 0,
       isActive: true,
-      notified: false
+      notified: false,
+      scheduledStartTime: scheduledStart?.toISOString(),
+      scheduledEndTime: scheduledEnd?.toISOString(),
+      actualStartTime: actualStart,
+      gradingDeadline
     };
 
     this.saveSession(session);
@@ -82,7 +95,7 @@ export class MeetingTimerService {
     const now = Date.now();
     const elapsedMs = now - session.startTime;
     const totalSeconds = Math.floor(elapsedMs / 1000);
-    
+
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
@@ -144,12 +157,12 @@ export class MeetingTimerService {
           session.notified = true;
         }
 
-        // Save session less frequently to avoid excessive writes? 
+        // Save session less frequently to avoid excessive writes?
         // Or just save every second? LocalStorage is fast enough usually.
-        // Let's optimize to save only if minutes changed or every 10 seconds if needed, 
-        // but for now simple is better. 
+        // Let's optimize to save only if minutes changed or every 10 seconds if needed,
+        // but for now simple is better.
         // However, we MUST emit sessionSubject to trigger UI updates every second.
-        
+
         this.saveSession(session);
         this.sessionSubject.next(session);
       }
@@ -193,6 +206,53 @@ export class MeetingTimerService {
     } catch (error) {
       // Silently fail if audio doesn't work
     }
+  }
+
+  /**
+   * Check if current time is within grading window (10 min after class end)
+   */
+  isWithinGradingWindow(): boolean {
+    const session = this.getSession();
+    if (!session || !session.gradingDeadline) return false;
+
+    const now = new Date();
+    const deadline = new Date(session.gradingDeadline);
+    return now <= deadline;
+  }
+
+  /**
+   * Get time remaining until grading deadline in seconds
+   */
+  getTimeUntilGradingDeadline(): number {
+    const session = this.getSession();
+    if (!session || !session.gradingDeadline) return 0;
+
+    const now = new Date();
+    const deadline = new Date(session.gradingDeadline);
+    return Math.max(0, Math.floor((deadline.getTime() - now.getTime()) / 1000));
+  }
+
+  /**
+   * Get class duration in hours from actual start to now
+   */
+  getClassDurationInHours(): number {
+    const session = this.getSession();
+    if (!session || !session.actualStartTime) return 0;
+
+    const start = new Date(session.actualStartTime);
+    const now = new Date();
+    const durationMs = now.getTime() - start.getTime();
+    return durationMs / (1000 * 60 * 60);
+  }
+
+  /**
+   * Get formatted grading deadline countdown
+   */
+  getFormattedGradingCountdown(): string {
+    const seconds = this.getTimeUntilGradingDeadline();
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
   /**
