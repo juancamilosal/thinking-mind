@@ -66,7 +66,7 @@
           </div>
           <div>
             <span class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1 block">Horas Trabajadas este Mes</span>
-            <span class="text-3xl font-bold text-gray-900">{{ payrollSummary.horasTrabajadasMes }} <span class="text-lg text-gray-500">hrs</span></span>
+            <span class="text-3xl font-bold text-gray-900">{{ formatHours(payrollSummary.horasTrabajadasMes) }} <span class="text-lg text-gray-500">hrs</span></span>
           </div>
         </div>
 
@@ -120,7 +120,7 @@
                 </td>
               </tr>
             } @else {
-              @for (payment of getPaginatedHistory(); track payment.id) {
+              @for (payment of paymentHistory; track payment.id) {
                 <tr class="hover:bg-gray-50 transition-colors">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">

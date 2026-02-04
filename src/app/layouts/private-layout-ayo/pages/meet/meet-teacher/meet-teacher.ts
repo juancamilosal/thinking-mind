@@ -10,6 +10,8 @@ import { ProgramaAyo } from '../../../../../core/models/Course';
 import { MeetingTimerService } from '../../../../../core/services/meeting-timer.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { PayrollService } from '../../../../../core/services/payroll.service';
+import { TeacherPayroll } from '../../../../../core/models/Payroll';
 import { environment } from '../../../../../../environments/environment';
 import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -78,6 +80,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private programaAyoService = inject(ProgramaAyoService);
   private attendanceService = inject(AttendanceService);
   private userService = inject(UserService);
+  private payrollService = inject(PayrollService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public timerService = inject(MeetingTimerService);
@@ -244,7 +247,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     // Start timer session and open meeting in Angular Zone
     this.ngZone.run(() => {
-      this.timerService.startSession(meeting.id);
+      const scheduledStart = new Date(meeting.fecha_inicio);
+      const scheduledEnd = new Date(meeting.fecha_finalizacion);
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd);
 
       // Open meeting in new tab
       if (meeting.link_reunion) {
@@ -355,6 +360,17 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate grading window
+    const isWithinWindow = this.timerService.isWithinGradingWindow();
+    if (!isWithinWindow) {
+      this.notificationService.showError(
+        'Tiempo Agotado',
+        'El tiempo para calificar ha expirado. Esta clase no será pagada.'
+      );
+      this.isLoading = false;
+      return;
+    }
+
     this.isLoading = true;
 
     const processAttendance = () => {
@@ -387,21 +403,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       forkJoin(evaluationRequests).subscribe({
         next: (responses) => {
-          this.isLoading = false;
-          // Close modal and end session
-          this.showEvaluationModal = false;
-          this.timerService.endSession();
-          this.showNotificationBanner = false;
-
-          this.notificationService.showSuccess(
-            'Sesión Finalizada',
-            'La evaluación y calificaciones han sido guardadas exitosamente.'
-          );
-
-          // Redirect or refresh logic if needed
-          setTimeout(() => {
-             this.router.navigate(['/private-ayo/dashboard']);
-          }, 1500);
+          // Create payroll record
+          this.createPayrollRecord();
         },
         error: (err) => {
           console.error('Error submitting evaluations:', err);
@@ -445,6 +448,81 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   dismissNotification(): void {
     this.showNotificationBanner = false;
+  }
+
+  createPayrollRecord(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const teacherId = currentUser?.id;
+    const session = this.timerService.getSession();
+
+    if (!teacherId || !session || !this.currentProgramId) {
+      this.finishEvaluationProcess();
+      return;
+    }
+
+    // Get current program and meeting
+    const currentProgram = this.programas.find(p =>
+      p.id_reuniones_meet?.some(m => m.id === session.meetingId)
+    );
+    const currentMeeting = currentProgram?.id_reuniones_meet?.find(m => m.id === session.meetingId);
+
+    if (!currentMeeting || !currentMeeting.id) {
+      console.error('Meeting not found or missing ID');
+      this.finishEvaluationProcess();
+      return;
+    }
+
+    // Get teacher hourly rate and create payroll
+    this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
+      next: (valorHora) => {
+        const classDuration = this.timerService.getClassDurationInHours();
+        const isOnTime = this.timerService.isWithinGradingWindow();
+
+        const payrollData: TeacherPayroll = {
+          teacher_id: teacherId,
+          reunion_meet_id: currentMeeting.id,
+          programa_ayo_id: this.currentProgramId!,
+          fecha_clase: new Date().toISOString().split('T')[0],
+          hora_inicio_real: session.actualStartTime,
+          hora_fin_evaluacion: new Date().toISOString(),
+          duracion_horas: classDuration,
+          calificado_a_tiempo: isOnTime,
+          estado_pago: 'Pendiente',
+          valor_hora: valorHora,
+          valor_total: isOnTime ? classDuration * valorHora : 0
+        };
+
+        this.payrollService.createPayrollRecord(payrollData).subscribe({
+          next: (response) => {
+            this.finishEvaluationProcess();
+          },
+          error: (err) => {
+            console.error('Error creating payroll record:', err);
+            this.finishEvaluationProcess();
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error getting hourly rate:', err);
+        this.finishEvaluationProcess();
+      }
+    });
+  }
+
+  finishEvaluationProcess(): void {
+    this.isLoading = false;
+    this.showEvaluationModal = false;
+    this.timerService.endSession();
+    this.showNotificationBanner = false;
+
+    this.notificationService.showSuccess(
+      'Sesión Finalizada',
+      'La evaluación y calificaciones han sido guardadas exitosamente.'
+    );
+
+    setTimeout(() => {
+      this.router.navigate(['/private-ayo/dashboard-ayo']);
+    }, 1500);
   }
 
   goBack(): void {

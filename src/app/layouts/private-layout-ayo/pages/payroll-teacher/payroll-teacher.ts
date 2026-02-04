@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StorageServices } from '../../../../core/services/storage.services';
-import { DashboardService } from '../../../../core/services/dashboard.service';
+import { PayrollService } from '../../../../core/services/payroll.service';
 
 export interface PayrollSummary {
   valorPorHora: number;
@@ -16,6 +16,8 @@ export interface PaymentHistory {
   fechaPago: string;
   metodoPago: string;
   estado: 'Pagado' | 'Pendiente';
+  fecha_clase?: string;
+  calificado_a_tiempo?: boolean;
 }
 
 @Component({
@@ -48,7 +50,7 @@ export class PayrollTeacher implements OnInit {
   Math = Math;
 
   constructor(
-    private dashboardService: DashboardService
+    private payrollService: PayrollService
   ) {}
 
   ngOnInit(): void {
@@ -57,85 +59,71 @@ export class PayrollTeacher implements OnInit {
 
   loadPayrollData(): void {
     this.isLoading = true;
+    const currentUser = StorageServices.getCurrentUser();
+    const teacherId = currentUser?.id;
 
-    // Mock data for demonstration - Replace with actual API call when backend is ready
-    setTimeout(() => {
-      // Summary data
-      this.payrollSummary = {
-        valorPorHora: 50000,
-        horasTrabajadasMes: 45,
-        pagoTotalMes: 2250000
-      };
-
-      // Payment history data
-      this.paymentHistory = [
-        {
-          id: '1',
-          horasTrabajadas: 45,
-          valorPorHora: 50000,
-          fechaPago: '',
-          metodoPago: 'TRANSFERENCIA',
-          estado: 'Pendiente'
-        },
-        {
-          id: '2',
-          horasTrabajadas: 40,
-          valorPorHora: 50000,
-          fechaPago: '2025-12-25',
-          metodoPago: 'TRANSFERENCIA',
-          estado: 'Pagado'
-        },
-        {
-          id: '3',
-          horasTrabajadas: 42,
-          valorPorHora: 50000,
-          fechaPago: '2025-11-25',
-          metodoPago: 'EFECTIVO',
-          estado: 'Pagado'
-        },
-        {
-          id: '4',
-          horasTrabajadas: 38,
-          valorPorHora: 45000,
-          fechaPago: '2025-10-25',
-          metodoPago: 'TRANSFERENCIA',
-          estado: 'Pagado'
-        },
-        {
-          id: '5',
-          horasTrabajadas: 44,
-          valorPorHora: 45000,
-          fechaPago: '2025-09-25',
-          metodoPago: 'TRANSFERENCIA',
-          estado: 'Pagado'
-        }
-      ];
-
-      this.totalItems = this.paymentHistory.length;
-      this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    if (!teacherId) {
       this.isLoading = false;
-    }, 800);
+      return;
+    }
 
-    // TODO: Replace with actual API call
-    // this.dashboardService.getTeacherPayroll().subscribe({
-    //   next: (response) => {
-    //     this.payrollSummary = response.summary;
-    //     this.paymentHistory = response.history;
-    //     this.totalItems = this.paymentHistory.length;
-    //     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    //     this.isLoading = false;
-    //   },
-    //   error: (error) => {
-    //     console.error('Error loading payroll data:', error);
-    //     this.isLoading = false;
-    //   }
-    // });
+    // Load summary for current month
+    this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
+      next: (summary) => {
+        this.payrollSummary = summary;
+      },
+      error: (error) => {
+        console.error('Error loading payroll summary:', error);
+        this.payrollSummary = {
+          valorPorHora: 0,
+          horasTrabajadasMes: 0,
+          pagoTotalMes: 0
+        };
+      }
+    });
+
+    // Load payment history
+    this.loadPaymentHistory();
+  }
+
+  loadPaymentHistory(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const teacherId = currentUser?.id;
+
+    if (!teacherId) {
+      this.isLoading = false;
+      return;
+    }
+
+    this.payrollService.getTeacherPayrollHistory(teacherId, this.currentPage, this.itemsPerPage).subscribe({
+      next: (response) => {
+        this.paymentHistory = response.data.map(record => ({
+          id: record.id,
+          horasTrabajadas: record.horasTrabajadas,
+          valorPorHora: record.valorPorHora,
+          fechaPago: record.fechaPago,
+          metodoPago: record.metodoPago,
+          estado: record.estado,
+          fecha_clase: record.fecha_clase,
+          calificado_a_tiempo: record.calificado_a_tiempo
+        }));
+        this.totalItems = response.meta?.filter_count || this.paymentHistory.length;
+        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading payroll history:', error);
+        this.paymentHistory = [];
+        this.isLoading = false;
+      }
+    });
   }
 
   // Pagination methods
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
+      this.loadPaymentHistory();
     }
   }
 
@@ -143,7 +131,7 @@ export class PayrollTeacher implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.itemsPerPage = parseInt(target.value);
     this.currentPage = 1;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    this.loadPaymentHistory();
   }
 
   getPaginationArray(): number[] {
@@ -162,12 +150,6 @@ export class PayrollTeacher implements OnInit {
     return pages;
   }
 
-  getPaginatedHistory(): PaymentHistory[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    return this.paymentHistory.slice(startIndex, endIndex);
-  }
-
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -175,6 +157,13 @@ export class PayrollTeacher implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  formatHours(hours: number): string {
+    return new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(hours);
   }
 
   getEstadoBadgeClass(estado: string): string {

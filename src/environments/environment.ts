@@ -23,6 +23,7 @@ export const environment = {
   historial_programas: apiUrl + 'items/historial_programas',
   reuniones_meet: apiUrl + 'items/reuniones_meet',
   attendance: apiUrl + 'items/asistencia',
+  nomina_docente: apiUrl + 'items/nomina_docente',
   programa_ayo: apiUrl + 'items/programas_ayo',
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
   plan_estudio: apiUrl + 'items/plan_estudio',
