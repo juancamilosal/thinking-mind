@@ -28,6 +28,7 @@ interface StudentEvaluation {
   rating: number;
   comment: string;
   currentRating: number;
+  currentCredits: number;
 }
 
 @Component({
@@ -280,7 +281,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         attended: true,
         rating: 0,
         comment: '',
-        currentRating: student.calificacion ? Number(student.calificacion) : 0
+        currentRating: student.calificacion ? Number(student.calificacion) : 0,
+        currentCredits: student.creditos ? Number(student.creditos) : 0
       }));
     } else {
       // Fallback to empty array if no students found
@@ -390,7 +392,13 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         // Update student cumulative grade if they attended and have a rating
         if (student.attended && student.rating > 0) {
           const newRating = (student.currentRating || 0) + student.rating;
-          const updateData: any = { calificacion: newRating };
+          const currentCredits = student.currentCredits || 0;
+          const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
+          
+          const updateData: any = { 
+            calificacion: newRating,
+            creditos: newCredits 
+          };
           const updateUserObs = this.userService.updateUser(student.id, updateData);
 
           // Combine both requests
