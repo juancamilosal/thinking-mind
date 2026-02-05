@@ -64,6 +64,7 @@ export const environment = {
   submit_lang_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   register_student: apiUrl + 'flows/trigger/c27fe837-9095-43f2-bd18-c89dc4fbfdca',
   send_novedad: apiUrl + 'flows/trigger/71db3b96-7928-401d-8250-a0d7fdae9b79',
+  new_account_ayo: apiUrl + 'flows/trigger/2a58b0b7-7a61-4648-82ea-570ec5c87e77',
   exchangeRates: {
     provider: 'erapi',
     alphavantageApiKey: '',

@@ -17,6 +17,7 @@ import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
 import { UserService } from '../../../../../core/services/user.service';
+import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -29,6 +30,8 @@ interface StudentEvaluation {
   comment: string;
   currentRating: number;
   currentCredits: number;
+  tipo_documento?: string;
+  numero_documento?: string;
 }
 
 @Component({
@@ -87,6 +90,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   public timerService = inject(MeetingTimerService);
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
+  private accountReceivableService = inject(AccountReceivableService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
@@ -274,15 +278,26 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
 
     if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
-      // Map students from id_nivel to evaluation objects
-      this.students = currentProgram.id_nivel.estudiantes_id.map((student: any) => ({
+      // Map students from id_nivel to evaluation objects, ensuring uniqueness
+      const uniqueStudentsMap = new Map();
+      
+      currentProgram.id_nivel.estudiantes_id.forEach((student: any) => {
+        const studentId = student.id || student.directus_users_id;
+        if (studentId && !uniqueStudentsMap.has(studentId)) {
+          uniqueStudentsMap.set(studentId, student);
+        }
+      });
+
+      this.students = Array.from(uniqueStudentsMap.values()).map((student: any) => ({
         id: student.id || student.directus_users_id || '',
         name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
         rating: 0,
         comment: '',
         currentRating: student.calificacion ? Number(student.calificacion) : 0,
-        currentCredits: student.creditos ? Number(student.creditos) : 0
+        currentCredits: student.creditos ? Number(student.creditos) : 0,
+        tipo_documento: student.tipo_documento,
+        numero_documento: student.numero_documento
       }));
     } else {
       // Fallback to empty array if no students found
@@ -376,6 +391,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     const processAttendance = () => {
+      const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
+
       // Create observables for each student evaluation
       const evaluationRequests = this.students.map(student => {
         const evaluationData: any = {
@@ -391,10 +408,17 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         // Update student cumulative grade if they attended and have a rating
         if (student.attended && student.rating > 0) {
-          const newRating = (student.currentRating || 0) + student.rating;
-          const currentCredits = student.currentCredits || 0;
+          const newRating = (Number(student.currentRating) || 0) + Number(student.rating);
+          const currentCredits = Number(student.currentCredits) || 0;
           const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
           
+          if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
+            studentsWithZeroCredits.push({
+              tipo_documento: student.tipo_documento,
+              numero_documento: student.numero_documento
+            });
+          }
+
           const updateData: any = { 
             calificacion: newRating,
             creditos: newCredits 
@@ -411,6 +435,17 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       forkJoin(evaluationRequests).subscribe({
         next: (responses) => {
+          // Send students with zero credits to new service
+          if (studentsWithZeroCredits.length > 0) {
+            const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);
+            const numero_documento = studentsWithZeroCredits.map(s => s.numero_documento);
+            
+            this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
+              next: () => console.log('Zero credit students sent successfully'),
+              error: (e) => console.error('Error sending zero credit students', e)
+            });
+          }
+
           // Create payroll record
           this.createPayrollRecord();
         },
