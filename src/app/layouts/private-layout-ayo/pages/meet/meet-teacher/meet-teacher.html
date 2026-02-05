@@ -263,18 +263,14 @@
                     <!-- Access Button -->
                     <button
                       (click)="accessMeeting(reunion, programa)"
-                      [disabled]="getMeetingStatus(reunion) === 'completed'"
                       class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       [ngClass]="{
-                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id) && getMeetingStatus(reunion) !== 'completed',
-                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id),
-                        'bg-gray-300 text-gray-600': getMeetingStatus(reunion) === 'completed'
+                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id),
+                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id)
                       }">
                       <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
                       @if (hasActiveSession(reunion.id)) {
                         <span>Sesión en Curso</span>
-                      } @else if (getMeetingStatus(reunion) === 'completed') {
-                        <span>Reunión Finalizada</span>
                       } @else {
                         <span>Acceder a Reunión</span>
                       }

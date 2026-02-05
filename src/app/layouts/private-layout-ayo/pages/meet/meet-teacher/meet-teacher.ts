@@ -218,6 +218,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     // Only allow access to upcoming or in-progress meetings
+    /*
     if (status === 'completed') {
       this.notificationService.showInfo(
         'Reunión Finalizada',
@@ -225,6 +226,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       );
       return;
     }
+    */
 
     // 1. Add students to Calendar Event
     let currentProgramStudents: string[] = [];
@@ -378,6 +380,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     // Validate grading window
+    /*
     const isWithinWindow = this.timerService.isWithinGradingWindow();
     if (!isWithinWindow) {
       this.notificationService.showError(
@@ -387,6 +390,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       this.isLoading = false;
       return;
     }
+    */
 
     this.isLoading = true;
 
@@ -519,7 +523,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
       next: (valorHora) => {
         const classDuration = this.timerService.getClassDurationInHours();
-        const isOnTime = this.timerService.isWithinGradingWindow();
+        // const isOnTime = this.timerService.isWithinGradingWindow();
+        const isOnTime = true; // Validation removed to allow payment regardless of time
 
         const payrollData: TeacherPayroll = {
           teacher_id: teacherId,
