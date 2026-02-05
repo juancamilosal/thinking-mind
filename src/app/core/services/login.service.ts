@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable, throwError} from 'rxjs';
-import {tap, timeout, catchError} from 'rxjs/operators';
+import {tap, timeout, catchError, finalize, shareReplay} from 'rxjs/operators';
 import {of} from 'rxjs';
 import {environment} from '../../../environments/environment';
 import {StorageServices} from './storage.services';
@@ -15,6 +15,7 @@ import {Roles} from '../const/Roles';
 
 export class LoginService {
   apiSecurity = environment;
+  private refreshTokenRequest$: Observable<any> | null = null;
 
   constructor(private http: HttpClient) {
 
@@ -125,6 +126,11 @@ export class LoginService {
   }
 
   refreshToken(): Observable<any> {
+    // If a refresh request is already in progress, return it to prevent multiple concurrent refreshes
+    if (this.refreshTokenRequest$) {
+      return this.refreshTokenRequest$;
+    }
+
     const refreshToken = StorageServices.getRefreshToken();
     
     let request$: Observable<any>;
@@ -137,7 +143,7 @@ export class LoginService {
       request$ = this.http.post(environment.security.refresh, { mode: 'cookie' }, { withCredentials: true });
     }
 
-    return request$.pipe(
+    this.refreshTokenRequest$ = request$.pipe(
       tap((response: any) => {
 
         const newAccessToken = response.access_token || response.data?.access_token;
@@ -187,8 +193,14 @@ export class LoginService {
       catchError((error) => {
         StorageServices.clearSession();
         return throwError(() => error);
+      }),
+      shareReplay(1),
+      finalize(() => {
+        this.refreshTokenRequest$ = null;
       })
     );
+
+    return this.refreshTokenRequest$;
   }
 
   me(): Observable<ResponseAPI<any>> {
