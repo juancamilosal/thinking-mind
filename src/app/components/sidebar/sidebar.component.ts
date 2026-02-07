@@ -46,12 +46,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
         }
 
         this.menuItems = items;
-        
-        // Debug logging to help diagnose route issues
-        console.log('Loaded menu items:', this.menuItems.map(item => ({
-          nombre: item.nombre,
-          ruta: item.ruta
-        })));
       },
       error: (error) => {
         console.error('Error loading menu items:', error);

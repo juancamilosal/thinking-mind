@@ -130,4 +130,72 @@ export class PayrollService {
       })
     );
   }
+
+  // Admin methods for payroll management
+  getAllPayrollRecords(
+    page: number = 1,
+    limit: number = 10,
+    filters?: {
+      teacherId?: string;
+      startDate?: string;
+      endDate?: string;
+      estadoPago?: string;
+    }
+  ): Observable<ResponseAPI<TeacherPayroll[]>> {
+    const params: any = {
+      'sort': '-fecha_clase',
+      'page': page.toString(),
+      'limit': limit.toString(),
+      'meta': 'total_count,filter_count',
+      'fields': 'id,teacher_id.id,teacher_id.first_name,teacher_id.last_name,fecha_clase,duracion_horas,valor_hora,valor_total,estado_pago,metodo_pago,fecha_pago,calificado_a_tiempo'
+    };
+
+    // Apply filters if provided
+    if (filters?.teacherId) {
+      params['filter[teacher_id][_eq]'] = filters.teacherId;
+    }
+
+    if (filters?.startDate) {
+      params['filter[fecha_clase][_gte]'] = filters.startDate;
+    }
+
+    if (filters?.endDate) {
+      params['filter[fecha_clase][_lte]'] = filters.endDate;
+    }
+
+    if (filters?.estadoPago) {
+      params['filter[estado_pago][_eq]'] = filters.estadoPago;
+    }
+
+    return this.http.get<ResponseAPI<TeacherPayroll[]>>(this.apiUrl, { params });
+  }
+
+  updateMultiplePayrollStatus(
+    payrollIds: string[],
+    updateData: Partial<TeacherPayroll>
+  ): Observable<ResponseAPI<TeacherPayroll[]>> {
+
+    const updatePromises = payrollIds.map(id =>
+      this.http.patch<ResponseAPI<TeacherPayroll>>(
+        `${this.apiUrl}/${id}`,
+        updateData
+      ).toPromise()
+    );
+
+    return new Observable(observer => {
+      Promise.all(updatePromises)
+        .then(results => {
+          const successfulUpdates = results.filter(r => r?.status === 'SUCCESS');
+          observer.next({
+            status: 'SUCCESS',
+            message: `${successfulUpdates.length} records updated successfully`,
+            data: successfulUpdates.map(r => r!.data) as any
+          } as ResponseAPI<TeacherPayroll[]>);
+          observer.complete();
+        })
+        .catch(error => {
+          observer.error(error);
+        });
+    });
+  }
 }

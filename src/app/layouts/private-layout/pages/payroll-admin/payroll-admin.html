@@ -1,1 +1,391 @@
-<p>payroll-admin works!</p>
+<div class="p-6 bg-gray-50 min-h-full">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-xl font-bold text-gray-800 mb-2">Administración de Nómina</h1>
+    <p class="text-gray-600">Gestiona los pagos de nómina para todos los docentes</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Filtros de Búsqueda</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <!-- Teacher Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Docente</label>
+        <select
+          [(ngModel)]="selectedTeacherId"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          <option value="">Todos los docentes</option>
+          @for (teacher of teachers; track teacher.id) {
+            <option [value]="teacher.id">{{ teacher.first_name }} {{ teacher.last_name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Start Date Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+        <input
+          type="date"
+          [(ngModel)]="startDate"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+      </div>
+
+      <!-- End Date Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+        <input
+          type="date"
+          [(ngModel)]="endDate"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+      </div>
+
+      <!-- Status Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Estado de Pago</label>
+        <select
+          [(ngModel)]="selectedStatus"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          <option value="">Todos los estados</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Pagado">Pagado</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Filter Actions -->
+    <div class="flex gap-3 justify-end">
+      <app-button
+        [variant]="'secondary'"
+        (click)="clearFilters()">
+        Limpiar Filtros
+      </app-button>
+      <app-button
+        [variant]="'primary'"
+        (click)="applyFilters()">
+        Aplicar Filtros
+      </app-button>
+    </div>
+  </div>
+
+  <!-- Payroll Records Table -->
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <!-- Table Header -->
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800">Registros de Nómina</h2>
+        <p class="text-sm text-gray-600 mt-1">Total de registros: {{ totalItems }}</p>
+      </div>
+
+      @if (selectedPayrollIds.size > 0) {
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-600">{{ selectedPayrollIds.size }} seleccionado(s)</span>
+          <app-button
+            [variant]="'success'"
+            [size]="'sm'"
+            (click)="openPaymentModal()">
+            Procesar Pago Masivo
+          </app-button>
+        </div>
+      }
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <input
+                type="checkbox"
+                [checked]="selectAll"
+                (change)="toggleSelectAll()"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Docente
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Fecha Clase
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Horas
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Valor/Hora
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Estado
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Método Pago
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Fecha Pago
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          @if (isLoading) {
+            <!-- Loading Skeleton -->
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+              </tr>
+            }
+          } @else if (payrollRecords.length === 0) {
+            <!-- Empty State -->
+            <tr>
+              <td colspan="10" class="px-6 py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                  <svg class="w-24 h-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron registros</p>
+                  <p class="text-sm text-gray-500">Intenta ajustar los filtros de búsqueda</p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            <!-- Data Rows -->
+            @for (record of payrollRecords; track record.id) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  @if (record.estado_pago === 'Pendiente' && record.id) {
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(record.id)"
+                      (change)="toggleSelection(record.id)"
+                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                  }
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ getTeacherName(record) }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-600">{{ formatDate(record.fecha_clase) }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">{{ record.duracion_horas }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">{{ formatCurrency(record.valor_hora) }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-gray-900">{{ formatCurrency(record.valor_total) }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ' + getEstadoBadgeClass(record.estado_pago)">
+                    {{ record.estado_pago }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-600">{{ record.metodo_pago || 'N/A' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-600">{{ record.fecha_pago ? formatDate(record.fecha_pago) : 'N/A' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  @if (record.estado_pago === 'Pendiente' && record.id) {
+                    <app-button
+                      [variant]="'success'"
+                      [size]="'sm'"
+                      (click)="openPaymentModal(record.id)">
+                      Pagar
+                    </app-button>
+                  } @else {
+                    <span class="text-green-600 font-medium">✓ Pagado</span>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (!isLoading && payrollRecords.length > 0) {
+      <div class="px-6 py-4 border-t border-gray-200">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <!-- Items per page selector -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-700">Mostrar</span>
+            <select
+              [(ngModel)]="itemsPerPage"
+              (change)="onItemsPerPageChange()"
+              class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              @for (option of itemsPerPageOptions; track option) {
+                <option [value]="option">{{ option }}</option>
+              }
+            </select>
+            <span class="text-sm text-gray-700">registros</span>
+          </div>
+
+          <!-- Page info -->
+          <div class="text-sm text-gray-700">
+            Mostrando {{ Math.min((currentPage - 1) * itemsPerPage + 1, totalItems) }}
+            a {{ Math.min(currentPage * itemsPerPage, totalItems) }}
+            de {{ totalItems }} registros
+          </div>
+
+          <!-- Page navigation -->
+          <div class="flex items-center gap-2">
+            <!-- First page -->
+            <app-button
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [disabled]="currentPage === 1"
+              (click)="goToPage(1)">
+              ««
+            </app-button>
+
+            <!-- Previous page -->
+            <app-button
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [disabled]="currentPage === 1"
+              (click)="goToPage(currentPage - 1)">
+              ‹
+            </app-button>
+
+            <!-- Page numbers -->
+            @for (page of getVisiblePages(); track page) {
+              <app-button
+                [variant]="page === currentPage ? 'primary' : 'ghost'"
+                [size]="'sm'"
+                (click)="goToPage(page)">
+                {{ page }}
+              </app-button>
+            }
+
+            <!-- Next page -->
+            <app-button
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [disabled]="currentPage === totalPages"
+              (click)="goToPage(currentPage + 1)">
+              ›
+            </app-button>
+
+            <!-- Last page -->
+            <app-button
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [disabled]="currentPage === totalPages"
+              (click)="goToPage(totalPages)">
+              »»
+            </app-button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Payment Modal -->
+@if (showPaymentModal) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative">
+      <button
+        (click)="closePaymentModal()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <h3 class="text-xl font-bold text-gray-800 mb-4">Procesar Pago</h3>
+
+      <div class="mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600">Registros a pagar:</span>
+            <span class="text-lg font-bold text-gray-900">{{ selectedPayrollForPayment.length }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Total a pagar:</span>
+            <span class="text-xl font-bold text-green-600">{{ formatCurrency(getTotalPaymentAmount()) }}</span>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pago *</label>
+          <select
+            [(ngModel)]="paymentMethod"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Seleccione un método</option>
+            @for (method of paymentMethods; track method.value) {
+              <option [value]="method.value">{{ method.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Pago *</label>
+          <input
+            type="date"
+            [(ngModel)]="paymentDate"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+      </div>
+
+      <div class="flex gap-3 justify-end">
+        <app-button
+          [variant]="'secondary'"
+          (click)="closePaymentModal()"
+          [disabled]="isProcessingPayment">
+          Cancelar
+        </app-button>
+        <app-button
+          [variant]="'success'"
+          (click)="confirmPayment()"
+          [disabled]="isProcessingPayment">
+          @if (isProcessingPayment) {
+            <span>Procesando...</span>
+          } @else {
+            <span>Confirmar Pago</span>
+          }
+        </app-button>
+      </div>
+    </div>
+  </div>
+}
+
+
