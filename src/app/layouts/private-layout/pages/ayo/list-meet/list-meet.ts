@@ -117,7 +117,7 @@ export class ListMeet implements OnInit {
           };
         } else {
           return {
-            number: 999999, // Push non-numbered items to the end
+            number: 999999,
             displayNumber: '',
             text: text,
             original: item
@@ -173,7 +173,7 @@ export class ListMeet implements OnInit {
                  }
              }
          }
-         
+
          if (emails.length === 0) {
              this.notificationService.showError('Error', 'No se encontraron correos de acudientes para este programa.');
              return;
@@ -244,10 +244,10 @@ export class ListMeet implements OnInit {
       next: (response) => {
         const allLevels = response.data || [];
         // Filter levels that have associated AYO programs
-        this.niveles = allLevels.filter(nivel => 
+        this.niveles = allLevels.filter(nivel =>
             nivel.id_programas_ayo && nivel.id_programas_ayo.length > 0
         );
-        
+
         if (this.showLevelModal) {
             this.filterLevelsForPromotion();
         }
@@ -268,9 +268,9 @@ export class ListMeet implements OnInit {
 
   filterLevelsForPromotion(): void {
       if (!this.selectedStudentForPromotion) return;
-      
+
       const currentLevelId = this.selectedStudentForPromotion.currentLevelId;
-      
+
       if (!currentLevelId) {
           // If no level, show all sorted by order
           this.filteredLevels = [...this.niveles].sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
@@ -291,7 +291,7 @@ export class ListMeet implements OnInit {
 
   filterLevelsForDegradation(): void {
       if (!this.selectedStudentForDegradation) return;
-      
+
       const currentLevelId = this.selectedStudentForDegradation.currentLevelId;
 
       if (!currentLevelId) {
@@ -360,23 +360,23 @@ export class ListMeet implements OnInit {
             try {
                 const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
                 this.notificationService.showSuccess('Éxito', message);
-                
+
                 // Update local state
                 if (this.selectedStudentForPromotion) {
                     this.selectedStudentForPromotion.currentLevelId = nivel.id;
                 }
-                
+
                 // Update student in the main list
                 const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
                 if (studentIndex !== -1) {
                     // If viewing a specific level (not "All Students"), remove the student if the new level doesn't match
-                    if (this.selectedProgramForFocus && 
-                        this.selectedProgramForFocus.id_nivel && 
-                        this.selectedProgramForFocus.id_nivel.id && 
+                    if (this.selectedProgramForFocus &&
+                        this.selectedProgramForFocus.id_nivel &&
+                        this.selectedProgramForFocus.id_nivel.id &&
                         this.selectedProgramForFocus.id_nivel.id !== nivel.id) {
-                        
+
                         this.attendanceList.splice(studentIndex, 1);
-                        
+
                         // Also remove from selectedStudents source array
                         const selectedIndex = this.selectedStudents.findIndex(s => s.id === userId);
                         if (selectedIndex !== -1) {
@@ -464,23 +464,23 @@ export class ListMeet implements OnInit {
             try {
                 const message = `El estudiante ${studentName} ha sido degradado de ${oldLevelName} a ${newLevelName}.`;
                 this.notificationService.showSuccess('Éxito', message);
-                
+
                 // Update local state
                 if (this.selectedStudentForDegradation) {
                     this.selectedStudentForDegradation.currentLevelId = nivel.id;
                 }
-                
+
                 // Update student in the main list
                 const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
                 if (studentIndex !== -1) {
                     // If viewing a specific level (not "All Students"), remove the student if the new level doesn't match
-                    if (this.selectedProgramForFocus && 
-                        this.selectedProgramForFocus.id_nivel && 
-                        this.selectedProgramForFocus.id_nivel.id && 
+                    if (this.selectedProgramForFocus &&
+                        this.selectedProgramForFocus.id_nivel &&
+                        this.selectedProgramForFocus.id_nivel.id &&
                         this.selectedProgramForFocus.id_nivel.id !== nivel.id) {
-                        
+
                         this.attendanceList.splice(studentIndex, 1);
-                        
+
                         // Also remove from selectedStudents source array
                         const selectedIndex = this.selectedStudents.findIndex(s => s.id === userId);
                         if (selectedIndex !== -1) {
@@ -965,8 +965,8 @@ export class ListMeet implements OnInit {
                 if (updatedProgram) {
                     this.verEstudiante(updatedProgram, true);
                 } else {
-                     // Program might have been deleted or filtered out, but we might want to keep the panel open 
-                     // or close it. For now, let's leave it as is if not found, 
+                     // Program might have been deleted or filtered out, but we might want to keep the panel open
+                     // or close it. For now, let's leave it as is if not found,
                      // or we could close it. But safer to just not update if not found.
                 }
             }
@@ -1046,7 +1046,7 @@ export class ListMeet implements OnInit {
 
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
-    
+
     // New Logic: Use estudiantes_id from id_nivel to get documents and fetch users
     if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
         const documents: {tipo: string, numero: string}[] = [];
@@ -1066,10 +1066,10 @@ export class ListMeet implements OnInit {
         });
 
         if (documents.length > 0) {
-            this.isLoadingStudents = true; 
+            this.isLoadingStudents = true;
             this.showStudentPanel = true;
             this.selectedProgramForFocus = programa;
-            
+
             this.userService.getUsersByMultipleDocuments(documents).subscribe({
                 next: (response) => {
                     this.isLoadingStudents = false;
@@ -1117,7 +1117,7 @@ export class ListMeet implements OnInit {
     // Fallback: Old Logic using cuentas_cobrar_id
     if (prog.cuentas_cobrar_id && prog.cuentas_cobrar_id.length > 0) {
       const documents: {tipo: string, numero: string}[] = [];
-      
+
       // Filter unique documents to avoid duplicate requests
       const seenDocs = new Set<string>();
 
@@ -1134,13 +1134,13 @@ export class ListMeet implements OnInit {
           }
         }
       });
-      
+
       if (documents.length > 0) {
         // Use isLoadingStudents instead of global isLoading to avoid main skeleton
-        this.isLoadingStudents = true; 
+        this.isLoadingStudents = true;
         this.showStudentPanel = true;
         this.selectedProgramForFocus = programa;
-        
+
         this.userService.getUsersByMultipleDocuments(documents)
           .subscribe({
             next: (response) => {
@@ -1236,7 +1236,7 @@ export class ListMeet implements OnInit {
     if (documents.length > 0) {
       this.isLoadingStudents = true;
       this.showStudentPanel = true;
-      
+
       // Dummy object for view
       this.selectedProgramForFocus = {
         id_nivel: {
