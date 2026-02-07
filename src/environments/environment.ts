@@ -66,6 +66,7 @@ export const environment = {
   send_novedad: apiUrl + 'flows/trigger/71db3b96-7928-401d-8250-a0d7fdae9b79',
   new_account_ayo: apiUrl + 'flows/trigger/2a58b0b7-7a61-4648-82ea-570ec5c87e77',
   change_level: apiUrl + 'flows/trigger/254634da-e19e-47dd-b7a6-0eab4935775d',
+  send_guardian_emails: apiUrl + 'flows/trigger/995203cb-7384-4abc-aa89-9c26d840f88a',
   exchangeRates: {
     provider: 'erapi',
     alphavantageApiKey: '',

@@ -32,6 +32,7 @@ interface StudentEvaluation {
   currentCredits: number;
   tipo_documento?: string;
   numero_documento?: string;
+  email_acudiente?: string;
 }
 
 @Component({
@@ -299,7 +300,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         currentRating: student.calificacion ? Number(student.calificacion) : 0,
         currentCredits: student.creditos ? Number(student.creditos) : 0,
         tipo_documento: student.tipo_documento,
-        numero_documento: student.numero_documento
+        numero_documento: student.numero_documento,
+        email_acudiente: student.email_acudiente
       }));
     } else {
       // Fallback to empty array if no students found
@@ -383,6 +385,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     const processAttendance = () => {
       const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
+      const studentsWithFourCredits: string[] = [];
 
       // Create observables for each student evaluation
       const evaluationRequests = this.students.map(student => {
@@ -410,6 +413,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             });
           }
 
+          if (newCredits === 4 && student.email_acudiente) {
+            studentsWithFourCredits.push(student.email_acudiente);
+          }
+
           const updateData: any = {
             calificacion: newRating,
             creditos: newCredits
@@ -434,6 +441,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
               next: () => console.log('Zero credit students sent successfully'),
               error: (e) => console.error('Error sending zero credit students', e)
+            });
+          }
+
+          // Send students with 4 credits email
+          if (studentsWithFourCredits.length > 0) {
+            this.http.post(environment.send_guardian_emails, { emails: studentsWithFourCredits }).subscribe({
+                next: () => console.log('Emails sent successfully'),
+                error: (e) => console.error('Error sending emails', e)
             });
           }
 
