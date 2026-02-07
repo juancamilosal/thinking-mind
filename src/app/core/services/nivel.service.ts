@@ -30,4 +30,8 @@ export class NivelService {
     
     return this.http.get<ResponseAPI<Nivel[]>>(url);
   }
+
+  changeLevel(payload: { estudiante_id: string, nivel_id: string, accion: string }): Observable<any> {
+    return this.http.post(environment.change_level, payload);
+  }
 }

@@ -5,6 +5,7 @@ export class Nivel {
     nivel: string;
     idioma: string;
     tematica: string;
+    orden?: string;
     imagen?: string;
     estudiantes_id?: any[];
     id_programas_ayo?: string[];

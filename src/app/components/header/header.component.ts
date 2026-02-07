@@ -100,9 +100,9 @@ export class HeaderComponent implements OnInit {
       next: () => {
         StorageServices.clearAllSession();
         if (isAyoRole) {
-          window.location.href = '/login-ayo';
+          this.router.navigate(['/login-ayo']);
         } else {
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       },
       error: (error) => {
@@ -110,9 +110,9 @@ export class HeaderComponent implements OnInit {
         // Incluso si hay error, limpiamos la sesión y redirigimos
         StorageServices.clearAllSession();
         if (isAyoRole) {
-          window.location.href = '/login-ayo';
+          this.router.navigate(['/login-ayo']);
         } else {
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       }
     });

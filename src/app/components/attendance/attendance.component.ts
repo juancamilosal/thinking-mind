@@ -23,8 +23,13 @@ export interface AttendanceItem {
 export class AttendanceComponent {
   @Input() attendanceList: AttendanceItem[] = [];
   @Output() promote = new EventEmitter<AttendanceItem>();
+  @Output() degrade = new EventEmitter<AttendanceItem>();
 
   openPromotionModal(student: AttendanceItem): void {
     this.promote.emit(student);
+  }
+
+  openDegradeModal(student: AttendanceItem): void {
+    this.degrade.emit(student);
   }
 }

@@ -70,6 +70,7 @@ export class ListMeet implements OnInit {
 
   // Promotion Modal Properties
   niveles: Nivel[] = [];
+  filteredLevels: Nivel[] = [];
   showLevelModal = false;
   selectedStudentForPromotion: AttendanceItem | null = null;
   isLoadingLevels = false;
@@ -246,6 +247,14 @@ export class ListMeet implements OnInit {
         this.niveles = allLevels.filter(nivel => 
             nivel.id_programas_ayo && nivel.id_programas_ayo.length > 0
         );
+        
+        if (this.showLevelModal) {
+            this.filterLevelsForPromotion();
+        }
+        if (this.showDegradeModal) {
+            this.filterLevelsForDegradation();
+        }
+
         this.isLoadingLevels = false;
         this.cdr.detectChanges();
       },
@@ -257,11 +266,58 @@ export class ListMeet implements OnInit {
     });
   }
 
+  filterLevelsForPromotion(): void {
+      if (!this.selectedStudentForPromotion) return;
+      
+      const currentLevelId = this.selectedStudentForPromotion.currentLevelId;
+      
+      if (!currentLevelId) {
+          // If no level, show all sorted by order
+          this.filteredLevels = [...this.niveles].sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
+          return;
+      }
+
+      const currentLevel = this.niveles.find(n => n.id === currentLevelId);
+      if (!currentLevel) {
+           this.filteredLevels = [...this.niveles].sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
+           return;
+      }
+
+      const currentOrden = parseInt(currentLevel.orden || '0');
+      this.filteredLevels = this.niveles
+          .filter(n => parseInt(n.orden || '0') > currentOrden)
+          .sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
+  }
+
+  filterLevelsForDegradation(): void {
+      if (!this.selectedStudentForDegradation) return;
+      
+      const currentLevelId = this.selectedStudentForDegradation.currentLevelId;
+
+      if (!currentLevelId) {
+          this.filteredLevels = [];
+          return;
+      }
+
+      const currentLevel = this.niveles.find(n => n.id === currentLevelId);
+      if (!currentLevel) {
+           this.filteredLevels = [];
+           return;
+      }
+
+      const currentOrden = parseInt(currentLevel.orden || '0');
+      this.filteredLevels = this.niveles
+          .filter(n => parseInt(n.orden || '0') < currentOrden)
+          .sort((a, b) => parseInt(b.orden || '0') - parseInt(a.orden || '0'));
+  }
+
   openPromotionModal(student: AttendanceItem): void {
     this.selectedStudentForPromotion = student;
     this.showLevelModal = true;
     if (this.niveles.length === 0) {
       this.loadNiveles();
+    } else {
+      this.filterLevelsForPromotion();
     }
   }
 
@@ -294,24 +350,17 @@ export class ListMeet implements OnInit {
         }
     }
 
-    this.userService.updateUser(userId, { nivel_id: nivel.id }).subscribe({
+    this.nivelService.changeLevel({
+        estudiante_id: userId,
+        nivel_id: nivel.id,
+        accion: 'promocionar'
+    }).subscribe({
       next: () => {
         this.ngZone.run(() => {
             try {
                 const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
                 this.notificationService.showSuccess('Éxito', message);
                 
-                // Create certificate for the completed level
-                if (currentLevelId) {
-                    this.certificacionService.createCertificado({
-                        estudiante_id: userId,
-                        nivel_id: currentLevelId
-                    }).subscribe({
-                        next: (res) => console.log('Certificado creado exitosamente', res),
-                        error: (err) => console.error('Error al crear certificado', err)
-                    });
-                }
-
                 // Update local state
                 if (this.selectedStudentForPromotion) {
                     this.selectedStudentForPromotion.currentLevelId = nivel.id;
@@ -344,6 +393,110 @@ export class ListMeet implements OnInit {
             } catch (e) {
                 console.error('Error processing promotion success:', e);
                 this.closePromotionModal();
+                this.loadProgramas();
+            } finally {
+                this.isLoadingLevels = false;
+                this.cdr.detectChanges();
+            }
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+            console.error('Error updating student level:', error);
+            this.notificationService.showError('Error', 'No se pudo actualizar el nivel del estudiante.');
+            this.isLoadingLevels = false;
+            this.cdr.detectChanges();
+        });
+      }
+    });
+  }
+
+  // Degrade Modal Properties
+  showDegradeModal = false;
+  selectedStudentForDegradation: AttendanceItem | null = null;
+
+  openDegradeModal(student: AttendanceItem): void {
+    this.selectedStudentForDegradation = student;
+    this.showDegradeModal = true;
+    if (this.niveles.length === 0) {
+      this.loadNiveles();
+    } else {
+      this.filterLevelsForDegradation();
+    }
+  }
+
+  closeDegradeModal(): void {
+    this.showDegradeModal = false;
+    this.selectedStudentForDegradation = null;
+  }
+
+  degradeStudent(nivel: Nivel): void {
+    if (!this.selectedStudentForDegradation || !this.selectedStudentForDegradation.id) {
+      this.notificationService.showError('Error', 'No se ha seleccionado un estudiante válido.');
+      return;
+    }
+
+    this.isLoadingLevels = true;
+    const userId = this.selectedStudentForDegradation.id;
+    const studentName = this.selectedStudentForDegradation.studentName;
+    const currentLevelId = this.selectedStudentForDegradation.currentLevelId;
+
+    // Prepare names for message
+    const newLevelName = `${nivel.nivel} ${nivel.subcategoria || ''}`.trim();
+    let oldLevelName = 'Sin nivel';
+
+    if (currentLevelId) {
+        const oldLevel = this.niveles.find(n => n.id === currentLevelId);
+        if (oldLevel) {
+            oldLevelName = `${oldLevel.nivel} ${oldLevel.subcategoria || ''}`.trim();
+        } else {
+            oldLevelName = 'Nivel anterior';
+        }
+    }
+
+    this.nivelService.changeLevel({
+        estudiante_id: userId,
+        nivel_id: nivel.id,
+        accion: 'degradar'
+    }).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+            try {
+                const message = `El estudiante ${studentName} ha sido degradado de ${oldLevelName} a ${newLevelName}.`;
+                this.notificationService.showSuccess('Éxito', message);
+                
+                // Update local state
+                if (this.selectedStudentForDegradation) {
+                    this.selectedStudentForDegradation.currentLevelId = nivel.id;
+                }
+                
+                // Update student in the main list
+                const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
+                if (studentIndex !== -1) {
+                    // If viewing a specific level (not "All Students"), remove the student if the new level doesn't match
+                    if (this.selectedProgramForFocus && 
+                        this.selectedProgramForFocus.id_nivel && 
+                        this.selectedProgramForFocus.id_nivel.id && 
+                        this.selectedProgramForFocus.id_nivel.id !== nivel.id) {
+                        
+                        this.attendanceList.splice(studentIndex, 1);
+                        
+                        // Also remove from selectedStudents source array
+                        const selectedIndex = this.selectedStudents.findIndex(s => s.id === userId);
+                        if (selectedIndex !== -1) {
+                            this.selectedStudents.splice(selectedIndex, 1);
+                        }
+                    } else {
+                        // Otherwise just update the level ID (e.g. in General List)
+                        this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                    }
+                }
+
+                this.closeDegradeModal();
+                this.loadProgramas(); // Refresh program list
+            } catch (e) {
+                console.error('Error processing degradation success:', e);
+                this.closeDegradeModal();
                 this.loadProgramas();
             } finally {
                 this.isLoadingLevels = false;

@@ -84,17 +84,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
       next: () => {
         StorageServices.clearAllSession();
         if (isAyoRole) {
-          window.location.href = '/login-ayo';
+          this.router.navigate(['/login-ayo']);
         } else {
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       },
       error: (error) => {
         StorageServices.clearAllSession();
         if (isAyoRole) {
-          window.location.href = '/login-ayo';
+          this.router.navigate(['/login-ayo']);
         } else {
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       }
     });
