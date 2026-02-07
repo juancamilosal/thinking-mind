@@ -282,7 +282,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
       // Map students from id_nivel to evaluation objects, ensuring uniqueness
       const uniqueStudentsMap = new Map();
-      
+
       currentProgram.id_nivel.estudiantes_id.forEach((student: any) => {
         const studentId = student.id || student.directus_users_id;
         if (studentId && !uniqueStudentsMap.has(studentId)) {
@@ -379,19 +379,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Validate grading window
-    /*
-    const isWithinWindow = this.timerService.isWithinGradingWindow();
-    if (!isWithinWindow) {
-      this.notificationService.showError(
-        'Tiempo Agotado',
-        'El tiempo para calificar ha expirado. Esta clase no será pagada.'
-      );
-      this.isLoading = false;
-      return;
-    }
-    */
-
     this.isLoading = true;
 
     const processAttendance = () => {
@@ -415,7 +402,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           const newRating = (Number(student.currentRating) || 0) + Number(student.rating);
           const currentCredits = Number(student.currentCredits) || 0;
           const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
-          
+
           if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
             studentsWithZeroCredits.push({
               tipo_documento: student.tipo_documento,
@@ -423,9 +410,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             });
           }
 
-          const updateData: any = { 
+          const updateData: any = {
             calificacion: newRating,
-            creditos: newCredits 
+            creditos: newCredits
           };
           const updateUserObs = this.userService.updateUser(student.id, updateData);
 
@@ -443,7 +430,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           if (studentsWithZeroCredits.length > 0) {
             const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);
             const numero_documento = studentsWithZeroCredits.map(s => s.numero_documento);
-            
+
             this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
               next: () => console.log('Zero credit students sent successfully'),
               error: (e) => console.error('Error sending zero credit students', e)
@@ -522,10 +509,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     // Get teacher hourly rate and create payroll
     this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
       next: (valorHora) => {
-        const classDuration = this.timerService.getClassDurationInHours();
-        // const isOnTime = this.timerService.isWithinGradingWindow();
-        const isOnTime = true; // Validation removed to allow payment regardless of time
-
+        // Always pay 1 full hour per class, regardless of actual duration
         const payrollData: TeacherPayroll = {
           teacher_id: teacherId,
           reunion_meet_id: currentMeeting.id,
@@ -533,11 +517,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           fecha_clase: new Date().toISOString().split('T')[0],
           hora_inicio_real: session.actualStartTime,
           hora_fin_evaluacion: new Date().toISOString(),
-          duracion_horas: classDuration,
-          calificado_a_tiempo: isOnTime,
+          duracion_horas: 1,
+          calificado_a_tiempo: true,
           estado_pago: 'Pendiente',
           valor_hora: valorHora,
-          valor_total: isOnTime ? classDuration * valorHora : 0
+          valor_total: valorHora
         };
 
         this.payrollService.createPayrollRecord(payrollData).subscribe({

@@ -30,7 +30,6 @@ export class PayrollService {
     const params: any = {
       'filter[teacher_id][_eq]': teacherId,
       'filter[fecha_clase][_between]': `${startDate},${endDate}`,
-      'filter[calificado_a_tiempo][_eq]': 'true',
       fields: 'duracion_horas,valor_hora,valor_total'
     };
 
