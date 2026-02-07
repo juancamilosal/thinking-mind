@@ -1087,7 +1087,7 @@ export class ListMeet implements OnInit {
                             email: student.email,
                             fecha: new Date(),
                             attended: false,
-                            score: '',
+                            score: student.calificacion || '',
                             currentLevelId: (student as any).nivel_id,
                             subcategoria: prog.id_nivel?.subcategoria || ''
                         }));
@@ -1159,7 +1159,7 @@ export class ListMeet implements OnInit {
                   email: student.email,
                   fecha: new Date(),
                   attended: false,
-                  score: '',
+                  score: student.calificacion || '',
                   currentLevelId: (student as any).nivel_id,
                   subcategoria: prog.id_nivel?.subcategoria || ''
                 }));
