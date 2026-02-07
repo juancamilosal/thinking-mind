@@ -10,7 +10,8 @@ import { ProgramaAyo, ProgramGroup } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
-import { AttendanceComponent, AttendanceItem } from '../../../../../components/attendance/attendance.component';
+import { AttendanceComponent } from '../../../../../components/attendance/attendance.component';
+import {AttendanceItem} from '../../../../../core/models/Attendance';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Nivel';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
@@ -1051,6 +1052,7 @@ export class ListMeet implements OnInit {
     if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
         const documents: {tipo: string, numero: string}[] = [];
         const seenDocs = new Set<string>();
+        const studentAttendanceMap = new Map<string, any[]>();
 
         prog.id_nivel.estudiantes_id.forEach((student: any) => {
             if (student.tipo_documento && student.numero_documento) {
@@ -1062,6 +1064,10 @@ export class ListMeet implements OnInit {
                         numero: student.numero_documento
                     });
                 }
+            }
+            // Populate attendance map
+            if (student.id && student.asistencia_id && Array.isArray(student.asistencia_id)) {
+                studentAttendanceMap.set(student.id, student.asistencia_id);
             }
         });
 
@@ -1081,16 +1087,36 @@ export class ListMeet implements OnInit {
                             this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
                         }
 
-                        this.attendanceList = this.selectedStudents.map(student => ({
-                            id: student.id,
-                            studentName: `${student.first_name} ${student.last_name}`,
-                            email: student.email,
-                            fecha: new Date(),
-                            attended: false,
-                            score: student.calificacion || '',
-                            currentLevelId: (student as any).nivel_id,
-                            subcategoria: prog.id_nivel?.subcategoria || ''
-                        }));
+                        this.attendanceList = this.selectedStudents.map(student => {
+                            let score: number = 0;
+                            let attendancePercentage: number = 0;
+
+                            const rawAttendance = studentAttendanceMap.get(student.id);
+                            if (rawAttendance) {
+                                const programAttendance = rawAttendance.filter((a: any) => a.programa_ayo_id === prog.id);
+
+                                if (programAttendance.length > 0) {
+                                    // Sum score
+                                    score = programAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+
+                                    // Calculate percentage
+                                    const attendedCount = programAttendance.filter((a: any) => a.asiste === true).length;
+                                    attendancePercentage = (attendedCount / programAttendance.length) * 100;
+                                }
+                            }
+
+                            return {
+                                id: student.id,
+                                studentName: `${student.first_name} ${student.last_name}`,
+                                email: student.email,
+                                fecha: new Date(),
+                                attended: false,
+                                score: score > 0 ? score : '',
+                                attendancePercentage: attendancePercentage,
+                                currentLevelId: (student as any).nivel_id,
+                                subcategoria: prog.id_nivel?.subcategoria || ''
+                            };
+                        });
                         this.cdr.detectChanges();
                     } else {
                         if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
@@ -1233,6 +1259,17 @@ export class ListMeet implements OnInit {
         });
     }
 
+    // Create a map of Level ID to Program IDs for filtering attendance
+    const levelProgramMap = new Map<string, Set<string>>();
+    this.programas.forEach((prog: any) => {
+        if (prog.id_nivel && prog.id_nivel.id) {
+            if (!levelProgramMap.has(prog.id_nivel.id)) {
+                levelProgramMap.set(prog.id_nivel.id, new Set<string>());
+            }
+            levelProgramMap.get(prog.id_nivel.id)?.add(prog.id);
+        }
+    });
+
     if (documents.length > 0) {
       this.isLoadingStudents = true;
       this.showStudentPanel = true;
@@ -1259,14 +1296,41 @@ export class ListMeet implements OnInit {
               this.selectedStudents = response.data;
               this.attendanceList = this.selectedStudents.map(student => {
                 const docKey = `${student.tipo_documento}-${student.numero_documento}`;
+                const studentLevelId = (student as any).nivel_id;
+                
+                let score: number = 0;
+                let attendancePercentage: number = 0;
+
+                // Only calculate if student has a level and we have programs for that level
+                if (studentLevelId && levelProgramMap.has(studentLevelId)) {
+                    const validProgramIds = levelProgramMap.get(studentLevelId);
+                    
+                    if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
+                        // Filter attendance records that belong to programs in the student's current level
+                        const validAttendance = (student as any).asistencia_id.filter((a: any) => 
+                            a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
+                        );
+
+                        if (validAttendance.length > 0) {
+                            // Sum score
+                            score = validAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+                            
+                            // Calculate percentage
+                            const attendedCount = validAttendance.filter((a: any) => a.asiste === true).length;
+                            attendancePercentage = (attendedCount / validAttendance.length) * 100;
+                        }
+                    }
+                }
+
                 return {
                     id: student.id,
                     studentName: `${student.first_name} ${student.last_name}`,
                     email: student.email,
                     fecha: new Date(),
                     attended: false,
-                    score: '',
-                    currentLevelId: (student as any).nivel_id,
+                    score: score > 0 ? score : '',
+                    attendancePercentage: attendancePercentage,
+                    currentLevelId: studentLevelId,
                     subcategoria: studentSubcategoryMap.get(docKey) || ''
                 };
               });

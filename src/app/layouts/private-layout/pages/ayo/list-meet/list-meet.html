@@ -456,23 +456,23 @@
         <div class="p-6">
             <div class="mb-4">
                 <label for="novedadText" class="block text-sm font-medium text-gray-700 mb-2">Descripción de la novedad</label>
-                <textarea 
-                    id="novedadText" 
-                    [(ngModel)]="novedadText" 
-                    rows="5" 
+                <textarea
+                    id="novedadText"
+                    [(ngModel)]="novedadText"
+                    rows="5"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#13486e] focus:border-transparent outline-none resize-none"
                     placeholder="Escribe aquí el detalle de la novedad..."></textarea>
             </div>
 
             <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     (click)="closeNovedadModal()"
                     class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium">
                     Cancelar
                 </button>
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     (click)="sendNovedad()"
                     [disabled]="isLoading || !novedadText.trim()"
                     class="px-4 py-2 bg-[#13486e] text-white rounded-lg hover:bg-[#0f3a5a] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
