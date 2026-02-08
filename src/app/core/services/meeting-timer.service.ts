@@ -42,7 +42,7 @@ export class MeetingTimerService {
 
     const now = new Date();
     // Always set actualStartTime to now - this is when the teacher actually started the session
-    const actualStart = now.toISOString();
+    const actualStart = now.toTimeString().split(' ')[0]; // HH:mm:ss format for time-only field
     const gradingDeadline = scheduledEnd ? new Date(scheduledEnd.getTime() + 10 * 60 * 1000).toISOString() : undefined;
 
     const session: MeetingSession = {

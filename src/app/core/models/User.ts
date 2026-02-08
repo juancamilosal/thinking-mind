@@ -12,4 +12,5 @@ export class User {
   numero_documento?: string;
   nivel_id?: string;
   calificacion?: number;
+  valor_hora?: number;
 }
