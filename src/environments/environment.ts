@@ -23,6 +23,7 @@ export const environment = {
   historial_programas: apiUrl + 'items/historial_programas',
   reuniones_meet: apiUrl + 'items/reuniones_meet',
   attendance: apiUrl + 'items/asistencia',
+  nomina_docente: apiUrl + 'items/nomina_docente',
   programa_ayo: apiUrl + 'items/programas_ayo',
   precio_programa_ayo: apiUrl + 'items/precio_programa_ayo',
   plan_estudio: apiUrl + 'items/plan_estudio',
@@ -63,6 +64,9 @@ export const environment = {
   submit_lang_test: apiUrl + 'flows/trigger/d6d785d3-aed1-4b2e-8d43-ec5c91d2f0b1',
   register_student: apiUrl + 'flows/trigger/c27fe837-9095-43f2-bd18-c89dc4fbfdca',
   send_novedad: apiUrl + 'flows/trigger/71db3b96-7928-401d-8250-a0d7fdae9b79',
+  new_account_ayo: apiUrl + 'flows/trigger/2a58b0b7-7a61-4648-82ea-570ec5c87e77',
+  change_level: apiUrl + 'flows/trigger/254634da-e19e-47dd-b7a6-0eab4935775d',
+  send_guardian_emails: apiUrl + 'flows/trigger/995203cb-7384-4abc-aa89-9c26d840f88a',
   exchangeRates: {
     provider: 'erapi',
     alphavantageApiKey: '',

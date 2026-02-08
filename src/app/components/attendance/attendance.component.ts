@@ -1,17 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface AttendanceItem {
-  id?: string;
-  fecha: string | Date;
-  studentName: string;
-  email?: string;
-  attended: boolean;
-  score: string | number;
-  currentLevelId?: string;
-  subcategoria?: string;
-}
+import {AttendanceItem} from '../../core/models/Attendance';
 
 @Component({
   selector: 'app-attendance',
@@ -23,8 +13,13 @@ export interface AttendanceItem {
 export class AttendanceComponent {
   @Input() attendanceList: AttendanceItem[] = [];
   @Output() promote = new EventEmitter<AttendanceItem>();
+  @Output() degrade = new EventEmitter<AttendanceItem>();
 
   openPromotionModal(student: AttendanceItem): void {
     this.promote.emit(student);
+  }
+
+  openDegradeModal(student: AttendanceItem): void {
+    this.degrade.emit(student);
   }
 }

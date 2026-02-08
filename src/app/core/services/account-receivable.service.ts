@@ -21,6 +21,7 @@ export class AccountReceivableService {
   private apiUrlPaymentReceivable = environment.payment_record;
   private apiUrlPaymentRecordAyo = environment.payment_record_ayo;
   private apiUrlReturn = environment.return;
+  private apiUrlNewAccountAyo = environment.new_account_ayo;
   private apiUrlListSchool = environment.list_student_school;
 
   constructor(private http: HttpClient) {
@@ -42,6 +43,10 @@ export class AccountReceivableService {
 
   createPaymentRecordAyo(data: any): Observable<any> {
     return this.http.post(this.apiUrlPaymentRecordAyo, data);
+  }
+
+  newAccountAyo(tipo_documento: string[], numero_documento: string[]): Observable<any> {
+    return this.http.post(this.apiUrlNewAccountAyo, { tipo_documento, numero_documento });
   }
 
   getAllAccountsReceivable(page: number = 1, limit: number = 10, searchTerm?: string): Observable<ResponseAPI<AccountReceivable[]>> {

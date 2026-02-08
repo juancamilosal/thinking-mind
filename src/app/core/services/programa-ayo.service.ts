@@ -30,7 +30,8 @@ export class ProgramaAyoService {
 
   getProgramaAyo(idioma?: string, search?: string, userId?: string, teacherId?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*'
+      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.asistencia_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*',
+      'sort': 'id_nivel.subcategoria'
     };
     if (idioma) {
       params['filter[idioma][_eq]'] = idioma;
@@ -120,7 +121,7 @@ export class ProgramaAyoService {
     return this.http.patch<ResponseAPI<PrecioProgramaAyo>>(`${this.precioUrl}/${id}`, precioData);
   }
 
-  sendNovedad(novedad: string): Observable<any> {
-    return this.http.post<any>(environment.send_novedad, { novedad });
+  sendNovedad(novedad: string, emails: string[]): Observable<any> {
+    return this.http.post<any>(environment.send_novedad, { novedad, emails });
   }
 }

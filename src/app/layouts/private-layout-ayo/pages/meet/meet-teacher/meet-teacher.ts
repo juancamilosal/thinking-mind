@@ -10,11 +10,15 @@ import { ProgramaAyo } from '../../../../../core/models/Course';
 import { MeetingTimerService } from '../../../../../core/services/meeting-timer.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
+import { PayrollService } from '../../../../../core/services/payroll.service';
+import { TeacherPayroll } from '../../../../../core/models/Payroll';
 import { environment } from '../../../../../../environments/environment';
 import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
 import { UserService } from '../../../../../core/services/user.service';
+import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
+import { StudentService } from '../../../../../core/services/student.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -26,6 +30,10 @@ interface StudentEvaluation {
   rating: number;
   comment: string;
   currentRating: number;
+  currentCredits: number;
+  tipo_documento?: string;
+  numero_documento?: string;
+  email_acudiente?: string;
 }
 
 @Component({
@@ -78,11 +86,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private programaAyoService = inject(ProgramaAyoService);
   private attendanceService = inject(AttendanceService);
   private userService = inject(UserService);
+  private payrollService = inject(PayrollService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public timerService = inject(MeetingTimerService);
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
+  private accountReceivableService = inject(AccountReceivableService);
+  private studentService = inject(StudentService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
@@ -210,6 +221,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     // Only allow access to upcoming or in-progress meetings
+    /*
     if (status === 'completed') {
       this.notificationService.showInfo(
         'Reunión Finalizada',
@@ -217,6 +229,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       );
       return;
     }
+    */
 
     // 1. Add students to Calendar Event
     let currentProgramStudents: string[] = [];
@@ -244,7 +257,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     // Start timer session and open meeting in Angular Zone
     this.ngZone.run(() => {
-      this.timerService.startSession(meeting.id);
+      const scheduledStart = new Date(meeting.fecha_inicio);
+      const scheduledEnd = new Date(meeting.fecha_finalizacion);
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd);
 
       // Open meeting in new tab
       if (meeting.link_reunion) {
@@ -268,14 +283,27 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
 
     if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
-      // Map students from id_nivel to evaluation objects
-      this.students = currentProgram.id_nivel.estudiantes_id.map((student: any) => ({
+      // Map students from id_nivel to evaluation objects, ensuring uniqueness
+      const uniqueStudentsMap = new Map();
+
+      currentProgram.id_nivel.estudiantes_id.forEach((student: any) => {
+        const studentId = student.id || student.directus_users_id;
+        if (studentId && !uniqueStudentsMap.has(studentId)) {
+          uniqueStudentsMap.set(studentId, student);
+        }
+      });
+
+      this.students = Array.from(uniqueStudentsMap.values()).map((student: any) => ({
         id: student.id || student.directus_users_id || '',
         name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
         rating: 0,
         comment: '',
-        currentRating: student.calificacion ? Number(student.calificacion) : 0
+        currentRating: student.calificacion ? Number(student.calificacion) : 0,
+        currentCredits: student.creditos ? Number(student.creditos) : 0,
+        tipo_documento: student.tipo_documento,
+        numero_documento: student.numero_documento,
+        email_acudiente: student.email_acudiente
       }));
     } else {
       // Fallback to empty array if no students found
@@ -358,6 +386,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     const processAttendance = () => {
+      const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
+      const studentsWithFourCredits: string[] = [];
+      const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
+
       // Create observables for each student evaluation
       const evaluationRequests = this.students.map(student => {
         const evaluationData: any = {
@@ -373,8 +405,32 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         // Update student cumulative grade if they attended and have a rating
         if (student.attended && student.rating > 0) {
-          const newRating = (student.currentRating || 0) + student.rating;
-          const updateData: any = { calificacion: newRating };
+          const newRating = (Number(student.currentRating) || 0) + Number(student.rating);
+          const currentCredits = Number(student.currentCredits) || 0;
+          const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
+
+          if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
+            studentsWithZeroCredits.push({
+              tipo_documento: student.tipo_documento,
+              numero_documento: student.numero_documento
+            });
+          }
+
+          if (newCredits === 4 && student.email_acudiente) {
+            studentsWithFourCredits.push(student.email_acudiente);
+          }
+
+          if (student.tipo_documento && student.numero_documento) {
+            ratedStudentsForUpdate.push({
+              tipo_documento: student.tipo_documento,
+              numero_documento: student.numero_documento
+            });
+          }
+
+          const updateData: any = {
+            calificacion: newRating,
+            creditos: newCredits
+          };
           const updateUserObs = this.userService.updateUser(student.id, updateData);
 
           // Combine both requests
@@ -387,21 +443,47 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       forkJoin(evaluationRequests).subscribe({
         next: (responses) => {
-          this.isLoading = false;
-          // Close modal and end session
-          this.showEvaluationModal = false;
-          this.timerService.endSession();
-          this.showNotificationBanner = false;
+          // Send students with zero credits to new service
+          if (studentsWithZeroCredits.length > 0) {
+            const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);
+            const numero_documento = studentsWithZeroCredits.map(s => s.numero_documento);
 
-          this.notificationService.showSuccess(
-            'Sesión Finalizada',
-            'La evaluación y calificaciones han sido guardadas exitosamente.'
-          );
+            this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
+              next: () => console.log('Zero credit students sent successfully'),
+              error: (e) => console.error('Error sending zero credit students', e)
+            });
+          }
 
-          // Redirect or refresh logic if needed
-          setTimeout(() => {
-             this.router.navigate(['/private-ayo/dashboard']);
-          }, 1500);
+          // Update estudiante_ayo status for ALL rated students
+          if (ratedStudentsForUpdate.length > 0) {
+            ratedStudentsForUpdate.forEach(s => {
+              this.studentService.searchStudentByDocument(s.tipo_documento, s.numero_documento).subscribe({
+                next: (res) => {
+                  if (res.data && res.data.length > 0) {
+                    const studentId = res.data[0].id;
+                    if (studentId) {
+                      this.studentService.updateStudent(studentId, { estudiante_ayo: true } as any).subscribe({
+                        next: () => console.log(`Updated estudiante_ayo for student ${s.numero_documento}`),
+                        error: (e) => console.error(`Error updating estudiante_ayo for student ${s.numero_documento}`, e)
+                      });
+                    }
+                  }
+                },
+                error: (e) => console.error(`Error searching student ${s.numero_documento}`, e)
+              });
+            });
+          }
+
+          // Send students with 4 credits email
+          if (studentsWithFourCredits.length > 0) {
+            this.http.post(environment.send_guardian_emails, { emails: studentsWithFourCredits }).subscribe({
+                next: () => console.log('Emails sent successfully'),
+                error: (e) => console.error('Error sending emails', e)
+            });
+          }
+
+          // Create payroll record
+          this.createPayrollRecord();
         },
         error: (err) => {
           console.error('Error submitting evaluations:', err);
@@ -445,6 +527,79 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   dismissNotification(): void {
     this.showNotificationBanner = false;
+  }
+
+  createPayrollRecord(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const teacherId = currentUser?.id;
+    const session = this.timerService.getSession();
+
+    if (!teacherId || !session || !this.currentProgramId) {
+      this.finishEvaluationProcess();
+      return;
+    }
+
+    // Get current program and meeting
+    const currentProgram = this.programas.find(p =>
+      p.id_reuniones_meet?.some(m => m.id === session.meetingId)
+    );
+    const currentMeeting = currentProgram?.id_reuniones_meet?.find(m => m.id === session.meetingId);
+
+    if (!currentMeeting || !currentMeeting.id) {
+      console.error('Meeting not found or missing ID');
+      this.finishEvaluationProcess();
+      return;
+    }
+
+    // Get teacher hourly rate and create payroll
+    this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
+      next: (valorHora) => {
+        // Always pay 1 full hour per class, regardless of actual duration
+        const payrollData: TeacherPayroll = {
+          teacher_id: teacherId,
+          reunion_meet_id: currentMeeting.id,
+          programa_ayo_id: this.currentProgramId!,
+          fecha_clase: new Date().toISOString().split('T')[0],
+          hora_inicio_real: session.actualStartTime,
+          hora_fin_evaluacion: new Date().toTimeString().split(' ')[0], // HH:mm:ss format for time-only field
+          duracion_horas: 1,
+          calificado_a_tiempo: true,
+          estado_pago: 'Pendiente',
+          valor_hora: valorHora,
+          valor_total: valorHora
+        };
+
+        this.payrollService.createPayrollRecord(payrollData).subscribe({
+          next: (response) => {
+            this.finishEvaluationProcess();
+          },
+          error: (err) => {
+            console.error('Error creating payroll record:', err);
+            this.finishEvaluationProcess();
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error getting hourly rate:', err);
+        this.finishEvaluationProcess();
+      }
+    });
+  }
+
+  finishEvaluationProcess(): void {
+    this.isLoading = false;
+    this.showEvaluationModal = false;
+    this.timerService.endSession();
+    this.showNotificationBanner = false;
+
+    this.notificationService.showSuccess(
+      'Sesión Finalizada',
+      'La evaluación y calificaciones han sido guardadas exitosamente.'
+    );
+
+    setTimeout(() => {
+      this.router.navigate(['/private-ayo/dashboard-ayo']);
+    }, 1500);
   }
 
   goBack(): void {

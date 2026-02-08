@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
+import { PayrollService } from '../../../../core/services/payroll.service';
 import { TeacherDashboardStats } from '../../../../core/models/DashboardModels';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
@@ -41,7 +42,8 @@ export class DashboardAyo implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private studentService: StudentService
+    private studentService: StudentService,
+    private payrollService: PayrollService
   ) {}
 
   ngOnInit(): void {
@@ -82,23 +84,29 @@ export class DashboardAyo implements OnInit {
         this.ayoStats.resultado_test = user.resultado_test || 'N/A';
         this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
           next: (response) => {
-            const data = response.data || response;
-            if (data) {
-              this.ayoStats = {
-                creditos: data.creditos ?? 0,
-                nivel: data.nivel || data.nivel_idioma || 'N/A',
-                calificacion: data.calificacion ?? 0,
-                resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
-                estado_cuenta: data.estado_cuenta || 'N/A',
-                idioma: data.idioma || 'N/A',
-                subcategoria: data.subcategoria || 'N/A',
-                tematica: data.tematica || 'N/A',
-                reuniones_meet: data.reuniones_meet ? this.sortReuniones(data.reuniones_meet) : []
-              };
+            try {
+              const data = response.data || response;
+              if (data) {
+                this.ayoStats = {
+                  creditos: data.creditos ?? 0,
+                  nivel: data.nivel || data.nivel_idioma || 'N/A',
+                  calificacion: data.calificacion ?? 0,
+                  resultado_test: data.resultado_test === 'undefined' ? 'N/A' : (data.resultado_test || 'N/A'),
+                  estado_cuenta: data.estado_cuenta || 'N/A',
+                  idioma: data.idioma || 'N/A',
+                  subcategoria: data.subcategoria || 'N/A',
+                  tematica: data.tematica || 'N/A',
+                  reuniones_meet: (data.reuniones_meet && Array.isArray(data.reuniones_meet)) ? this.sortReuniones(data.reuniones_meet) : []
+                };
+              }
+            } catch (e) {
+              console.error('Error processing dashboard data:', e);
+            } finally {
+              this.isLoading = false;
             }
-            this.isLoading = false;
           },
           error: (error) => {
+            console.error('Error loading student dashboard:', error);
             this.isLoading = false;
           }
         });
@@ -109,6 +117,9 @@ export class DashboardAyo implements OnInit {
   }
 
   private loadTeacherData(): void {
+    const user = StorageServices.getItemObjectFromSessionStorage('current_user');
+    const teacherId = user?.id;
+
     this.dashboardService.dashboardTeacher().subscribe({
       next: (response) => {
         if (response && response.data) {
@@ -121,7 +132,22 @@ export class DashboardAyo implements OnInit {
             this.teacherStats = response.data;
           }
         }
-        this.isLoading = false;
+
+        // Load payroll hours for current month (only for teachers)
+        if (teacherId) {
+          this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
+            next: (payrollSummary) => {
+              this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes;
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading payroll hours', error);
+              this.isLoading = false;
+            }
+          });
+        } else {
+          this.isLoading = false;
+        }
       },
       error: (error) => {
         console.error('Error loading teacher dashboard', error);

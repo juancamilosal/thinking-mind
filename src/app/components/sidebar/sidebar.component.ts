@@ -48,6 +48,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.menuItems = items;
       },
       error: (error) => {
+        console.error('Error loading menu items:', error);
       }
     });
   }
@@ -84,17 +85,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
       next: () => {
         StorageServices.clearAllSession();
         if (isAyoRole) {
-          window.location.href = '/login-ayo';
+          this.router.navigate(['/login-ayo']);
         } else {
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       },
       error: (error) => {
         StorageServices.clearAllSession();
         if (isAyoRole) {
-          window.location.href = '/login-ayo';
+          this.router.navigate(['/login-ayo']);
         } else {
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       }
     });

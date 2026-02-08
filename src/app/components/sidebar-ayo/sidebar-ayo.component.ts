@@ -67,7 +67,7 @@ export class SidebarAyoComponent implements OnInit, OnDestroy {
     this.loginService.logout().subscribe({
       next: () => {
         StorageServices.clearAllSession();
-          window.location.href = '/login-ayo';
+        this.router.navigate(['/login-ayo']);
       },
     });
   }

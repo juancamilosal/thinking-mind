@@ -44,8 +44,17 @@ export class TokenRefreshService implements OnDestroy {
 
     // Si estamos en el navegador y hay una sesión activa que expiró, redirigir a session-expired
     if (typeof window !== 'undefined' && StorageServices.getAccessToken()) {
+      const currentUser = StorageServices.getCurrentUser();
+      const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
+      const shouldRedirectToAyo = currentUser && currentUser.role && ayoRoles.includes(currentUser.role);
+
       StorageServices.clearSession();
-      this.router.navigate(['/session-expired']);
+      
+      if (shouldRedirectToAyo) {
+        this.router.navigate(['/login-ayo']);
+      } else {
+        this.router.navigate(['/session-expired']);
+      }
     }
   }
 
@@ -107,8 +116,17 @@ export class TokenRefreshService implements OnDestroy {
    * Maneja errores en la renovación del token
    */
   private handleRefreshError(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
+    const shouldRedirectToAyo = currentUser && currentUser.role && ayoRoles.includes(currentUser.role);
+
     StorageServices.clearSession();
-    this.router.navigate(['/login']);
+    
+    if (shouldRedirectToAyo) {
+      this.router.navigate(['/login-ayo']);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   /**

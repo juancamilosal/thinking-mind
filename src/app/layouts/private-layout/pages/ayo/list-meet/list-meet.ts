@@ -10,7 +10,8 @@ import { ProgramaAyo, ProgramGroup } from '../../../../../core/models/Course';
 import { User } from '../../../../../core/models/User';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { environment } from '../../../../../../environments/environment';
-import { AttendanceComponent, AttendanceItem } from '../../../../../components/attendance/attendance.component';
+import { AttendanceComponent } from '../../../../../components/attendance/attendance.component';
+import {AttendanceItem} from '../../../../../core/models/Attendance';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Nivel';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
@@ -70,6 +71,7 @@ export class ListMeet implements OnInit {
 
   // Promotion Modal Properties
   niveles: Nivel[] = [];
+  filteredLevels: Nivel[] = [];
   showLevelModal = false;
   selectedStudentForPromotion: AttendanceItem | null = null;
   isLoadingLevels = false;
@@ -82,6 +84,7 @@ export class ListMeet implements OnInit {
   // Novedad Modal Properties
   showNovedadModal = false;
   novedadText: string = '';
+  selectedProgramForNovedad: any = null;
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -115,7 +118,7 @@ export class ListMeet implements OnInit {
           };
         } else {
           return {
-            number: 999999, // Push non-numbered items to the end
+            number: 999999,
             displayNumber: '',
             text: text,
             original: item
@@ -134,7 +137,14 @@ export class ListMeet implements OnInit {
     this.selectedProgramForStudyPlan = null;
   }
 
-  openNovedadModal(): void {
+  openNovedadModalGlobal(): void {
+    this.selectedProgramForNovedad = null;
+    this.showNovedadModal = true;
+    this.novedadText = '';
+  }
+
+  openNovedadModal(program: any): void {
+    this.selectedProgramForNovedad = program;
     this.showNovedadModal = true;
     this.novedadText = '';
   }
@@ -142,16 +152,58 @@ export class ListMeet implements OnInit {
   closeNovedadModal(): void {
     this.showNovedadModal = false;
     this.novedadText = '';
+    this.selectedProgramForNovedad = null;
   }
 
-  sendNovedad(): void {
+  sendNovedad(program?: any): void {
+    // If program is not passed as argument, use the stored one
+    const targetProgram = program || this.selectedProgramForNovedad;
+
     if (!this.novedadText.trim()) {
       this.notificationService.showError('Error', 'La novedad no puede estar vacía.');
       return;
     }
 
+    let emails: string[] = [];
+
+    if (targetProgram) {
+         if (targetProgram.id_nivel && Array.isArray(targetProgram.id_nivel.estudiantes_id)) {
+             for (const estudiante of targetProgram.id_nivel.estudiantes_id) {
+                 if (estudiante.email_acudiente) {
+                     emails.push(estudiante.email_acudiente);
+                 }
+             }
+         }
+
+         if (emails.length === 0) {
+             this.notificationService.showError('Error', 'No se encontraron correos de acudientes para este programa.');
+             return;
+         }
+    } else {
+        // Global send - collect from all programs
+        if (this.programas && this.programas.length > 0) {
+             for (const prog of this.programas) {
+                 if (prog.id_nivel && Array.isArray(prog.id_nivel.estudiantes_id)) {
+                     for (const estudiante of prog.id_nivel.estudiantes_id) {
+                         if (estudiante.email_acudiente) {
+                             emails.push(estudiante.email_acudiente);
+                         }
+                     }
+                 }
+             }
+        }
+
+        if (emails.length === 0) {
+            this.notificationService.showError('Error', 'No se encontraron correos de acudientes en ningún programa.');
+            return;
+        }
+    }
+
+    // Deduplicate emails
+    emails = [...new Set(emails)];
+
     this.isLoading = true;
-    this.programaAyoService.sendNovedad(this.novedadText).subscribe({
+    this.programaAyoService.sendNovedad(this.novedadText, emails).subscribe({
       next: () => {
         this.notificationService.showSuccess('Éxito', 'Novedad enviada correctamente.');
         this.closeNovedadModal();
@@ -193,9 +245,17 @@ export class ListMeet implements OnInit {
       next: (response) => {
         const allLevels = response.data || [];
         // Filter levels that have associated AYO programs
-        this.niveles = allLevels.filter(nivel => 
+        this.niveles = allLevels.filter(nivel =>
             nivel.id_programas_ayo && nivel.id_programas_ayo.length > 0
         );
+
+        if (this.showLevelModal) {
+            this.filterLevelsForPromotion();
+        }
+        if (this.showDegradeModal) {
+            this.filterLevelsForDegradation();
+        }
+
         this.isLoadingLevels = false;
         this.cdr.detectChanges();
       },
@@ -207,11 +267,58 @@ export class ListMeet implements OnInit {
     });
   }
 
+  filterLevelsForPromotion(): void {
+      if (!this.selectedStudentForPromotion) return;
+
+      const currentLevelId = this.selectedStudentForPromotion.currentLevelId;
+
+      if (!currentLevelId) {
+          // If no level, show all sorted by order
+          this.filteredLevels = [...this.niveles].sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
+          return;
+      }
+
+      const currentLevel = this.niveles.find(n => n.id === currentLevelId);
+      if (!currentLevel) {
+           this.filteredLevels = [...this.niveles].sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
+           return;
+      }
+
+      const currentOrden = parseInt(currentLevel.orden || '0');
+      this.filteredLevels = this.niveles
+          .filter(n => parseInt(n.orden || '0') > currentOrden)
+          .sort((a, b) => parseInt(a.orden || '0') - parseInt(b.orden || '0'));
+  }
+
+  filterLevelsForDegradation(): void {
+      if (!this.selectedStudentForDegradation) return;
+
+      const currentLevelId = this.selectedStudentForDegradation.currentLevelId;
+
+      if (!currentLevelId) {
+          this.filteredLevels = [];
+          return;
+      }
+
+      const currentLevel = this.niveles.find(n => n.id === currentLevelId);
+      if (!currentLevel) {
+           this.filteredLevels = [];
+           return;
+      }
+
+      const currentOrden = parseInt(currentLevel.orden || '0');
+      this.filteredLevels = this.niveles
+          .filter(n => parseInt(n.orden || '0') < currentOrden)
+          .sort((a, b) => parseInt(b.orden || '0') - parseInt(a.orden || '0'));
+  }
+
   openPromotionModal(student: AttendanceItem): void {
     this.selectedStudentForPromotion = student;
     this.showLevelModal = true;
     if (this.niveles.length === 0) {
       this.loadNiveles();
+    } else {
+      this.filterLevelsForPromotion();
     }
   }
 
@@ -244,40 +351,33 @@ export class ListMeet implements OnInit {
         }
     }
 
-    this.userService.updateUser(userId, { nivel_id: nivel.id }).subscribe({
+    this.nivelService.changeLevel({
+        estudiante_id: userId,
+        nivel_id: nivel.id,
+        accion: 'promocionar'
+    }).subscribe({
       next: () => {
         this.ngZone.run(() => {
             try {
                 const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
                 this.notificationService.showSuccess('Éxito', message);
-                
-                // Create certificate for the completed level
-                if (currentLevelId) {
-                    this.certificacionService.createCertificado({
-                        estudiante_id: userId,
-                        nivel_id: currentLevelId
-                    }).subscribe({
-                        next: (res) => console.log('Certificado creado exitosamente', res),
-                        error: (err) => console.error('Error al crear certificado', err)
-                    });
-                }
 
                 // Update local state
                 if (this.selectedStudentForPromotion) {
                     this.selectedStudentForPromotion.currentLevelId = nivel.id;
                 }
-                
+
                 // Update student in the main list
                 const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
                 if (studentIndex !== -1) {
                     // If viewing a specific level (not "All Students"), remove the student if the new level doesn't match
-                    if (this.selectedProgramForFocus && 
-                        this.selectedProgramForFocus.id_nivel && 
-                        this.selectedProgramForFocus.id_nivel.id && 
+                    if (this.selectedProgramForFocus &&
+                        this.selectedProgramForFocus.id_nivel &&
+                        this.selectedProgramForFocus.id_nivel.id &&
                         this.selectedProgramForFocus.id_nivel.id !== nivel.id) {
-                        
+
                         this.attendanceList.splice(studentIndex, 1);
-                        
+
                         // Also remove from selectedStudents source array
                         const selectedIndex = this.selectedStudents.findIndex(s => s.id === userId);
                         if (selectedIndex !== -1) {
@@ -294,6 +394,110 @@ export class ListMeet implements OnInit {
             } catch (e) {
                 console.error('Error processing promotion success:', e);
                 this.closePromotionModal();
+                this.loadProgramas();
+            } finally {
+                this.isLoadingLevels = false;
+                this.cdr.detectChanges();
+            }
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+            console.error('Error updating student level:', error);
+            this.notificationService.showError('Error', 'No se pudo actualizar el nivel del estudiante.');
+            this.isLoadingLevels = false;
+            this.cdr.detectChanges();
+        });
+      }
+    });
+  }
+
+  // Degrade Modal Properties
+  showDegradeModal = false;
+  selectedStudentForDegradation: AttendanceItem | null = null;
+
+  openDegradeModal(student: AttendanceItem): void {
+    this.selectedStudentForDegradation = student;
+    this.showDegradeModal = true;
+    if (this.niveles.length === 0) {
+      this.loadNiveles();
+    } else {
+      this.filterLevelsForDegradation();
+    }
+  }
+
+  closeDegradeModal(): void {
+    this.showDegradeModal = false;
+    this.selectedStudentForDegradation = null;
+  }
+
+  degradeStudent(nivel: Nivel): void {
+    if (!this.selectedStudentForDegradation || !this.selectedStudentForDegradation.id) {
+      this.notificationService.showError('Error', 'No se ha seleccionado un estudiante válido.');
+      return;
+    }
+
+    this.isLoadingLevels = true;
+    const userId = this.selectedStudentForDegradation.id;
+    const studentName = this.selectedStudentForDegradation.studentName;
+    const currentLevelId = this.selectedStudentForDegradation.currentLevelId;
+
+    // Prepare names for message
+    const newLevelName = `${nivel.nivel} ${nivel.subcategoria || ''}`.trim();
+    let oldLevelName = 'Sin nivel';
+
+    if (currentLevelId) {
+        const oldLevel = this.niveles.find(n => n.id === currentLevelId);
+        if (oldLevel) {
+            oldLevelName = `${oldLevel.nivel} ${oldLevel.subcategoria || ''}`.trim();
+        } else {
+            oldLevelName = 'Nivel anterior';
+        }
+    }
+
+    this.nivelService.changeLevel({
+        estudiante_id: userId,
+        nivel_id: nivel.id,
+        accion: 'degradar'
+    }).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+            try {
+                const message = `El estudiante ${studentName} ha sido degradado de ${oldLevelName} a ${newLevelName}.`;
+                this.notificationService.showSuccess('Éxito', message);
+
+                // Update local state
+                if (this.selectedStudentForDegradation) {
+                    this.selectedStudentForDegradation.currentLevelId = nivel.id;
+                }
+
+                // Update student in the main list
+                const studentIndex = this.attendanceList.findIndex(s => s.id === userId);
+                if (studentIndex !== -1) {
+                    // If viewing a specific level (not "All Students"), remove the student if the new level doesn't match
+                    if (this.selectedProgramForFocus &&
+                        this.selectedProgramForFocus.id_nivel &&
+                        this.selectedProgramForFocus.id_nivel.id &&
+                        this.selectedProgramForFocus.id_nivel.id !== nivel.id) {
+
+                        this.attendanceList.splice(studentIndex, 1);
+
+                        // Also remove from selectedStudents source array
+                        const selectedIndex = this.selectedStudents.findIndex(s => s.id === userId);
+                        if (selectedIndex !== -1) {
+                            this.selectedStudents.splice(selectedIndex, 1);
+                        }
+                    } else {
+                        // Otherwise just update the level ID (e.g. in General List)
+                        this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                    }
+                }
+
+                this.closeDegradeModal();
+                this.loadProgramas(); // Refresh program list
+            } catch (e) {
+                console.error('Error processing degradation success:', e);
+                this.closeDegradeModal();
                 this.loadProgramas();
             } finally {
                 this.isLoadingLevels = false;
@@ -762,8 +966,8 @@ export class ListMeet implements OnInit {
                 if (updatedProgram) {
                     this.verEstudiante(updatedProgram, true);
                 } else {
-                     // Program might have been deleted or filtered out, but we might want to keep the panel open 
-                     // or close it. For now, let's leave it as is if not found, 
+                     // Program might have been deleted or filtered out, but we might want to keep the panel open
+                     // or close it. For now, let's leave it as is if not found,
                      // or we could close it. But safer to just not update if not found.
                 }
             }
@@ -843,11 +1047,12 @@ export class ListMeet implements OnInit {
 
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
-    
+
     // New Logic: Use estudiantes_id from id_nivel to get documents and fetch users
     if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
         const documents: {tipo: string, numero: string}[] = [];
         const seenDocs = new Set<string>();
+        const studentAttendanceMap = new Map<string, any[]>();
 
         prog.id_nivel.estudiantes_id.forEach((student: any) => {
             if (student.tipo_documento && student.numero_documento) {
@@ -860,13 +1065,17 @@ export class ListMeet implements OnInit {
                     });
                 }
             }
+            // Populate attendance map
+            if (student.id && student.asistencia_id && Array.isArray(student.asistencia_id)) {
+                studentAttendanceMap.set(student.id, student.asistencia_id);
+            }
         });
 
         if (documents.length > 0) {
-            this.isLoadingStudents = true; 
+            this.isLoadingStudents = true;
             this.showStudentPanel = true;
             this.selectedProgramForFocus = programa;
-            
+
             this.userService.getUsersByMultipleDocuments(documents).subscribe({
                 next: (response) => {
                     this.isLoadingStudents = false;
@@ -878,16 +1087,36 @@ export class ListMeet implements OnInit {
                             this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
                         }
 
-                        this.attendanceList = this.selectedStudents.map(student => ({
-                            id: student.id,
-                            studentName: `${student.first_name} ${student.last_name}`,
-                            email: student.email,
-                            fecha: new Date(),
-                            attended: false,
-                            score: '',
-                            currentLevelId: (student as any).nivel_id,
-                            subcategoria: prog.id_nivel?.subcategoria || ''
-                        }));
+                        this.attendanceList = this.selectedStudents.map(student => {
+                            let score: number = 0;
+                            let attendancePercentage: number = 0;
+
+                            const rawAttendance = studentAttendanceMap.get(student.id);
+                            if (rawAttendance) {
+                                const programAttendance = rawAttendance.filter((a: any) => a.programa_ayo_id === prog.id);
+
+                                if (programAttendance.length > 0) {
+                                    // Sum score
+                                    score = programAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+
+                                    // Calculate percentage
+                                    const attendedCount = programAttendance.filter((a: any) => a.asiste === true).length;
+                                    attendancePercentage = (attendedCount / programAttendance.length) * 100;
+                                }
+                            }
+
+                            return {
+                                id: student.id,
+                                studentName: `${student.first_name} ${student.last_name}`,
+                                email: student.email,
+                                fecha: new Date(),
+                                attended: false,
+                                score: score > 0 ? score : '',
+                                attendancePercentage: attendancePercentage,
+                                currentLevelId: (student as any).nivel_id,
+                                subcategoria: prog.id_nivel?.subcategoria || ''
+                            };
+                        });
                         this.cdr.detectChanges();
                     } else {
                         if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
@@ -914,7 +1143,7 @@ export class ListMeet implements OnInit {
     // Fallback: Old Logic using cuentas_cobrar_id
     if (prog.cuentas_cobrar_id && prog.cuentas_cobrar_id.length > 0) {
       const documents: {tipo: string, numero: string}[] = [];
-      
+
       // Filter unique documents to avoid duplicate requests
       const seenDocs = new Set<string>();
 
@@ -931,13 +1160,13 @@ export class ListMeet implements OnInit {
           }
         }
       });
-      
+
       if (documents.length > 0) {
         // Use isLoadingStudents instead of global isLoading to avoid main skeleton
-        this.isLoadingStudents = true; 
+        this.isLoadingStudents = true;
         this.showStudentPanel = true;
         this.selectedProgramForFocus = programa;
-        
+
         this.userService.getUsersByMultipleDocuments(documents)
           .subscribe({
             next: (response) => {
@@ -956,7 +1185,7 @@ export class ListMeet implements OnInit {
                   email: student.email,
                   fecha: new Date(),
                   attended: false,
-                  score: '',
+                  score: student.calificacion || '',
                   currentLevelId: (student as any).nivel_id,
                   subcategoria: prog.id_nivel?.subcategoria || ''
                 }));
@@ -1030,10 +1259,21 @@ export class ListMeet implements OnInit {
         });
     }
 
+    // Create a map of Level ID to Program IDs for filtering attendance
+    const levelProgramMap = new Map<string, Set<string>>();
+    this.programas.forEach((prog: any) => {
+        if (prog.id_nivel && prog.id_nivel.id) {
+            if (!levelProgramMap.has(prog.id_nivel.id)) {
+                levelProgramMap.set(prog.id_nivel.id, new Set<string>());
+            }
+            levelProgramMap.get(prog.id_nivel.id)?.add(prog.id);
+        }
+    });
+
     if (documents.length > 0) {
       this.isLoadingStudents = true;
       this.showStudentPanel = true;
-      
+
       // Dummy object for view
       this.selectedProgramForFocus = {
         id_nivel: {
@@ -1056,14 +1296,41 @@ export class ListMeet implements OnInit {
               this.selectedStudents = response.data;
               this.attendanceList = this.selectedStudents.map(student => {
                 const docKey = `${student.tipo_documento}-${student.numero_documento}`;
+                const studentLevelId = (student as any).nivel_id;
+                
+                let score: number = 0;
+                let attendancePercentage: number = 0;
+
+                // Only calculate if student has a level and we have programs for that level
+                if (studentLevelId && levelProgramMap.has(studentLevelId)) {
+                    const validProgramIds = levelProgramMap.get(studentLevelId);
+                    
+                    if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
+                        // Filter attendance records that belong to programs in the student's current level
+                        const validAttendance = (student as any).asistencia_id.filter((a: any) => 
+                            a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
+                        );
+
+                        if (validAttendance.length > 0) {
+                            // Sum score
+                            score = validAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+                            
+                            // Calculate percentage
+                            const attendedCount = validAttendance.filter((a: any) => a.asiste === true).length;
+                            attendancePercentage = (attendedCount / validAttendance.length) * 100;
+                        }
+                    }
+                }
+
                 return {
                     id: student.id,
                     studentName: `${student.first_name} ${student.last_name}`,
                     email: student.email,
                     fecha: new Date(),
                     attended: false,
-                    score: '',
-                    currentLevelId: (student as any).nivel_id,
+                    score: score > 0 ? score : '',
+                    attendancePercentage: attendancePercentage,
+                    currentLevelId: studentLevelId,
                     subcategoria: studentSubcategoryMap.get(docKey) || ''
                 };
               });

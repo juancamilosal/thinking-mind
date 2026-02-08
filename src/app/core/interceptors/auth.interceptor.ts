@@ -8,7 +8,7 @@ import { StorageServices } from '../services/storage.services';
 import { TokenRefreshService } from '../services/token-refresh.service';
 import { Roles } from '../const/Roles';
 
-// Variables globales para el estado del refresh
+
 let isRefreshing = false;
 let refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
@@ -16,13 +16,12 @@ export const AuthInterceptor: HttpInterceptorFn = (request: HttpRequest<any>, ne
   const router = inject(Router);
   const loginService = inject(LoginService);
   const tokenRefreshService = inject(TokenRefreshService);
-  
-  // No interceptar las peticiones de login y refresh
+
+
   if (shouldSkipInterceptor(request)) {
     return next(request);
   }
 
-  // Agregar el token de acceso si está disponible
   const accessToken = StorageServices.getAccessToken();
   if (accessToken) {
     request = addTokenToRequest(request, accessToken);
@@ -61,13 +60,9 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
         const newAccessToken = response?.access_token || response?.data?.access_token;
         if (newAccessToken) {
           StorageServices.setAccessToken(newAccessToken);
-          // Notificar a todas las peticiones en espera que el token está listo
           refreshTokenSubject.next(newAccessToken);
-          // Reprogramar la renovación automática con el nuevo token
           tokenRefreshService.startTokenRefreshService();
-          // Reintentar la petición original con el nuevo token
           const retryRequest = addTokenToRequest(request, newAccessToken);
-          // Resetear el estado después de un pequeño delay para permitir que otras peticiones se procesen
           setTimeout(() => {
             isRefreshing = false;
           }, 100);
@@ -83,7 +78,6 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
       })
     );
   } else {
-    // Si ya se está refrescando el token, esperar a que termine
     return refreshTokenSubject.pipe(
       filter(token => token != null),
       take(1),
@@ -98,13 +92,23 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, router: 
 
 function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshService): Observable<never> {
   isRefreshing = false;
-  // Detener el servicio de renovación de tokens
+  
+  const currentUser = StorageServices.getCurrentUser();
+  const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
+  const shouldRedirectToAyo = currentUser && currentUser.role && ayoRoles.includes(currentUser.role);
+
   tokenRefreshService.stopTokenRefreshService();
-  
-  // Limpiar tokens usando StorageServices
-  StorageServices.clearTokens();
-  
-  router.navigate(['/session-expired']);
+
+  // If session still exists (tokenRefreshService didn't clear it), we handle it
+  if (StorageServices.getCurrentUser()) {
+    StorageServices.clearSession();
+    
+    if (shouldRedirectToAyo) {
+      router.navigate(['/login-ayo']);
+    } else {
+      router.navigate(['/session-expired']);
+    }
+  }
 
   return throwError(() => 'Token refresh failed');
 }

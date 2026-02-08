@@ -25,6 +25,7 @@ import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
 import { SessionExpiredComponent } from './layouts/public-layout/pages/session-expired/session-expired';
 import { ayoRoutes } from './ayo.routes';
+import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payroll-admin';
 
 
 export const routes: Routes = [
@@ -154,6 +155,11 @@ export const routes: Routes = [
         path: 'ayo/list-meet',
         title: 'Thinking Mind | Reuniones AYO',
         component: ListMeet
+      },
+      {
+        path: 'payroll-admin',
+        title: 'Thinking Mind | Administración de Nómina',
+        component: PayrollAdmin
       },
       {
         path: '**',

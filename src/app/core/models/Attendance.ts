@@ -12,3 +12,15 @@ export interface Attendance {
     observaciones?: string;
     [key: string]: any;
 }
+
+export interface AttendanceItem {
+  id?: string;
+  fecha: string | Date;
+  studentName: string;
+  email?: string;
+  attended: boolean;
+  score: string | number;
+  attendancePercentage?: number;
+  currentLevelId?: string;
+  subcategoria?: string;
+}
