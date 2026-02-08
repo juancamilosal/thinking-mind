@@ -531,7 +531,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           programa_ayo_id: this.currentProgramId!,
           fecha_clase: new Date().toISOString().split('T')[0],
           hora_inicio_real: session.actualStartTime,
-          hora_fin_evaluacion: new Date().toISOString(),
+          hora_fin_evaluacion: new Date().toTimeString().split(' ')[0], // HH:mm:ss format for time-only field
           duracion_horas: 1,
           calificado_a_tiempo: true,
           estado_pago: 'Pendiente',

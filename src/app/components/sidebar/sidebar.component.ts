@@ -48,6 +48,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.menuItems = items;
       },
       error: (error) => {
+        console.error('Error loading menu items:', error);
       }
     });
   }

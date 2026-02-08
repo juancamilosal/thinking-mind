@@ -67,7 +67,8 @@ export class FormUser implements OnInit {
       schoolId: [''],
       schoolSearchTerm: [''],
       password: ['', passwordValidators],
-      confirmPassword: ['', this.editMode ? [] : [Validators.required]]
+      confirmPassword: ['', this.editMode ? [] : [Validators.required]],
+      valorHora: ['', [Validators.min(0)]]
     }, { validators: this.createPasswordMatchValidator() });
 
     // Hacer el campo de colegio requerido solo para ciertos roles
@@ -76,7 +77,7 @@ export class FormUser implements OnInit {
 
   private updateSchoolValidation(): void {
     const schoolControl = this.userForm.get('schoolId');
-    if (this.selectedRole?.name?.toLowerCase().includes('rector') || 
+    if (this.selectedRole?.name?.toLowerCase().includes('rector') ||
         this.selectedRole?.name?.toLowerCase().includes('director')) {
       schoolControl?.setValidators([Validators.required]);
     } else {
@@ -145,17 +146,17 @@ export class FormUser implements OnInit {
     return (control: AbstractControl): { [key: string]: any } | null => {
       const password = control.get('password');
       const confirmPassword = control.get('confirmPassword');
-      
+
       // Solo validar si ambos campos tienen valores
       if (password?.value && confirmPassword?.value && password.value !== confirmPassword.value) {
         return { passwordMismatch: true };
       }
-      
+
       // En modo edición, si solo uno de los campos tiene valor, es un error
       if (this.editMode && ((password?.value && !confirmPassword?.value) || (!password?.value && confirmPassword?.value))) {
         return { passwordMismatch: true };
       }
-      
+
       return null;
     };
   }
@@ -163,12 +164,12 @@ export class FormUser implements OnInit {
   private passwordMatchValidator(control: AbstractControl): { [key: string]: any } | null {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
-    
+
     // Solo validar si ambos campos tienen valores
     if (password?.value && confirmPassword?.value && password.value !== confirmPassword.value) {
       return { passwordMismatch: true };
     }
-    
+
     return null;
   }
 
@@ -178,7 +179,8 @@ export class FormUser implements OnInit {
         firstName: this.userData.first_name,
         lastName: this.userData.last_name,
         email: this.userData.email,
-        phone: this.userData.celular
+        phone: this.userData.celular,
+        valorHora: this.userData.valor_hora
       });
 
       if (this.userData.colegio_id) {
@@ -222,6 +224,12 @@ export class FormUser implements OnInit {
     const schoolId = this.userForm.get('schoolId')?.value;
     if (schoolId) {
       userData.colegio_id = schoolId;
+    }
+
+    // Solo agregar valor_hora si se proporcionó (para docentes)
+    const valorHora = this.userForm.get('valorHora')?.value;
+    if (valorHora !== null && valorHora !== undefined && valorHora !== '') {
+      userData.valor_hora = parseFloat(valorHora);
     }
 
     this.userService.createUser(userData).subscribe({
@@ -276,6 +284,12 @@ export class FormUser implements OnInit {
     const password = this.userForm.get('password')?.value?.trim();
     if (password) {
       userData.password = password;
+    }
+
+    // Solo agregar valor_hora si se proporcionó (para docentes)
+    const valorHora = this.userForm.get('valorHora')?.value;
+    if (valorHora !== null && valorHora !== undefined && valorHora !== '') {
+      userData.valor_hora = parseFloat(valorHora);
     }
 
     // Verificar que al menos un campo tenga valor
@@ -358,7 +372,7 @@ export class FormUser implements OnInit {
 
   private capitalizeWords(text: string): string {
     if (!text) return text;
-    
+
     return text
       .toLowerCase()
       .split(' ')
@@ -384,4 +398,5 @@ export class FormUser implements OnInit {
   get schoolId() { return this.userForm.get('schoolId'); }
   get password() { return this.userForm.get('password'); }
   get confirmPassword() { return this.userForm.get('confirmPassword'); }
+  get valorHora() { return this.userForm.get('valorHora'); }
 }
