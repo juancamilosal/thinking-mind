@@ -113,6 +113,27 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.selectedProgramForStudents = null;
   }
 
+  getStudentAttendance(student: any): number {
+    if (!student.asistencia_id || !Array.isArray(student.asistencia_id) || !this.selectedProgramForStudents) {
+      return 0;
+    }
+
+    const programId = this.selectedProgramForStudents.id;
+
+    // Filter attendance records for this specific program
+    // We expect record to be an object as per user JSON, but we check just in case
+    const relevantRecords = student.asistencia_id.filter((record: any) =>
+      record && typeof record === 'object' && record.programa_ayo_id === programId
+    );
+
+    if (relevantRecords.length === 0) return 0;
+
+    const attendedCount = relevantRecords.filter((record: any) => record.asiste === true).length;
+
+    // Percentage = (Attended / Total Recorded) * 100
+    return Math.round((attendedCount / relevantRecords.length) * 100);
+  }
+
   ngOnInit(): void {
     this.loadGoogleScripts();
 

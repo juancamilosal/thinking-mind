@@ -58,7 +58,7 @@ export class ProgramaAyoService {
 
   getProgramaAyoDocente(teacherId: string, idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*, plan_estudio_id.*'
+      'fields': '*, id_nivel.*, id_reuniones_meet.*,id_nivel.estudiantes_id.*, id_nivel.estudiantes_id.asistencia_id.*,plan_estudio_id.*'
     };
 
     if (teacherId) {
