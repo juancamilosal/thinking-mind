@@ -18,6 +18,7 @@ import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
 import { UserService } from '../../../../../core/services/user.service';
 import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
+import { StudentService } from '../../../../../core/services/student.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -92,6 +93,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
   private accountReceivableService = inject(AccountReceivableService);
+  private studentService = inject(StudentService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
@@ -386,6 +388,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const processAttendance = () => {
       const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
       const studentsWithFourCredits: string[] = [];
+      const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
 
       // Create observables for each student evaluation
       const evaluationRequests = this.students.map(student => {
@@ -417,6 +420,13 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             studentsWithFourCredits.push(student.email_acudiente);
           }
 
+          if (student.tipo_documento && student.numero_documento) {
+            ratedStudentsForUpdate.push({
+              tipo_documento: student.tipo_documento,
+              numero_documento: student.numero_documento
+            });
+          }
+
           const updateData: any = {
             calificacion: newRating,
             creditos: newCredits
@@ -441,6 +451,26 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
               next: () => console.log('Zero credit students sent successfully'),
               error: (e) => console.error('Error sending zero credit students', e)
+            });
+          }
+
+          // Update estudiante_ayo status for ALL rated students
+          if (ratedStudentsForUpdate.length > 0) {
+            ratedStudentsForUpdate.forEach(s => {
+              this.studentService.searchStudentByDocument(s.tipo_documento, s.numero_documento).subscribe({
+                next: (res) => {
+                  if (res.data && res.data.length > 0) {
+                    const studentId = res.data[0].id;
+                    if (studentId) {
+                      this.studentService.updateStudent(studentId, { estudiante_ayo: true } as any).subscribe({
+                        next: () => console.log(`Updated estudiante_ayo for student ${s.numero_documento}`),
+                        error: (e) => console.error(`Error updating estudiante_ayo for student ${s.numero_documento}`, e)
+                      });
+                    }
+                  }
+                },
+                error: (e) => console.error(`Error searching student ${s.numero_documento}`, e)
+              });
             });
           }
 

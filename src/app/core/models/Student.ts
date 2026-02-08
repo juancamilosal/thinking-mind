@@ -20,6 +20,7 @@ export class Student {
   test_completado?: boolean;
   nivel_idioma?: string;
   test_resultado?: any;
+  estudiante_ayo?: boolean;
 }
 
 export class Certification {
