@@ -15,8 +15,9 @@ import {AttendanceItem} from '../../../../../core/models/Attendance';
 import { NivelService } from '../../../../../core/services/nivel.service';
 import { Nivel } from '../../../../../core/models/Nivel';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { FileService, DirectusFile } from '../../../../../core/services/file.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -41,6 +42,17 @@ export class ListMeet implements OnInit {
   searchTerm: string = '';
   filteredProgramGroups: ProgramGroup[] = [];
   private searchSubject = new Subject<string>();
+
+  // Image Edit Properties
+  showFileModal = false;
+  directusFiles: DirectusFile[] = [];
+  isLoadingFiles = false;
+  selectedDirectusFileId: string | null = null;
+  selectedProgramForImageEdit: ProgramaAyo | null = null;
+  selectedFile: File | null = null;
+  isDragging = false;
+  previewImage: string | null = null;
+  isUpdatingImage = false;
 
   // Edit Modal Properties
   showEditModal = false;
@@ -99,6 +111,7 @@ export class ListMeet implements OnInit {
     private cdr: ChangeDetectorRef,
     private nivelService: NivelService,
     private certificacionService: CertificacionService,
+    private fileService: FileService,
     private ngZone: NgZone
   ) { }
 
@@ -1357,5 +1370,170 @@ export class ListMeet implements OnInit {
     this.selectedProgramForFocus = null;
     this.selectedStudents = [];
     this.attendanceList = [];
+  }
+
+  // Image Edit Methods
+  openImageEditModal(programa: ProgramaAyo, event: Event): void {
+    event.stopPropagation(); // Prevent card click
+    this.selectedProgramForImageEdit = programa;
+    this.previewImage = programa.img && programa.img.id ? `${this.assetsUrl}/${programa.img.id}` : null;
+    this.selectedFile = null;
+    this.selectedDirectusFileId = null;
+    this.showFileModal = true;
+    this.loadDirectusFiles();
+  }
+
+  closeFileModal(): void {
+    this.showFileModal = false;
+    this.selectedProgramForImageEdit = null;
+    this.previewImage = null;
+    this.selectedFile = null;
+    this.selectedDirectusFileId = null;
+  }
+
+  async loadDirectusFiles() {
+    this.isLoadingFiles = true;
+    try {
+      const filter = {
+        _and: [
+          { type: { _starts_with: 'image/' } },
+          { tematica: { _eq: true } }
+        ]
+      };
+      
+      const res = await firstValueFrom(this.fileService.getFiles({
+        sort: '-uploaded_on',
+        type: 'image/jpeg,image/png,image/webp',
+        filter: JSON.stringify(filter)
+      }));
+      this.directusFiles = res.data;
+    } catch (error) {
+      console.error('Error loading files', error);
+      this.notificationService.showError('Error', 'No se pudieron cargar los archivos.');
+    } finally {
+      this.isLoadingFiles = false;
+    }
+  }
+
+  selectDirectusFile(file: DirectusFile) {
+    this.selectedDirectusFileId = file.id;
+    this.selectedFile = null;
+    this.previewImage = `${this.assetsUrl}/${file.id}`;
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.handleFile(file);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.handleFile(files[0]);
+    }
+  }
+
+  handleFile(file: File): void {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.notificationService.showError('Tipo de archivo inválido', 'Por favor, selecciona una imagen (PNG, JPG, GIF)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      this.notificationService.showError('Archivo muy grande', 'El tamaño máximo permitido es 5MB');
+      return;
+    }
+
+    this.selectedFile = file;
+    this.selectedDirectusFileId = null;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewImage = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async saveProgramImage() {
+    if (!this.selectedProgramForImageEdit) return;
+    
+    if (!this.selectedFile && !this.selectedDirectusFileId) {
+        // If nothing new selected, close
+        this.closeFileModal();
+        return;
+    }
+
+    this.isUpdatingImage = true;
+
+    try {
+      let imageId = this.selectedDirectusFileId;
+
+      // If it's a new file, upload it first
+      if (this.selectedFile) {
+        const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedFile));
+        imageId = uploadRes.data.id;
+        
+        // Update file metadata explicitly to ensure tematica is saved
+        if (imageId) {
+            await firstValueFrom(this.fileService.updateFile(imageId, { tematica: true }));
+        }
+      }
+
+      if (imageId) {
+        // Update program with new image ID
+        await firstValueFrom(this.programaAyoService.updateProgramaAyo(this.selectedProgramForImageEdit.id, {
+          img: imageId
+        }));
+
+
+        
+        // Update local data
+        if (this.selectedProgramForImageEdit.img) {
+             this.selectedProgramForImageEdit.img.id = imageId;
+        } else {
+             this.selectedProgramForImageEdit.img = { id: imageId } as any;
+        }
+        
+        // Also update in programGroups if applicable
+        this.programGroups.forEach(group => {
+            group.programs.forEach(p => {
+                if (p.id === this.selectedProgramForImageEdit!.id) {
+                     if (!p.img) p.img = { id: imageId } as any;
+                     else p.img.id = imageId;
+                }
+            });
+        });
+
+        this.closeFileModal();
+      }
+    } catch (error) {
+      console.error('Error updating image', error);
+      this.notificationService.showError('Error', 'No se pudo actualizar la imagen.');
+    } finally {
+      this.isUpdatingImage = false;
+      this.cdr.detectChanges();
+    }
   }
 }
