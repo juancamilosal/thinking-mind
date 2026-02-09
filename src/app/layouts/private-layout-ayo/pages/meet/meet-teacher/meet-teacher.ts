@@ -19,6 +19,7 @@ import { AttendanceService } from '../../../../../core/services/attendance.servi
 import { UserService } from '../../../../../core/services/user.service';
 import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
 import { StudentService } from '../../../../../core/services/student.service';
+import { CertificacionService } from '../../../../../core/services/certificacion.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -34,6 +35,7 @@ interface StudentEvaluation {
   tipo_documento?: string;
   numero_documento?: string;
   email_acudiente?: string;
+  asistencia_id?: any[];
 }
 
 @Component({
@@ -74,6 +76,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
   currentProgramId: string | null = null;
+  currentLevelId: string | null = null;
   evaluationStudyPlan: any[] = [];
   selectedPlanItemForEvaluation: any = null;
 
@@ -94,6 +97,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private accountReceivableService = inject(AccountReceivableService);
   private studentService = inject(StudentService);
+  private certificacionService = inject(CertificacionService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
@@ -132,6 +136,55 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     // Percentage = (Attended / Total Recorded) * 100
     return Math.round((attendedCount / relevantRecords.length) * 100);
+  }
+
+  // Helper to calculate attendance including current session (before it's saved to DB)
+  calculateProjectedAttendance(student: any): number {
+     if (!student.accountInfo && !student.asistencia_id) {
+        // Fallback if no history, just current session
+        return student.attended ? 100 : 0;
+     }
+
+     // We need to access the attendance records.
+     // In the student object loaded in `initializeStudentEvaluations`, we might not have the full `asistencia_id` array populated if it wasn't fetched deep enough or mapped correctly.
+     // However, `getStudentAttendance` relies on `student.asistencia_id`.
+     // Let's assume `student` in `processAttendance` loop is the same object from `this.students`.
+     // But `this.students` was mapped from `uniqueStudentsMap`.
+     // The original data came from `this.selectedProgramForStudents` or `programa.id_nivel.estudiantes_id`.
+     // In `openStudentsModal`, we used `programa.id_nivel.estudiantes_id`.
+     // But `initializeStudentEvaluations` builds `this.students` from the meeting participants (which comes from Google Meet) matched against `this.programas`.
+
+     // Let's trace where `student.asistencia_id` comes from in `this.students`.
+     // `initializeStudentEvaluations` maps from `uniqueStudentsMap`.
+     // `uniqueStudentsMap` is populated from `program.id_nivel.estudiantes_id`.
+     // So `student` object in `this.students` SHOULD have `asistencia_id` if it was preserved.
+     // Let's check `initializeStudentEvaluations` mapping.
+
+     // Looking at previous `initializeStudentEvaluations` (implied):
+     // It maps: id, name, attended, rating, comment, currentRating, currentCredits, tipo_documento, numero_documento, email_acudiente.
+     // It does NOT seem to preserve `asistencia_id` explicitly in the `StudentEvaluation` interface I saw earlier.
+     // I need to update `StudentEvaluation` interface and the mapping to include `asistencia_id`.
+
+     // But first, let's implement this method assuming `asistencia_id` is available.
+     // Wait, I can't assume. I need to fix the interface and mapping first.
+
+     // But for now, let's write the logic:
+     const records = student.asistencia_id || [];
+     const programId = this.currentProgramId;
+
+     const relevantRecords = records.filter((record: any) =>
+        record && typeof record === 'object' && record.programa_ayo_id === programId
+     );
+
+     const pastTotal = relevantRecords.length;
+     const pastAttended = relevantRecords.filter((record: any) => record.asiste === true).length;
+
+     const currentAttended = student.attended ? 1 : 0;
+
+     const finalTotal = pastTotal + 1;
+     const finalAttended = pastAttended + currentAttended;
+
+     return Math.round((finalAttended / finalTotal) * 100);
   }
 
   ngOnInit(): void {
@@ -302,6 +355,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     );
 
     this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
+    this.currentLevelId = currentProgram?.id_nivel?.id ? String(currentProgram.id_nivel.id) : null;
 
     if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
       // Map students from id_nivel to evaluation objects, ensuring uniqueness
@@ -324,7 +378,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         currentCredits: student.creditos ? Number(student.creditos) : 0,
         tipo_documento: student.tipo_documento,
         numero_documento: student.numero_documento,
-        email_acudiente: student.email_acudiente
+        email_acudiente: student.email_acudiente,
+        asistencia_id: student.asistencia_id
       }));
     } else {
       // Fallback to empty array if no students found
@@ -452,6 +507,32 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             calificacion: newRating,
             creditos: newCredits
           };
+
+          // Logic for certification and approval
+          if (newCredits === 0) {
+            const finalAttendancePercent = this.calculateProjectedAttendance(student);
+            const passed = finalAttendancePercent >= 70 && newRating >= 70;
+
+            updateData.aprobo_ayo = passed;
+
+            if (passed) {
+               // Trigger API for certificate individually
+               if (this.currentLevelId) {
+                  const certificatePayload = {
+                     id_estudiante: student.id,
+                     id_nivel: this.currentLevelId
+                  };
+
+                  this.http.post(environment.generate_certificate, certificatePayload).subscribe({
+                     next: () => console.log(`Certificate generation triggered for student ${student.id}`),
+                     error: (e) => console.error(`Error triggering certificate generation for student ${student.id}`, e)
+                  });
+               }
+            } else {
+              console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${newRating}`);
+            }
+          }
+
           const updateUserObs = this.userService.updateUser(student.id, updateData);
 
           // Combine both requests
@@ -470,8 +551,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             const numero_documento = studentsWithZeroCredits.map(s => s.numero_documento);
 
             this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
-              next: () => console.log('Zero credit students sent successfully'),
-              error: (e) => console.error('Error sending zero credit students', e)
+              next: () => console.log('Students sent to new service'),
+              error: (e) => console.error('Error sending students to new service', e)
             });
           }
 
