@@ -516,16 +516,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             updateData.aprobo_ayo = passed;
 
             if (passed) {
-               // Trigger API for certificate individually
+               // Create certificate directly using CertificacionService
                if (this.currentLevelId) {
-                  const certificatePayload = {
-                     id_estudiante: student.id,
-                     id_nivel: this.currentLevelId
+                  const certificateData = {
+                     estudiante_id: student.id,
+                     nivel_id: this.currentLevelId
                   };
 
-                  this.http.post(environment.generate_certificate, certificatePayload).subscribe({
-                     next: () => console.log(`Certificate generation triggered for student ${student.id}`),
-                     error: (e) => console.error(`Error triggering certificate generation for student ${student.id}`, e)
+                  this.certificacionService.createCertificado(certificateData).subscribe({
+                     next: () => console.log(`Certificate created successfully for student ${student.id}`),
+                     error: (e) => console.error(`Error creating certificate for student ${student.id}`, e)
                   });
                }
             } else {

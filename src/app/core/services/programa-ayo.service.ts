@@ -28,6 +28,18 @@ export class ProgramaAyoService {
     return this.http.post<ResponseAPI<ProgramaAyo>>(this.apiUrl, programaAyo);
   }
 
+  createReunionGeneral(data: any): Observable<ResponseAPI<any>> {
+    // Eliminar atributos null o undefined
+    const cleanData = Object.keys(data).reduce((acc: any, key) => {
+      if (data[key] !== null && data[key] !== undefined) {
+        acc[key] = data[key];
+      }
+      return acc;
+    }, {});
+
+    return this.http.post<ResponseAPI<any>>(environment.reunion_general, cleanData);
+  }
+
   getProgramaAyo(idioma?: string, search?: string, userId?: string, teacherId?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
       'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.asistencia_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*',

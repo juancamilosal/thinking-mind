@@ -156,6 +156,16 @@ export class AyoComponent implements OnInit {
     }
   }
 
+  openGeneralMeeting(): void {
+    if (this.selectedLanguage) {
+      this.router.navigate(['/private/ayo/create-general-meet'], { queryParams: { idioma: this.selectedLanguage } });
+    } else {
+      console.error('No language selected');
+      // Opcional: mostrar error o navegar sin idioma si es permitido
+      // this.router.navigate(['/private/ayo/create-general-meet']);
+    }
+  }
+
   goBack(): void {
     if (this.step === 'meetings') {
       this.step = 'options';

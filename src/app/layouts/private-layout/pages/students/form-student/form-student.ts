@@ -72,10 +72,10 @@ export class FormStudent implements OnInit, OnChanges {
       grade: [null, [Validators.required, Validators.minLength(1)]],
       school: [null, [Validators.required]],
       schoolSearchTerm: [''],
-      guardianDocumentType: ['CC', [Validators.required]],
-      guardianDocumentNumber: [null, [Validators.required, Validators.minLength(6)]],
-      guardianFirstName: [null, [Validators.required, Validators.minLength(2)]],
-      guardianLastName: [null, [Validators.required, Validators.minLength(2)]]
+      guardianDocumentType: ['CC'],
+      guardianDocumentNumber: [null, [Validators.minLength(6)]],
+      guardianFirstName: [null, [Validators.minLength(2)]],
+      guardianLastName: [null, [Validators.minLength(2)]]
     });
   }
 

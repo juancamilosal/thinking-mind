@@ -204,13 +204,14 @@
                             <h3 class="text-gray-400 font-medium uppercase tracking-wider text-xs mb-1">Calificación Global</h3>
                             <div class="flex items-baseline gap-1">
                                 <span class="text-6xl font-black text-[#13486e] tracking-tight leading-none">{{ ayoStats.calificacion || 0 }}</span>
-                                <span class="text-3xl text-gray-300 font-bold">/64</span>
+                                <span class="text-3xl text-gray-300 font-bold">/80</span>
                             </div>
                         </div>
                         <div class="pt-4">
                             <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                                <div class="bg-gradient-to-r from-[#13486e] to-[#1a5f8f] h-2.5 rounded-full transition-all duration-1000 ease-out"
-                                     [style.width.%]="(ayoStats.calificacion || 0) * 10">
+                                <div class="h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                     [ngClass]="getProgressBarClass(ayoStats.calificacion || 0)"
+                                     [style.width]="getProgressBarWidth(ayoStats.calificacion || 0)">
                                 </div>
                             </div>
                             <p class="text-right text-xs text-gray-400 mt-2 font-medium">Nivel de desempeño</p>

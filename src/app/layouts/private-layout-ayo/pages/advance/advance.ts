@@ -381,4 +381,20 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
   getStarArray(score: number): number[] {
     return Array(Math.round(score)).fill(0);
   }
+
+  getProgressBarClass(score: number): string {
+    if (score < 50) {
+      return 'bg-gradient-to-r from-gray-400 to-gray-500';
+    } else if (score >= 50 && score < 80) {
+      return 'bg-gradient-to-r from-orange-400 to-orange-500';
+    } else {
+      return 'bg-gradient-to-r from-green-400 to-green-500';
+    }
+  }
+
+  getProgressBarWidth(score: number): string {
+    // Cap at 100%
+    const percentage = Math.min((score / 80) * 100, 100);
+    return `${percentage}%`;
+  }
 }
