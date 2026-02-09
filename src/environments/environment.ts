@@ -1,4 +1,4 @@
-const apiUrl = 'https://devapi.appthinkingmind.com/';
+const apiUrl = 'https://api.appthinkingmind.com/';
 
 export const environment = {
   production: false,
@@ -22,6 +22,7 @@ export const environment = {
   colegio_cursos: apiUrl + 'items/colegios_cursos',
   historial_programas: apiUrl + 'items/historial_programas',
   reuniones_meet: apiUrl + 'items/reuniones_meet',
+  reunion_general: apiUrl + 'items/reunion_general',
   attendance: apiUrl + 'items/asistencia',
   nomina_docente: apiUrl + 'items/nomina_docente',
   programa_ayo: apiUrl + 'items/programas_ayo',
