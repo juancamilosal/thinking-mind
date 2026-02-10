@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
@@ -34,6 +34,14 @@ export class DashboardAyo implements OnInit {
     reuniones_meet: []
   };
 
+  programRules: string[] = [
+    'Mantener la cámara encendida durante toda la sesión.',
+    'Estar en un lugar tranquilo y sin ruido.',
+    'Ser puntual y respetar el horario de la clase.',
+    'Participar activamente en las actividades.',
+    'Respetar a los compañeros y al docente.'
+  ];
+
   // AYO Teacher Stats
   teacherStats: TeacherDashboardStats = {
     horas_trabajadas: 0,
@@ -43,7 +51,8 @@ export class DashboardAyo implements OnInit {
   constructor(
     private dashboardService: DashboardService,
     private studentService: StudentService,
-    private payrollService: PayrollService
+    private payrollService: PayrollService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -103,16 +112,26 @@ export class DashboardAyo implements OnInit {
               console.error('Error processing dashboard data:', e);
             } finally {
               this.isLoading = false;
+              this.cdr.detectChanges();
             }
           },
           error: (error) => {
             console.error('Error loading student dashboard:', error);
             this.isLoading = false;
+            this.cdr.detectChanges();
           }
         });
 
         return;
       }
+      
+      // If user role is not handled
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    } else {
+      // If no user found
+      this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -128,30 +147,44 @@ export class DashboardAyo implements OnInit {
             this.teacherStats = response.data[0];
           }
           // Si es un objeto directo (no array), lo asignamos directamente
-          else if (!Array.isArray(response.data) && typeof response.data === 'object') {
+          else if (!Array.isArray(response.data) && typeof response.data === 'object' && response.data !== null) {
             this.teacherStats = response.data;
           }
+        }
+
+        // Ensure teacherStats is initialized if it's null/undefined
+        if (!this.teacherStats) {
+            this.teacherStats = {
+                horas_trabajadas: 0,
+                reuniones_meet_id: []
+            };
         }
 
         // Load payroll hours for current month (only for teachers)
         if (teacherId) {
           this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
             next: (payrollSummary) => {
-              this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes;
+              if (this.teacherStats && payrollSummary) {
+                  this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes || 0;
+              }
               this.isLoading = false;
+              this.cdr.detectChanges();
             },
             error: (error) => {
               console.error('Error loading payroll hours', error);
               this.isLoading = false;
+              this.cdr.detectChanges();
             }
           });
         } else {
           this.isLoading = false;
+          this.cdr.detectChanges();
         }
       },
       error: (error) => {
         console.error('Error loading teacher dashboard', error);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

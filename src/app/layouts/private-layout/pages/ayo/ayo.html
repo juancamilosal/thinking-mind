@@ -24,69 +24,6 @@
         </div>
       }
 
-      <!-- Contenedor de Cards de Idioma -->
-      <div class="flex flex-col md:flex-row justify-center items-center gap-8 transition-all duration-500 ease-in-out">
-
-        <!-- Card AYO Inglés -->
-        @if (!selectedLanguage || selectedLanguage === 'INGLES') {
-          <div (click)="selectLanguage('INGLES')"
-               class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group w-full md:w-96 hover:-translate-y-2 hover:shadow-2xl"
-               [ngClass]="{'ring-4 ring-blue-100 transform scale-105': selectedLanguage === 'INGLES'}">
-
-            <div class="relative overflow-hidden flex flex-col items-center justify-center h-48 transition-all duration-500">
-              <!-- Background Image -->
-              <img src="assets/images/ayo-ingles.jpg" alt="AYO Inglés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-              <!-- Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-            </div>
-
-            <div class="p-8 text-center">
-              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">AYO Inglés</h2>
-              <div class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full"></div>
-              <p class="text-gray-500 leading-relaxed mb-4">
-                Programa intensivo de aprendizaje del idioma inglés.
-              </p>
-              @if (courses.length > 0 && courses[0].precio) {
-                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 inline-block w-full">
-                  <p class="text-xs text-blue-600 font-medium uppercase mb-1">Inversión</p>
-                  <p class="text-xl font-bold text-blue-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Card AYO Francés -->
-        @if (!selectedLanguage || selectedLanguage === 'FRANCES') {
-          <div (click)="selectLanguage('FRANCES')"
-               class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group w-full md:w-96 hover:-translate-y-2 hover:shadow-2xl"
-               [ngClass]="{'ring-4 ring-purple-100 transform scale-105': selectedLanguage === 'FRANCES'}">
-
-            <div class="relative overflow-hidden flex flex-col items-center justify-center h-48 transition-all duration-500">
-              <!-- Background Image -->
-              <img src="assets/images/ayo-frances.jpg" alt="AYO Francés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-              <!-- Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-            </div>
-
-            <div class="p-8 text-center">
-              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">AYO Francés</h2>
-              <div class="w-16 h-1 bg-purple-500 mx-auto mb-4 rounded-full"></div>
-              <p class="text-gray-500 leading-relaxed mb-4">
-                Programa intensivo de aprendizaje del idioma francés.
-              </p>
-              @if (courses.length > 0 && courses[0].precio) {
-                <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100 inline-block w-full">
-                  <p class="text-xs text-purple-600 font-medium uppercase mb-1">Inversión</p>
-                  <p class="text-xl font-bold text-purple-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-      </div>
-
       <!-- Card Precio Programa AYO -->
       @if ((precioData || isLoadingPrice) && step === 'initial') {
         <div class="relative w-full md:w-96 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 flex flex-col items-center justify-center text-center mt-4 transition-all duration-500 hover:shadow-2xl">
@@ -154,6 +91,97 @@
                     </div>
                 }
             }
+        </div>
+      }
+
+      <!-- Contenedor de Cards de Idioma -->
+      <div class="flex flex-col md:flex-row justify-center items-center gap-8 transition-all duration-500 ease-in-out">
+
+        <!-- Card AYO Inglés -->
+        @if (!selectedLanguage || selectedLanguage === 'INGLES') {
+          <div (click)="selectLanguage('INGLES')"
+               class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group w-full md:w-96 hover:-translate-y-2 hover:shadow-2xl"
+               [ngClass]="{'ring-4 ring-blue-100 transform scale-105': selectedLanguage === 'INGLES'}">
+
+            <div class="relative overflow-hidden flex flex-col items-center justify-center h-48 transition-all duration-500">
+              <!-- Background Image -->
+              <img src="assets/images/ayo-ingles.jpg" alt="AYO Inglés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+              <!-- Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            </div>
+
+            <div class="p-8 text-center">
+              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">AYO Inglés</h2>
+              <div class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full"></div>
+              <p class="text-gray-500 leading-relaxed mb-4">
+                Programa intensivo de aprendizaje del idioma inglés.
+              </p>
+              @if (courses.length > 0 && courses[0].precio) {
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 inline-block w-full">
+                  <p class="text-xs text-blue-600 font-medium uppercase mb-1">Inversión</p>
+                  <p class="text-xl font-bold text-blue-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Card AYO Francés -->
+        @if (!selectedLanguage || selectedLanguage === 'FRANCES') {
+          <div (click)="selectLanguage('FRANCES')"
+               class="cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group w-full md:w-96 hover:-translate-y-2 hover:shadow-2xl"
+               [ngClass]="{'ring-4 ring-purple-100 transform scale-105': selectedLanguage === 'FRANCES'}">
+
+            <div class="relative overflow-hidden flex flex-col items-center justify-center h-48 transition-all duration-500">
+              <!-- Background Image -->
+              <img src="assets/images/ayo-frances.jpg" alt="AYO Francés" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+              <!-- Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            </div>
+
+            <div class="p-8 text-center">
+              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">AYO Francés</h2>
+              <div class="w-16 h-1 bg-purple-500 mx-auto mb-4 rounded-full"></div>
+              <p class="text-gray-500 leading-relaxed mb-4">
+                Programa intensivo de aprendizaje del idioma francés.
+              </p>
+              @if (courses.length > 0 && courses[0].precio) {
+                <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100 inline-block w-full">
+                  <p class="text-xs text-purple-600 font-medium uppercase mb-1">Inversión</p>
+                  <p class="text-xl font-bold text-purple-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- Card Calificación Docente -->
+      @if (step === 'initial') {
+        <div (click)="goToTeacherEvaluation()"
+             class="relative w-full md:w-96 cursor-pointer bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100 group hover:-translate-y-2 hover:shadow-2xl mt-4">
+             
+            <div class="relative overflow-hidden flex flex-col items-center justify-center h-40 transition-all duration-500 bg-gray-100">
+              <!-- Background Image -->
+              <img src="assets/images/docente.png" alt="Evaluación Docente" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onError="this.src='assets/icons/evaluacion-docente.png'; this.classList.add('p-8', 'object-contain'); this.classList.remove('object-cover');">
+              <!-- Overlay -->
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+              
+              <!-- Title on Image -->
+              <h3 class="relative z-10 text-2xl font-bold text-white mb-1 drop-shadow-lg text-center px-4">Calificación de los Docentes</h3>
+            </div>
+
+            <div class="p-6 text-center bg-white">
+              <p class="text-gray-500 text-sm mb-4 leading-relaxed">Calificación de los alumnos hacia los docentes de AYO</p>
+              
+              <div class="inline-flex items-center justify-center px-6 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                  <span>Ver Calificaciones</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+              </div>
+            </div>
         </div>
       }
 

@@ -251,6 +251,34 @@
           <p class="text-4xl font-bold text-gray-900 text-center">{{ ayoStats.calificacion }}</p>
         </div>
       </div>
+
+      <!-- Reglas del Programa Section -->
+      <div class="mb-8">
+        <div class="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="bg-[#13486e] p-6 text-white font-bold flex items-center gap-3">
+            <div class="p-1.5 rounded-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span class="text-xl">Reglas del Programa</span>
+          </div>
+          
+          <div class="p-6 bg-gray-50/50">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @for (rule of programRules; track $index) {
+                <div class="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow h-full">
+                    <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-sm font-bold mt-0.5">
+                    {{ $index + 1 }}
+                    </span>
+                    <span class="text-gray-700 text-base leading-relaxed font-medium">{{ rule }}</span>
+                </div>
+                }
+            </div>
+          </div>
+        </div>
+      </div>
+
     }
   }
 </div>

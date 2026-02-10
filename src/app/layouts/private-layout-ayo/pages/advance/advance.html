@@ -290,10 +290,10 @@
                                                         'bg-yellow-100 text-yellow-700': obs.score >= 3 && obs.score < 4,
                                                         'bg-red-100 text-red-700': obs.score < 3
                                                     }">
-                                                    Nota: 
                                                     @for (star of getStarArray(obs.score); track $index) {
                                                         <img src="assets/icons/estrella.png" class="w-5 h-5" alt="star">
                                                     }
+                                                    <span class="ml-1">{{ getScoreLabel(obs.score) }}</span>
                                                 </span>
                                                         }
                                                     </div>

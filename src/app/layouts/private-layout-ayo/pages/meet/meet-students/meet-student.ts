@@ -8,6 +8,7 @@ import { StorageServices } from '../../../../../core/services/storage.services';
 import { ProgramaAyo } from '../../../../../core/models/Course';
 import { environment } from '../../../../../../environments/environment';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { TeacherEvaluationComponent } from './teacher-evaluation/teacher-evaluation.component';
 
 declare var gapi: any;
 declare var google: any;
@@ -15,7 +16,7 @@ declare var google: any;
 @Component({
   selector: 'app-meet-student',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, TeacherEvaluationComponent],
   templateUrl: './meet-student.html',
   styleUrl: './meet-student.css'
 })
@@ -35,6 +36,23 @@ export class MeetStudent implements OnInit {
   parsedStudyPlans = new Map<string, any[]>();
   selectedPlanItems = new Map<string, any>();
 
+  // Evaluation Modal Properties
+  showEvaluationModal = false;
+  selectedEvaluationTeacherName = '';
+  selectedEvaluationClassName = '';
+  selectedReunion: any = null;
+  selectedProgramId: string | null = null;
+
+  // Rules Modal Properties
+  showRulesModal = false;
+  pendingReunion: any = null;
+  programRules: string[] = [
+    'Mantener la cámara encendida durante toda la sesión.',
+    'Estar en un lugar tranquilo y sin ruido.',
+    'Ser puntual y respetar el horario de la clase.',
+    'Participar activamente en las actividades.',
+    'Respetar a los compañeros y al docente.'
+  ];
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -203,8 +221,103 @@ export class MeetStudent implements OnInit {
    handleTestAndJoin(event: Event, reunion: any): void {
      event.preventDefault();
      if (reunion.link_reunion) {
-         window.open(reunion.link_reunion, '_blank');
+         this.pendingReunion = reunion;
+         this.showRulesModal = true;
      }
    }
+
+   acceptRulesAndJoin(): void {
+     if (this.pendingReunion && this.pendingReunion.link_reunion) {
+       (window as any).open(this.pendingReunion.link_reunion, '_blank');
+     }
+     this.closeRulesModal();
+   }
+
+   closeRulesModal(): void {
+     this.showRulesModal = false;
+     this.pendingReunion = null;
+   }
+
+  // Evaluation methods
+  openEvaluation(reunion: any, programId: string): void {
+    console.log('openEvaluation called with programId:', programId);
+    if (!programId) {
+      console.error('programId is missing in openEvaluation');
+    }
+    this.selectedReunion = reunion;
+    this.selectedProgramId = programId;
+    this.selectedEvaluationTeacherName = reunion.id_docente 
+      ? `${reunion.id_docente.first_name} ${reunion.id_docente.last_name}` 
+      : 'Docente';
+    this.selectedEvaluationClassName = reunion.nombre || 'Clase';
+    this.showEvaluationModal = true;
+  }
+
+  closeEvaluationModal(): void {
+    this.showEvaluationModal = false;
+    this.selectedReunion = null;
+    this.selectedProgramId = null;
+    this.selectedEvaluationTeacherName = '';
+    this.selectedEvaluationClassName = '';
+  }
+
+  handleEvaluationSubmit(evaluationData: any): void {
+    const user = StorageServices.getCurrentUser();
+    if (!user) {
+      this.notificationService.showError('Error', 'No se pudo identificar al usuario.');
+      return;
+    }
+
+    if (!this.selectedReunion || !this.selectedReunion.id_docente) {
+      this.notificationService.showError('Error', 'No se pudo identificar al docente.');
+      return;
+    }
+
+    const payloads: any[] = [];
+    const date = new Date().toISOString().split('T')[0];
+    const observations = evaluationData.observations || '';
+    const teacherId = this.selectedReunion.id_docente.id;
+    const evaluatorName = `${user.first_name} ${user.last_name}`;
+    const programId = this.selectedProgramId;
+
+    if (!programId) {
+      this.notificationService.showError('Error', 'No se pudo identificar el programa.');
+      return;
+    }
+
+    // Iterate over keys
+    for (const key in evaluationData) {
+      // Skip global observations field and individual observation fields (processed with their rating)
+      if (key !== 'observations' && !key.startsWith('obs_') && evaluationData.hasOwnProperty(key)) {
+        const observation = evaluationData['obs_' + key] || '';
+        
+        payloads.push({
+          fecha: date,
+          observaciones: observation,
+          docente_id: { id: teacherId },
+          evaluado_por: evaluatorName,
+          criterio_evaluacion_id: { id: key },
+          programa_ayo_id: { id: programId },
+          calificacion: evaluationData[key]
+        });
+      }
+    }
+
+    if (payloads.length === 0) {
+      this.notificationService.showWarning('Advertencia', 'No hay calificaciones para enviar.');
+      return;
+    }
+
+    this.programaAyoService.saveCalificacionDocente(payloads).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Éxito', 'Evaluación enviada correctamente');
+        this.closeEvaluationModal();
+      },
+      error: (err) => {
+        console.error('Error saving evaluation:', err);
+        this.notificationService.showError('Error', 'Hubo un error al enviar la evaluación.');
+      }
+    });
+  }
 
 }

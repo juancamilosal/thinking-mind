@@ -181,4 +181,8 @@ export class AyoComponent implements OnInit {
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  goToTeacherEvaluation(): void {
+    this.router.navigate(['/private/ayo/teacher-evaluation-ayo']);
+  }
 }

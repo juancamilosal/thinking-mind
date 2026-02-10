@@ -382,6 +382,18 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     return Array(Math.round(score)).fill(0);
   }
 
+  getScoreLabel(score: number): string {
+    const roundedScore = Math.round(score);
+    switch (roundedScore) {
+      case 1: return 'Exploring';
+      case 2: return 'Growing';
+      case 3: return 'Moving Forward';
+      case 4: return 'Shining';
+      case 5: return 'Star Performer';
+      default: return '';
+    }
+  }
+
   getProgressBarClass(score: number): string {
     if (score < 50) {
       return 'bg-gradient-to-r from-gray-400 to-gray-500';
