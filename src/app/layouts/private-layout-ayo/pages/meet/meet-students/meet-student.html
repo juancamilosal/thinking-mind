@@ -65,6 +65,48 @@
     </div>
     }
 
+    @if (showRulesModal) {
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4" (click)="closeRulesModal()">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn" (click)="$event.stopPropagation()">
+            <!-- Header -->
+            <div class="bg-[#13486e] p-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Reglas del Programa
+                </h3>
+                <button (click)="closeRulesModal()" class="text-white/80 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <p class="text-gray-600 mb-4 font-medium">Para unirte a la reunión, por favor acepta las siguientes reglas:</p>
+                <ul class="space-y-3 mb-6">
+                    @for (rule of programRules; track $index) {
+                    <li class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
+                            {{ $index + 1 }}
+                        </span>
+                        <span class="text-gray-700 leading-relaxed">{{ rule }}</span>
+                    </li>
+                    }
+                </ul>
+                <button (click)="acceptRulesAndJoin()" class="w-full py-3 bg-[#13486e] hover:bg-[#0f3a5a] text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2">
+                    <span>ACEPTO</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
     <div class="mb-10 header-section">
         <h1 class="page-title">
             Mis Programas
@@ -243,11 +285,34 @@
                             </div>
                             }
 
-                            <!-- Mobile Study Plan Button (Hidden on Desktop) -->
-                            <div class="flex xl:hidden justify-center mt-6 pt-4 border-t border-gray-100">
+                            <!-- Mobile Study Plan & Rules -->
+                            <div class="flex xl:hidden flex-col gap-6 mt-6 pt-4 border-t border-gray-100">
+                                <!-- Study Plan Button -->
                                 <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudyPlanModal(account.programa_ayo_id)">
                                     <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Plan">
                                     <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Plan de Estudio</span>
+                                </div>
+
+                                <!-- Rules Section -->
+                                <div class="flex flex-col bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+                                    <div class="bg-[#13486e]/5 p-3 flex items-center gap-2 border-b border-gray-100">
+                                        <svg class="w-5 h-5 text-[#13486e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="font-bold text-[#13486e] text-sm">Reglas del Programa</span>
+                                    </div>
+                                    <div class="p-3 bg-gray-50/50">
+                                        <ul class="space-y-2">
+                                            @for (rule of programRules; track $index) {
+                                            <li class="flex items-start gap-3 p-2 bg-white rounded-lg border border-gray-100 shadow-sm">
+                                                <span class="flex-shrink-0 w-4 h-4 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-[10px] font-bold mt-0.5">
+                                                    {{ $index + 1 }}
+                                                </span>
+                                                <span class="text-gray-600 text-xs leading-relaxed">{{ rule }}</span>
+                                            </li>
+                                            }
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -255,62 +320,92 @@
                 </div>
             </div>
 
-            <!-- Side Panel: Study Plan (Desktop Only) -->
-            <div class="hidden xl:flex flex-col w-[600px] bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex-shrink-0 self-start sticky top-6">
-                <div class="bg-[#13486e] p-4 text-white font-bold flex items-center gap-3">
-                    <div class=" p-1.5 rounded-lg">
-                        <img src="assets/icons/plan.png" class="w-10 h-10" alt="Plan">
+            <!-- Side Panel Container (Right Column) -->
+            <div class="hidden xl:flex flex-col w-[600px] flex-shrink-0 gap-6 sticky top-6 self-start">
+                
+                <!-- Panel 1: Plan de Estudio -->
+                <div class="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden max-h-[600px]">
+                    <div class="bg-[#13486e] p-4 text-white font-bold flex items-center gap-3">
+                        <div class=" p-1.5 rounded-lg">
+                            <img src="assets/icons/plan.png" class="w-10 h-10" alt="Plan">
+                        </div>
+                        <span>Plan de Estudio</span>
                     </div>
-                    <span>Plan de Estudio</span>
+
+                    <div class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-gray-50/50">
+                        @if (getParsedStudyPlan(account.programa_ayo_id.id).length > 0) {
+                            <ul class="space-y-3">
+                                @for (item of getParsedStudyPlan(account.programa_ayo_id.id); track $index) {
+                                <li class="flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 bg-white shadow-sm"
+                                    [ngClass]="{
+                                        'border-gray-100 hover:border-gray-200': !item.original.realizado,
+                                        'bg-green-50/50 border-green-100': item.original.realizado
+                                    }">
+
+                                    <!-- Icon: Check (completed) or Book (incomplete) -->
+                                     <div class="flex-shrink-0 mt-0.5">
+                                         @if (item.original.realizado) {
+                                             <div class="w-6 h-6 flex items-center justify-center">
+                                                 <img src="assets/icons/check.png" class="w-5 h-5 object-contain" alt="Realizado">
+                                             </div>
+                                         } @else {
+                                             <div class="w-6 h-6 flex items-center justify-center">
+                                                 <img src="assets/icons/libro.png" class="w-5 h-5 object-contain opacity-70" alt="Libro">
+                                             </div>
+                                         }
+                                     </div>
+
+                                    <!-- Text -->
+                                    <div class="flex-1">
+                                        <div class="flex items-start gap-2">
+                                            <span class="flex-shrink-0 text-xs font-bold text-[#13486e] bg-[#13486e]/10 px-2 py-0.5 rounded-full mt-0.5">
+                                                {{ item.displayNumber || ($index + 1) }}
+                                            </span>
+                                            <span class="text-gray-700 text-sm leading-relaxed" [class.text-gray-500]="item.original.realizado">{{ item.text }}</span>
+                                        </div>
+                                        @if (item.original.realizado) {
+                                            <span class="inline-block mt-1 text-[10px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                                Completado
+                                            </span>
+                                        }
+                                    </div>
+                                </li>
+                                }
+                            </ul>
+                        } @else {
+                            <div class="flex flex-col items-center justify-center py-12 text-gray-500 h-full">
+                                <img src="assets/icons/plan.png" class="w-16 h-16 object-contain mb-3 opacity-50" alt="Plan">
+                                <p class="text-sm font-medium">No hay plan disponible</p>
+                            </div>
+                        }
+                    </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto max-h-[600px] p-4 custom-scrollbar bg-gray-50/50">
-                    @if (getParsedStudyPlan(account.programa_ayo_id.id).length > 0) {
+                <!-- Panel 2: Reglas del Programa -->
+                <div class="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="bg-[#13486e] p-4 text-white font-bold flex items-center gap-3">
+                        <div class="p-1.5 rounded-lg">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span>Reglas del Programa</span>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50/50">
                         <ul class="space-y-3">
-                            @for (item of getParsedStudyPlan(account.programa_ayo_id.id); track $index) {
-                            <li class="flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 bg-white shadow-sm"
-                                [ngClass]="{
-                                    'border-gray-100 hover:border-gray-200': !item.original.realizado,
-                                    'bg-green-50/50 border-green-100': item.original.realizado
-                                }">
-
-                                <!-- Icon: Check (completed) or Book (incomplete) -->
-                                 <div class="flex-shrink-0 mt-0.5">
-                                     @if (item.original.realizado) {
-                                         <div class="w-6 h-6 flex items-center justify-center">
-                                             <img src="assets/icons/check.png" class="w-5 h-5 object-contain" alt="Realizado">
-                                         </div>
-                                     } @else {
-                                         <div class="w-6 h-6 flex items-center justify-center">
-                                             <img src="assets/icons/libro.png" class="w-5 h-5 object-contain opacity-70" alt="Libro">
-                                         </div>
-                                     }
-                                 </div>
-
-                                <!-- Text -->
-                                <div class="flex-1">
-                                    <div class="flex items-start gap-2">
-                                        <span class="flex-shrink-0 text-xs font-bold text-[#13486e] bg-[#13486e]/10 px-2 py-0.5 rounded-full mt-0.5">
-                                            {{ item.displayNumber || ($index + 1) }}
-                                        </span>
-                                        <span class="text-gray-700 text-sm leading-relaxed" [class.text-gray-500]="item.original.realizado">{{ item.text }}</span>
-                                    </div>
-                                    @if (item.original.realizado) {
-                                        <span class="inline-block mt-1 text-[10px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                            Completado
-                                        </span>
-                                    }
-                                </div>
+                            @for (rule of programRules; track $index) {
+                            <li class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                <span class="flex-shrink-0 w-5 h-5 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-[10px] font-bold mt-0.5">
+                                    {{ $index + 1 }}
+                                </span>
+                                <span class="text-gray-600 text-sm leading-relaxed">{{ rule }}</span>
                             </li>
                             }
                         </ul>
-                    } @else {
-                        <div class="flex flex-col items-center justify-center py-12 text-gray-500 h-full">
-                            <img src="assets/icons/plan.png" class="w-16 h-16 object-contain mb-3 opacity-50" alt="Plan">
-                            <p class="text-sm font-medium">No hay plan disponible</p>
-                        </div>
-                    }
+                    </div>
                 </div>
+
             </div>
         </div>
         }

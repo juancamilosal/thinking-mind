@@ -94,6 +94,13 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<any[]>>(environment.calificacion_docente, { params });
   }
 
+  getAllCalificacionesDocente(): Observable<ResponseAPI<any[]>> {
+    const params = {
+      'fields': '*,criterio_evaluacion_id.id,criterio_evaluacion_id.nombre,docente_id.*'
+    };
+    return this.http.get<ResponseAPI<any[]>>(environment.calificacion_docente, { params });
+  }
+
   getProgramaAyoDocente(teacherId: string, idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     return this.getProgramaAyo(idioma, undefined, undefined, teacherId);
   }

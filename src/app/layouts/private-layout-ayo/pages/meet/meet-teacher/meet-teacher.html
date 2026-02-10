@@ -381,7 +381,9 @@
                     }
                   </div>
                   @if (student.rating > 0) {
-                    <p class="text-sm text-gray-600 mt-2">{{ student.rating }} de 5 estrellas</p>
+                    <p class="text-base font-bold text-blue-600 mt-2 flex items-center gap-1 animate-fadeIn">
+                        {{ getRatingLabel(student.rating) }}
+                    </p>
                   }
                 </div>
 

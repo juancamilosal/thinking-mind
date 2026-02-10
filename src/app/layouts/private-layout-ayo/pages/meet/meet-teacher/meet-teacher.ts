@@ -432,6 +432,17 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     return [1, 2, 3, 4, 5];
   }
 
+  getRatingLabel(rating: number): string {
+    switch (rating) {
+      case 1: return 'Exploring';
+      case 2: return 'Growing';
+      case 3: return 'Moving forward';
+      case 4: return 'Shining';
+      case 5: return 'Star performer';
+      default: return '';
+    }
+  }
+
   submitEvaluations(): void {
     // Validate that all students who attended have ratings
     const attendedStudents = this.students.filter(s => s.attended);

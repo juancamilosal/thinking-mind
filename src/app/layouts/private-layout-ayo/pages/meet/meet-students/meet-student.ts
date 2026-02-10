@@ -43,6 +43,17 @@ export class MeetStudent implements OnInit {
   selectedReunion: any = null;
   selectedProgramId: string | null = null;
 
+  // Rules Modal Properties
+  showRulesModal = false;
+  pendingReunion: any = null;
+  programRules: string[] = [
+    'Mantener la cámara encendida durante toda la sesión.',
+    'Estar en un lugar tranquilo y sin ruido.',
+    'Ser puntual y respetar el horario de la clase.',
+    'Participar activamente en las actividades.',
+    'Respetar a los compañeros y al docente.'
+  ];
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private router: Router,
@@ -210,8 +221,21 @@ export class MeetStudent implements OnInit {
    handleTestAndJoin(event: Event, reunion: any): void {
      event.preventDefault();
      if (reunion.link_reunion) {
-         (window as any).open(reunion.link_reunion, '_blank');
+         this.pendingReunion = reunion;
+         this.showRulesModal = true;
      }
+   }
+
+   acceptRulesAndJoin(): void {
+     if (this.pendingReunion && this.pendingReunion.link_reunion) {
+       (window as any).open(this.pendingReunion.link_reunion, '_blank');
+     }
+     this.closeRulesModal();
+   }
+
+   closeRulesModal(): void {
+     this.showRulesModal = false;
+     this.pendingReunion = null;
    }
 
   // Evaluation methods

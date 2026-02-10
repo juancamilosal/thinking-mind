@@ -34,6 +34,14 @@ export class DashboardAyo implements OnInit {
     reuniones_meet: []
   };
 
+  programRules: string[] = [
+    'Mantener la cámara encendida durante toda la sesión.',
+    'Estar en un lugar tranquilo y sin ruido.',
+    'Ser puntual y respetar el horario de la clase.',
+    'Participar activamente en las actividades.',
+    'Respetar a los compañeros y al docente.'
+  ];
+
   // AYO Teacher Stats
   teacherStats: TeacherDashboardStats = {
     horas_trabajadas: 0,
