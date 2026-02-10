@@ -86,6 +86,14 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<any>>(environment.certificados);
   }
 
+  getCalificacionesDocente(teacherId: string): Observable<ResponseAPI<any[]>> {
+    const params = {
+      'filter[docente_id][_eq]': teacherId,
+      'fields': '*,criterio_evaluacion_id.id,criterio_evaluacion_id.nombre'
+    };
+    return this.http.get<ResponseAPI<any[]>>(environment.calificacion_docente, { params });
+  }
+
   getProgramaAyoDocente(teacherId: string, idioma?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     return this.getProgramaAyo(idioma, undefined, undefined, teacherId);
   }

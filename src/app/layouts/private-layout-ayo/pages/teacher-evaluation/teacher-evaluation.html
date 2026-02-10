@@ -1,0 +1,105 @@
+<div class="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Evaluación Docente</h1>
+        <p class="text-gray-600 mt-2">Análisis de desempeño y retroalimentación de estudiantes</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && evaluations.length === 0" class="text-center py-12 bg-white rounded-xl shadow-sm">
+        <img src="assets/icons/evaluacion.png" class="w-24 h-24 mx-auto mb-4 opacity-50" alt="Sin evaluaciones">
+        <h3 class="text-xl font-medium text-gray-900">Aún no tienes evaluaciones</h3>
+        <p class="text-gray-500 mt-2">Tus calificaciones aparecerán aquí cuando los estudiantes completen las encuestas.</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="!isLoading && evaluations.length > 0" class="space-y-6">
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Overall Rating -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Calificación General</h3>
+                <div class="mt-4 flex items-end gap-3">
+                    <span class="text-5xl font-bold text-gray-900">{{ averageRating | number:'1.1-1' }}</span>
+                    <span class="text-lg text-gray-400 mb-1">/ 5.0</span>
+                </div>
+                <div class="mt-2 flex items-center">
+                    <ng-container *ngFor="let star of [1,2,3,4,5]">
+                        <svg class="w-5 h-5" [class.text-yellow-400]="averageRating >= star" [class.text-gray-300]="averageRating < star" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </ng-container>
+                </div>
+            </div>
+
+            <!-- Total Evaluations -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Evaluaciones</h3>
+                <div class="mt-4">
+                    <span class="text-5xl font-bold text-blue-600">{{ totalEvaluations }}</span>
+                    <p class="text-sm text-gray-500 mt-2">Respuestas recibidas</p>
+                </div>
+            </div>
+
+            <!-- Recommendation Score (Mockup or calculated) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
+                 <div class="w-full">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Desempeño</h3>
+                    <div class="relative pt-1">
+                        <div class="overflow-hidden h-4 text-xs flex rounded bg-blue-100">
+                            <div [style.width.%]="(averageRating / 5) * 100" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"></div>
+                        </div>
+                        <p class="text-right text-xs text-gray-500 mt-1">Base 5.0</p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Criteria Analysis -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-6">Desglose por Criterios</h2>
+                <div class="space-y-6">
+                    <div *ngFor="let criterion of criteriaAnalysis">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-gray-700 w-2/3 truncate" [title]="criterion.name">{{ criterion.name }}</span>
+                            <span class="text-sm font-bold text-gray-900">{{ criterion.average | number:'1.1-1' }}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2.5">
+                            <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" [style.width.%]="criterion.percentage"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">{{ criterion.count }} respuestas</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Comments -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-6">Comentarios Recientes</h2>
+                <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div *ngIf="recentComments.length === 0" class="text-center text-gray-500 py-4">
+                        No hay comentarios disponibles.
+                    </div>
+                    <div *ngFor="let comment of recentComments" class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <p class="text-gray-600 text-sm italic mb-3">"{{ comment.observaciones }}"</p>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span class="font-medium text-gray-500">{{ comment.evaluado_por }}</span>
+                            <span>{{ comment.fecha | date:'mediumDate' }}</span>
+                        </div>
+                        <div class="mt-2 flex items-center">
+                            <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                {{ comment.criterio_evaluacion_id.nombre | slice:0:20 }}...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

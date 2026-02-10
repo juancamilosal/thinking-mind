@@ -166,7 +166,7 @@ export class Dashboard implements OnInit {
   private loadRectorData(): void {
     this.dashboardService.dashboardRector().subscribe({
       next: (response) => {
-        if (response.data) {
+        if (response && response.data) {
           this.rectorStats.totalStudentsEnrolled = response.data.total_estudiantes || 0;
           this.rectorStats.totalStudentsWithPendingStatus = response.data.cuentas_pendientes || 0;
           this.rectorStats.totalStudentsWithPaidStatus = response.data.cuentas_pagadas || 0;
@@ -425,7 +425,7 @@ export class Dashboard implements OnInit {
   private loadSalesData(): void {
     this.dashboardService.dashboardSale().subscribe({
       next: (response) => {
-        if (response.data) {
+        if (response && response.data) {
           this.rectorStats.totalStudentsEnrolled = response.data.total_estudiantes || 0;
           this.rectorStats.totalStudentsWithPendingStatus = response.data.cuentas_pendientes || 0;
           this.rectorStats.totalStudentsWithPaidStatus = response.data.cuentas_pagadas || 0;

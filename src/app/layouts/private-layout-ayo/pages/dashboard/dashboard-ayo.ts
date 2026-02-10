@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
@@ -43,7 +43,8 @@ export class DashboardAyo implements OnInit {
   constructor(
     private dashboardService: DashboardService,
     private studentService: StudentService,
-    private payrollService: PayrollService
+    private payrollService: PayrollService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -103,16 +104,26 @@ export class DashboardAyo implements OnInit {
               console.error('Error processing dashboard data:', e);
             } finally {
               this.isLoading = false;
+              this.cdr.detectChanges();
             }
           },
           error: (error) => {
             console.error('Error loading student dashboard:', error);
             this.isLoading = false;
+            this.cdr.detectChanges();
           }
         });
 
         return;
       }
+      
+      // If user role is not handled
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    } else {
+      // If no user found
+      this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -145,23 +156,27 @@ export class DashboardAyo implements OnInit {
         if (teacherId) {
           this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
             next: (payrollSummary) => {
-              if (this.teacherStats) {
-                  this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes;
+              if (this.teacherStats && payrollSummary) {
+                  this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes || 0;
               }
               this.isLoading = false;
+              this.cdr.detectChanges();
             },
             error: (error) => {
               console.error('Error loading payroll hours', error);
               this.isLoading = false;
+              this.cdr.detectChanges();
             }
           });
         } else {
           this.isLoading = false;
+          this.cdr.detectChanges();
         }
       },
       error: (error) => {
         console.error('Error loading teacher dashboard', error);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

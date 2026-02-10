@@ -12,6 +12,7 @@ import { AttendancePageComponent } from './layouts/private-layout-ayo/pages/atte
 import { CertificatesComponent } from './layouts/private-layout-ayo/pages/certificates/certificates';
 import { authGuard } from './core/guards/auth.guard';
 import { PayrollTeacher } from './layouts/private-layout-ayo/pages/payroll-teacher/payroll-teacher';
+import { TeacherEvaluationPage } from './layouts/private-layout-ayo/pages/teacher-evaluation/teacher-evaluation';
 
 export const ayoRoutes: Routes = [
   {
@@ -78,6 +79,11 @@ export const ayoRoutes: Routes = [
         path: 'payroll-teacher',
         title: 'Thinking Mind | Nómina Profesor',
         component: PayrollTeacher
+      },
+      {
+        path: 'teacher-evaluation',
+        title: 'Thinking Mind | Evaluación Docente',
+        component: TeacherEvaluationPage
       },
       {
         path: '**',
