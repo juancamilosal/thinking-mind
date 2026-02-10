@@ -1,0 +1,4 @@
+/* Styles are mostly handled by Tailwind classes in HTML */
+:host {
+  display: block;
+}

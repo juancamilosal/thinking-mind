@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { ResponseAPI } from '../models/ResponseAPI';
 import { environment } from '../../../environments/environment';
 import { ProgramaAyo, PrecioProgramaAyo } from '../models/Course';
+import { CriterioEvaluacion } from '../models/Evaluation';
 
 @Injectable({
   providedIn: 'root'
@@ -38,6 +39,10 @@ export class ProgramaAyoService {
     }, {});
 
     return this.http.post<ResponseAPI<any>>(environment.reunion_general, cleanData);
+  }
+
+  getCriteriosEvaluacion(): Observable<ResponseAPI<CriterioEvaluacion[]>> {
+    return this.http.get<ResponseAPI<CriterioEvaluacion[]>>(environment.criterio_evaluacion);
   }
 
   getProgramaAyo(idioma?: string, search?: string, userId?: string, teacherId?: string): Observable<ResponseAPI<ProgramaAyo[]>> {

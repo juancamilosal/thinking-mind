@@ -8,6 +8,7 @@ import { StorageServices } from '../../../../../core/services/storage.services';
 import { ProgramaAyo } from '../../../../../core/models/Course';
 import { environment } from '../../../../../../environments/environment';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { TeacherEvaluationComponent } from './teacher-evaluation/teacher-evaluation.component';
 
 declare var gapi: any;
 declare var google: any;
@@ -15,7 +16,7 @@ declare var google: any;
 @Component({
   selector: 'app-meet-student',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, TeacherEvaluationComponent],
   templateUrl: './meet-student.html',
   styleUrl: './meet-student.css'
 })
@@ -35,6 +36,11 @@ export class MeetStudent implements OnInit {
   parsedStudyPlans = new Map<string, any[]>();
   selectedPlanItems = new Map<string, any>();
 
+  // Evaluation Modal Properties
+  showEvaluationModal = false;
+  selectedEvaluationTeacherName = '';
+  selectedEvaluationClassName = '';
+  selectedReunion: any = null;
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -203,8 +209,33 @@ export class MeetStudent implements OnInit {
    handleTestAndJoin(event: Event, reunion: any): void {
      event.preventDefault();
      if (reunion.link_reunion) {
-         window.open(reunion.link_reunion, '_blank');
+         (window as any).open(reunion.link_reunion, '_blank');
      }
    }
+
+  // Evaluation methods
+  openEvaluation(reunion: any): void {
+    this.selectedReunion = reunion;
+    this.selectedEvaluationTeacherName = reunion.id_docente 
+      ? `${reunion.id_docente.first_name} ${reunion.id_docente.last_name}` 
+      : 'Docente';
+    this.selectedEvaluationClassName = reunion.nombre || 'Clase';
+    this.showEvaluationModal = true;
+  }
+
+  closeEvaluationModal(): void {
+    this.showEvaluationModal = false;
+    this.selectedReunion = null;
+    this.selectedEvaluationTeacherName = '';
+    this.selectedEvaluationClassName = '';
+  }
+
+  handleEvaluationSubmit(evaluationData: any): void {
+    console.log('Evaluación enviada:', evaluationData);
+    console.log('Reunión evaluada:', this.selectedReunion);
+    // Aquí iría la lógica para enviar la evaluación al backend
+    this.notificationService.showSuccess('Éxito', 'Evaluación enviada correctamente');
+    this.closeEvaluationModal();
+  }
 
 }

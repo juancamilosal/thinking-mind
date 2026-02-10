@@ -9,6 +9,15 @@
         </button>
     </div>
 
+    @if (showEvaluationModal) {
+        <app-teacher-evaluation
+            [teacherName]="selectedEvaluationTeacherName"
+            [className]="selectedEvaluationClassName"
+            (onSubmitEvaluation)="handleEvaluationSubmit($event)"
+            (onCancel)="closeEvaluationModal()">
+        </app-teacher-evaluation>
+    }
+
     @if (showStudyPlanModal) {
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4" (click)="closeStudyPlanModal()">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn" (click)="$event.stopPropagation()">
@@ -220,10 +229,13 @@
                                         </div>
                                         <div class="flex items-center gap-5">
                                             @if (reunion.link_reunion) {
-                                            <a href="javascript:void(0)" class="meeting-link" title="Unirse a reunión" (click)="handleTestAndJoin($event, reunion)">
-                                                <img src="../../../../../../assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                            <a class="meeting-link cursor-pointer" title="Unirse a reunión" (click)="handleTestAndJoin($event, reunion)">
+                                                <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
                                             </a>
                                             }
+                                          <a class="meeting-link cursor-pointer" title="Evaluar al docente" (click)="openEvaluation(reunion)">
+                                            <img src="/assets/icons/evaluacion.png" class="w-full h-full object-contain" alt="Evaluar">
+                                          </a>
                                         </div>
                                     </div>
                                     }
