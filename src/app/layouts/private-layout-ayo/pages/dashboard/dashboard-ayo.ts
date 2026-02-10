@@ -128,16 +128,26 @@ export class DashboardAyo implements OnInit {
             this.teacherStats = response.data[0];
           }
           // Si es un objeto directo (no array), lo asignamos directamente
-          else if (!Array.isArray(response.data) && typeof response.data === 'object') {
+          else if (!Array.isArray(response.data) && typeof response.data === 'object' && response.data !== null) {
             this.teacherStats = response.data;
           }
+        }
+
+        // Ensure teacherStats is initialized if it's null/undefined
+        if (!this.teacherStats) {
+            this.teacherStats = {
+                horas_trabajadas: 0,
+                reuniones_meet_id: []
+            };
         }
 
         // Load payroll hours for current month (only for teachers)
         if (teacherId) {
           this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
             next: (payrollSummary) => {
-              this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes;
+              if (this.teacherStats) {
+                  this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes;
+              }
               this.isLoading = false;
             },
             error: (error) => {

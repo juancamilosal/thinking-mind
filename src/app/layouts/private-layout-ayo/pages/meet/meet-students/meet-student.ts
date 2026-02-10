@@ -41,6 +41,7 @@ export class MeetStudent implements OnInit {
   selectedEvaluationTeacherName = '';
   selectedEvaluationClassName = '';
   selectedReunion: any = null;
+  selectedProgramId: string | null = null;
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -214,8 +215,13 @@ export class MeetStudent implements OnInit {
    }
 
   // Evaluation methods
-  openEvaluation(reunion: any): void {
+  openEvaluation(reunion: any, programId: string): void {
+    console.log('openEvaluation called with programId:', programId);
+    if (!programId) {
+      console.error('programId is missing in openEvaluation');
+    }
     this.selectedReunion = reunion;
+    this.selectedProgramId = programId;
     this.selectedEvaluationTeacherName = reunion.id_docente 
       ? `${reunion.id_docente.first_name} ${reunion.id_docente.last_name}` 
       : 'Docente';
@@ -226,16 +232,68 @@ export class MeetStudent implements OnInit {
   closeEvaluationModal(): void {
     this.showEvaluationModal = false;
     this.selectedReunion = null;
+    this.selectedProgramId = null;
     this.selectedEvaluationTeacherName = '';
     this.selectedEvaluationClassName = '';
   }
 
   handleEvaluationSubmit(evaluationData: any): void {
-    console.log('Evaluación enviada:', evaluationData);
-    console.log('Reunión evaluada:', this.selectedReunion);
-    // Aquí iría la lógica para enviar la evaluación al backend
-    this.notificationService.showSuccess('Éxito', 'Evaluación enviada correctamente');
-    this.closeEvaluationModal();
+    const user = StorageServices.getCurrentUser();
+    if (!user) {
+      this.notificationService.showError('Error', 'No se pudo identificar al usuario.');
+      return;
+    }
+
+    if (!this.selectedReunion || !this.selectedReunion.id_docente) {
+      this.notificationService.showError('Error', 'No se pudo identificar al docente.');
+      return;
+    }
+
+    const payloads: any[] = [];
+    const date = new Date().toISOString().split('T')[0];
+    const observations = evaluationData.observations || '';
+    const teacherId = this.selectedReunion.id_docente.id;
+    const evaluatorName = `${user.first_name} ${user.last_name}`;
+    const programId = this.selectedProgramId;
+
+    if (!programId) {
+      this.notificationService.showError('Error', 'No se pudo identificar el programa.');
+      return;
+    }
+
+    // Iterate over keys
+    for (const key in evaluationData) {
+      // Skip global observations field and individual observation fields (processed with their rating)
+      if (key !== 'observations' && !key.startsWith('obs_') && evaluationData.hasOwnProperty(key)) {
+        const observation = evaluationData['obs_' + key] || '';
+        
+        payloads.push({
+          fecha: date,
+          observaciones: observation,
+          docente_id: { id: teacherId },
+          evaluado_por: evaluatorName,
+          criterio_evaluacion_id: { id: key },
+          programa_ayo_id: { id: programId },
+          calificacion: evaluationData[key]
+        });
+      }
+    }
+
+    if (payloads.length === 0) {
+      this.notificationService.showWarning('Advertencia', 'No hay calificaciones para enviar.');
+      return;
+    }
+
+    this.programaAyoService.saveCalificacionDocente(payloads).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Éxito', 'Evaluación enviada correctamente');
+        this.closeEvaluationModal();
+      },
+      error: (err) => {
+        console.error('Error saving evaluation:', err);
+        this.notificationService.showError('Error', 'Hubo un error al enviar la evaluación.');
+      }
+    });
   }
 
 }

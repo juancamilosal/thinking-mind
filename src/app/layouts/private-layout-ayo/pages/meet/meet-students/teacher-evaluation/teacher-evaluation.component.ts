@@ -19,6 +19,7 @@ export class TeacherEvaluationComponent implements OnInit {
 
   evaluationForm: FormGroup;
   questions: { id: string, text: string }[] = [];
+  isLoading = true;
 
   constructor(
     private fb: FormBuilder,
@@ -34,6 +35,7 @@ export class TeacherEvaluationComponent implements OnInit {
   }
 
   loadCriteria(): void {
+    this.isLoading = true;
     this.programaAyoService.getCriteriosEvaluacion().subscribe({
       next: (response) => {
         if (response.data) {
@@ -45,11 +47,14 @@ export class TeacherEvaluationComponent implements OnInit {
           // Add controls for each question
           this.questions.forEach(q => {
             this.evaluationForm.addControl(q.id, this.fb.control(0, [Validators.required, Validators.min(1)]));
+            this.evaluationForm.addControl('obs_' + q.id, this.fb.control(''));
           });
         }
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading evaluation criteria:', err);
+        this.isLoading = false;
       }
     });
   }
