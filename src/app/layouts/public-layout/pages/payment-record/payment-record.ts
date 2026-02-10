@@ -685,8 +685,7 @@ export class PaymentRecord implements OnInit {
 
     // Limpiar el valor del colegio seleccionado cuando el usuario empieza a escribir
     this.paymentForm.get('studentSchool')?.setValue('');
-    // Limpiar el grado al empezar a buscar otro colegio
-    this.paymentForm.get('studentGrado')?.setValue('');
+    // NO limpiar el grado/grupo al buscar otro colegio
 
     const trimmed = searchTerm.trim();
     if (!trimmed || trimmed.length < 2) {
@@ -758,8 +757,7 @@ export class PaymentRecord implements OnInit {
   selectSchool(school: School): void {
     this.paymentForm.get('studentSchool')?.setValue(school.id);
     this.paymentForm.get('schoolSearchTerm')?.setValue(school.nombre);
-    // Limpiar el grado al cambiar de colegio
-    this.paymentForm.get('studentGrado')?.setValue('');
+    // NO limpiar el grado al cambiar de colegio
     this.filteredSchools = [];
     this.isSchoolSelected = true;
     this.cdRef.detectChanges();
@@ -794,8 +792,7 @@ export class PaymentRecord implements OnInit {
     this.filteredSchools = [];
     this.isSchoolSelected = false;
     this.paymentForm.get('studentSchool')?.setValue('');
-    // Limpiar el grado al limpiar el colegio
-    this.paymentForm.get('studentGrado')?.setValue('');
+    // NO limpiar el grado al limpiar el colegio
     // Al limpiar el colegio, reiniciar también la selección de programa y sus precios
     this.resetCourseSelection();
     this.cdRef.detectChanges();
@@ -807,8 +804,7 @@ export class PaymentRecord implements OnInit {
     const indCtrl = this.paymentForm.get('independentInstitution');
     if (checked) {
       this.paymentForm.get('studentSchool')?.setValue(this.openProgramSchoolId);
-      // Limpiar el grado al cambiar a programa abierto
-      this.paymentForm.get('studentGrado')?.setValue('');
+      // NO limpiar el grado al cambiar a programa abierto
       this.paymentForm.get('studentSchool')?.updateValueAndValidity();
       this.paymentForm.get('schoolSearchTerm')?.setValue('');
       this.filteredSchools = [];
@@ -853,7 +849,7 @@ export class PaymentRecord implements OnInit {
         const hasWillGoEstandarPaid = this.clientData.cuentas_cobrar.some((cuenta: any) =>
           cuenta.curso_id &&
           cuenta.curso_id.id === willGoEstandarId &&
-          cuenta.estado === 'PAGADA'
+          (cuenta.pagos && cuenta.pagos.length > 0)
         );
 
         if (!hasWillGoEstandarPaid) {
@@ -874,7 +870,7 @@ export class PaymentRecord implements OnInit {
         const hasWillGoSegundoHermanoPaid = this.clientData.cuentas_cobrar.some((cuenta: any) =>
           cuenta.curso_id &&
           cuenta.curso_id.id === willGoSegundoHermanoId &&
-          cuenta.estado === 'PAGADA'
+          (cuenta.pagos && cuenta.pagos.length > 0)
         );
 
         if (!hasWillGoSegundoHermanoPaid) {
