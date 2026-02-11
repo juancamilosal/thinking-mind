@@ -304,6 +304,12 @@
                                                             "{{ obs.text }}"
                                                         }
                                                     </p>
+                                                    @if (obs.criterion) {
+                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Criterio de Evaluación</span>
+                                                            <p class="text-sm text-gray-700">{{ obs.criterion }}</p>
+                                                        </div>
+                                                    }
                                                 </div>
                                             } @empty {
                                                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-400 italic text-sm text-center">

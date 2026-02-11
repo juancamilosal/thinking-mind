@@ -18,7 +18,7 @@ interface LevelAnalysis {
   totalSessions: number;
   attendedSessions: number;
   lastObservation: string;
-  observations: { date: string, text: string, score: number, isDefault: boolean }[];
+  observations: { date: string, text: string, score: number, isDefault: boolean, criterion?: string }[];
   trend: 'up' | 'down' | 'stable';
 }
 
@@ -129,12 +129,10 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     const user = StorageServices.getCurrentUser();
     if (user && user.id) {
       const filter = { estudiante_id: user.id };
-      // Limit set to 100 to get a good amount of history without pagination for now
-      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha', '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*').subscribe({
+      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha', '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*,criterio_evaluacion_estudiante_id.*').subscribe({
         next: (response) => {
           this.attendanceList = response.data || [];
           this.processLevelAnalysis();
-          // Una vez cargadas las asistencias, inicializamos el gráfico con los datos reales
           setTimeout(() => {
             this.initChart();
           }, 0);
@@ -196,12 +194,20 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
 
       // Todas las observaciones (sin filtrar vacías)
       const observations = attendances
-        .map(a => ({
-          date: a.fecha || '',
-          text: a.observaciones || 'Sin observaciones',
-          isDefault: !a.observaciones,
-          score: a.calificacion || 0
-        }))
+        .map(a => {
+          // Intentar obtener el objeto del criterio de ambas posibles propiedades (con o sin _id)
+          // Directus a veces mapea la relación al nombre sin _id
+          const criterionObj = a['criterio_evaluacion_estudiante'] || a['criterio_evaluacion_estudiante_id'];
+          const criterionName = (typeof criterionObj === 'object' && criterionObj?.criterio) ? criterionObj.criterio : '';
+
+          return {
+            date: a.fecha || '',
+            text: a.observaciones || 'Sin observaciones',
+            isDefault: !a.observaciones,
+            score: a.calificacion || 0,
+            criterion: criterionName
+          };
+        })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Ordenar por fecha descendente
 
       // Tendencia (comparar última mitad vs primera mitad o últimos 3)

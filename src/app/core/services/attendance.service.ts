@@ -59,6 +59,10 @@ export class AttendanceService {
     return this.http.post<ResponseAPI<Attendance>>(this.apiUrl, data);
   }
 
+  createAttendances(data: Partial<Attendance>[]): Observable<ResponseAPI<Attendance[]>> {
+    return this.http.post<ResponseAPI<Attendance[]>>(this.apiUrl, data);
+  }
+
   updateAttendance(id: string, data: Partial<Attendance>): Observable<ResponseAPI<Attendance>> {
     return this.http.patch<ResponseAPI<Attendance>>(`${this.apiUrl}/${id}`, data);
   }

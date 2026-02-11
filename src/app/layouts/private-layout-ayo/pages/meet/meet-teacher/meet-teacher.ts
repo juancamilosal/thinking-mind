@@ -13,7 +13,7 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
 import { PayrollService } from '../../../../../core/services/payroll.service';
 import { TeacherPayroll } from '../../../../../core/models/Payroll';
 import { environment } from '../../../../../../environments/environment';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
 import { UserService } from '../../../../../core/services/user.service';
@@ -36,6 +36,14 @@ interface StudentEvaluation {
   numero_documento?: string;
   email_acudiente?: string;
   asistencia_id?: any[];
+  selectedCriteriaId?: string;
+}
+
+interface CriterioEvaluacionEstudiante {
+  id: string;
+  nombre: string;
+  calificacion: number;
+  criterio: string;
 }
 
 @Component({
@@ -79,6 +87,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   currentLevelId: string | null = null;
   evaluationStudyPlan: any[] = [];
   selectedPlanItemForEvaluation: any = null;
+  evaluationCriteria: CriterioEvaluacionEstudiante[] = [];
 
   // Students List Modal Properties
   showStudentsModal = false;
@@ -123,9 +132,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     const programId = this.selectedProgramForStudents.id;
-
-    // Filter attendance records for this specific program
-    // We expect record to be an object as per user JSON, but we check just in case
     const relevantRecords = student.asistencia_id.filter((record: any) =>
       record && typeof record === 'object' && record.programa_ayo_id === programId
     );
@@ -134,41 +140,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     const attendedCount = relevantRecords.filter((record: any) => record.asiste === true).length;
 
-    // Percentage = (Attended / Total Recorded) * 100
     return Math.round((attendedCount / relevantRecords.length) * 100);
   }
 
-  // Helper to calculate attendance including current session (before it's saved to DB)
   calculateProjectedAttendance(student: any): number {
      if (!student.accountInfo && !student.asistencia_id) {
-        // Fallback if no history, just current session
         return student.attended ? 100 : 0;
      }
 
-     // We need to access the attendance records.
-     // In the student object loaded in `initializeStudentEvaluations`, we might not have the full `asistencia_id` array populated if it wasn't fetched deep enough or mapped correctly.
-     // However, `getStudentAttendance` relies on `student.asistencia_id`.
-     // Let's assume `student` in `processAttendance` loop is the same object from `this.students`.
-     // But `this.students` was mapped from `uniqueStudentsMap`.
-     // The original data came from `this.selectedProgramForStudents` or `programa.id_nivel.estudiantes_id`.
-     // In `openStudentsModal`, we used `programa.id_nivel.estudiantes_id`.
-     // But `initializeStudentEvaluations` builds `this.students` from the meeting participants (which comes from Google Meet) matched against `this.programas`.
-
-     // Let's trace where `student.asistencia_id` comes from in `this.students`.
-     // `initializeStudentEvaluations` maps from `uniqueStudentsMap`.
-     // `uniqueStudentsMap` is populated from `program.id_nivel.estudiantes_id`.
-     // So `student` object in `this.students` SHOULD have `asistencia_id` if it was preserved.
-     // Let's check `initializeStudentEvaluations` mapping.
-
-     // Looking at previous `initializeStudentEvaluations` (implied):
-     // It maps: id, name, attended, rating, comment, currentRating, currentCredits, tipo_documento, numero_documento, email_acudiente.
-     // It does NOT seem to preserve `asistencia_id` explicitly in the `StudentEvaluation` interface I saw earlier.
-     // I need to update `StudentEvaluation` interface and the mapping to include `asistencia_id`.
-
-     // But first, let's implement this method assuming `asistencia_id` is available.
-     // Wait, I can't assume. I need to fix the interface and mapping first.
-
-     // But for now, let's write the logic:
      const records = student.asistencia_id || [];
      const programId = this.currentProgramId;
 
@@ -189,6 +168,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadGoogleScripts();
+    this.loadEvaluationCriteria();
 
     this.route.queryParams.subscribe(params => {
       if (params['idioma']) {
@@ -215,6 +195,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
     }
+  }
+
+  loadEvaluationCriteria(): void {
+    this.programaAyoService.getCriteriosEvaluacionEstudiante().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.evaluationCriteria = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading evaluation criteria:', error);
+      }
+    });
   }
 
   loadTeacherMeetings(): void {
@@ -425,6 +418,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   setRating(student: StudentEvaluation, rating: number): void {
+    if (student.rating !== rating) {
+      student.selectedCriteriaId = undefined;
+    }
     student.rating = rating;
   }
 
@@ -456,6 +452,18 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate that rated students have a criterion selected
+    const ratedStudents = attendedStudents.filter(s => s.rating > 0);
+    const allCriteriaSelected = ratedStudents.every(s => s.selectedCriteriaId);
+
+    if (ratedStudents.length > 0 && !allCriteriaSelected) {
+      this.notificationService.showWarning(
+        'Criterios Incompletos',
+        'Por favor selecciona un criterio para cada calificación.'
+      );
+      return;
+    }
+
     if (!this.currentProgramId) {
       this.notificationService.showError('Error', 'No se identificó el programa asociado.');
       return;
@@ -477,18 +485,23 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       const studentsWithFourCredits: string[] = [];
       const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
 
-      // Create observables for each student evaluation
-      const evaluationRequests = this.students.map(student => {
+      const attendanceDataList: any[] = [];
+      const usersToUpdate: any[] = [];
+      const certificatesToCreate: any[] = [];
+
+      // Collect data for batch requests
+      this.students.forEach(student => {
         const evaluationData: any = {
           calificacion: student.rating,
           estudiante_id: student.id,
           programa_ayo_id: this.currentProgramId,
           asiste: student.attended,
           observaciones: student.comment,
-          fecha: new Date().toISOString().split('T')[0]
+          fecha: new Date().toISOString().split('T')[0],
+          criterio_evaluacion_estudiante_id: student.selectedCriteriaId
         };
 
-        const attendanceObs = this.attendanceService.createAttendance(evaluationData);
+        attendanceDataList.push(evaluationData);
 
         // Update student cumulative grade if they attended and have a rating
         if (student.attended && student.rating > 0) {
@@ -515,6 +528,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           }
 
           const updateData: any = {
+            id: student.id,
             calificacion: newRating,
             creditos: newCredits
           };
@@ -523,6 +537,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           if (newCredits === 0) {
             const finalAttendancePercent = this.calculateProjectedAttendance(student);
             const passed = finalAttendancePercent >= 70 && newRating >= 70;
+
+            console.log(`Checking certification for ${student.name}:`, {
+                newCredits,
+                finalAttendancePercent,
+                newRating,
+                passed,
+                currentLevelId: this.currentLevelId
+            });
 
             updateData.aprobo_ayo = passed;
 
@@ -533,29 +555,42 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
                      estudiante_id: student.id,
                      nivel_id: this.currentLevelId
                   };
-
-                  this.certificacionService.createCertificado(certificateData).subscribe({
-                     next: () => console.log(`Certificate created successfully for student ${student.id}`),
-                     error: (e) => console.error(`Error creating certificate for student ${student.id}`, e)
-                  });
+                  console.log('Adding certificate to create:', certificateData);
+                  certificatesToCreate.push(certificateData);
+               } else {
+                   console.warn('Passed but no currentLevelId found. Certificate NOT created.');
                }
             } else {
               console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${newRating}`);
             }
           }
 
-          const updateUserObs = this.userService.updateUser(student.id, updateData);
-
-          // Combine both requests
-          return forkJoin([attendanceObs, updateUserObs]);
+          usersToUpdate.push(updateData);
         }
-
-        // If no rating update needed, just return attendance wrapped in array
-        return attendanceObs.pipe(map(res => [res, null]));
       });
 
-      forkJoin(evaluationRequests).subscribe({
+      const requests: Observable<any>[] = [];
+
+      // 1. Batch create attendance
+      if (attendanceDataList.length > 0) {
+        requests.push(this.attendanceService.createAttendances(attendanceDataList));
+      }
+
+      // 2. Batch update users
+      if (usersToUpdate.length > 0) {
+        requests.push(this.userService.updateUsers(usersToUpdate));
+      }
+
+      // 3. Batch create certificates
+      if (certificatesToCreate.length > 0) {
+        requests.push(this.certificacionService.createCertificados(certificatesToCreate));
+      }
+
+      // Execute all batch requests
+      forkJoin(requests).subscribe({
         next: (responses) => {
+          console.log('Batch operations completed', responses);
+
           // Send students with zero credits to new service
           if (studentsWithZeroCredits.length > 0) {
             const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);
@@ -589,9 +624,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
           // Send students with 4 credits email
           if (studentsWithFourCredits.length > 0) {
-            this.http.post(environment.send_guardian_emails, { emails: studentsWithFourCredits }).subscribe({
-                next: () => console.log('Emails sent successfully'),
-                error: (e) => console.error('Error sending emails', e)
+            this.programaAyoService.notifyAcudientesFlow(studentsWithFourCredits).subscribe({
+              next: () => console.log('Notify Acudientes Flow triggered successfully'),
+              error: (e) => console.error('Error triggering Notify Acudientes Flow', e)
             });
           }
 

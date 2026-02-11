@@ -54,6 +54,14 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<CriterioEvaluacion[]>>(environment.criterio_evaluacion);
   }
 
+  getCriteriosEvaluacionEstudiante(rating?: number): Observable<ResponseAPI<any[]>> {
+    let params: any = {};
+    if (rating) {
+      params['filter[calificacion][_eq]'] = rating;
+    }
+    return this.http.get<ResponseAPI<any[]>>(environment.criterio_evaluacion_estudiante, { params });
+  }
+
   saveCalificacionDocente(data: any): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(environment.calificacion_docente, data);
   }
@@ -123,5 +131,9 @@ export class ProgramaAyoService {
 
   sendNovedad(novedad: string, emails: string[]): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(environment.send_novedad, { novedad, emails });
+  }
+
+  notifyAcudientesFlow(emails: string[]): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(environment.notify_acudiente_flow, { emails });
   }
 }

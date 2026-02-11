@@ -26,12 +26,37 @@ export class UserService {
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
   }
 
+  getStudentsWithAttendance(filters: { search?: string, level?: string, subcategory?: string } = {}): Observable<ResponseAPI<User[]>> {
+    let params: any = {
+      'filter[role][_eq]': 'ca8ffc29-c040-439f-8017-0dcb141f0fd3', // Roles.STUDENT
+      'fields': '*,asistencia_id.*,nivel_id.*'
+    };
+
+    if (filters.search) {
+      params['search'] = filters.search;
+    }
+
+    if (filters.level) {
+      params['filter[nivel_id][nivel][_eq]'] = filters.level;
+    }
+
+    if (filters.subcategory) {
+      params['filter[nivel_id][subcategoria][_eq]'] = filters.subcategory;
+    }
+
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
+
   createUser(user: Partial<User>): Observable<ResponseAPI<User>> {
     return this.http.post<ResponseAPI<User>>(this.apiUrl, user);
   }
 
   updateUser(id: string, user: Partial<User>): Observable<ResponseAPI<User>> {
     return this.http.patch<ResponseAPI<User>>(`${this.apiUrl}/${id}`, user);
+  }
+
+  updateUsers(users: Partial<User>[]): Observable<ResponseAPI<User[]>> {
+    return this.http.patch<ResponseAPI<User[]>>(this.apiUrl, users);
   }
 
   deleteUser(id: string): Observable<ResponseAPI<any>> {
