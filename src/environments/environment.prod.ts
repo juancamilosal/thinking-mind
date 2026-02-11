@@ -24,6 +24,7 @@ export const environment = {
   reuniones_meet: apiUrl + 'items/reuniones_meet',
   reunion_general: apiUrl + 'items/reunion_general',
   criterio_evaluacion: apiUrl + 'items/criterio_evaluacion',
+  criterio_evaluacion_estudiante: apiUrl + 'items/criterio_evaluacion_estudiante',
   calificacion_docente: apiUrl + 'items/calificacion_docente',
   attendance: apiUrl + 'items/asistencia',
   nomina_docente: apiUrl + 'items/nomina_docente',
