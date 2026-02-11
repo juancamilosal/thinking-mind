@@ -443,10 +443,12 @@ export class PaymentRecordAyoComponent implements OnInit {
                     this.clientService.searchClientPayment(docType, docNum, true).subscribe({
                         next: (data) => {
                             if (data.data && data.data.length > 0) {
+                                this.clientData = data.data[0];
                                 this.showConfirmation = false;
                                 this.showRegisteredCourses = true;
                                 this.prepareRegisteredCoursesTable(data.data[0]);
                                 window.scrollTo(0, 0);
+                                this.cdRef.markForCheck();
                             }
                         },
                         error: (error) => {
