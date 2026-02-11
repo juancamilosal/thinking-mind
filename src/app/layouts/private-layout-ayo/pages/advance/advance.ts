@@ -129,7 +129,7 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     const user = StorageServices.getCurrentUser();
     if (user && user.id) {
       const filter = { estudiante_id: user.id };
-      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha', '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*,criterio_evaluacion_estudiante_id.*').subscribe({
+      this.attendanceService.getAttendances(1, 100, '', filter, 'fecha', '*,programa_ayo_id.*,programa_ayo_id.id_nivel.*,criterio_evaluacion_estudiante_id.*,criterio_evaluacion_estudiante.*').subscribe({
         next: (response) => {
           this.attendanceList = response.data || [];
           this.processLevelAnalysis();
