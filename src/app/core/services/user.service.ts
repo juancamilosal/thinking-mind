@@ -34,6 +34,10 @@ export class UserService {
     return this.http.patch<ResponseAPI<User>>(`${this.apiUrl}/${id}`, user);
   }
 
+  updateUsers(users: Partial<User>[]): Observable<ResponseAPI<User[]>> {
+    return this.http.patch<ResponseAPI<User[]>>(this.apiUrl, users);
+  }
+
   deleteUser(id: string): Observable<ResponseAPI<any>> {
     return this.http.delete<ResponseAPI<any>>(`${this.apiUrl}/${id}`);
   }

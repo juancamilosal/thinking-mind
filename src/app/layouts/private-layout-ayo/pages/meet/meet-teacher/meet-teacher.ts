@@ -13,7 +13,7 @@ import { ConfirmationService } from '../../../../../core/services/confirmation.s
 import { PayrollService } from '../../../../../core/services/payroll.service';
 import { TeacherPayroll } from '../../../../../core/models/Payroll';
 import { environment } from '../../../../../../environments/environment';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
 import { UserService } from '../../../../../core/services/user.service';
@@ -476,9 +476,13 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
       const studentsWithFourCredits: string[] = [];
       const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
+      
+      const attendanceDataList: any[] = [];
+      const usersToUpdate: any[] = [];
+      const certificatesToCreate: any[] = [];
 
-      // Create observables for each student evaluation
-      const evaluationRequests = this.students.map(student => {
+      // Collect data for batch requests
+      this.students.forEach(student => {
         const evaluationData: any = {
           calificacion: student.rating,
           estudiante_id: student.id,
@@ -488,7 +492,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           fecha: new Date().toISOString().split('T')[0]
         };
 
-        const attendanceObs = this.attendanceService.createAttendance(evaluationData);
+        attendanceDataList.push(evaluationData);
 
         // Update student cumulative grade if they attended and have a rating
         if (student.attended && student.rating > 0) {
@@ -515,6 +519,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           }
 
           const updateData: any = {
+            id: student.id,
             calificacion: newRating,
             creditos: newCredits
           };
@@ -533,29 +538,39 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
                      estudiante_id: student.id,
                      nivel_id: this.currentLevelId
                   };
-
-                  this.certificacionService.createCertificado(certificateData).subscribe({
-                     next: () => console.log(`Certificate created successfully for student ${student.id}`),
-                     error: (e) => console.error(`Error creating certificate for student ${student.id}`, e)
-                  });
+                  certificatesToCreate.push(certificateData);
                }
             } else {
               console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${newRating}`);
             }
           }
 
-          const updateUserObs = this.userService.updateUser(student.id, updateData);
-
-          // Combine both requests
-          return forkJoin([attendanceObs, updateUserObs]);
+          usersToUpdate.push(updateData);
         }
-
-        // If no rating update needed, just return attendance wrapped in array
-        return attendanceObs.pipe(map(res => [res, null]));
       });
 
-      forkJoin(evaluationRequests).subscribe({
+      const requests: Observable<any>[] = [];
+
+      // 1. Batch create attendance
+      if (attendanceDataList.length > 0) {
+        requests.push(this.attendanceService.createAttendances(attendanceDataList));
+      }
+
+      // 2. Batch update users
+      if (usersToUpdate.length > 0) {
+        requests.push(this.userService.updateUsers(usersToUpdate));
+      }
+
+      // 3. Batch create certificates
+      if (certificatesToCreate.length > 0) {
+        requests.push(this.certificacionService.createCertificados(certificatesToCreate));
+      }
+
+      // Execute all batch requests
+      forkJoin(requests).subscribe({
         next: (responses) => {
+          console.log('Batch operations completed', responses);
+
           // Send students with zero credits to new service
           if (studentsWithZeroCredits.length > 0) {
             const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);

@@ -25,6 +25,10 @@ export class CertificacionService {
     return this.http.post<ResponseAPI<Certification>>(this.apiUrl, data);
   }
 
+  createCertificados(data: any[]): Observable<ResponseAPI<Certification[]>> {
+    return this.http.post<ResponseAPI<Certification[]>>(this.apiUrl, data);
+  }
+
   updateCertificado(id: string, data: any): Observable<ResponseAPI<Certification>> {
     return this.http.patch<ResponseAPI<Certification>>(`${this.apiUrl}/${id}`, data);
   }
