@@ -295,13 +295,16 @@ export class Reports {
 private generateEnrollReport(startDate?: string, endDate?: string): void {
   this.loadingSchoolsData = true;
   this.accountReceivableService.getAccountsForReport(startDate, endDate).subscribe({
-    next: (response) => {
-      if (response && response.data && Array.isArray(response.data)) {
-        // Agrupar datos por colegio y curso
-        const schoolsMap = new Map<string, any>();
+      next: (response) => {
+        // Normalizar la respuesta: puede venir como array directo o dentro de la propiedad data
+        const data = Array.isArray(response) ? response : (response?.data || []);
 
-        response.data.forEach((item: any) => {
-          const schoolName = item.colegio;
+        if (Array.isArray(data) && data.length > 0) {
+          // Agrupar datos por colegio y curso
+          const schoolsMap = new Map<string, any>();
+
+          data.forEach((item: any) => {
+            const schoolName = item.colegio;
 
           if (!schoolsMap.has(schoolName)) {
             schoolsMap.set(schoolName, {
@@ -413,10 +416,11 @@ private generateEnrollReport(startDate?: string, endDate?: string): void {
 
     // Separar cursos WILL-GO de otros cursos
     cursos.forEach(curso => {
+      const courseName = curso.curso || '';
       const isWillGo = willGoVariants.some(variant =>
-        curso.curso.toLowerCase().includes(variant.toLowerCase()) ||
-        curso.curso.toLowerCase().includes('will-go') ||
-        curso.curso.toLowerCase().includes('will go')
+        courseName.toLowerCase().includes(variant.toLowerCase()) ||
+        courseName.toLowerCase().includes('will-go') ||
+        courseName.toLowerCase().includes('will go')
       );
 
       if (isWillGo) {
