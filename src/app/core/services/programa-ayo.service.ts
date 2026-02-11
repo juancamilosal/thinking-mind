@@ -124,4 +124,8 @@ export class ProgramaAyoService {
   sendNovedad(novedad: string, emails: string[]): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(environment.send_novedad, { novedad, emails });
   }
+
+  notifyAcudientesFlow(emails: string[]): Observable<ResponseAPI<any>> {
+    return this.http.post<ResponseAPI<any>>(environment.notify_acudiente_flow, { emails });
+  }
 }

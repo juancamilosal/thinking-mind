@@ -589,9 +589,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
           // Send students with 4 credits email
           if (studentsWithFourCredits.length > 0) {
-            this.http.post(environment.send_guardian_emails, { emails: studentsWithFourCredits }).subscribe({
-                next: () => console.log('Emails sent successfully'),
-                error: (e) => console.error('Error sending emails', e)
+            this.programaAyoService.notifyAcudientesFlow(studentsWithFourCredits).subscribe({
+              next: () => console.log('Notify Acudientes Flow triggered successfully'),
+              error: (e) => console.error('Error triggering Notify Acudientes Flow', e)
             });
           }
 
