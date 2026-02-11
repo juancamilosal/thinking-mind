@@ -575,6 +575,59 @@
                          </h2>
                     </div>
 
+                    <!-- Filters Section (Always visible) -->
+                    <div class="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
+                        <div class="flex-1 w-full">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Buscar por Nombre</label>
+                            <div class="relative group">
+                                    <input type="text" 
+                                    [(ngModel)]="studentSearchTerm" 
+                                    (input)="onStudentSearch($event)" 
+                                    placeholder="Buscar estudiante..." 
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm group-hover:border-gray-300">
+                                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full md:w-64">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Nivel</label>
+                            <div class="relative">
+                                <select 
+                                    [(ngModel)]="selectedLevelFilter" 
+                                    (change)="verTodosEstudiantes(true)"
+                                    class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
+                                    <option value="">Todos los Niveles</option>
+                                    @for (level of uniqueLevels; track level) {
+                                        <option [value]="level">{{ level }}</option>
+                                    }
+                                </select>
+                                <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-64">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Subcategoría</label>
+                            <div class="relative">
+                                <select 
+                                    [(ngModel)]="selectedSubcategoryFilter" 
+                                    (change)="verTodosEstudiantes(true)"
+                                    class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
+                                    <option value="">Todas las Subcategorías</option>
+                                    @for (sub of uniqueSubcategories; track sub) {
+                                        <option [value]="sub">{{ sub }}</option>
+                                    }
+                                </select>
+                                <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
                     @if (isLoadingStudents) {
                         <div class="flex justify-center items-center h-64">
                             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

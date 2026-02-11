@@ -42,6 +42,7 @@ export class ListMeet implements OnInit {
   searchTerm: string = '';
   filteredProgramGroups: ProgramGroup[] = [];
   private searchSubject = new Subject<string>();
+  private studentSearchSubject = new Subject<string>();
 
   // Image Edit Properties
   showFileModal = false;
@@ -80,6 +81,14 @@ export class ListMeet implements OnInit {
   showStudentPanel = false;
   selectedStudents: User[] = [];
   attendanceList: AttendanceItem[] = [];
+  originalAttendanceList: AttendanceItem[] = [];
+  
+  // Student Filters
+  studentSearchTerm: string = '';
+  selectedLevelFilter: string = '';
+  selectedSubcategoryFilter: string = '';
+  uniqueLevels: string[] = [];
+  uniqueSubcategories: string[] = [];
 
   // Promotion Modal Properties
   niveles: Nivel[] = [];
@@ -246,6 +255,14 @@ export class ListMeet implements OnInit {
     ).subscribe(searchTerm => {
       this.searchTerm = searchTerm;
       this.loadProgramas();
+    });
+
+    this.studentSearchSubject.pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      this.studentSearchTerm = term;
+      this.verTodosEstudiantes(true);
     });
 
     this.loadProgramas();
@@ -995,6 +1012,9 @@ export class ListMeet implements OnInit {
 
   groupPrograms(): void {
     const groups: {[key: string]: ProgramGroup} = {};
+    const levels = new Set<string>();
+    const subcategories = new Set<string>();
+
     this.programas.forEach(p => {
       const key = p.id_nivel?.tematica || 'Sin Temática';
       if (!groups[key]) {
@@ -1008,10 +1028,20 @@ export class ListMeet implements OnInit {
         };
       }
       groups[key].programs.push(p);
+
+      if (p.id_nivel?.nivel) {
+          levels.add(p.id_nivel.nivel);
+      }
+      if (p.id_nivel?.subcategoria) {
+          subcategories.add(p.id_nivel.subcategoria);
+      }
     });
     this.programGroups = Object.values(groups);
     // Since filtering is server-side, filteredProgramGroups is just the grouped result
     this.filteredProgramGroups = this.programGroups;
+
+    this.uniqueLevels = Array.from(levels).sort();
+    this.uniqueSubcategories = Array.from(subcategories).sort();
 
     // If a group was selected, update it with new data
     if (this.selectedGroup) {
@@ -1227,68 +1257,11 @@ export class ListMeet implements OnInit {
   }
 
   verTodosEstudiantes(suppressWarnings: boolean = false) {
-    const documents: { tipo: string; numero: string }[] = [];
-    const seenDocs = new Set<string>();
-    const studentSubcategoryMap = new Map<string, string>();
+    this.isLoadingStudents = true;
+    this.showStudentPanel = true;
 
-    // 1. Collect from id_nivel.estudiantes_id
-    this.programas.forEach((prog: any) => {
-        if (prog.id_nivel && prog.id_nivel.estudiantes_id && Array.isArray(prog.id_nivel.estudiantes_id)) {
-            prog.id_nivel.estudiantes_id.forEach((student: any) => {
-                if (student.tipo_documento && student.numero_documento) {
-                    const docKey = `${student.tipo_documento}-${student.numero_documento}`;
-                    if (!seenDocs.has(docKey)) {
-                        seenDocs.add(docKey);
-                        documents.push({
-                            tipo: student.tipo_documento,
-                            numero: student.numero_documento
-                        });
-                        studentSubcategoryMap.set(docKey, prog.id_nivel.subcategoria || '');
-                    }
-                }
-            });
-        }
-    });
-
-    // 2. Fallback to cuentas_cobrar_id if no documents found yet
-    if (documents.length === 0) {
-        this.programas.forEach((programa: any) => {
-          if (programa.cuentas_cobrar_id) {
-            programa.cuentas_cobrar_id.forEach((cuenta: any) => {
-              const est = cuenta.estudiante_id;
-              if (est && est.tipo_documento && est.numero_documento) {
-                const key = `${est.tipo_documento}-${est.numero_documento}`;
-                if (!seenDocs.has(key)) {
-                  seenDocs.add(key);
-                  documents.push({
-                    tipo: est.tipo_documento,
-                    numero: est.numero_documento
-                  });
-                  studentSubcategoryMap.set(key, programa.id_nivel?.subcategoria || '');
-                }
-              }
-            });
-          }
-        });
-    }
-
-    // Create a map of Level ID to Program IDs for filtering attendance
-    const levelProgramMap = new Map<string, Set<string>>();
-    this.programas.forEach((prog: any) => {
-        if (prog.id_nivel && prog.id_nivel.id) {
-            if (!levelProgramMap.has(prog.id_nivel.id)) {
-                levelProgramMap.set(prog.id_nivel.id, new Set<string>());
-            }
-            levelProgramMap.get(prog.id_nivel.id)?.add(prog.id);
-        }
-    });
-
-    if (documents.length > 0) {
-      this.isLoadingStudents = true;
-      this.showStudentPanel = true;
-
-      // Dummy object for view
-      this.selectedProgramForFocus = {
+    // Dummy object for view
+    this.selectedProgramForFocus = {
         id_nivel: {
             tematica: 'Listado General',
             nivel: 'Todos los Niveles',
@@ -1299,70 +1272,111 @@ export class ListMeet implements OnInit {
         },
         fecha_finalizacion: '',
         curso_id: ''
-      };
+    };
 
-      this.userService.getUsersByMultipleDocuments(documents)
-        .subscribe({
-          next: (response) => {
+    // Create maps for calculating stats and subcategory
+    const levelProgramMap = new Map<string, Set<string>>();
+    const levelSubcategoryMap = new Map<string, string>();
+
+    this.programas.forEach((prog: any) => {
+        if (prog.id_nivel && prog.id_nivel.id) {
+            if (!levelProgramMap.has(prog.id_nivel.id)) {
+                levelProgramMap.set(prog.id_nivel.id, new Set<string>());
+            }
+            levelProgramMap.get(prog.id_nivel.id)?.add(prog.id);
+
+            if (prog.id_nivel.subcategoria) {
+                levelSubcategoryMap.set(prog.id_nivel.id, prog.id_nivel.subcategoria);
+            }
+        }
+    });
+
+
+
+
+
+    const filters = {
+        search: this.studentSearchTerm,
+        level: this.selectedLevelFilter,
+        subcategory: this.selectedSubcategoryFilter
+    };
+
+    this.userService.getStudentsWithAttendance(filters).subscribe({
+        next: (response) => {
             this.isLoadingStudents = false;
             if (response.data && response.data.length > 0) {
-              this.selectedStudents = response.data;
-              this.attendanceList = this.selectedStudents.map(student => {
-                const docKey = `${student.tipo_documento}-${student.numero_documento}`;
-                const studentLevelId = (student as any).nivel_id;
-                
-                let score: number = 0;
-                let attendancePercentage: number = 0;
-
-                // Only calculate if student has a level and we have programs for that level
-                if (studentLevelId && levelProgramMap.has(studentLevelId)) {
-                    const validProgramIds = levelProgramMap.get(studentLevelId);
+                this.selectedStudents = response.data;
+                const tempAttendanceList = this.selectedStudents.map(student => {
+                    const rawNivel = (student as any).nivel_id;
+                    const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || (student as any).nivel);
+                    const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
+                    const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
                     
-                    if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
-                        // Filter attendance records that belong to programs in the student's current level
-                        const validAttendance = (student as any).asistencia_id.filter((a: any) => 
-                            a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
-                        );
+                    // Combine Level and Subcategory for display
+                    const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
 
-                        if (validAttendance.length > 0) {
-                            // Sum score
-                            score = validAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
-                            
-                            // Calculate percentage
-                            const attendedCount = validAttendance.filter((a: any) => a.asiste === true).length;
-                            attendancePercentage = (attendedCount / validAttendance.length) * 100;
+                    let score: number = 0;
+                    let attendancePercentage: number = 0;
+
+                    // Only calculate if student has a level and we have programs for that level
+                    if (studentLevelId && levelProgramMap.has(studentLevelId)) {
+                        const validProgramIds = levelProgramMap.get(studentLevelId);
+                        
+                        if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
+                             const validAttendance = (student as any).asistencia_id.filter((a: any) => 
+                                a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
+                            );
+
+                            if (validAttendance.length > 0) {
+                                score = validAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+                                const attendedCount = validAttendance.filter((a: any) => a.asiste === true).length;
+                                attendancePercentage = (attendedCount / validAttendance.length) * 100;
+                            }
                         }
                     }
-                }
 
-                return {
-                    id: student.id,
-                    studentName: `${student.first_name} ${student.last_name}`,
-                    email: student.email,
-                    fecha: new Date(),
-                    attended: false,
-                    score: score > 0 ? score : '',
-                    attendancePercentage: attendancePercentage,
-                    currentLevelId: studentLevelId,
-                    subcategoria: studentSubcategoryMap.get(docKey) || ''
-                };
-              });
-              this.cdr.detectChanges();
+                    return {
+                        id: student.id,
+                        studentName: `${student.first_name} ${student.last_name}`,
+                        email: student.email,
+                        fecha: new Date(),
+                        attended: false,
+                        score: score > 0 ? score : '',
+                        attendancePercentage: attendancePercentage,
+                        currentLevelId: studentLevelId,
+                        levelName: displayLevelName, // Use combined name
+                        level: studentLevelName, // Raw level name for filtering
+                        subcategoria: studentSubcategory
+                    };
+                });
+                
+                this.originalAttendanceList = [...tempAttendanceList];
+                this.attendanceList = [...tempAttendanceList];
+
+                this.cdr.detectChanges();
             } else {
-              if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
-              this.cdr.detectChanges();
+                if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron estudiantes.');
+                this.selectedStudents = [];
+                this.attendanceList = [];
+                this.originalAttendanceList = [];
+                this.cdr.detectChanges();
             }
-          },
-          error: (error) => {
+        },
+        error: (error) => {
             this.isLoadingStudents = false;
             console.error('Error fetching students:', error);
-            if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+            if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar el listado de estudiantes.');
             this.cdr.detectChanges();
-          }
-        });
-    } else {
-        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes registrados en ningún programa.');
-    }
+        }
+    });
+  }
+
+  onStudentSearch(event: any): void {
+      this.studentSearchSubject.next(event.target.value);
+  }
+
+  filterStudents() {
+    // Deprecated in favor of API filtering
   }
 
   closeStudentPanel() {

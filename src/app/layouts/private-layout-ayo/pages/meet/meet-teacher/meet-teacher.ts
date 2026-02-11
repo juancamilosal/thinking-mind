@@ -529,6 +529,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             const finalAttendancePercent = this.calculateProjectedAttendance(student);
             const passed = finalAttendancePercent >= 70 && newRating >= 70;
 
+            console.log(`Checking certification for ${student.name}:`, {
+                newCredits,
+                finalAttendancePercent,
+                newRating,
+                passed,
+                currentLevelId: this.currentLevelId
+            });
+
             updateData.aprobo_ayo = passed;
 
             if (passed) {
@@ -538,7 +546,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
                      estudiante_id: student.id,
                      nivel_id: this.currentLevelId
                   };
+                  console.log('Adding certificate to create:', certificateData);
                   certificatesToCreate.push(certificateData);
+               } else {
+                   console.warn('Passed but no currentLevelId found. Certificate NOT created.');
                }
             } else {
               console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${newRating}`);

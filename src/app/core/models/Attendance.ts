@@ -22,5 +22,7 @@ export interface AttendanceItem {
   score: string | number;
   attendancePercentage?: number;
   currentLevelId?: string;
+  levelName?: string;
+  level?: string;
   subcategoria?: string;
 }
