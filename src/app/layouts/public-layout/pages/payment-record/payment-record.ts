@@ -71,6 +71,10 @@ export class PaymentRecord implements OnInit {
   totalAmountToPay = 0;
   editablePaymentAmount = 0;
 
+  // Properties for discount modal
+  showDiscountModal = false;
+  selectedDiscountCourse: any = null;
+
   // Variables para el modal de notificaciones
   showNotification: boolean = false;
   notificationData: NotificationData | null = null;
@@ -479,10 +483,23 @@ export class PaymentRecord implements OnInit {
         const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
 
         // Calcular el saldo pendiente (Precio del Curso - Total Abonado)
-        const coursePriceNumber = cuenta.monto || 0;
+        const finalPrice = cuenta.monto || 0;
         const courseInscriptionPriceNumber = cuenta.curso_id?.precio_inscripcion || 0;
         const totalPaidNumber = cuenta.saldo || 0;
-        const pendingBalanceNumber = coursePriceNumber - totalPaidNumber;
+
+        // Lógica de descuento
+        const discountPercentage = parseFloat(cuenta.descuento || '0');
+        const hasDiscount = discountPercentage > 0;
+        let originalPriceNumber = cuenta.monto_original;
+
+        if (!originalPriceNumber && hasDiscount) {
+             originalPriceNumber = finalPrice / (1 - (discountPercentage / 100));
+        } else if (!originalPriceNumber) {
+             originalPriceNumber = finalPrice;
+        }
+
+        const discountAmount = originalPriceNumber - finalPrice;
+        const pendingBalanceNumber = finalPrice - totalPaidNumber;
 
         const isInscription = (() => {
           const val = cuenta.es_inscripcion;
@@ -499,8 +516,12 @@ export class PaymentRecord implements OnInit {
           studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
           studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
           studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
-          coursePrice: this.formatCurrency(coursePriceNumber), // Precio del curso
-          coursePriceNumber: coursePriceNumber, // Valor numérico del precio
+          coursePrice: this.formatCurrency(finalPrice), // Precio con descuento
+          coursePriceNumber: finalPrice, // Valor numérico con descuento
+          originalPrice: this.formatCurrency(originalPriceNumber), // Precio original
+          hasDiscount: hasDiscount,
+          discountPercentage: discountPercentage,
+          discountAmount: this.formatCurrency(discountAmount),
           courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
           courseInscriptionCurrency: cuenta.curso_id?.moneda || null,
           balance: this.formatCurrency(totalPaidNumber), // Total abonado
@@ -1454,6 +1475,18 @@ export class PaymentRecord implements OnInit {
     this.paymentModalData = null;
     this.totalAmountToPay = 0;
     this.editablePaymentAmount = 0;
+  }
+
+  openDiscountModal(course: any): void {
+    if (course.hasDiscount) {
+      this.selectedDiscountCourse = course;
+      this.showDiscountModal = true;
+    }
+  }
+
+  closeDiscountModal(): void {
+    this.showDiscountModal = false;
+    this.selectedDiscountCourse = null;
   }
 
   onPaymentAmountChange(event: any): void {
