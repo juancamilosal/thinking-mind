@@ -483,23 +483,32 @@ export class PaymentRecord implements OnInit {
         const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
 
         // Calcular el saldo pendiente (Precio del Curso - Total Abonado)
-        const finalPrice = cuenta.monto || 0;
+        const backendFinalRaw = Number(cuenta.monto || 0);
         const courseInscriptionPriceNumber = cuenta.curso_id?.precio_inscripcion || 0;
         const totalPaidNumber = cuenta.saldo || 0;
 
-        // Lógica de descuento
-        const discountPercentage = parseFloat(cuenta.descuento || '0');
-        const hasDiscount = discountPercentage > 0;
-        let originalPriceNumber = cuenta.monto_original;
+        // Lógica de descuento: precio final = base - (base * porcentaje)
+        const discountPercentage = parseFloat(cuenta.descuento ?? '0') || 0;
+        const basePriceNumber = Number(cuenta.monto_original ?? cuenta.monto ?? 0);
+        let originalPriceNumber = basePriceNumber;
+        let discountAmountNumber = 0;
+        let finalPriceNumber = 0;
 
-        if (!originalPriceNumber && hasDiscount) {
-             originalPriceNumber = finalPrice / (1 - (discountPercentage / 100));
-        } else if (!originalPriceNumber) {
-             originalPriceNumber = finalPrice;
+        if (discountPercentage > 0 && basePriceNumber > 0) {
+          discountAmountNumber = Math.round(basePriceNumber * (discountPercentage / 100));
+          finalPriceNumber = Math.max(0, basePriceNumber - discountAmountNumber);
+        } else if (Number(cuenta.monto_descuento ?? 0) > 0) {
+          discountAmountNumber = Number(cuenta.monto_descuento || 0);
+          finalPriceNumber = Math.max(0, basePriceNumber - discountAmountNumber);
+        } else if (backendFinalRaw > 0) {
+          finalPriceNumber = backendFinalRaw;
+          discountAmountNumber = Math.max(0, basePriceNumber - finalPriceNumber);
+        } else {
+          finalPriceNumber = basePriceNumber;
         }
 
-        const discountAmount = originalPriceNumber - finalPrice;
-        const pendingBalanceNumber = finalPrice - totalPaidNumber;
+        const hasDiscount = discountPercentage > 0 || discountAmountNumber > 0;
+        const pendingBalanceNumber = finalPriceNumber - totalPaidNumber;
 
         const isInscription = (() => {
           const val = cuenta.es_inscripcion;
@@ -516,12 +525,12 @@ export class PaymentRecord implements OnInit {
           studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
           studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
           studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
-          coursePrice: this.formatCurrency(finalPrice), // Precio con descuento
-          coursePriceNumber: finalPrice, // Valor numérico con descuento
+          coursePrice: this.formatCurrency(finalPriceNumber), // Precio con descuento
+          coursePriceNumber: finalPriceNumber, // Valor numérico con descuento
           originalPrice: this.formatCurrency(originalPriceNumber), // Precio original
           hasDiscount: hasDiscount,
           discountPercentage: discountPercentage,
-          discountAmount: this.formatCurrency(discountAmount),
+          discountAmount: this.formatCurrency(discountAmountNumber),
           courseInscriptionPriceNumber: courseInscriptionPriceNumber, // Valor numérico inscripción
           courseInscriptionCurrency: cuenta.curso_id?.moneda || null,
           balance: this.formatCurrency(totalPaidNumber), // Total abonado
