@@ -13,4 +13,5 @@ export class User {
   nivel_id?: string;
   calificacion?: number;
   valor_hora?: number;
+  programa_ayo_id?: any;
 }

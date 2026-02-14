@@ -35,6 +35,7 @@ export interface ProgramaAyo {
   img?: any;
   cuentas_cobrar_id?: any[];
   plan_estudio_id?: PlanEstudio[] | string;
+  estudiantes_id?: any[];
 
 }
 

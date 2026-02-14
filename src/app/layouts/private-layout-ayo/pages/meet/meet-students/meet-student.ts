@@ -76,13 +76,19 @@ export class MeetStudent implements OnInit {
        this.programaAyoService.getProgramaAyo(undefined, undefined, user.id).subscribe({
          next: (response) => {
            const allPrograms = response.data || [];
-           const userPrograms = allPrograms.filter(program => {
-             if (program.id_nivel && program.id_nivel.estudiantes_id && Array.isArray(program.id_nivel.estudiantes_id)) {
-               const isStudent = program.id_nivel.estudiantes_id.some((student: any) => student.id === user.id);
-               return isStudent;
-             }
-             return false;
-           });
+           const userPrograms = allPrograms
+             .filter(program => {
+               if (program.estudiantes_id && Array.isArray(program.estudiantes_id)) {
+                 return program.estudiantes_id.some((student: any) => student.id === user.id);
+               }
+               return false;
+             })
+             .map(program => {
+               const filteredStudents = Array.isArray(program.estudiantes_id)
+                 ? program.estudiantes_id.filter((student: any) => student.id === user.id)
+                 : [];
+               return { ...program, estudiantes_id: filteredStudents };
+             });
 
           this.accountsReceivable = userPrograms.map(program => {
             // Parse study plan immediately for side panel view

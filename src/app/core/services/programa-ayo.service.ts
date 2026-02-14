@@ -15,7 +15,7 @@ export class ProgramaAyoService {
 
   getProgramaAyo(idioma?: string, search?: string, userId?: string, teacherId?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.asistencia_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*',
+      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,estudiantes_id.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.asistencia_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*',
       'sort': 'id_nivel.subcategoria'
     };
     if (idioma) {
@@ -32,14 +32,9 @@ export class ProgramaAyoService {
       params['deep[id_reuniones_meet][_filter][id_docente][id][_eq]'] = teacherId;
     }
     if (userId) {
-        params['filter[id_nivel][estudiantes_id][id][_eq]'] = userId;
+        params['filter[estudiantes_id][id][_eq]'] = userId;
+        params['deep[estudiantes_id][_filter][id][_eq]'] = userId;
     }
-
-    // Filter active accounts only (deep filtering)
-    // Directus doesn't support deep filtering on array relations easily for nested conditions in 'fields'
-    // So we'll filter on client side or use a different approach if needed.
-    // For now, let's get all and filter.
-
     return this.http.get<ResponseAPI<ProgramaAyo[]>>(environment.programa_ayo, { params });
   }
 

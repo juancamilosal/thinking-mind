@@ -36,6 +36,7 @@ export class ListMeet implements OnInit {
   programGroups: ProgramGroup[] = [];
   selectedGroup: ProgramGroup | null = null;
   viewMode: 'groups' | 'details' | 'students' = 'groups';
+  studentPanelMode: 'general' | 'noProgram' = 'general';
   isLoading = false;
   isLoadingStudents = false;
   selectedLanguage: string | null = null;
@@ -43,6 +44,15 @@ export class ListMeet implements OnInit {
   filteredProgramGroups: ProgramGroup[] = [];
   private searchSubject = new Subject<string>();
   private studentSearchSubject = new Subject<string>();
+  studentsWithoutProgramCount: number = 0;
+  // Filters: General
+  generalStudentSearchTerm: string = '';
+  generalSelectedLevelFilter: string = '';
+  generalSelectedSubcategoryFilter: string = '';
+  // Filters: No Program
+  noProgramStudentSearchTerm: string = '';
+  noProgramSelectedLevelFilter: string = '';
+  noProgramSelectedSubcategoryFilter: string = '';
 
   // Image Edit Properties
   showFileModal = false;
@@ -261,11 +271,15 @@ export class ListMeet implements OnInit {
       debounceTime(500),
       distinctUntilChanged()
     ).subscribe(term => {
-      this.studentSearchTerm = term;
-      this.verTodosEstudiantes(true);
+      if (this.studentPanelMode === 'general') {
+        this.verTodosEstudiantes(true);
+      } else {
+        this.verEstudiantesSinReunion();
+      }
     });
 
     this.loadProgramas();
+    this.loadStudentsWithoutProgramCount();
   }
 
   loadNiveles(): void {
@@ -1257,8 +1271,14 @@ export class ListMeet implements OnInit {
   }
 
   verTodosEstudiantes(suppressWarnings: boolean = false) {
+    // Reset filters of other section when switching
+    this.noProgramStudentSearchTerm = '';
+    this.noProgramSelectedLevelFilter = '';
+    this.noProgramSelectedSubcategoryFilter = '';
+
     this.isLoadingStudents = true;
     this.showStudentPanel = true;
+    this.studentPanelMode = 'general';
 
     // Dummy object for view
     this.selectedProgramForFocus = {
@@ -1296,9 +1316,9 @@ export class ListMeet implements OnInit {
 
 
     const filters = {
-        search: this.studentSearchTerm,
-        level: this.selectedLevelFilter,
-        subcategory: this.selectedSubcategoryFilter
+        search: this.generalStudentSearchTerm,
+        level: this.generalSelectedLevelFilter,
+        subcategory: this.generalSelectedSubcategoryFilter
     };
 
     this.userService.getStudentsWithAttendance(filters).subscribe({
@@ -1372,7 +1392,13 @@ export class ListMeet implements OnInit {
   }
 
   onStudentSearch(event: any): void {
-      this.studentSearchSubject.next(event.target.value);
+      const term = event.target.value;
+      if (this.studentPanelMode === 'general') {
+        this.generalStudentSearchTerm = term;
+      } else {
+        this.noProgramStudentSearchTerm = term;
+      }
+      this.studentSearchSubject.next(term);
   }
 
   filterStudents() {
@@ -1384,6 +1410,112 @@ export class ListMeet implements OnInit {
     this.selectedProgramForFocus = null;
     this.selectedStudents = [];
     this.attendanceList = [];
+  }
+
+  loadStudentsWithoutProgramCount(): void {
+    this.userService.getStudentsWithoutProgramaAyo().subscribe({
+      next: (response) => {
+        const students = response.data || [];
+        this.studentsWithoutProgramCount = students.length;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.studentsWithoutProgramCount = 0;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  verEstudiantesSinReunion(): void {
+    // Reset filters of other section when switching
+    this.generalStudentSearchTerm = '';
+    this.generalSelectedLevelFilter = '';
+    this.generalSelectedSubcategoryFilter = '';
+
+    this.isLoadingStudents = true;
+    this.showStudentPanel = true;
+    this.studentPanelMode = 'noProgram';
+    this.selectedProgramForFocus = {
+      id_nivel: {
+        tematica: 'Estudiantes sin Programa AYO',
+        nivel: 'N/A',
+        subcategoria: 'Sin asignación',
+        categoria: '',
+        id: '',
+        idioma: ''
+      },
+      fecha_finalizacion: '',
+      curso_id: ''
+    };
+
+    this.userService.getStudentsWithoutProgramaAyo().subscribe({
+      next: (response) => {
+        this.isLoadingStudents = false;
+        let students = response.data || [];
+        // Apply local filters for noProgram view
+        const search = (this.noProgramStudentSearchTerm || '').trim().toLowerCase();
+        const levelFilter = this.noProgramSelectedLevelFilter || '';
+        const subcatFilter = this.noProgramSelectedSubcategoryFilter || '';
+
+        if (search) {
+          students = students.filter((s: any) => {
+            const name = `${s.first_name || ''} ${s.last_name || ''}`.toLowerCase();
+            return name.includes(search);
+          });
+        }
+
+        if (levelFilter) {
+          students = students.filter((s: any) => {
+            const rawNivel = s.nivel_id;
+            const nivelName = rawNivel && typeof rawNivel === 'object' ? (rawNivel.nivel || '') : '';
+            return nivelName === levelFilter;
+          });
+        }
+
+        if (subcatFilter) {
+          students = students.filter((s: any) => {
+            const rawNivel = s.nivel_id;
+            const subcat = rawNivel && typeof rawNivel === 'object' ? (rawNivel.subcategoria || '') : '';
+            return subcat === subcatFilter;
+          });
+        }
+        this.selectedStudents = students;
+        this.studentsWithoutProgramCount = students.length;
+
+        const tempAttendanceList = students.map((student: any) => {
+          const rawNivel = student.nivel_id;
+          const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || '');
+          const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
+          const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : '';
+
+          const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
+
+          return {
+            id: student.id,
+            studentName: `${student.first_name} ${student.last_name}`,
+            email: student.email,
+            fecha: new Date(),
+            attended: false,
+            score: '',
+            attendancePercentage: 0,
+            currentLevelId: studentLevelId,
+            levelName: displayLevelName,
+            level: studentLevelName,
+            subcategoria: studentSubcategory
+          };
+        });
+
+        this.originalAttendanceList = [...tempAttendanceList];
+        this.attendanceList = [...tempAttendanceList];
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.isLoadingStudents = false;
+        console.error('Error fetching students without program:', error);
+        this.notificationService.showError('Error', 'No se pudo cargar el listado de estudiantes sin programa.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   // Image Edit Methods
