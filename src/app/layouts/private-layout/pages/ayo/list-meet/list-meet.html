@@ -303,6 +303,16 @@
                 <span class="font-semibold">Ver Listado de Estudiantes</span>
             </button>
 
+            <button (click)="verEstudiantesSinReunion()" class="relative flex items-center gap-2 bg-[#13486e] text-white px-5 py-2.5 rounded-xl hover:bg-[#0f3a5a] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <img src="assets/icons/students.png" class="w-5 h-5 object-contain brightness-0 invert" alt="Estudiantes Sin Reunión">
+                <span class="font-semibold">Ver Estudiantes Sin Reunión</span>
+                @if (studentsWithoutProgramCount > 0) {
+                  <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full shadow-md">
+                    {{ studentsWithoutProgramCount }}
+                  </span>
+                }
+            </button>
+
             <button (click)="openNovedadModalGlobal()" class="flex items-center gap-2 bg-[#13486e] text-white px-5 py-2.5 rounded-xl hover:bg-[#0f3a5a] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 <img src="assets/icons/email.png" class="w-5 h-5 object-contain brightness-0 invert" alt="Novedad">
                 <span class="font-semibold">Enviar Novedad a Todos</span>
@@ -575,70 +585,190 @@
                          </h2>
                     </div>
 
-                    <!-- Filters Section (Always visible) -->
-                    <div class="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
-                        <div class="flex-1 w-full">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Buscar por Nombre</label>
-                            <div class="relative group">
-                                    <input type="text" 
-                                    [(ngModel)]="studentSearchTerm" 
-                                    (input)="onStudentSearch($event)" 
-                                    placeholder="Buscar estudiante..." 
-                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm group-hover:border-gray-300">
-                                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                            </div>
-                        </div>
-                        
-                        <div class="w-full md:w-64">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Nivel</label>
-                            <div class="relative">
-                                <select 
-                                    [(ngModel)]="selectedLevelFilter" 
-                                    (change)="verTodosEstudiantes(true)"
-                                    class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
-                                    <option value="">Todos los Niveles</option>
-                                    @for (level of uniqueLevels; track level) {
-                                        <option [value]="level">{{ level }}</option>
-                                    }
-                                </select>
-                                <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
+                    <!-- Filters Section -->
+                    @if (studentPanelMode === 'general') {
+                      <div class="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
+                          <div class="flex-1 w-full">
+                              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Buscar por Nombre</label>
+                              <div class="relative group">
+                                      <input type="text" 
+                                      [(ngModel)]="generalStudentSearchTerm" 
+                                      (input)="onStudentSearch($event)" 
+                                      placeholder="Buscar estudiante..." 
+                                      class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm group-hover:border-gray-300">
+                                      <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                      </svg>
+                              </div>
+                          </div>
+                          
+                          <div class="w-full md:w-64">
+                              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Nivel</label>
+                              <div class="relative">
+                                  <select 
+                                      [(ngModel)]="generalSelectedLevelFilter" 
+                                      (change)="verTodosEstudiantes(true)"
+                                      class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
+                                      <option value="">Todos los Niveles</option>
+                                      @for (level of uniqueLevels; track level) {
+                                          <option [value]="level">{{ level }}</option>
+                                      }
+                                  </select>
+                                  <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                              </div>
+                          </div>
 
-                        <div class="w-full md:w-64">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Subcategoría</label>
-                            <div class="relative">
-                                <select 
-                                    [(ngModel)]="selectedSubcategoryFilter" 
-                                    (change)="verTodosEstudiantes(true)"
-                                    class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
-                                    <option value="">Todas las Subcategorías</option>
-                                    @for (sub of uniqueSubcategories; track sub) {
-                                        <option [value]="sub">{{ sub }}</option>
-                                    }
-                                </select>
-                                <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                          <div class="w-full md:w-64">
+                              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Subcategoría</label>
+                              <div class="relative">
+                                  <select 
+                                      [(ngModel)]="generalSelectedSubcategoryFilter" 
+                                      (change)="verTodosEstudiantes(true)"
+                                      class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
+                                      <option value="">Todas las Subcategorías</option>
+                                      @for (sub of uniqueSubcategories; track sub) {
+                                          <option [value]="sub">{{ sub }}</option>
+                                      }
+                                  </select>
+                                  <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                              </div>
+                          </div>
+                      </div>
+                    } @else {
+                      <div class="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row gap-4 items-end animate-fadeIn">
+                          <div class="flex-1 w-full">
+                              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Buscar por Nombre</label>
+                              <div class="relative group">
+                                      <input type="text" 
+                                      [(ngModel)]="noProgramStudentSearchTerm" 
+                                      (input)="onStudentSearch($event)" 
+                                      placeholder="Buscar estudiante..." 
+                                      class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm group-hover:border-gray-300">
+                                      <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                      </svg>
+                              </div>
+                          </div>
+                          
+                          <div class="w-full md:w-64">
+                              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Nivel</label>
+                              <div class="relative">
+                                  <select 
+                                      [(ngModel)]="noProgramSelectedLevelFilter" 
+                                      (change)="verEstudiantesSinReunion()"
+                                      class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
+                                      <option value="">Todos los Niveles</option>
+                                      @for (level of uniqueLevels; track level) {
+                                          <option [value]="level">{{ level }}</option>
+                                      }
+                                  </select>
+                                  <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                              </div>
+                          </div>
+
+                          <div class="w-full md:w-64">
+                              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Filtrar por Subcategoría</label>
+                              <div class="relative">
+                                  <select 
+                                      [(ngModel)]="noProgramSelectedSubcategoryFilter" 
+                                      (change)="verEstudiantesSinReunion()"
+                                      class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 outline-none transition-all shadow-sm bg-white appearance-none cursor-pointer hover:border-gray-300">
+                                      <option value="">Todas las Subcategorías</option>
+                                      @for (sub of uniqueSubcategories; track sub) {
+                                          <option [value]="sub">{{ sub }}</option>
+                                      }
+                                  </select>
+                                  <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                              </div>
+                          </div>
+                      </div>
+                    }
 
                     @if (isLoadingStudents) {
                         <div class="flex justify-center items-center h-64">
                             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                         </div>
                     } @else {
-                        <app-attendance [attendanceList]="attendanceList" (promote)="openPromotionModal($event)" (degrade)="openDegradeModal($event)"></app-attendance>
+                        <app-attendance [attendanceList]="attendanceList" (promote)="openPromotionModal($event)" (degrade)="openDegradeModal($event)" (locate)="openLocatePrograms($event)"></app-attendance>
                     }
                 </div>
             </div>
         }
     </div>
+
+    @if (showLocateModal) {
+      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
+          <div class="bg-gradient-to-r from-[#13486e] to-[#1a5f8f] p-5 text-white flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold">Programas AYO del mismo nivel</h3>
+              <p class="text-sm opacity-90">Estudiante: {{ selectedStudentForLocate?.studentName }}</p>
+            </div>
+            <button (click)="closeLocateModal()" class="text-white/90 hover:text-white transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-6">
+            @if (locatePrograms.length === 0) {
+              <div class="text-gray-500 text-sm">No hay programas AYO con el mismo nivel del estudiante.</div>
+            } @else {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                @for (p of locatePrograms; track p.id) {
+                  <div class="border rounded-xl p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <img [src]="p.img?.id ? (assetsUrl + '/' + p.img.id) : 'assets/icons/curso-linea.png'" class="w-10 h-10 object-contain" alt="Programa">
+                      </div>
+                      <div>
+                        <div class="text-sm font-bold text-gray-800">{{ p.id_nivel?.tematica }}</div>
+                        <div class="text-xs text-gray-600">{{ p.id_nivel?.nivel }} - {{ p.id_nivel?.subcategoria }}</div>
+                        <div class="text-xs text-gray-500">Idioma: {{ p.idioma }}</div>
+                      </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500">Finaliza: {{ p.fecha_finalizacion | date:'mediumDate' }}</div>
+                    <div class="mt-4 border-t pt-3">
+                      <div class="text-xs font-bold text-gray-700 mb-2">Docentes y reuniones</div>
+                      @for (t of locateProgramTeachers[p.id] || []; track t.teacherId) {
+                        <div class="mb-2">
+                          <div class="text-sm font-semibold text-gray-800">{{ t.teacherName || 'Docente' }}</div>
+                          @for (meet of t.meetings; track meet.id) {
+                            <div class="text-xs text-gray-600 flex items-center gap-2">
+                              <span>{{ meet.fecha_inicio | date:'EEEE' }}</span>
+                              <span>{{ meet.fecha_inicio | date:'shortTime' }}</span>
+                              @if (meet.link_reunion) {
+                                <a [href]="meet.link_reunion" target="_blank" class="text-indigo-600 hover:underline">Enlace</a>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <div class="mt-4">
+                      <button (click)="assignStudentToProgram(p)" class="px-3 py-2 bg-[#13486e] text-white rounded-lg text-xs font-semibold hover:bg-[#0f3a5a] transition-colors">
+                        Asignar a este Programa
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <div class="px-6 pb-6">
+            <button (click)="closeLocateModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
 
 @if (showNovedadModal) {
 <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4" (click)="closeNovedadModal()">

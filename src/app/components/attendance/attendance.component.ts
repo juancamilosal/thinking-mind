@@ -14,6 +14,7 @@ export class AttendanceComponent {
   @Input() attendanceList: AttendanceItem[] = [];
   @Output() promote = new EventEmitter<AttendanceItem>();
   @Output() degrade = new EventEmitter<AttendanceItem>();
+  @Output() locate = new EventEmitter<AttendanceItem>();
 
   openPromotionModal(student: AttendanceItem): void {
     this.promote.emit(student);
@@ -21,5 +22,9 @@ export class AttendanceComponent {
 
   openDegradeModal(student: AttendanceItem): void {
     this.degrade.emit(student);
+  }
+
+  openLocateModal(student: AttendanceItem): void {
+    this.locate.emit(student);
   }
 }

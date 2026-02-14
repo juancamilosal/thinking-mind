@@ -60,12 +60,15 @@ export class DashboardAyo implements OnInit {
   }
 
   private sortReuniones(reuniones: any[]): any[] {
-    const weekdayOrder = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
-    return reuniones.sort((a, b) => {
-        const dayA = a.DIA ? a.DIA.toUpperCase() : '';
-        const dayB = b.DIA ? b.DIA.toUpperCase() : '';
-        return weekdayOrder.indexOf(dayA) - weekdayOrder.indexOf(dayB);
-    });
+    try {
+      return [...reuniones].sort((a, b) => {
+        const aStart = new Date(a.fecha_inicio || a.fecha || 0).getTime();
+        const bStart = new Date(b.fecha_inicio || b.fecha || 0).getTime();
+        return aStart - bStart;
+      });
+    } catch {
+      return reuniones;
+    }
   }
 
   private loadDashboardData(): void {

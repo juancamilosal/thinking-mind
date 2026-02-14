@@ -26,6 +26,28 @@ export class UserService {
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
   }
 
+  getStudentsWithoutProgramaAyo(): Observable<ResponseAPI<User[]>> {
+    const roleId = 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+    const params: any = {
+      'filter[role][_eq]': roleId,
+      'filter[programa_ayo_id][_null]': true,
+      'fields': 'id,first_name,last_name,email,role,celular,colegio_id.*,nivel_id.*,asistencia_id.*,programa_ayo_id'
+    };
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
+
+  getStudentsWithoutProgramaAyoCount(): Observable<ResponseAPI<User[]>> {
+    const roleId = 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
+    const params: any = {
+      'filter[role][_eq]': roleId,
+      'filter[programa_ayo_id][_null]': true,
+      'fields': 'id',
+      'limit': '1',
+      'meta': 'total_count'
+    };
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
+
   getStudentsWithAttendance(filters: { search?: string, level?: string, subcategory?: string } = {}): Observable<ResponseAPI<User[]>> {
     let params: any = {
       'filter[role][_eq]': 'ca8ffc29-c040-439f-8017-0dcb141f0fd3', // Roles.STUDENT
