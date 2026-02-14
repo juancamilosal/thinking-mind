@@ -880,13 +880,15 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   private updateAccountAmount(): void {
     const updateData = {
       monto: this.originalAmount,
-      descuento: this.discountPercentage
+      descuento: this.discountPercentage,
+      monto_descuento: this.finalAmount
     };
 
     this.accountService.updateAccountReceivable(this.account.id, updateData).subscribe({
       next: (response) => {
         this.account.monto = this.originalAmount;
         this.account.descuento = this.discountPercentage;
+        (this.account as any).monto_descuento = this.finalAmount;
         this.notificationService.showSuccess('Éxito', 'Descuento aplicado correctamente');
         this.checkAndUpdateAccountStatus();
         this.llamarFuncion.emit();
