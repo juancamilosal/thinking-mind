@@ -470,25 +470,28 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   saveAmount() {
     if (this.editedAmount > 0) {
-      // Determinar el nuevo estado basado en la comparación finalAmount vs saldo
       let newEstado = '';
       const currentSaldo = this.account.saldo || 0;
 
-      // Use finalAmount for status determination instead of editedAmount
+      this.originalAmount = this.editedAmount;
+      this.calculateDiscount();
+
       if (currentSaldo >= this.finalAmount) {
         newEstado = 'PAGADA';
       } else {
         newEstado = 'PENDIENTE';
       }
 
-
       this.accountService.updateAccountReceivable(this.account.id, {
         monto: this.editedAmount,
-        estado: newEstado
+        estado: newEstado,
+        descuento: this.discountPercentage,
+        monto_descuento: this.finalAmount
       }).subscribe({
         next: (updatedAccount) => {
           this.account.monto = this.editedAmount;
           this.account.estado = newEstado;
+          (this.account as any).monto_descuento = this.finalAmount;
           this.isEditingAmount = false;
           this.notificationService.showSuccess('Éxito', `El monto de la cuenta ha sido actualizado. Estado: ${newEstado}`);
           this.llamarFuncion.emit(); // Actualizar la lista principal
