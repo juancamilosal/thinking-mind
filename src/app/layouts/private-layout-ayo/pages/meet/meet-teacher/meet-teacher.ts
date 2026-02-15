@@ -547,6 +547,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             });
 
             updateData.aprobo_ayo = passed;
+            updateData.programa_ayo_id = null;
 
             if (passed) {
                // Create certificate directly using CertificacionService
