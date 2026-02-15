@@ -147,6 +147,23 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     return Math.round((attendedCount / relevantRecords.length) * 100);
   }
 
+  getStudentProgramRating(student: any): number {
+    if (!student.asistencia_id || !Array.isArray(student.asistencia_id) || !this.selectedProgramForStudents) {
+      return 0;
+    }
+    const programId = this.selectedProgramForStudents.id;
+    const relevantRecords = student.asistencia_id.filter((record: any) => {
+      if (!record || typeof record !== 'object') return false;
+      const rid = record.programa_ayo_id;
+      const recProgramId = typeof rid === 'object' ? (rid && rid.id ? rid.id : rid) : rid;
+      return recProgramId === programId;
+    });
+    if (relevantRecords.length === 0) return 0;
+    return relevantRecords.reduce((sum: number, r: any) => {
+      const val = Number(r.calificacion);
+      return Number.isFinite(val) ? sum + val : sum;
+    }, 0);
+  }
   calculateProjectedAttendance(student: any): number {
      if (!student.accountInfo && !student.asistencia_id) {
         return student.attended ? 100 : 0;
