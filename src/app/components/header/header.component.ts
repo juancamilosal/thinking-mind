@@ -1,4 +1,5 @@
 import { Component, OnInit, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LoginService } from '../../core/services/login.service';
@@ -6,6 +7,7 @@ import { StorageServices } from '../../core/services/storage.services';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
 import { Roles } from '../../core/const/Roles';
 import { TranslateService } from '@ngx-translate/core';
+import { StudentService } from '../../core/services/student.service';
 
 class CurrentUser {
   email: string;
@@ -18,7 +20,7 @@ class CurrentUser {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
@@ -26,13 +28,15 @@ export class HeaderComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
   isUserMenuOpen = false;
   selectedAyoLanguage: string = 'ES';
+  availableLangOptions: string[] = ['ES', 'EN', 'FR'];
 
   constructor(
     private elementRef: ElementRef,
     private router: Router,
     private loginService: LoginService,
     private tokenRefreshService: TokenRefreshService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private studentService: StudentService
   ) {}
 
   ngOnInit() {
@@ -46,6 +50,28 @@ export class HeaderComponent implements OnInit {
     }
     const code = this.selectedAyoLanguage === 'EN' ? 'en' : this.selectedAyoLanguage === 'FR' ? 'fr' : 'es';
     this.translate.use(code);
+    const user = StorageServices.getCurrentUser();
+    if (user?.id && user?.role) {
+      this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
+        next: (response) => {
+          const data = response?.data || response;
+          const idiomaSrv = (data?.idioma || '').toString().toUpperCase();
+          const defaultLang = this.mapServiceIdiomaToLang(idiomaSrv);
+          const opts = [defaultLang, 'ES'].filter((v, i, a) => a.indexOf(v) === i);
+          this.availableLangOptions = opts;
+          this.selectedAyoLanguage = defaultLang;
+          const code2 = defaultLang === 'EN' ? 'en' : defaultLang === 'FR' ? 'fr' : 'es';
+          this.translate.use(code2);
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ayo_language', defaultLang);
+          }
+          const t = this.router.parseUrl(this.router.url);
+          t.queryParams = { ...t.queryParams, lang: defaultLang };
+          this.router.navigateByUrl(t, { replaceUrl: true });
+        },
+        error: () => {}
+      });
+    }
   }
 
   private loadUserFromSessionStorage(): void {
@@ -54,6 +80,19 @@ export class HeaderComponent implements OnInit {
     } catch (error) {
       console.error('Error al cargar usuario desde sessionStorage:', error);
     }
+  }
+
+  private mapServiceIdiomaToLang(idioma: string): string {
+    const v = idioma.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (v.includes('INGLE')) return 'EN';
+    if (v.includes('FRANCE') || v.includes('FRANCES')) return 'FR';
+    return 'ES';
+  }
+
+  languageLabel(lang: string): string {
+    if (lang === 'EN') return 'English';
+    if (lang === 'FR') return 'Français';
+    return 'Español';
   }
 
   getInitials(): string {
