@@ -15,7 +15,7 @@
       <h1 class="text-2xl font-bold bg-gradient-to-r text-white bg-clip-text text-transparent">
         Thinking Mind
       </h1>
-      <p class="text-white text-sm mt-1">Sistema de Gestión</p>
+      <p class="text-white text-sm mt-1">{{ 'sidebar.system' | translate }}</p>
     </div>
 
 
@@ -26,11 +26,12 @@
           <a
             [routerLink]="item.ruta"
             (click)="closeSidebar()"
+            [queryParamsHandling]="'preserve'"
             class="flex items-center p-4 text-slate-300 rounded-xl hover:bg-gradient-to-r hover:from-teal-600 hover:via-blue-600 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
             routerLinkActive="bg-gradient-to-r from-teal-500 via-blue-500 to-red-500 text-white shadow-lg scale-105">
             <div class="flex items-center justify-between w-full">
               <img [src]="item.icono" [alt]="item.alt" class="w-10 h-10 object-contain">
-              <span class="text-lg font-semibold">{{ item.nombre }}</span>
+              <span class="text-lg font-semibold">{{ getSidebarLabel(item.nombre) }}</span>
             </div>
           </a>
         </li>
@@ -44,7 +45,7 @@
         class="w-full flex items-center p-4 text-slate-300 rounded-xl hover:bg-gradient-to-r hover:from-red-600 hover:via-red-500 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
       >
         <img src="assets/icons/cerrar.png" alt="Cerrar Sesión" class="w-10 h-10 object-contain mr-4 transition-transform duration-300 group-hover:scale-110">
-        <span class="text-lg font-semibold">Cerrar Sesión</span>
+        <span class="text-lg font-semibold">{{ 'sidebar.logout' | translate }}</span>
       </button>
     </div>
   </div>

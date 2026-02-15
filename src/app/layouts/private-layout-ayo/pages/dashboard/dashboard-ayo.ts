@@ -6,11 +6,13 @@ import { PayrollService } from '../../../../core/services/payroll.service';
 import { TeacherDashboardStats } from '../../../../core/models/DashboardModels';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
+import { ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-dashboard-ayo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './dashboard-ayo.html',
   styleUrl: './dashboard-ayo.css'
 })
@@ -35,11 +37,11 @@ export class DashboardAyo implements OnInit {
   };
 
   programRules: string[] = [
-    'Mantener la cámara encendida durante toda la sesión.',
-    'Estar en un lugar tranquilo y sin ruido.',
-    'Ser puntual y respetar el horario de la clase.',
-    'Participar activamente en las actividades.',
-    'Respetar a los compañeros y al docente.'
+    'program_rules.cameraOn',
+    'program_rules.quietPlace',
+    'program_rules.punctual',
+    'program_rules.participate',
+    'program_rules.respect'
   ];
 
   // AYO Teacher Stats
@@ -52,10 +54,25 @@ export class DashboardAyo implements OnInit {
     private dashboardService: DashboardService,
     private studentService: StudentService,
     private payrollService: PayrollService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const param = params['lang'] ? String(params['lang']).toUpperCase() : null;
+      if (param === 'EN' || param === 'FR' || param === 'ES') {
+        const code = param === 'EN' ? 'en' : param === 'FR' ? 'fr' : 'es';
+        this.translate.use(code);
+      } else {
+        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
+        if (stored === 'EN' || stored === 'FR' || stored === 'ES') {
+          const code = stored === 'EN' ? 'en' : stored === 'FR' ? 'fr' : 'es';
+          this.translate.use(code);
+        }
+      }
+    });
     this.loadDashboardData();
   }
 
@@ -190,5 +207,13 @@ export class DashboardAyo implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  getLanguageKey(lang?: string): string {
+    const v = (lang || '').toUpperCase();
+    if (v === 'INGLES' || v === 'INGLÉS' || v === 'ENGLISH' || v === 'EN') return 'language.english';
+    if (v === 'FRANCES' || v === 'FRANCÉS' || v === 'FRENCH' || v === 'FR') return 'language.french';
+    if (v === 'ESPAÑOL' || v === 'ESPANOL' || v === 'SPANISH' || v === 'ES') return 'language.spanish';
+    return '';
   }
 }

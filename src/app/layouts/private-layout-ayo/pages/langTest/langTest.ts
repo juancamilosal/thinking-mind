@@ -41,7 +41,7 @@ export class LangTest implements OnInit, OnDestroy {
     // Check if student already completed the test
     if (currentUser.resultado_test !== null && currentUser.resultado_test !== undefined) {
       // Student has already taken the test, redirect to dashboard
-      this.router.navigate(['/private-ayo/dashboard']);
+      this.router.navigate(['/private-ayo/dashboard-ayo'], { queryParamsHandling: 'preserve' });
       return;
     }
 

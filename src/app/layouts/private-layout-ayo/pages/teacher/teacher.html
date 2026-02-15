@@ -2,7 +2,7 @@
   <div class="mb-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">AYO Docente</h1>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">{{ 'teacher.title' | translate }}</h1>
       </div>
     </div>
   </div>
@@ -18,7 +18,7 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
-            <span>Cambiar selección</span>
+            <span>{{ 'teacher.changeSelection' | translate }}</span>
           </button>
         </div>
       }
@@ -40,14 +40,14 @@
             </div>
 
             <div class="p-8 text-center">
-              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">AYO Inglés</h2>
+              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-blue-600">{{ 'teacher.englishProgram' | translate }}</h2>
               <div class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full"></div>
               <p class="text-gray-500 leading-relaxed mb-4">
-                Programa intensivo de aprendizaje del idioma inglés.
+                {{ 'teacher.englishDescription' | translate }}
               </p>
               @if (courses.length > 0 && courses[0].precio) {
                 <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 inline-block w-full">
-                  <p class="text-xs text-blue-600 font-medium uppercase mb-1">Inversión</p>
+                  <p class="text-xs text-blue-600 font-medium uppercase mb-1">{{ 'teacher.investment' | translate }}</p>
                   <p class="text-xl font-bold text-blue-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
                 </div>
               }
@@ -69,14 +69,14 @@
             </div>
 
             <div class="p-8 text-center">
-              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">AYO Francés</h2>
+              <h2 class="text-3xl font-bold text-gray-800 mb-3 transition-colors group-hover:text-purple-600">{{ 'teacher.frenchProgram' | translate }}</h2>
               <div class="w-16 h-1 bg-purple-500 mx-auto mb-4 rounded-full"></div>
               <p class="text-gray-500 leading-relaxed mb-4">
-                Programa intensivo de aprendizaje del idioma francés.
+                {{ 'teacher.frenchDescription' | translate }}
               </p>
               @if (courses.length > 0 && courses[0].precio) {
                 <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100 inline-block w-full">
-                  <p class="text-xs text-purple-600 font-medium uppercase mb-1">Inversión</p>
+                  <p class="text-xs text-purple-600 font-medium uppercase mb-1">{{ 'teacher.investment' | translate }}</p>
                   <p class="text-xl font-bold text-purple-800">$ {{ courses[0].precio | number:'1.0-0' }}</p>
                 </div>
               }
@@ -96,8 +96,8 @@
                     <img src="assets/icons/meet.png" alt="Meet" class="w-24 h-24 object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-lg">
                 </div>
                 <div class="p-6 text-center flex-1 flex flex-col justify-center">
-                    <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">Reuniones Meet Programadas</h3>
-                    <p class="text-gray-500 text-sm">Ver y gestionar las reuniones programadas.</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">{{ 'teacher.scheduledMeetings' | translate }}</h3>
+                    <p class="text-gray-500 text-sm">{{ 'teacher.scheduledMeetingsSubtitle' | translate }}</p>
                 </div>
             </div>
           </div>

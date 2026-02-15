@@ -5,7 +5,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
                 </path>
             </svg>
-            Volver
+            {{ 'meet_student.back' | translate }}
         </button>
     </div>
 
@@ -24,8 +24,8 @@
             <!-- Header -->
             <div class="bg-[#13486e] p-4 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <img src="assets/icons/plan.png" class="w-6 h-6 object-contain" alt="Plan">
-                    Plan de Estudio
+                    <img src="assets/icons/plan.png" class="w-6 h-6 object-contain" [attr.alt]="'meet_student.planAlt' | translate">
+                    {{ 'meet_student.studyPlan' | translate }}
                 </h3>
                 <button (click)="closeStudyPlanModal()" class="text-white/80 hover:text-white transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@
                         <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        <p class="text-lg font-medium">No hay plan de estudio disponible</p>
+                        <p class="text-lg font-medium">{{ 'meet_student.noStudyPlan' | translate }}</p>
                     </div>
                 }
             </div>
@@ -74,7 +74,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Reglas del Programa
+                    {{ 'meet_student.programRules' | translate }}
                 </h3>
                 <button (click)="closeRulesModal()" class="text-white/80 hover:text-white transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,19 +85,19 @@
 
             <!-- Body -->
             <div class="p-6">
-                <p class="text-gray-600 mb-4 font-medium">Para unirte a la reunión, por favor acepta las siguientes reglas:</p>
+                <p class="text-gray-600 mb-4 font-medium">{{ 'meet_student.rulesIntro' | translate }}</p>
                 <ul class="space-y-3 mb-6">
                     @for (rule of programRules; track $index) {
                     <li class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
                         <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
                             {{ $index + 1 }}
                         </span>
-                        <span class="text-gray-700 leading-relaxed">{{ rule }}</span>
+                        <span class="text-gray-700 leading-relaxed">{{ rule | translate }}</span>
                     </li>
                     }
                 </ul>
                 <button (click)="acceptRulesAndJoin()" class="w-full py-3 bg-[#13486e] hover:bg-[#0f3a5a] text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2">
-                    <span>ACEPTO</span>
+                    <span>{{ 'meet_student.accept' | translate }}</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
@@ -109,9 +109,9 @@
 
     <div class="mb-10 header-section">
         <h1 class="page-title">
-            Mis Programas
+            {{ 'meet_student.title' | translate }}
         </h1>
-        <p class="page-subtitle">Visualiza tus programas y reuniones programadas</p>
+        <p class="page-subtitle">{{ 'meet_student.subtitle' | translate }}</p>
     </div>
 
     @if (isLoading) {
@@ -179,7 +179,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
-        <p class="empty-text">No tienes programas asignados actualmente</p>
+        <p class="empty-text">{{ 'meet_student.emptyPrograms' | translate }}</p>
     </div>
     } @else {
     <div class="programs-grid">
@@ -206,7 +206,7 @@
                     <div class="absolute top-4 right-4">
                         <div class="status-badge">
                             <span class="status-dot"></span>
-                            Activo
+                            {{ 'meet_student.active' | translate }}
                         </div>
                     </div>
                 </div>
@@ -215,8 +215,8 @@
                 <div class="card-body">
                     <div class="flex flex-col h-full">
                         <div class="program-title-section">
-                            <h3 class="program-language">{{ account.programa_ayo_id?.id_nivel?.tematica }}</h3>
-                            <p class="program-label">Programa AYO</p>
+                            <h3 class="program-language">{{ (getLanguageKey(account.programa_ayo_id?.id_nivel?.tematica) | translate) || account.programa_ayo_id?.id_nivel?.tematica }}</h3>
+                            <p class="program-label">{{ 'meet_student.programLabel' | translate }}</p>
                         </div>
 
                         <!-- Program Details -->
@@ -226,7 +226,7 @@
                                     <img src="../../../../../../assets/icons/calendario.png" class="w-full h-full object-contain" alt="Calendario">
                                 </div>
                                 <div class="detail-content">
-                                    <span class="detail-label">Fecha Finalización</span>
+                                    <span class="detail-label">{{ 'meet_student.endDate' | translate }}</span>
                                     <span class="detail-value">{{ account.programa_ayo_id?.fecha_finalizacion | date:'mediumDate' }}</span>
                                 </div>
                             </div>
@@ -237,7 +237,7 @@
                                     <img src="../../../../../../assets/icons/nivel.png" class="w-full h-full object-contain" alt="Nivel">
                                 </div>
                                 <div class="detail-content">
-                                    <span class="detail-label">Nivel</span>
+                                    <span class="detail-label">{{ 'meet_student.level' | translate }}</span>
                                     <span class="detail-value">{{ account.programa_ayo_id.id_nivel?.nivel }} | {{
                                         account.programa_ayo_id.id_nivel?.subcategoria}}</span>
                                 </div>
@@ -248,35 +248,35 @@
                             <div class="meetings-section">
                                 <h4 class="meetings-title">
                                     <img src="../../../../../../assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
-                                    Reuniones Programadas
+                                    {{ 'meet_student.scheduledMeetings' | translate }}
                                 </h4>
                                 <div class="meetings-list">
                                     @for (reunion of account.programa_ayo_id.id_reuniones_meet; track reunion.id) {
                                     <div class="meeting-item">
                                         <div class="meeting-info">
                                             <span class="meeting-day">
-                                                <span class="text-gray-500 font-semibold text-sm mr-1">Día:</span>
-                                                {{ reunion.fecha_inicio | date:'EEEE' | titlecase }}
+                                                <span class="text-gray-500 font-semibold text-sm mr-1">{{ 'meet_student.day' | translate }}:</span>
+                                                {{ getWeekdayKey(reunion) | translate }}
                                             </span>
                                             @if (reunion.id_docente) {
                                             <span class="meeting-teacher">
-                                                <span class="text-gray-500 font-semibold text-sm mr-1">Docente:</span>
+                                                <span class="text-gray-500 font-semibold text-sm mr-1">{{ 'meet_student.teacher' | translate }}:</span>
                                                 {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
                                             </span>
                                             }
                                             <span class="meeting-time">
-                                                <span class="text-gray-500 font-semibold text-sm mr-1">Horario:</span>
+                                                <span class="text-gray-500 font-semibold text-sm mr-1">{{ 'meet_student.time' | translate }}:</span>
                                                 {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion | date:'shortTime' }}
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-5">
                                             @if (reunion.link_reunion) {
-                                            <a class="meeting-link cursor-pointer" title="Unirse a reunión" (click)="handleTestAndJoin($event, reunion)">
+                                            <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.joinMeetingTitle' | translate" (click)="handleTestAndJoin($event, reunion)">
                                                 <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
                                             </a>
                                             }
-                                          <a class="meeting-link cursor-pointer" title="Evaluar al docente" (click)="openEvaluation(reunion, account.id)">
-                                            <img src="/assets/icons/evaluacion.png" class="w-full h-full object-contain" alt="Evaluar">
+                                          <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.evaluateTeacherTitle' | translate" (click)="openEvaluation(reunion, account.id)">
+                                            <img src="/assets/icons/evaluacion.png" class="w-full h-full object-contain" [attr.alt]="'meet_student.evaluateAlt' | translate">
                                           </a>
                                         </div>
                                     </div>
@@ -289,8 +289,8 @@
                             <div class="flex xl:hidden flex-col gap-6 mt-6 pt-4 border-t border-gray-100">
                                 <!-- Study Plan Button -->
                                 <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudyPlanModal(account.programa_ayo_id)">
-                                    <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Plan">
-                                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Plan de Estudio</span>
+                                    <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" [attr.alt]="'meet_student.planAlt' | translate">
+                                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">{{ 'meet_student.viewStudyPlan' | translate }}</span>
                                 </div>
 
                                 <!-- Rules Section -->
@@ -299,7 +299,7 @@
                                         <svg class="w-5 h-5 text-[#13486e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span class="font-bold text-[#13486e] text-sm">Reglas del Programa</span>
+                                        <span class="font-bold text-[#13486e] text-sm">{{ 'meet_student.programRules' | translate }}</span>
                                     </div>
                                     <div class="p-3 bg-gray-50/50">
                                         <ul class="space-y-2">
@@ -308,7 +308,7 @@
                                                 <span class="flex-shrink-0 w-4 h-4 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-[10px] font-bold mt-0.5">
                                                     {{ $index + 1 }}
                                                 </span>
-                                                <span class="text-gray-600 text-xs leading-relaxed">{{ rule }}</span>
+                                                <span class="text-gray-600 text-xs leading-relaxed">{{ rule | translate }}</span>
                                             </li>
                                             }
                                         </ul>
@@ -329,7 +329,7 @@
                         <div class=" p-1.5 rounded-lg">
                             <img src="assets/icons/plan.png" class="w-10 h-10" alt="Plan">
                         </div>
-                        <span>Plan de Estudio</span>
+                        <span>{{ 'meet_student.studyPlan' | translate }}</span>
                     </div>
 
                     <div class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-gray-50/50">
@@ -365,7 +365,7 @@
                                         </div>
                                         @if (item.original.realizado) {
                                             <span class="inline-block mt-1 text-[10px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                                Completado
+                                                {{ 'meet_student.completed' | translate }}
                                             </span>
                                         }
                                     </div>
@@ -375,7 +375,7 @@
                         } @else {
                             <div class="flex flex-col items-center justify-center py-12 text-gray-500 h-full">
                                 <img src="assets/icons/plan.png" class="w-16 h-16 object-contain mb-3 opacity-50" alt="Plan">
-                                <p class="text-sm font-medium">No hay plan disponible</p>
+                                <p class="text-sm font-medium">{{ 'meet_student.noPlanAvailable' | translate }}</p>
                             </div>
                         }
                     </div>
@@ -389,7 +389,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <span>Reglas del Programa</span>
+                        <span>{{ 'meet_student.programRules' | translate }}</span>
                     </div>
                     
                     <div class="p-4 bg-gray-50/50">
@@ -399,7 +399,7 @@
                                 <span class="flex-shrink-0 w-5 h-5 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-[10px] font-bold mt-0.5">
                                     {{ $index + 1 }}
                                 </span>
-                                <span class="text-gray-600 text-sm leading-relaxed">{{ rule }}</span>
+                                <span class="text-gray-600 text-sm leading-relaxed">{{ rule | translate }}</span>
                             </li>
                             }
                         </ul>

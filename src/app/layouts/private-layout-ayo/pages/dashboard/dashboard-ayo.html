@@ -4,12 +4,12 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-          Dashboard
+          {{ 'dashboard.title' | translate }}
         </h1>
-        <p class="text-gray-600 mt-2">Resumen general del sistema</p>
+        <p class="text-gray-600 mt-2">{{ 'dashboard.subtitle' | translate }}</p>
       </div>
       <div class="text-right">
-        <p class="text-sm text-gray-500">Última actualización</p>
+        <p class="text-sm text-gray-500">{{ 'dashboard.lastUpdate' | translate }}</p>
         <p class="text-lg font-semibold text-gray-700">{{ currentDate.toLocaleString('es-ES') }}</p>
       </div>
     </div>
@@ -20,7 +20,7 @@
     <div class="flex items-center justify-center min-h-96">
       <div class="text-center">
         <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600 text-lg">Cargando datos del dashboard...</p>
+        <p class="text-gray-600 text-lg">{{ 'dashboard.loading' | translate }}</p>
       </div>
     </div>
   } @else {
@@ -33,7 +33,7 @@
             <span class="bg-indigo-100 p-2 rounded-lg mr-3">
                 <img src="assets/icons/curso-linea.png" class="w-16 h-16 object-contain" alt="Icono Resumen">
             </span>
-            Resumen
+            {{ 'dashboard.summary' | translate }}
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
              <!-- Horas Trabajadas -->
@@ -42,7 +42,7 @@
                     <img src="assets/icons/calendario.png" class="w-8 h-8 object-contain" alt="Tiempo">
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">Horas Trabajadas</span>
+                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">{{ 'dashboard.hoursWorked' | translate }}</span>
                     <span class="text-lg font-bold text-gray-900">{{ teacherStats.horas_trabajadas | number:'1.2-2':'es-CO' }} <span class="text-sm text-gray-500">hrs</span></span>
                 </div>
              </div>
@@ -55,7 +55,7 @@
             <span class="bg-purple-100 p-2 rounded-lg mr-3">
                 <img src="assets/icons/calendario.png" class="w-12 h-12 object-contain" alt="Icono Calendario">
             </span>
-            Reuniones Programadas
+            {{ 'dashboard.scheduledMeetings' | translate }}
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,7 +81,7 @@
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <div class="flex items-center gap-2 mb-1">
                                 <img src="assets/icons/idioma.png" class="w-5 h-5 object-contain" alt="Idioma">
-                                <span class="text-xs font-bold text-gray-500 uppercase">Idioma</span>
+                                <span class="text-xs font-bold text-gray-500 uppercase">{{ 'dashboard.language' | translate }}</span>
                             </div>
                             <p class="text-sm font-bold text-gray-900 truncate pl-7">{{ reunion.id_programa_ayo?.idioma || 'N/A' }}</p>
                         </div>
@@ -90,7 +90,7 @@
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <div class="flex items-center gap-2 mb-1">
                                 <img src="assets/icons/nivel.png" class="w-5 h-5 object-contain" alt="Nivel">
-                                <span class="text-xs font-bold text-gray-500 uppercase">Nivel</span>
+                                <span class="text-xs font-bold text-gray-500 uppercase">{{ 'dashboard.level' | translate }}</span>
                             </div>
                             <p class="text-sm font-bold text-gray-900 truncate pl-7">{{ reunion.id_programa_ayo?.id_nivel?.nivel || 'N/A' }}</p>
                         </div>
@@ -99,7 +99,7 @@
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <div class="flex items-center gap-2 mb-1">
                                 <img src="assets/icons/subcategoria.png" class="w-5 h-5 object-contain" alt="Subcategoría">
-                                <span class="text-xs font-bold text-gray-500 uppercase">Categoría</span>
+                                <span class="text-xs font-bold text-gray-500 uppercase">{{ 'dashboard.category' | translate }}</span>
                             </div>
                             <p class="text-sm font-bold text-gray-900 truncate pl-7">{{ reunion.id_programa_ayo?.id_nivel?.subcategoria || 'N/A' }}</p>
                         </div>
@@ -108,7 +108,7 @@
                         <div class="bg-gray-50 p-3 rounded-lg">
                             <div class="flex items-center gap-2 mb-1">
                                 <img src="assets/icons/tematica.png" class="w-5 h-5 object-contain" alt="Temática">
-                                <span class="text-xs font-bold text-gray-500 uppercase">Temática</span>
+                                <span class="text-xs font-bold text-gray-500 uppercase">{{ 'dashboard.topic' | translate }}</span>
                             </div>
                             <p class="text-sm font-bold text-gray-900 truncate pl-7">{{ reunion.id_programa_ayo?.id_nivel?.tematica || 'N/A' }}</p>
                         </div>
@@ -119,7 +119,7 @@
                     <div class="bg-purple-100 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                         <img src="assets/icons/calendario.png" class="w-10 h-10 object-contain opacity-50" alt="Sin reuniones">
                     </div>
-                    <p class="text-gray-500 text-lg font-medium">No hay reuniones programadas.</p>
+                    <p class="text-gray-500 text-lg font-medium">{{ 'dashboard.noMeetings' | translate }}</p>
                 </div>
             }
         </div>
@@ -137,7 +137,7 @@
             <span class="bg-indigo-100 p-2 rounded-lg mr-3">
                 <img src="assets/icons/curso-linea.png" class="w-16 h-16 object-contain" alt="Icono Curso">
             </span>
-            Detalles del Programa
+            {{ 'dashboard.programDetails' | translate }}
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
              <!-- Idioma -->
@@ -146,8 +146,8 @@
                     <img src="assets/icons/idioma.png" class="w-8 h-8 object-contain" alt="Idioma">
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">Idioma</span>
-                    <span class="text-lg font-bold text-gray-900">{{ ayoStats.idioma }}</span>
+                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">{{ 'dashboard.language' | translate }}</span>
+                    <span class="text-lg font-bold text-gray-900">{{ (getLanguageKey(ayoStats.idioma) | translate | uppercase) || (ayoStats.idioma | uppercase) }}</span>
                 </div>
              </div>
              <!-- Nivel -->
@@ -156,7 +156,7 @@
                     <img src="assets/icons/nivel.png" class="w-8 h-8 object-contain" alt="Nivel">
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">Nivel</span>
+                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">{{ 'dashboard.level' | translate }}</span>
                     <span class="text-lg font-bold text-gray-900">{{ ayoStats.nivel }}</span>
                 </div>
              </div>
@@ -166,7 +166,7 @@
                     <img src="assets/icons/subcategoria.png" class="w-12 h-12 object-contain" alt="Subcategoría">
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">Subcategoría</span>
+                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">{{ 'dashboard.subcategory' | translate }}</span>
                     <span class="text-lg font-bold text-gray-900">{{ ayoStats.subcategoria }}</span>
                 </div>
              </div>
@@ -176,7 +176,7 @@
                     <img src="assets/icons/tematica.png" class="w-12 h-12 object-contain" alt="Temática">
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">Temática</span>
+                    <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1 block">{{ 'dashboard.topic' | translate }}</span>
                     <span class="text-lg font-bold text-gray-900">{{ ayoStats.tematica }}</span>
                 </div>
              </div>
@@ -188,7 +188,7 @@
         <!-- Créditos -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 flex flex-col justify-between">
           <div class="flex items-center justify-between mb-2">
-             <p class="text-lg font-bold text-gray-500 uppercase">Créditos</p>
+             <p class="text-lg font-bold text-gray-500 uppercase">{{ 'dashboard.credits' | translate }}</p>
              <div class="rounded-full p-2">
                 <img src="assets/icons/precio.png" class="w-12 h-12 object-contain" alt="Créditos">
              </div>
@@ -199,7 +199,7 @@
         <!-- Reuniones -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 flex flex-col justify-between">
           <div class="flex items-center justify-between mb-2">
-             <p class="text-lg font-bold text-gray-500 uppercase">Reuniones</p>
+             <p class="text-lg font-bold text-gray-500 uppercase">{{ 'dashboard.meetings' | translate }}</p>
              <div class="rounded-full p-2">
                 <img src="assets/icons/calendario.png" class="w-12 h-12 object-contain" alt="Reuniones">
              </div>
@@ -225,7 +225,7 @@
         <!-- Estado de Cuenta -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 flex flex-col justify-between">
           <div class="flex items-center justify-between mb-2">
-             <p class="text-lg font-bold text-gray-500 uppercase">Estado Cuenta</p>
+             <p class="text-lg font-bold text-gray-500 uppercase">{{ 'dashboard.accountStatus' | translate }}</p>
              <div class="rounded-full p-2">
                 <img src="assets/icons/accounts-receivable.png" class="w-12 h-12 object-contain" alt="Estado Cuenta">
              </div>
@@ -236,7 +236,7 @@
         <!-- Resultado Test -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-cyan-500 flex flex-col justify-between">
           <div class="flex items-center justify-between mb-2">
-             <p class="text-lg font-bold text-gray-500 uppercase">Resultado Test</p>
+             <p class="text-lg font-bold text-gray-500 uppercase">{{ 'dashboard.testResult' | translate }}</p>
              <div class=" rounded-full p-2">
                 <img src="assets/icons/test.png" class="w-12 h-12 object-contain" alt="Resultado Test">
              </div>
@@ -247,7 +247,7 @@
         <!-- Calificación -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500 flex flex-col justify-between">
           <div class="flex items-center justify-between mb-2">
-             <p class="text-lg font-bold text-gray-500 uppercase">Calificación</p>
+             <p class="text-lg font-bold text-gray-500 uppercase">{{ 'dashboard.grade' | translate }}</p>
              <div class="rounded-full p-2">
                 <img src="assets/icons/calificacion.png" class="w-12 h-12 object-contain" alt="Calificación">
              </div>
@@ -265,7 +265,7 @@
                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span class="text-xl">Reglas del Programa</span>
+            <span class="text-xl">{{ 'dashboard.programRules' | translate }}</span>
           </div>
           
           <div class="p-6 bg-gray-50/50">
@@ -275,7 +275,7 @@
                     <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-sm font-bold mt-0.5">
                     {{ $index + 1 }}
                     </span>
-                    <span class="text-gray-700 text-base leading-relaxed font-medium">{{ rule }}</span>
+                    <span class="text-gray-700 text-base leading-relaxed font-medium">{{ rule | translate }}</span>
                 </div>
                 }
             </div>

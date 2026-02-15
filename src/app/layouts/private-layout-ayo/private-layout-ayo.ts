@@ -1,18 +1,22 @@
 import { Component, HostListener, OnInit, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from '../../components/header/header.component';
-import { NgClass, isPlatformBrowser } from "@angular/common";
+import { NgClass, isPlatformBrowser, registerLocaleData } from "@angular/common";
+import localeEs from '@angular/common/locales/es';
+import localeFr from '@angular/common/locales/fr';
 import { NotificationModalComponent, NotificationData } from '../../components/notification-modal/notification-modal';
 import { ConfirmationModalComponent, ConfirmationData } from '../../components/confirmation-modal/confirmation-modal';
 import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmationService } from '../../core/services/confirmation.service';
 import {SidebarAyoComponent} from '../../components/sidebar-ayo/sidebar-ayo.component';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-private-layout-ayo',
   standalone: true,
-  imports: [RouterOutlet, SidebarAyoComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent, NgClass],
+  imports: [RouterOutlet, SidebarAyoComponent, HeaderComponent, NotificationModalComponent, ConfirmationModalComponent, NgClass, TranslateModule],
   templateUrl: './private-layout-ayo.html'
 })
 export class PrivateLayoutAyo implements OnInit, AfterViewInit {
@@ -37,12 +41,16 @@ export class PrivateLayoutAyo implements OnInit, AfterViewInit {
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
     private tokenRefreshService: TokenRefreshService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
+    private router: Router
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit() {
+    registerLocaleData(localeEs);
+    registerLocaleData(localeFr);
     // Start token refresh service to ensure session stays active
     if (this.isBrowser) {
         this.tokenRefreshService.startTokenRefreshService();
@@ -63,6 +71,34 @@ export class PrivateLayoutAyo implements OnInit, AfterViewInit {
       this.isNotificationVisible = isVisible;
     });
 
+    const storedLang = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
+    if (storedLang) {
+      const code = storedLang === 'EN' ? 'en' : storedLang === 'FR' ? 'fr' : 'es';
+      this.translate.use(code);
+    } else {
+      this.translate.use('es');
+      if (typeof localStorage !== 'undefined') localStorage.setItem('ayo_language', 'ES');
+    }
+    // Asegurar que ?lang siempre esté presente en rutas privadas AYO
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        const urlTree = this.router.parseUrl(event.urlAfterRedirects || event.url);
+        const currentLangParam = urlTree.queryParams['lang'];
+        const hasLang = !!currentLangParam;
+        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
+        const lang = (currentLangParam && (String(currentLangParam).toUpperCase())) || (stored === 'EN' || stored === 'FR' || stored === 'ES' ? stored : 'ES');
+        const isPrivateAyo = (urlTree.root.children['primary']?.segments[0]?.path || '').startsWith('private-ayo');
+        if (isPrivateAyo && !hasLang) {
+          urlTree.queryParams = { ...urlTree.queryParams, lang };
+          this.router.navigateByUrl(urlTree, { replaceUrl: true });
+        }
+        const code = lang === 'EN' ? 'en' : lang === 'FR' ? 'fr' : 'es';
+        this.translate.use(code);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('ayo_language', lang);
+        }
+      }
+    });
     // Suscribirse a las confirmaciones
     this.confirmationService.confirmation$.subscribe(confirmation => {
       this.currentConfirmation = confirmation;

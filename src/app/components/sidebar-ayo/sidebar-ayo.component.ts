@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LoginService } from '../../core/services/login.service';
 import { User } from '../../core/models/User';
 import { StorageServices } from '../../core/services/storage.services';
@@ -11,7 +11,7 @@ import {Menu} from '../../core/models/Menu';
 @Component({
   selector: 'app-sidebar-ayo',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './sidebar-ayo.component.html'
 })
 export class SidebarAyoComponent implements OnInit, OnDestroy {
@@ -24,7 +24,8 @@ export class SidebarAyoComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private loginService: LoginService,
-    private menuService: MenuService
+    private menuService: MenuService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {
@@ -70,5 +71,23 @@ export class SidebarAyoComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login-ayo']);
       },
     });
+  }
+
+  getSidebarKey(name?: string): string {
+    const v = (name || '').toLowerCase().trim();
+    if (v === 'dasboard' || v === 'dashboard') return 'sidebar_ayo.dashboard';
+    if (v === 'reuniones' || v === 'meetings') return 'sidebar_ayo.meetings';
+    if (v === 'avance' || v === 'progress') return 'sidebar_ayo.progress';
+    if (v === 'certificados' || v === 'certificates') return 'sidebar_ayo.certificates';
+    if (v === 'nomina docente' || v === 'nómina docente' || v === 'teacher payroll' || v === 'payroll') return 'sidebar_ayo.teacherPayroll';
+    if (v === 'calificacion' || v === 'calificación' || v === 'rating' || v === 'grading' || v === 'grade') return 'sidebar_ayo.rating';
+    return '';
+  }
+
+  getSidebarLabel(name?: string): string {
+    const key = this.getSidebarKey(name);
+    if (!key) return name || '';
+    const value = this.translate.instant(key);
+    return value && value !== key ? value : (name || '');
   }
 }

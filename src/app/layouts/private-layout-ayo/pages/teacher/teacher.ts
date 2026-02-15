@@ -5,13 +5,14 @@ import { ProgramaAyoService } from '../../../../core/services/programa-ayo.servi
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { Course, ProgramaAyo } from '../../../../core/models/Course';
 import { environment } from '../../../../../environments/environment';
+import {TranslatePipe} from '@ngx-translate/core';
 
 export type TeacherStep = 'initial' | 'options';
 
 @Component({
   selector: 'app-teacher',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './teacher.html',
   styleUrl: './teacher.css'
 })
@@ -57,7 +58,7 @@ export class Teacher implements OnInit {
     }
 
     openMeetings(): void {
-      this.router.navigate(['/private-ayo/teacher/meetings']);
+      this.router.navigate(['/private-ayo/teacher/meetings'], { queryParamsHandling: 'preserve' });
     }
 
     goBack(): void {

@@ -1,9 +1,11 @@
 import { Component, OnInit, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
 import { Roles } from '../../core/const/Roles';
+import { TranslateService } from '@ngx-translate/core';
 
 class CurrentUser {
   email: string;
@@ -16,23 +18,34 @@ class CurrentUser {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
   currentUser: CurrentUser | null = null;
   @Output() toggleSidebar = new EventEmitter<void>();
   isUserMenuOpen = false;
+  selectedAyoLanguage: string = 'ES';
 
   constructor(
     private elementRef: ElementRef,
     private router: Router,
     private loginService: LoginService,
-    private tokenRefreshService: TokenRefreshService
+    private tokenRefreshService: TokenRefreshService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {
     this.loadUserFromSessionStorage();
+    const tree = this.router.parseUrl(this.router.url);
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
+    const langParam = tree.queryParams['lang'] ? String(tree.queryParams['lang']).toUpperCase() : null;
+    const lang = (stored || langParam || 'ES').toUpperCase();
+    if (lang === 'EN' || lang === 'FR' || lang === 'ES') {
+      this.selectedAyoLanguage = lang;
+    }
+    const code = this.selectedAyoLanguage === 'EN' ? 'en' : this.selectedAyoLanguage === 'FR' ? 'fr' : 'es';
+    this.translate.use(code);
   }
 
   private loadUserFromSessionStorage(): void {
@@ -63,6 +76,18 @@ export class HeaderComponent implements OnInit {
 
   onToggleSidebar() {
     this.toggleSidebar.emit();
+  }
+
+  onChangeLanguage(lang: string) {
+    this.selectedAyoLanguage = lang;
+    const code = lang === 'EN' ? 'en' : lang === 'FR' ? 'fr' : 'es';
+    this.translate.use(code);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ayo_language', lang);
+    }
+    const tree = this.router.parseUrl(this.router.url);
+    tree.queryParams = { ...tree.queryParams, lang };
+    this.router.navigateByUrl(tree);
   }
 
   toggleUserMenu() {

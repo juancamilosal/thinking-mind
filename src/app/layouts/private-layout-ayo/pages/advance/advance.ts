@@ -6,6 +6,7 @@ import { AttendanceService } from '../../../../core/services/attendance.service'
 import { StorageServices } from '../../../../core/services/storage.services';
 import { Attendance } from '../../../../core/models/Attendance';
 import { environment } from '../../../../../environments/environment';
+import { TranslateModule } from '@ngx-translate/core';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -25,7 +26,7 @@ interface LevelAnalysis {
 @Component({
   selector: 'app-advance',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './advance.html',
   styleUrl: './advance.css'
 })
