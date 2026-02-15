@@ -35,6 +35,7 @@ export const environment = {
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',
   certificados: apiUrl + 'items/certificados',
+  advertising: apiUrl + 'items/publicidad',
   security: {
     login: apiUrl + 'auth/login',
     logout: apiUrl + 'auth/logout',

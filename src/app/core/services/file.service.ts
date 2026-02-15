@@ -46,4 +46,8 @@ export class FileService {
   updateFile(id: string, data: any): Observable<{ data: DirectusFile }> {
     return this.http.patch<{ data: DirectusFile }>(`${this.apiUrl}/${id}`, data);
   }
+
+  deleteFile(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

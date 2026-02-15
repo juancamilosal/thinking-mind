@@ -70,10 +70,9 @@ export const environment = {
   nivel: apiUrl + 'items/nivel',
   grado: apiUrl + 'items/grado',
   certificados: apiUrl + 'items/certificados',
+  advertising: apiUrl + 'items/publicidad',
 
-  // Configuración de tasas de cambio
   exchangeRates: {
-    // Proveedor de tasas: 'exchangerate_host' (gratis), 'alphavantage' (requiere API key), 'erapi' (anterior)
     provider: 'erapi',
     alphavantageApiKey: '',
     currencylayerApiKey: ''
