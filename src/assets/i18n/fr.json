@@ -26,6 +26,7 @@
     "logout": "Se déconnecter"
   },
   "sidebar_ayo": {
+    "system": "Plateforme AYO",
     "dashboard": "Tableau de bord",
     "meetings": "Réunions",
     "progress": "Avancement",
