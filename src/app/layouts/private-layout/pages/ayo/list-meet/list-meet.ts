@@ -1124,13 +1124,13 @@ export class ListMeet implements OnInit {
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
 
-    // New Logic: Use estudiantes_id from id_nivel to get documents and fetch users
-    if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
+    // Use estudiantes_id del programa para listar estudiantes
+    if (prog.estudiantes_id && prog.estudiantes_id.length > 0) {
         const documents: {tipo: string, numero: string}[] = [];
         const seenDocs = new Set<string>();
         const studentAttendanceMap = new Map<string, any[]>();
 
-        prog.id_nivel.estudiantes_id.forEach((student: any) => {
+        prog.estudiantes_id.forEach((student: any) => {
             if (student.tipo_documento && student.numero_documento) {
                 const docKey = `${student.tipo_documento}-${student.numero_documento}`;
                 if (!seenDocs.has(docKey)) {
@@ -1157,11 +1157,6 @@ export class ListMeet implements OnInit {
                     this.isLoadingStudents = false;
                     if (response.data && response.data.length > 0) {
                         this.selectedStudents = response.data;
-
-                        // Filter students to ensure they belong to the current level
-                        if (prog.id_nivel && prog.id_nivel.id) {
-                            this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
-                        }
 
                         this.attendanceList = this.selectedStudents.map(student => {
                             let score: number = 0;
