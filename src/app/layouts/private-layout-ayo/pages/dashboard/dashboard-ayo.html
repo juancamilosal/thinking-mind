@@ -267,7 +267,7 @@
             </div>
             <span class="text-xl">{{ 'dashboard.programRules' | translate }}</span>
           </div>
-          
+
           <div class="p-6 bg-gray-50/50">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @for (rule of programRules; track $index) {
@@ -279,6 +279,128 @@
                 </div>
                 }
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publicidad de Otros Programas -->
+      <div class="mb-10">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 px-6 py-8 md:px-10 md:py-10">
+          <h2 class="text-2xl md:text-5xl font-extrabold text-gray-900 text-center mb-3">
+            {{ 'dashboard.adProgramsTitle' | translate }}
+          </h2>
+          <p class="text-gray-600 text-center max-w-3xl mx-auto mb-8 text-md">
+            {{ 'dashboard.adProgramsSubtitle' | translate }}
+          </p>
+
+          <div class="space-y-8 md:space-y-10">
+            <!-- Will-Go -->
+            <a href="https://thinkingmind.co/?v=e85759b74988"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="group flex flex-col md:flex-row items-stretch gap-6 md:gap-10">
+              <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100">
+                <img src="assets/images/advertising/will-go.png"
+                     alt="Will-Go"
+                     class="w-full h-full object-contain transition-transform duration-500">
+              </div>
+              <div class="md:w-1/2 flex flex-col justify-center">
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Will-Go</span>
+                </h3>
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-3">
+                  {{ 'dashboard.adWillGoDescription' | translate }}
+                </p>
+                <span class="inline-flex items-center text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                  {{ 'dashboard.adLearnMore' | translate }}
+                  <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </a>
+
+            <!-- Grow Camp (imagen a la derecha en desktop) -->
+            <a href="https://thinkingmind.co/?v=e85759b74988"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="group flex flex-col md:flex-row-reverse items-stretch gap-6 md:gap-10">
+              <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100">
+                <img src="assets/images/advertising/grow-camp.jpg"
+                     alt="Grow Camp"
+                     class="w-full h-full object-contain transition-transform duration-500">
+              </div>
+              <div class="md:w-1/2 flex flex-col justify-center">
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                  <span>Grow Camp</span>
+                </h3>
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-3">
+                  {{ 'dashboard.adGrowCampDescription' | translate }}
+                </p>
+                <span class="inline-flex items-center text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                  {{ 'dashboard.adLearnMore' | translate }}
+                  <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </a>
+
+            <!-- Summer Camp -->
+            <a href="https://thinkingmind.co/?v=e85759b74988"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="group flex flex-col md:flex-row items-stretch gap-6 md:gap-10">
+              <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100">
+                <img src="assets/images/advertising/summer-camp.png"
+                     alt="Summer Camp"
+                     class="w-full h-full object-contain transition-transform duration-500">
+              </div>
+              <div class="md:w-1/2 flex flex-col justify-center">
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <span>Summer Camp</span>
+                </h3>
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-3">
+                  {{ 'dashboard.adSummerCampDescription' | translate }}
+                </p>
+                <span class="inline-flex items-center text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                  {{ 'dashboard.adLearnMore' | translate }}
+                  <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </a>
+
+            <!-- Winter Camp (imagen a la derecha en desktop) -->
+            <a href="https://thinkingmind.co/?v=e85759b74988"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="group flex flex-col md:flex-row-reverse items-stretch gap-6 md:gap-10">
+              <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100">
+                <img src="assets/images/advertising/winter-camp.jpg"
+                     alt="Winter Camp"
+                     class="w-full h-full object-contain transition-transform duration-500">
+              </div>
+              <div class="md:w-1/2 flex flex-col justify-center">
+                <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  <span>Winter Camp</span>
+                </h3>
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-3">
+                  {{ 'dashboard.adWinterCampDescription' | translate }}
+                </p>
+                <span class="inline-flex items-center text-sm font-semibold text-indigo-600 group-hover:text-indigo-700">
+                  {{ 'dashboard.adLearnMore' | translate }}
+                  <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </a>
           </div>
         </div>
       </div>

@@ -19,7 +19,14 @@
     "accountStatus": "Account Status",
     "testResult": "Test Result",
     "grade": "Grade",
-    "programRules": "Program Rules"
+    "programRules": "Program Rules",
+    "adProgramsTitle": "Discover more Thinking Mind programs",
+    "adProgramsSubtitle": "Explore other immersion experiences and camps that Thinking Mind offers.",
+    "adLearnMore": "Learn more",
+    "adWillGoDescription": "Immersion program designed to take your English or French to the next level.",
+    "adGrowCampDescription": "Camp focused on personal growth, leadership and social skills.",
+    "adSummerCampDescription": "Enjoy a summer camp full of activities, languages and new friends.",
+    "adWinterCampDescription": "A winter experience to learn, have fun and practice languages."
   },
   "sidebar": {
     "system": "Management System",

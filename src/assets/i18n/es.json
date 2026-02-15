@@ -19,7 +19,14 @@
     "accountStatus": "Estado Cuenta",
     "testResult": "Resultado Test",
     "grade": "Calificación",
-    "programRules": "Reglas del Programa"
+    "programRules": "Reglas del Programa",
+    "adProgramsTitle": "Descubre más programas Thinking Mind",
+    "adProgramsSubtitle": "Explora otras experiencias de inmersión y campamentos que Thinking Mind tiene para ti.",
+    "adLearnMore": "Conoce más",
+    "adWillGoDescription": "Programa de inmersión pensado para que lleves tu inglés o francés al siguiente nivel.",
+    "adGrowCampDescription": "Campamento enfocado en el crecimiento personal, liderazgo y habilidades sociales.",
+    "adSummerCampDescription": "Vive un campamento de verano lleno de actividades, idiomas y nuevas amistades.",
+    "adWinterCampDescription": "Una experiencia de invierno para aprender, divertirte y practicar idiomas."
   },
   "sidebar": {
     "system": "Sistema de Gestión",
