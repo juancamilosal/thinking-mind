@@ -28,6 +28,7 @@ import { SessionExpiredComponent } from './layouts/public-layout/pages/session-e
 import { ayoRoutes } from './ayo.routes';
 import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payroll-admin';
 import { TeacherEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/teacher-evaluation-ayo/teacher-evaluation-ayo';
+import { Advertising } from './layouts/private-layout/pages/advertising/advertising';
 
 
 export const routes: Routes = [
@@ -117,6 +118,11 @@ export const routes: Routes = [
         path: 'presupuesto',
         title: 'Thinking Mind | Gestión de Presupuesto',
         component: Presupuesto
+      },
+      {
+        path: 'advertising',
+        title: 'Thinking Mind | Publicidad',
+        component: Advertising
       },
       {
         path: 'budget-report',
