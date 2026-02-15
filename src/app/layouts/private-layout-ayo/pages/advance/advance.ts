@@ -148,6 +148,21 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  getDisplayLanguage(idioma: string | null | undefined): string {
+    if (!idioma) return '';
+    const value = idioma.toString().toUpperCase();
+    if (['INGLES', 'INGLÉS', 'ENGLISH', 'EN'].includes(value)) {
+      return 'language.english';
+    }
+    if (['FRANCES', 'FRANCÉS', 'FRENCH', 'FR'].includes(value)) {
+      return 'language.french';
+    }
+    if (['ESPANOL', 'ESPAÑOL', 'SPANISH', 'ES'].includes(value)) {
+      return 'language.spanish';
+    }
+    return idioma;
+  }
+
   processLevelAnalysis(): void {
     const groupedByLevel: { [key: string]: Attendance[] } = {};
 
