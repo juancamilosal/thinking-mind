@@ -408,12 +408,13 @@ export class ListMeet implements OnInit {
       next: () => {
         this.ngZone.run(() => {
             try {
-                const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
-                this.notificationService.showSuccess('Éxito', message);
+                // Success message removed per request
 
                 // Update local state
                 if (this.selectedStudentForPromotion) {
                     this.selectedStudentForPromotion.currentLevelId = nivel.id;
+                    this.selectedStudentForPromotion.level = nivel.nivel || this.selectedStudentForPromotion.level;
+                    this.selectedStudentForPromotion.subcategoria = nivel.subcategoria || this.selectedStudentForPromotion.subcategoria;
                 }
 
                 // Update student in the main list
@@ -435,10 +436,16 @@ export class ListMeet implements OnInit {
                     } else {
                         // Otherwise just update the level ID (e.g. in General List)
                         this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                        this.attendanceList[studentIndex].level = nivel.nivel || this.attendanceList[studentIndex].level;
+                        this.attendanceList[studentIndex].subcategoria = nivel.subcategoria || this.attendanceList[studentIndex].subcategoria;
                     }
                 }
 
+                const studentForLocate = this.selectedStudentForPromotion;
                 this.closePromotionModal();
+                if (studentForLocate) {
+                  this.openLocatePrograms(studentForLocate);
+                }
                 this.loadProgramas(); // Refresh program list
             } catch (e) {
                 console.error('Error processing promotion success:', e);
@@ -512,12 +519,13 @@ export class ListMeet implements OnInit {
       next: () => {
         this.ngZone.run(() => {
             try {
-                const message = `El estudiante ${studentName} ha sido degradado de ${oldLevelName} a ${newLevelName}.`;
-                this.notificationService.showSuccess('Éxito', message);
+                // Success message removed per request
 
                 // Update local state
                 if (this.selectedStudentForDegradation) {
                     this.selectedStudentForDegradation.currentLevelId = nivel.id;
+                    this.selectedStudentForDegradation.level = nivel.nivel || this.selectedStudentForDegradation.level;
+                    this.selectedStudentForDegradation.subcategoria = nivel.subcategoria || this.selectedStudentForDegradation.subcategoria;
                 }
 
                 // Update student in the main list
@@ -539,10 +547,16 @@ export class ListMeet implements OnInit {
                     } else {
                         // Otherwise just update the level ID (e.g. in General List)
                         this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                        this.attendanceList[studentIndex].level = nivel.nivel || this.attendanceList[studentIndex].level;
+                        this.attendanceList[studentIndex].subcategoria = nivel.subcategoria || this.attendanceList[studentIndex].subcategoria;
                     }
                 }
 
+                const studentForLocate = this.selectedStudentForDegradation;
                 this.closeDegradeModal();
+                if (studentForLocate) {
+                  this.openLocatePrograms(studentForLocate);
+                }
                 this.loadProgramas(); // Refresh program list
             } catch (e) {
                 console.error('Error processing degradation success:', e);
