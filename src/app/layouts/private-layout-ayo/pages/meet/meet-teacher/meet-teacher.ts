@@ -112,7 +112,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   openStudentsModal(programa: ProgramaAyo): void {
     this.selectedProgramForStudents = programa;
-    if (programa.id_nivel && Array.isArray(programa.id_nivel.estudiantes_id)) {
+    if (Array.isArray((programa as any).estudiantes_id)) {
+      this.selectedStudents = (programa as any).estudiantes_id;
+    } else if (programa.id_nivel && Array.isArray(programa.id_nivel.estudiantes_id)) {
       this.selectedStudents = programa.id_nivel.estudiantes_id;
     } else {
       this.selectedStudents = [];
@@ -125,6 +127,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.selectedStudents = [];
     this.selectedProgramForStudents = null;
   }
+
+ 
 
   getStudentAttendance(student: any): number {
     if (!student.asistencia_id || !Array.isArray(student.asistencia_id) || !this.selectedProgramForStudents) {
@@ -306,7 +310,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             .filter((email: string) => email && email.length > 0);
     }
 
-    // Also check root level estudiantes_id as fallback or addition if needed, based on previous logic
+    // Also check root level estudiantes_id as fallback or addition if needed
     if (programa?.estudiantes_id && Array.isArray(programa.estudiantes_id)) {
          const rootStudents = programa.estudiantes_id
             .map((s: any) => s.email?.trim())
@@ -350,11 +354,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
     this.currentLevelId = currentProgram?.id_nivel?.id ? String(currentProgram.id_nivel.id) : null;
 
-    if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
+    const programStudents = currentProgram && Array.isArray((currentProgram as any).estudiantes_id)
+      ? (currentProgram as any).estudiantes_id
+      : (currentProgram?.id_nivel?.estudiantes_id || []);
+
+    if (currentProgram && programStudents && Array.isArray(programStudents)) {
       // Map students from id_nivel to evaluation objects, ensuring uniqueness
       const uniqueStudentsMap = new Map();
 
-      currentProgram.id_nivel.estudiantes_id.forEach((student: any) => {
+      programStudents.forEach((student: any) => {
         const studentId = student.id || student.directus_users_id;
         if (studentId && !uniqueStudentsMap.has(studentId)) {
           uniqueStudentsMap.set(studentId, student);
