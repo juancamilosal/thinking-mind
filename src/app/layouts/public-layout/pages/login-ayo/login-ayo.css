@@ -10,8 +10,7 @@
 /* --- Left Panel --- */
 .left-panel {
     width: 50%;
-    background: url('../../../../../assets/images/AYO-background.jpg') no-repeat center center;
-    background-size: 120%;
+    background-color: #020617;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -21,6 +20,68 @@
     text-align: center;
     padding: 2rem;
     overflow: hidden;
+}
+
+.collage-wrapper {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.collage-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    animation: collageFade 25s infinite;
+    transition: opacity 1.5s ease-in-out, transform 20s ease-in-out;
+    transform: scale(1.05);
+}
+
+.collage-image-1 {
+    animation-delay: 0s;
+}
+
+.collage-image-2 {
+    animation-delay: 5s;
+}
+
+.collage-image-3 {
+    animation-delay: 10s;
+}
+
+.collage-image-4 {
+    animation-delay: 15s;
+}
+
+.collage-image-5 {
+    animation-delay: 20s;
+}
+
+@keyframes collageFade {
+    0% {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    4% {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+    20% {
+        opacity: 1;
+        transform: scale(1.0);
+    }
+    24% {
+        opacity: 0;
+        transform: scale(1.03);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.05);
+    }
 }
 
 .left-panel::before {
