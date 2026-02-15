@@ -282,7 +282,7 @@
                                             @for (obs of analysis.observations; track obs.date) {
                                                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 transition-colors hover:bg-gray-100">
                                                     <div class="flex justify-between items-start mb-1">
-                                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ obs.date | date:'dd MMM yyyy' }}</span>
+                                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ formatObservationDateNumeric(obs.date) }}</span>
                                                         @if (obs.score > 0) {
                                                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded text-xs font-bold" 
                                                     [ngClass]="{
