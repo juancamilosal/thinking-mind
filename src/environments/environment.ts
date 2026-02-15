@@ -1,4 +1,4 @@
-const apiUrl = 'https://devapi.appthinkingmind.com/';
+const apiUrl = 'https://api.appthinkingmind.com/';
 
 export const environment = {
   production: false,

@@ -112,7 +112,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   openStudentsModal(programa: ProgramaAyo): void {
     this.selectedProgramForStudents = programa;
-    if (programa.id_nivel && Array.isArray(programa.id_nivel.estudiantes_id)) {
+    if (Array.isArray((programa as any).estudiantes_id)) {
+      this.selectedStudents = (programa as any).estudiantes_id;
+    } else if (programa.id_nivel && Array.isArray(programa.id_nivel.estudiantes_id)) {
       this.selectedStudents = programa.id_nivel.estudiantes_id;
     } else {
       this.selectedStudents = [];
@@ -125,6 +127,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.selectedStudents = [];
     this.selectedProgramForStudents = null;
   }
+
+ 
 
   getStudentAttendance(student: any): number {
     if (!student.asistencia_id || !Array.isArray(student.asistencia_id) || !this.selectedProgramForStudents) {
@@ -143,6 +147,23 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     return Math.round((attendedCount / relevantRecords.length) * 100);
   }
 
+  getStudentProgramRating(student: any): number {
+    if (!student.asistencia_id || !Array.isArray(student.asistencia_id) || !this.selectedProgramForStudents) {
+      return 0;
+    }
+    const programId = this.selectedProgramForStudents.id;
+    const relevantRecords = student.asistencia_id.filter((record: any) => {
+      if (!record || typeof record !== 'object') return false;
+      const rid = record.programa_ayo_id;
+      const recProgramId = typeof rid === 'object' ? (rid && rid.id ? rid.id : rid) : rid;
+      return recProgramId === programId;
+    });
+    if (relevantRecords.length === 0) return 0;
+    return relevantRecords.reduce((sum: number, r: any) => {
+      const val = Number(r.calificacion);
+      return Number.isFinite(val) ? sum + val : sum;
+    }, 0);
+  }
   calculateProjectedAttendance(student: any): number {
      if (!student.accountInfo && !student.asistencia_id) {
         return student.attended ? 100 : 0;
@@ -306,7 +327,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             .filter((email: string) => email && email.length > 0);
     }
 
-    // Also check root level estudiantes_id as fallback or addition if needed, based on previous logic
+    // Also check root level estudiantes_id as fallback or addition if needed
     if (programa?.estudiantes_id && Array.isArray(programa.estudiantes_id)) {
          const rootStudents = programa.estudiantes_id
             .map((s: any) => s.email?.trim())
@@ -350,11 +371,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
     this.currentLevelId = currentProgram?.id_nivel?.id ? String(currentProgram.id_nivel.id) : null;
 
-    if (currentProgram && currentProgram.id_nivel?.estudiantes_id) {
+    const programStudents = currentProgram && Array.isArray((currentProgram as any).estudiantes_id)
+      ? (currentProgram as any).estudiantes_id
+      : (currentProgram?.id_nivel?.estudiantes_id || []);
+
+    if (currentProgram && programStudents && Array.isArray(programStudents)) {
       // Map students from id_nivel to evaluation objects, ensuring uniqueness
       const uniqueStudentsMap = new Map();
 
-      currentProgram.id_nivel.estudiantes_id.forEach((student: any) => {
+      programStudents.forEach((student: any) => {
         const studentId = student.id || student.directus_users_id;
         if (studentId && !uniqueStudentsMap.has(studentId)) {
           uniqueStudentsMap.set(studentId, student);
@@ -547,6 +572,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
             });
 
             updateData.aprobo_ayo = passed;
+            updateData.programa_ayo_id = null;
 
             if (passed) {
                // Create certificate directly using CertificacionService

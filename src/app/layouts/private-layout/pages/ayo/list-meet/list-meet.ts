@@ -408,12 +408,13 @@ export class ListMeet implements OnInit {
       next: () => {
         this.ngZone.run(() => {
             try {
-                const message = `El estudiante ${studentName} ha pasado de ${oldLevelName} a ${newLevelName}.`;
-                this.notificationService.showSuccess('Éxito', message);
+                // Success message removed per request
 
                 // Update local state
                 if (this.selectedStudentForPromotion) {
                     this.selectedStudentForPromotion.currentLevelId = nivel.id;
+                    this.selectedStudentForPromotion.level = nivel.nivel || this.selectedStudentForPromotion.level;
+                    this.selectedStudentForPromotion.subcategoria = nivel.subcategoria || this.selectedStudentForPromotion.subcategoria;
                 }
 
                 // Update student in the main list
@@ -435,10 +436,16 @@ export class ListMeet implements OnInit {
                     } else {
                         // Otherwise just update the level ID (e.g. in General List)
                         this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                        this.attendanceList[studentIndex].level = nivel.nivel || this.attendanceList[studentIndex].level;
+                        this.attendanceList[studentIndex].subcategoria = nivel.subcategoria || this.attendanceList[studentIndex].subcategoria;
                     }
                 }
 
+                const studentForLocate = this.selectedStudentForPromotion;
                 this.closePromotionModal();
+                if (studentForLocate) {
+                  this.openLocatePrograms(studentForLocate);
+                }
                 this.loadProgramas(); // Refresh program list
             } catch (e) {
                 console.error('Error processing promotion success:', e);
@@ -512,12 +519,13 @@ export class ListMeet implements OnInit {
       next: () => {
         this.ngZone.run(() => {
             try {
-                const message = `El estudiante ${studentName} ha sido degradado de ${oldLevelName} a ${newLevelName}.`;
-                this.notificationService.showSuccess('Éxito', message);
+                // Success message removed per request
 
                 // Update local state
                 if (this.selectedStudentForDegradation) {
                     this.selectedStudentForDegradation.currentLevelId = nivel.id;
+                    this.selectedStudentForDegradation.level = nivel.nivel || this.selectedStudentForDegradation.level;
+                    this.selectedStudentForDegradation.subcategoria = nivel.subcategoria || this.selectedStudentForDegradation.subcategoria;
                 }
 
                 // Update student in the main list
@@ -539,10 +547,16 @@ export class ListMeet implements OnInit {
                     } else {
                         // Otherwise just update the level ID (e.g. in General List)
                         this.attendanceList[studentIndex].currentLevelId = nivel.id;
+                        this.attendanceList[studentIndex].level = nivel.nivel || this.attendanceList[studentIndex].level;
+                        this.attendanceList[studentIndex].subcategoria = nivel.subcategoria || this.attendanceList[studentIndex].subcategoria;
                     }
                 }
 
+                const studentForLocate = this.selectedStudentForDegradation;
                 this.closeDegradeModal();
+                if (studentForLocate) {
+                  this.openLocatePrograms(studentForLocate);
+                }
                 this.loadProgramas(); // Refresh program list
             } catch (e) {
                 console.error('Error processing degradation success:', e);
@@ -1110,13 +1124,13 @@ export class ListMeet implements OnInit {
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
 
-    // New Logic: Use estudiantes_id from id_nivel to get documents and fetch users
-    if (prog.id_nivel && prog.id_nivel.estudiantes_id && prog.id_nivel.estudiantes_id.length > 0) {
+    // Use estudiantes_id del programa para listar estudiantes
+    if (prog.estudiantes_id && prog.estudiantes_id.length > 0) {
         const documents: {tipo: string, numero: string}[] = [];
         const seenDocs = new Set<string>();
         const studentAttendanceMap = new Map<string, any[]>();
 
-        prog.id_nivel.estudiantes_id.forEach((student: any) => {
+        prog.estudiantes_id.forEach((student: any) => {
             if (student.tipo_documento && student.numero_documento) {
                 const docKey = `${student.tipo_documento}-${student.numero_documento}`;
                 if (!seenDocs.has(docKey)) {
@@ -1143,11 +1157,6 @@ export class ListMeet implements OnInit {
                     this.isLoadingStudents = false;
                     if (response.data && response.data.length > 0) {
                         this.selectedStudents = response.data;
-
-                        // Filter students to ensure they belong to the current level
-                        if (prog.id_nivel && prog.id_nivel.id) {
-                            this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
-                        }
 
                         this.attendanceList = this.selectedStudents.map(student => {
                             let score: number = 0;
