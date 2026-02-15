@@ -180,25 +180,24 @@ export class DashboardAyo implements OnInit {
             };
         }
 
-        // Load payroll hours for current month (only for teachers)
+        // Stop main loading spinner once teacher dashboard data is ready
+        this.isLoading = false;
+        this.cdr.detectChanges();
+
+        // Load payroll hours for current month (only for teachers), without blocking the spinner
         if (teacherId) {
           this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
             next: (payrollSummary) => {
               if (this.teacherStats && payrollSummary) {
-                  this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes || 0;
+                this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes || 0;
               }
-              this.isLoading = false;
               this.cdr.detectChanges();
             },
             error: (error) => {
               console.error('Error loading payroll hours', error);
-              this.isLoading = false;
               this.cdr.detectChanges();
             }
           });
-        } else {
-          this.isLoading = false;
-          this.cdr.detectChanges();
         }
       },
       error: (error) => {

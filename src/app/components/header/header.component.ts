@@ -6,7 +6,7 @@ import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
 import { Roles } from '../../core/const/Roles';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { StudentService } from '../../core/services/student.service';
 
 class CurrentUser {
@@ -20,7 +20,7 @@ class CurrentUser {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, TranslateModule],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
@@ -56,9 +56,13 @@ export class HeaderComponent implements OnInit {
         next: (response) => {
           const data = response?.data || response;
           const idiomaSrv = (data?.idioma || '').toString().toUpperCase();
-          const defaultLang = this.mapServiceIdiomaToLang(idiomaSrv);
-          const opts = [defaultLang, 'ES'].filter((v, i, a) => a.indexOf(v) === i);
-          this.availableLangOptions = opts;
+          const mapped = this.mapServiceIdiomaToLang(idiomaSrv);
+          let defaultLang = mapped;
+          if (mapped === 'ES') {
+            defaultLang = 'EN';
+          }
+
+          this.availableLangOptions = ['ES', 'EN', 'FR'];
           this.selectedAyoLanguage = defaultLang;
           const code2 = defaultLang === 'EN' ? 'en' : defaultLang === 'FR' ? 'fr' : 'es';
           this.translate.use(code2);
@@ -93,6 +97,12 @@ export class HeaderComponent implements OnInit {
     if (lang === 'EN') return 'English';
     if (lang === 'FR') return 'Français';
     return 'Español';
+  }
+
+  getLogoutLabel(): string {
+    if (this.selectedAyoLanguage === 'EN') return 'Log Out';
+    if (this.selectedAyoLanguage === 'FR') return 'Se déconnecter';
+    return 'Cerrar Sesión';
   }
 
   getInitials(): string {

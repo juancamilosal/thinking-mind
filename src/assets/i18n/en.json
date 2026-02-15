@@ -161,5 +161,65 @@
     "english": "English",
     "french": "French",
     "spanish": "Spanish"
+  },
+  "payroll_teacher": {
+    "title": "Teacher Payroll",
+    "subtitle": "Payment information and hours worked",
+    "lastUpdate": "Last update",
+    "loading": "Loading payroll information...",
+    "currentMonthSummary": "Current Month Summary",
+    "hourlyRate": "Hourly Rate",
+    "hoursWorkedThisMonth": "Hours Worked This Month",
+    "totalPaymentThisMonth": "Total Payment This Month",
+    "paymentHistory": "Payment History",
+    "paymentHistorySubtitle": "Complete record of processed payments",
+    "table": {
+      "hoursWorked": "Hours Worked",
+      "hourlyRate": "Hourly Rate",
+      "total": "Total",
+      "paymentDate": "Payment Date",
+      "paymentMethod": "Payment Method",
+      "status": "Status"
+    },
+    "empty": {
+      "title": "No payment records",
+      "subtitle": "Payments will appear here once they are processed"
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "results": "results",
+      "perPage": "Show:"
+    }
+  },
+  "teacher_evaluation": {
+    "title": "Teacher Evaluation",
+    "subtitle": "Performance analysis and student feedback",
+    "empty": {
+      "title": "You do not have evaluations yet",
+      "subtitle": "Your ratings will appear here when students complete the surveys."
+    },
+    "overallRating": {
+      "title": "Overall Rating"
+    },
+    "totalEvaluations": {
+      "title": "Total Evaluations",
+      "subtitle": "Responses received"
+    },
+    "performance": {
+      "title": "Performance",
+      "base": "Based on 5.0"
+    },
+    "criteria": {
+      "title": "Breakdown by Criteria",
+      "responses": "{{ count }} responses"
+    },
+    "comments": {
+      "title": "Recent Comments",
+      "empty": "No comments available."
+    }
   }
 }

@@ -161,5 +161,65 @@
     "english": "Inglés",
     "french": "Francés",
     "spanish": "Español"
+  },
+  "payroll_teacher": {
+    "title": "Nómina Docente",
+    "subtitle": "Información de pagos y horas trabajadas",
+    "lastUpdate": "Última actualización",
+    "loading": "Cargando información de nómina...",
+    "currentMonthSummary": "Resumen del Mes Actual",
+    "hourlyRate": "Valor por Hora",
+    "hoursWorkedThisMonth": "Horas Trabajadas este Mes",
+    "totalPaymentThisMonth": "Pago Total del Mes",
+    "paymentHistory": "Historial de Pagos",
+    "paymentHistorySubtitle": "Registro completo de pagos realizados",
+    "table": {
+      "hoursWorked": "Horas Trabajadas",
+      "hourlyRate": "Valor por Hora",
+      "total": "Total",
+      "paymentDate": "Fecha de Pago",
+      "paymentMethod": "Método de Pago",
+      "status": "Estado"
+    },
+    "empty": {
+      "title": "No hay registros de pagos",
+      "subtitle": "Los pagos aparecerán aquí cuando sean procesados"
+    },
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Siguiente",
+      "showing": "Mostrando",
+      "to": "a",
+      "of": "de",
+      "results": "resultados",
+      "perPage": "Mostrar:"
+    }
+  },
+  "teacher_evaluation": {
+    "title": "Evaluación Docente",
+    "subtitle": "Análisis de desempeño y retroalimentación de estudiantes",
+    "empty": {
+      "title": "Aún no tienes evaluaciones",
+      "subtitle": "Tus calificaciones aparecerán aquí cuando los estudiantes completen las encuestas."
+    },
+    "overallRating": {
+      "title": "Calificación General"
+    },
+    "totalEvaluations": {
+      "title": "Total Evaluaciones",
+      "subtitle": "Respuestas recibidas"
+    },
+    "performance": {
+      "title": "Desempeño",
+      "base": "Base 5.0"
+    },
+    "criteria": {
+      "title": "Desglose por Criterios",
+      "responses": "{{ count }} respuestas"
+    },
+    "comments": {
+      "title": "Comentarios Recientes",
+      "empty": "No hay comentarios disponibles."
+    }
   }
 }

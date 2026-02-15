@@ -161,5 +161,65 @@
     "english": "Anglais",
     "french": "Français",
     "spanish": "Espagnol"
+  },
+  "payroll_teacher": {
+    "title": "Paie Enseignant",
+    "subtitle": "Informations sur les paiements et les heures travaillées",
+    "lastUpdate": "Dernière mise à jour",
+    "loading": "Chargement des informations de paie...",
+    "currentMonthSummary": "Résumé du mois en cours",
+    "hourlyRate": "Taux horaire",
+    "hoursWorkedThisMonth": "Heures travaillées ce mois",
+    "totalPaymentThisMonth": "Paiement total du mois",
+    "paymentHistory": "Historique des paiements",
+    "paymentHistorySubtitle": "Historique complet des paiements effectués",
+    "table": {
+      "hoursWorked": "Heures travaillées",
+      "hourlyRate": "Taux horaire",
+      "total": "Total",
+      "paymentDate": "Date de paiement",
+      "paymentMethod": "Méthode de paiement",
+      "status": "Statut"
+    },
+    "empty": {
+      "title": "Aucun enregistrement de paiement",
+      "subtitle": "Les paiements apparaîtront ici une fois traités"
+    },
+    "pagination": {
+      "prev": "Précédent",
+      "next": "Suivant",
+      "showing": "Affichage",
+      "to": "à",
+      "of": "sur",
+      "results": "résultats",
+      "perPage": "Afficher :"
+    }
+  },
+  "teacher_evaluation": {
+    "title": "Évaluation de l'enseignant",
+    "subtitle": "Analyse des performances et retours des étudiants",
+    "empty": {
+      "title": "Vous n'avez pas encore d'évaluations",
+      "subtitle": "Vos notes apparaîtront ici lorsque les étudiants auront complété les enquêtes."
+    },
+    "overallRating": {
+      "title": "Note générale"
+    },
+    "totalEvaluations": {
+      "title": "Total des évaluations",
+      "subtitle": "Réponses reçues"
+    },
+    "performance": {
+      "title": "Performance",
+      "base": "Base 5,0"
+    },
+    "criteria": {
+      "title": "Détail par critères",
+      "responses": "{{ count }} réponses"
+    },
+    "comments": {
+      "title": "Commentaires récents",
+      "empty": "Aucun commentaire disponible."
+    }
   }
 }
