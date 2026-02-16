@@ -4,6 +4,8 @@ import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { PayrollService } from '../../../../core/services/payroll.service';
 import { TeacherDashboardStats } from '../../../../core/models/DashboardModels';
+import { AdvertisingService } from '../../../../core/services/advertising.service';
+import { AdvertisingItem } from '../../../../core/models/Advertising';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
 import { ActivatedRoute } from '@angular/router';
@@ -44,6 +46,9 @@ export class DashboardAyo implements OnInit {
     'program_rules.respect'
   ];
 
+  advertisingItems: AdvertisingItem[] = [];
+  isAdvertisingLoading = false;
+
   // AYO Teacher Stats
   teacherStats: TeacherDashboardStats = {
     horas_trabajadas: 0,
@@ -56,7 +61,8 @@ export class DashboardAyo implements OnInit {
     private payrollService: PayrollService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private advertisingService: AdvertisingService
   ) {}
 
   ngOnInit(): void {
@@ -74,6 +80,7 @@ export class DashboardAyo implements OnInit {
       }
     });
     this.loadDashboardData();
+    this.loadAdvertising();
   }
 
   private sortReuniones(reuniones: any[]): any[] {
@@ -208,11 +215,34 @@ export class DashboardAyo implements OnInit {
     });
   }
 
+  private loadAdvertising(): void {
+    this.isAdvertisingLoading = true;
+    this.advertisingService.list().subscribe({
+      next: (res) => {
+        const data = res?.data || [];
+        this.advertisingItems = data.filter((item) => !!item.activo);
+        this.isAdvertisingLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isAdvertisingLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   getLanguageKey(lang?: string): string {
     const v = (lang || '').toUpperCase();
     if (v === 'INGLES' || v === 'INGLÉS' || v === 'ENGLISH' || v === 'EN') return 'language.english';
     if (v === 'FRANCES' || v === 'FRANCÉS' || v === 'FRENCH' || v === 'FR') return 'language.french';
     if (v === 'ESPAÑOL' || v === 'ESPANOL' || v === 'SPANISH' || v === 'ES') return 'language.spanish';
     return '';
+  }
+
+  getAdvertisingDescription(item: AdvertisingItem): string {
+    const lang = (this.translate.currentLang || 'es').toLowerCase();
+    if (lang.startsWith('en')) return item.descripcion_ingles || item.descripcion || '';
+    if (lang.startsWith('fr')) return item.descripcion_frances || item.descripcion || '';
+    return item.descripcion || '';
   }
 }
