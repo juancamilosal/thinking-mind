@@ -26,6 +26,7 @@ export class GeneralMeetingComponent implements OnInit {
   isLoading = false;
   assetsUrl = environment.assets;
   selectedMeeting: any = null;
+  selectedLanguage: string | null = null;
   showEditModal = false;
   editForm!: FormGroup;
   filteredTeachers: User[] = [];
@@ -52,6 +53,21 @@ export class GeneralMeetingComponent implements OnInit {
   ngOnInit(): void {
     this.initEditForm();
     this.loadGoogleScripts();
+    this.route.queryParams.subscribe(params => {
+      const idioma = params['idioma'];
+      if (idioma) {
+        const lang = (idioma as string).toUpperCase();
+        if (lang === 'INGLÉS' || lang === 'INGLES') {
+          this.selectedLanguage = 'INGLES';
+        } else if (lang === 'FRANCÉS' || lang === 'FRANCES') {
+          this.selectedLanguage = 'FRANCES';
+        } else {
+          this.selectedLanguage = lang;
+        }
+      } else {
+        this.selectedLanguage = null;
+      }
+    });
     this.loadReuniones();
   }
 
@@ -351,9 +367,8 @@ export class GeneralMeetingComponent implements OnInit {
   }
 
   goBack(): void {
-    const idioma = this.route.snapshot.queryParamMap.get('idioma');
-    if (idioma) {
-      this.router.navigate(['/private/ayo'], { queryParams: { idioma } });
+    if (this.selectedLanguage) {
+      this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.selectedLanguage } });
     } else {
       this.router.navigate(['/private/ayo']);
     }
