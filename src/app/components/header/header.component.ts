@@ -29,6 +29,7 @@ export class HeaderComponent implements OnInit {
   isUserMenuOpen = false;
   selectedAyoLanguage: string = 'ES';
   availableLangOptions: string[] = ['ES', 'EN', 'FR'];
+  isAyoRole = false;
 
   constructor(
     private elementRef: ElementRef,
@@ -41,6 +42,21 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserFromSessionStorage();
+    const user = StorageServices.getCurrentUser();
+    this.isAyoRole = !!user && (user.role === Roles.STUDENT || user.role === Roles.TEACHER);
+
+    if (!this.isAyoRole) {
+      this.selectedAyoLanguage = 'ES';
+      this.translate.use('es');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ayo_language', 'ES');
+      }
+      const treeDefault = this.router.parseUrl(this.router.url);
+      treeDefault.queryParams = { ...treeDefault.queryParams, lang: 'ES' };
+      this.router.navigateByUrl(treeDefault, { replaceUrl: true });
+      return;
+    }
+
     const tree = this.router.parseUrl(this.router.url);
     const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
     const langParam = tree.queryParams['lang'] ? String(tree.queryParams['lang']).toUpperCase() : null;
@@ -50,7 +66,7 @@ export class HeaderComponent implements OnInit {
     }
     const code = this.selectedAyoLanguage === 'EN' ? 'en' : this.selectedAyoLanguage === 'FR' ? 'fr' : 'es';
     this.translate.use(code);
-    const user = StorageServices.getCurrentUser();
+
     if (user?.id && user?.role) {
       this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
         next: (response) => {
