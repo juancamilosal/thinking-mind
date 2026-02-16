@@ -325,9 +325,11 @@ export class GeneralMeetingComponent implements OnInit {
   }
 
   editReunionGeneral(reunion: ReunionGeneral): void {
-    this.router.navigate(['/private/ayo/create-general-meet'], {
-      queryParams: { reunion_general_id: reunion.id }
-    });
+    const queryParams: any = { reunion_general_id: reunion.id };
+    if (this.selectedLanguage) {
+      queryParams.idioma = this.selectedLanguage;
+    }
+    this.router.navigate(['/private/ayo/create-general-meet'], { queryParams });
   }
 
   deleteReunionGeneral(reunion: ReunionGeneral): void {
@@ -363,7 +365,11 @@ export class GeneralMeetingComponent implements OnInit {
   }
 
   createNewGeneralMeeting(): void {
-    this.router.navigate(['/private/ayo/create-general-meet']);
+    const queryParams: any = {};
+    if (this.selectedLanguage) {
+      queryParams.idioma = this.selectedLanguage;
+    }
+    this.router.navigate(['/private/ayo/create-general-meet'], { queryParams });
   }
 
   goBack(): void {

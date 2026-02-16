@@ -174,13 +174,6 @@
         }
     </div>
     } @else if (accountsReceivable.length === 0) {
-    <div class="empty-state">
-        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-        <p class="empty-text">{{ 'meet_student.emptyPrograms' | translate }}</p>
-    </div>
     } @else {
     <div class="programs-grid">
         @for (account of accountsReceivable; track account.id) {
@@ -322,7 +315,7 @@
 
             <!-- Side Panel Container (Right Column) -->
             <div class="hidden xl:flex flex-col w-[600px] flex-shrink-0 gap-6 sticky top-6 self-start">
-                
+
                 <!-- Panel 1: Plan de Estudio -->
                 <div class="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden max-h-[600px]">
                     <div class="bg-[#13486e] p-4 text-white font-bold flex items-center gap-3">
@@ -391,7 +384,7 @@
                         </div>
                         <span>{{ 'meet_student.programRules' | translate }}</span>
                     </div>
-                    
+
                     <div class="p-4 bg-gray-50/50">
                         <ul class="space-y-3">
                             @for (rule of programRules; track $index) {
@@ -411,5 +404,76 @@
         }
     </div>
     }
-
+    @if (generalPrograms.length > 0) {
+    <div class="general-programs-container mb-8">
+      @for (general of generalPrograms; track general.id) {
+        <div class="program-card general-program-card">
+          <div class="card-header relative">
+            <div class="gradient-overlay"></div>
+            <div class="header-content">
+              <div class="icon-wrapper">
+                <img
+                  [src]="getGeneralProgramImage(general)"
+                  class="program-icon-img"
+                  alt="Programa General"
+                  onError="this.src='assets/icons/grupo.png'">
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="flex flex-col h-full">
+              <div class="program-title-section">
+                <h3 class="program-language">{{ general.tematica || 'Programa General' }}</h3>
+              </div>
+              @if (general.id_reuniones_meet && general.id_reuniones_meet.length > 0) {
+                <div class="meetings-section mt-6 pt-6 border-t border-gray-100">
+                  <h4 class="meetings-title">
+                    <img src="../../../../../../assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
+                    {{ 'meet_student.scheduledMeetings' | translate }}
+                  </h4>
+                  <div class="meetings-list">
+                    @for (reunion of general.id_reuniones_meet; track reunion.id) {
+                      <div class="meeting-item">
+                        <div class="meeting-info">
+                                    <span class="meeting-day">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">{{ 'meet_student.day' | translate }}:</span>
+                                      {{ getWeekdayKey(reunion) | translate }}
+                                    </span>
+                          @if (reunion.id_docente && reunion.id_docente.first_name) {
+                            <span class="meeting-teacher">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">{{ 'meet_student.teacher' | translate }}:</span>
+                              {{ reunion.id_docente.first_name }} {{ reunion.id_docente.last_name }}
+                                    </span>
+                          }
+                          <span class="meeting-time">
+                                        <span class="text-gray-500 font-semibold text-sm mr-1">{{ 'meet_student.time' | translate }}:</span>
+                            {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion | date:'shortTime' }}
+                                    </span>
+                        </div>
+                        <div class="flex items-center gap-5">
+                          @if (reunion.link_reunion) {
+                            <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.joinMeetingTitle' | translate" (click)="handleTestAndJoin($event, reunion)">
+                              <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                            </a>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      <p class="empty-text">{{ 'meet_student.emptyPrograms' | translate }}</p>
+    </div>
+  }
 </div>

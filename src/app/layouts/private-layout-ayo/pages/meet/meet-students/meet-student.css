@@ -140,6 +140,29 @@
     flex-direction: column;
 }
 
+.general-programs-container {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.general-program-card {
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.general-program-card .card-body {
+    padding: 2.25rem 1.75rem 1.75rem;
+}
+
+.general-program-card .icon-wrapper {
+    width: 64px;
+    height: 64px;
+}
+
 /* Card Header */
 .card-header {
     position: relative;

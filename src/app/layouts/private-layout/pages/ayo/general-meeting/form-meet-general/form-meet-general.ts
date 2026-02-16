@@ -39,6 +39,8 @@ export class FormMeetGeneralComponent implements OnInit {
   selectedFile: File | null = null;
   isDragging: boolean = false;
   reunionGeneralId: string | null = null;
+  isEditMode: boolean = false;
+  selectedLanguage: string | null = null;
 
   // File Selection Modal
   showFileModal = false;
@@ -75,8 +77,25 @@ export class FormMeetGeneralComponent implements OnInit {
     const id = this.route.snapshot.queryParamMap.get('reunion_general_id');
     if (id) {
       this.reunionGeneralId = id;
+      this.isEditMode = true;
       this.loadReunionGeneral(id);
     }
+
+    this.route.queryParams.subscribe(params => {
+      const idioma = params['idioma'];
+      if (idioma) {
+        const lang = (idioma as string).toUpperCase();
+        if (lang === 'INGLÉS' || lang === 'INGLES') {
+          this.selectedLanguage = 'INGLES';
+        } else if (lang === 'FRANCÉS' || lang === 'FRANCES') {
+          this.selectedLanguage = 'FRANCES';
+        } else {
+          this.selectedLanguage = lang;
+        }
+      } else {
+        this.selectedLanguage = null;
+      }
+    });
   }
 
   loadGoogleScripts() {
@@ -375,7 +394,11 @@ export class FormMeetGeneralComponent implements OnInit {
     if (this.goBack.observed) {
       this.goBack.emit();
     } else {
-      this.router.navigate(['/private/ayo']);
+      if (this.selectedLanguage) {
+        this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.selectedLanguage } });
+      } else {
+        this.router.navigate(['/private/ayo']);
+      }
     }
   }
 

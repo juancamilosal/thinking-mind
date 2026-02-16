@@ -10,6 +10,8 @@ import { environment } from '../../../../../../environments/environment';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { TeacherEvaluationComponent } from './teacher-evaluation/teacher-evaluation.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ReunionGeneral } from '../../../../../core/models/Meeting';
+import { ReunionGeneralService } from '../../../../../core/services/reunion-general.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -27,6 +29,7 @@ export class MeetStudent implements OnInit {
   programas: ProgramaAyo[] = [];
   isLoading = false;
   accountsReceivable: any[] = [];
+  generalPrograms: ReunionGeneral[] = [];
   
   // Study Plan Modal Properties
   showStudyPlanModal = false;
@@ -91,11 +94,13 @@ export class MeetStudent implements OnInit {
     private programaAyoService: ProgramaAyoService,
     private router: Router,
     private notificationService: NotificationService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private reunionGeneralService: ReunionGeneralService
   ) { }
 
   ngOnInit(): void {
     this.loadAccountsReceivable();
+    this.loadGeneralPrograms();
   }
 
   goBack(): void {
@@ -147,6 +152,21 @@ export class MeetStudent implements OnInit {
     }
   }
 
+  loadGeneralPrograms(): void {
+    const params: any = {
+      fields: '*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*'
+    };
+    this.reunionGeneralService.list(params).subscribe({
+      next: (response) => {
+        const data = response?.data || [];
+        this.generalPrograms = Array.isArray(data) ? data : [];
+      },
+      error: () => {
+        this.generalPrograms = [];
+      }
+    });
+  }
+
   getProgramImage(account: any): string {
     const program = account.programa_ayo_id;
     if (program?.img) {
@@ -157,6 +177,13 @@ export class MeetStudent implements OnInit {
       return `${this.assetsUrl}/${program.id_nivel.imagen}`;
     }
     return 'assets/icons/ayo.png';
+  }
+
+  getGeneralProgramImage(program: ReunionGeneral): string {
+    if (program.img) {
+      return `${this.assetsUrl}/${program.img}`;
+    }
+    return 'assets/icons/grupo.png';
   }
 
   parseStudyPlan(rawPlan: any[]): any[] {
