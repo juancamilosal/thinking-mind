@@ -23,7 +23,8 @@ import { ColegioCursosComponent } from './layouts/private-layout/pages/courses/f
 import { ListMeet } from './layouts/private-layout/pages/ayo/list-meet/list-meet';
 import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
-import { FormMeetGeneralComponent } from './layouts/private-layout/pages/ayo/form-meet-general/form-meet-general';
+import { FormMeetGeneralComponent } from './layouts/private-layout/pages/ayo/general-meeting/form-meet-general/form-meet-general';
+import { GeneralMeetingComponent } from './layouts/private-layout/pages/ayo/general-meeting/general-meeting';
 import { SessionExpiredComponent } from './layouts/public-layout/pages/session-expired/session-expired';
 import { ayoRoutes } from './ayo.routes';
 import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payroll-admin';
@@ -163,6 +164,11 @@ export const routes: Routes = [
         path: 'ayo/create-general-meet',
         title: 'Thinking Mind | Crear Reunión General',
         component: FormMeetGeneralComponent
+      },
+      {
+        path: 'ayo/general-meeting',
+        title: 'Thinking Mind | Reuniones Generales',
+        component: GeneralMeetingComponent
       },
       {
         path: 'ayo/list-meet',

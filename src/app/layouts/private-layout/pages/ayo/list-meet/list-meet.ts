@@ -122,6 +122,9 @@ export class ListMeet implements OnInit {
   novedadText: string = '';
   selectedProgramForNovedad: any = null;
 
+  // External navigation helpers
+  private meetingIdToOpen: string | null = null;
+
   constructor(
     private programaAyoService: ProgramaAyoService,
     private notificationService: NotificationService,
@@ -261,6 +264,9 @@ export class ListMeet implements OnInit {
     this.route.queryParams.subscribe(params => {
       if (params['idioma']) {
         this.selectedLanguage = params['idioma'];
+      }
+      if (params['meeting_id']) {
+        this.meetingIdToOpen = params['meeting_id'];
       }
     });
 
@@ -1017,6 +1023,20 @@ export class ListMeet implements OnInit {
         this.programas = response.data || [];
         this.groupPrograms();
         this.isLoading = false;
+
+        if (this.meetingIdToOpen) {
+          const targetId = this.meetingIdToOpen;
+          this.meetingIdToOpen = null;
+
+          for (const programa of this.programas) {
+            const meetings = (programa as any).id_reuniones_meet || [];
+            const found = meetings.find((m: any) => m.id === targetId);
+            if (found) {
+              this.openEditModal(found);
+              break;
+            }
+          }
+        }
 
         // Refresh student panel if open
         if (this.showStudentPanel && this.selectedProgramForFocus) {
