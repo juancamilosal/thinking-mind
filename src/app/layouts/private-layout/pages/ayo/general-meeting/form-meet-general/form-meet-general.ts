@@ -1,15 +1,16 @@
 import { Component, OnInit, Input, Output, EventEmitter, ElementRef, HostListener, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { CourseService } from '../../../../../core/services/course.service';
-import { Course } from '../../../../../core/models/Course';
-import { NotificationService } from '../../../../../core/services/notification.service';
-import { UserService } from '../../../../../core/services/user.service';
-import { ProgramaAyoService } from '../../../../../core/services/programa-ayo.service';
-import { User } from '../../../../../core/models/User';
-import { FileService, DirectusFile } from '../../../../../core/services/file.service';
-import { environment } from '../../../../../../environments/environment';
+import { CourseService } from '../../../../../../core/services/course.service';
+import { Course } from '../../../../../../core/models/Course';
+import { NotificationService } from '../../../../../../core/services/notification.service';
+import { UserService } from '../../../../../../core/services/user.service';
+import { ProgramaAyoService } from '../../../../../../core/services/programa-ayo.service';
+import { User } from '../../../../../../core/models/User';
+import { FileService, DirectusFile } from '../../../../../../core/services/file.service';
+import { environment } from '../../../../../../../environments/environment';
+import { ReunionGeneralService } from '../../../../../../core/services/reunion-general.service';
 
 
 declare var gapi: any;
@@ -37,6 +38,9 @@ export class FormMeetGeneralComponent implements OnInit {
   previewImage: string | null = null;
   selectedFile: File | null = null;
   isDragging: boolean = false;
+  reunionGeneralId: string | null = null;
+  isEditMode: boolean = false;
+  selectedLanguage: string | null = null;
 
   // File Selection Modal
   showFileModal = false;
@@ -62,12 +66,36 @@ export class FormMeetGeneralComponent implements OnInit {
     private userService: UserService,
     private elementRef: ElementRef,
     private ngZone: NgZone,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private reunionGeneralService: ReunionGeneralService
   ) { }
 
   ngOnInit(): void {
     this.initForm();
     this.loadGoogleScripts();
+    const id = this.route.snapshot.queryParamMap.get('reunion_general_id');
+    if (id) {
+      this.reunionGeneralId = id;
+      this.isEditMode = true;
+      this.loadReunionGeneral(id);
+    }
+
+    this.route.queryParams.subscribe(params => {
+      const idioma = params['idioma'];
+      if (idioma) {
+        const lang = (idioma as string).toUpperCase();
+        if (lang === 'INGLÉS' || lang === 'INGLES') {
+          this.selectedLanguage = 'INGLES';
+        } else if (lang === 'FRANCÉS' || lang === 'FRANCES') {
+          this.selectedLanguage = 'FRANCES';
+        } else {
+          this.selectedLanguage = lang;
+        }
+      } else {
+        this.selectedLanguage = null;
+      }
+    });
   }
 
   loadGoogleScripts() {
@@ -127,6 +155,33 @@ export class FormMeetGeneralComponent implements OnInit {
         });
       }
       controls.forEach(c => this.fechaFinalizacionForm.get(c)?.updateValueAndValidity());
+    });
+  }
+
+  loadReunionGeneral(id: string): void {
+    this.reunionGeneralService.getById(id).subscribe({
+      next: (response) => {
+        const data: any = response?.data;
+        if (!data) {
+          return;
+        }
+        this.fechaFinalizacionForm.patchValue({
+          tematica: data.tematica || '',
+          agendar_google_calendar: false,
+          evento_titulo: '',
+          evento_descripcion: '',
+          evento_docente: '',
+          teacherSearchTerm: '',
+          evento_inicio: null,
+          evento_fin: null
+        });
+        this.selectedDirectusFileId = data.img || null;
+        if (data.img) {
+          this.previewImage = `${this.assetsUrl}/${data.img}`;
+        }
+      },
+      error: () => {
+      }
     });
   }
 
@@ -323,13 +378,13 @@ export class FormMeetGeneralComponent implements OnInit {
     // Check if valid date
     if (isNaN(dateValue.getTime())) return;
 
-    // Removed restriction on specific days as per "General Meeting" flexibility, 
-    // or if user wants strict days, we can re-enable. 
+    // Removed restriction on specific days as per "General Meeting" flexibility,
+    // or if user wants strict days, we can re-enable.
     // User said "Un día no mas", implying just one meeting.
     // The previous code enforced Tuesday (2).
-    // If it's general, maybe any day is fine? 
+    // If it's general, maybe any day is fine?
     // "Agendar en Google Calendar Sesión"
-    // I'll leave the day check commented out or remove it to allow any day, 
+    // I'll leave the day check commented out or remove it to allow any day,
     // unless strictly required. The user didn't specify a day for this new "General" form.
     // But previously it was "Martes".
     // I'll remove the day restriction for now to be "General".
@@ -339,7 +394,11 @@ export class FormMeetGeneralComponent implements OnInit {
     if (this.goBack.observed) {
       this.goBack.emit();
     } else {
-      this.router.navigate(['/private/ayo']);
+      if (this.selectedLanguage) {
+        this.router.navigate(['/private/ayo'], { queryParams: { idioma: this.selectedLanguage } });
+      } else {
+        this.router.navigate(['/private/ayo']);
+      }
     }
   }
 
@@ -349,12 +408,13 @@ export class FormMeetGeneralComponent implements OnInit {
 
       try {
         const agendar = this.fechaFinalizacionForm.get('agendar_google_calendar')?.value;
+        const isEdit = !!this.reunionGeneralId;
         const meetingIds: string[] = [];
 
-        // 1. Create Calendar Events and Meetings
-        if (agendar) {
+        // 1. Create Calendar Events and Meetings (only on create)
+        if (!isEdit && agendar) {
           await this.ensureCalendarToken();
-          
+
           const calendarEventData = await this.createCalendarEvent();
           if (calendarEventData) {
             const meetingData = {
@@ -390,25 +450,31 @@ export class FormMeetGeneralComponent implements OnInit {
           }
         }
 
-        // 3. Create Reunion General
-        const reunionGeneralData = {
+        // 3. Create or update Reunion General
+        const reunionGeneralData: any = {
           tematica: this.fechaFinalizacionForm.get('tematica')?.value,
-          img: imageId,
-          id_reuniones_meet: meetingIds
+          img: imageId
         };
+        if (!isEdit && meetingIds.length > 0) {
+          reunionGeneralData.id_reuniones_meet = meetingIds;
+        }
 
-        await firstValueFrom(this.programaAyoService.createReunionGeneral(reunionGeneralData));
+        if (isEdit && this.reunionGeneralId) {
+          await firstValueFrom(this.reunionGeneralService.update(this.reunionGeneralId, reunionGeneralData));
+        } else {
+          await firstValueFrom(this.programaAyoService.createReunionGeneral(reunionGeneralData));
+        }
 
         this.ngZone.run(() => {
-            this.notificationService.showSuccess(
-              'Reunión General Creada',
-              `La reunión se ha creado correctamente.`,
-              0,
-              () => {
-                 this.goBackAction();
-              }
-            );
-            this.isSubmitting = false;
+          this.notificationService.showSuccess(
+            isEdit ? 'Reunión General Actualizada' : 'Reunión General Creada',
+            isEdit ? 'La reunión se ha actualizado correctamente.' : 'La reunión se ha creado correctamente.',
+            0,
+            () => {
+              this.goBackAction();
+            }
+          );
+          this.isSubmitting = false;
         });
 
       } catch (error: any) {

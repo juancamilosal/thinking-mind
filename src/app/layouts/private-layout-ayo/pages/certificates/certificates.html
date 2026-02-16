@@ -4,17 +4,17 @@
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
     
     <div class="inline-block p-4 rounded-2xl bg-white shadow-xl mb-6 transform hover:scale-110 transition-transform duration-300 border-2 border-blue-100">
-      <img src="assets/icons/birrete.png" class="w-16 h-16 object-contain drop-shadow-md" alt="Logros Académicos">
+      <img src="assets/icons/birrete.png" class="w-16 h-16 object-contain drop-shadow-md" [attr.alt]="'certificates.iconAlt' | translate">
     </div>
     
     <h1 class="text-4xl md:text-6xl font-black bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent mb-4 tracking-tight drop-shadow-sm">
-      Mis Certificados
+      {{ 'certificates.title' | translate }}
     </h1>
     
     <p class="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-      Colecciona tus logros y celebra tu progreso académico.
+      {{ 'certificates.subtitle1' | translate }}
       <br>
-      <span class="text-indigo-500 font-semibold">¡Cada certificado es un paso hacia la excelencia!</span>
+      <span class="text-indigo-500 font-semibold">{{ 'certificates.subtitle2' | translate }}</span>
     </p>
     
     <div class="flex items-center justify-center gap-2 mt-8">
@@ -41,13 +41,13 @@
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
               </svg>
             </div>
-            <div class="text-xs text-gray-500">Nivel</div>
+            <div class="text-xs text-gray-500">{{ 'certificates.level' | translate }}</div>
             <div class="text-base font-bold text-gray-900">{{ cert.level }}</div>
           </div>
           @if (cert.isUnlocked) {
-            <div class="cert-medal-ribbon">Completado</div>
+            <div class="cert-medal-ribbon">{{ 'certificates.completed' | translate }}</div>
           } @else {
-             <div class="cert-medal-ribbon !bg-gray-500 !shadow-none">Bloqueado</div>
+             <div class="cert-medal-ribbon !bg-gray-500 !shadow-none">{{ 'certificates.locked' | translate }}</div>
           }
         </div>
         <app-button
@@ -60,12 +60,12 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Descargar Certificado
+              {{ 'certificates.download' | translate }}
             } @else {
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              Bloqueado
+              {{ 'certificates.locked' | translate }}
             }
           </div>
         </app-button>

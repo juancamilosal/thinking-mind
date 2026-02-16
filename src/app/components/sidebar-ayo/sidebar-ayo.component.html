@@ -7,15 +7,12 @@
   <div class="h-full px-4 py-6 overflow-y-auto flex flex-col sidebar-scrollbar">
     <!-- Logo/Brand Section -->
     <div class="mb-8 text-center border-b border-slate-700 pb-6">
-      <div class="flex items-center justify-center mb-3">
-        <div class="w-12 h-12 bg-white  rounded-xl flex items-center justify-center shadow-lg">
-          <img class="h-12 w-12" alt="Logo Thinking Mind" src="assets/images/Logo_Thinking_Mind.png">
+      <div class="flex items-center justify-center mb-4">
+        <div class="w-48 h-48 rounded-2xl flex items-center justify-center">
+          <img class="w-full h-full object-contain" alt="Logo AYO" src="assets/icons/ayo.png">
         </div>
       </div>
-      <h1 class="text-2xl font-bold bg-gradient-to-r text-white bg-clip-text text-transparent">
-        Thinking Mind
-      </h1>
-      <p class="text-white text-sm mt-1">Sistema de Gestión</p>
+      <p class="text-white text-lg mt-1 font-semibold">{{ 'sidebar_ayo.system' | translate }}</p>
     </div>
 
 
@@ -26,11 +23,12 @@
           <a
             [routerLink]="item.ruta"
             (click)="closeSidebar()"
+            [queryParamsHandling]="'preserve'"
             class="flex items-center p-4 text-slate-300 rounded-xl hover:bg-gradient-to-r hover:from-teal-600 hover:via-blue-600 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
             routerLinkActive="bg-gradient-to-r from-teal-500 via-blue-500 to-red-500 text-white shadow-lg scale-105">
             <div class="flex items-center justify-between w-full">
               <img [src]="item.icono" [alt]="item.alt" class="w-10 h-10 object-contain">
-              <span class="text-lg font-semibold">{{ item.nombre }}</span>
+              <span class="text-lg font-semibold">{{ getSidebarLabel(item.nombre) }}</span>
             </div>
           </a>
         </li>
@@ -44,7 +42,7 @@
         class="w-full flex items-center p-4 text-slate-300 rounded-xl hover:bg-gradient-to-r hover:from-red-600 hover:via-red-500 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
       >
         <img src="assets/icons/cerrar.png" alt="Cerrar Sesión" class="w-10 h-10 object-contain mr-4 transition-transform duration-300 group-hover:scale-110">
-        <span class="text-lg font-semibold">Cerrar Sesión</span>
+        <span class="text-lg font-semibold">{{ 'sidebar.logout' | translate }}</span>
       </button>
     </div>
   </div>

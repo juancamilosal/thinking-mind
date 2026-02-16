@@ -88,10 +88,11 @@
         </div>
       </div>
 
-      <!-- Google Calendar Section -->
+      <!-- Google Calendar Section (solo en creación, no en edición) -->
+      @if (!isEditMode) {
       <div class="mt-8 border-t pt-8">
         <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-          <img src="assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
+          <img src="../../../../../../../assets/icons/calendario-de-google.png" class="w-8 h-8 mr-2" alt="Google Calendar">
           Agendar en Google Calendar Sesión
         </h3>
 
@@ -191,6 +192,7 @@
           </div>
         </div>
       </div>
+      }
 
       <!-- Submit Button -->
       <div class="pt-6 flex justify-center">
@@ -206,7 +208,7 @@
           </svg>
           Guardando...
           } @else {
-          Agendar Sesión
+          {{ isEditMode ? 'Guardar cambios' : 'Agendar Sesión' }}
           }
         </button>
       </div>
@@ -227,7 +229,7 @@
         <div class="sm:flex sm:items-start">
           <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
             <h3 class="text-lg leading-6 font-bold text-gray-900 mb-4" id="modal-title">Seleccionar Imagen de Galería</h3>
-            
+
             @if (isLoadingFiles) {
               <div class="flex justify-center py-10">
                  <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500"></div>

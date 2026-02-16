@@ -4,13 +4,17 @@ import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { PayrollService } from '../../../../core/services/payroll.service';
 import { TeacherDashboardStats } from '../../../../core/models/DashboardModels';
+import { AdvertisingService } from '../../../../core/services/advertising.service';
+import { AdvertisingItem } from '../../../../core/models/Advertising';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
+import { ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-dashboard-ayo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './dashboard-ayo.html',
   styleUrl: './dashboard-ayo.css'
 })
@@ -35,12 +39,15 @@ export class DashboardAyo implements OnInit {
   };
 
   programRules: string[] = [
-    'Mantener la cámara encendida durante toda la sesión.',
-    'Estar en un lugar tranquilo y sin ruido.',
-    'Ser puntual y respetar el horario de la clase.',
-    'Participar activamente en las actividades.',
-    'Respetar a los compañeros y al docente.'
+    'program_rules.cameraOn',
+    'program_rules.quietPlace',
+    'program_rules.punctual',
+    'program_rules.participate',
+    'program_rules.respect'
   ];
+
+  advertisingItems: AdvertisingItem[] = [];
+  isAdvertisingLoading = false;
 
   // AYO Teacher Stats
   teacherStats: TeacherDashboardStats = {
@@ -52,11 +59,28 @@ export class DashboardAyo implements OnInit {
     private dashboardService: DashboardService,
     private studentService: StudentService,
     private payrollService: PayrollService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute,
+    private translate: TranslateService,
+    private advertisingService: AdvertisingService
   ) {}
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const param = params['lang'] ? String(params['lang']).toUpperCase() : null;
+      if (param === 'EN' || param === 'FR' || param === 'ES') {
+        const code = param === 'EN' ? 'en' : param === 'FR' ? 'fr' : 'es';
+        this.translate.use(code);
+      } else {
+        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
+        if (stored === 'EN' || stored === 'FR' || stored === 'ES') {
+          const code = stored === 'EN' ? 'en' : stored === 'FR' ? 'fr' : 'es';
+          this.translate.use(code);
+        }
+      }
+    });
     this.loadDashboardData();
+    this.loadAdvertising();
   }
 
   private sortReuniones(reuniones: any[]): any[] {
@@ -163,25 +187,24 @@ export class DashboardAyo implements OnInit {
             };
         }
 
-        // Load payroll hours for current month (only for teachers)
+        // Stop main loading spinner once teacher dashboard data is ready
+        this.isLoading = false;
+        this.cdr.detectChanges();
+
+        // Load payroll hours for current month (only for teachers), without blocking the spinner
         if (teacherId) {
           this.payrollService.getTeacherPayrollSummary(teacherId).subscribe({
             next: (payrollSummary) => {
               if (this.teacherStats && payrollSummary) {
-                  this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes || 0;
+                this.teacherStats.horas_trabajadas = payrollSummary.horasTrabajadasMes || 0;
               }
-              this.isLoading = false;
               this.cdr.detectChanges();
             },
             error: (error) => {
               console.error('Error loading payroll hours', error);
-              this.isLoading = false;
               this.cdr.detectChanges();
             }
           });
-        } else {
-          this.isLoading = false;
-          this.cdr.detectChanges();
         }
       },
       error: (error) => {
@@ -190,5 +213,36 @@ export class DashboardAyo implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private loadAdvertising(): void {
+    this.isAdvertisingLoading = true;
+    this.advertisingService.list().subscribe({
+      next: (res) => {
+        const data = res?.data || [];
+        this.advertisingItems = data.filter((item) => !!item.activo);
+        this.isAdvertisingLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isAdvertisingLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  getLanguageKey(lang?: string): string {
+    const v = (lang || '').toUpperCase();
+    if (v === 'INGLES' || v === 'INGLÉS' || v === 'ENGLISH' || v === 'EN') return 'language.english';
+    if (v === 'FRANCES' || v === 'FRANCÉS' || v === 'FRENCH' || v === 'FR') return 'language.french';
+    if (v === 'ESPAÑOL' || v === 'ESPANOL' || v === 'SPANISH' || v === 'ES') return 'language.spanish';
+    return '';
+  }
+
+  getAdvertisingDescription(item: AdvertisingItem): string {
+    const lang = (this.translate.currentLang || 'es').toLowerCase();
+    if (lang.startsWith('en')) return item.descripcion_ingles || item.descripcion || '';
+    if (lang.startsWith('fr')) return item.descripcion_frances || item.descripcion || '';
+    return item.descripcion || '';
   }
 }

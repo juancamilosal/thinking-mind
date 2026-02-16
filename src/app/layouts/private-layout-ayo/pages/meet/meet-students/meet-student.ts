@@ -9,6 +9,9 @@ import { ProgramaAyo } from '../../../../../core/models/Course';
 import { environment } from '../../../../../../environments/environment';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { TeacherEvaluationComponent } from './teacher-evaluation/teacher-evaluation.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ReunionGeneral } from '../../../../../core/models/Meeting';
+import { ReunionGeneralService } from '../../../../../core/services/reunion-general.service';
 
 declare var gapi: any;
 declare var google: any;
@@ -16,7 +19,7 @@ declare var google: any;
 @Component({
   selector: 'app-meet-student',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, TeacherEvaluationComponent],
+  imports: [CommonModule, HttpClientModule, TeacherEvaluationComponent, TranslateModule],
   templateUrl: './meet-student.html',
   styleUrl: './meet-student.css'
 })
@@ -26,6 +29,7 @@ export class MeetStudent implements OnInit {
   programas: ProgramaAyo[] = [];
   isLoading = false;
   accountsReceivable: any[] = [];
+  generalPrograms: ReunionGeneral[] = [];
   
   // Study Plan Modal Properties
   showStudyPlanModal = false;
@@ -47,25 +51,60 @@ export class MeetStudent implements OnInit {
   showRulesModal = false;
   pendingReunion: any = null;
   programRules: string[] = [
-    'Mantener la cámara encendida durante toda la sesión.',
-    'Estar en un lugar tranquilo y sin ruido.',
-    'Ser puntual y respetar el horario de la clase.',
-    'Participar activamente en las actividades.',
-    'Respetar a los compañeros y al docente.'
+    'program_rules.cameraOn',
+    'program_rules.quietPlace',
+    'program_rules.punctual',
+    'program_rules.participate',
+    'program_rules.respect'
   ];
 
+  // Date locale based on selected language
+
+  getDateLocale(): string {
+    const lang = (typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null) || this.translate.currentLang || 'ES';
+    const v = (lang || '').toUpperCase();
+    if (v === 'ES') return 'es';
+    if (v === 'EN') return 'en-US';
+    if (v === 'FR') return 'fr';
+    return 'es';
+  }
+
+  getWeekdayKey(reunion: any): string {
+    const raw = (reunion?.dia || reunion?.day || reunion?.weekday || '').toString().trim().toLowerCase();
+    if (raw) {
+      if (raw === 'lunes' || raw === 'monday' || raw === 'lundi') return 'weekday.monday';
+      if (raw === 'martes' || raw === 'tuesday' || raw === 'mardi') return 'weekday.tuesday';
+      if (raw === 'miercoles' || raw === 'miércoles' || raw === 'wednesday' || raw === 'mercredi') return 'weekday.wednesday';
+      if (raw === 'jueves' || raw === 'thursday' || raw === 'jeudi') return 'weekday.thursday';
+      if (raw === 'viernes' || raw === 'friday' || raw === 'vendredi') return 'weekday.friday';
+      if (raw === 'sabado' || raw === 'sábado' || raw === 'saturday' || raw === 'samedi') return 'weekday.saturday';
+      if (raw === 'domingo' || raw === 'sunday' || raw === 'dimanche') return 'weekday.sunday';
+    }
+    const d = new Date(reunion?.fecha_inicio);
+    const dayIndex = isNaN(d.getTime()) ? -1 : d.getDay();
+    if (dayIndex === 1) return 'weekday.monday';
+    if (dayIndex === 2) return 'weekday.tuesday';
+    if (dayIndex === 3) return 'weekday.wednesday';
+    if (dayIndex === 4) return 'weekday.thursday';
+    if (dayIndex === 5) return 'weekday.friday';
+    if (dayIndex === 6) return 'weekday.saturday';
+    return 'weekday.sunday';
+  }
   constructor(
     private programaAyoService: ProgramaAyoService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private translate: TranslateService,
+    private reunionGeneralService: ReunionGeneralService
   ) { }
 
   ngOnInit(): void {
     this.loadAccountsReceivable();
+    this.loadGeneralPrograms();
   }
 
   goBack(): void {
-    this.router.navigate(['/private-ayo/dashboard']);
+    this.router.navigate(['/private-ayo/dashboard-ayo'], { queryParamsHandling: 'preserve' });
   }
 
   loadAccountsReceivable(): void {
@@ -113,6 +152,21 @@ export class MeetStudent implements OnInit {
     }
   }
 
+  loadGeneralPrograms(): void {
+    const params: any = {
+      fields: '*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*'
+    };
+    this.reunionGeneralService.list(params).subscribe({
+      next: (response) => {
+        const data = response?.data || [];
+        this.generalPrograms = Array.isArray(data) ? data : [];
+      },
+      error: () => {
+        this.generalPrograms = [];
+      }
+    });
+  }
+
   getProgramImage(account: any): string {
     const program = account.programa_ayo_id;
     if (program?.img) {
@@ -123,6 +177,13 @@ export class MeetStudent implements OnInit {
       return `${this.assetsUrl}/${program.id_nivel.imagen}`;
     }
     return 'assets/icons/ayo.png';
+  }
+
+  getGeneralProgramImage(program: ReunionGeneral): string {
+    if (program.img) {
+      return `${this.assetsUrl}/${program.img}`;
+    }
+    return 'assets/icons/grupo.png';
   }
 
   parseStudyPlan(rawPlan: any[]): any[] {
@@ -326,4 +387,11 @@ export class MeetStudent implements OnInit {
     });
   }
 
+  getLanguageKey(lang?: string): string {
+    const v = (lang || '').toUpperCase();
+    if (v === 'INGLES' || v === 'INGLÉS' || v === 'ENGLISH' || v === 'EN') return 'language.english';
+    if (v === 'FRANCES' || v === 'FRANCÉS' || v === 'FRENCH' || v === 'FR') return 'language.french';
+    if (v === 'ESPAÑOL' || v === 'ESPANOL' || v === 'SPANISH' || v === 'ES') return 'language.spanish';
+    return '';
+  }
 }

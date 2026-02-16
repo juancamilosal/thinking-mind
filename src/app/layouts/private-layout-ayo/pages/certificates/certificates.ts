@@ -7,13 +7,14 @@ import { StorageServices } from '../../../../core/services/storage.services';
 import { environment } from '../../../../../environments/environment';
 import {CertificacionService} from '../../../../core/services/certificacion.service';
 import { CertificateFormatComponent } from '../../../../components/certificate-format/certificate-format.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { LEVELS } from '../../../../core/const/Levels';
 
 @Component({
   selector: 'app-certificates',
   standalone: true,
-  imports: [CommonModule, AppButtonComponent, CertificateFormatComponent],
+  imports: [CommonModule, AppButtonComponent, CertificateFormatComponent, TranslateModule],
   templateUrl: './certificates.html',
   styleUrls: ['./certificates.css']
 })

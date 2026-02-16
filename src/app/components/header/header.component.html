@@ -1,17 +1,29 @@
-<header class="bg-gray-800 shadow-sm border-b border-gray-700 py-4">
-  <div class="flex items-center justify-between px-6">
-    <!-- Botón hamburguesa para móviles -->
-    <button (click)="onToggleSidebar()" class="md:hidden btn-secondary p-2 rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
-      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
+<header class="bg-gray-800 shadow-sm border-b border-gray-700">
+  <div class="px-4 sm:px-6 py-3 flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <!-- Botón hamburguesa para móviles -->
+      <button (click)="onToggleSidebar()" class="md:hidden btn-secondary p-2 rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
-    <!-- Espacio vacío para centrar el contenido -->
-    <div class="md:flex-1"></div>
+      <!-- Espacio para centrar el contenido en desktop -->
+      <div class="hidden md:flex-1"></div>
 
-    <!-- Información del usuario -->
-    <div class="flex items-center ml-auto relative">
+      <!-- Selector de idioma AYO (desktop) -->
+      <div class="hidden md:flex items-center mr-4" *ngIf="isAyoRole">
+        <select
+          class="bg-gray-700 text-gray-100 text-sm rounded-md px-3 py-1 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          [(ngModel)]="selectedAyoLanguage"
+          (change)="onChangeLanguage(selectedAyoLanguage)"
+        >
+          <option *ngFor="let lang of availableLangOptions" [value]="lang">{{ languageLabel(lang) }}</option>
+        </select>
+      </div>
+
+      <!-- Información del usuario -->
+      <div class="flex items-center ml-auto relative">
       @if (currentUser) {
         <div class="relative" data-user-menu>
           <button (click)="toggleUserMenu()" class="btn-secondary flex items-center space-x-3 p-2 rounded-lg border border-blue-500 hover:border-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
@@ -52,7 +64,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                   </svg>
-                  <span>Cerrar Sesión</span>
+                  <span>{{ getLogoutLabel() }}</span>
                 </div>
               </button>
             </div>
@@ -68,6 +80,18 @@
           </div>
         </div>
       }
+      </div>
+    </div>
+
+    <!-- Selector de idioma AYO (mobile, centrado abajo) -->
+    <div class="md:hidden flex justify-center">
+      <select
+        class="bg-gray-700 text-gray-100 text-sm rounded-md px-4 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[160px]"
+        [(ngModel)]="selectedAyoLanguage"
+        (change)="onChangeLanguage(selectedAyoLanguage)"
+      >
+        <option *ngFor="let lang of availableLangOptions" [value]="lang">{{ languageLabel(lang) }}</option>
+      </select>
     </div>
   </div>
 </header>

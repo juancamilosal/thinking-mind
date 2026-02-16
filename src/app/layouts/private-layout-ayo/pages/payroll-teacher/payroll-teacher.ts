@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StorageServices } from '../../../../core/services/storage.services';
 import { PayrollService } from '../../../../core/services/payroll.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface PayrollSummary {
   valorPorHora: number;
@@ -23,7 +24,7 @@ export interface PaymentHistory {
 @Component({
   selector: 'app-payroll-teacher',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './payroll-teacher.html',
   styleUrl: './payroll-teacher.css'
 })

@@ -20,3 +20,10 @@ export class Docente {
   first_name: string;
   last_name: string;
 }
+
+export interface ReunionGeneral {
+  id: string;
+  img: string | null;
+  tematica: string;
+  id_reuniones_meet: any[];
+}

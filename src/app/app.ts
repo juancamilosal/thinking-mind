@@ -1,15 +1,16 @@
-import { Component, OnInit, OnDestroy, signal, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { RouterOutlet } from '@angular/router';
 import { TokenRefreshService } from './core/services/token-refresh.service';
 import { StorageServices } from './core/services/storage.services';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
   imports: [
-    RouterOutlet
+    RouterOutlet,
+    TranslateModule
   ],
   styleUrl: './app.css'
 })

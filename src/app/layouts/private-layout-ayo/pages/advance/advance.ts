@@ -6,6 +6,7 @@ import { AttendanceService } from '../../../../core/services/attendance.service'
 import { StorageServices } from '../../../../core/services/storage.services';
 import { Attendance } from '../../../../core/models/Attendance';
 import { environment } from '../../../../../environments/environment';
+import { TranslateModule } from '@ngx-translate/core';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -25,7 +26,7 @@ interface LevelAnalysis {
 @Component({
   selector: 'app-advance',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './advance.html',
   styleUrl: './advance.css'
 })
@@ -145,6 +146,21 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     }
+  }
+
+  getDisplayLanguage(idioma: string | null | undefined): string {
+    if (!idioma) return '';
+    const value = idioma.toString().toUpperCase();
+    if (['INGLES', 'INGLÉS', 'ENGLISH', 'EN'].includes(value)) {
+      return 'language.english';
+    }
+    if (['FRANCES', 'FRANCÉS', 'FRENCH', 'FR'].includes(value)) {
+      return 'language.french';
+    }
+    if (['ESPANOL', 'ESPAÑOL', 'SPANISH', 'ES'].includes(value)) {
+      return 'language.spanish';
+    }
+    return idioma;
   }
 
   processLevelAnalysis(): void {
@@ -398,6 +414,57 @@ export class Advance implements OnInit, AfterViewInit, OnDestroy {
       case 5: return 'Star Performer';
       default: return '';
     }
+  }
+
+  private parseServiceDate(raw: string): Date | null {
+    if (!raw) return null;
+    const isoOnlyDate = /^\d{4}-\d{2}-\d{2}$/;
+    const isoWithTime = /^\d{4}-\d{2}-\d{2}T.*$/;
+    if (isoOnlyDate.test(raw)) {
+      const [y, m, d] = raw.split('-').map(n => parseInt(n, 10));
+      const local = new Date(y, m - 1, d);
+      return isNaN(local.getTime()) ? null : local;
+    }
+    if (isoWithTime.test(raw)) {
+      const base = raw.split('T')[0];
+      const [y, m, d] = base.split('-').map(n => parseInt(n, 10));
+      const local = new Date(y, m - 1, d);
+      return isNaN(local.getTime()) ? null : local;
+    }
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) return d;
+    const parts = raw.trim().replace(/\s+/g, ' ').split(' ');
+    if (parts.length < 3) return null;
+    const day = parseInt(parts[0], 10);
+    const monthToken = parts[1].toLowerCase();
+    const year = parseInt(parts[2], 10);
+    const map: { [k: string]: number } = {
+      'ene': 0, 'enero': 0, 'jan': 0, 'janv.': 0,
+      'feb': 1, 'febrero': 1, 'févr.': 1,
+      'mar': 2, 'marzo': 2, 'mars': 2,
+      'abr': 3, 'abril': 3, 'apr': 3, 'avr.': 3,
+      'may': 4, 'mayo': 4, 'mai': 4,
+      'jun': 5, 'junio': 5, 'juin': 5,
+      'jul': 6, 'julio': 6, 'juil.': 6,
+      'ago': 7, 'agosto': 7, 'aug': 7,
+      'sep': 8, 'septiembre': 8, 'sept.': 8,
+      'oct': 9, 'octubre': 9,
+      'nov': 10, 'noviembre': 10,
+      'dic': 11, 'diciembre': 11, 'dec': 11, 'déc.': 11
+    };
+    const mi = map[monthToken];
+    if (isNaN(day) || isNaN(year) || mi === undefined) return null;
+    const d2 = new Date(year, mi, day);
+    return isNaN(d2.getTime()) ? null : d2;
+  }
+
+  formatObservationDateNumeric(input: string): string {
+    const date = this.parseServiceDate(input);
+    if (isNaN(date.getTime())) return input;
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
   }
 
   getProgressBarClass(score: number): string {

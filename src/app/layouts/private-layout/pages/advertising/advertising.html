@@ -1,0 +1,199 @@
+<div class="min-h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="mb-10 text-center">
+      <p class="text-sm font-semibold tracking-[0.2em] text-indigo-500 uppercase mb-2">
+        Thinking Mind
+      </p>
+      <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 mb-3">
+        {{ 'dashboard.adProgramsTitle' | translate }}
+      </h1>
+      <p class="text-gray-600 max-w-3xl mx-auto text-base md:text-lg">
+        {{ 'dashboard.adProgramsSubtitle' | translate }}
+      </p>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 px-6 py-8 md:px-10 md:py-12">
+      <div class="h-1 bg-gradient-to-r from-sky-400 via-indigo-500 to-pink-500 rounded-full mb-8"></div>
+
+      <div class="flex items-center justify-between mb-6">
+        <app-button variant="primary" size="md" (btnClick)="openNew()">
+          Crear publicidad
+        </app-button>
+        @if (isLoading) {
+          <span class="text-gray-500 text-sm">Cargando...</span>
+        }
+      </div>
+
+      @if (showForm) {
+        <form [formGroup]="form" (ngSubmit)="submit()" class="bg-gray-50 rounded-2xl p-6 md:p-8 mb-8 border border-gray-200">
+          <div class="mb-6 flex justify-center">
+            <div class="w-full md:w-2/3">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 text-center">Imagen</label>
+              <div class="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 bg-white">
+                <div class="w-40 h-40 mb-4 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                  @if (previewImage || currentImageUrl) {
+                    <img [src]="previewImage || currentImageUrl" alt="Previsualización" class="w-full h-full object-cover" />
+                  } @else {
+                    <span class="text-gray-400 text-xs text-center">No hay imagen seleccionada</span>
+                  }
+                </div>
+                <input type="file" accept="image/*" class="hidden" #fileInput (change)="onFileSelected($event)" />
+                <app-button variant="secondary" size="sm" (btnClick)="fileInput.click()">
+                  Seleccionar imagen
+                </app-button>
+                @if (imageError) {
+                  <p class="mt-2 text-xs text-red-500">{{ imageError }}</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Título</label>
+              <input
+                type="text"
+                formControlName="titulo"
+                class="w-full rounded-lg border border-gray-300 p-2" />
+              @if (form.get('titulo')?.invalid && (form.get('titulo')?.dirty || form.get('titulo')?.touched)) {
+                <p class="mt-1 text-xs text-red-500">Este campo es obligatorio.</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Español</label>
+              <textarea
+                rows="3"
+                formControlName="descripcion"
+                class="w-full rounded-lg border border-gray-300 p-2"></textarea>
+              @if (form.get('descripcion')?.invalid && (form.get('descripcion')?.dirty || form.get('descripcion')?.touched)) {
+                <p class="mt-1 text-xs text-red-500">Este campo es obligatorio.</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Inglés</label>
+              <textarea
+                rows="3"
+                formControlName="descripcion_ingles"
+                class="w-full rounded-lg border border-gray-300 p-2"></textarea>
+              @if (form.get('descripcion_ingles')?.invalid && (form.get('descripcion_ingles')?.dirty || form.get('descripcion_ingles')?.touched)) {
+                <p class="mt-1 text-xs text-red-500">Este campo es obligatorio.</p>
+              }
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Francés</label>
+              <textarea
+                rows="3"
+                formControlName="descripcion_frances"
+                class="w-full rounded-lg border border-gray-300 p-2"></textarea>
+              @if (form.get('descripcion_frances')?.invalid && (form.get('descripcion_frances')?.dirty || form.get('descripcion_frances')?.touched)) {
+                <p class="mt-1 text-xs text-red-500">Este campo es obligatorio.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Enlace</label>
+              <input
+                type="text"
+                formControlName="enlace"
+                class="w-full rounded-lg border border-gray-300 p-2" />
+              @if (form.get('enlace')?.invalid && (form.get('enlace')?.dirty || form.get('enlace')?.touched)) {
+                <p class="mt-1 text-xs text-red-500">Este campo es obligatorio.</p>
+              }
+            </div>
+            <div class="flex flex-col justify-end">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+              <div class="flex items-center gap-4">
+                <span
+                  class="text-sm font-semibold"
+                  [ngClass]="form.get('activo')?.value ? 'text-emerald-600' : 'text-red-600'">
+                  {{ form.get('activo')?.value ? 'Activo' : 'Inactivo' }}
+                </span>
+                <button
+                  type="button"
+                  class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                  [ngClass]="form.get('activo')?.value ? 'bg-emerald-500' : 'bg-red-500'"
+                  (click)="toggleActivo()">
+                  <span
+                    class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                    [ngClass]="form.get('activo')?.value ? 'translate-x-5' : 'translate-x-1'">
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-3">
+            <app-button type="submit" variant="success" size="md" [loading]="isSaving">
+              Guardar
+            </app-button>
+            <app-button type="button" variant="secondary" size="md" (btnClick)="cancel()">
+              Cancelar
+            </app-button>
+          </div>
+        </form>
+      }
+
+      <div class="space-y-10 md:space-y-14">
+        @for (ad of items; track ad.id) {
+          <div class="group flex flex-col md:flex-row items-stretch gap-6 md:gap-10">
+            <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100 relative">
+              <img [src]="ad.img_url" [alt]="ad.descripcion"
+                   class="absolute inset-0 w-full h-full object-cover scale-125 blur-md opacity-50">
+              <img [src]="ad.img_url" [alt]="ad.descripcion"
+                   class="relative w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
+            </div>
+            <div class="md:w-1/2 flex">
+              <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 text-gray-900 border-l-4 border-indigo-400">
+                <div class="flex items-center justify-between mb-2">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    [ngClass]="ad.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'">
+                    {{ ad.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+                <h2 class="text-xl md:text-2xl font-bold mb-2 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  <span>{{ ad.titulo }}</span>
+                </h2>
+                <p class="text-sm md:text-base text-gray-700 leading-relaxed mb-4">
+                  {{ getDescription(ad) }}
+                </p>
+                <div class="flex items-center gap-3">
+                  <a
+                    [href]="ad.enlace"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700">
+                    {{ 'dashboard.adLearnMore' | translate }}
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                  <app-button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    customClass="ml-auto"
+                    (btnClick)="edit(ad)">
+                    Editar
+                  </app-button>
+                  <app-button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    (btnClick)="remove(ad)">
+                    Eliminar
+                  </app-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (!items?.length && !isLoading) {
+          <div class="text-center text-gray-500">No hay publicidad registrada</div>
+        }
+
+        <!-- fin listado -->
+      </div>
+    </div>
+  </div>
+</div>

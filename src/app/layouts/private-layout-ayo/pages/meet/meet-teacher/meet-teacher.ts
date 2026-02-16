@@ -20,6 +20,7 @@ import { UserService } from '../../../../../core/services/user.service';
 import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
 import { StudentService } from '../../../../../core/services/student.service';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 declare var gapi: any;
 declare var google: any;
@@ -49,7 +50,7 @@ interface CriterioEvaluacionEstudiante {
 @Component({
   selector: 'app-meet-teacher',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, HttpClientModule, TranslateModule],
   templateUrl: './meet-teacher.html',
   styleUrl: './meet-teacher.css'
 })
@@ -778,7 +779,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/private-ayo/dashboard-ayo'], {
-      queryParams: { idioma: this.selectedLanguage }
+      queryParams: { idioma: this.selectedLanguage },
+      queryParamsHandling: 'merge'
     });
   }
 

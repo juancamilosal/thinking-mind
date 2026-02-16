@@ -4,12 +4,12 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-          Nómina Docente
+          {{ 'payroll_teacher.title' | translate }}
         </h1>
-        <p class="text-gray-600 mt-2">Información de pagos y horas trabajadas</p>
+        <p class="text-gray-600 mt-2">{{ 'payroll_teacher.subtitle' | translate }}</p>
       </div>
       <div class="text-right">
-        <p class="text-sm text-gray-500">Última actualización</p>
+        <p class="text-sm text-gray-500">{{ 'payroll_teacher.lastUpdate' | translate }}</p>
         <p class="text-lg font-semibold text-gray-700">{{ currentDate | date:'dd/MM/yyyy HH:mm' }}</p>
       </div>
     </div>
@@ -20,7 +20,7 @@
     <div class="flex items-center justify-center min-h-96">
       <div class="text-center">
         <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600 text-lg">Cargando información de nómina...</p>
+        <p class="text-gray-600 text-lg">{{ 'payroll_teacher.loading' | translate }}</p>
       </div>
     </div>
   } @else {
@@ -36,7 +36,7 @@
         <span class="bg-indigo-100 p-2 rounded-lg mr-3">
           <img src="assets/icons/calendario.png" class="w-16 h-16 object-contain" alt="Icono Resumen">
         </span>
-        Resumen del Mes Actual
+        {{ 'payroll_teacher.currentMonthSummary' | translate }}
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
@@ -50,7 +50,9 @@
             </div>
           </div>
           <div>
-            <span class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">Valor por Hora</span>
+            <span class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">
+              {{ 'payroll_teacher.hourlyRate' | translate }}
+            </span>
             <span class="text-3xl font-bold text-gray-900">{{ formatCurrency(payrollSummary.valorPorHora) }}</span>
           </div>
         </div>
@@ -65,7 +67,9 @@
             </div>
           </div>
           <div>
-            <span class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1 block">Horas Trabajadas este Mes</span>
+            <span class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1 block">
+              {{ 'payroll_teacher.hoursWorkedThisMonth' | translate }}
+            </span>
             <span class="text-3xl font-bold text-gray-900">{{ formatHours(payrollSummary.horasTrabajadasMes) }} <span class="text-lg text-gray-500">hrs</span></span>
           </div>
         </div>
@@ -80,7 +84,9 @@
             </div>
           </div>
           <div>
-            <span class="text-xs font-bold text-green-600 uppercase tracking-wider mb-1 block">Pago Total del Mes</span>
+            <span class="text-xs font-bold text-green-600 uppercase tracking-wider mb-1 block">
+              {{ 'payroll_teacher.totalPaymentThisMonth' | translate }}
+            </span>
             <span class="text-3xl font-bold text-gray-900">{{ formatCurrency(payrollSummary.pagoTotalMes) }}</span>
           </div>
         </div>
@@ -90,20 +96,32 @@
     <!-- Payment History Table -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <h2 class="text-xl font-bold text-gray-800">Historial de Pagos</h2>
-        <p class="text-sm text-gray-600 mt-1">Registro completo de pagos realizados</p>
+        <h2 class="text-xl font-bold text-gray-800">{{ 'payroll_teacher.paymentHistory' | translate }}</h2>
+        <p class="text-sm text-gray-600 mt-1">{{ 'payroll_teacher.paymentHistorySubtitle' | translate }}</p>
       </div>
 
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Trabajadas</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor por Hora</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Pago</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método de Pago</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {{ 'payroll_teacher.table.hoursWorked' | translate }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {{ 'payroll_teacher.table.hourlyRate' | translate }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {{ 'payroll_teacher.table.total' | translate }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {{ 'payroll_teacher.table.paymentDate' | translate }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {{ 'payroll_teacher.table.paymentMethod' | translate }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {{ 'payroll_teacher.table.status' | translate }}
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -114,8 +132,12 @@
                     <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    <p class="text-lg font-medium text-gray-500">No hay registros de pagos</p>
-                    <p class="text-xs text-gray-400">Los pagos aparecerán aquí cuando sean procesados</p>
+                    <p class="text-lg font-medium text-gray-500">
+                      {{ 'payroll_teacher.empty.title' | translate }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                      {{ 'payroll_teacher.empty.subtitle' | translate }}
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -141,7 +163,9 @@
                       <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                       </svg>
-                      <span class="text-sm text-gray-900">{{ payment.fechaPago | date:'dd/MM/yyyy' }}</span>
+                      <span class="text-sm text-gray-900">
+                        {{ payment.fechaPago | date:'dd/MM/yyyy' }}
+                      </span>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -183,7 +207,7 @@
               [class.opacity-50]="currentPage === 1"
               [class.cursor-not-allowed]="currentPage === 1"
               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              Anterior
+              {{ 'payroll_teacher.pagination.prev' | translate }}
             </button>
             <button
               (click)="onPageChange(currentPage + 1)"
@@ -191,24 +215,26 @@
               [class.opacity-50]="currentPage === totalPages"
               [class.cursor-not-allowed]="currentPage === totalPages"
               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              Siguiente
+              {{ 'payroll_teacher.pagination.next' | translate }}
             </button>
           </div>
           <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div class="flex items-center space-x-6">
               <div class="bg-white rounded-lg px-4 py-2 shadow-md border border-gray-100">
                 <p class="text-sm text-gray-600">
-                  Mostrando
+                  {{ 'payroll_teacher.pagination.showing' | translate }}
                   <span class="font-bold text-indigo-600 mx-1">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
-                  a
+                  {{ 'payroll_teacher.pagination.to' | translate }}
                   <span class="font-bold text-indigo-600 mx-1">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
-                  de
+                  {{ 'payroll_teacher.pagination.of' | translate }}
                   <span class="font-bold text-purple-600 mx-1">{{ totalItems }}</span>
-                  resultados
+                  {{ 'payroll_teacher.pagination.results' | translate }}
                 </p>
               </div>
               <div class="flex items-center space-x-3">
-                <label for="itemsPerPage" class="text-sm font-medium text-gray-700">Mostrar:</label>
+                <label for="itemsPerPage" class="text-sm font-medium text-gray-700">
+                  {{ 'payroll_teacher.pagination.perPage' | translate }}
+                </label>
                 <select
                   id="itemsPerPage"
                   [value]="itemsPerPage"

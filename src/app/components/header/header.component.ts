@@ -1,9 +1,13 @@
 import { Component, OnInit, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { LoginService } from '../../core/services/login.service';
 import { StorageServices } from '../../core/services/storage.services';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
 import { Roles } from '../../core/const/Roles';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { StudentService } from '../../core/services/student.service';
 
 class CurrentUser {
   email: string;
@@ -16,23 +20,78 @@ class CurrentUser {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [],
+  imports: [FormsModule, CommonModule, TranslateModule],
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit {
   currentUser: CurrentUser | null = null;
   @Output() toggleSidebar = new EventEmitter<void>();
   isUserMenuOpen = false;
+  selectedAyoLanguage: string = 'ES';
+  availableLangOptions: string[] = ['ES', 'EN', 'FR'];
+  isAyoRole = false;
 
   constructor(
     private elementRef: ElementRef,
     private router: Router,
     private loginService: LoginService,
-    private tokenRefreshService: TokenRefreshService
+    private tokenRefreshService: TokenRefreshService,
+    private translate: TranslateService,
+    private studentService: StudentService
   ) {}
 
   ngOnInit() {
     this.loadUserFromSessionStorage();
+    const user = StorageServices.getCurrentUser();
+    this.isAyoRole = !!user && (user.role === Roles.STUDENT || user.role === Roles.TEACHER);
+
+    if (!this.isAyoRole) {
+      this.selectedAyoLanguage = 'ES';
+      this.translate.use('es');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ayo_language', 'ES');
+      }
+      const treeDefault = this.router.parseUrl(this.router.url);
+      treeDefault.queryParams = { ...treeDefault.queryParams, lang: 'ES' };
+      this.router.navigateByUrl(treeDefault, { replaceUrl: true });
+      return;
+    }
+
+    const tree = this.router.parseUrl(this.router.url);
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
+    const langParam = tree.queryParams['lang'] ? String(tree.queryParams['lang']).toUpperCase() : null;
+    const lang = (stored || langParam || 'ES').toUpperCase();
+    if (lang === 'EN' || lang === 'FR' || lang === 'ES') {
+      this.selectedAyoLanguage = lang;
+    }
+    const code = this.selectedAyoLanguage === 'EN' ? 'en' : this.selectedAyoLanguage === 'FR' ? 'fr' : 'es';
+    this.translate.use(code);
+
+    if (user?.id && user?.role) {
+      this.studentService.dashboardStudent({ params: { user_id: user.id, role_id: user.role } }).subscribe({
+        next: (response) => {
+          const data = response?.data || response;
+          const idiomaSrv = (data?.idioma || '').toString().toUpperCase();
+          const mapped = this.mapServiceIdiomaToLang(idiomaSrv);
+          let defaultLang = mapped;
+          if (mapped === 'ES') {
+            defaultLang = 'EN';
+          }
+
+          this.availableLangOptions = ['ES', 'EN', 'FR'];
+          this.selectedAyoLanguage = defaultLang;
+          const code2 = defaultLang === 'EN' ? 'en' : defaultLang === 'FR' ? 'fr' : 'es';
+          this.translate.use(code2);
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ayo_language', defaultLang);
+          }
+          const t = this.router.parseUrl(this.router.url);
+          t.queryParams = { ...t.queryParams, lang: defaultLang };
+          this.router.navigateByUrl(t, { replaceUrl: true });
+        },
+        error: () => {}
+      });
+    }
   }
 
   private loadUserFromSessionStorage(): void {
@@ -41,6 +100,25 @@ export class HeaderComponent implements OnInit {
     } catch (error) {
       console.error('Error al cargar usuario desde sessionStorage:', error);
     }
+  }
+
+  private mapServiceIdiomaToLang(idioma: string): string {
+    const v = idioma.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (v.includes('INGLE')) return 'EN';
+    if (v.includes('FRANCE') || v.includes('FRANCES')) return 'FR';
+    return 'ES';
+  }
+
+  languageLabel(lang: string): string {
+    if (lang === 'EN') return 'English';
+    if (lang === 'FR') return 'Français';
+    return 'Español';
+  }
+
+  getLogoutLabel(): string {
+    if (this.selectedAyoLanguage === 'EN') return 'Log Out';
+    if (this.selectedAyoLanguage === 'FR') return 'Se déconnecter';
+    return 'Cerrar Sesión';
   }
 
   getInitials(): string {
@@ -63,6 +141,18 @@ export class HeaderComponent implements OnInit {
 
   onToggleSidebar() {
     this.toggleSidebar.emit();
+  }
+
+  onChangeLanguage(lang: string) {
+    this.selectedAyoLanguage = lang;
+    const code = lang === 'EN' ? 'en' : lang === 'FR' ? 'fr' : 'es';
+    this.translate.use(code);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ayo_language', lang);
+    }
+    const tree = this.router.parseUrl(this.router.url);
+    tree.queryParams = { ...tree.queryParams, lang };
+    this.router.navigateByUrl(tree);
   }
 
   toggleUserMenu() {

@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
 import { StorageServices } from '../../../../core/services/storage.services';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface Evaluation {
   id: string;
@@ -27,7 +28,7 @@ interface CriterionAnalysis {
 @Component({
   selector: 'app-teacher-evaluation-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './teacher-evaluation.html',
   styleUrls: ['./teacher-evaluation.css']
 })
