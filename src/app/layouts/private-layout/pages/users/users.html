@@ -154,14 +154,34 @@
                   }
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div class="flex space-x-2">
-                      <app-button (btnClick)="editUser(user)" variant="success" size="sm" class="transform hover:scale-105">
-                        <div class="flex items-center">
-                          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                          </svg>
-                          Editar
-                        </div>
-                      </app-button>
+                      @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+                        <app-button (btnClick)="editRector(user)" variant="success" size="sm" class="transform hover:scale-105">
+                          <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Editar
+                          </div>
+                        </app-button>
+                      } @else if (selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
+                        <app-button (btnClick)="editAdmin(user)" variant="success" size="sm" class="transform hover:scale-105">
+                          <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Editar
+                          </div>
+                        </app-button>
+                      } @else {
+                        <app-button (btnClick)="editUser(user)" variant="success" size="sm" class="transform hover:scale-105">
+                          <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Editar
+                          </div>
+                        </app-button>
+                      }
                     </div>
                   </td>
                 </tr>
@@ -220,7 +240,8 @@
             (goBack)="toggleForm()"
             (searchRector)="searchRector()"
             (rectorCreated)="onRectorCreated($event)"
-            (rectorUpdated)="onRectorUpdated($event)">
+            (rectorUpdated)="onRectorUpdated($event)"
+            (rectorDeleted)="onRectorDeleted($event)">
           </app-form-rector>
         } @else if (selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
           <app-form-admin

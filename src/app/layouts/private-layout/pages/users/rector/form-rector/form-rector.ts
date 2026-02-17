@@ -24,6 +24,7 @@ export class FormRector implements OnInit, OnChanges {
   @Output() searchRector = new EventEmitter();
   @Output() rectorCreated = new EventEmitter<User>();
   @Output() rectorUpdated = new EventEmitter();
+  @Output() rectorDeleted = new EventEmitter<User>();
   rectorForm!: FormGroup;
   isSubmitting = false;
   showPassword = false;
@@ -236,7 +237,7 @@ export class FormRector implements OnInit, OnChanges {
             next: () => {
               this.isDeleting = false;
               this.notificationService.showSuccess('Éxito', 'Usuario eliminado exitosamente');
-              this.rectorUpdated.emit();
+              this.rectorDeleted.emit(this.rectorData!);
             },
             error: (error) => {
               this.isDeleting = false;
