@@ -684,7 +684,7 @@ export class PaymentRecord implements OnInit {
 
   loadCourses(): void {
     this.isLoadingCourses = true;
-    this.courseService.searchCourse().subscribe({
+    this.courseService.searchCourse(undefined, true).subscribe({
       next: (response) => {
         if (response.data) {
           // Ordenar los cursos alfabéticamente por nombre

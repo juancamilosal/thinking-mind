@@ -19,11 +19,15 @@ export class CourseService {
   constructor(private http: HttpClient) {
   }
 
-  searchCourse(searchTerm?: string): Observable<ResponseAPI<Course[]>> {
+  searchCourse(searchTerm?: string, onlyWithColegioCursos?: boolean): Observable<ResponseAPI<Course[]>> {
     // Agregar fields para incluir colegios_cursos con colegio_id expandido
-    const baseParams = {
+    const baseParams: any = {
       'fields': '*,colegios_cursos.*,colegios_cursos.colegio_id.*,colegios_cursos.id_reuniones_meet.*'
     };
+
+    if (onlyWithColegioCursos) {
+      baseParams['filter[colegios_cursos][_nnull]'] = 'true';
+    }
 
     const request = !searchTerm
       ? this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params: baseParams })
