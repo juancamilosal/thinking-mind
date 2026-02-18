@@ -42,7 +42,7 @@
         </div>
         <!-- Footer con botón de acción -->
         <div class="px-6 pb-6">
-          <button (click)="closeModal()"
+          <button *ngIf="!notification?.hideDefaultButton" (click)="closeModal()"
             class="w-full px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 [ngClass]="notification?.type === 'success' ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 
                           notification?.type === 'error' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' : 

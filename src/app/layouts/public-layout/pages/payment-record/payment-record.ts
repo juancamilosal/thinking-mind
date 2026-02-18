@@ -40,6 +40,7 @@ export class PaymentRecord implements OnInit {
   DOCUMENT_TYPE = DOCUMENT_TYPE;
   isSubmitting = false;
   courses: Course[] = [];
+  availableCourses: Course[] = [];
   schools: School[] = [];
   filteredSchools: School[] = [];
   grado: Grupo[] = []; // Nueva propiedad para los grupos
@@ -450,6 +451,7 @@ export class PaymentRecord implements OnInit {
         }
       });
     }
+    this.updateAvailableCourses();
   }
 
   private clearGuardianFields(): void {
@@ -684,7 +686,7 @@ export class PaymentRecord implements OnInit {
 
   loadCourses(): void {
     this.isLoadingCourses = true;
-    this.courseService.searchCourse().subscribe({
+    this.courseService.searchCourse(undefined, true).subscribe({
       next: (response) => {
         if (response.data) {
           // Ordenar los cursos alfabéticamente por nombre
@@ -697,6 +699,7 @@ export class PaymentRecord implements OnInit {
               });
             }
           });
+          this.updateAvailableCourses();
         }
         this.isLoadingCourses = false;
       },
@@ -705,6 +708,15 @@ export class PaymentRecord implements OnInit {
         this.isLoadingCourses = false;
       }
     });
+  }
+
+  private updateAvailableCourses(): void {
+    const schoolId: string | null = this.paymentForm?.get('studentSchool')?.value || null;
+    if (!schoolId) {
+      this.availableCourses = [];
+      return;
+    }
+    this.availableCourses = this.courses.filter(course => this.getSchoolSpecificPrice(course, schoolId) !== null);
   }
 
 
@@ -802,7 +814,12 @@ export class PaymentRecord implements OnInit {
     }
     // Validar precio del programa seleccionado con el colegio recién seleccionado
     const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
+    this.updateAvailableCourses();
     if (selectedCourseId) {
+      if (!this.availableCourses.some(c => c.id === selectedCourseId)) {
+        this.resetCourseSelection();
+        return;
+      }
       const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
       if (selectedCourse) {
         const price = this.computeCoursePrice(selectedCourse);
@@ -825,11 +842,77 @@ export class PaymentRecord implements OnInit {
     // NO limpiar el grado al limpiar el colegio
     // Al limpiar el colegio, reiniciar también la selección de programa y sus precios
     this.resetCourseSelection();
+    this.updateAvailableCourses();
     this.cdRef.detectChanges();
   }
 
   onOpenProgramChange(event: any): void {
     const checked = !!event.target.checked;
+    
+    // Si se intenta marcar el check, mostrar confirmación
+    if (checked) {
+      this.showOpenProgramConfirmation();
+      // Restablecer el valor del check temporalmente
+      this.paymentForm.get('isOpenProgram')?.setValue(false);
+      return;
+    }
+    
+    // Si se desmarca, proceder normalmente
+    this.processOpenProgramChange(false);
+  }
+
+  private showOpenProgramConfirmation(): void {
+    this.notificationData = {
+      type: 'warning',
+      title: 'Atención',
+      message: '¿Su asesor de Programa le informó que va a contratar un PROGRAMA INDEPENDIENTE?',
+      hideDefaultButton: true,
+      onClose: () => {
+        // No hacer nada, solo cerrar
+      }
+    };
+    this.showNotification = true;
+    
+    // Crear botones personalizados para Sí/No
+    setTimeout(() => {
+      const modal = document.querySelector('.modal-content');
+      if (modal) {
+        const sections = modal.querySelectorAll('.px-6.pb-6');
+        const footer = sections.length > 1 ? sections[sections.length - 1] as HTMLElement : null;
+        if (footer) {
+          // Limpiar el botón existente
+          footer.innerHTML = '';
+          
+          // Crear contenedor para botones
+          const buttonContainer = document.createElement('div');
+          buttonContainer.className = 'flex gap-3';
+          
+          // Botón NO
+          const noButton = document.createElement('button');
+          noButton.textContent = 'NO';
+          noButton.className = 'flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200';
+          noButton.onclick = () => {
+            this.onNotificationClose();
+          };
+          
+          // Botón SÍ
+          const yesButton = document.createElement('button');
+          yesButton.textContent = 'SI';
+          yesButton.className = 'flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors duration-200';
+          yesButton.onclick = () => {
+            this.onNotificationClose();
+            this.processOpenProgramChange(true);
+          };
+          
+          buttonContainer.appendChild(noButton);
+          buttonContainer.appendChild(yesButton);
+          footer.appendChild(buttonContainer);
+        }
+      }
+    }, 100);
+  }
+
+  private processOpenProgramChange(checked: boolean): void {
     this.paymentForm.get('isOpenProgram')?.setValue(checked);
     const indCtrl = this.paymentForm.get('independentInstitution');
     if (checked) {
@@ -845,6 +928,7 @@ export class PaymentRecord implements OnInit {
       this.paymentForm.get('independentInstitution')?.setValue('');
       this.clearSchoolSearch();
     }
+    this.updateAvailableCourses();
   }
 
   onCourseChange(courseId: string): void {
