@@ -7,6 +7,7 @@ export class NotificationData {
   message: string;
   duration?: number; // duración en milisegundos, opcional
   onClose?: () => void; // Callback opcional al cerrar
+  hideDefaultButton?: boolean; // Ocultar el botón "Entendido" por defecto
 }
 
 @Component({

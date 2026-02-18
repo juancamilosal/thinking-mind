@@ -726,7 +726,7 @@
                     formControlName="isOpenProgram"
                     (change)="onOpenProgramChange($event)"
                     class="h-5 w-5 rounded border-green-300 text-green-600 focus:ring-green-500" />
-                  <label for="isOpenProgram" class="text-sm font-semibold text-green-700">¿Es Programa Abierto?</label>
+                  <label for="isOpenProgram" class="text-sm font-semibold text-green-700">Es Programa AYO</label>
                 </div>
                 <p class="text-xs text-gray-600">Este campo es opcional.</p>
               </div>
@@ -746,17 +746,7 @@
                       placeholder="Buscar colegio..."
                       class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
                       autocomplete="off">
-                    @if (paymentForm.get('schoolSearchTerm')?.value) {
-                      <app-button
-                        variant="ghost"
-                        size="icon"
-                        (btnClick)="clearSchoolSearch()"
-                        customClass="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                      </app-button>
-                    }
+                    
                   </div>
 
                   @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
@@ -826,7 +816,7 @@
           }
 
           <!-- Selección del Curso -->
-          @if (!showRegisteredCourses || showAddCourseForm) {
+          @if (isStudentInfoComplete() && (!showRegisteredCourses || showAddCourseForm)) {
           <div class="bg-gradient-to-br from-violet-50 to-purple-100 rounded-2xl shadow-xl p-8 border border-violet-200">
             <div class="flex items-center mb-6">
               <div class="bg-gradient-to-r from-violet-600 to-purple-700 rounded-full p-3 mr-4">
@@ -856,21 +846,12 @@
                     id="selectedCourse"
                     formControlName="selectedCourse"
                     (change)="onCourseChange($any($event.target).value)"
-                    [disabled]="!isStudentInfoComplete()"
                     class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 bg-white text-violet-800">
                     <option value="">Seleccione un programa</option>
-                    @for (course of courses; track course.id) {
+                    @for (course of availableCourses; track course.id) {
                       <option [value]="course.id">{{ course.nombre }}</option>
                     }
                   </select>
-                  @if (!isStudentInfoComplete()) {
-                    <p class="text-violet-700 text-sm mt-2 flex items-center">
-                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                      </svg>
-                      Complete la Información del Estudiante para habilitar la selección del programa.
-                    </p>
-                  }
                 }
                @if (isStudentInfoComplete() && paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
                   <p class="text-red-500 text-sm mt-2 flex items-center">
@@ -1020,7 +1001,7 @@
         <!-- Componente de Confirmación -->
         <app-payment-confirmation
           [paymentForm]="paymentForm"
-          [courses]="courses"
+          [courses]="availableCourses"
           [isSubmitting]="isSubmitting"
           [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
           [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
