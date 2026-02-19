@@ -26,6 +26,16 @@ export class UserService {
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
   }
 
+  getUsersCountByRole(roleId: string): Observable<ResponseAPI<User[]>> {
+    const params: any = {
+      'filter[role][_eq]': roleId,
+      'fields': 'id',
+      'limit': '1',
+      'meta': 'total_count,filter_count'
+    };
+    return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
+  }
+
   getStudentsWithoutProgramaAyo(): Observable<ResponseAPI<User[]>> {
     const roleId = 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
     const params: any = {
