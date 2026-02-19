@@ -164,23 +164,6 @@ export class ListSchool implements OnInit {
     // Filtrar cuentas por fecha de finalización solo para Rector
     let filteredAccounts = accounts;
 
-    if (this.isRector) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Establecer a medianoche para comparación exacta
-
-      filteredAccounts = accounts.filter(account => {
-        if (account.fecha_finalizacion) {
-          const fechaFinalizacion = new Date(account.fecha_finalizacion);
-          fechaFinalizacion.setHours(0, 0, 0, 0);
-
-          // Mostrar solo si la fecha de finalización es hoy o posterior (no ha pasado)
-          return fechaFinalizacion >= today;
-        }
-        // Si no tiene fecha de finalización, mostrar la cuenta
-        return true;
-      });
-    }
-
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
     filteredAccounts.forEach((account, index) => {

@@ -62,9 +62,7 @@ export class SchoolWithPaymentsService {
     const params: any = {
       fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,cliente_id.*,curso_id.*,pagos.*',
       'filter[estudiante_id][colegio_id][_eq]': schoolId,
-      // Filtrar por saldo mayor a 0 directamente en Directus
       'filter[saldo][_gt]': '0',
-      // Filtrar solo cuentas de curso (no inscripción)
       'filter[es_inscripcion][_eq]': 'FALSE',
       page: page.toString(),
       limit: limit.toString(),
