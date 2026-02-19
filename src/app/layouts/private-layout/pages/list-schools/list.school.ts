@@ -436,8 +436,8 @@ export class ListSchool implements OnInit {
     const isChecked = event.target.checked;
     const pinValue = isChecked ? 'SI' : 'NO';
 
-    // Verificar si el estado no es PAGADA o PAGADO (protección adicional)
-    if (account.estado !== 'PAGADA' && account.estado !== 'PAGADO') {
+    // Verificar si el saldo es mayor a 0 (nueva validación)
+    if (!account.saldo || account.saldo <= 0) {
       event.target.checked = !isChecked; // Revertir el checkbox
       return;
     }
