@@ -270,14 +270,18 @@
                     <!-- Access Button -->
                     <button
                       (click)="accessMeeting(reunion, programa)"
+                      [disabled]="!hasStudents(programa)"
                       class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       [ngClass]="{
-                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id),
-                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id)
+                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id) && hasStudents(programa),
+                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id),
+                        'bg-gray-400 text-gray-200 cursor-not-allowed': !hasStudents(programa)
                       }">
                       <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
                       @if (hasActiveSession(reunion.id)) {
                         <span>Sesión en Curso</span>
+                      } @else if (!hasStudents(programa)) {
+                        <span>Sin Estudiantes Asignados</span>
                       } @else {
                         <span>Acceder a Reunión</span>
                       }
