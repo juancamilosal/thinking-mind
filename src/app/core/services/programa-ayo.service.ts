@@ -113,8 +113,12 @@ export class ProgramaAyoService {
   }
 
   createPlanEstudio(data: any): Observable<ResponseAPI<any>> {
-    return this.http.post<ResponseAPI<any>>(environment.plan_estudio, data);
-  }
+        return this.http.post<ResponseAPI<any>>(environment.plan_estudio, data);
+    }
+
+    deletePlanEstudio(id: string | number): Observable<ResponseAPI<any>> {
+        return this.http.delete<ResponseAPI<any>>(`${environment.plan_estudio}/${id}`);
+    }
 
   updatePrecioProgramaAyo(id: string, data: any): Observable<ResponseAPI<any>> {
     return this.http.patch<ResponseAPI<any>>(`${environment.precio_programa_ayo}/${id}`, data);

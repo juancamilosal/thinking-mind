@@ -116,6 +116,10 @@ export class ListMeet implements OnInit {
   showStudyPlanModal = false;
   selectedStudyPlan: any[] = [];
   selectedProgramForStudyPlan: ProgramaAyo | null = null;
+  newPlanText: string = '';
+  editingPlanId: string | number | null = null;
+  editingPlanText: string = '';
+  isProcessingPlan: boolean = false;
 
   // Novedad Modal Properties
   showNovedadModal = false;
@@ -175,6 +179,148 @@ export class ListMeet implements OnInit {
     this.showStudyPlanModal = false;
     this.selectedStudyPlan = [];
     this.selectedProgramForStudyPlan = null;
+    this.newPlanText = '';
+    this.editingPlanId = null;
+    this.editingPlanText = '';
+    this.isProcessingPlan = false;
+  }
+
+  addPlanItem(): void {
+    if (!this.newPlanText.trim()) return;
+    this.isProcessingPlan = true;
+
+    const newPlanData = {
+        plan: this.newPlanText,
+        realizado: false
+    };
+
+    this.programaAyoService.createPlanEstudio(newPlanData).subscribe({
+        next: (response) => {
+            const newPlan = response.data;
+            const currentPlans = this.selectedProgramForStudyPlan?.plan_estudio_id || [];
+            const currentIds = Array.isArray(currentPlans) 
+                ? currentPlans.map((p: any) => p.id) 
+                : [];
+            
+            const newIds = [...currentIds, newPlan.id];
+            
+            if (this.selectedProgramForStudyPlan && this.selectedProgramForStudyPlan.id) {
+                 this.programaAyoService.updateProgramaAyo(this.selectedProgramForStudyPlan.id, {
+                    plan_estudio_id: newIds
+                 }).subscribe({
+                    next: () => {
+                        this.ngZone.run(() => {
+                             if (Array.isArray(this.selectedProgramForStudyPlan?.plan_estudio_id)) {
+                                 (this.selectedProgramForStudyPlan!.plan_estudio_id as any[]).push(newPlan);
+                             } else {
+                                 this.selectedProgramForStudyPlan!.plan_estudio_id = [newPlan];
+                             }
+                             
+                             this.openStudyPlanModal(this.selectedProgramForStudyPlan!);
+                             
+                             this.newPlanText = '';
+                             this.isProcessingPlan = false;
+                             this.cdr.detectChanges();
+                        });
+                    },
+                    error: (err) => {
+                        this.ngZone.run(() => {
+                            console.error(err);
+                            this.notificationService.showError('Error', 'No se pudo actualizar el programa.');
+                            this.isProcessingPlan = false;
+                            this.cdr.detectChanges();
+                        });
+                    }
+                 });
+            }
+        },
+        error: (err) => {
+            this.ngZone.run(() => {
+                console.error(err);
+                this.notificationService.showError('Error', 'No se pudo crear el item.');
+                this.isProcessingPlan = false;
+                this.cdr.detectChanges();
+            });
+        }
+    });
+  }
+
+  startEditingPlan(item: any): void {
+      this.editingPlanId = item.original.id;
+      this.editingPlanText = item.original.plan;
+  }
+
+  cancelEditingPlan(): void {
+      this.editingPlanId = null;
+      this.editingPlanText = '';
+  }
+
+  saveEditedPlan(item: any): void {
+       if (!this.editingPlanText.trim()) return;
+       this.isProcessingPlan = true;
+       
+       this.programaAyoService.updatePlanEstudio(item.original.id, {
+           plan: this.editingPlanText
+       }).subscribe({
+           next: () => {
+               this.ngZone.run(() => {
+                   item.original.plan = this.editingPlanText;
+                   this.openStudyPlanModal(this.selectedProgramForStudyPlan!);
+                   
+                   this.cancelEditingPlan();
+                   this.isProcessingPlan = false;
+                   this.cdr.detectChanges();
+               });
+            },
+            error: (err) => {
+               this.ngZone.run(() => {
+                   this.notificationService.showError('Error', 'No se pudo actualizar el item.');
+                   this.isProcessingPlan = false;
+                   this.cdr.detectChanges();
+               });
+           }
+       });
+  }
+
+  deletePlanItem(item: any): void {
+    this.confirmationService.showDeleteConfirmation(
+        'este item del plan de estudio',
+        'Item del Plan',
+        () => {
+            this.isProcessingPlan = true;
+            this.cdr.detectChanges();
+            
+            const currentPlans = this.selectedProgramForStudyPlan?.plan_estudio_id as any[];
+            const newIds = currentPlans.filter(p => p.id !== item.original.id).map(p => p.id);
+            
+            if (this.selectedProgramForStudyPlan && this.selectedProgramForStudyPlan.id) {
+                 // Primero desvincular del programa (opcional si Directus maneja cascada, pero seguro hacerlo)
+                 // O simplemente eliminar directamente el item si la relación lo permite
+                 
+                 this.programaAyoService.deletePlanEstudio(item.original.id).subscribe({
+                     next: () => {
+                         this.ngZone.run(() => {
+                             const index = (this.selectedProgramForStudyPlan!.plan_estudio_id as any[]).findIndex(p => p.id === item.original.id);
+                             if (index !== -1) {
+                                 (this.selectedProgramForStudyPlan!.plan_estudio_id as any[]).splice(index, 1);
+                             }
+                             this.openStudyPlanModal(this.selectedProgramForStudyPlan!);
+                             this.isProcessingPlan = false;
+                             this.cdr.detectChanges();
+                         });
+                     },
+                     error: (err) => {
+                         this.ngZone.run(() => {
+                             console.error('Error eliminando item:', err);
+                             this.notificationService.showError('Error', 'No se pudo eliminar el item.');
+                             this.isProcessingPlan = false;
+                             this.cdr.detectChanges();
+                         });
+                     }
+                 });
+             }
+         }
+     );
   }
 
   openNovedadModalGlobal(): void {

@@ -342,14 +342,14 @@
                                         <input
                                           type="checkbox"
                                           [checked]="isPinEntregado(studentWithAccount.account)"
-                                          [disabled]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
+                                          [disabled]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0"
                                           (change)="updatePinEntregado(studentWithAccount.account, $event)"
                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                          [class.opacity-50]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
-                                          [class.cursor-not-allowed]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
+                                          [class.opacity-50]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0"
+                                          [class.cursor-not-allowed]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0"
                                         />
                                         <span class="ml-2 text-xs text-gray-600"
-                                              [class.text-gray-400]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'">
+                                              [class.text-gray-400]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0">
                                           {{ getPinEntregadoText(studentWithAccount.account) }}
                                         </span>
                                       </div>
@@ -602,13 +602,14 @@
                                                 <input
                                                   type="checkbox"
                                                   [checked]="isPinEntregado(studentWithAccount.account)"
-                                                  [disabled]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
+                                                  [disabled]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0"
                                                   (change)="updatePinEntregado(studentWithAccount.account, $event)"
                                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                                  [class.opacity-50]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'"
+                                                  [class.opacity-50]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0"
+                                                  [class.cursor-not-allowed]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0"
                                                 />
                                                 <span class="ml-2 text-xs"
-                                                      [class.text-gray-400]="studentWithAccount.account.estado !== 'PAGADA' && studentWithAccount.account.estado !== 'PAGADO'">
+                                                      [class.text-gray-400]="!studentWithAccount.account.saldo || studentWithAccount.account.saldo <= 0">
                                                   {{ getPinEntregadoText(studentWithAccount.account) }}
                                                 </span>
                                               </div>

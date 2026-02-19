@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { forkJoin, of, Observable } from 'rxjs';
+import { switchMap, map, catchError, shareReplay, startWith } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
 
 import { FormsModule } from '@angular/forms';
 import { FormRector } from './rector/form-rector/form-rector';
@@ -17,7 +20,7 @@ import { AppButtonComponent } from '../../../../components/app-button/app-button
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail, FormUser, AppButtonComponent],
+  imports: [CommonModule, FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail, FormUser, AppButtonComponent],
   templateUrl: './users.html'
 })
 export class Users implements OnInit {
@@ -25,6 +28,7 @@ export class Users implements OnInit {
   showForm = false;
   showDetail = false;
   editMode = false;
+  roleCounts: { [key: string]: Observable<number> } = {};
   selectedRector: User | null = null;
   selectedAdmin: User | null = null;
   selectedUser: User | null = null;
@@ -42,12 +46,19 @@ export class Users implements OnInit {
     private userService: UserService,
     private schoolService: SchoolService,
     private notificationService: NotificationService,
-    private roleService: RoleService
+    private roleService: RoleService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
     // Solo cargar roles al inicio
     this.loadRoles();
+  }
+
+  selectRole(roleId: string): void {
+    this.selectedRole = roleId;
+    this.onRoleChange();
   }
 
   // Nuevo método para cargar usuarios por rol
@@ -137,6 +148,40 @@ export class Users implements OnInit {
     if (this.selectedRole) {
       this.loadUsersByRole();
     }
+  }
+
+  getRoleImage(roleId: string): string {
+    // Rector
+    if (roleId === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
+      return 'assets/icons/rector.png';
+    }
+    // Director Ejecutivo
+    if (roleId === 'ad299f85-8137-4709-a3ad-beaeb579cdb3') {
+      return 'assets/icons/ejecutivo.png';
+    }
+    // Administrador
+    if (roleId === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
+      return 'assets/icons/director.png';
+    }
+    // Student
+    if (roleId === 'ca8ffc29-c040-439f-8017-0dcb141f0fd3') {
+      return 'assets/icons/estudiante.png';
+    }
+    // Teacher
+    if (roleId === 'fe83d2f3-1b89-477d-984a-de3b56e12001') {
+      return 'assets/icons/docente.png';
+    }
+    // Finanzas
+    if (roleId === 'b9cf2164-22ab-4dc8-be5a-8a9420c82f1c') {
+      return 'assets/icons/finanzas.png';
+    }
+    // Ventas
+    if (roleId === 'b40cfe25-bd79-4d62-818b-6cf96674fc12') {
+      return 'assets/icons/clients.png';
+    }
+    
+    // Default
+    return 'assets/icons/users.png';
   }
 
   loadRectores(): void {
@@ -340,18 +385,38 @@ export class Users implements OnInit {
   }
 
   loadRoles(): void {
+    this.isLoading = true;
     this.roleService.getAllRoles().subscribe({
       next: (response) => {
         this.roles = response.data;
+        this.isLoading = false;
+        
+        // Configurar observables para cada rol
+        this.roles.forEach(role => {
+          this.roleCounts[role.id] = this.userService.getUsersCountByRole(role.id).pipe(
+            map(res => (res?.meta?.filter_count ?? res?.meta?.total_count) || 0),
+            catchError(err => {
+              console.error(`Error loading count for role ${role.id}`, err);
+              return of(0);
+            }),
+            startWith(0), // Valor inicial inmediato
+            shareReplay(1) // Cachear el último valor
+          );
+        });
       },
       error: (error) => {
-        console.error('Error loading roles:', error);
+        console.error('Error loading roles data:', error);
+        this.isLoading = false;
         this.notificationService.showError(
           'Error al cargar roles',
           'No se pudieron cargar los roles. Inténtalo nuevamente.'
         );
       }
     });
+  }
+
+  loadRoleCounts(): void {
+    // Método obsoleto, reemplazado por la lógica en loadRoles
   }
 
   loadAllUsers(): void {

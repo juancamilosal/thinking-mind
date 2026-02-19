@@ -129,7 +129,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.selectedProgramForStudents = null;
   }
 
- 
+  hasStudents(programa: ProgramaAyo): boolean {
+    const studentsFromLevel = programa.id_nivel?.estudiantes_id;
+    const studentsFromRoot = (programa as any).estudiantes_id;
+
+    const hasLevelStudents = Array.isArray(studentsFromLevel) && studentsFromLevel.length > 0;
+    const hasRootStudents = Array.isArray(studentsFromRoot) && studentsFromRoot.length > 0;
+
+    return hasLevelStudents || hasRootStudents;
+  }
 
   getStudentAttendance(student: any): number {
     if (!student.asistencia_id || !Array.isArray(student.asistencia_id) || !this.selectedProgramForStudents) {

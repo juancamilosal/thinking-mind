@@ -8,7 +8,7 @@
             Volver
         </button>
     @if (showStudyPlanModal) {
-<div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4" (click)="closeStudyPlanModal()">
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-30 p-4" (click)="closeStudyPlanModal()">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn" (click)="$event.stopPropagation()">
         <!-- Header -->
         <div class="bg-[#13486e] p-4 flex justify-between items-center">
@@ -28,15 +28,37 @@
             @if (selectedStudyPlan.length > 0) {
                 <ul class="space-y-3">
                     @for (item of selectedStudyPlan; track $index) {
-                    <li class="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-start gap-3">
-                            <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
-                                {{ item.displayNumber || ($index + 1) }}
-                            </span>
-                            <span class="text-gray-700 leading-relaxed">{{ item.text }}</span>
-                        </div>
-                        @if (item.original.realizado) {
-                            <img src="assets/icons/check.png" class="w-6 h-6 object-contain flex-shrink-0" alt="Realizado" title="Realizado">
+                    <li class="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group">
+                        @if (editingPlanId === item.original.id) {
+                            <div class="flex-1 flex items-center gap-2">
+                                <input type="text" [(ngModel)]="editingPlanText" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#13486e] outline-none" (keyup.enter)="saveEditedPlan(item)" autofocus>
+                                <button (click)="saveEditedPlan(item)" class="text-green-600 hover:text-green-700 p-1" title="Guardar">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                </button>
+                                <button (click)="cancelEditingPlan()" class="text-red-600 hover:text-red-700 p-1" title="Cancelar">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        } @else {
+                            <div class="flex items-start gap-3 flex-1">
+                                <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-[#13486e]/10 text-[#13486e] rounded-full text-xs font-bold mt-0.5">
+                                    {{ item.displayNumber || ($index + 1) }}
+                                </span>
+                                <span class="text-gray-700 leading-relaxed">{{ item.text }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if (item.original.realizado) {
+                                    <img src="assets/icons/check.png" class="w-6 h-6 object-contain flex-shrink-0" alt="Realizado" title="Realizado">
+                                }
+                                <div class="flex gap-1 transition-opacity">
+                                    <button (click)="startEditingPlan(item)" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Editar">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </button>
+                                    <button (click)="deletePlanItem(item)" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Eliminar">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
                         }
                     </li>
                     }
@@ -49,6 +71,18 @@
                     <p class="text-lg font-medium">No hay plan de estudio disponible</p>
                 </div>
             }
+
+            <!-- Add New Item Section -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <h4 class="text-sm font-bold text-gray-700 mb-2">Agregar nuevo item</h4>
+                <div class="flex gap-2">
+                    <input type="text" [(ngModel)]="newPlanText" placeholder="Escribe el nuevo item del plan..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#13486e] outline-none transition-all" (keyup.enter)="addPlanItem()">
+                    <button (click)="addPlanItem()" [disabled]="!newPlanText.trim() || isProcessingPlan" class="bg-[#13486e] text-white px-4 py-2 rounded-lg hover:bg-[#0f3a5a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Agregar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

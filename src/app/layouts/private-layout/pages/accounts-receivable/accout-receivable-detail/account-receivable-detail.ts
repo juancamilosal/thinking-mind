@@ -214,12 +214,22 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
       this.paymentService.uploadFile(formData).subscribe({
         next: (uploadResponse) => {
-          payment.comprobante = uploadResponse.data.id;
+          // Validar respuesta del backend
+          if ((uploadResponse as any)?.status === 'ERROR' || !(uploadResponse as any)?.data?.id) {
+            this.isSubmittingPayment = false;
+            const msg = this.getResponseMessage(uploadResponse) || 'No se pudo subir la imagen del comprobante.';
+            this.notificationService.showError('Error al subir comprobante', msg);
+            this.cdr.detectChanges();
+            return;
+          }
+          payment.comprobante = (uploadResponse as any).data.id;
           this.createPaymentRecord(payment);
         },
         error: (uploadError) => {
           this.isSubmittingPayment = false;
-          this.notificationService.showError('Error', 'No se pudo subir la imagen del comprobante.');
+          const msg = this.getErrorMessage(uploadError);
+          this.notificationService.showError('Error al subir comprobante', msg);
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -229,7 +239,15 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   private createPaymentRecord(payment: any) {
     this.paymentService.createPayment(payment).subscribe({
-      next: ():void => {
+      next: (response: any): void => {
+        // Si el backend retorna éxito lógico/ERROR en 200, validarlo
+        if (response && response.status === 'ERROR') {
+          this.isSubmittingPayment = false;
+          const msg = this.getResponseMessage(response) || 'El servidor rechazó el registro del pago.';
+          this.notificationService.showError('Error al registrar pago', msg);
+          this.cdr.detectChanges();
+          return;
+        }
         const newSaldo = this.account.saldo + this.newPaymentAmount;
         // Use finalAmount instead of account.monto for status determination
         const newEstado = newSaldo >= this.finalAmount ? 'PAGADA' : 'PENDIENTE';
@@ -246,22 +264,58 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
             this.isSubmittingPayment = false;
             this.refreshAccountData();
             this.notificationService.showSuccess('Éxito', 'El pago ha sido registrado correctamente.');
+            this.cdr.detectChanges();
 
           },
           error: (updateError) => {
-            this.resetPaymentForm();
-            this.showAddPaymentForm = false;
             this.isSubmittingPayment = false;
-            this.refreshAccountData();
+            const msg = this.getErrorMessage(updateError);
+            this.notificationService.showError('Error al actualizar saldo', msg);
+            this.cdr.detectChanges();
 
           }
         });
       },
       error: (paymentError) => {
         this.isSubmittingPayment = false;
-        this.notificationService.showError('Error', 'No se pudo registrar el pago.');
+        const msg = this.getErrorMessage(paymentError);
+        this.notificationService.showError('Error al registrar pago', msg);
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  private getErrorMessage(error: any): string {
+    try {
+      const e = error || {};
+      if (e.error) {
+        const err = e.error;
+        if (typeof err === 'string') return err;
+        if (err.data && typeof err.data === 'string') return err.data;
+        if (Array.isArray(err.errors) && err.errors.length > 0) {
+          const first = err.errors[0];
+          if (first.message) return first.message;
+          if (first.extensions && first.extensions.code) return first.extensions.code;
+        }
+        if (err.message) return err.message;
+      }
+      if (e.message) return e.message;
+      return 'Ocurrió un error no especificado. Inténtalo nuevamente.';
+    } catch {
+      return 'Ocurrió un error no especificado. Inténtalo nuevamente.';
+    }
+  }
+
+  private getResponseMessage(response: any): string {
+    if (!response) return '';
+    const r = response as any;
+    if (typeof r.message === 'string' && r.message.trim()) return r.message;
+    if (r.data && typeof r.data === 'string' && r.data.trim()) return r.data;
+    if (Array.isArray(r.errors) && r.errors.length > 0) {
+      const first = r.errors[0];
+      if (first?.message) return first.message;
+    }
+    return '';
   }
 
 
