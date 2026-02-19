@@ -9,7 +9,7 @@
         <div
           class="group relative cursor-pointer rounded-xl border border-slate-600 transition-all shadow-md hover:shadow-xl hover:border-purple-400 overflow-hidden aspect-square p-4 flex flex-col items-center justify-center text-center"
           (click)="selectRole(role.id)"
-          [class.bg-slate-700]="selectedRole !== role.id"
+          [class.bg-slate-500]="selectedRole !== role.id"
           [class.bg-slate-900]="selectedRole === role.id"
           [class.border-purple-500]="selectedRole === role.id"
           [class.ring-2]="selectedRole === role.id"
@@ -17,8 +17,8 @@
           <div class="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-transparent group-hover:to-white/10"
                [class.to-purple-500_10]="selectedRole === role.id"></div>
           <img [src]="getRoleImage(role.id)" [alt]="role.name" class="relative w-16 h-16 object-contain mb-3 drop-shadow-md" onerror="this.src='assets/icons/users.png'">
-          <div class="relative text-sm font-semibold text-white group-hover:text-purple-300 leading-tight"
-               [class.text-purple-300]="selectedRole === role.id">{{ role.name }}</div>
+          <label class="relative text-2xl font-semibold text-white group-hover:text-purple-300 leading-tight"
+               [class.text-purple-300]="selectedRole === role.id">{{ role.name }}</label>
           <div class="relative mt-1">
             <span class="text-2xl font-extrabold tracking-tight text-purple-300"
                   [class.text-purple-400]="selectedRole === role.id">{{ (roleCounts[role.id] | async) || 0 }}</span>

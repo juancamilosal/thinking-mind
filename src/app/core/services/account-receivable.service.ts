@@ -118,6 +118,7 @@ export class AccountReceivableService {
     }
 
     // Filtro por búsqueda general (nombre, apellido, documento)
+    let nextAndIndex = 0;
     if (filterParams.search) {
       const searchTerms = filterParams.search.trim().split(/\s+/);
 
@@ -139,6 +140,7 @@ export class AccountReceivableService {
             params[`filter[_and][${index}][_or][2][cliente_id][numero_documento][_icontains]`] = term;
             params[`filter[_and][${index}][_or][3][estudiante_id][nombre][_icontains]`] = term;
             params[`filter[_and][${index}][_or][4][estudiante_id][apellido][_icontains]`] = term;
+            nextAndIndex = index + 1;
           }
         });
       }
@@ -157,7 +159,11 @@ export class AccountReceivableService {
     // Filtro por estado
     if (filterParams.estado) {
       if (filterParams.estado === 'SALDO_0') {
-        params['filter[saldo][_eq]'] = '0';
+        // Incluir saldo menor o igual a 0 y saldo nulo
+        // Usamos nextAndIndex para evitar conflictos con los índices de búsqueda múltiple
+        params[`filter[_and][${nextAndIndex}][_or][0][saldo][_lte]`] = '0';
+        params[`filter[_and][${nextAndIndex}][_or][1][saldo][_null]`] = 'true';
+        nextAndIndex++;
       } else {
         params['filter[estado][_eq]'] = filterParams.estado;
       }
@@ -257,32 +263,10 @@ export class AccountReceivableService {
       meta: 'total_count,filter_count'
     };
 
-    // Filtro por estado
-    if (status === 'zero') {
-      params['filter[saldo][_eq]'] = '0';
-    } else {
-      // Mapear los estados del frontend a los valores de la base de datos
-      let dbStatus = status;
-      switch (status) {
-        case 'pending':
-          dbStatus = 'PENDIENTE';
-          break;
-        case 'paid':
-          dbStatus = 'PAGADA';
-          break;
-        case 'refund':
-          dbStatus = 'DEVOLUCION';
-          break;
-      }
-      params['filter[estado][_eq]'] = dbStatus;
-    }
+    // Calcular el próximo índice disponible para _and
+    let nextAndIndex = 0;
 
-    // Filtro por colegio si se proporciona
-    if (colegioId) {
-      params['filter[estudiante_id][colegio_id][_eq]'] = colegioId;
-    }
-
-    // Filtro por término de búsqueda si se proporciona
+    // Filtro por término de búsqueda si se proporciona (procesar esto primero para reservar índices)
     if (searchTerm) {
       const searchTerms = searchTerm.trim().split(/\s+/);
 
@@ -304,9 +288,39 @@ export class AccountReceivableService {
             params[`filter[_and][${index}][_or][2][cliente_id][numero_documento][_icontains]`] = term;
             params[`filter[_and][${index}][_or][3][estudiante_id][nombre][_icontains]`] = term;
             params[`filter[_and][${index}][_or][4][estudiante_id][apellido][_icontains]`] = term;
+            nextAndIndex = index + 1;
           }
         });
       }
+    }
+
+    // Filtro por estado
+    if (status === 'zero') {
+      // Usar un índice específico para el grupo OR de saldo para no interferir con otros filtros AND/OR
+      // Incluir saldo menor o igual a 0 y saldo nulo
+      params[`filter[_and][${nextAndIndex}][_or][0][saldo][_lte]`] = '0';
+      params[`filter[_and][${nextAndIndex}][_or][1][saldo][_null]`] = 'true';
+      nextAndIndex++;
+    } else {
+      // Mapear los estados del frontend a los valores de la base de datos
+      let dbStatus = status;
+      switch (status) {
+        case 'pending':
+          dbStatus = 'PENDIENTE';
+          break;
+        case 'paid':
+          dbStatus = 'PAGADA';
+          break;
+        case 'refund':
+          dbStatus = 'DEVOLUCION';
+          break;
+      }
+      params['filter[estado][_eq]'] = dbStatus;
+    }
+
+    // Filtro por colegio si se proporciona
+    if (colegioId) {
+      params['filter[estudiante_id][colegio_id][_eq]'] = colegioId;
     }
 
     const queryString = new URLSearchParams(params).toString();
