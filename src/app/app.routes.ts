@@ -153,6 +153,7 @@ export const routes: Routes = [
       },
       {
         path: 'ayo',
+        pathMatch: 'full',
         title: 'Thinking Mind | AYO',
         component: AyoComponent
       },
