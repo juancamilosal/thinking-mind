@@ -32,23 +32,28 @@ export class AttendanceService {
     }
 
     if (filter) {
-      Object.keys(filter).forEach(key => {
-        const value = filter[key];
-        if (value !== null && value !== undefined) {
-          if (typeof value === 'object' && !Array.isArray(value)) {
-             // Handle complex filters like { _gte: '...', _lte: '...' }
-             Object.keys(value).forEach(operator => {
-                 params = params.set(`filter[${key}][${operator}]`, value[operator]);
-             });
-          } else {
-             // Default to _eq for primitive values
-             params = params.set(`filter[${key}][_eq]`, value);
-          }
-        }
-      });
+      params = this.buildFilterParams(params, filter, 'filter');
     }
 
     return this.http.get<ResponseAPI<Attendance[]>>(this.apiUrl, { params });
+  }
+
+  private buildFilterParams(params: HttpParams, filter: any, prefix: string): HttpParams {
+    Object.keys(filter).forEach(key => {
+      const value = filter[key];
+      if (value !== null && value !== undefined) {
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          params = this.buildFilterParams(params, value, `${prefix}[${key}]`);
+        } else {
+          if (key.startsWith('_')) {
+            params = params.set(`${prefix}[${key}]`, value);
+          } else {
+            params = params.set(`${prefix}[${key}][_eq]`, value);
+          }
+        }
+      }
+    });
+    return params;
   }
 
   getAttendanceById(id: string): Observable<ResponseAPI<Attendance>> {

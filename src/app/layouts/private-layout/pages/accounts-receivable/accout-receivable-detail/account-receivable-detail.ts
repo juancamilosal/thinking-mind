@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {ActivatedRoute, Router} from '@angular/router';
 import {AccountReceivable, PaymentModel} from '../../../../../core/models/AccountReceivable';
 import { PaymentDetailComponent } from '../payment-detail/payment-detail';
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
@@ -20,14 +21,43 @@ import { AppButtonComponent } from '../../../../../components/app-button/app-but
 })
 export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   @Input() account!: AccountReceivable;
+  isLoading = false;
 
   ngOnInit() {
     if (this.account) {
       this.initializeDiscountValues();
       setTimeout(() => this.checkAndUpdateAccountStatus(), 0);
+      this.initializeComponentProperties();
+      this.cdr.detectChanges();
+    } else {
+      this.route.paramMap.subscribe(params => {
+        const id = params.get('id');
+        if (id) {
+          this.loadAccount(id);
+        }
+      });
     }
-    this.initializeComponentProperties();
-    this.cdr.detectChanges();
+  }
+
+  loadAccount(id: string) {
+    this.isLoading = true;
+    this.accountService.getAccountById(id).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        if (response.data) {
+          this.account = response.data;
+          this.initializeDiscountValues();
+          this.checkAndUpdateAccountStatus();
+          this.initializeComponentProperties();
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.notificationService.showError('Error', 'No se pudo cargar la cuenta');
+        this.goBack();
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -42,6 +72,15 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   @Output() backToList = new EventEmitter<void>();
   @Output() llamarFuncion = new EventEmitter<void>();
   @Output() addPayment = new EventEmitter<PaymentModel>();
+
+  goBack() {
+    if (this.route.snapshot.paramMap.get('id')) {
+      this.router.navigate(['/private/accounts-receivable']);
+    } else {
+      this.backToList.emit();
+    }
+  }
+
 
   get payments(): PaymentModel[] {
     return this.account?.pagos || [];
@@ -58,6 +97,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   newApprovalNumber: string;
   newBank: string;
   newPaymentImage: File | null = null;
+  newPaymentImagePreview: string | null = null;
   isSubmittingPayment = false;
   isDeletingPayment = false;
   deletingPaymentId: string | null = null;
@@ -84,7 +124,9 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private accountService: AccountReceivableService,
     private confirmationService: ConfirmationService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
 
@@ -104,7 +146,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   }
 
   onBack() {
-    this.backToList.emit();
+    this.goBack();
   }
 
   getTotalPaid(): number {
@@ -360,6 +402,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.newApprovalNumber = '';
     this.newBank = '';
     this.newPaymentImage = null;
+    this.newPaymentImagePreview = null;
     this.isSubmittingPayment = false;
     // Forzar detección de cambios
     this.cdr.detectChanges();
@@ -370,11 +413,27 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (file) {
       if (file.type.startsWith('image/')) {
         this.newPaymentImage = file;
+        
+        // Generate preview
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.newPaymentImagePreview = e.target.result;
+          this.cdr.detectChanges();
+        };
+        reader.readAsDataURL(file);
       } else {
         this.notificationService.showError('Error', 'Por favor seleccione un archivo de imagen válido.');
         event.target.value = '';
+        this.newPaymentImage = null;
+        this.newPaymentImagePreview = null;
       }
     }
+  }
+
+  removePaymentImage() {
+    this.newPaymentImage = null;
+    this.newPaymentImagePreview = null;
+    this.cdr.detectChanges();
   }
 
   viewPaymentImage(payment: PaymentModel) {

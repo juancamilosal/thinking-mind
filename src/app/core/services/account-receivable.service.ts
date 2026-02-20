@@ -29,7 +29,7 @@ export class AccountReceivableService {
 
 
   getAccountById(id: string): Observable<ResponseAPI<AccountReceivable>> {
-    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,pagos.*,pagos.responsable.*,curso_id.*`).pipe(
+    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,pagos.*,pagos.responsable.*,curso_id.*`).pipe(
       map(response => ({
         ...response,
         data: this.mapToAccountReceivable(response.data)

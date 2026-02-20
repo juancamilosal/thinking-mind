@@ -82,7 +82,10 @@ export class LoginAyo implements OnInit {
     }
 
     onLoginSubmit() {
-        if (this.loginForm.invalid) return;
+        if (this.loginForm.invalid) {
+            this.loginForm.markAllAsTouched();
+            return;
+        }
         this.isLoading = true;
 
         const { email, password } = this.loginForm.value;
