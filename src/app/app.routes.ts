@@ -31,6 +31,9 @@ import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payro
 import { TeacherEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/teacher-evaluation-ayo/teacher-evaluation-ayo';
 import { StudentEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/student-evaluation-ayo/student-evaluation-ayo';
 import { Advertising } from './layouts/private-layout/pages/advertising/advertising';
+import {
+  AccountReceivableDetailComponent
+} from './layouts/private-layout/pages/accounts-receivable/accout-receivable-detail/account-receivable-detail';
 
 
 export const routes: Routes = [
@@ -105,6 +108,11 @@ export const routes: Routes = [
         path: 'accounts-receivable',
         title: 'Thinking Mind | Cuentas por Cobrar',
         component: AccountsReceivable
+      },
+      {
+        path: 'accounts-receivable/:id',
+        title: 'Thinking Mind | Detalle de Cuenta por Cobrar',
+        component: AccountReceivableDetailComponent
       },
       {
         path: 'payments',

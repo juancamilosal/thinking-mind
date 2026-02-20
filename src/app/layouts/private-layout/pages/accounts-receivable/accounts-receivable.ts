@@ -1,7 +1,7 @@
 import {Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {AccountReceivableFormComponent} from './account-recevable-form/account-receivable-form';
 import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
 import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
@@ -58,6 +58,7 @@ export class AccountsReceivable implements OnInit {
     private accountService: AccountReceivableService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
+    private router: Router,
     private confirmationService: ConfirmationService,
     private notificationService: NotificationService
   ) {
@@ -80,9 +81,6 @@ export class AccountsReceivable implements OnInit {
       this.applyFilters();
     }
 
-    this.totalAccounts();
-
-    // Check for cuentaCobrarId query parameter
     this.route.queryParams.subscribe(params => {
       const cuentaCobrarId = params['cuentaCobrarId'];
       if (cuentaCobrarId) {
@@ -394,35 +392,6 @@ export class AccountsReceivable implements OnInit {
     this.loadAccountsByTab(tab);
   }
 
-  totalAccounts = (): void => {
-    this.isLoadingTotals = true;
-
-    // Si es rector, filtrar totales por su colegio
-    if (this.isRector && this.userColegioId) {
-      this.accountService.totalAccounts(this.userColegioId).subscribe({
-        next: (data) => {
-          this.total = data.data;
-          this.isLoadingTotals = false;
-        },
-        error: (error) => {
-          console.error('Error al cargar totales:', error);
-          this.isLoadingTotals = false;
-        }
-      });
-    } else {
-      this.accountService.totalAccounts().subscribe({
-        next: (data) => {
-          this.total = data.data;
-          this.isLoadingTotals = false;
-        },
-        error: (error) => {
-          console.error('Error al cargar totales:', error);
-          this.isLoadingTotals = false;
-        }
-      });
-    }
-  }
-
   private updateAccountsForActiveTab(): void {
     let base: AccountReceivable[] = [];
     switch (this.activeTab) {
@@ -481,7 +450,7 @@ export class AccountsReceivable implements OnInit {
     this.updatePagination();
 
     this.showForm = false;
-    this.totalAccounts();
+
   }
 
   private loadAccountsByStatus(status: 'pending' | 'paid' | 'refund' | 'zero'): void {
@@ -621,7 +590,7 @@ export class AccountsReceivable implements OnInit {
           // Refiltrar todas las cuentas
           this.filterAccountsByStatus();
           this.updatePagination();
-          this.totalAccounts();
+
         },
         error: (error) => {
           console.error('Error al marcar como pagada:', error);
@@ -689,7 +658,7 @@ export class AccountsReceivable implements OnInit {
             // Refiltrar todas las cuentas
             this.filterAccountsByStatus();
             this.updatePagination();
-            this.totalAccounts();
+
 
             // Si la cuenta eliminada era la seleccionada, cerrar el detalle
             if (this.selectedAccount && this.selectedAccount.id === accountId) {
@@ -715,9 +684,7 @@ export class AccountsReceivable implements OnInit {
   }
 
   viewDetail(account: AccountReceivable) {
-    this.selectedAccount = account;
-    this.showDetail = true;
-    this.cdr.detectChanges();
+    this.router.navigate(['/private/accounts-receivable', account.id]);
   }
 
   backToList() {
@@ -725,7 +692,6 @@ export class AccountsReceivable implements OnInit {
     this.selectedAccount = null;
     // Mantener los filtros aplicados al regresar
     this.applyFilters();
-    this.totalAccounts();
     this.cdr.detectChanges();
   }
 
