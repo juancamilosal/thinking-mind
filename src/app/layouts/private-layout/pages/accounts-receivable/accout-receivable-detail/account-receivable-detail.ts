@@ -58,6 +58,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   newApprovalNumber: string;
   newBank: string;
   newPaymentImage: File | null = null;
+  newPaymentImagePreview: string | null = null;
   isSubmittingPayment = false;
   isDeletingPayment = false;
   deletingPaymentId: string | null = null;
@@ -360,6 +361,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.newApprovalNumber = '';
     this.newBank = '';
     this.newPaymentImage = null;
+    this.newPaymentImagePreview = null;
     this.isSubmittingPayment = false;
     // Forzar detección de cambios
     this.cdr.detectChanges();
@@ -370,11 +372,27 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (file) {
       if (file.type.startsWith('image/')) {
         this.newPaymentImage = file;
+        
+        // Generate preview
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.newPaymentImagePreview = e.target.result;
+          this.cdr.detectChanges();
+        };
+        reader.readAsDataURL(file);
       } else {
         this.notificationService.showError('Error', 'Por favor seleccione un archivo de imagen válido.');
         event.target.value = '';
+        this.newPaymentImage = null;
+        this.newPaymentImagePreview = null;
       }
     }
+  }
+
+  removePaymentImage() {
+    this.newPaymentImage = null;
+    this.newPaymentImagePreview = null;
+    this.cdr.detectChanges();
   }
 
   viewPaymentImage(payment: PaymentModel) {
