@@ -97,6 +97,15 @@ export class ProgramaAyoService {
     return this.http.get<ResponseAPI<any[]>>(environment.calificacion_docente, { params });
   }
 
+  getCalificacionesEstudiante(studentId: string): Observable<ResponseAPI<any[]>> {
+    // Obtener calificaciones donde el estudiante es el evaluado
+    const params = {
+      'filter[evaluado_id][_eq]': studentId,
+      'fields': '*,criterio_evaluacion_id.*,'
+    };
+    return this.http.get<ResponseAPI<any[]>>(environment.calificacion_docente, { params });
+  }
+
   getAllCalificacionesDocente(): Observable<ResponseAPI<any[]>> {
     const params = {
       'fields': '*,criterio_evaluacion_id.id,criterio_evaluacion_id.nombre,docente_id.*'

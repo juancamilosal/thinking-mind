@@ -1,0 +1,210 @@
+<div class="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <!-- Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Evaluación Estudiante AYO</h1>
+            <p class="text-gray-600 mt-2">
+                {{ state === 'list' ? 'Seleccione un estudiante para ver sus calificaciones.' : 'Detalle de calificaciones del estudiante.' }}
+            </p>
+        </div>
+        <button (click)="goBack()" class="flex items-center px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Regresar
+        </button>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div *ngIf="state === 'list'">
+        <!-- Loading State -->
+        <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoading && students.length === 0" class="text-center py-12 bg-white rounded-xl shadow-sm">
+            <img src="assets/icons/users.png" class="w-24 h-24 mx-auto mb-4 opacity-50" alt="Sin estudiantes">
+            <h3 class="text-xl font-medium text-gray-900">No hay estudiantes registrados</h3>
+            <p class="text-gray-500 mt-2">No se encontraron estudiantes con el rol AYO.</p>
+        </div>
+
+        <!-- Students Grid -->
+        <div *ngIf="!isLoading && students.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div *ngFor="let student of students" (click)="selectStudent(student)" 
+                 class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1">
+                <div class="p-6 text-center">
+                    <div class="mx-auto h-24 w-24 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-3xl uppercase overflow-hidden mb-4 shadow-inner">
+                         <!-- Use avatar if available, else initials -->
+                         <img *ngIf="student.avatar" [src]="student.avatar" class="h-full w-full object-cover" alt="Avatar">
+                         <span *ngIf="!student.avatar">{{ student.studentName.charAt(0) }}</span>
+                    </div>
+                    
+                    <h3 class="text-lg font-bold text-gray-900 mb-1 truncate" [title]="student.studentName">{{ student.studentName }}</h3>
+                    <p class="text-sm text-gray-500 mb-4 truncate" [title]="student.studentEmail">{{ student.studentEmail }}</p>
+                    
+                    <button class="w-full py-2 px-4 bg-green-50 text-green-600 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors">
+                        Ver Calificaciones
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAIL VIEW -->
+    <div *ngIf="state === 'detail' && selectedStudent" class="fade-in">
+        
+        <!-- Student Header Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+             <div class="h-24 w-24 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-3xl uppercase overflow-hidden flex-shrink-0 shadow-inner">
+                 <img *ngIf="selectedStudent.avatar" [src]="selectedStudent.avatar" class="h-full w-full object-cover" alt="Avatar">
+                 <span *ngIf="!selectedStudent.avatar">{{ selectedStudent.studentName.charAt(0) }}</span>
+            </div>
+            <div class="flex-1 text-center md:text-left">
+                <h2 class="text-2xl font-bold text-gray-900">{{ selectedStudent.studentName }}</h2>
+                <p class="text-gray-500 mb-4">{{ selectedStudent.studentEmail }}</p>
+                
+                <div *ngIf="!isLoadingDetail && selectedStudent.totalEvaluations > 0" class="flex flex-wrap gap-4 justify-center md:justify-start">
+                    <div class="bg-green-50 px-4 py-2 rounded-lg">
+                        <span class="text-xs text-green-500 uppercase font-bold block">Promedio Calificación</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-2xl font-bold text-green-700">{{ selectedStudent.averageRating | number:'1.1-1' }}</span>
+                            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500 uppercase font-bold block">Registros</span>
+                        <span class="text-2xl font-bold text-gray-700">{{ selectedStudent.totalEvaluations }}</span>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500 uppercase font-bold block">Último Registro</span>
+                        <span class="text-lg font-bold text-gray-700 mt-1">{{ selectedStudent.lastEvaluationDate | date:'mediumDate' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Loading State -->
+        <div *ngIf="isLoadingDetail" class="flex justify-center items-center h-64 bg-white rounded-xl shadow-sm">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+
+        <!-- Detail Content -->
+        <div *ngIf="!isLoadingDetail">
+            <!-- Empty State for Detail -->
+            <div *ngIf="selectedStudent.totalEvaluations === 0" class="text-center py-12 bg-white rounded-xl shadow-sm">
+                <img src="assets/icons/evaluacion.png" class="w-24 h-24 mx-auto mb-4 opacity-50" alt="Sin registros">
+                <h3 class="text-xl font-medium text-gray-900">Este estudiante aún no tiene registros de asistencia</h3>
+                <p class="text-gray-500 mt-2">Los datos aparecerán cuando se registren asistencias.</p>
+            </div>
+
+            <!-- Attendance History -->
+            <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
+                <h2 class="text-lg font-bold text-gray-900 mb-6">Historial de Asistencia</h2>
+                
+                <div *ngIf="isLoadingAttendance" class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                </div>
+
+                <div *ngIf="!isLoadingAttendance && attendanceRecords.length === 0" class="text-center py-8 text-gray-500">
+                    No hay registros de asistencia disponibles.
+                </div>
+
+                <div *ngIf="!isLoadingAttendance && attendanceRecords.length > 0" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Programa / Nivel</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criterio</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asistencia</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr *ngFor="let record of attendanceRecords" class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ record.fecha | date:'mediumDate' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    <div class="font-medium text-gray-900" *ngIf="record.programa_ayo_id?.id_nivel?.nivel">
+                                        {{ record.programa_ayo_id.id_nivel.nivel }}
+                                    </div>
+                                    <div class="text-xs text-gray-500" *ngIf="!record.programa_ayo_id">
+                                        No asignado
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    <span *ngIf="record.criterio_evaluacion_estudiante_id" class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                                        {{ record.criterio_evaluacion_estudiante_id.nombre }}
+                                    </span>
+                                    <span *ngIf="!record.criterio_evaluacion_estudiante_id" class="text-gray-400 text-xs">
+                                        -
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span [class]="record.asiste ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                        {{ record.asiste ? 'Presente' : 'Ausente' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                    <div class="flex items-center gap-1" *ngIf="record.calificacion > 0; else noRating">
+                                        <img *ngFor="let star of getStarsArray(record.calificacion)" src="assets/icons/estrella.png" alt="Star" class="w-5 h-5">
+                                    </div>
+                                    <ng-template #noRating>
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    </ng-template>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate cursor-pointer hover:text-green-600 hover:underline" 
+                                    (click)="record.observaciones ? openObservationModal(record.observaciones) : null"
+                                    [title]="record.observaciones ? 'Clic para ver completo' : ''">
+                                    {{ record.observaciones || '-' }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Observación -->
+<div *ngIf="isObservationModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" (click)="closeObservationModal()"></div>
+
+        <!-- This element is to trick the browser into centering the modal contents. -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Observación Completa
+                        </h3>
+                        <div class="mt-4 bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto border border-gray-100">
+                            <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ selectedObservation }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" (click)="closeObservationModal()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

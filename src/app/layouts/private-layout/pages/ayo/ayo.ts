@@ -183,4 +183,8 @@ export class AyoComponent implements OnInit {
   goToTeacherEvaluation(): void {
     this.router.navigate(['/private/ayo/teacher-evaluation-ayo']);
   }
+
+  goToStudentEvaluation(): void {
+    this.router.navigate(['/private/ayo/student-evaluation']);
+  }
 }

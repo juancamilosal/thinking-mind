@@ -29,6 +29,7 @@ import { SessionExpiredComponent } from './layouts/public-layout/pages/session-e
 import { ayoRoutes } from './ayo.routes';
 import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payroll-admin';
 import { TeacherEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/teacher-evaluation-ayo/teacher-evaluation-ayo';
+import { StudentEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/student-evaluation-ayo/student-evaluation-ayo';
 import { Advertising } from './layouts/private-layout/pages/advertising/advertising';
 
 
@@ -176,9 +177,14 @@ export const routes: Routes = [
         component: ListMeet
       },
       {
-        path: 'ayo/teacher-evaluation-ayo',
+        path: 'ayo/teacher-evaluation',
         title: 'Thinking Mind | Evaluación Docente AYO',
         component: TeacherEvaluationAyoComponent
+      },
+      {
+        path: 'ayo/student-evaluation',
+        title: 'Thinking Mind | Evaluación Estudiante AYO',
+        component: StudentEvaluationAyoComponent
       },
       {
         path: 'payroll-admin',
