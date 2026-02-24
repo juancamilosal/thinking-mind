@@ -576,13 +576,27 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.editedAmount = this.account.monto;
   }
 
-  cancelEditingAmount() {
+  cancelEditingAmount(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.isEditingAmount = false;
     this.editedAmount = 0;
   }
 
-  saveAmount() {
+  saveAmount(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     if (this.editedAmount > 0) {
+      // Actualización optimista: Cerrar edición inmediatamente
+      this.isEditingAmount = false;
+
+      // Guardar valores anteriores para rollback si falla
+      const previousMonto = this.account.monto;
+      const previousEstado = this.account.estado;
+      const previousMontoDescuento = (this.account as any).monto_descuento;
+
       let newEstado = '';
       const currentSaldo = this.account.saldo || 0;
 
@@ -595,6 +609,11 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         newEstado = 'PENDIENTE';
       }
 
+      // Actualizar modelo local inmediatamente
+      this.account.monto = this.editedAmount;
+      this.account.estado = newEstado;
+      (this.account as any).monto_descuento = this.finalAmount;
+
       this.accountService.updateAccountReceivable(this.account.id, {
         monto: this.editedAmount,
         estado: newEstado,
@@ -602,17 +621,20 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         monto_descuento: this.finalAmount
       }).subscribe({
         next: (updatedAccount) => {
-          this.account.monto = this.editedAmount;
-          this.account.estado = newEstado;
-          (this.account as any).monto_descuento = this.finalAmount;
-          this.isEditingAmount = false;
           this.notificationService.showSuccess('Éxito', `El monto de la cuenta ha sido actualizado. Estado: ${newEstado}`);
           this.llamarFuncion.emit(); // Actualizar la lista principal
         },
         error: (err) => {
+          // Rollback en caso de error
+          this.account.monto = previousMonto;
+          this.account.estado = previousEstado;
+          (this.account as any).monto_descuento = previousMontoDescuento;
+          this.initializeDiscountValues(); // Recalcular valores derivados
           this.notificationService.showError('Error', 'No se pudo actualizar el monto de la cuenta.');
         }
       });
+    } else {
+      this.notificationService.showWarning('Advertencia', 'El monto debe ser mayor a 0');
     }
   }
 
@@ -959,14 +981,20 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.isEditingDiscount = true;
   }
 
-  cancelEditingDiscount(): void {
+  cancelEditingDiscount(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
     this.isEditingDiscount = false;
     // Restaurar el descuento original
     this.discountPercentage = this.account.descuento || 0;
     this.calculateDiscount();
   }
 
-  saveDiscount(): void {
+  saveDiscount(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
     if (this.discountPercentage >= 0 && this.discountPercentage <= 100) {
       // Si es la primera vez aplicando descuento, usar el monto actual como original
       if (this.account.descuento === 0 || !this.account.descuento) {
@@ -994,6 +1022,16 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   }
 
   private updateAccountAmount(): void {
+    // Guardar valores anteriores para rollback
+    const previousMonto = this.account.monto;
+    const previousDescuento = this.account.descuento;
+    const previousMontoDescuento = (this.account as any).monto_descuento;
+
+    // Actualización optimista del modelo local
+    this.account.monto = this.originalAmount;
+    this.account.descuento = this.discountPercentage;
+    (this.account as any).monto_descuento = this.finalAmount;
+
     const updateData = {
       monto: this.originalAmount,
       descuento: this.discountPercentage,
@@ -1002,14 +1040,17 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
     this.accountService.updateAccountReceivable(this.account.id, updateData).subscribe({
       next: (response) => {
-        this.account.monto = this.originalAmount;
-        this.account.descuento = this.discountPercentage;
-        (this.account as any).monto_descuento = this.finalAmount;
         this.notificationService.showSuccess('Éxito', 'Descuento aplicado correctamente');
         this.checkAndUpdateAccountStatus();
         this.llamarFuncion.emit();
       },
       error: (error) => {
+        // Rollback en caso de error
+        this.account.monto = previousMonto;
+        this.account.descuento = previousDescuento;
+        (this.account as any).monto_descuento = previousMontoDescuento;
+        this.initializeDiscountValues(); // Restaurar cálculos
+
         console.error('Error al aplicar descuento:', error);
         this.notificationService.showError('Error', 'Error al aplicar el descuento');
       }
