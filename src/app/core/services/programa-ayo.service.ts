@@ -29,7 +29,7 @@ export class ProgramaAyoService {
     }
 
     if (teacherId) {
-      params['deep[id_reuniones_meet][_filter][id_docente][id][_eq]'] = teacherId;
+      params['filter[id_reuniones_meet][id_docente][id][_eq]'] = teacherId;
     }
     if (userId) {
         params['filter[estudiantes_id][id][_eq]'] = userId;

@@ -126,7 +126,10 @@
           </div>
 
           <div class="space-y-4">
-            <div class="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div class="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-200 transition-colors duration-200"
+                 [class.cursor-pointer]="!isEditingAmount"
+                 [class.hover:bg-blue-100]="!isEditingAmount"
+                 (click)="!isEditingAmount && startEditingAmount()">
               <span class="text-gray-600 font-medium">
                 @if (discountPercentage > 0) {
                   Monto Original:
@@ -136,8 +139,7 @@
               </span>
               @if (!isEditingAmount) {
                 <div class="flex items-center space-x-2">
-                  <span class="text-xl font-bold text-blue-600 cursor-pointer hover:bg-blue-100 px-2 py-1 rounded"
-                        (click)="startEditingAmount()"
+                  <span class="text-xl font-bold text-blue-600 px-2 py-1 rounded"
                         title="Clic para editar">
                     @if (discountPercentage > 0) {
                       {{ formatCurrency(originalAmount) }}
@@ -150,7 +152,7 @@
                   </svg>
                 </div>
               } @else {
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2" (click)="$event.stopPropagation()">
                   <div class="relative">
                     <span class="absolute left-3 top-2 text-gray-500">$</span>
                     <input type="number"
@@ -158,14 +160,14 @@
                            class="w-40 pl-8 pr-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold text-blue-600"
                            step="0.01"
                            min="0"
-                           (keyup.enter)="saveAmount()"
-                           (keyup.escape)="cancelEditingAmount()">
+                           (keyup.enter)="saveAmount($event)"
+                           (keyup.escape)="cancelEditingAmount($event)">
                   </div>
-                  <button (click)="saveAmount()"
+                  <button type="button" (click)="saveAmount($event)"
                           class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
                     ✓
                   </button>
-                  <button (click)="cancelEditingAmount()"
+                  <button type="button" (click)="cancelEditingAmount($event)"
                           class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
                     ✕
                   </button>
@@ -174,12 +176,14 @@
             </div>
 
             <!-- Campo de Descuento -->
-            <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-lg border border-yellow-200 transition-colors duration-200"
+                 [class.cursor-pointer]="!isEditingDiscount"
+                 [class.hover:bg-yellow-100]="!isEditingDiscount"
+                 (click)="!isEditingDiscount && startEditingDiscount()">
               <span class="text-gray-600 font-medium">Descuento (%):</span>
               @if (!isEditingDiscount) {
                 <div class="flex items-center space-x-2">
-                  <span class="text-lg font-bold text-orange-600 cursor-pointer hover:bg-orange-50 px-2 py-1 rounded"
-                        (click)="startEditingDiscount()"
+                  <span class="text-lg font-bold text-orange-600 px-2 py-1 rounded"
                         title="Clic para aplicar descuento">
                     {{ discountPercentage }}%
                   </span>
@@ -188,7 +192,7 @@
                   </svg>
                 </div>
               } @else {
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2" (click)="$event.stopPropagation()">
                   <div class="relative">
                     <input type="number"
                            [(ngModel)]="discountPercentage"
@@ -197,15 +201,15 @@
                            step="0.1"
                            min="0"
                            max="100"
-                           (keyup.enter)="saveDiscount()"
-                           (keyup.escape)="cancelEditingDiscount()">
+                           (keyup.enter)="saveDiscount($event)"
+                           (keyup.escape)="cancelEditingDiscount($event)">
                     <span class="absolute right-3 top-2 text-gray-500">%</span>
                   </div>
-                  <button (click)="saveDiscount()"
+                  <button type="button" (click)="saveDiscount($event)"
                           class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
                     ✓
                   </button>
-                  <button (click)="cancelEditingDiscount()"
+                  <button type="button" (click)="cancelEditingDiscount($event)"
                           class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
                     ✕
                   </button>

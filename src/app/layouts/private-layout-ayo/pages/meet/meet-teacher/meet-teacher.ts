@@ -253,16 +253,36 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.programaAyoService.getProgramaAyoDocente(teacherId, this.selectedLanguage || undefined).subscribe({
       next: (response) => {
         if (response.data) {
-          this.programas = response.data
-            .filter(p => p.id_reuniones_meet && p.id_reuniones_meet.length > 0);
+          const programas = response.data as any[];
+
+          // Filtrar programas y reuniones para que solo queden las del docente actual
+          const filtered = programas
+            .map(programa => {
+              const reuniones = Array.isArray(programa.id_reuniones_meet)
+                ? programa.id_reuniones_meet.filter((meet: any) => {
+                    if (!meet || !meet.id_docente) return false;
+                    const docente = meet.id_docente;
+                    const docenteId = typeof docente === 'object' ? docente.id : docente;
+                    return docenteId === teacherId;
+                  })
+                : [];
+
+              return {
+                ...programa,
+                id_reuniones_meet: reuniones
+              };
+            })
+            .filter(programa => Array.isArray(programa.id_reuniones_meet) && programa.id_reuniones_meet.length > 0);
+
+          this.programas = filtered;
+
           if (!this.selectedLanguage && this.programas.length > 0) {
             this.selectedLanguage = this.programas[0].idioma?.toUpperCase() || null;
           }
-
         }
         this.isLoading = false;
       },
-      error: (error) => {
+      error: () => {
         this.isLoading = false;
       }
     });
