@@ -1,0 +1,358 @@
+@if (!showForm && !showDetail) {
+  <div class="p-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-xl font-bold text-gray-800 mb-2">Cuentas por Cobrar AYO</h1>
+      <p class="text-gray-600">Gestiona las cuentas pendientes y pagadas de tus clientes del programa AYO</p>
+    </div>
+
+    <!-- Filtros de Búsqueda -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros de Búsqueda</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Filtro por Colegio -->
+        <div>
+          <label for="colegio" class="block text-xs font-medium text-gray-700 mb-2">Colegio</label>
+          <input
+            id="colegio"
+            type="text"
+            placeholder="Buscar por colegio..."
+            [(ngModel)]="filters.colegio"
+            (input)="onFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Filtro por Fecha de Finalización -->
+        <div>
+          <label for="fechaFinalizacion" class="block text-xs font-medium text-gray-700 mb-2">Fecha de Finalización</label>
+          <input
+            id="fechaFinalizacion"
+            type="date"
+            [(ngModel)]="filters.fechaFinalizacion"
+            (change)="onFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Filtro por Estado -->
+        <div>
+          <label for="estado" class="block text-xs font-medium text-gray-700 mb-2">Estado</label>
+          <select
+            id="estado"
+            [(ngModel)]="filters.estado"
+            (change)="onFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Todos los estados</option>
+            <option value="PENDIENTE">Pendientes</option>
+            <option value="PAGADA">Pagadas</option>
+            <option value="DEVOLUCION">Devolución</option>
+            <option value="SALDO_0">Saldo 0</option>
+          </select>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div>
+          <label class="block text-xs font-medium text-transparent mb-2">Acciones</label>
+          <div class="flex gap-2">
+            <app-button
+              (btnClick)="onClearFilters()"
+              variant="secondary-filled"
+              customClass="flex-1 font-medium flex items-center justify-center space-x-2"
+              title="Limpiar Filtros">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </app-button>
+            <app-button
+              (btnClick)="openForm()"
+              variant="primary"
+              customClass="flex-1 font-medium flex items-center justify-center space-x-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Nueva</span>
+            </app-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Cuentas -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- Barra de Búsqueda (estilo schools) -->
+      <div class="px-6 py-4 border-b border-gray-100">
+        <div class="flex gap-4 flex-wrap sm:flex-nowrap">
+          <input
+            type="text"
+            placeholder="Buscar por nombre, apellido o documento..."
+            [value]="searchTerm"
+            (input)="onSearchChange(($any($event.target)).value)"
+            (keyup.enter)="onSearch()"
+            class="flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <app-button
+            (btnClick)="onSearch()"
+            variant="primary"
+            customClass="w-full sm:w-auto font-medium">
+            Buscar
+          </app-button>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800">
+          Cuentas por Cobrar ({{ totalItems }})
+        </h2>
+      </div>
+
+      <!-- Loading Skeleton -->
+      @if (isLoading) {
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Finalización</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @for (item of [1,2,3,4,5]; track item) {
+                <tr class="animate-pulse">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-32"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-28"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-20"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-20"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-20"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="h-4 bg-gray-200 rounded w-16"></div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <!-- Contenido real de la tabla -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abonado</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Límite</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @if (accounts.length === 0) {
+                <tr>
+                  <td colspan="8" class="px-6 py-16">
+                    <div class="flex flex-col items-center justify-center space-y-4 text-center">
+                      <div class="bg-gray-100 rounded-full p-6">
+                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                      </div>
+                      <div class="space-y-2">
+                        <h3 class="text-xl font-semibold text-gray-700">
+                          No hay cuentas disponibles
+                        </h3>
+                        <p class="text-gray-500 max-w-md">
+                          No se encontraron cuentas que coincidan con los filtros aplicados
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              } @else {
+                @for (account of accounts; track account.id) {
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-xs font-medium text-gray-900">{{ account.clientName || 'N/A' }}</div>
+                      <div class="text-xs text-gray-500">{{ getClientDocumentType(account) }}: {{ getClientDocument(account) || 'N/A' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-xs font-medium text-gray-900">{{ account.studentName || 'N/A' }}</div>
+                      <div class="text-xs text-gray-500">{{ getStudentDocumentType(account) }}: {{ getStudentDocument(account) || 'N/A' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-xs font-medium text-gray-900">{{ account.schoolName || 'N/A' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span [class]="getEstadoClass(account.estado)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                        {{ getEstadoText(account.estado) }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-xs font-semibold text-gray-900">{{ formatCurrency(account.monto) }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-xs font-semibold text-gray-900">{{ formatCurrency(account.saldo || 0) }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-xs text-gray-900">{{ account.fecha_finalizacion | date:'dd/MM/yyyy' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
+                      <div class="flex space-x-2 justify-end">
+                        <app-button (btnClick)="viewDetail(account)"
+                                variant="primary"
+                                size="sm">
+                          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                          Ver
+                        </app-button>
+                        <app-button (btnClick)="deleteAccount(account.id)"
+                                variant="danger"
+                                size="sm">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          </svg>
+                          <span>Eliminar</span>
+                        </app-button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        @if (accounts.length > 0) {
+          <div class="bg-gradient-to-r from-white to-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-8 shadow-inner">
+            @if (totalPages > 1) {
+              <div class="flex-1 flex justify-between sm:hidden">
+                <app-button
+                  (btnClick)="onPageChange(currentPage - 1)"
+                  [disabled]="currentPage === 1"
+                  variant="primary"
+                  size="sm">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                  Anterior
+                </app-button>
+                <app-button
+                  (btnClick)="onPageChange(currentPage + 1)"
+                  [disabled]="currentPage === totalPages"
+                  variant="primary"
+                  size="sm">
+                  Siguiente
+                  <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </app-button>
+              </div>
+            }
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div class="flex items-center space-x-6">
+                <div class="bg-white rounded-lg px-4 py-2 shadow-md border border-gray-100">
+                  <p class="text-xs text-gray-600">
+                    Mostrando
+                    <span class="font-bold text-indigo-600 mx-1">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+                    a
+                    <span class="font-bold text-indigo-600 mx-1">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
+                    de
+                    <span class="font-bold text-purple-600 mx-1">{{ totalItems }}</span>
+                    resultados
+                  </p>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <label for="itemsPerPage" class="text-xs font-medium text-gray-700">Mostrar:</label>
+                  <select
+                    id="itemsPerPage"
+                    [value]="itemsPerPage"
+                    (change)="onItemsPerPageChange($event)"
+                    class="border-2 border-gray-200 rounded-lg px-4 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm hover:border-indigo-300 transition-all duration-200">
+                    @for (option of itemsPerPageOptions; track option) {
+                      <option [value]="option" [selected]="option === itemsPerPage">{{ option }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              @if (totalPages > 1) {
+                 <div class="flex gap-1">
+                   <nav class="relative z-0 inline-flex rounded-xl shadow-lg bg-white border border-gray-200 overflow-hidden" aria-label="Pagination">
+                     @if (currentPage > 1) {
+                       <app-button
+                         (btnClick)="onPageChange(currentPage - 1)"
+                         variant="ghost"
+                         size="sm">
+                         <span class="sr-only">Anterior</span>
+                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                         </svg>
+                       </app-button>
+                     }
+                     @for (page of getPaginationArray(); track page) {
+                       <app-button
+                         (btnClick)="onPageChange(page)"
+                         [variant]="page === currentPage ? 'primary' : 'ghost'"
+                         size="sm">
+                         {{ page }}
+                       </app-button>
+                     }
+                     @if (currentPage < totalPages) {
+                       <app-button
+                         (btnClick)="onPageChange(currentPage + 1)"
+                         variant="ghost"
+                         size="sm">
+                         <span class="sr-only">Siguiente</span>
+                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                         </svg>
+                       </app-button>
+                     }
+                   </nav>
+                 </div>
+               }
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+} @else if (showDetail) {
+  <!-- Vista del detalle -->
+  <app-account-receivable-detail-ayo
+    [account]="selectedAccount!"
+    (backToList)="backToList()"
+    (llamarFuncion)="refreshAccountDetail()">
+  </app-account-receivable-detail-ayo>
+} @else if (showForm) {
+  <!-- Formulario - Página completa -->
+  <app-account-receivable-form
+    (accountCreated)="onAccountCreated($event)"
+    (formClosed)="closeForm()">
+  </app-account-receivable-form>
+}

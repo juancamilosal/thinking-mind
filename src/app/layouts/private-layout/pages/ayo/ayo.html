@@ -14,83 +14,105 @@
       <!-- Botón Volver / Cambiar Selección (visible cuando hay selección) -->
       @if (selectedLanguage) {
         <div class="w-full max-w-4xl flex justify-center mb-8 fade-in">
-          <button (click)="goBack()"
-                  class="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold flex items-center space-x-3">
+          <app-button (btnClick)="goBack()"
+                  variant="primary"
+                  customClass="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl shadow-lg transform hover:scale-105 flex items-center space-x-3 border-none">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
             <span>Cambiar selección</span>
-          </button>
+          </app-button>
         </div>
       }
 
-      <!-- Card Precio Programa AYO -->
+      <!-- Cards Container: Precio y Cuentas por Cobrar -->
       @if ((precioData || isLoadingPrice) && step === 'initial') {
-        <div class="relative w-full md:w-96 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 flex flex-col items-center justify-center text-center mt-4 transition-all duration-500 hover:shadow-2xl">
-            @if (precioData?.tiene_precio_especial) {
-                <div class="absolute top-0 right-0 p-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-yellow-400 drop-shadow-md filter">
-                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-            }
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Precio Programa AYO</h3>
+        <div class="flex flex-col md:flex-row gap-8 mt-4 w-full justify-center">
+            <!-- Card Precio Programa AYO -->
+            <div class="relative w-full md:w-96 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 flex flex-col items-center justify-center text-center transition-all duration-500 hover:shadow-2xl">
+                @if (precioData?.tiene_precio_especial) {
+                    <div class="absolute top-0 right-0 p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-yellow-400 drop-shadow-md filter">
+                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                }
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Precio Programa AYO</h3>
 
-            @if (isLoadingPrice) {
-                <div class="animate-pulse flex flex-col items-center w-full my-4">
-                    <div class="h-10 w-48 bg-gray-200 rounded mb-4"></div>
-                    <div class="h-8 w-32 bg-gray-200 rounded"></div>
-                </div>
-            } @else if (precioData) {
-                @if (!isEditingPrice) {
+                @if (isLoadingPrice) {
+                    <div class="animate-pulse flex flex-col items-center w-full my-4">
+                        <div class="h-10 w-48 bg-gray-200 rounded mb-4"></div>
+                        <div class="h-8 w-32 bg-gray-200 rounded"></div>
+                    </div>
+                } @else if (precioData) {
+                    @if (!isEditingPrice) {
                     <p class="text-3xl font-extrabold text-blue-600 mb-4">$ {{ precioData.precio | number:'1.0-0' }}</p>
-                    <button (click)="startEditingPrice()" class="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium flex items-center gap-2 border border-gray-200">
+                    <app-button (btnClick)="startEditingPrice()" variant="secondary" customClass="flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                         Editar Precio
-                    </button>
+                    </app-button>
                 } @else {
-                    <div class="w-full space-y-4 text-left">
-                        <!-- Precio Base -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Precio Base</label>
-                            <input type="number" [(ngModel)]="tempPrice" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-gray-300 font-bold text-lg">
-                        </div>
-
-                        <!-- Checkbox Precio Especial -->
-                        <div class="flex items-center">
-                            <input type="checkbox" id="tienePrecioEspecial" [(ngModel)]="tempTienePrecioEspecial" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4">
-                            <label for="tienePrecioEspecial" class="ml-2 block text-sm font-medium text-gray-700">Tiene Precio Especial</label>
-                        </div>
-
-                        <!-- Campos Condicionales -->
-                        @if (tempTienePrecioEspecial) {
-                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-blue-800 mb-1">Precio Especial</label>
-                                    <input type="number" [(ngModel)]="tempPrecioEspecial" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-blue-200">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-blue-800 mb-1">Fecha Creación</label>
-                                    <input type="date" [(ngModel)]="tempFechaCreacion" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-blue-200">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-blue-800 mb-1">Fecha Fin Especial</label>
-                                    <input type="date" [(ngModel)]="tempFechaFinEspecial" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-blue-200">
-                                </div>
+                        <div class="w-full space-y-4 text-left">
+                            <!-- Precio Base -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Precio Base</label>
+                                <input type="number" [(ngModel)]="tempPrice" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-gray-300 font-bold text-lg">
                             </div>
-                        }
 
-                        <div class="flex justify-center gap-2 pt-2">
-                            <button (click)="cancelEditingPrice()" class="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm font-medium transition-colors">Cancelar</button>
-                            <button (click)="savePrice()" [disabled]="isSavingPrice" class="px-3 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 text-sm font-medium disabled:opacity-50 transition-colors">
-                                {{ isSavingPrice ? 'Guardando...' : 'Guardar' }}
-                            </button>
+                            <!-- Checkbox Precio Especial -->
+                            <div class="flex items-center">
+                                <input type="checkbox" id="tienePrecioEspecial" [(ngModel)]="tempTienePrecioEspecial" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                <label for="tienePrecioEspecial" class="ml-2 block text-sm font-medium text-gray-700">Tiene Precio Especial</label>
+                            </div>
+
+                            <!-- Campos Condicionales -->
+                            @if (tempTienePrecioEspecial) {
+                                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-blue-800 mb-1">Precio Especial</label>
+                                        <input type="number" [(ngModel)]="tempPrecioEspecial" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-blue-200">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-blue-800 mb-1">Fecha Creación</label>
+                                        <input type="date" [(ngModel)]="tempFechaCreacion" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-blue-200">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-blue-800 mb-1">Fecha Fin Especial</label>
+                                        <input type="date" [(ngModel)]="tempFechaFinEspecial" class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-blue-200">
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="flex justify-center gap-2 pt-2">
+                                <app-button (btnClick)="cancelEditingPrice()" variant="danger" size="sm">Cancelar</app-button>
+                                <app-button (btnClick)="savePrice()" [loading]="isSavingPrice" variant="success" size="sm">
+                                    Guardar
+                                </app-button>
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
-            }
+            </div>
+
+            <!-- Card Cuentas Por Cobrar Ayo -->
+            <div class="relative w-full md:w-96 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 flex flex-col items-center justify-center text-center transition-all duration-500 hover:shadow-2xl">
+               <div class="p-3 mb-4 bg-green-50 rounded-full">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                 </svg>
+               </div>
+               <h3 class="text-xl font-bold text-gray-800 mb-2">Cuentas Por Cobrar Ayo</h3>
+               <p class="text-gray-500 mb-6 text-sm">Gestiona los pagos y cuentas pendientes del programa AYO.</p>
+               <app-button (btnClick)="goToAccounts()" variant="success" customClass="shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2">
+                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                 </svg>
+                 Ver Cuentas
+               </app-button>
+            </div>
         </div>
       }
 

@@ -28,8 +28,10 @@ export class AccountReceivableService {
   }
 
 
-  getAccountById(id: string): Observable<ResponseAPI<AccountReceivable>> {
-    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,pagos.*,pagos.responsable.*,curso_id.*`).pipe(
+  getAccountById(id: string, fields?: string): Observable<ResponseAPI<AccountReceivable>> {
+    const defaultFields = '*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,pagos.*,pagos.responsable.*,curso_id.*';
+    const fieldsToUse = fields || defaultFields;
+    return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=${fieldsToUse}`).pipe(
       map(response => ({
         ...response,
         data: this.mapToAccountReceivable(response.data)
@@ -167,6 +169,11 @@ export class AccountReceivableService {
       } else {
         params['filter[estado][_eq]'] = filterParams.estado;
       }
+    }
+
+    // Filtro por es_programa_ayo
+    if (filterParams.es_programa_ayo !== undefined) {
+      params['filter[es_programa_ayo][_eq]'] = filterParams.es_programa_ayo;
     }
 
     const queryString = new URLSearchParams(params).toString();
