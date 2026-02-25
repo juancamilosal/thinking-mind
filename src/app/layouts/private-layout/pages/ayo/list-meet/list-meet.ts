@@ -1546,7 +1546,8 @@ export class ListMeet implements OnInit {
                         currentLevelId: studentLevelId,
                         levelName: displayLevelName, // Use combined name
                         level: studentLevelName, // Raw level name for filtering
-                        subcategoria: studentSubcategory
+                        subcategoria: studentSubcategory,
+                        creditos: (student as any).creditos
                     };
                 });
                 
@@ -1760,7 +1761,8 @@ export class ListMeet implements OnInit {
             currentLevelId: studentLevelId,
             levelName: displayLevelName,
             level: studentLevelName,
-            subcategoria: studentSubcategory
+            subcategoria: studentSubcategory,
+            creditos: (student as any).creditos
           };
         });
 
