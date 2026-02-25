@@ -242,77 +242,93 @@
 
     <!-- Pagination -->
     @if (!isLoading && payrollRecords.length > 0) {
-      <div class="px-6 py-4 border-t border-gray-200">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <!-- Items per page selector -->
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-700">Mostrar</span>
-            <select
-              [(ngModel)]="itemsPerPage"
-              (change)="onItemsPerPageChange()"
-              class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              @for (option of itemsPerPageOptions; track option) {
-                <option [value]="option">{{ option }}</option>
-              }
-            </select>
-            <span class="text-sm text-gray-700">registros</span>
-          </div>
-
-          <!-- Page info -->
-          <div class="text-sm text-gray-700">
-            Mostrando {{ Math.min((currentPage - 1) * itemsPerPage + 1, totalItems) }}
-            a {{ Math.min(currentPage * itemsPerPage, totalItems) }}
-            de {{ totalItems }} registros
-          </div>
-
-          <!-- Page navigation -->
-          <div class="flex items-center gap-2">
-            <!-- First page -->
+      <div class="bg-gradient-to-r from-white to-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-8 shadow-inner">
+        @if (totalPages > 1) {
+          <div class="flex-1 flex justify-between sm:hidden">
             <app-button
-              [variant]="'ghost'"
-              [size]="'sm'"
+              (btnClick)="goToPage(currentPage - 1)"
               [disabled]="currentPage === 1"
-              (click)="goToPage(1)">
-              ««
+              variant="primary"
+              size="sm">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              Anterior
             </app-button>
-
-            <!-- Previous page -->
             <app-button
-              [variant]="'ghost'"
-              [size]="'sm'"
-              [disabled]="currentPage === 1"
-              (click)="goToPage(currentPage - 1)">
-              ‹
-            </app-button>
-
-            <!-- Page numbers -->
-            @for (page of getVisiblePages(); track page) {
-              <app-button
-                [variant]="page === currentPage ? 'primary' : 'ghost'"
-                [size]="'sm'"
-                (click)="goToPage(page)">
-                {{ page }}
-              </app-button>
-            }
-
-            <!-- Next page -->
-            <app-button
-              [variant]="'ghost'"
-              [size]="'sm'"
+              (btnClick)="goToPage(currentPage + 1)"
               [disabled]="currentPage === totalPages"
-              (click)="goToPage(currentPage + 1)">
-              ›
-            </app-button>
-
-            <!-- Last page -->
-            <app-button
-              [variant]="'ghost'"
-              [size]="'sm'"
-              [disabled]="currentPage === totalPages"
-              (click)="goToPage(totalPages)">
-              »»
+              variant="primary"
+              size="sm">
+              Siguiente
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
             </app-button>
           </div>
+        }
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div class="flex items-center space-x-6">
+            <div class="bg-white rounded-lg px-4 py-2 shadow-md border border-gray-100">
+              <p class="text-xs text-gray-600">
+                Mostrando
+                <span class="font-bold text-indigo-600 mx-1">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+                a
+                <span class="font-bold text-indigo-600 mx-1">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span>
+                de
+                <span class="font-bold text-purple-600 mx-1">{{ totalItems }}</span>
+                resultados
+              </p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <label for="itemsPerPage" class="text-xs font-medium text-gray-700">Mostrar:</label>
+              <select
+                id="itemsPerPage"
+                [(ngModel)]="itemsPerPage"
+                (change)="onItemsPerPageChange()"
+                class="border-2 border-gray-200 rounded-lg px-4 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm hover:border-indigo-300 transition-all duration-200">
+                @for (option of itemsPerPageOptions; track option) {
+                  <option [value]="option" [selected]="option === itemsPerPage">{{ option }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          @if (totalPages > 1) {
+             <div class="flex gap-1">
+               <nav class="relative z-0 inline-flex rounded-xl shadow-lg bg-white border border-gray-200 overflow-hidden" aria-label="Pagination">
+                 @if (currentPage > 1) {
+                   <app-button
+                     (btnClick)="goToPage(currentPage - 1)"
+                     variant="ghost"
+                     size="sm">
+                     <span class="sr-only">Anterior</span>
+                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                     </svg>
+                   </app-button>
+                 }
+                 @for (page of getVisiblePages(); track page) {
+                   <app-button
+                     (btnClick)="goToPage(page)"
+                     [variant]="page === currentPage ? 'primary' : 'ghost'"
+                     size="sm">
+                     {{ page }}
+                   </app-button>
+                 }
+                 @if (currentPage < totalPages) {
+                   <app-button
+                     (btnClick)="goToPage(currentPage + 1)"
+                     variant="ghost"
+                     size="sm">
+                     <span class="sr-only">Siguiente</span>
+                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                     </svg>
+                   </app-button>
+                 }
+               </nav>
+             </div>
+           }
         </div>
       </div>
     }
