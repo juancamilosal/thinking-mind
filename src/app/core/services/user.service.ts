@@ -61,7 +61,7 @@ export class UserService {
   getStudentsWithAttendance(filters: { search?: string, level?: string, subcategory?: string } = {}): Observable<ResponseAPI<User[]>> {
     let params: any = {
       'filter[role][_eq]': 'ca8ffc29-c040-439f-8017-0dcb141f0fd3', // Roles.STUDENT
-      'fields': '*,asistencia_id.*,nivel_id.*'
+      'fields': '*,asistencia_id.*,nivel_id.*,creditos'
     };
 
     if (filters.search) {

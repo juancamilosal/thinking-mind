@@ -7,6 +7,7 @@ export class User {
   email: string;
   role?: string;
   celular?: string;
+  creditos?: number;
   colegio_id?: School;
   tipo_documento?: string;
   numero_documento?: string;
