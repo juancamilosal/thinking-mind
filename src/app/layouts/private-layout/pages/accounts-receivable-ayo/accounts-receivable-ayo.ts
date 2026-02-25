@@ -362,8 +362,7 @@ export class AccountsReceivableAyo implements OnInit {
   }
 
   viewDetail(account: AccountReceivable) {
-    this.selectedAccount = account;
-    this.showDetail = true;
+    this.router.navigate(['/private/accounts-receivable-ayo', account.id]);
   }
 
   deleteAccount(accountId: string): void {
