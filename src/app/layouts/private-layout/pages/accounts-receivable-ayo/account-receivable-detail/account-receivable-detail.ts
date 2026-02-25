@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AccountReceivable, PaymentModel} from '../../../../../core/models/AccountReceivable';
-import { PaymentDetailComponent } from '../payment-detail/payment-detail';
+import { PaymentDetailComponent } from '../../accounts-receivable/payment-detail/payment-detail';
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
 import {PaymentService} from '../../../../../core/services/payment.service';
 import {AccountReceivableService} from '../../../../../core/services/account-receivable.service';
@@ -13,13 +13,13 @@ import { StorageServices } from '../../../../../core/services/storage.services';
 import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
-  selector: 'app-account-receivable-detail',
+  selector: 'app-account-receivable-detail-ayo',
   imports: [CommonModule, FormsModule, PaymentDetailComponent, AppButtonComponent],
   templateUrl: './account-receivable-detail.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.Default
 })
-export class AccountReceivableDetailComponent implements OnInit, OnChanges {
+export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   @Input() account!: AccountReceivable;
   isLoading = false;
 
@@ -75,7 +75,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   goBack() {
     if (this.route.snapshot.paramMap.get('id')) {
-      this.router.navigate(['/private/accounts-receivable']);
+      this.router.navigate(['/private/accounts-receivable-ayo']);
     } else {
       this.backToList.emit();
     }
@@ -89,13 +89,13 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   selectedPayment: PaymentModel | null = null;
   showPaymentDetailView = false;
   showAddPaymentForm = false;
-  newPaymentAmount: number;
+  newPaymentAmount: number = 0;
   newPaymentAmountDisplay: string = '';
-  newPaymentMethod: string;
-  newPaymentReference: string;
-  newPayerName: string;
-  newApprovalNumber: string;
-  newBank: string;
+  newPaymentMethod: string = '';
+  newPaymentReference: string = '';
+  newPayerName: string = '';
+  newApprovalNumber: string = '';
+  newBank: string = '';
   newPaymentImage: File | null = null;
   newPaymentImagePreview: string | null = null;
   isSubmittingPayment = false;
@@ -610,481 +610,344 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
       }
 
       // Actualizar modelo local inmediatamente
-      this.account.monto = this.editedAmount;
+      this.account.monto = this.finalAmount;
       this.account.estado = newEstado;
-      (this.account as any).monto_descuento = this.finalAmount;
 
+      // Llamar a la API
       this.accountService.updateAccountReceivable(this.account.id, {
-        monto: this.editedAmount,
+        monto: this.finalAmount,
         estado: newEstado,
-        descuento: this.discountPercentage,
-        monto_descuento: this.finalAmount
+        monto_descuento: this.account.monto_descuento, // Actualizar también el descuento en DB
+        descuento: this.discountPercentage
       }).subscribe({
-        next: (updatedAccount) => {
-          this.notificationService.showSuccess('Éxito', `El monto de la cuenta ha sido actualizado. Estado: ${newEstado}`);
-          this.llamarFuncion.emit(); // Actualizar la lista principal
+        next: (response) => {
+          this.notificationService.showSuccess('Monto actualizado', 'El monto de la cuenta ha sido actualizado.');
+          this.llamarFuncion.emit();
+          this.cdr.detectChanges();
         },
-        error: (err) => {
-          // Rollback en caso de error
+        error: (error) => {
+          // Revertir cambios si falla
           this.account.monto = previousMonto;
           this.account.estado = previousEstado;
           (this.account as any).monto_descuento = previousMontoDescuento;
-          this.initializeDiscountValues(); // Recalcular valores derivados
-          this.notificationService.showError('Error', 'No se pudo actualizar el monto de la cuenta.');
+          this.calculateDiscount();
+
+          this.notificationService.showError('Error', 'No se pudo actualizar el monto.');
+          this.cdr.detectChanges();
         }
       });
+    }
+  }
+
+  onPaymentAmountChange(event: any) {
+    // Remove non-numeric chars for processing
+    const rawValue = event.target.value.replace(/[^0-9]/g, '');
+    this.newPaymentAmount = rawValue ? parseInt(rawValue, 10) : 0;
+    
+    // Format for display
+    if (rawValue) {
+      this.newPaymentAmountDisplay = new Intl.NumberFormat('es-CO').format(this.newPaymentAmount);
     } else {
-      this.notificationService.showWarning('Advertencia', 'El monto debe ser mayor a 0');
+      this.newPaymentAmountDisplay = '';
     }
   }
 
-  canDeletePayment(payment: PaymentModel): boolean {
-    const allowedMethods = ['EFECTIVO', 'TRANSFERENCIA', 'DATÁFONO', 'CHEQUE'];
+  // --- Lógica para Descuento ---
 
-    // Permitir eliminar si es un método permitido O si es TRANSACCIÓN y estado DEVOLUCION
-    return allowedMethods.includes(payment.metodo_pago) ||
-           (payment.metodo_pago === 'TRANSACCIÓN' && payment.estado === 'DEVOLUCION');
+  startEditingDiscount() {
+    this.isEditingDiscount = true;
   }
 
-  formatPaymentMethod(method: string): string {
-    if (method === 'CARD') {
-      return 'TARJETA';
+  cancelEditingDiscount(event?: Event) {
+    if (event) {
+      event.stopPropagation();
     }
-    if (method === 'BANCOLOMBIA_TRANSFER') {
-      return 'TRANSFERENCIA BANCOLOMBIA';
-    }
-    if (method === 'BANCOLOMBIA_COLLECT') {
-      return 'CORRESPONSAL BANCARIO';
-    }
-    return method;
+    this.isEditingDiscount = false;
+    // Restaurar valor visual si se cancela (aunque discountPercentage ya tiene el valor real)
+    this.initializeDiscountValues();
   }
 
-  // Métodos para el modal de devolución
-  openRefundModal(): void {
+  onDiscountPercentageChange() {
+    if (this.discountPercentage < 0) this.discountPercentage = 0;
+    if (this.discountPercentage > 100) this.discountPercentage = 100;
+  }
+
+  saveDiscount(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isEditingDiscount = false;
+    this.calculateDiscount();
+    this.updateDiscountInBackend();
+  }
+
+  initializeDiscountValues() {
+    if (this.account) {
+      // Parse values safely handling strings/numbers
+      const monto = Number(this.account.monto) || 0;
+      const montoDescuento = Number(this.account.monto_descuento) || 0;
+      const descuentoRaw = this.account.descuento;
+      let discountPct = 0;
+      
+      if (descuentoRaw !== undefined && descuentoRaw !== null) {
+          discountPct = parseFloat(descuentoRaw.toString());
+      }
+      
+      // Fix: if discountPct is NaN, set to 0
+      if (isNaN(discountPct)) discountPct = 0;
+
+      this.finalAmount = monto;
+      this.discountPercentage = discountPct;
+
+      if (discountPct > 0) {
+          // If we have a percentage, calculate original amount
+          if (montoDescuento > 0) {
+              this.originalAmount = monto + montoDescuento;
+          } else {
+              this.originalAmount = Math.round(monto / (1 - (discountPct / 100)));
+              // Backfill monto_descuento locally
+              this.account.monto_descuento = this.originalAmount - monto;
+          }
+      } else if (montoDescuento > 0) {
+          // No percentage explicit, calculate from amounts
+          this.originalAmount = monto + montoDescuento;
+          this.discountPercentage = parseFloat(((montoDescuento / this.originalAmount) * 100).toFixed(1));
+      } else {
+          // No discount
+          this.originalAmount = monto;
+          this.discountPercentage = 0;
+      }
+    }
+  }
+  
+  initializeComponentProperties() {
+     this.showAddPaymentForm = false;
+     this.showRefundModal = false;
+     this.resetPaymentForm();
+     this.resetRefundForm();
+  }
+
+  calculateDiscount() {
+    const discountAmount = Math.round((this.originalAmount * this.discountPercentage) / 100);
+    this.finalAmount = Math.round(this.originalAmount - discountAmount);
+    
+    // Actualizar los valores en el objeto account para que se reflejen y se envíen
+    this.account.monto_descuento = discountAmount;
+    this.account.descuento = this.discountPercentage;
+    // Nota: No actualizamos account.monto aquí todavía, se hace al confirmar/guardar o en updateDiscountInBackend
+  }
+
+  getDiscountAmount(): number {
+    return Math.round((this.originalAmount * this.discountPercentage) / 100);
+  }
+
+  updateDiscountInBackend() {
+    // Actualizar el monto en el backend
+    // El nuevo monto de la cuenta es el finalAmount
+    
+    const previousMonto = this.account.monto;
+    const previousMontoDescuento = (this.account as any).monto_descuento;
+    const previousEstado = this.account.estado;
+
+    // Actualización optimista
+    this.account.monto = this.finalAmount;
+    
+    // Recalcular estado basado en el nuevo monto
+    let newEstado = '';
+    const currentSaldo = this.account.saldo || 0;
+    if (currentSaldo >= this.finalAmount) {
+      newEstado = 'PAGADA';
+    } else {
+      newEstado = 'PENDIENTE';
+    }
+    this.account.estado = newEstado;
+
+    this.accountService.updateAccountReceivable(this.account.id, {
+      monto: this.finalAmount,
+      monto_descuento: this.account.monto_descuento,
+      descuento: this.discountPercentage,
+      estado: newEstado
+    }).subscribe({
+      next: (response) => {
+        this.notificationService.showSuccess('Descuento actualizado', 'El descuento ha sido aplicado correctamente.');
+        this.llamarFuncion.emit();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        // Rollback
+        this.account.monto = previousMonto;
+        (this.account as any).monto_descuento = previousMontoDescuento;
+        this.account.estado = previousEstado;
+        this.initializeDiscountValues(); // Recalcular valores visuales
+        
+        this.notificationService.showError('Error', 'No se pudo actualizar el descuento.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  checkAndUpdateAccountStatus() {
+    if (!this.account) return;
+    
+    // Verificar si el estado visual coincide con la lógica de negocio
+    const currentSaldo = this.account.saldo || 0;
+    // Usar finalAmount si está inicializado, sino monto
+    const targetAmount = this.finalAmount || this.account.monto || 0;
+    
+    const calculatedState = currentSaldo >= targetAmount ? 'PAGADA' : 'PENDIENTE';
+    
+    if (this.account.estado !== calculatedState && this.account.estado !== 'ANULADA' && this.account.estado !== 'DEVOLUCION') {
+      console.log(`Estado incorrecto detectado. Actual: ${this.account.estado}, Calculado: ${calculatedState}`);
+      // Opcional: Auto-corregir en backend si es crítico, o solo visualmente
+      // this.account.estado = calculatedState;
+    }
+  }
+
+
+  // --- Lógica para Devoluciones ---
+
+  openRefundModal() {
     this.showRefundModal = true;
     this.refundAmount = 0;
+    this.refundAmountDisplay = '';
     this.refundFile = null;
     this.returnTotalPaid = false;
-    this.refundAmountDisplay = '';
-    // Forzar detección de cambios
-    this.cdr.detectChanges();
   }
 
-  closeRefundModal(): void {
+  closeRefundModal() {
     this.showRefundModal = false;
+    this.resetRefundForm();
+  }
+
+  resetRefundForm() {
     this.refundAmount = 0;
     this.refundAmountDisplay = '';
     this.refundFile = null;
-    this.returnTotalPaid = false;
     this.isProcessingRefund = false;
-    // Forzar detección de cambios
-    this.cdr.detectChanges();
+    this.returnTotalPaid = false;
   }
 
-  toggleReturnTotalPaid(): void {
-    // No invertimos el valor aquí porque ngModel ya lo actualizó al hacer click
+  onRefundAmountChange(event: any) {
+    const rawValue = event.target.value.replace(/[^0-9]/g, '');
+    let val = rawValue ? parseInt(rawValue, 10) : 0;
+    
+    // Validar que no exceda lo disponible para devolver
+    const maxRefund = this.getMaxRefundAvailable();
+    if (val > maxRefund) {
+      val = maxRefund;
+    }
+    
+    this.refundAmount = val;
+    this.refundAmountDisplay = val > 0 ? new Intl.NumberFormat('es-CO').format(val) : '';
+  }
 
+  toggleReturnTotal() {
+    this.returnTotalPaid = !this.returnTotalPaid;
     if (this.returnTotalPaid) {
-      // Si se activa, usar el TOTAL PAGADO (bruto) como monto
-      const totalPaid = this.getTotalPaidAmount();
-      this.refundAmount = totalPaid;
-      this.refundAmountDisplay = this.formatRefundNumber(totalPaid);
-
-      // Ocultar cualquier notificación de advertencia existente
-      this.notificationService.hideNotification();
+      this.refundAmount = this.getMaxRefundAvailable();
+      this.refundAmountDisplay = new Intl.NumberFormat('es-CO').format(this.refundAmount);
     } else {
-      // Si se desactiva, limpiar el monto
       this.refundAmount = 0;
       this.refundAmountDisplay = '';
     }
   }
 
-  onRefundAmountChange(event: any): void {
-    // Si el usuario edita manualmente, desmarcamos el checkbox de "Total Pagado"
-    if (this.returnTotalPaid) {
-      this.returnTotalPaid = false;
-    }
-
-    // Remover comas (separadores de miles) y caracteres no válidos (dejar números y punto)
-    let value = event.target.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
-
-    // Manejar múltiples puntos - mantener solo el primero
-    const parts = value.split('.');
-    if (parts.length > 2) {
-      value = parts[0] + '.' + parts.slice(1).join('');
-    }
-
-    // Calcular valor numérico (parseFloat usa punto nativamente)
-    const numericValue = parseFloat(value) || 0;
-
-    // Validar que no exceda el máximo disponible (valor_neto)
-    // PERO si se seleccionó "Devolver Total Pagado", permitimos el valor bruto
-    const maxRefundAvailable = this.getMaxRefundAvailable();
-
-    // NOTA: Aquí es donde estaba el conflicto. Si queremos que el usuario pueda devolver
-    // el total pagado (bruto), la validación debe ser flexible o basarse en el bruto.
-    // Sin embargo, el backend probablemente valide contra valor_neto si se trata de Wompi.
-    // Asumiremos que si el usuario selecciona "Total Pagado", queremos permitir ese valor
-    // en el input, pero el envío al backend y validación final dependerá de la lógica de negocio.
-    // Para cumplir con la solicitud visual: "El monto no puede ser mayor al máximo disponible"
-    // debe seguir validando contra lo que el sistema permite realmente (maxRefundAvailable).
-
-    if (numericValue > maxRefundAvailable && !this.returnTotalPaid) {
-       // Si el valor ingresado manualmente supera el disponible REAL (neto), mostramos error.
-       // Pero si viene del checkbox (aunque aquí se desmarca al editar), la lógica es delicada.
-       // Si el usuario quiere devolver el bruto, pero el sistema solo tiene el neto disponible,
-       // técnicamente no se puede devolver más de lo que hay en la cuenta de Wompi.
-
-       // REVISIÓN: El usuario pidió:
-       // "Hay una sección que se llama Total Pagado. Ese valor debe ser lo máximo permitido cuando le doy check"
-       // Y "el Máximo disponible: no es como lo tenía antes. Esa sección debe quedar como estaba antes"
-
-       // Entonces:
-       // 1. getMaxRefundAvailable() debe retornar el valor NETO (como estaba antes).
-       // 2. toggleReturnTotalPaid() debe llenar el input con el valor BRUTO (Total Pagado).
-       // 3. La validación en onRefundAmountChange debe permitir este valor si es igual al Total Pagado,
-       //    O debemos ajustar la validación para que no bloquee la acción visual.
-
-       // Si el valor bruto es mayor al neto disponible, técnicamente hay un déficit para la devolución completa
-       // desde la pasarela, pero tal vez el negocio lo maneja diferente.
-       // Vamos a permitir que se llene el input, pero la validación de advertencia se disparará
-       // si el usuario edita y supera el límite.
-
-       this.refundAmount = maxRefundAvailable;
-       this.refundAmountDisplay = this.formatRefundNumber(maxRefundAvailable);
-       event.target.value = this.refundAmountDisplay;
-
-       this.notificationService.showWarning('Advertencia',
-         `El monto no puede ser mayor al máximo disponible: ${this.formatCurrency(maxRefundAvailable)}`);
-       return;
-    }
-
-    // Si el usuario selecciona el checkbox, el valor puede ser mayor al disponible neto.
-    // Debemos manejar esto. Si numericValue viene de la edición manual, validamos estricto.
-
-    this.refundAmount = numericValue;
-    this.refundAmountDisplay = this.formatRefundInputValue(value);
-
-    // Actualizar el valor del input
-    event.target.value = this.refundAmountDisplay;
-  }
-
-  private formatRefundInputValue(value: string): string {
-    if (!value) return '';
-
-    const parts = value.split('.');
-    let integerPart = parts[0];
-    const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
-
-    // Manejar parte entera vacía o ceros a la izquierda
-    if (integerPart === '') {
-      integerPart = '0';
-    } else {
-      const val = parseInt(integerPart);
-      integerPart = isNaN(val) ? '0' : val.toString();
-    }
-
-    // Agregar separadores de miles (comas)
-    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-    return integerPart + decimalPart;
-  }
-
-  private formatRefundNumber(num: number): string {
-    if (num === 0) return '';
-    // Manejar decimales si existen
-    const parts = num.toString().split('.');
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
-    return integerPart + decimalPart;
-  }
-
-  private formatNumberWithDots(num: number): string {
-    if (num === 0) return '';
-    // Manejar decimales si existen
-    const parts = num.toString().split('.');
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    // Limitar a 2 decimales si hay muchos? Por ahora mostramos lo que hay
-    const decimalPart = parts.length > 1 ? ',' + parts[1] : '';
-    return integerPart + decimalPart;
-  }
-
-  onPaymentAmountChange(event: any): void {
-    const value = event.target.value.replace(/\./g, ''); // Remover puntos existentes
-    const numericValue = parseInt(value) || 0;
-
-    this.newPaymentAmount = numericValue;
-    this.newPaymentAmountDisplay = this.formatNumberWithDots(numericValue);
-
-    // Actualizar el valor del input
-    event.target.value = this.newPaymentAmountDisplay;
-  }
-
-  onRefundFileSelected(event: any): void {
+  onRefundFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-      // Validar tamaño del archivo (máximo 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB en bytes
-      if (file.size > maxSize) {
-        this.notificationService.showError('Error', 'El archivo no puede ser mayor a 10MB');
-        return;
-      }
-
-      // Validar tipo de archivo
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-      if (!allowedTypes.includes(file.type)) {
-        this.notificationService.showError('Error', 'Solo se permiten archivos PDF, JPG, JPEG o PNG');
-        return;
-      }
-
       this.refundFile = file;
     }
   }
 
-  removeRefundFile(): void {
-    this.refundFile = null;
-  }
-
-  processRefund(): void {
-    if (!this.refundAmount || this.refundAmount <= 0) {
-      this.notificationService.showError('Error', 'Debe ingresar un monto válido para la devolución');
+  processRefund() {
+    if (this.refundAmount <= 0) {
+      this.notificationService.showError('Error', 'El monto de devolución debe ser mayor a cero.');
       return;
     }
 
-    const maxRefundAvailable = this.getMaxRefundAvailable();
-    if (this.refundAmount > maxRefundAvailable) {
-      this.notificationService.showError('Error', `El monto de devolución no puede ser mayor al máximo disponible: ${this.formatCurrency(maxRefundAvailable)}`);
+    if (this.refundAmount > this.getMaxRefundAvailable()) {
+      this.notificationService.showError('Error', 'El monto excede el saldo disponible para devolución.');
       return;
     }
 
-    this.confirmationService.showConfirmation(
-      {
-        title: 'Confirmar Devolución',
-        message: `¿Está seguro de procesar una devolución de ${this.formatCurrency(this.refundAmount)}?`,
-        confirmText: 'Procesar',
-        cancelText: 'Cancelar',
-        type: 'warning'
-      },
-      () => {
-        this.executeRefund();
-      }
-    );
-  }
-
-  private executeRefund(): void {
     this.isProcessingRefund = true;
     const currentUser = StorageServices.getCurrentUser();
 
+    const paymentData: any = {
+      cuenta_cobrar_id: this.account.id,
+      valor: this.refundAmount,
+      fecha_pago: new Date().toISOString(),
+      metodo_pago: 'DEVOLUCION',
+      pagador: 'COLEGIO', // O el nombre de la institución
+      estado: 'DEVOLUCION',
+      responsable: currentUser?.id,
+      observaciones: 'Devolución de dinero'
+    };
+
+    // 1. Subir archivo si existe
     if (this.refundFile) {
-      // Primero subir el archivo
       const formData = new FormData();
       formData.append('file', this.refundFile);
 
       this.paymentService.uploadFile(formData).subscribe({
         next: (uploadResponse) => {
-          // Una vez subido el archivo, procesar la devolución
-          const returnAccount = {
-            id: this.account.id,
-            monto: this.refundAmount,
-            comprobante: uploadResponse.data.id,
-            responsable: currentUser?.id
-          };
-
-          this.accountService.returnAccount(returnAccount).subscribe({
-            next: (response) => {
-              this.isProcessingRefund = false;
-              this.notificationService.showSuccess('Devolución Procesada', 'La devolución ha sido procesada exitosamente');
-              this.closeRefundModal();
-
-              // Recargar los datos de la cuenta
-              this.refreshAccountData();
-            },
-            error: (error) => {
-              this.isProcessingRefund = false;
-              this.notificationService.showError('Error', 'Error al subir el comprobante: ' + (error.message || 'Error desconocido'));
-            }
-          });
+          if ((uploadResponse as any)?.data?.id) {
+            paymentData.comprobante = (uploadResponse as any).data.id;
+            this.createRefundPayment(paymentData);
+          } else {
+            this.isProcessingRefund = false;
+            this.notificationService.showError('Error', 'No se pudo subir el comprobante.');
+          }
         },
-        error: (error) => {
+        error: () => {
           this.isProcessingRefund = false;
-          this.notificationService.showError('Error', 'Error al subir el comprobante: ' + (error.message || 'Error desconocido'));
+          this.notificationService.showError('Error', 'Error al subir el comprobante.');
         }
       });
     } else {
-      // Si no hay archivo, procesar sin comprobante
-      const returnAccount = {
-        id: this.account.id,
-        monto: this.refundAmount,
-        comprobante: undefined,
-        responsable: currentUser?.id
-      };
-
-      this.accountService.returnAccount(returnAccount).subscribe({
-        next: (response) => {
-          this.isProcessingRefund = false;
-          this.notificationService.showSuccess('Devolución Procesada', 'La devolución ha sido procesada exitosamente');
-          this.closeRefundModal();
-
-
-          this.refreshAccountData();
-        },
-        error: (error) => {
-          this.isProcessingRefund = false;
-          this.notificationService.showError('Error', 'Error al procesar la devolución: ' + (error.message || 'Error desconocido'));
-        }
-      });
+      this.createRefundPayment(paymentData);
     }
   }
 
+  private createRefundPayment(paymentData: any) {
+    this.paymentService.createPayment(paymentData).subscribe({
+      next: () => {
+        // Actualizar el saldo de la cuenta
+        // En devoluciones, el saldo "pagado" disminuye, por ende el saldo pendiente aumenta?
+        // O simplemente se registra la devolución. 
+        // Lógica: El saldo de la cuenta es cuanto han pagado. Si devuelvo, han pagado menos.
+        // Saldo = Pagos - Devoluciones.
+        
+        // Pero en la DB, 'saldo' suele ser lo que han pagado (acumulado).
+        // Si la lógica es Saldo = Total Pagado, entonces al hacer devolución, el Saldo debe disminuir.
+        
+        const newSaldo = this.account.saldo - this.refundAmount;
+        const newEstado = newSaldo >= this.finalAmount ? 'PAGADA' : 'DEVOLUCION'; // O PENDIENTE?
 
-  initializeDiscountValues(): void {
-    if (!this.account) return;
-    const descuento = this.account.descuento;
-    this.discountPercentage = typeof descuento === 'string' ? parseFloat(descuento) : (descuento || 0);
-    
-    if (this.discountPercentage > 0) {
-      this.originalAmount = this.account.monto;
-      this.finalAmount = this.originalAmount * (1 - this.discountPercentage / 100);
-    } else {
-      this.originalAmount = this.account.monto;
-      this.finalAmount = this.account.monto;
-    }
-  }
-
-  private initializeComponentProperties(): void {
-    this.showRefundModal = false;
-    this.showAddPaymentForm = false;
-    this.showPaymentDetailView = false;
-    this.isSubmittingPayment = false;
-    this.isDeletingPayment = false;
-    this.isProcessingRefund = false;
-    this.isEditingAmount = false;
-    this.isEditingDiscount = false;
-
-    // Inicializar propiedades de formulario
-    this.newPaymentAmountDisplay = '';
-    this.refundAmountDisplay = '';
-    this.selectedPayment = null;
-    this.deletingPaymentId = null;
-    this.newPaymentImage = null;
-    this.refundFile = null;
-
-    // Forzar detección de cambios múltiple
-    this.cdr.markForCheck();
-    this.cdr.detectChanges();
-
-    // Usar setTimeout para asegurar que los cambios se apliquen en el próximo ciclo
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 0);
-  }
-
-  startEditingDiscount(): void {
-    this.isEditingDiscount = true;
-  }
-
-  cancelEditingDiscount(event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-    this.isEditingDiscount = false;
-    // Restaurar el descuento original
-    const descuento = this.account.descuento;
-    this.discountPercentage = typeof descuento === 'string' ? parseFloat(descuento) : (descuento || 0);
-    this.calculateDiscount();
-  }
-
-  saveDiscount(event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-    if (this.discountPercentage >= 0 && this.discountPercentage <= 100) {
-      // Si es la primera vez aplicando descuento, usar el monto actual como original
-      if (this.account.descuento === 0 || !this.account.descuento) {
-        this.originalAmount = this.account.monto;
-      }
-
-      this.calculateDiscount();
-      this.updateAccountAmount();
-      this.isEditingDiscount = false;
-    }
-  }
-
-  calculateDiscount(): void {
-    const discountAmount = (this.originalAmount * this.discountPercentage) / 100;
-    this.finalAmount = this.originalAmount - discountAmount;
-  }
-
-  onDiscountPercentageChange(): void {
-    if (this.discountPercentage < 0) {
-      this.discountPercentage = 0;
-    } else if (this.discountPercentage > 100) {
-      this.discountPercentage = 100;
-    }
-    this.calculateDiscount();
-  }
-
-  private updateAccountAmount(): void {
-    // Guardar valores anteriores para rollback
-    const previousMonto = this.account.monto;
-    const previousDescuento = this.account.descuento;
-    const previousMontoDescuento = (this.account as any).monto_descuento;
-
-    // Actualización optimista del modelo local
-    this.account.monto = this.originalAmount;
-    this.account.descuento = this.discountPercentage;
-    (this.account as any).monto_descuento = this.finalAmount;
-
-    const updateData = {
-      monto: this.originalAmount,
-      descuento: this.discountPercentage,
-      monto_descuento: this.finalAmount
-    };
-
-    this.accountService.updateAccountReceivable(this.account.id, updateData).subscribe({
-      next: (response) => {
-        this.notificationService.showSuccess('Éxito', 'Descuento aplicado correctamente');
-        this.checkAndUpdateAccountStatus();
-        this.llamarFuncion.emit();
+        this.accountService.updateAccountReceivable(this.account.id, {
+          saldo: newSaldo,
+          estado: newEstado
+        }).subscribe({
+          next: () => {
+            this.isProcessingRefund = false;
+            this.closeRefundModal();
+            this.notificationService.showSuccess('Éxito', 'Devolución registrada correctamente.');
+            this.account.saldo = newSaldo;
+            this.account.estado = newEstado;
+            this.refreshAccountData();
+            this.llamarFuncion.emit();
+          },
+          error: (err) => {
+            this.isProcessingRefund = false;
+            this.notificationService.showError('Error', 'Se registró el pago pero falló la actualización de saldo.');
+            this.refreshAccountData();
+          }
+        });
       },
-      error: (error) => {
-        // Rollback en caso de error
-        this.account.monto = previousMonto;
-        this.account.descuento = previousDescuento;
-        (this.account as any).monto_descuento = previousMontoDescuento;
-        this.initializeDiscountValues(); // Restaurar cálculos
-
-        console.error('Error al aplicar descuento:', error);
-        this.notificationService.showError('Error', 'Error al aplicar el descuento');
+      error: (err) => {
+        this.isProcessingRefund = false;
+        this.notificationService.showError('Error', 'No se pudo registrar la devolución.');
       }
     });
-  }
-
-  private checkAndUpdateAccountStatus(): void {
-    const totalPaid = this.getTotalPaid();
-    const shouldBePaid = totalPaid >= this.finalAmount;
-
-    // Only update if the status needs to change
-    if (shouldBePaid && this.account.estado === 'PENDIENTE') {
-      this.updateAccountStatus('PAGADA');
-    } else if (!shouldBePaid && this.account.estado === 'PAGADA') {
-      this.updateAccountStatus('PENDIENTE');
-    }
-  }
-
-
-  private updateAccountStatus(newStatus: 'PAGADA' | 'PENDIENTE'): void {
-    this.accountService.updateAccountReceivable(this.account.id, {
-      estado: newStatus
-    }).subscribe({
-      next: (response) => {
-        this.account.estado = newStatus;
-        this.llamarFuncion.emit();
-      }
-    });
-  }
-
-  getDiscountAmount(): number {
-    return this.originalAmount - this.finalAmount;
   }
 }

@@ -1290,13 +1290,20 @@ export class ListMeet implements OnInit {
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
 
-    // Use estudiantes_id del programa para listar estudiantes
+    // Use estudiantes_id del programa or id_nivel.estudiantes_id para listar estudiantes
+    let studentsSource: any[] = [];
     if (prog.estudiantes_id && prog.estudiantes_id.length > 0) {
+        studentsSource = prog.estudiantes_id;
+    } else if (prog.id_nivel && prog.id_nivel.estudiantes_id && Array.isArray(prog.id_nivel.estudiantes_id)) {
+        studentsSource = prog.id_nivel.estudiantes_id;
+    }
+
+    if (studentsSource.length > 0) {
         const documents: {tipo: string, numero: string}[] = [];
         const seenDocs = new Set<string>();
         const studentAttendanceMap = new Map<string, any[]>();
 
-        prog.estudiantes_id.forEach((student: any) => {
+        studentsSource.forEach((student: any) => {
             if (student.tipo_documento && student.numero_documento) {
                 const docKey = `${student.tipo_documento}-${student.numero_documento}`;
                 if (!seenDocs.has(docKey)) {
@@ -1342,6 +1349,9 @@ export class ListMeet implements OnInit {
                                 }
                             }
 
+                            // Use safe navigation for nested properties
+                            const studentLevel = (student as any).nivel_id;
+                            
                             return {
                                 id: student.id,
                                 studentName: `${student.first_name} ${student.last_name}`,
@@ -1350,8 +1360,11 @@ export class ListMeet implements OnInit {
                                 attended: false,
                                 score: score > 0 ? score : '',
                                 attendancePercentage: attendancePercentage,
-                                currentLevelId: (student as any).nivel_id,
-                                subcategoria: prog.id_nivel?.subcategoria || ''
+                                currentLevelId: studentLevel?.id || studentLevel, // Handle object or ID
+                                levelName: studentLevel?.nivel || '',
+                                level: studentLevel?.nivel || '',
+                                subcategoria: prog.id_nivel?.subcategoria || '',
+                                creditos: (student as any).creditos
                             };
                         });
                         this.cdr.detectChanges();
@@ -1546,7 +1559,8 @@ export class ListMeet implements OnInit {
                         currentLevelId: studentLevelId,
                         levelName: displayLevelName, // Use combined name
                         level: studentLevelName, // Raw level name for filtering
-                        subcategoria: studentSubcategory
+                        subcategoria: studentSubcategory,
+                        creditos: (student as any).creditos
                     };
                 });
                 
@@ -1760,7 +1774,8 @@ export class ListMeet implements OnInit {
             currentLevelId: studentLevelId,
             levelName: displayLevelName,
             level: studentLevelName,
-            subcategoria: studentSubcategory
+            subcategoria: studentSubcategory,
+            creditos: (student as any).creditos
           };
         });
 

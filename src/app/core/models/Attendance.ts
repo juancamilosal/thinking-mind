@@ -25,4 +25,5 @@ export interface AttendanceItem {
   levelName?: string;
   level?: string;
   subcategoria?: string;
+  creditos?: number;
 }

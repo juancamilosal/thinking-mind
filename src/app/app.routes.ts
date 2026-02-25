@@ -34,6 +34,8 @@ import { Advertising } from './layouts/private-layout/pages/advertising/advertis
 import {
   AccountReceivableDetailComponent
 } from './layouts/private-layout/pages/accounts-receivable/accout-receivable-detail/account-receivable-detail';
+import { AccountsReceivableAyo } from './layouts/private-layout/pages/accounts-receivable-ayo/accounts-receivable-ayo';
+import { AccountReceivableDetailAyoComponent } from './layouts/private-layout/pages/accounts-receivable-ayo/account-receivable-detail/account-receivable-detail';
 
 
 export const routes: Routes = [
@@ -113,6 +115,16 @@ export const routes: Routes = [
         path: 'accounts-receivable/:id',
         title: 'Thinking Mind | Detalle de Cuenta por Cobrar',
         component: AccountReceivableDetailComponent
+      },
+      {
+        path: 'accounts-receivable-ayo',
+        title: 'Thinking Mind | Cuentas por Cobrar AYO',
+        component: AccountsReceivableAyo
+      },
+      {
+        path: 'accounts-receivable-ayo/:id',
+        title: 'Thinking Mind | Detalle de Cuenta por Cobrar AYO',
+        component: AccountReceivableDetailAyoComponent
       },
       {
         path: 'payments',

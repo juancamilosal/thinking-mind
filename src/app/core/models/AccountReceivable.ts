@@ -40,7 +40,9 @@ export class AccountReceivable {
   createdDate?: string;
   fecha_inscripcion?: string;
   fecha_finalizacion?: string;
-  descuento?: number;
+  descuento?: number | string;
+  monto_descuento?: number;
+  valor_final_descuento?: number;
   id_inscripcion?: string | null;
   // Propiedades adicionales según la estructura JSON del servicio
   colegio_id?: any; // Para el colegio

@@ -5,13 +5,14 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CourseService } from '../../../../core/services/course.service';
 import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
 import { Course, PrecioProgramaAyo } from '../../../../core/models/Course';
+import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 
 export type AyoStep = 'initial' | 'options' | 'meetings';
 
 @Component({
   selector: 'app-ayo',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppButtonComponent],
   templateUrl: './ayo.html',
   styleUrls: ['./ayo.css']
 })
@@ -100,6 +101,10 @@ export class AyoComponent implements OnInit {
     this.tempPrecioEspecial = null;
     this.tempFechaCreacion = null;
     this.tempFechaFinEspecial = null;
+  }
+
+  goToAccounts(): void {
+    this.router.navigate(['/private/accounts-receivable-ayo']);
   }
 
   savePrice(): void {
