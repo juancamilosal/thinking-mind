@@ -939,7 +939,9 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   initializeDiscountValues(): void {
     if (!this.account) return;
-    this.discountPercentage = this.account.descuento || 0;
+    const descuento = this.account.descuento;
+    this.discountPercentage = typeof descuento === 'string' ? parseFloat(descuento) : (descuento || 0);
+    
     if (this.discountPercentage > 0) {
       this.originalAmount = this.account.monto;
       this.finalAmount = this.originalAmount * (1 - this.discountPercentage / 100);
@@ -987,7 +989,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     }
     this.isEditingDiscount = false;
     // Restaurar el descuento original
-    this.discountPercentage = this.account.descuento || 0;
+    const descuento = this.account.descuento;
+    this.discountPercentage = typeof descuento === 'string' ? parseFloat(descuento) : (descuento || 0);
     this.calculateDiscount();
   }
 

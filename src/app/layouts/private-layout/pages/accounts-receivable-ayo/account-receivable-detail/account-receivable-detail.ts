@@ -610,14 +610,15 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
       }
 
       // Actualizar modelo local inmediatamente
-      this.account.monto = this.editedAmount;
+      this.account.monto = this.finalAmount;
       this.account.estado = newEstado;
 
       // Llamar a la API
       this.accountService.updateAccountReceivable(this.account.id, {
-        monto: this.editedAmount,
+        monto: this.finalAmount,
         estado: newEstado,
-        monto_descuento: (this.account as any).monto_descuento // Actualizar también el descuento en DB
+        monto_descuento: this.account.monto_descuento, // Actualizar también el descuento en DB
+        descuento: this.discountPercentage
       }).subscribe({
         next: (response) => {
           this.notificationService.showSuccess('Monto actualizado', 'El monto de la cuenta ha sido actualizado.');
@@ -682,23 +683,39 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
 
   initializeDiscountValues() {
     if (this.account) {
-      // Intentar obtener el descuento guardado o calcularlo
-      // Asumimos que el backend tiene un campo 'porcentaje_descuento' o lo calculamos
-      // Si no existe el campo, lo ideal sería que el backend lo envíe.
-      // Por ahora, calculamos basado en monto original y monto actual si hay lógica para ello,
-      // PERO, para simplificar y dado que el modelo AccountReceivable no parece tener 'originalAmount',
-      // vamos a usar una lógica: si hay 'monto_descuento', calculamos el porcentaje.
+      // Parse values safely handling strings/numbers
+      const monto = Number(this.account.monto) || 0;
+      const montoDescuento = Number(this.account.monto_descuento) || 0;
+      const descuentoRaw = this.account.descuento;
+      let discountPct = 0;
       
-      const montoDescuento = (this.account as any).monto_descuento || 0;
-      this.finalAmount = this.account.monto; // El monto en la cuenta YA es el final (según lógica usual)
+      if (descuentoRaw !== undefined && descuentoRaw !== null) {
+          discountPct = parseFloat(descuentoRaw.toString());
+      }
       
-      // Si hay descuento, el monto original era final + descuento
-      if (montoDescuento > 0) {
-        this.originalAmount = this.finalAmount + montoDescuento;
-        this.discountPercentage = parseFloat(((montoDescuento / this.originalAmount) * 100).toFixed(1));
+      // Fix: if discountPct is NaN, set to 0
+      if (isNaN(discountPct)) discountPct = 0;
+
+      this.finalAmount = monto;
+      this.discountPercentage = discountPct;
+
+      if (discountPct > 0) {
+          // If we have a percentage, calculate original amount
+          if (montoDescuento > 0) {
+              this.originalAmount = monto + montoDescuento;
+          } else {
+              this.originalAmount = Math.round(monto / (1 - (discountPct / 100)));
+              // Backfill monto_descuento locally
+              this.account.monto_descuento = this.originalAmount - monto;
+          }
+      } else if (montoDescuento > 0) {
+          // No percentage explicit, calculate from amounts
+          this.originalAmount = monto + montoDescuento;
+          this.discountPercentage = parseFloat(((montoDescuento / this.originalAmount) * 100).toFixed(1));
       } else {
-        this.originalAmount = this.finalAmount;
-        this.discountPercentage = 0;
+          // No discount
+          this.originalAmount = monto;
+          this.discountPercentage = 0;
       }
     }
   }
@@ -711,16 +728,17 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   }
 
   calculateDiscount() {
-    const discountAmount = (this.originalAmount * this.discountPercentage) / 100;
-    this.finalAmount = this.originalAmount - discountAmount;
+    const discountAmount = Math.round((this.originalAmount * this.discountPercentage) / 100);
+    this.finalAmount = Math.round(this.originalAmount - discountAmount);
     
     // Actualizar los valores en el objeto account para que se reflejen y se envíen
-    (this.account as any).monto_descuento = discountAmount;
+    this.account.monto_descuento = discountAmount;
+    this.account.descuento = this.discountPercentage;
     // Nota: No actualizamos account.monto aquí todavía, se hace al confirmar/guardar o en updateDiscountInBackend
   }
 
   getDiscountAmount(): number {
-    return (this.originalAmount * this.discountPercentage) / 100;
+    return Math.round((this.originalAmount * this.discountPercentage) / 100);
   }
 
   updateDiscountInBackend() {
@@ -746,7 +764,8 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
 
     this.accountService.updateAccountReceivable(this.account.id, {
       monto: this.finalAmount,
-      monto_descuento: (this.account as any).monto_descuento,
+      monto_descuento: this.account.monto_descuento,
+      descuento: this.discountPercentage,
       estado: newEstado
     }).subscribe({
       next: (response) => {
