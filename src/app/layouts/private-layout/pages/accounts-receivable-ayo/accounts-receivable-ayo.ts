@@ -4,7 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {AccountReceivableFormComponent} from '../accounts-receivable/account-recevable-form/account-receivable-form';
 import {AccountReceivableDetailAyoComponent} from './account-receivable-detail/account-receivable-detail';
-import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
+import {AccountReceivable} from '../../../../core/models/AccountReceivable';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
 import {ConfirmationService} from '../../../../core/services/confirmation.service';
 import {NotificationService} from '../../../../core/services/notification.service';
@@ -21,16 +21,8 @@ export class AccountsReceivableAyo implements OnInit {
   showForm = false;
   showDetail = false;
   selectedAccount: AccountReceivable | null = null;
-  activeTab: 'pending' | 'paid' | 'refund' | 'zero' = 'pending';
   accounts: AccountReceivable[] = [];
   isLoading = false;
-  isLoadingTotals = false;
-  allAccounts: AccountReceivable[] = []; // Todas las cuentas cargadas una sola vez
-  pendingAccounts: AccountReceivable[] = [];
-  paidAccounts: AccountReceivable[] = [];
-  refundAccounts: AccountReceivable[] = [];
-  zeroBalanceAccounts: AccountReceivable[] = [];
-  total: TotalAccounts;
   // Search
   searchTerm: string = '';
 
@@ -75,32 +67,17 @@ export class AccountsReceivableAyo implements OnInit {
 
     // Si es rector, cargar solo las cuentas de su colegio
     if (this.isRector && this.userColegioId) {
-      this.loadRectorAccounts();
-    } else {
-      // Para otros usuarios, aplicar filtros normales
-      this.applyFilters();
+      // Pre-configurar filtro de colegio si es necesario, o manejarlo en applyFilters
+      // this.filters.colegio = ... (no necesario si usamos colegio_id)
     }
+    
+    // Cargar cuentas aplicando filtros
+    this.applyFilters();
 
     this.route.queryParams.subscribe(params => {
       const cuentaCobrarId = params['cuentaCobrarId'];
       if (cuentaCobrarId) {
         this.loadAndShowAccountDetail(cuentaCobrarId);
-      }
-    });
-  }
-
-  // Método para cargar todas las cuentas
-  private loadAllAccounts(): void {
-    this.isLoading = true;
-    this.accountService.getAllAccountsReceivable(this.currentPage, this.itemsPerPage).subscribe({
-      next: (response) => {
-        this.accounts = response.data || [];
-        this.totalItems = response.meta?.total_count || 0;
-        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
       }
     });
   }
@@ -113,12 +90,6 @@ export class AccountsReceivableAyo implements OnInit {
 
   // Método para aplicar filtros
   private applyFilters(): void {
-    // Si es rector, usar su método específico
-    if (this.isRector && this.userColegioId) {
-      this.loadRectorAccounts();
-      return;
-    }
-
     this.isLoading = true;
 
     // Construir parámetros de filtro
@@ -127,6 +98,11 @@ export class AccountsReceivableAyo implements OnInit {
       limit: this.itemsPerPage,
       es_programa_ayo: true // Filtro obligatorio para este componente
     };
+
+    // Si es rector, filtrar por su colegio
+    if (this.isRector && this.userColegioId) {
+      filterParams.colegio_id = this.userColegioId;
+    }
 
     // Incluir el término de búsqueda si existe
     if (this.searchTerm.trim()) {
@@ -173,29 +149,6 @@ export class AccountsReceivableAyo implements OnInit {
           return;
         }
 
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-      }
-    });
-  }
-
-  // Método específico para cargar cuentas de rector (similar a list-schools)
-  private loadRectorAccounts(): void {
-    this.isLoading = true;
-
-    // Usar searchAccountReceivable con el colegioId del rector
-    this.accountService.searchAccountReceivable(
-      this.currentPage,
-      this.itemsPerPage,
-      this.searchTerm || undefined,
-      this.userColegioId
-    ).subscribe({
-      next: (response) => {
-        this.accounts = response.data || [];
-        this.totalItems = response.meta?.total_count || 0;
-        this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
         this.isLoading = false;
       },
       error: () => {

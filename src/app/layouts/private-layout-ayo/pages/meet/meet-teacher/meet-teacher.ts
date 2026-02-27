@@ -409,14 +409,31 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       const uniqueStudentsMap = new Map();
 
       programStudents.forEach((student: any) => {
-        const studentId = student.id || student.directus_users_id;
-        if (studentId && !uniqueStudentsMap.has(studentId)) {
-          uniqueStudentsMap.set(studentId, student);
+        // Determine the actual user object
+        // 1. If it's a direct user object (O2M), it has first_name, email etc directly.
+        // 2. If it's a junction (M2M), it has directus_users_id (which should be expanded to object).
+
+        let userObj = student;
+
+        if (student.directus_users_id && typeof student.directus_users_id === 'object') {
+            userObj = student.directus_users_id;
+            // Preserve junction specific fields if needed, but usually we want user fields
+            // If asistencia_id is on junction, we might lose it, but usually it's on user.
+            // If userObj doesn't have asistencia_id but student does, copy it?
+            if (!userObj.asistencia_id && student.asistencia_id) {
+                userObj = { ...userObj, asistencia_id: student.asistencia_id };
+            }
+        }
+
+        const userId = userObj.id;
+
+        if (userId && !uniqueStudentsMap.has(userId)) {
+          uniqueStudentsMap.set(userId, userObj);
         }
       });
 
       this.students = Array.from(uniqueStudentsMap.values()).map((student: any) => ({
-        id: student.id || student.directus_users_id || '',
+        id: student.id,
         name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
         rating: 0,
