@@ -1733,6 +1733,16 @@ export class ListMeet implements OnInit {
       curso_id: ''
     };
 
+    // Create map for subcategory fallback (same as in verTodosEstudiantes)
+    const levelSubcategoryMap = new Map<string, string>();
+    if (this.programas) {
+        this.programas.forEach((prog: any) => {
+            if (prog.id_nivel && prog.id_nivel.id && prog.id_nivel.subcategoria) {
+                levelSubcategoryMap.set(prog.id_nivel.id, prog.id_nivel.subcategoria);
+            }
+        });
+    }
+
     this.userService.getStudentsWithoutProgramaAyo().subscribe({
       next: (response) => {
         this.isLoadingStudents = false;
@@ -1771,7 +1781,9 @@ export class ListMeet implements OnInit {
           const rawNivel = student.nivel_id;
           const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || '');
           const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
-          const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : '';
+          
+          // Use robust subcategory logic
+          const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
 
           const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
 

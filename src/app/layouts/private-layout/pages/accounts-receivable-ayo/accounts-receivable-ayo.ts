@@ -56,6 +56,10 @@ export class AccountsReceivableAyo implements OnInit {
   ) {
   }
 
+  goBack(): void {
+    this.router.navigate(['/private/ayo']);
+  }
+
   ngOnInit(): void {
     // Obtener información del usuario desde StorageServices
     const user = StorageServices.getCurrentUser();
