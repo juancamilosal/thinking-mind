@@ -1304,19 +1304,30 @@ export class ListMeet implements OnInit {
         const studentAttendanceMap = new Map<string, any[]>();
 
         studentsSource.forEach((student: any) => {
-            if (student.tipo_documento && student.numero_documento) {
-                const docKey = `${student.tipo_documento}-${student.numero_documento}`;
+            // Determine user object (handle M2M junction or direct object)
+            let userObj = student;
+            if (student.directus_users_id && typeof student.directus_users_id === 'object') {
+                userObj = student.directus_users_id;
+            }
+
+            // Filter by estado_cuenta if available
+            if (userObj.estado_cuenta && userObj.estado_cuenta !== 'PAGADA') {
+                return;
+            }
+
+            if (userObj.tipo_documento && userObj.numero_documento) {
+                const docKey = `${userObj.tipo_documento}-${userObj.numero_documento}`;
                 if (!seenDocs.has(docKey)) {
                     seenDocs.add(docKey);
                     documents.push({
-                        tipo: student.tipo_documento,
-                        numero: student.numero_documento
+                        tipo: userObj.tipo_documento,
+                        numero: userObj.numero_documento
                     });
                 }
             }
             // Populate attendance map
-            if (student.id && student.asistencia_id && Array.isArray(student.asistencia_id)) {
-                studentAttendanceMap.set(student.id, student.asistencia_id);
+            if (userObj.id && student.asistencia_id && Array.isArray(student.asistencia_id)) {
+                studentAttendanceMap.set(userObj.id, student.asistencia_id);
             }
         });
 
@@ -1329,7 +1340,8 @@ export class ListMeet implements OnInit {
                 next: (response) => {
                     this.isLoadingStudents = false;
                     if (response.data && response.data.length > 0) {
-                        this.selectedStudents = response.data;
+                        // Filter again in case the initial list didn't have estado_cuenta but the detailed fetch does
+                        this.selectedStudents = response.data.filter((s: any) => s.estado_cuenta === 'PAGADA');
 
                         this.attendanceList = this.selectedStudents.map(student => {
                             let score: number = 0;
@@ -1422,7 +1434,7 @@ export class ListMeet implements OnInit {
             next: (response) => {
               this.isLoadingStudents = false;
               if (response.data && response.data.length > 0) {
-                this.selectedStudents = response.data;
+                this.selectedStudents = response.data.filter((s: any) => s.estado_cuenta === 'PAGADA');
 
                 // Filter students to ensure they belong to the current level
                 if (prog.id_nivel && prog.id_nivel.id) {
@@ -1721,6 +1733,16 @@ export class ListMeet implements OnInit {
       curso_id: ''
     };
 
+    // Create map for subcategory fallback (same as in verTodosEstudiantes)
+    const levelSubcategoryMap = new Map<string, string>();
+    if (this.programas) {
+        this.programas.forEach((prog: any) => {
+            if (prog.id_nivel && prog.id_nivel.id && prog.id_nivel.subcategoria) {
+                levelSubcategoryMap.set(prog.id_nivel.id, prog.id_nivel.subcategoria);
+            }
+        });
+    }
+
     this.userService.getStudentsWithoutProgramaAyo().subscribe({
       next: (response) => {
         this.isLoadingStudents = false;
@@ -1759,7 +1781,9 @@ export class ListMeet implements OnInit {
           const rawNivel = student.nivel_id;
           const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || '');
           const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
-          const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : '';
+          
+          // Use robust subcategory logic
+          const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
 
           const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
 

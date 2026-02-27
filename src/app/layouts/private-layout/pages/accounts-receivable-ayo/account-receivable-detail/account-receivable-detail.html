@@ -11,7 +11,11 @@
 
 <!-- Vista Principal de Detalle de Cuenta por Cobrar -->
 @if (!showPaymentDetailView){
-  @if (account) {
+  @if (isLoading) {
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+  } @else if (account) {
   <div  class="p-6 bg-gray-50 min-h-screen">
     <!-- Header con botón de regreso -->
     <div class="flex item-center justify-between my-5">

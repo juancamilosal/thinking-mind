@@ -32,10 +32,15 @@ export class AccountReceivableService {
     const defaultFields = '*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,pagos.*,pagos.responsable.*,curso_id.*';
     const fieldsToUse = fields || defaultFields;
     return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=${fieldsToUse}`).pipe(
-      map(response => ({
-        ...response,
-        data: this.mapToAccountReceivable(response.data)
-      }))
+      map(response => {
+        if (!response || !response.data) {
+          return { ...response, data: null as any };
+        }
+        return {
+          ...response,
+          data: this.mapToAccountReceivable(response.data)
+        };
+      })
     );
   }
 
@@ -148,9 +153,14 @@ export class AccountReceivableService {
       }
     }
 
-    // Filtro por colegio
+    // Filtro por colegio (nombre)
     if (filterParams.colegio) {
       params['filter[estudiante_id][colegio_id][nombre][_icontains]'] = filterParams.colegio;
+    }
+
+    // Filtro por colegio (ID)
+    if (filterParams.colegio_id) {
+      params['filter[estudiante_id][colegio_id][id][_eq]'] = filterParams.colegio_id;
     }
 
     // Filtro por fecha de finalización

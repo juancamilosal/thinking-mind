@@ -50,6 +50,9 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
           this.checkAndUpdateAccountStatus();
           this.initializeComponentProperties();
           this.cdr.detectChanges();
+        } else {
+          this.notificationService.showError('Error', 'No se encontró la cuenta');
+          this.goBack();
         }
       },
       error: (error) => {
