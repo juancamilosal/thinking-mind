@@ -1,3 +1,9 @@
+<app-notification-modal
+  [isVisible]="showNotification"
+  [notification]="notificationData"
+  (close)="onNotificationClose()">
+</app-notification-modal>
+
 <div class="print:hidden h-[100dvh] w-full animate-gradient-bg relative overflow-y-auto font-['Plus_Jakarta_Sans']">
 
   <!-- Decorative background elements similar to payment-record -->
@@ -303,18 +309,46 @@
                               <table class="w-full bg-white rounded-lg shadow-sm border ">
                                 <thead class="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
                                   <tr>
+                                    <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider md:hidden">Acción</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Programa</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Programa</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
                                     <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
-                                    <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Acción</th>
+                                    <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider hidden md:table-cell">Acción</th>
                                   </tr>
                                 </thead>
                                 <tbody class="divide-y divide-emerald-100">
                                   @for (courseData of registeredCourses; track courseData.id) {
                                       <tr class="transition-colors duration-200">
+                                        <td class="px-6 py-4 text-center md:hidden">
+                                      <div class="flex flex-col gap-2 justify-center">
+                                        <app-button
+                                          variant="success"
+                                          size="sm"
+                                          (btnClick)="onPayCourse(courseData)"
+                                          customClass="w-full shadow-md hover:shadow-lg transform hover:scale-105">
+                                          Pagar
+                                        </app-button>
+                                        <div class="flex gap-2 justify-center w-full">
+                                          <app-button
+                                            variant="primary"
+                                            size="sm"
+                                            (btnClick)="onViewPayments(courseData)"
+                                            customClass="flex-1 shadow-md hover:shadow-lg transform hover:scale-105">
+                                            Ver Pagos
+                                          </app-button>
+                                          <app-button
+                                            variant="warning"
+                                            size="sm"
+                                            (btnClick)="onResendCode(courseData)"
+                                            customClass="flex-1 shadow-md hover:shadow-lg transform hover:scale-105">
+                                            Reenviar Código
+                                          </app-button>
+                                        </div>
+                                      </div>
+                                    </td>
                                         <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                                           @if (courseData.isInscription) {
                                             <div class="flex flex-col">
@@ -348,7 +382,7 @@
                                             {{ courseData.status }}
                                           </span>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
+                                        <td class="px-6 py-4 text-center hidden md:table-cell">
                                           <div class="flex gap-2 justify-center">
                                             <app-button
                                               variant="success"
@@ -363,6 +397,13 @@
                                               (btnClick)="onViewPayments(courseData)"
                                               customClass="shadow-md hover:shadow-lg transform hover:scale-105">
                                               Ver Pagos
+                                            </app-button>
+                                            <app-button
+                                              variant="warning"
+                                              size="sm"
+                                              (btnClick)="onResendCode(courseData)"
+                                              customClass="shadow-md hover:shadow-lg transform hover:scale-105">
+                                              Reenviar Código
                                             </app-button>
                                           </div>
                                         </td>
@@ -1038,14 +1079,8 @@
         </app-button>
       </div>
     </div>
-  </div>
+</div>
 }
-
-<app-notification-modal
-                            [isVisible]="showNotification"
-                            [notification]="notificationData"
-                            (close)="onNotificationClose()">
-                          </app-notification-modal>
                         </div>
 
 <!-- Print Layout Section -->
