@@ -21,6 +21,7 @@ export class Student {
   nivel_idioma?: string;
   test_resultado?: any;
   estudiante_ayo?: boolean;
+  codigo_registro?: string;
 }
 
 export class Certification {

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -80,7 +80,8 @@ export class PaymentRecordAyoComponent implements OnInit {
         private accountReceivableService: AccountReceivableService,
         private paymentService: PaymentService,
         private exchangeRateService: ExchangeRateService,
-        private cdRef: ChangeDetectorRef
+        private cdRef: ChangeDetectorRef,
+        private ngZone: NgZone
     ) { }
 
     ngOnInit(): void {
@@ -475,6 +476,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             duration: 5000
         };
         this.showNotification = true;
+        this.cdRef.detectChanges();
     }
 
     showErrorNotification(message: string) {
@@ -485,6 +487,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             duration: 5000
         };
         this.showNotification = true;
+        this.cdRef.detectChanges();
     }
 
     onNotificationClose() {
@@ -548,6 +551,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                     studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
                     studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
                     studentDocumentNumber: student ? student.numero_documento : cuenta.estudiante_id.numero_documento,
+                    studentId: student ? student.id : cuenta.estudiante_id.id,
                     coursePrice: this.formatCurrency(coursePriceNumber),
                     coursePriceNumber: coursePriceNumber,
                     balance: this.formatCurrency(totalPaidNumber),
@@ -620,6 +624,57 @@ export class PaymentRecordAyoComponent implements OnInit {
         };
 
         this.showPaymentModal = true;
+    }
+
+    onResendCode(courseData: any): void {
+        const studentId = courseData.studentId;
+        if (!studentId) {
+            this.showErrorNotification('No se encontró información del estudiante para reenviar el código.');
+            return;
+        }
+
+        this.isLoading = true;
+        this.studentService.getStudentById(studentId).subscribe({
+            next: (response) => {
+                const student = response.data;
+                const guardianEmail = this.clientData?.email || this.paymentForm.get('email')?.value;
+
+                if (student && student.codigo_registro && guardianEmail) {
+                     // Use sendNovedad to send the code
+                     const message = `Hola ${student.nombre}, tu código de registro es: ${student.codigo_registro}`;
+                     // sendNovedad expects array of emails
+                     this.programaAyoService.sendNovedad(message, [guardianEmail]).subscribe({
+                        next: () => {
+                            this.ngZone.run(() => {
+                                this.isLoading = false;
+                                this.showSuccessNotification(`El correo fue enviado satisfactoriamente a ${guardianEmail}`);
+                            });
+                        },
+                        error: (err) => {
+                            this.ngZone.run(() => {
+                                this.isLoading = false;
+                                console.error('Error sending code:', err);
+                                this.showErrorNotification('Error al enviar el código. Inténtelo más tarde.');
+                            });
+                        }
+                    });
+                } else {
+                    this.isLoading = false;
+                    if (!student) {
+                        this.showErrorNotification('Estudiante no encontrado.');
+                    } else if (!student.codigo_registro) {
+                         this.showErrorNotification('El estudiante no tiene código de registro asignado.');
+                    } else if (!guardianEmail) {
+                         this.showErrorNotification('No se encontró el correo electrónico del acudiente.');
+                    }
+                }
+            },
+            error: (error) => {
+                this.isLoading = false;
+                console.error('Error fetching student details:', error);
+                this.showErrorNotification('Error al obtener datos del estudiante.');
+            }
+        });
     }
 
     onViewPayments(courseData: any): void {
