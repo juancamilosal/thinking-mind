@@ -133,6 +133,18 @@ export class ProgramaAyoService {
     return this.http.patch<ResponseAPI<any>>(`${environment.precio_programa_ayo}/${id}`, data);
   }
 
+  consultarAcudiente(tipo_documento: string, numero_documento: string): Observable<any> {
+    return this.http.post<any>(environment.consultar_acudiente, { tipo_documento, numero_documento });
+  }
+
+  verificacionCodigo(tipo_documento: string, numero_documento: string, codigo: string): Observable<any> {
+    return this.http.post<any>(environment.verificacion_codigo, { tipo_documento, numero_documento, codigo });
+  }
+
+  cambioContraseña(contrasena: string, email: string): Observable<any> {
+    return this.http.post<any>(environment.cambio_contrasena, { contrasena, email });
+  }
+
   createReunionGeneral(data: any): Observable<ResponseAPI<any>> {
     return this.http.post<ResponseAPI<any>>(environment.reunion_general, data);
   }

@@ -33,7 +33,9 @@
     <div class="right-panel">
         <div class="login-card">
 
-            @if (isLoginMode) {
+            @if (showForgotPassword) {
+                <app-forgot-password-ayo (close)="toggleForgotPassword()"></app-forgot-password-ayo>
+            } @else if (isLoginMode) {
             <!-- LOGIN VIEW -->
             <h3 class="card-title">Ingreso</h3>
             <p class="card-subtitle">Inicia sesión para continuar</p>
@@ -67,11 +69,19 @@
                     }
                 </button>
 
-                <div class="my-5 toggle-container">
-                    <p class="font-bold">¿Desea registrarse al Programa AYO?
-                        <a (click)="toggleMode()"
-                            class="text-blue-700 underline cursor-pointer hover:text-blue-800">Regístrate aquí</a>
+                <div class="flex flex-col gap-10  my-5 toggle-container">
+                  <div>
+                    <p class="font-bold mt-2">¿Olvidaste la Contraseña o el usuario?
+                      <a (click)="toggleForgotPassword()" href="javascript:void(0)"
+                         class="text-blue-700 underline cursor-pointer hover:text-blue-800">Recupérala aquí</a>
                     </p>
+                  </div>
+                  <div>
+                    <p class="font-bold">¿Desea registrarse al Programa AYO?
+                      <a (click)="toggleMode()" href="javascript:void(0)"
+                         class="text-blue-700 underline cursor-pointer hover:text-blue-800">Regístrate aquí</a>
+                    </p>
+                  </div>
                 </div>
             </form>
             } @else {
@@ -187,7 +197,7 @@
 
                 <div class="my-5 toggle-container">
                     <p class="font-bold">¿Ya tienes cuenta y deseas ingresar?
-                        <a (click)="toggleMode()"
+                        <a (click)="toggleMode()" href="javascript:void(0)"
                             class="text-blue-700 underline cursor-pointer hover:text-blue-800">Ingresa aquí</a>
                     </p>
                 </div>

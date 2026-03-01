@@ -8,11 +8,13 @@ import { ClientService } from '../../../../core/services/client.service';
 import { NotificationModalComponent, NotificationData } from '../../../../components/notification-modal/notification-modal';
 import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ForgotPasswordAyoComponent } from './forgot-password-ayo/forgot-password-ayo';
 
 @Component({
     selector: 'app-login-ayo',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterModule, NotificationModalComponent],
+    imports: [ReactiveFormsModule, RouterModule, NotificationModalComponent, ForgotPasswordAyoComponent],
     templateUrl: './login-ayo.html',
     styleUrls: ['./login-ayo.css']
 })
@@ -21,6 +23,7 @@ export class LoginAyo implements OnInit {
     loginForm!: FormGroup;
 
     isLoginMode: boolean = true; // Default to Login view
+    showForgotPassword: boolean = false;
     isLoading: boolean = false;
     showRegisterPassword = false;
     showRegisterConfirmPassword = false;
@@ -37,10 +40,21 @@ export class LoginAyo implements OnInit {
         private clientService: ClientService,
         private router: Router,
         private cdr: ChangeDetectorRef,
-        private ngZone: NgZone
+        private ngZone: NgZone,
+        private notificationService: NotificationService
     ) { }
 
     ngOnInit(): void {
+        // Subscribe to notification service
+        this.notificationService.notification$.subscribe(notification => {
+            this.notificationData = notification;
+        });
+
+        this.notificationService.isVisible$.subscribe(isVisible => {
+            this.showNotification = isVisible;
+            this.cdr.detectChanges();
+        });
+
         // Set context for routing redirects
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem('app_context', 'ayo');
@@ -79,6 +93,10 @@ export class LoginAyo implements OnInit {
 
     toggleMode() {
         this.isLoginMode = !this.isLoginMode;
+    }
+
+    toggleForgotPassword() {
+        this.showForgotPassword = !this.showForgotPassword;
     }
 
     onLoginSubmit() {
@@ -220,19 +238,20 @@ export class LoginAyo implements OnInit {
     }
 
     onNotificationClose() {
-        this.showNotification = false;
-        this.notificationData = null;
+        this.notificationService.hideNotification();
     }
 
     private showMessage(type: 'success' | 'error' | 'info' | 'warning', title: string, message: string) {
         this.ngZone.run(() => {
-            this.notificationData = {
-                type,
-                title,
-                message
-            };
-            this.showNotification = true;
-            this.cdr.detectChanges();
+            if (type === 'success') {
+                this.notificationService.showSuccess(title, message);
+            } else if (type === 'error') {
+                this.notificationService.showError(title, message);
+            } else if (type === 'warning') {
+                this.notificationService.showWarning(title, message);
+            } else {
+                this.notificationService.showInfo(title, message);
+            }
         });
     }
 }
