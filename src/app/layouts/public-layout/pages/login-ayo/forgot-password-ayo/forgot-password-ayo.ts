@@ -190,6 +190,15 @@ export class ForgotPasswordAyoComponent implements OnInit {
             this.cdr.detectChanges();
             return;
         }
+
+        // Check for empty data array (specific case requested)
+        if (response && response.data && Array.isArray(response.data) && response.data.length === 0) {
+             this.ngZone.run(() => {
+                this.notificationService.showError('Error', 'No existe estudiante registrado en programa AYO');
+            });
+            this.cdr.detectChanges();
+            return;
+        }
         
         let serverCode = null;
         if (response && response.codigo_registro) {
@@ -200,10 +209,27 @@ export class ForgotPasswordAyoComponent implements OnInit {
             serverCode = response.data.codigo_registro;
         }
         
+        // Extract email from response
+        let serverEmail = null;
+        if (response && response.email) serverEmail = response.email;
+        else if (Array.isArray(response) && response.length > 0 && response[0].email) serverEmail = response[0].email;
+        else if (response && response.data && Array.isArray(response.data) && response.data.length > 0 && response.data[0].email) serverEmail = response.data[0].email;
+        else if (response && response.data && response.data.email) serverEmail = response.data.email;
+
+        // Check if server explicitly confirmed
+        const isServerConfirmed = response && response.message === 'Código de Verificación Confirmado';
+
         // If we found a code from the server, let's compare it with the input
         if (serverCode) {
              if (String(serverCode) === String(code)) {
                  this.currentStep = 3;
+
+                 // Auto-populate and disable email if found
+                 if (serverEmail) {
+                     this.resetPasswordForm.patchValue({ email: serverEmail });
+                     this.resetPasswordForm.get('email')?.disable();
+                 }
+
                  this.ngZone.run(() => {
                      this.notificationService.showSuccess('Correcto', 'Código de registro verificado.');
                  });
@@ -215,9 +241,16 @@ export class ForgotPasswordAyoComponent implements OnInit {
                  this.cdr.detectChanges();
              }
         } else {
-             // Fallback to local check
-             if (this.selectedStudent.codigo_registro === code) {
+             // Fallback to local check OR explicit server confirmation
+             if (isServerConfirmed || this.selectedStudent.codigo_registro === code) {
                   this.currentStep = 3;
+
+                  // Auto-populate and disable email if found (also in fallback/confirmed case)
+                  if (serverEmail) {
+                      this.resetPasswordForm.patchValue({ email: serverEmail });
+                      this.resetPasswordForm.get('email')?.disable();
+                  }
+
                   this.ngZone.run(() => {
                       this.notificationService.showSuccess('Correcto', 'Código de registro verificado.');
                   });
@@ -248,7 +281,7 @@ export class ForgotPasswordAyoComponent implements OnInit {
     }
 
     this.isLoading = true;
-    const { password, email } = this.resetPasswordForm.value;
+    const { password, email } = this.resetPasswordForm.getRawValue();
     
     this.programaAyoService.cambioContraseña(password, email).subscribe({
       next: (response) => {
