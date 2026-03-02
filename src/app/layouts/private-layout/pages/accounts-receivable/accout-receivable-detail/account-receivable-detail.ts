@@ -116,6 +116,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   refundAmount: number = 0;
   refundAmountDisplay: string = '';
   refundFile: File | null = null;
+  refundImagePreview: string | null = null;
   isProcessingRefund = false;
   returnTotalPaid: boolean = false;
 
@@ -838,11 +839,26 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
       }
 
       this.refundFile = file;
+
+      // Generate preview if it is an image
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.refundImagePreview = e.target.result;
+          this.cdr.detectChanges();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        this.refundImagePreview = null;
+        this.cdr.detectChanges();
+      }
     }
   }
 
   removeRefundFile(): void {
     this.refundFile = null;
+    this.refundImagePreview = null;
+    this.cdr.detectChanges();
   }
 
   processRefund(): void {
@@ -968,6 +984,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.deletingPaymentId = null;
     this.newPaymentImage = null;
     this.refundFile = null;
+    this.refundImagePreview = null;
 
     // Forzar detección de cambios múltiple
     this.cdr.markForCheck();
