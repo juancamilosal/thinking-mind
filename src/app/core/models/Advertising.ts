@@ -6,6 +6,7 @@ export class AdvertisingItem {
   descripcion: string;
   descripcion_ingles: string;
   descripcion_frances: string;
+  link_youtube?: string;
   activo: boolean;
   img_url?: string;
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AdvertisingService } from '../../../../core/services/advertising.service';
 import { AdvertisingItem } from '../../../../core/models/Advertising';
 import { TranslateService } from '@ngx-translate/core';
@@ -37,11 +38,13 @@ export class Advertising implements OnInit {
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private sanitizer: DomSanitizer
   ) {
     this.form = this.fb.group({
       titulo: ['', Validators.required],
       enlace: ['', Validators.required],
+      link_youtube: [''],
       descripcion: ['', Validators.required],
       descripcion_ingles: ['', Validators.required],
       descripcion_frances: ['', Validators.required],
@@ -94,6 +97,7 @@ export class Advertising implements OnInit {
     this.form.patchValue({
       titulo: item.titulo || '',
       enlace: item.enlace || '',
+      link_youtube: item.link_youtube || '',
       descripcion: item.descripcion || '',
       descripcion_ingles: item.descripcion_ingles || '',
       descripcion_frances: item.descripcion_frances || '',
@@ -222,6 +226,22 @@ export class Advertising implements OnInit {
     if (lang.startsWith('en')) return item.descripcion_ingles || item.descripcion || '';
     if (lang.startsWith('fr')) return item.descripcion_frances || item.descripcion || '';
     return item.descripcion || '';
+  }
+
+  getSafeUrl(url: string | undefined): SafeResourceUrl | null {
+    if (!url) return null;
+    
+    // Regular expression to extract video ID from various YouTube URL formats
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/|live\/)([^#&?]*).*/;
+    const match = url.match(regExp);
+
+    // YouTube IDs are 11 characters long
+    if (match && match[2].length === 11) {
+      const videoId = match[2];
+      return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoId}`);
+    }
+    
+    return null;
   }
 
   onFileSelected(event: any): void {
