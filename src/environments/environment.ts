@@ -72,6 +72,9 @@ export const environment = {
   new_account_ayo: apiUrl + 'flows/trigger/2a58b0b7-7a61-4648-82ea-570ec5c87e77',
   change_level: apiUrl + 'flows/trigger/254634da-e19e-47dd-b7a6-0eab4935775d',
   notify_acudiente_flow: apiUrl + 'flows/trigger/ddbcef22-64cb-4858-a00d-d5fd1837faca',
+  consultar_acudiente: apiUrl + 'flows/trigger/8abc9d58-c405-44b4-b405-f4a265a7d505',
+  verificacion_codigo: apiUrl + 'flows/trigger/3c8d3680-7f96-4311-9d8c-50d557bdb44e',
+  cambio_contrasena: apiUrl + 'flows/trigger/0002d508-1d3e-40d4-a455-74d820d6683d',
   exchangeRates: {
     provider: 'erapi',
     alphavantageApiKey: '',
