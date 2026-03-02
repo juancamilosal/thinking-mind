@@ -310,7 +310,7 @@
                     <img [src]="ad.img_url" [alt]="ad.descripcion"
                          class="relative w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
                   </div>
-                  <div class="md:w-1/2 flex">
+                  <div class="md:w-1/2 flex flex-col gap-6">
                     <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 text-gray-900 border-l-4 border-indigo-400">
                       <h3 class="text-xl md:text-2xl font-bold mb-2 flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
@@ -330,6 +330,21 @@
                         </svg>
                       </a>
                     </div>
+
+                    <!-- Video Section -->
+                    @if (ad.link_youtube && getSafeUrl(ad.link_youtube)) {
+                      <div class="w-full relative rounded-xl overflow-hidden shadow-lg bg-black" style="padding-bottom: 56.25%;">
+                        <iframe
+                          class="absolute top-0 left-0 w-full h-full"
+                          [src]="getSafeUrl(ad.link_youtube)"
+                          title="YouTube video player"
+                          frameborder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          referrerpolicy="strict-origin-when-cross-origin"
+                          allowfullscreen>
+                        </iframe>
+                      </div>
+                    }
                   </div>
                 </div>
               }

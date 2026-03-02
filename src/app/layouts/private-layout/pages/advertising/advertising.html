@@ -16,9 +16,11 @@
       <div class="h-1 bg-gradient-to-r from-sky-400 via-indigo-500 to-pink-500 rounded-full mb-8"></div>
 
       <div class="flex items-center justify-between mb-6">
-        <app-button variant="primary" size="md" (btnClick)="openNew()">
-          Crear publicidad
-        </app-button>
+        @if (!showForm) {
+          <app-button variant="primary" size="md" (btnClick)="openNew()">
+            Crear publicidad
+          </app-button>
+        }
         @if (isLoading) {
           <span class="text-gray-500 text-sm">Cargando...</span>
         }
@@ -99,6 +101,14 @@
                 <p class="mt-1 text-xs text-red-500">Este campo es obligatorio.</p>
               }
             </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Link de YouTube</label>
+              <input
+                type="text"
+                formControlName="link_youtube"
+                placeholder="https://www.youtube.com/watch?v=..."
+                class="w-full rounded-lg border border-gray-300 p-2" />
+            </div>
             <div class="flex flex-col justify-end">
               <label class="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
               <div class="flex items-center gap-4">
@@ -131,69 +141,86 @@
         </form>
       }
 
-      <div class="space-y-10 md:space-y-14">
-        @for (ad of items; track ad.id) {
-          <div class="group flex flex-col md:flex-row items-stretch gap-6 md:gap-10">
-            <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100 relative">
-              <img [src]="ad.img_url" [alt]="ad.descripcion"
-                   class="absolute inset-0 w-full h-full object-cover scale-125 blur-md opacity-50">
-              <img [src]="ad.img_url" [alt]="ad.descripcion"
-                   class="relative w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
-            </div>
-            <div class="md:w-1/2 flex">
-              <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 text-gray-900 border-l-4 border-indigo-400">
-                <div class="flex items-center justify-between mb-2">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                    [ngClass]="ad.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'">
-                    {{ ad.activo ? 'Activo' : 'Inactivo' }}
-                  </span>
+      @if (!showForm) {
+        <div class="space-y-10 md:space-y-14">
+          @for (ad of items; track ad.id) {
+            <div class="group flex flex-col md:flex-row items-stretch gap-6 md:gap-10">
+              <div class="md:w-1/2 h-72 md:h-96 rounded-2xl overflow-hidden shadow-md bg-gray-100 relative">
+                <img [src]="ad.img_url" [alt]="ad.descripcion"
+                     class="absolute inset-0 w-full h-full object-cover scale-125 blur-md opacity-50">
+                <img [src]="ad.img_url" [alt]="ad.descripcion"
+                     class="relative w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
+              </div>
+              <div class="md:w-1/2 flex flex-col gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 text-gray-900 border-l-4 border-indigo-400">
+                  <div class="flex items-center justify-between mb-2">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [ngClass]="ad.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'">
+                      {{ ad.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </div>
+                  <h2 class="text-xl md:text-2xl font-bold mb-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    <span>{{ ad.titulo }}</span>
+                  </h2>
+                  <p class="text-sm md:text-base text-gray-700 leading-relaxed mb-4">
+                    {{ getDescription(ad) }}
+                  </p>
+                  <div class="flex items-center gap-3">
+                    <a
+                      [href]="ad.enlace"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700">
+                      {{ 'dashboard.adLearnMore' | translate }}
+                      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
+                    <app-button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      customClass="ml-auto"
+                      (btnClick)="edit(ad)">
+                      Editar
+                    </app-button>
+                    <app-button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      (btnClick)="remove(ad)">
+                      Eliminar
+                    </app-button>
+                  </div>
                 </div>
-                <h2 class="text-xl md:text-2xl font-bold mb-2 flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  <span>{{ ad.titulo }}</span>
-                </h2>
-                <p class="text-sm md:text-base text-gray-700 leading-relaxed mb-4">
-                  {{ getDescription(ad) }}
-                </p>
-                <div class="flex items-center gap-3">
-                  <a
-                    [href]="ad.enlace"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700">
-                    {{ 'dashboard.adLearnMore' | translate }}
-                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                  <app-button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    customClass="ml-auto"
-                    (btnClick)="edit(ad)">
-                    Editar
-                  </app-button>
-                  <app-button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    (btnClick)="remove(ad)">
-                    Eliminar
-                  </app-button>
-                </div>
+
+                <!-- Video Section -->
+                @if (ad.link_youtube && getSafeUrl(ad.link_youtube)) {
+                  <div class="w-full relative rounded-xl overflow-hidden shadow-lg bg-black" style="padding-bottom: 56.25%;">
+                    <iframe
+                      class="absolute top-0 left-0 w-full h-full"
+                      [src]="getSafeUrl(ad.link_youtube)"
+                      title="YouTube video player"
+                      frameborder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerpolicy="strict-origin-when-cross-origin"
+                      allowfullscreen>
+                    </iframe>
+                  </div>
+                }
               </div>
             </div>
-          </div>
-        }
+          }
 
-        @if (!items?.length && !isLoading) {
-          <div class="text-center text-gray-500">No hay publicidad registrada</div>
-        }
+          @if (!items?.length && !isLoading) {
+            <div class="text-center text-gray-500">No hay publicidad registrada</div>
+          }
 
-        <!-- fin listado -->
-      </div>
+          <!-- fin listado -->
+        </div>
+      }
     </div>
   </div>
 </div>

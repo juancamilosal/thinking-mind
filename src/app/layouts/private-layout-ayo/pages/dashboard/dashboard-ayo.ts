@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { PayrollService } from '../../../../core/services/payroll.service';
@@ -62,7 +63,8 @@ export class DashboardAyo implements OnInit {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private translate: TranslateService,
-    private advertisingService: AdvertisingService
+    private advertisingService: AdvertisingService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -244,5 +246,21 @@ export class DashboardAyo implements OnInit {
     if (lang.startsWith('en')) return item.descripcion_ingles || item.descripcion || '';
     if (lang.startsWith('fr')) return item.descripcion_frances || item.descripcion || '';
     return item.descripcion || '';
+  }
+
+  getSafeUrl(url: string | undefined): SafeResourceUrl | null {
+    if (!url) return null;
+    
+    // Regular expression to extract video ID from various YouTube URL formats
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/|live\/)([^#&?]*).*/;
+    const match = url.match(regExp);
+
+    // YouTube IDs are 11 characters long
+    if (match && match[2].length === 11) {
+      const videoId = match[2];
+      return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoId}`);
+    }
+    
+    return null;
   }
 }
