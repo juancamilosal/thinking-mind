@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export class NotificationData {
@@ -22,6 +22,8 @@ export class NotificationModalComponent {
   @Input() notification: NotificationData | null = null;
   @Output() close = new EventEmitter<void>();
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnChanges() {
     if (this.isVisible && this.notification?.duration) {
       setTimeout(() => {
@@ -35,6 +37,7 @@ export class NotificationModalComponent {
       this.notification.onClose();
     }
     this.isVisible = false;
+    this.cdr.detectChanges();
     this.close.emit();
   }
 

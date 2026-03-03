@@ -1422,6 +1422,7 @@ export class PaymentRecord implements OnInit {
   onNotificationClose() {
     this.showNotification = false;
     this.notificationData = null;
+    this.cdRef.detectChanges();
   }
 
   // Validation method to check for duplicate enrollment
