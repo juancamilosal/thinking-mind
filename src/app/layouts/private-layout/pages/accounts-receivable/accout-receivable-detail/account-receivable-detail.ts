@@ -686,10 +686,10 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     // No invertimos el valor aquí porque ngModel ya lo actualizó al hacer click
 
     if (this.returnTotalPaid) {
-      // Si se activa, usar el TOTAL PAGADO (bruto) como monto
-      const totalPaid = this.getTotalPaidAmount();
-      this.refundAmount = totalPaid;
-      this.refundAmountDisplay = this.formatRefundNumber(totalPaid);
+      // Si se activa, usar el MÁXIMO DISPONIBLE (neto) como monto
+      const maxAvailable = this.getMaxRefundAvailable();
+      this.refundAmount = maxAvailable;
+      this.refundAmountDisplay = this.formatRefundNumber(maxAvailable);
 
       // Ocultar cualquier notificación de advertencia existente
       this.notificationService.hideNotification();
