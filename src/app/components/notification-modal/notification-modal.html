@@ -1,7 +1,7 @@
 <!-- Overlay del modal -->
 @if (isVisible) {
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+    class="fixed inset-0 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm"
     style="background-color: rgba(0, 0, 0, 0.5);"
     (click)="closeModal()">
     <!-- Contenido del modal -->
@@ -42,14 +42,16 @@
         </div>
         <!-- Footer con botón de acción -->
         <div class="px-6 pb-6">
-          <button *ngIf="!notification?.hideDefaultButton" (click)="closeModal()"
-            class="w-full px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                [ngClass]="notification?.type === 'success' ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 
-                          notification?.type === 'error' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' : 
-                          notification?.type === 'warning' ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500' : 
-                          'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'">
-            Entendido
-          </button>
+          @if (!notification?.hideDefaultButton) {
+            <button (click)="closeModal()"
+              class="w-full px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  [ngClass]="notification?.type === 'success' ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 
+                            notification?.type === 'error' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' : 
+                            notification?.type === 'warning' ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500' : 
+                            'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'">
+              Entendido
+            </button>
+          }
         </div>
       </div>
     </div>

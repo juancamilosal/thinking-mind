@@ -69,6 +69,7 @@ export class PrivateLayoutAyo implements OnInit, AfterViewInit {
 
     this.notificationService.isVisible$.subscribe(isVisible => {
       this.isNotificationVisible = isVisible;
+      this.cdr.detectChanges();
     });
 
     const storedLang = typeof localStorage !== 'undefined' ? localStorage.getItem('ayo_language') : null;
@@ -106,6 +107,7 @@ export class PrivateLayoutAyo implements OnInit, AfterViewInit {
 
     this.confirmationService.isVisible$.subscribe(isVisible => {
       this.isConfirmationVisible = isVisible;
+      this.cdr.detectChanges();
     });
   }
 

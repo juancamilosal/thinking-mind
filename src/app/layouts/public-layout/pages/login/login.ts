@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import {Router} from '@angular/router';
@@ -26,7 +26,8 @@ export class Login implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private loginServices: LoginService,
-    private tokenRefreshService: TokenRefreshService
+    private tokenRefreshService: TokenRefreshService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -103,6 +104,7 @@ export class Login implements OnInit {
   onNotificationClose() {
     this.showNotification = false;
     this.notificationData = null;
+    this.cdr.detectChanges();
   }
 
   // Método para resetear el estado del componente

@@ -54,6 +54,7 @@ export class PrivateLayout implements OnInit, AfterViewInit {
 
     this.notificationService.isVisible$.subscribe(isVisible => {
       this.isNotificationVisible = isVisible;
+      this.cdr.detectChanges();
     });
 
     // Suscribirse a las confirmaciones
@@ -63,6 +64,7 @@ export class PrivateLayout implements OnInit, AfterViewInit {
 
     this.confirmationService.isVisible$.subscribe(isVisible => {
       this.isConfirmationVisible = isVisible;
+      this.cdr.detectChanges();
     });
   }
 

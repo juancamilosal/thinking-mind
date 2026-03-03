@@ -493,6 +493,7 @@ export class PaymentRecordAyoComponent implements OnInit {
     onNotificationClose() {
         this.showNotification = false;
         this.notificationData = null;
+        this.cdRef.detectChanges();
     }
 
     onContinue(): void {
