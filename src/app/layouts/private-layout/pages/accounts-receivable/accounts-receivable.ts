@@ -670,6 +670,7 @@ export class AccountsReceivable implements OnInit {
               'Cuenta eliminada',
               'La cuenta por cobrar ha sido eliminada exitosamente.'
             );
+            this.cdr.detectChanges();
           },
           error: (error) => {
             console.error('Error al eliminar la cuenta:', error);

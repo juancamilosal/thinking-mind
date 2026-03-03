@@ -107,6 +107,7 @@ export class PrivateLayoutAyo implements OnInit, AfterViewInit {
 
     this.confirmationService.isVisible$.subscribe(isVisible => {
       this.isConfirmationVisible = isVisible;
+      this.cdr.detectChanges();
     });
   }
 
