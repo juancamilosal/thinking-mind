@@ -3,4 +3,5 @@ export class Roles {
   public static SALES: string = 'b40cfe25-bd79-4d62-818b-6cf96674fc12';
   public static STUDENT: string = 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
   public static TEACHER: string = 'fe83d2f3-1b89-477d-984a-de3b56e12001';
+  public static CEO: string = 'ad299f85-8137-4709-a3ad-beaeb579cdb3';
 }

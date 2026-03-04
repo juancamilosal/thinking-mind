@@ -49,9 +49,12 @@ export class Dashboard implements OnInit {
   userColegioId: string = '';
   isRector: boolean = false;
   isSales: boolean = false;
+  isCEO: boolean = false;
   isAyoStudent: boolean = false;
   isAyoTeacher: boolean = false;
   rol = Roles;
+
+  ceoStats: any = {};
 
   // AYO Student Stats
   ayoStats: any = {
@@ -106,8 +109,14 @@ export class Dashboard implements OnInit {
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === this.rol.RECTOR;
       this.isSales = user.role === this.rol.SALES;
+      this.isCEO = user.role === Roles.CEO;
       this.isAyoStudent = user.role === Roles.STUDENT;
       this.isAyoTeacher = user.role === Roles.TEACHER;
+
+      if (this.isCEO) {
+        this.loadCEOData();
+        return;
+      }
 
       if (this.isSales) {
         // Consumir el servicio dashboardSale para el rol específico
@@ -434,6 +443,22 @@ export class Dashboard implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private loadCEOData(): void {
+    this.dashboardService.dashboardCEO().subscribe({
+      next: (response) => {
+        if (response) {
+          const data = response.data || response;
+          this.processDefaultDashboardData(data);
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading CEO dashboard', error);
         this.isLoading = false;
       }
     });

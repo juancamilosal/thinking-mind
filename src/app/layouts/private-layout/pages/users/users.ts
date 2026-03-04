@@ -30,6 +30,7 @@ export class Users implements OnInit {
   roles: Role[] = [];
   filteredUsers: User[] = [];
   isLoading = false;
+  isLoadingRoles = false;
   searchTerm = '';
   roleSearchTerm = '';
   schools: { [key: number]: string } = {};
@@ -215,15 +216,15 @@ export class Users implements OnInit {
   }
 
   loadRoles(): void {
-    this.isLoading = true;
+    this.isLoadingRoles = true;
     this.roleService.getAllRoles(this.roleSearchTerm).subscribe({
       next: (response) => {
         this.roles = response.data;
-        this.isLoading = false;
+        this.isLoadingRoles = false;
       },
       error: (error) => {
         console.error('Error loading roles data:', error);
-        this.isLoading = false;
+        this.isLoadingRoles = false;
         this.notificationService.showError(
           'Error al cargar roles',
           'No se pudieron cargar los roles. Inténtalo nuevamente.'

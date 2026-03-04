@@ -20,6 +20,7 @@ export class DashboardService {
   private dashboardRectorUrl: string = environment.dashboardRector;
   private dashboardSaleUrl: string = environment.dashboardSale;
   private dashboardTeacherUrl: string = environment.dashboardTeacher;
+  private dashboardCEOUrl: string = environment.dashboardCEO;
   private dashboardUrl: string = environment.dashboard;
 
   constructor(private http: HttpClient) {}
@@ -43,6 +44,19 @@ export class DashboardService {
       observer.next(null);
       observer.complete();
     });
+  }
+
+  dashboardCEO(): Observable<any> {
+    const user = StorageServices.getCurrentUser();
+    let userId = '';
+
+    if (user) {
+        userId = user.id || '';
+    }
+
+    const params = userId ? { userId } : {};
+
+    return this.http.get<any>(this.dashboardCEOUrl, { params });
   }
 
   dashboardRector(): Observable<ResponseAPI<DashboardRectorData>> {
