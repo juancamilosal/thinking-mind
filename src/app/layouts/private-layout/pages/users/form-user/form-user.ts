@@ -6,6 +6,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { User } from '../../../../../core/models/User';
 import { School } from '../../../../../core/models/School';
 import { Role } from '../../../../../core/services/role.service';
+import {Roles} from '../../../../../core/const/Roles';
 import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 @Component({
@@ -34,6 +35,7 @@ export class FormUser implements OnInit {
   filteredSchools: School[] = [];
   isLoadingSchools = false;
   isSchoolSelected = false;
+  protected readonly roles = Roles;
   private searchTimeout: any;
 
   constructor(

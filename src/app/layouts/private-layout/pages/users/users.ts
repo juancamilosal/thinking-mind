@@ -4,11 +4,8 @@ import { switchMap, map, catchError, shareReplay, startWith } from 'rxjs/operato
 import { CommonModule } from '@angular/common';
 
 import { FormsModule } from '@angular/forms';
-import { FormRector } from './rector/form-rector/form-rector';
-import { RectorDetail } from './rector/rector-detail/rector-detail';
-import { FormAdmin } from './admin/form-admin/form-admin';
-import { AdminDetail } from './admin/admin-detail/admin-detail';
 import { FormUser } from './form-user/form-user';
+import { UserList } from './user-list/user-list';
 import { UserService } from '../../../../core/services/user.service';
 import { SchoolService } from '../../../../core/services/school.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -20,7 +17,7 @@ import { AppButtonComponent } from '../../../../components/app-button/app-button
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormRector, RectorDetail, FormAdmin, AdminDetail, FormUser, AppButtonComponent],
+  imports: [CommonModule, FormsModule, FormUser, UserList, AppButtonComponent],
   templateUrl: './users.html'
 })
 export class Users implements OnInit {
@@ -29,11 +26,7 @@ export class Users implements OnInit {
   showDetail = false;
   editMode = false;
   roleCounts: { [key: string]: Observable<number> } = {};
-  selectedRector: User | null = null;
-  selectedAdmin: User | null = null;
   selectedUser: User | null = null;
-  rectores: User[] = [];
-  admins: User[] = [];
   allUsers: User[] = [];
   roles: Role[] = [];
   filteredUsers: User[] = [];
@@ -54,6 +47,7 @@ export class Users implements OnInit {
   ngOnInit(): void {
     // Solo cargar roles al inicio
     this.loadRoles();
+    this.loadSchools(); // Cargar escuelas para mostrar nombres en la tabla
   }
 
   selectRole(roleId: string): void {
@@ -64,23 +58,14 @@ export class Users implements OnInit {
   // Nuevo método para cargar usuarios por rol
   loadUsersByRole(): void {
     if (!this.selectedRole) return;
-    
+
     this.isLoading = true;
     this.userService.getUsersByRole(this.selectedRole).subscribe({
       next: (response) => {
         this.filteredUsers = response.data || [];
-        
-        // Mantener compatibilidad con arrays específicos
-        if (this.selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') { // rector
-          this.rectores = this.filteredUsers;
-        } else if (this.selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') { // administrador
-          this.admins = this.filteredUsers;
-        }
-        
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading users by role:', error);
         this.notificationService.showError('Error', 'No se pudieron cargar los usuarios');
         this.isLoading = false;
       }
@@ -93,9 +78,6 @@ export class Users implements OnInit {
         response.data.forEach(school => {
           this.schools[school.id!] = school.nombre;
         });
-      },
-      error: (error) => {
-        console.error('Error loading schools:', error);
       }
     });
   }
@@ -107,18 +89,18 @@ export class Users implements OnInit {
 
   getCollegeName(colegio_id: any): string {
     if (!colegio_id) return 'N/A';
-    
+
     // Si colegio_id es un objeto con la propiedad nombre
     if (typeof colegio_id === 'object' && colegio_id.nombre) {
       return colegio_id.nombre;
     }
-    
+
     // Si colegio_id es solo un ID, buscar en el array de schools
     if (typeof colegio_id === 'string' || typeof colegio_id === 'number') {
       const id = typeof colegio_id === 'string' ? parseInt(colegio_id, 10) : colegio_id;
       return this.schools[id] || 'N/A';
     }
-    
+
     return 'N/A';
   }
 
@@ -132,17 +114,14 @@ export class Users implements OnInit {
   }
 
   onRoleChange(): void {
+    // No mostrar formulario automáticamente al seleccionar rol
     this.showForm = false;
     this.showDetail = false;
     this.editMode = false;
-    this.selectedRector = null;
-    this.selectedAdmin = null;
     this.selectedUser = null;
 
     // Limpiar datos anteriores
     this.filteredUsers = [];
-    this.rectores = [];
-    this.admins = [];
 
     // Solo cargar usuarios cuando se selecciona un rol
     if (this.selectedRole) {
@@ -179,78 +158,35 @@ export class Users implements OnInit {
     if (roleId === 'b40cfe25-bd79-4d62-818b-6cf96674fc12') {
       return 'assets/icons/clients.png';
     }
-    
+
     // Default
     return 'assets/icons/users.png';
-  }
-
-  loadRectores(): void {
-    this.isLoading = true;
-    // Usar el roleId específico para rectores
-    this.userService.getUsersByRole('a4ed6390-5421-46d1-b81e-5cad06115abc').subscribe({
-      next: (response) => {
-        this.rectores = response.data || [];
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading rectores:', error);
-        this.notificationService.showError('Error', 'No se pudieron cargar los rectores');
-        this.isLoading = false;
-      }
-    });
-  }
-
-  loadAdministradores(): void {
-    this.isLoading = true;
-    // Usar el roleId específico para administradores
-    this.userService.getUsersByRole('ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02').subscribe({
-      next: (response) => {
-        this.admins = response.data || [];
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading administradores:', error);
-        this.notificationService.showError('Error', 'No se pudieron cargar los administradores');
-        this.isLoading = false;
-      }
-    });
   }
 
   toggleForm() {
     this.showForm = !this.showForm;
     this.showDetail = false;
-    this.editMode = false;
-    this.selectedRector = null;
-    this.selectedAdmin = null;
-    this.selectedUser = null;
-    
-    // Cargar colegios solo cuando se abre el formulario Y el rol seleccionado es rector
-    if (this.showForm && this.selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-      this.loadSchools();
+
+    if (!this.showForm) {
+        this.editMode = false;
+        this.selectedUser = null;
     }
   }
 
-  searchRector(searchTerm?: string, showErrorNotification: boolean = true) {
-    this.isLoading = true;
-
-    // Usar el servicio para buscar rectores
-    this.userService.getUsersByRole('a4ed6390-5421-46d1-b81e-5cad06115abc', searchTerm).subscribe({
-      next: (response) => {
-        this.rectores = response.data || [];
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error searching rectores:', error);
-        if (showErrorNotification) {
-          this.notificationService.showError('Error', 'No se pudieron buscar los rectores');
-        }
-        this.isLoading = false;
-      }
-    });
-  }
-
   onSearch() {
-    this.searchRector(this.searchTerm);
+    // Implementar búsqueda genérica si es necesario
+    // Por ahora, filtrar localmente filteredUsers
+    if (!this.searchTerm) {
+        this.loadUsersByRole();
+        return;
+    }
+
+    const term = this.searchTerm.toLowerCase();
+    this.filteredUsers = this.filteredUsers.filter(user =>
+        (user.first_name && user.first_name.toLowerCase().includes(term)) ||
+        (user.last_name && user.last_name.toLowerCase().includes(term)) ||
+        (user.email && user.email.toLowerCase().includes(term))
+    );
   }
 
   onSearchInputChange(event: Event) {
@@ -262,125 +198,18 @@ export class Users implements OnInit {
     }
 
     this.searchTimeout = setTimeout(() => {
-      this.searchRector(this.searchTerm);
+      this.onSearch();
     }, 500);
-  }
-
-  viewRector(rector: User) {
-    this.selectedRector = rector;
-    this.showDetail = true;
-  }
-
-  editRector(rector: User) {
-    this.selectedRector = rector;
-    this.editMode = true;
-    this.showForm = true;
-    this.showDetail = false;
-    
-    // Cargar colegios cuando se va a editar
-    this.loadSchools();
   }
 
   closeDetail() {
     this.showDetail = false;
-    this.selectedRector = null;
-    this.selectedAdmin = null;
     this.selectedUser = null;
   }
-
-  onRectorCreated(rector: User) {
-    this.showForm = false;
-    this.editMode = false;
-    this.selectedRector = null;
-    this.notificationService.showSuccess('Rector creado', 'El rector ha sido creado exitosamente');
-    // Recargar usuarios del rol actual
-    this.loadUsersByRole();
-  }
-
-  onRectorUpdated(rector: User) {
-    this.showForm = false;
-    this.editMode = false;
-    this.selectedRector = null;
-    this.notificationService.showSuccess('Rector actualizado', 'El rector ha sido actualizado exitosamente');
-    // Recargar usuarios del rol actual
-    this.loadUsersByRole();
-  }
-
-  onRectorDeleted(rector: User) {
-    this.showForm = false;
-    this.showDetail = false;
-    this.editMode = false;
-    this.selectedRector = null;
-    this.notificationService.showSuccess('Rector eliminado', 'El rector ha sido eliminado exitosamente');
-    // Recargar usuarios del rol actual
-    this.loadUsersByRole();
-  }
-
-  // Métodos para Administradores
-  viewAdminDetail(admin: User) {
-    this.selectedAdmin = admin;
-  }
-
-  viewAdmin(admin: User) {
-    this.selectedAdmin = admin;
-    this.showDetail = true;
-  }
-
-  editAdmin(admin: User) {
-    this.selectedAdmin = admin;
-    this.editMode = true;
-    this.showForm = true;
-    this.showDetail = false;
-    
-    // No cargar colegios para administradores
-    // this.loadSchools();
-  }
-
-  createAdmin() {
-    this.selectedAdmin = null;
-    this.editMode = false;
-    this.showForm = true;
-    this.showDetail = false;
-    
-    // No cargar colegios para administradores
-    // this.loadSchools();
-  }
-
-  onAdminCreated(admin: User) {
-    this.showForm = false;
-    this.editMode = false;
-    this.selectedAdmin = null;
-    this.notificationService.showSuccess('Administrador creado', 'El administrador ha sido creado exitosamente');
-    // Recargar usuarios del rol actual
-    this.loadUsersByRole();
-  }
-
-  onAdminUpdated(admin: User) {
-    this.showForm = false;
-    this.editMode = false;
-    this.selectedAdmin = null;
-    this.notificationService.showSuccess('Administrador actualizado', 'El administrador ha sido actualizado exitosamente');
-    // Recargar usuarios del rol actual
-    this.loadUsersByRole();
-  }
-
-  onAdminDeleted(admin: User) {
-    this.showForm = false;
-    this.showDetail = false;
-    this.editMode = false;
-    this.selectedAdmin = null;
-    this.notificationService.showSuccess('Administrador eliminado', 'El administrador ha sido eliminado exitosamente');
-    // Recargar usuarios del rol actual
-    this.loadUsersByRole();
-  }
-
-
 
   closeForm() {
     this.showForm = false;
     this.editMode = false;
-    this.selectedRector = null;
-    this.selectedAdmin = null;
     this.selectedUser = null;
   }
 
@@ -390,7 +219,7 @@ export class Users implements OnInit {
       next: (response) => {
         this.roles = response.data;
         this.isLoading = false;
-        
+
         // Configurar observables para cada rol
         this.roles.forEach(role => {
           this.roleCounts[role.id] = this.userService.getUsersCountByRole(role.id).pipe(
@@ -411,29 +240,6 @@ export class Users implements OnInit {
           'Error al cargar roles',
           'No se pudieron cargar los roles. Inténtalo nuevamente.'
         );
-      }
-    });
-  }
-
-  loadRoleCounts(): void {
-    // Método obsoleto, reemplazado por la lógica en loadRoles
-  }
-
-  loadAllUsers(): void {
-    this.isLoading = true;
-    this.userService.getAllUsers().subscribe({
-      next: (response) => {
-        this.allUsers = response.data || [];
-        // Actualizar la lista filtrada después de cargar todos los usuarios
-        if (this.selectedRole) {
-          this.filteredUsers = this.allUsers.filter(user => user.role === this.selectedRole);
-        }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading all users:', error);
-        this.notificationService.showError('Error', 'No se pudieron cargar todos los usuarios');
-        this.isLoading = false;
       }
     });
   }
@@ -473,10 +279,5 @@ export class Users implements OnInit {
     this.editMode = true;
     this.showForm = true;
     this.showDetail = false;
-    
-    // Cargar colegios solo si el usuario es rector
-    if (user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-      this.loadSchools();
-    }
   }
 }

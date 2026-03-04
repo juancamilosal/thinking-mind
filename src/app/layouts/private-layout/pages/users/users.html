@@ -35,7 +35,7 @@
         </div>
       }
     </div>
-    @if (selectedRole) {
+    @if (selectedRole && !showForm) {
       <div class="flex justify-center mt-6">
         <app-button
           (btnClick)="toggleForm()"
@@ -53,153 +53,18 @@
     }
   </div>
 
-  <!-- Modal de detalle de Rector -->
-  @if (selectedRector && !showForm && !editMode) {
-    <app-rector-detail
-      [rector]="selectedRector"
-      (close)="closeDetail()"
-      (edit)="editRector(selectedRector)"
-      (delete)="onRectorDeleted(selectedRector)">
-    </app-rector-detail>
-  }
-
-  <!-- Modal de detalle de Administrador -->
-  @if (selectedAdmin && !showForm && !editMode) {
-    <app-admin-detail
-      [admin]="selectedAdmin"
-      (close)="closeDetail()"
-      (edit)="editAdmin(selectedAdmin)"
-      (delete)="onAdminDeleted(selectedAdmin!)">
-    </app-admin-detail>
-  }
-
   <!-- Contenido basado en el rol seleccionado -->
   @if (selectedRole && !showForm) {
-    <!-- Tabla de usuarios filtrados por rol (vista original) -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-base font-semibold text-gray-800">Usuarios con rol: {{ getRoleName(selectedRole) }}</h2>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
-              @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
-              }
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            @if (isLoading) {
-              @for (item of [1,2,3,4,5]; track $index) {
-                <tr class="animate-pulse">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-                    <div class="h-3 bg-gray-200 rounded w-24"></div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="h-4 bg-gray-200 rounded w-24"></div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="h-4 bg-gray-200 rounded w-32"></div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="h-4 bg-gray-200 rounded w-40"></div>
-                  </td>
-                  @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="h-4 bg-gray-200 rounded w-40"></div>
-                    </td>
-                  }
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="h-8 bg-gray-200 rounded w-16"></div>
-                  </td>
-                </tr>
-              }
-            } @else if (filteredUsers.length === 0) {
-              <tr>
-                <td [attr.colspan]="selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc' ? 6 : 5" class="px-6 py-12 text-center">
-                  <div class="flex flex-col items-center justify-center space-y-3">
-                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    <p class="text-lg font-medium text-gray-500">No hay usuarios con este rol</p>
-                    <p class="text-sm text-gray-400">No se encontraron usuarios para el rol seleccionado</p>
-                  </div>
-                </td>
-              </tr>
-            } @else {
-              @for(user of filteredUsers; track user.id) {
-                <tr class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-xs font-medium text-gray-900">{{ user.first_name }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-xs text-gray-900">{{ user.last_name }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-xs text-gray-900">{{ user.email }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-xs text-gray-900">{{ user.celular || 'N/A' }}</div>
-                  </td>
-                  @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-xs text-gray-900">{{ getCollegeName(user.colegio_id) }}</div>
-                    </td>
-                  }
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex space-x-2">
-                      @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-                        <app-button (btnClick)="editRector(user)" variant="success" size="sm" class="transform hover:scale-105">
-                          <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Editar
-                          </div>
-                        </app-button>
-                      } @else if (selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
-                        <app-button (btnClick)="editAdmin(user)" variant="success" size="sm" class="transform hover:scale-105">
-                          <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Editar
-                          </div>
-                        </app-button>
-                      } @else {
-                        <app-button (btnClick)="editUser(user)" variant="success" size="sm" class="transform hover:scale-105">
-                          <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Editar
-                          </div>
-                        </app-button>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- Tabla de usuarios filtrados por rol -->
+    <app-user-list
+        [filteredUsers]="filteredUsers"
+        [isLoading]="isLoading"
+        [selectedRole]="selectedRole"
+        [rolesList]="roles"
+        [schools]="schools"
+        (editUser)="editUser($event)">
+    </app-user-list>
   }
-
-
-
-
-
-
 
 @if (showForm) {
   <div class="p-6 bg-gray-50">
@@ -208,18 +73,10 @@
         <div class="flex justify-between items-center mb-8">
           <div>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">
-              @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc' || selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
-                {{ selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc' ? (editMode ? 'Editar Información Rector' : 'Registro de Rector') : (editMode ? 'Editar Información Administrador' : 'Registro de Administrador') }}
-              } @else {
                 {{ editMode ? 'Editar Información ' + getRoleName(selectedRole) : 'Registro de ' + getRoleName(selectedRole) }}
-              }
             </h1>
             <p class="text-gray-600">
-              @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc' || selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
-                {{ selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc' ? (editMode ? 'Actualiza la información del rector' : 'Completa la información del rector') : (editMode ? 'Actualiza la información del administrador' : 'Completa la información del administrador') }}
-              } @else {
                 {{ editMode ? 'Actualiza la información del ' + getRoleName(selectedRole).toLowerCase() : 'Completa la información del ' + getRoleName(selectedRole).toLowerCase() }}
-              }
             </p>
           </div>
           <app-button
@@ -235,26 +92,6 @@
           </app-button>
         </div>
 
-        @if (selectedRole === 'a4ed6390-5421-46d1-b81e-5cad06115abc') {
-          <app-form-rector
-            [editMode]="editMode"
-            [rectorData]="selectedRector"
-            (goBack)="toggleForm()"
-            (searchRector)="searchRector()"
-            (rectorCreated)="onRectorCreated($event)"
-            (rectorUpdated)="onRectorUpdated($event)"
-            (rectorDeleted)="onRectorDeleted($event)">
-          </app-form-rector>
-        } @else if (selectedRole === 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02') {
-          <app-form-admin
-            [editMode]="editMode"
-            [adminData]="selectedAdmin"
-            (adminCreated)="onAdminCreated($event)"
-            (adminUpdated)="onAdminUpdated($event)"
-            (adminDeleted)="onAdminDeleted($event)"
-            (cancel)="closeForm()">
-          </app-form-admin>
-        } @else {
           <app-form-user
             [editMode]="editMode"
             [userData]="selectedUser"
@@ -264,7 +101,6 @@
             (userDeleted)="onUserDeleted($event)"
             (cancel)="closeForm()">
           </app-form-user>
-        }
       </div>
     </div>
   </div>

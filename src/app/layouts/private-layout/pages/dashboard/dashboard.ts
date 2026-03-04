@@ -105,7 +105,7 @@ export class Dashboard implements OnInit {
       this.userRole = user.role;
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === this.rol.RECTOR;
-      this.isSales = user.role === this.rol.VENTAS;
+      this.isSales = user.role === this.rol.SALES;
       this.isAyoStudent = user.role === Roles.STUDENT;
       this.isAyoTeacher = user.role === Roles.TEACHER;
 
