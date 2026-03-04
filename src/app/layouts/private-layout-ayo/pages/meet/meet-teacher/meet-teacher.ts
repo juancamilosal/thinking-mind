@@ -337,6 +337,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.hasStudents(programa)) {
+      this.notificationService.showWarning(
+        'Aviso',
+        'No puede iniciar una reunión si no hay estudiantes registrados.'
+      );
+      return;
+    }
+
     // Only allow access to upcoming or in-progress meetings
     /*
     if (status === 'completed') {

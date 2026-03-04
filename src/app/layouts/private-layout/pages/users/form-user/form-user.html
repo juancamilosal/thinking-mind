@@ -115,7 +115,7 @@
     </div>
 
     <!-- Información del Colegio (solo si es necesario) -->
-    @if (selectedRole?.name?.toLowerCase().includes('rector') || selectedRole?.name?.toLowerCase().includes('director')) {
+    @if (selectedRole && selectedRole.id === roles.RECTOR) {
       <div class="bg-gray-50 rounded-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
           <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

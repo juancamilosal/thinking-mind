@@ -116,7 +116,7 @@ export class ListSchool implements OnInit {
       }
 
       // Si es ventas, establecer la bandera
-      if (user.role === Roles.VENTAS) {
+      if (user.role === Roles.SALES) {
         this.isSales = true;
       }
     }

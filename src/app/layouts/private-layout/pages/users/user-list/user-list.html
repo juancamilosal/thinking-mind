@@ -1,0 +1,98 @@
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h2 class="text-base font-semibold text-gray-800">Usuarios con rol: {{ getRoleName(selectedRole) }}</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
+          <!-- Mostrar columna de colegio solo si es necesario, por ejemplo para Rectores -->
+          @if (selectedRole === roles.RECTOR) {
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colegio</th>
+          }
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        @if (isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+            <tr class="animate-pulse">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded w-24"></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="h-4 bg-gray-200 rounded w-24"></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="h-4 bg-gray-200 rounded w-32"></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="h-4 bg-gray-200 rounded w-40"></div>
+              </td>
+              @if (selectedRole === roles.RECTOR) {
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-200 rounded w-40"></div>
+                </td>
+              }
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="h-8 bg-gray-200 rounded w-16"></div>
+              </td>
+            </tr>
+          }
+        } @else if (filteredUsers.length === 0) {
+          <tr>
+            <td [attr.colspan]="selectedRole === roles.RECTOR ? 6 : 5" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center justify-center space-y-3">
+                <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <p class="text-lg font-medium text-gray-500">No hay usuarios con este rol</p>
+                <p class="text-sm text-gray-400">No se encontraron usuarios para el rol seleccionado</p>
+              </div>
+            </td>
+          </tr>
+        } @else {
+          @for(user of filteredUsers; track user.id) {
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-xs font-medium text-gray-900">{{ user.first_name }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-xs text-gray-900">{{ user.last_name }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-xs text-gray-900">{{ user.email }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-xs text-gray-900">{{ user.celular || 'N/A' }}</div>
+              </td>
+              @if (selectedRole === roles.RECTOR) {
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-xs text-gray-900">{{ getCollegeName(user.colegio_id) }}</div>
+                </td>
+              }
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <app-button (btnClick)="onEditUser(user)" variant="success" size="sm" class="transform hover:scale-105">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Editar
+                      </div>
+                    </app-button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
