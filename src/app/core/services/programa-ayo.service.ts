@@ -134,7 +134,7 @@ export class ProgramaAyoService {
   }
 
   consultarAcudiente(tipo_documento: string, numero_documento: string): Observable<any> {
-    return this.http.post<any>(environment.consultar_acudiente, { tipo_documento, numero_documento });
+    return this.http.post<any>(environment.consultar_acudiente_ayo, { tipo_documento, numero_documento });
   }
 
   verificacionCodigo(tipo_documento: string, numero_documento: string, codigo: string): Observable<any> {

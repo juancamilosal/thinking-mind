@@ -5,13 +5,9 @@ import { RouterModule } from '@angular/router';
 import { ProgramaAyoService } from '../../../../core/services/programa-ayo.service';
 import { PrecioProgramaAyo } from '../../../../core/models/Course';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
-import { ClientService } from '../../../../core/services/client.service';
 import { StudentService } from '../../../../core/services/student.service';
 import { SchoolService } from '../../../../core/services/school.service';
-import { School } from '../../../../core/models/School';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
-import { PaymentService } from '../../../../core/services/payment.service';
-import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
@@ -63,23 +59,17 @@ export class PaymentRecordAyoComponent implements OnInit {
 
     readonly openProgramSchoolId = 'dfdc71c9-20ab-4981-865f-f5e93fa3efc7';
     wompiConfig = environment.wompi;
-
-    // School and Grade properties
-    grado: any[] = []; // Should be Grupo[] but using any for safety if model not imported
-    filteredSchools: any[] = []; // Should be School[]
-    isLoadingSchools: boolean = false;
+    grado: any[] = [];
     isSchoolSelected: boolean = false;
     @ViewChild('schoolSearchInput') schoolSearchInput!: ElementRef;
 
     constructor(
         private formBuilder: FormBuilder,
         private programaAyoService: ProgramaAyoService,
-        private clientService: ClientService,
+        private programaAYOService: ProgramaAyoService,
         private studentService: StudentService,
         private schoolService: SchoolService,
         private accountReceivableService: AccountReceivableService,
-        private paymentService: PaymentService,
-        private exchangeRateService: ExchangeRateService,
         private cdRef: ChangeDetectorRef,
         private ngZone: NgZone
     ) { }
@@ -89,7 +79,6 @@ export class PaymentRecordAyoComponent implements OnInit {
             localStorage.setItem('app_context', 'ayo');
         }
         this.loadPrecioPrograma();
-        this.loadGrupos();
         this.paymentForm = this.formBuilder.group({
             tipoDocumento: ['CC', Validators.required],
             numeroDocumento: ['', [Validators.required, Validators.minLength(6), Validators.pattern(/^[0-9]+$/)]],
@@ -138,31 +127,6 @@ export class PaymentRecordAyoComponent implements OnInit {
         });
     }
 
-    loadGrupos(): void {
-        this.schoolService.getGroup().subscribe({
-            next: (response) => {
-                if (response.data) {
-                    this.grado = response.data;
-                }
-            },
-            error: (error) => {
-                console.error('Error loading groups:', error);
-            }
-        });
-    }
-
-
-
-
-    private normalize(value: string): string {
-        return (value || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase();
-    }
-
-
-
     loadPrecioPrograma(): void {
         this.programaAyoService.getPrecioProgramaAyo().subscribe({
             next: (response) => {
@@ -176,8 +140,6 @@ export class PaymentRecordAyoComponent implements OnInit {
             }
         });
     }
-
-    // --- Guardian Search Logic ---
 
     onGuardianDocumentTypeChange(event: any): void {
         this.searchClientIfReady();
@@ -215,7 +177,7 @@ export class PaymentRecordAyoComponent implements OnInit {
 
     private searchClientPayment(documentType: string, documentNumber: string): void {
         this.isSearchingClient = true;
-        this.clientService.searchClientPayment(documentType, documentNumber, true).subscribe({
+        this.programaAYOService.consultarAcudiente(documentType, documentNumber).subscribe({
             next: (data) => {
                 this.isSearchingClient = false;
                 if (data.data && data.data.length > 0) {
@@ -239,7 +201,6 @@ export class PaymentRecordAyoComponent implements OnInit {
             },
             error: (error) => {
                 this.isSearchingClient = false;
-                console.error('Error searching client:', error);
                 this.clearGuardianFields();
                 this.registeredCourses = [];
                 this.showRegisteredCourses = false;
@@ -267,8 +228,6 @@ export class PaymentRecordAyoComponent implements OnInit {
         });
     }
 
-    // --- Student Search Logic ---
-
     onStudentDocumentTypeChange(event: any): void {
         this.searchStudentIfReady();
     }
@@ -285,11 +244,6 @@ export class PaymentRecordAyoComponent implements OnInit {
     onStudentSurnameChange(event: any): void {
         const value = this.capitalizeText(event.target.value);
         this.paymentForm.get('studentApellido')?.setValue(value, { emitEvent: false });
-    }
-
-    onStudentSchoolChange(event: any): void {
-        const value = this.capitalizeText(event.target.value);
-        this.paymentForm.get('studentColegio')?.setValue(value, { emitEvent: false });
     }
 
     private searchStudentIfReady(): void {
@@ -441,7 +395,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                     const docType = this.paymentForm.get('tipoDocumento')?.value;
                     const docNum = this.paymentForm.get('numeroDocumento')?.value;
 
-                    this.clientService.searchClientPayment(docType, docNum, true).subscribe({
+                    this.programaAYOService.consultarAcudiente(docType, docNum).subscribe({
                         next: (data) => {
                             if (data.data && data.data.length > 0) {
                                 this.clientData = data.data[0];
@@ -654,7 +608,6 @@ export class PaymentRecordAyoComponent implements OnInit {
                         error: (err) => {
                             this.ngZone.run(() => {
                                 this.isLoading = false;
-                                console.error('Error sending code:', err);
                                 this.showErrorNotification('Error al enviar el código. Inténtelo más tarde.');
                             });
                         }
@@ -747,20 +700,6 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.totalAmountToPay = 0;
         this.editablePaymentAmount = 0;
         this.isLoading = false;
-    }
-
-    onPaymentAmountChange(event: any): void {
-        let inputValue = event.target.value.replace(/[^0-9]/g, '');
-
-        if (inputValue === '') {
-            this.editablePaymentAmount = 0;
-            event.target.value = '';
-            return;
-        }
-
-        const numericValue = parseInt(inputValue) || 0;
-        this.editablePaymentAmount = Math.min(numericValue, this.totalAmountToPay);
-        event.target.value = this.getFormattedPaymentAmount();
     }
 
     formatNumberWithCommas(value: number): string {
