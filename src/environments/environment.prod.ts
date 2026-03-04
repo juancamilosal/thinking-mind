@@ -61,6 +61,7 @@ export const environment = {
   dashboardRector: apiUrl + 'flows/trigger/7e0cc8b7-7d75-47db-804a-03f0d9a4205c',
   dashboardSale: apiUrl + 'flows/trigger/e2287aa0-115a-4dac-b484-49363945b9b3',
   dashboard: apiUrl + 'flows/trigger/8b5137ca-cfe2-4e7a-acb2-73e97663e529',
+  dashboardCEO: apiUrl + 'flows/trigger/f1c8e7fa-e0f5-4aab-a2dd-4dea336ef947',
   dashboardStudent: apiUrl + 'flows/trigger/49bce56c-1953-4ff0-ad70-3ff8a81252bd',
   dashboardTeacher: apiUrl + 'flows/trigger/8932bbd0-f749-4666-baac-845537f6c469',
   total_payment: apiUrl + 'flows/trigger/dcceb5b9-c6ae-4cda-afb0-55922c337d4e',
