@@ -18,10 +18,14 @@ export class RoleService {
 
   constructor(private http: HttpClient) {}
 
-  getAllRoles(): Observable<ResponseAPI<Role[]>> {
-    const params: any = {
+  getAllRoles(search?: string): Observable<ResponseAPI<Role[]>> {
+    let params: any = {
       'fields': 'id,name,description'
     };
+
+    if (search) {
+      params['filter[name][_contains]'] = search;
+    }
 
     return this.http.get<ResponseAPI<Role[]>>(this.apiUrl, { params });
   }

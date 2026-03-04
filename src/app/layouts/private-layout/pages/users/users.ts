@@ -25,15 +25,16 @@ export class Users implements OnInit {
   showForm = false;
   showDetail = false;
   editMode = false;
-  roleCounts: { [key: string]: Observable<number> } = {};
   selectedUser: User | null = null;
   allUsers: User[] = [];
   roles: Role[] = [];
   filteredUsers: User[] = [];
   isLoading = false;
   searchTerm = '';
+  roleSearchTerm = '';
   schools: { [key: number]: string } = {};
   private searchTimeout: any;
+  private roleSearchTimeout: any;
 
   constructor(
     private userService: UserService,
@@ -215,23 +216,10 @@ export class Users implements OnInit {
 
   loadRoles(): void {
     this.isLoading = true;
-    this.roleService.getAllRoles().subscribe({
+    this.roleService.getAllRoles(this.roleSearchTerm).subscribe({
       next: (response) => {
         this.roles = response.data;
         this.isLoading = false;
-
-        // Configurar observables para cada rol
-        this.roles.forEach(role => {
-          this.roleCounts[role.id] = this.userService.getUsersCountByRole(role.id).pipe(
-            map(res => (res?.meta?.filter_count ?? res?.meta?.total_count) || 0),
-            catchError(err => {
-              console.error(`Error loading count for role ${role.id}`, err);
-              return of(0);
-            }),
-            startWith(0), // Valor inicial inmediato
-            shareReplay(1) // Cachear el último valor
-          );
-        });
       },
       error: (error) => {
         console.error('Error loading roles data:', error);
@@ -242,6 +230,19 @@ export class Users implements OnInit {
         );
       }
     });
+  }
+
+  onRoleSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.roleSearchTerm = target.value;
+
+    if (this.roleSearchTimeout) {
+      clearTimeout(this.roleSearchTimeout);
+    }
+
+    this.roleSearchTimeout = setTimeout(() => {
+      this.loadRoles();
+    }, 500);
   }
 
   // Métodos para el formulario genérico de usuarios
