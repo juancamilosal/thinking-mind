@@ -40,10 +40,15 @@ export class LangTestService {
 		return this.http.get<ResponseAPI<AnswerOption[]>>(this.apiAnswers, { params });
 	}
 
-	submitTest(answerIds: string[], studentId?: string): Observable<any> {
+	submitTest(answerIds: string[], studentId?: string, language?: string): Observable<any> {
 		const body: any = { ids: answerIds };
 		if (studentId) {
 			body.student_id = studentId;
+		}
+		if (language) {
+			// Remove accents for backend compatibility
+			const normalizedLang = language === 'INGLÉS' ? 'INGLES' : (language === 'FRANCÉS' ? 'FRANCES' : language);
+			body.idioma = normalizedLang;
 		}
 		return this.http.post(environment.submit_lang_test, body);
 	}

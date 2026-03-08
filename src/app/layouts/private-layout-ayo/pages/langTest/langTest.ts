@@ -162,7 +162,7 @@ export class LangTest implements OnInit, OnDestroy {
 
     // Send to server for scoring
     this.loading = true;
-    this.langTestService.submitTest(selectedAnswerIds, this.studentId || undefined).subscribe({
+    this.langTestService.submitTest(selectedAnswerIds, this.studentId || undefined, this.selectedLanguage || undefined).subscribe({
       next: (response) => {
         this.score = response.data.respuestas_correctas;
         this.classification = this.getClassification(this.score);
