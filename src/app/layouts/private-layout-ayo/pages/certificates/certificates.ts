@@ -19,10 +19,7 @@ import { LEVELS } from '../../../../core/const/Levels';
   styleUrls: ['./certificates.css']
 })
 export class CertificatesComponent implements OnInit {
-  certificates: Certificate[] = JSON.parse(JSON.stringify(LEVELS)).map((c: Certificate) => ({
-    ...c,
-    isUnlocked: false // Initialize all as locked
-  }));
+  certificates: Certificate[] = [];
 
   // Properties for the certificate component
   selectedStudentName: string = '';
@@ -48,6 +45,22 @@ export class CertificatesComponent implements OnInit {
   loadCertificates() {
     const user = StorageServices.getCurrentUser();
     if (user && user.id) {
+      // Determine user's language based on nivel_id or other property
+      let userLanguage = 'INGLES'; // Default
+      
+      if (user.nivel_id && typeof user.nivel_id === 'object' && user.nivel_id.idioma) {
+        userLanguage = user.nivel_id.idioma;
+      }
+      
+      // Filter initial certificates list based on language
+      // We keep 'AYO' (GENERAL) and filter others by language
+      this.certificates = JSON.parse(JSON.stringify(LEVELS)).filter((c: Certificate) => 
+        c.theme === 'GENERAL' || c.language === userLanguage
+      ).map((c: Certificate) => ({
+        ...c,
+        isUnlocked: false
+      }));
+
       this.certificacionService.getCertificatesByStudentId(user.id).subscribe({
         next: (response) => {
           if (response.data) {
