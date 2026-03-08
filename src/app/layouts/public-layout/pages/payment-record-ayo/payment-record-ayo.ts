@@ -582,16 +582,18 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     onResendCode(courseData: any): void {
-        const studentId = courseData.studentId;
-        if (!studentId) {
-            this.showErrorNotification('No se encontró información del estudiante para reenviar el código.');
+        const studentDocumentType = courseData.studentDocumentType;
+        const studentDocumentNumber = courseData.studentDocumentNumber;
+
+        if (!studentDocumentType || !studentDocumentNumber) {
+            this.showErrorNotification('No se encontró información del documento del estudiante para reenviar el código.');
             return;
         }
 
         this.isLoading = true;
-        this.studentService.getStudentById(studentId).subscribe({
+        this.studentService.getStudentByFlow(studentDocumentType, studentDocumentNumber).subscribe({
             next: (response) => {
-                const student = response.data;
+                const student = response.data || response;
                 const guardianEmail = this.clientData?.email || this.paymentForm.get('email')?.value;
 
                 if (student && student.codigo_registro && guardianEmail) {

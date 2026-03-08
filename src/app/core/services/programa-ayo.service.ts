@@ -15,7 +15,7 @@ export class ProgramaAyoService {
 
   getProgramaAyo(idioma?: string, search?: string, userId?: string, teacherId?: string): Observable<ResponseAPI<ProgramaAyo[]>> {
     let params: any = {
-      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,estudiantes_id.*,estudiantes_id.asistencia_id.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.asistencia_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*',
+      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,estudiantes_id.*,estudiantes_id.directus_users_id.*,estudiantes_id.estudiante_id.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.asistencia_id.*,id_nivel.estudiantes_id.directus_users_id.*,id_nivel.estudiantes_id.estudiante_id.*,id_reuniones_meet.*,id_reuniones_meet.id_docente.*,id_reuniones_meet.id_cuentas_cobrar.*,img.*,plan_estudio_id.*',
       'sort': 'id_nivel.subcategoria'
     };
     if (idioma) {
@@ -40,7 +40,7 @@ export class ProgramaAyoService {
 
   getProgramaAyoById(id: string): Observable<ResponseAPI<ProgramaAyo>> {
     const params = {
-      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,id_nivel.estudiantes_id.*,id_reuniones_meet.*,img.*,plan_estudio_id.*'
+      'fields': '*,cuentas_cobrar_id.*,id_nivel.*,estudiantes_id.*,estudiantes_id.directus_users_id.*,estudiantes_id.estudiante_id.*,id_nivel.estudiantes_id.*,id_nivel.estudiantes_id.directus_users_id.*,id_nivel.estudiantes_id.estudiante_id.*,id_reuniones_meet.*,img.*,plan_estudio_id.*'
     };
     return this.http.get<ResponseAPI<ProgramaAyo>>(`${environment.programa_ayo}/${id}`, { params });
   }

@@ -414,6 +414,8 @@ export class ListMeet implements OnInit {
       if (params['meeting_id']) {
         this.meetingIdToOpen = params['meeting_id'];
       }
+      this.loadProgramas();
+      this.loadStudentsWithoutProgramCount();
     });
 
     this.searchSubject.pipe(
@@ -434,9 +436,6 @@ export class ListMeet implements OnInit {
         this.verEstudiantesSinReunion();
       }
     });
-
-    this.loadProgramas();
-    this.loadStudentsWithoutProgramCount();
   }
 
   loadNiveles(): void {
@@ -1308,6 +1307,10 @@ export class ListMeet implements OnInit {
             let userObj = student;
             if (student.directus_users_id && typeof student.directus_users_id === 'object') {
                 userObj = student.directus_users_id;
+            } else if (student.estudiante_id && typeof student.estudiante_id === 'object') {
+                userObj = student.estudiante_id;
+            } else if (student.estudiantes_id && typeof student.estudiantes_id === 'object') {
+                userObj = student.estudiantes_id;
             }
 
             // Filter by estado_cuenta if available
@@ -1341,7 +1344,7 @@ export class ListMeet implements OnInit {
                     this.isLoadingStudents = false;
                     if (response.data && response.data.length > 0) {
                         // Filter again in case the initial list didn't have estado_cuenta but the detailed fetch does
-                        this.selectedStudents = response.data.filter((s: any) => s.estado_cuenta === 'PAGADA');
+                        this.selectedStudents = response.data.filter((s: any) => !s.estado_cuenta || s.estado_cuenta === 'PAGADA');
 
                         this.attendanceList = this.selectedStudents.map(student => {
                             let score: number = 0;
@@ -1523,7 +1526,8 @@ export class ListMeet implements OnInit {
     const filters = {
         search: this.generalStudentSearchTerm,
         level: this.generalSelectedLevelFilter,
-        subcategory: this.generalSelectedSubcategoryFilter
+        subcategory: this.generalSelectedSubcategoryFilter,
+        idioma: this.selectedLanguage || undefined
     };
 
     this.userService.getStudentsWithAttendance(filters).subscribe({
@@ -1698,10 +1702,11 @@ export class ListMeet implements OnInit {
   }
 
   loadStudentsWithoutProgramCount(): void {
-    this.userService.getStudentsWithoutProgramaAyo().subscribe({
+    this.userService.getStudentsWithoutProgramaAyoCount(this.selectedLanguage || undefined).subscribe({
       next: (response) => {
-        const students = response.data || [];
-        this.studentsWithoutProgramCount = students.length;
+        // We use filter_count because total_count returns the count of all records in the collection ignoring filters
+        const total = response.meta?.filter_count || 0;
+        this.studentsWithoutProgramCount = total;
         this.cdr.detectChanges();
       },
       error: () => {
@@ -1743,7 +1748,7 @@ export class ListMeet implements OnInit {
         });
     }
 
-    this.userService.getStudentsWithoutProgramaAyo().subscribe({
+    this.userService.getStudentsWithoutProgramaAyo(this.selectedLanguage || undefined).subscribe({
       next: (response) => {
         this.isLoadingStudents = false;
         let students = response.data || [];

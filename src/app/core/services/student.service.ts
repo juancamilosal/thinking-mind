@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable, shareReplay} from 'rxjs';
+import {Observable} from 'rxjs';
 import {ResponseAPI} from '../models/ResponseAPI';
 import {Student} from '../models/Student';
 import {environment} from '../../../environments/environment';
@@ -14,7 +14,6 @@ export class StudentService {
   apiSearchStudentPayment: string = environment.search_student;
   apiRegisterStudentFlow: string = environment.register_student;
   apiDashboardStudent: string = environment.dashboardStudent;
-  private dashboardStudentCache$: Observable<any> | null = null;
 
   constructor(private http: HttpClient) {
   }
@@ -89,6 +88,14 @@ export class StudentService {
     return this.http.get<ResponseAPI<Student>>(`${this.apiStudent}/${id}`, { params });
   }
 
+  getStudentByFlow(tipo_documento: string, numero_documento: string): Observable<any> {
+    const params = {
+      'tipo_documento': tipo_documento,
+      'numero_documento': numero_documento
+    };
+    return this.http.get<any>(environment.search_student, { params });
+  }
+
   getStudentByEmail(email: string): Observable<ResponseAPI<Student[]>> {
     const params = {
       'filter[email][_eq]': email,
@@ -120,12 +127,6 @@ export class StudentService {
   }
 
   dashboardStudent(payload: any): Observable<any> {
-    if (this.dashboardStudentCache$) {
-      return this.dashboardStudentCache$;
-    }
-    this.dashboardStudentCache$ = this.http.get<any>(this.apiDashboardStudent, payload).pipe(
-      shareReplay(1)
-    );
-    return this.dashboardStudentCache$;
+    return this.http.get<any>(this.apiDashboardStudent, payload);
   }
 }

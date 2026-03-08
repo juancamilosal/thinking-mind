@@ -258,7 +258,8 @@ export class DashboardAyo implements OnInit {
     // YouTube IDs are 11 characters long
     if (match && match[2].length === 11) {
       const videoId = match[2];
-      return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoId}`);
+      // Using youtube-nocookie.com to minimize external tracking requests
+      return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${videoId}`);
     }
     
     return null;
