@@ -164,8 +164,21 @@ export class LangTest implements OnInit, OnDestroy {
     this.loading = true;
     this.langTestService.submitTest(selectedAnswerIds, this.studentId || undefined, this.selectedLanguage || undefined).subscribe({
       next: (response) => {
-        this.score = response.data.respuestas_correctas;
-        this.classification = this.getClassification(this.score);
+        const data = response.data;
+        this.score = data.respuestas_correctas;
+        
+        // Use backend response for classification (subcategoria + nivel)
+        // Check in response root (as per user input) or inside data object
+        const subcategoria = response.subcategoria || data.subcategoria;
+        const nivel = response.nivel || data.nivel;
+
+        if (subcategoria && nivel) {
+          this.classification = `${subcategoria} - ${nivel}`;
+        } else {
+          // Fallback to local calculation if backend data is missing
+          this.classification = this.getClassification(this.score);
+        }
+
         this.showResults = true;
         this.loading = false;
 
@@ -173,6 +186,7 @@ export class LangTest implements OnInit, OnDestroy {
         const currentUser = StorageServices.getCurrentUser();
         if (currentUser) {
           currentUser.resultado_test = this.score;
+          currentUser.nivel = this.classification;
           StorageServices.setUserData(currentUser);
         }
       },
