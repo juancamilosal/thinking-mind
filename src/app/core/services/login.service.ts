@@ -179,7 +179,20 @@ export class LoginService {
             filteredUserData.calificacion = userData.calificacion;
             filteredUserData.creditos = userData.creditos;
             filteredUserData.resultado_test = userData.resultado_test;
-            filteredUserData.nivel_id = userData.nivel_id || userData.nivel;
+
+            // Preserve expanded nivel_id if available in current session and new value is just an ID
+            const currentSessionUser = StorageServices.getCurrentUser();
+            const newNivelId = userData.nivel_id || userData.nivel;
+            
+            if (currentSessionUser && 
+                currentSessionUser.nivel_id && 
+                typeof currentSessionUser.nivel_id === 'object' && 
+                (typeof newNivelId === 'string' || typeof newNivelId === 'number') &&
+                currentSessionUser.nivel_id.id === newNivelId) {
+              filteredUserData.nivel_id = currentSessionUser.nivel_id;
+            } else {
+              filteredUserData.nivel_id = newNivelId;
+            }
           }
           // Si el rol es AYO (Teacher), agregar campos específicos
           if (userData.role === Roles.TEACHER) {
@@ -204,7 +217,10 @@ export class LoginService {
   }
 
   me(): Observable<ResponseAPI<any>> {
-    return this.http.get<ResponseAPI<any>>(this.apiSecurity.security.me).pipe(
+    const params = {
+      fields: '*,nivel_id.*'
+    };
+    return this.http.get<ResponseAPI<any>>(this.apiSecurity.security.me, { params }).pipe(
       tap((response: any) => {
         const userData = response.data || response;
 
