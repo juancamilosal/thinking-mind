@@ -54,11 +54,10 @@ export class ClientService {
 
   getClientByStudent(tipoDocumento: string, numeroDocumento: string): Observable<ResponseAPI<Client[]>> {
     const params = {
-      'filter[estudiantes][tipo_documento][_eq]': tipoDocumento,
-      'filter[estudiantes][numero_documento][_eq]': numeroDocumento,
-      fields: 'email'
+      tipo_documento: tipoDocumento,
+      numero_documento: numeroDocumento
     };
-    return this.http.get<ResponseAPI<Client[]>>(this.apiCliente, { params });
+    return this.http.get<ResponseAPI<Client[]>>(environment.getClientByStudent, { params });
   }
 
   createClient(client: Client): Observable<ResponseAPI<Client>> {

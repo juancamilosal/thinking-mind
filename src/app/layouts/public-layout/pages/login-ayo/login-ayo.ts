@@ -158,7 +158,7 @@ export class LoginAyo implements OnInit {
 
                         this.clientService.getClientByStudent(tipoDocumento, numeroDocumento).subscribe({
                             next: (clientRes) => {
-                                if (clientRes.data && clientRes.data.length > 0) {
+                                if (clientRes && clientRes.data && Array.isArray(clientRes.data) && clientRes.data.length > 0) {
                                     studentData.email_acudiente = clientRes.data[0].email;
                                 }
                                 this.processStudentRegistration(studentData, email, password);
