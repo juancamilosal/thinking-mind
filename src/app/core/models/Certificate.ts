@@ -7,4 +7,5 @@ export interface Certificate {
   file?: string;
   isUnlocked?: boolean;
   fullData?: any;
+  language?: string;
 }
