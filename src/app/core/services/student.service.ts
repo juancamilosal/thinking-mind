@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable, shareReplay} from 'rxjs';
+import {Observable} from 'rxjs';
 import {ResponseAPI} from '../models/ResponseAPI';
 import {Student} from '../models/Student';
 import {environment} from '../../../environments/environment';
@@ -14,7 +14,6 @@ export class StudentService {
   apiSearchStudentPayment: string = environment.search_student;
   apiRegisterStudentFlow: string = environment.register_student;
   apiDashboardStudent: string = environment.dashboardStudent;
-  private dashboardStudentCache$: Observable<any> | null = null;
 
   constructor(private http: HttpClient) {
   }
@@ -128,12 +127,6 @@ export class StudentService {
   }
 
   dashboardStudent(payload: any): Observable<any> {
-    if (this.dashboardStudentCache$) {
-      return this.dashboardStudentCache$;
-    }
-    this.dashboardStudentCache$ = this.http.get<any>(this.apiDashboardStudent, payload).pipe(
-      shareReplay(1)
-    );
-    return this.dashboardStudentCache$;
+    return this.http.get<any>(this.apiDashboardStudent, payload);
   }
 }
