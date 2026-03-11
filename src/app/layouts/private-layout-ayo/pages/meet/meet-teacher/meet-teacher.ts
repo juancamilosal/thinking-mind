@@ -20,6 +20,7 @@ import { UserService } from '../../../../../core/services/user.service';
 import { AccountReceivableService } from '../../../../../core/services/account-receivable.service';
 import { StudentService } from '../../../../../core/services/student.service';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
+import { Attendance } from '../../../../../core/models/Attendance';
 import { TranslateModule } from '@ngx-translate/core';
 
 declare var gapi: any;
@@ -94,6 +95,11 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   showStudentsModal = false;
   selectedStudents: any[] = [];
   selectedProgramForStudents: ProgramaAyo | null = null;
+  showRatingHistoryModal = false;
+  isLoadingRatingHistory = false;
+  selectedStudentForHistory: any | null = null;
+  ratingHistory: Attendance[] = [];
+  ratingHistoryStats: { total: number; attended: number; absent: number; attendancePercent: number; averageRating: number } | null = null;
 
   // Inject services
   private programaAyoService = inject(ProgramaAyoService);
@@ -111,6 +117,37 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
+  ngOnInit(): void {
+    this.loadGoogleScripts();
+    this.loadEvaluationCriteria();
+
+    this.route.queryParams.subscribe(params => {
+      if (params['idioma']) {
+        this.selectedLanguage = params['idioma'].toUpperCase();
+      }
+      this.loadTeacherMeetings();
+    });
+
+    this.timerSubscription = this.timerService.session$.subscribe(session => {
+      this.currentSession = session;
+      if (session && session.isActive) {
+        this.elapsedTime = this.timerService.getFormattedElapsedTime();
+        if (session.elapsedMinutes >= 45 && !this.showNotificationBanner) {
+          this.showNotificationBanner = true;
+        }
+      } else {
+        this.elapsedTime = '00:00';
+        this.showNotificationBanner = false;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
+    }
+  }
+
   openStudentsModal(programa: ProgramaAyo): void {
     this.selectedProgramForStudents = programa;
     if (Array.isArray((programa as any).estudiantes_id)) {
@@ -127,6 +164,58 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.showStudentsModal = false;
     this.selectedStudents = [];
     this.selectedProgramForStudents = null;
+    this.closeRatingHistoryModal();
+  }
+
+  openRatingHistoryModal(student: any): void {
+    if (!student || !student.id) return;
+
+    this.selectedStudentForHistory = student;
+    this.showRatingHistoryModal = true;
+    this.isLoadingRatingHistory = true;
+    this.ratingHistory = [];
+    this.ratingHistoryStats = null;
+
+    const filter: any = { estudiante_id: student.id };
+    if (this.selectedProgramForStudents?.id) {
+      filter.programa_ayo_id = this.selectedProgramForStudents.id;
+    }
+
+    const fields = '*,criterio_evaluacion_estudiante_id.*,programa_ayo_id.*,programa_ayo_id.id_nivel.*';
+
+    this.attendanceService.getAttendances(1, 250, undefined, filter, '-fecha', fields).subscribe({
+      next: (response) => {
+        this.ratingHistory = (response?.data || []) as Attendance[];
+        const total = this.ratingHistory.length;
+        const attended = this.ratingHistory.filter(r => r?.asiste === true).length;
+        const absent = total - attended;
+        const attendancePercent = total > 0 ? Math.round((attended / total) * 100) : 0;
+        const attendedWithRating = this.ratingHistory
+          .filter(r => r?.asiste === true)
+          .map(r => Number((r as any)?.calificacion))
+          .filter(v => Number.isFinite(v));
+        const averageRating = attendedWithRating.length > 0
+          ? Math.round((attendedWithRating.reduce((sum, v) => sum + v, 0) / attendedWithRating.length) * 10) / 10
+          : 0;
+
+        this.ratingHistoryStats = { total, attended, absent, attendancePercent, averageRating };
+        this.isLoadingRatingHistory = false;
+      },
+      error: () => {
+        this.isLoadingRatingHistory = false;
+        this.ratingHistory = [];
+        this.ratingHistoryStats = null;
+        this.notificationService.showError('Error', 'No se pudo cargar el historial de calificaciones del estudiante.');
+      }
+    });
+  }
+
+  closeRatingHistoryModal(): void {
+    this.showRatingHistoryModal = false;
+    this.isLoadingRatingHistory = false;
+    this.selectedStudentForHistory = null;
+    this.ratingHistory = [];
+    this.ratingHistoryStats = null;
   }
 
   hasStudents(programa: ProgramaAyo): boolean {
@@ -194,37 +283,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
      const finalAttended = pastAttended + currentAttended;
 
      return Math.round((finalAttended / finalTotal) * 100);
-  }
-
-  ngOnInit(): void {
-    this.loadGoogleScripts();
-    this.loadEvaluationCriteria();
-
-    this.route.queryParams.subscribe(params => {
-      if (params['idioma']) {
-        this.selectedLanguage = params['idioma'].toUpperCase();
-      }
-      this.loadTeacherMeetings();
-    });
-
-    this.timerSubscription = this.timerService.session$.subscribe(session => {
-      this.currentSession = session;
-      if (session && session.isActive) {
-        this.elapsedTime = this.timerService.getFormattedElapsedTime();
-        if (session.elapsedMinutes >= 45 && !this.showNotificationBanner) {
-          this.showNotificationBanner = true;
-        }
-      } else {
-        this.elapsedTime = '00:00';
-        this.showNotificationBanner = false;
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    if (this.timerSubscription) {
-      this.timerSubscription.unsubscribe();
-    }
   }
 
   loadEvaluationCriteria(): void {
