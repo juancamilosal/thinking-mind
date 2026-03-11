@@ -143,9 +143,9 @@
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden animate-fadeIn" (click)="$event.stopPropagation()">
         <div class="bg-[#13486e] p-5 flex justify-between items-center">
           <div class="flex items-center gap-3">
-            <img src="assets/icons/historial-calificaciones.png" class="w-10 h-10 object-contain" alt="Historial de Calificaciones">
+            <img src="assets/icons/historial-calificaciones.png" class="w-10 h-10 object-contain" [alt]="'teacherMeetings.ratingHistory.title' | translate">
             <div>
-              <h3 class="text-xl font-bold text-white">Historial de Calificaciones</h3>
+              <h3 class="text-xl font-bold text-white">{{ 'teacherMeetings.ratingHistory.title' | translate }}</h3>
               <p class="text-white/80 text-sm">
                 {{ selectedStudentForHistory?.first_name }} {{ selectedStudentForHistory?.last_name }}
               </p>
@@ -167,34 +167,34 @@
             @if (ratingHistory.length > 0) {
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div class="bg-gray-50 border border-gray-100 rounded-xl p-4">
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Promedio</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'teacherMeetings.ratingHistory.stats.average' | translate }}</div>
                   <div class="mt-2 text-2xl font-bold text-[#13486e]">{{ ratingHistoryStats?.averageRating ?? 0 }}</div>
-                  <div class="mt-1 text-xs text-gray-500">Solo asistencias</div>
+                  <div class="mt-1 text-xs text-gray-500">{{ 'teacherMeetings.ratingHistory.stats.averageHint' | translate }}</div>
                 </div>
                 <div class="bg-gray-50 border border-gray-100 rounded-xl p-4">
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Asistencias</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'teacherMeetings.ratingHistory.stats.attended' | translate }}</div>
                   <div class="mt-2 text-2xl font-bold text-[#13486e]">{{ ratingHistoryStats?.attended ?? 0 }}</div>
-                  <div class="mt-1 text-xs text-gray-500">de {{ ratingHistoryStats?.total ?? 0 }}</div>
+                  <div class="mt-1 text-xs text-gray-500">{{ 'teacherMeetings.ratingHistory.stats.ofTotal' | translate:{ total: (ratingHistoryStats?.total ?? 0) } }}</div>
                 </div>
                 <div class="bg-gray-50 border border-gray-100 rounded-xl p-4">
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Inasistencias</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'teacherMeetings.ratingHistory.stats.absent' | translate }}</div>
                   <div class="mt-2 text-2xl font-bold text-[#13486e]">{{ ratingHistoryStats?.absent ?? 0 }}</div>
-                  <div class="mt-1 text-xs text-gray-500">de {{ ratingHistoryStats?.total ?? 0 }}</div>
+                  <div class="mt-1 text-xs text-gray-500">{{ 'teacherMeetings.ratingHistory.stats.ofTotal' | translate:{ total: (ratingHistoryStats?.total ?? 0) } }}</div>
                 </div>
                 <div class="bg-gray-50 border border-gray-100 rounded-xl p-4">
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">% Asistencia</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'teacherMeetings.ratingHistory.stats.attendancePercent' | translate }}</div>
                   <div class="mt-2 text-2xl font-bold text-[#13486e]">{{ ratingHistoryStats?.attendancePercent ?? 0 }}%</div>
-                  <div class="mt-1 text-xs text-gray-500">Total sesiones</div>
+                  <div class="mt-1 text-xs text-gray-500">{{ 'teacherMeetings.ratingHistory.stats.totalSessions' | translate }}</div>
                 </div>
               </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="text-left text-gray-500 border-b">
-                      <th class="py-3 pr-4 font-semibold">Fecha</th>
-                      <th class="py-3 pr-4 font-semibold">Asistencia</th>
-                      <th class="py-3 pr-4 font-semibold">Calificación</th>
-                      <th class="py-3 pr-4 font-semibold">Observaciones</th>
+                      <th class="py-3 pr-4 font-semibold">{{ 'teacherMeetings.ratingHistory.table.date' | translate }}</th>
+                      <th class="py-3 pr-4 font-semibold">{{ 'teacherMeetings.attendance' | translate }}</th>
+                      <th class="py-3 pr-4 font-semibold">{{ 'teacherMeetings.rating' | translate }}</th>
+                      <th class="py-3 pr-4 font-semibold">{{ 'teacherMeetings.ratingHistory.table.observations' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -205,9 +205,9 @@
                         </td>
                         <td class="py-3 pr-4">
                           @if (row.asiste === true) {
-                            <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold">Sí</span>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 font-semibold">{{ 'teacherMeetings.ratingHistory.table.yes' | translate }}</span>
                           } @else {
-                            <span class="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold">No</span>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold">{{ 'teacherMeetings.ratingHistory.table.no' | translate }}</span>
                           }
                         </td>
                         <td class="py-3 pr-4 text-gray-800 font-semibold">
@@ -226,7 +226,7 @@
                 <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h6M9 17H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v5" />
                 </svg>
-                <p class="text-lg font-medium">Este estudiante no tiene historial de calificaciones.</p>
+                <p class="text-lg font-medium">{{ 'teacherMeetings.ratingHistory.empty' | translate }}</p>
               </div>
             }
           }
@@ -397,12 +397,12 @@
             <div class="flex justify-center mt-6 pt-4 border-t border-gray-100 gap-4">
                 <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudyPlanModal(programa)">
                     <img src="assets/icons/plan.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Plan">
-                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Plan de Estudio</span>
+                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">{{ 'teacherMeetings.viewStudyPlan' | translate }}</span>
                 </div>
 
                 <div class="flex flex-col items-center justify-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors w-full" (click)="openStudentsModal(programa)">
                     <img src="assets/icons/students.png" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform" alt="Estudiantes">
-                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">Ver Listado de Estudiantes</span>
+                    <span class="font-semibold text-[#13486e] group-hover:text-[#0f3a5a]">{{ 'teacherMeetings.viewStudentsList' | translate }}</span>
                 </div>
             </div>
           </div>

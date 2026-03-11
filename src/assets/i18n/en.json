@@ -81,6 +81,8 @@
     "studyPlan": "Study Plan",
     "noStudyPlan": "No study plan available",
     "studentsList": "Students List",
+    "viewStudyPlan": "View Study Plan",
+    "viewStudentsList": "View Students List",
     "attendance": "Attendance",
     "rating": "Rating",
     "noStudents": "No enrolled students",
@@ -92,7 +94,26 @@
     "understood": "Understood",
     "noMeetingsTitle": "No meetings scheduled",
     "noMeetingsBody": "You have no meetings assigned for this language at the moment.",
-    "scheduledMeetings": "Scheduled Meetings"
+    "scheduledMeetings": "Scheduled Meetings",
+    "ratingHistory": {
+      "title": "Rating History",
+      "stats": {
+        "average": "Average",
+        "averageHint": "Attended sessions only",
+        "attended": "Attendances",
+        "absent": "Absences",
+        "ofTotal": "of {{total}}",
+        "attendancePercent": "Attendance %",
+        "totalSessions": "Total sessions"
+      },
+      "table": {
+        "date": "Date",
+        "observations": "Observations",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "empty": "This student has no rating history."
+    }
   },
   "advance": {
     "backToDashboard": "Back to Dashboard",
