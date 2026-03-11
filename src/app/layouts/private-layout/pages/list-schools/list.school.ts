@@ -751,7 +751,176 @@ export class ListSchool implements OnInit {
       this.notificationService.showError('No disponible', 'No se encontró información de cuentas para este colegio');
       return;
     }
-    await this.downloadSchoolExcel(schoolAccData);
+    await this.downloadSchoolExcelByCourseTabs(schoolAccData);
+  }
+
+  private async downloadSchoolExcelByCourseTabs(schoolData: SchoolWithAccounts): Promise<void> {
+    try {
+      let ExcelJS: any;
+      let Workbook: any;
+
+      try {
+        ExcelJS = await import('exceljs');
+        if (ExcelJS.default && ExcelJS.default.Workbook) {
+          Workbook = ExcelJS.default.Workbook;
+        } else if (ExcelJS.Workbook) {
+          Workbook = ExcelJS.Workbook;
+        } else {
+          throw new Error('No se pudo encontrar la clase Workbook');
+        }
+      } catch (importError) {
+        console.error('Error al importar ExcelJS:', importError);
+        throw new Error('No se pudo cargar la librería ExcelJS');
+      }
+
+      const workbook = new Workbook();
+
+      const courseGroups = new Map<string, AccountReceivable[]>();
+
+      for (const account of schoolData.accounts) {
+        const course = (account.curso_id && typeof account.curso_id === 'object') ? account.curso_id : null;
+        const courseName = course ? (this.isWillGoCourse(course.nombre) ? 'WILL - GO' : (course.nombre || 'Sin curso')) : 'Sin curso';
+        const key = courseName.trim() || 'Sin curso';
+
+        if (!courseGroups.has(key)) {
+          courseGroups.set(key, []);
+        }
+        courseGroups.get(key)!.push(account);
+      }
+
+      if (courseGroups.size === 0) {
+        const sheetName = this.getUniqueWorksheetName(workbook, this.sanitizeFileName(schoolData.school.nombre || 'Colegio'));
+        const worksheet = workbook.addWorksheet(sheetName);
+        this.setSchoolExcelColumns(worksheet);
+        worksheet.getRow(1).font = { bold: true };
+      } else {
+        for (const [courseName, accounts] of courseGroups.entries()) {
+          const sheetBaseName = this.sanitizeFileName(courseName || 'Curso');
+          const sheetName = this.getUniqueWorksheetName(workbook, sheetBaseName);
+          const worksheet = workbook.addWorksheet(sheetName);
+          this.setSchoolExcelColumns(worksheet);
+
+          for (const account of accounts) {
+            this.appendAccountAndPaymentsRows(worksheet, account);
+          }
+
+          worksheet.getRow(1).font = { bold: true };
+        }
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a');
+      const schoolName = this.sanitizeFileName(schoolData.school.nombre || 'Colegio');
+      const datePart = this.getColombiaDateStamp();
+      const fileName = `Inscripciones ${schoolName} - ${datePart}.xlsx`;
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err: any) {
+      this.notificationService.showError('Error al descargar', err?.message || 'No se pudo generar el Excel');
+    }
+  }
+
+  private setSchoolExcelColumns(worksheet: any): void {
+    worksheet.columns = [
+      { header: 'Estudiante', key: 'estudiante', width: 28 },
+      { header: 'Tipo Documento', key: 'tipo_documento', width: 16 },
+      { header: 'Número Documento', key: 'numero_documento', width: 18 },
+      { header: 'Grado', key: 'grado', width: 12 },
+      { header: 'Curso', key: 'curso', width: 24 },
+      { header: 'Estado de la Cuenta', key: 'estado', width: 18 },
+      { header: 'Fecha de Inscripción', key: 'fecha_inscripcion', width: 20 },
+      { header: 'Pin Entregado', key: 'pin_entregado', width: 16 },
+      { header: 'Acudiente', key: 'acudiente', width: 28 },
+      { header: 'Tipo Documento Acudiente', key: 'tipo_documento_acudiente', width: 20 },
+      { header: 'Número Documento Acudiente', key: 'numero_documento_acudiente', width: 22 },
+      { header: 'Celular Acudiente', key: 'celular_acudiente', width: 18 },
+      { header: 'Email Acudiente', key: 'email_acudiente', width: 28 },
+      { header: 'Valor Pago', key: 'valor_pago', width: 15 },
+      { header: 'Fecha Pago', key: 'fecha_pago', width: 20 },
+      { header: 'Método Pago', key: 'metodo_pago', width: 15 },
+      { header: 'Total Pagos', key: 'total_pagos', width: 15 },
+    ];
+  }
+
+  private appendAccountAndPaymentsRows(worksheet: any, account: AccountReceivable): void {
+    const student = (account.estudiante_id && typeof account.estudiante_id === 'object') ? account.estudiante_id : null;
+    const course = (account.curso_id && typeof account.curso_id === 'object') ? account.curso_id : null;
+    const client = (account.cliente_id && typeof account.cliente_id === 'object') ? account.cliente_id : null;
+
+    const accountRow = worksheet.addRow({
+      estudiante: student ? `${student.nombre || ''} ${student.apellido || ''}` : 'Sin estudiante',
+      tipo_documento: student?.tipo_documento || '',
+      numero_documento: student?.numero_documento || '',
+      grado: student?.grado || '',
+      curso: course ? (this.isWillGoCourse(course.nombre) ? 'WILL - GO' : (course.nombre || '')) : 'Sin curso',
+      estado: account.estado || '',
+      fecha_inscripcion: account.fecha_inscripcion ? new Date(account.fecha_inscripcion).toLocaleDateString('es-CO') : '',
+      pin_entregado: account.pin_entregado || 'NO',
+      acudiente: client ? `${client.nombre || ''} ${client.apellido || ''}`.trim() : '',
+      tipo_documento_acudiente: client?.tipo_documento || '',
+      numero_documento_acudiente: client?.numero_documento || '',
+      celular_acudiente: client?.celular || '',
+      email_acudiente: client?.email || '',
+      valor_pago: '',
+      fecha_pago: '',
+      metodo_pago: '',
+      total_pagos: '',
+    });
+
+    accountRow.eachCell((cell: any) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+    });
+
+    if (account.pagos && account.pagos.length > 0) {
+      const pagosPagados = account.pagos.filter(pago => pago.estado === 'PAGADO');
+      if (pagosPagados.length > 0) {
+        let totalPagos = 0;
+        pagosPagados.forEach((pago, index) => {
+          totalPagos += pago.valor || 0;
+          worksheet.addRow({
+            estudiante: '',
+            tipo_documento: '',
+            numero_documento: '',
+            grado: '',
+            curso: '',
+            estado: '',
+            fecha_inscripcion: '',
+            pin_entregado: '',
+            acudiente: '',
+            tipo_documento_acudiente: '',
+            numero_documento_acudiente: '',
+            celular_acudiente: '',
+            email_acudiente: '',
+            valor_pago: pago.valor || 0,
+            fecha_pago: pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString('es-CO') : '',
+            metodo_pago: pago.metodo_pago || '',
+            total_pagos: index === pagosPagados.length - 1 ? totalPagos : '',
+          });
+        });
+      }
+    }
+  }
+
+  private getUniqueWorksheetName(workbook: any, baseName: string): string {
+    const safeBase = (baseName || 'Hoja').trim() || 'Hoja';
+    const trimmedBase = safeBase.substring(0, 31);
+    let name = trimmedBase;
+    let i = 2;
+
+    while (workbook.getWorksheet(name)) {
+      const suffix = ` (${i})`;
+      name = `${trimmedBase.substring(0, Math.max(1, 31 - suffix.length))}${suffix}`;
+      i++;
+    }
+
+    return name;
   }
 
   private sanitizeFileName(name: string): string {

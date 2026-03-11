@@ -81,6 +81,8 @@
     "studyPlan": "Plan d'étude",
     "noStudyPlan": "Aucun plan d'étude disponible",
     "studentsList": "Liste des étudiants",
+    "viewStudyPlan": "Voir le plan d'étude",
+    "viewStudentsList": "Voir la liste des étudiants",
     "attendance": "Assiduité",
     "rating": "Note",
     "noStudents": "Aucun étudiant inscrit",
@@ -92,7 +94,26 @@
     "understood": "Compris",
     "noMeetingsTitle": "Aucune réunion programmée",
     "noMeetingsBody": "Vous n'avez aucune réunion assignée pour cette langue pour le moment.",
-    "scheduledMeetings": "Réunions programmées"
+    "scheduledMeetings": "Réunions programmées",
+    "ratingHistory": {
+      "title": "Historique des notes",
+      "stats": {
+        "average": "Moyenne",
+        "averageHint": "Uniquement les présences",
+        "attended": "Présences",
+        "absent": "Absences",
+        "ofTotal": "sur {{total}}",
+        "attendancePercent": "% de présence",
+        "totalSessions": "Total des sessions"
+      },
+      "table": {
+        "date": "Date",
+        "observations": "Observations",
+        "yes": "Oui",
+        "no": "Non"
+      },
+      "empty": "Cet étudiant n'a pas d'historique de notes."
+    }
   },
   "advance": {
     "backToDashboard": "Retour au tableau de bord",

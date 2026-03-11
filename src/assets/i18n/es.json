@@ -81,6 +81,8 @@
     "studyPlan": "Plan de Estudio",
     "noStudyPlan": "No hay plan de estudio disponible",
     "studentsList": "Listado de Estudiantes",
+    "viewStudyPlan": "Ver Plan de Estudio",
+    "viewStudentsList": "Ver Listado de Estudiantes",
     "attendance": "Asistencia",
     "rating": "Calificación",
     "noStudents": "No hay estudiantes inscritos",
@@ -92,7 +94,26 @@
     "understood": "Entendido",
     "noMeetingsTitle": "No hay reuniones programadas",
     "noMeetingsBody": "No tienes reuniones asignadas para este idioma en este momento.",
-    "scheduledMeetings": "Reuniones Programadas"
+    "scheduledMeetings": "Reuniones Programadas",
+    "ratingHistory": {
+      "title": "Historial de Calificaciones",
+      "stats": {
+        "average": "Promedio",
+        "averageHint": "Solo asistencias",
+        "attended": "Asistencias",
+        "absent": "Inasistencias",
+        "ofTotal": "de {{total}}",
+        "attendancePercent": "% Asistencia",
+        "totalSessions": "Total sesiones"
+      },
+      "table": {
+        "date": "Fecha",
+        "observations": "Observaciones",
+        "yes": "Sí",
+        "no": "No"
+      },
+      "empty": "Este estudiante no tiene historial de calificaciones."
+    }
   },
   "advance": {
     "backToDashboard": "Volver al Dashboard",
