@@ -280,14 +280,14 @@
   }
 
   <!-- Loading State -->
-  @if (isLoading) {
+  @if (isLoading || isLoadingGeneralPrograms) {
     <div class="flex items-center justify-center py-20">
       <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
     </div>
   }
 
   <!-- Empty State -->
-  @if (!isLoading && programas.length === 0) {
+  @if (!isLoading && !isLoadingGeneralPrograms && programas.length === 0 && generalPrograms.length === 0) {
     <div class="flex flex-col items-center justify-center py-20 px-4">
       <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
         <img src="../../../../../../assets/icons/meet.png" class="w-24 h-24 mx-auto mb-4 opacity-50" alt="Sin reuniones">
@@ -298,7 +298,7 @@
   }
 
   <!-- Programs List -->
-  @if (!isLoading && programas.length > 0) {
+  @if (!isLoading && !isLoadingGeneralPrograms && programas.length > 0) {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       @for (programa of programas; track programa.id) {
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-2xl">
@@ -351,15 +351,8 @@
                       }
                     </div>
 
-                    <!-- Meeting Info Grid -->
+                    <!-- Meeting Info -->
                     <div class="grid grid-cols-1 gap-2 mb-4">
-                      <div class="flex items-center gap-2 text-sm">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-gray-700 font-medium">{{ reunion.fecha_inicio | date:'EEEE, d MMMM' | titlecase }}</span>
-                      </div>
-
                       <div class="flex items-center gap-2 text-sm">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -408,6 +401,90 @@
           </div>
         </div>
       }
+    </div>
+  }
+
+  @if (!isLoading && !isLoadingGeneralPrograms && generalPrograms.length > 0) {
+    <div class="mt-10">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Reuniones generales</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        @for (general of generalPrograms; track general.id) {
+          <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-2xl">
+            <div class="program-header bg-gradient-to-r from-slate-600 to-slate-800 p-6 text-white">
+              <div class="flex items-center gap-4">
+                <div class="program-icon-wrapper bg-white/20 p-3 rounded-xl">
+                  <img [src]="getGeneralProgramImage(general)" class="w-12 h-12 object-contain" alt="Programa General" onError="this.src='assets/icons/grupo.png'">
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold">{{ general.tematica || 'Programa General' }}</h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-6">
+              @if (general.id_reuniones_meet && general.id_reuniones_meet.length > 0) {
+                <div class="space-y-4">
+                  <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2 mb-4">
+                    <img src="../../../../../../assets/icons/calendario-de-google.png" class="w-5 h-5 object-contain" alt="Calendario Google">
+                    {{ 'teacherMeetings.scheduledMeetings' | translate }} ({{ general.id_reuniones_meet.length }})
+                  </h4>
+
+                  @for (reunion of general.id_reuniones_meet; track reunion.id) {
+                    <div class="meeting-card bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-blue-300 transition-all"
+                         [ngClass]="{'ring-2 ring-green-400': hasActiveSession(reunion.id)}">
+                      <div class="flex items-start justify-between mb-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold border"
+                              [ngClass]="getStatusBadgeClass(getMeetingStatus(reunion))">
+                          {{ getStatusLabel(getMeetingStatus(reunion)) }}
+                        </span>
+
+                        @if (hasActiveSession(reunion.id)) {
+                          <span class="flex items-center gap-1 text-green-600 text-xs font-semibold animate-pulse">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <circle cx="10" cy="10" r="4" />
+                            </svg>
+                            Sesión Activa
+                          </span>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2 mb-4">
+                        <div class="flex items-center gap-2 text-sm">
+                          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span class="text-gray-700">
+                            {{ reunion.fecha_inicio | date:'shortTime' }} - {{ reunion.fecha_finalizacion | date:'shortTime' }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        (click)="accessGeneralMeeting(reunion)"
+                        class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+                        [ngClass]="{
+                          'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id),
+                          'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id)
+                        }">
+                        <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
+                        @if (hasActiveSession(reunion.id)) {
+                          <span>Sesión en Curso</span>
+                        } @else {
+                          <span>Acceder a Reunión</span>
+                        }
+                      </button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="text-center py-8 text-gray-500">
+                  <p>No hay reuniones programadas</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
     </div>
   }
 
