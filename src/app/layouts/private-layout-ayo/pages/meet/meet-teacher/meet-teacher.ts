@@ -503,7 +503,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ngZone.run(() => {
       const scheduledStart = new Date(meeting.fecha_inicio);
       const scheduledEnd = new Date(meeting.fecha_finalizacion);
-      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd);
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'program');
 
       // Open meeting in new tab
       if (meeting.link_reunion) {
@@ -525,7 +525,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ngZone.run(() => {
       const scheduledStart = new Date(meeting.fecha_inicio);
       const scheduledEnd = new Date(meeting.fecha_finalizacion);
-      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd);
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'general');
 
       if (meeting.link_reunion) {
         window.open(meeting.link_reunion, '_blank');
@@ -534,9 +534,87 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   endSession(): void {
-    // Show evaluation modal instead of directly ending
+    const session = this.timerService.getSession();
+    if (!session || !session.isActive) return;
+
+    if (session.source === 'general') {
+      this.confirmationService.showConfirmation(
+        {
+          title: 'Finalizar Sesión',
+          message: '¿Deseas finalizar esta reunión? Se registrará la nómina y se cerrará la sesión.',
+          confirmText: 'Sí, finalizar',
+          cancelText: 'Cancelar',
+          type: 'warning'
+        },
+        () => {
+          this.createPayrollRecordForGeneralMeeting();
+        }
+      );
+      return;
+    }
+
     this.initializeStudentEvaluations();
     this.showEvaluationModal = true;
+  }
+
+  private createPayrollRecordForGeneralMeeting(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const teacherId = currentUser?.id;
+    const session = this.timerService.getSession();
+
+    if (!teacherId || !session?.meetingId) {
+      this.finishGeneralMeetingClose();
+      return;
+    }
+
+    this.isLoading = true;
+
+    this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
+      next: (valorHora) => {
+        const payrollData: TeacherPayroll = {
+          teacher_id: teacherId,
+          reunion_meet_id: session.meetingId,
+          programa_ayo_id: null,
+          fecha_clase: new Date().toISOString().split('T')[0],
+          hora_inicio_real: session.actualStartTime,
+          hora_fin_evaluacion: new Date().toTimeString().split(' ')[0],
+          duracion_horas: 1,
+          calificado_a_tiempo: true,
+          estado_pago: 'Pendiente',
+          valor_hora: valorHora,
+          valor_total: valorHora
+        };
+
+        this.payrollService.createPayrollRecord(payrollData).subscribe({
+          next: () => {
+            this.finishGeneralMeetingClose();
+          },
+          error: () => {
+            this.finishGeneralMeetingClose();
+          }
+        });
+      },
+      error: () => {
+        this.finishGeneralMeetingClose();
+      }
+    });
+  }
+
+  private finishGeneralMeetingClose(): void {
+    this.isLoading = false;
+    this.showEvaluationModal = false;
+    this.students = [];
+    this.timerService.endSession();
+    this.showNotificationBanner = false;
+
+    this.notificationService.showSuccess(
+      'Sesión Finalizada',
+      'La sesión se cerró y la nómina fue registrada.'
+    );
+
+    setTimeout(() => {
+      this.router.navigate(['/private-ayo/dashboard-ayo']);
+    }, 1500);
   }
 
   initializeStudentEvaluations(): void {

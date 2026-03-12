@@ -11,6 +11,7 @@ export interface MeetingSession {
   scheduledEndTime?: string;
   actualStartTime?: string;
   gradingDeadline?: string;
+  source?: 'program' | 'general';
 }
 
 @Injectable({
@@ -32,7 +33,7 @@ export class MeetingTimerService {
   /**
    * Start a new meeting session
    */
-  startSession(meetingId: string, scheduledStart?: Date, scheduledEnd?: Date): void {
+  startSession(meetingId: string, scheduledStart?: Date, scheduledEnd?: Date, source: 'program' | 'general' = 'program'): void {
     const existingSession = this.getSession();
 
     // If there's already an active session for a different meeting, end it first
@@ -54,7 +55,8 @@ export class MeetingTimerService {
       scheduledStartTime: scheduledStart?.toISOString(),
       scheduledEndTime: scheduledEnd?.toISOString(),
       actualStartTime: actualStart,
-      gradingDeadline
+      gradingDeadline,
+      source
     };
 
     this.saveSession(session);
