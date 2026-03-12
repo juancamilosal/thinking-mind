@@ -366,14 +366,18 @@
                     <!-- Access Button -->
                     <button
                       (click)="accessMeeting(reunion, programa)"
+                      [disabled]="!canAccessMeeting(reunion)"
                       class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2"
                       [ngClass]="{
-                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id),
-                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id)
+                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id) && canAccessMeeting(reunion),
+                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id),
+                        'bg-gray-300 text-gray-500 cursor-not-allowed': !canAccessMeeting(reunion)
                       }">
                       <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
                       @if (hasActiveSession(reunion.id)) {
                         <span>Sesión en Curso</span>
+                      } @else if (!canAccessMeeting(reunion)) {
+                        <span>{{ getMeetingAccessMessage(reunion) }}</span>
                       } @else {
                         <span>Acceder a Reunión</span>
                       }
@@ -461,14 +465,18 @@
 
                       <button
                         (click)="accessGeneralMeeting(reunion)"
+                        [disabled]="!canAccessMeeting(reunion)"
                         class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2"
                         [ngClass]="{
-                          'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id),
-                          'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id)
+                          'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id) && canAccessMeeting(reunion),
+                          'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id),
+                          'bg-gray-300 text-gray-500 cursor-not-allowed': !canAccessMeeting(reunion)
                         }">
                         <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
                         @if (hasActiveSession(reunion.id)) {
                           <span>Sesión en Curso</span>
+                        } @else if (!canAccessMeeting(reunion)) {
+                          <span>{{ getMeetingAccessMessage(reunion) }}</span>
                         } @else {
                           <span>Acceder a Reunión</span>
                         }

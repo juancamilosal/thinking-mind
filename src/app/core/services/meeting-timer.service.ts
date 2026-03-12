@@ -19,7 +19,7 @@ export interface MeetingSession {
 })
 export class MeetingTimerService {
   private readonly STORAGE_KEY = 'teacher_meeting_session';
-  private readonly NOTIFICATION_THRESHOLD = 4; // minutes (AJUSTAR A 45 EN PRODUCCIÓN)
+  private readonly NOTIFICATION_THRESHOLD = 45; // minutes
   private timerSubscription: Subscription | null = null;
 
   private sessionSubject = new BehaviorSubject<MeetingSession | null>(null);

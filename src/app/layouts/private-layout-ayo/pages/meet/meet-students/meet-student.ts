@@ -30,12 +30,12 @@ export class MeetStudent implements OnInit {
   isLoading = false;
   accountsReceivable: any[] = [];
   generalPrograms: ReunionGeneral[] = [];
-  
+
   // Study Plan Modal Properties
   showStudyPlanModal = false;
   selectedStudyPlan: any[] = [];
   selectedProgramForStudyPlan: ProgramaAyo | null = null;
-  
+
   // Maps for efficient state management
   parsedStudyPlans = new Map<string, any[]>();
   selectedPlanItems = new Map<string, any>();
@@ -245,15 +245,15 @@ export class MeetStudent implements OnInit {
     this.programaAyoService.updatePlanEstudio(selectedItem.original.id, { realizado: true }).subscribe({
       next: () => {
         this.notificationService.showSuccess('Éxito', 'Plan de estudio actualizado correctamente.');
-        
+
         // Update local state
         selectedItem.original.realizado = true;
         this.selectedPlanItems.delete(programId);
-        
+
         // Re-parse to update view (or just rely on object reference if binding is deep, but sort might be affected if we change things? No, sort is by number)
         // Actually, since we modified the original item object which is referenced in the parsed array, the view should update automatically if change detection runs.
         // But to be safe and cleaner:
-        // The parsed array items contain 'original' which is the raw item. 
+        // The parsed array items contain 'original' which is the raw item.
       },
       error: (err) => {
         console.error('Error updating study plan', err);
@@ -287,6 +287,16 @@ export class MeetStudent implements OnInit {
 
    handleTestAndJoin(event: Event, reunion: any): void {
      event.preventDefault();
+
+     // Check if meeting can be accessed
+     if (!this.canAccessMeeting(reunion)) {
+       const message = this.getMeetingAccessMessage(reunion);
+       if (message) {
+         this.notificationService.showWarning('Reunión No Disponible', message);
+       }
+       return;
+     }
+
      if (reunion.link_reunion) {
          this.pendingReunion = reunion;
          this.showRulesModal = true;
@@ -313,8 +323,8 @@ export class MeetStudent implements OnInit {
     }
     this.selectedReunion = reunion;
     this.selectedProgramId = programId;
-    this.selectedEvaluationTeacherName = reunion.id_docente 
-      ? `${reunion.id_docente.first_name} ${reunion.id_docente.last_name}` 
+    this.selectedEvaluationTeacherName = reunion.id_docente
+      ? `${reunion.id_docente.first_name} ${reunion.id_docente.last_name}`
       : 'Docente';
     this.selectedEvaluationClassName = reunion.nombre || 'Clase';
     this.showEvaluationModal = true;
@@ -357,7 +367,7 @@ export class MeetStudent implements OnInit {
       // Skip global observations field and individual observation fields (processed with their rating)
       if (key !== 'observations' && !key.startsWith('obs_') && evaluationData.hasOwnProperty(key)) {
         const observation = evaluationData['obs_' + key] || '';
-        
+
         payloads.push({
           fecha: date,
           observaciones: observation,
@@ -393,5 +403,41 @@ export class MeetStudent implements OnInit {
     if (v === 'FRANCES' || v === 'FRANCÉS' || v === 'FRENCH' || v === 'FR') return 'language.french';
     if (v === 'ESPAÑOL' || v === 'ESPANOL' || v === 'SPANISH' || v === 'ES') return 'language.spanish';
     return '';
+  }
+
+  /**
+   * Check if meeting can be accessed (exact meeting time only)
+   * @param meeting The meeting to check
+   * @returns true if meeting can be accessed
+   */
+  canAccessMeeting(meeting: any): boolean {
+    const now = new Date();
+    const start = new Date(meeting.fecha_inicio);
+    const end = new Date(meeting.fecha_finalizacion);
+
+    // Students can only access during exact meeting time (no early buffer)
+    return now >= start && now <= end;
+  }
+
+  /**
+   * Get the reason why a meeting cannot be accessed
+   * @param meeting The meeting to check
+   * @returns Descriptive message or null if can access
+   */
+  getMeetingAccessMessage(meeting: any): string | null {
+    if (this.canAccessMeeting(meeting)) return null;
+
+    const now = new Date();
+    const start = new Date(meeting.fecha_inicio);
+    const end = new Date(meeting.fecha_finalizacion);
+
+    if (now < start) {
+      const minutesUntil = Math.ceil((start.getTime() - now.getTime()) / 60000);
+      return `Disponible en ${minutesUntil} minutos`;
+    } else if (now > end) {
+      return 'Reunión finalizada';
+    }
+
+    return null;
   }
 }
