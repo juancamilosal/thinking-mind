@@ -58,12 +58,12 @@
     <div class="flex gap-3 justify-end">
       <app-button
         [variant]="'secondary'"
-        (click)="clearFilters()">
+        (btnClick)="clearFilters()">
         Limpiar Filtros
       </app-button>
       <app-button
         [variant]="'primary'"
-        (click)="applyFilters()">
+        (btnClick)="applyFilters()">
         Aplicar Filtros
       </app-button>
     </div>
@@ -84,7 +84,7 @@
           <app-button
             [variant]="'success'"
             [size]="'sm'"
-            (click)="openPaymentModal()">
+            (btnClick)="openPaymentModal()">
             Procesar Pago Masivo
           </app-button>
         </div>
@@ -222,15 +222,17 @@
                   <div class="text-sm text-gray-600">{{ record.fecha_pago ? formatDate(record.fecha_pago) : 'N/A' }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  @if (record.estado_pago === 'Pendiente' && record.id) {
+                  @if (record.estado_pago === 'Pagado') {
+                    <span class="text-green-600 font-medium">✓ Pagado</span>
+                  } @else if (record.id) {
                     <app-button
                       [variant]="'success'"
                       [size]="'sm'"
-                      (click)="openPaymentModal(record.id)">
+                      (btnClick)="openPaymentModal(record.id)">
                       Pagar
                     </app-button>
                   } @else {
-                    <span class="text-green-600 font-medium">✓ Pagado</span>
+                    <span class="text-gray-400">N/A</span>
                   }
                 </td>
               </tr>
@@ -340,6 +342,7 @@
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative">
       <button
+        type="button"
         (click)="closePaymentModal()"
         class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -385,13 +388,13 @@
       <div class="flex gap-3 justify-end">
         <app-button
           [variant]="'secondary'"
-          (click)="closePaymentModal()"
+          (btnClick)="closePaymentModal()"
           [disabled]="isProcessingPayment">
           Cancelar
         </app-button>
         <app-button
           [variant]="'success'"
-          (click)="confirmPayment()"
+          (btnClick)="confirmPayment()"
           [disabled]="isProcessingPayment">
           @if (isProcessingPayment) {
             <span>Procesando...</span>
