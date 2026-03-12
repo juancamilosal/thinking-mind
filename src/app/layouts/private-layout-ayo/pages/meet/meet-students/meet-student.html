@@ -264,9 +264,16 @@
                                         </div>
                                         <div class="flex items-center gap-5">
                                             @if (reunion.link_reunion) {
-                                            <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.joinMeetingTitle' | translate" (click)="handleTestAndJoin($event, reunion)">
-                                                <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
-                                            </a>
+                                              @if (canAccessMeeting(reunion)) {
+                                                <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.joinMeetingTitle' | translate" (click)="handleTestAndJoin($event, reunion)">
+                                                    <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                                </a>
+                                              } @else {
+                                                <div class="meeting-link-disabled opacity-50 cursor-not-allowed" [attr.title]="getMeetingAccessMessage(reunion) || ''">
+                                                    <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                                                </div>
+                                                <span class="text-xs text-gray-500 italic">{{ getMeetingAccessMessage(reunion) }}</span>
+                                              }
                                             }
                                           <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.evaluateTeacherTitle' | translate" (click)="openEvaluation(reunion, account.id)">
                                             <img src="/assets/icons/evaluacion.png" class="w-full h-full object-contain" [attr.alt]="'meet_student.evaluateAlt' | translate">
@@ -452,9 +459,16 @@
                         </div>
                         <div class="flex items-center gap-5">
                           @if (reunion.link_reunion) {
-                            <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.joinMeetingTitle' | translate" (click)="handleTestAndJoin($event, reunion)">
-                              <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
-                            </a>
+                            @if (canAccessMeeting(reunion)) {
+                              <a class="meeting-link cursor-pointer" [attr.title]="'meet_student.joinMeetingTitle' | translate" (click)="handleTestAndJoin($event, reunion)">
+                                <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                              </a>
+                            } @else {
+                              <div class="meeting-link-disabled opacity-50 cursor-not-allowed" [attr.title]="getMeetingAccessMessage(reunion) || ''">
+                                <img src="/assets/icons/meet.png" class="w-full h-full object-contain" alt="Meet">
+                              </div>
+                              <span class="text-xs text-gray-500 italic">{{ getMeetingAccessMessage(reunion) }}</span>
+                            }
                           }
                         </div>
                       </div>

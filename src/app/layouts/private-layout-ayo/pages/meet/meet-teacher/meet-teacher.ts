@@ -446,6 +446,25 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   async accessMeeting(meeting: any, programa: any): Promise<void> {
     const status = this.getMeetingStatus(meeting);
 
+    // Check if meeting is within allowed access window
+    if (!this.canAccessMeeting(meeting)) {
+      const start = new Date(meeting.fecha_inicio);
+      const minutesUntilStart = Math.ceil((start.getTime() - Date.now()) / 60000);
+
+      if (minutesUntilStart > 0) {
+        this.notificationService.showWarning(
+          'Reunión No Disponible',
+          `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
+        );
+      } else {
+        this.notificationService.showInfo(
+          'Reunión Finalizada',
+          'Esta reunión ya ha finalizado.'
+        );
+      }
+      return;
+    }
+
     // Check if there's already an active session
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
@@ -463,17 +482,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       );
       return;
     }
-
-    // Only allow access to upcoming or in-progress meetings
-    /*
-    if (status === 'completed') {
-      this.notificationService.showInfo(
-        'Reunión Finalizada',
-        'Esta reunión ya ha finalizado.'
-      );
-      return;
-    }
-    */
 
     // 1. Add students to Calendar Event
     let currentProgramStudents: string[] = [];
@@ -495,7 +503,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       try {
         await this.addParticipantsToMeeting(meeting, currentProgramStudents);
       } catch (error) {
-
+        console.warn('Could not add participants to meeting:', error);
       }
     }
 
@@ -513,6 +521,25 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   accessGeneralMeeting(meeting: any): void {
+    // Check if meeting is within allowed access window
+    if (!this.canAccessMeeting(meeting)) {
+      const start = new Date(meeting.fecha_inicio);
+      const minutesUntilStart = Math.ceil((start.getTime() - Date.now()) / 60000);
+
+      if (minutesUntilStart > 0) {
+        this.notificationService.showWarning(
+          'Reunión No Disponible',
+          `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
+        );
+      } else {
+        this.notificationService.showInfo(
+          'Reunión Finalizada',
+          'Esta reunión ya ha finalizado.'
+        );
+      }
+      return;
+    }
+
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
       this.notificationService.showWarning(
@@ -775,10 +802,84 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Check if students have already been graded today
     this.isLoading = true;
 
-    const processAttendance = () => {
-      const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
+    this.checkIfAlreadyGradedToday().subscribe({
+      next: (alreadyGraded) => {
+        if (alreadyGraded) {
+          this.isLoading = false;
+          this.notificationService.showWarning(
+            'Estudiantes Ya Calificados',
+            'Los estudiantes ya han sido calificados hoy para este programa. Solo se permite una calificación por día.'
+          );
+          return;
+        }
+        // Proceed with evaluation submission
+        this.processEvaluationSubmission();
+      },
+      error: (err) => {
+        console.error('Error checking if already graded:', err);
+        // Proceed anyway if check fails
+        this.processEvaluationSubmission();
+      }
+    });
+  }
+
+  /**
+   * Check if students have already been graded today for current program
+   */
+  private checkIfAlreadyGradedToday(): Observable<boolean> {
+    const today = new Date().toISOString().split('T')[0];
+    const studentIds = this.students.map(s => s.id);
+
+    if (studentIds.length === 0 || !this.currentProgramId) {
+      return new Observable(observer => {
+        observer.next(false);
+        observer.complete();
+      });
+    }
+
+    const filter: any = {
+      fecha: today,
+      programa_ayo_id: this.currentProgramId,
+      estudiante_id: { _in: studentIds },
+      asiste: true
+    };
+
+    return this.attendanceService.getAttendances(1, 1, undefined, filter).pipe(
+      map(response => {
+        const records = response?.data || [];
+        return records.length > 0;
+      })
+    );
+  }
+
+  /**
+   * Process the evaluation submission after validations
+   */
+  private processEvaluationSubmission(): void {
+    // First, update study plan if selected
+    const planUpdateObservable = this.selectedPlanItemForEvaluation
+      ? this.programaAyoService.updatePlanEstudio(this.selectedPlanItemForEvaluation.original.id, { realizado: true })
+      : new Observable(observer => { observer.next(true); observer.complete(); });
+
+    planUpdateObservable.subscribe({
+      next: () => {
+        this.processBatchAttendanceAndUpdates();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.notificationService.showError('Error', 'No se pudo actualizar el plan de estudio.');
+      }
+    });
+  }
+
+  /**
+   * Process batch attendance records and user updates
+   */
+  private processBatchAttendanceAndUpdates(): void {
+    const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
       const studentsWithFourCredits: string[] = [];
       const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
 
@@ -805,6 +906,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           const newRating = (Number(student.currentRating) || 0) + Number(student.rating);
           const currentCredits = Number(student.currentCredits) || 0;
           const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
+
+          console.log(`Processing student ${student.name}:`, {
+            currentCredits,
+            newCredits,
+            creditsDecremented: currentCredits - newCredits,
+            currentRating: student.currentRating,
+            newRating: newRating
+          });
 
           if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
             studentsWithZeroCredits.push({
@@ -937,22 +1046,45 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
         }
       });
-    };
+  }
 
-    if (this.selectedPlanItemForEvaluation) {
-      this.programaAyoService.updatePlanEstudio(this.selectedPlanItemForEvaluation.original.id, { realizado: true })
-        .subscribe({
-          next: () => {
-            processAttendance();
-          },
-          error: (err) => {
-            this.isLoading = false;
-            this.notificationService.showError('Error', 'No se pudo actualizar el plan de estudio.');
-          }
-        });
-    } else {
-      processAttendance();
+  /**
+   * Check if meeting can be accessed (10 minutes before start until end)
+   * @param meeting The meeting to check
+   * @returns true if meeting can be accessed
+   */
+  canAccessMeeting(meeting: any): boolean {
+    const now = new Date();
+    const start = new Date(meeting.fecha_inicio);
+    const end = new Date(meeting.fecha_finalizacion);
+
+    // Allow access 10 minutes before start
+    const accessStart = new Date(start.getTime() - 10 * 60 * 1000);
+
+    return now >= accessStart && now <= end;
+  }
+
+  /**
+   * Get the reason why a meeting cannot be accessed
+   * @param meeting The meeting to check
+   * @returns Descriptive message or null if can access
+   */
+  getMeetingAccessMessage(meeting: any): string | null {
+    if (this.canAccessMeeting(meeting)) return null;
+
+    const now = new Date();
+    const start = new Date(meeting.fecha_inicio);
+    const end = new Date(meeting.fecha_finalizacion);
+    const accessStart = new Date(start.getTime() - 10 * 60 * 1000);
+
+    if (now < accessStart) {
+      const minutesUntil = Math.ceil((accessStart.getTime() - now.getTime()) / 60000);
+      return `Disponible en ${minutesUntil} minutos`;
+    } else if (now > end) {
+      return 'Reunión finalizada';
     }
+
+    return null;
   }
 
   cancelEvaluation(): void {
