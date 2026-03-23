@@ -137,4 +137,9 @@ export class UserService {
 
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
   }
+
+  getUserById(id: string, fields: string = '*'): Observable<ResponseAPI<User>> {
+    const params: any = { fields };
+    return this.http.get<ResponseAPI<User>>(`${this.apiUrl}/${id}`, { params });
+  }
 }

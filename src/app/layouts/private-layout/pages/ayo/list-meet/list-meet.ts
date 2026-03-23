@@ -97,7 +97,8 @@ export class ListMeet implements OnInit {
   selectedStudents: User[] = [];
   attendanceList: AttendanceItem[] = [];
   originalAttendanceList: AttendanceItem[] = [];
-  
+  savingCredits = false;
+
   // Student Filters
   studentSearchTerm: string = '';
   selectedLevelFilter: string = '';
@@ -198,12 +199,12 @@ export class ListMeet implements OnInit {
         next: (response) => {
             const newPlan = response.data;
             const currentPlans = this.selectedProgramForStudyPlan?.plan_estudio_id || [];
-            const currentIds = Array.isArray(currentPlans) 
-                ? currentPlans.map((p: any) => p.id) 
+            const currentIds = Array.isArray(currentPlans)
+                ? currentPlans.map((p: any) => p.id)
                 : [];
-            
+
             const newIds = [...currentIds, newPlan.id];
-            
+
             if (this.selectedProgramForStudyPlan && this.selectedProgramForStudyPlan.id) {
                  this.programaAyoService.updateProgramaAyo(this.selectedProgramForStudyPlan.id, {
                     plan_estudio_id: newIds
@@ -215,9 +216,9 @@ export class ListMeet implements OnInit {
                              } else {
                                  this.selectedProgramForStudyPlan!.plan_estudio_id = [newPlan];
                              }
-                             
+
                              this.openStudyPlanModal(this.selectedProgramForStudyPlan!);
-                             
+
                              this.newPlanText = '';
                              this.isProcessingPlan = false;
                              this.cdr.detectChanges();
@@ -258,7 +259,7 @@ export class ListMeet implements OnInit {
   saveEditedPlan(item: any): void {
        if (!this.editingPlanText.trim()) return;
        this.isProcessingPlan = true;
-       
+
        this.programaAyoService.updatePlanEstudio(item.original.id, {
            plan: this.editingPlanText
        }).subscribe({
@@ -266,7 +267,7 @@ export class ListMeet implements OnInit {
                this.ngZone.run(() => {
                    item.original.plan = this.editingPlanText;
                    this.openStudyPlanModal(this.selectedProgramForStudyPlan!);
-                   
+
                    this.cancelEditingPlan();
                    this.isProcessingPlan = false;
                    this.cdr.detectChanges();
@@ -289,14 +290,14 @@ export class ListMeet implements OnInit {
         () => {
             this.isProcessingPlan = true;
             this.cdr.detectChanges();
-            
+
             const currentPlans = this.selectedProgramForStudyPlan?.plan_estudio_id as any[];
             const newIds = currentPlans.filter(p => p.id !== item.original.id).map(p => p.id);
-            
+
             if (this.selectedProgramForStudyPlan && this.selectedProgramForStudyPlan.id) {
                  // Primero desvincular del programa (opcional si Directus maneja cascada, pero seguro hacerlo)
                  // O simplemente eliminar directamente el item si la relación lo permite
-                 
+
                  this.programaAyoService.deletePlanEstudio(item.original.id).subscribe({
                      next: () => {
                          this.ngZone.run(() => {
@@ -1286,6 +1287,33 @@ export class ListMeet implements OnInit {
     }
   }
 
+  onUpdateCredits(items: AttendanceItem[]): void {
+    if (!items || items.length === 0) return;
+    this.savingCredits = true;
+
+    const updates = items
+      .filter(i => i.id && i.creditos !== undefined && i.creditos !== null)
+      .map(i => ({ id: String(i.id), creditos: Number(i.creditos) }));
+
+    if (updates.length === 0) {
+      this.savingCredits = false;
+      return;
+    }
+
+    this.userService.updateUsers(updates as any).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Créditos Actualizados', 'Se actualizaron los créditos de los estudiantes.');
+        this.savingCredits = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.notificationService.showError('Error', 'No se pudieron actualizar los créditos.');
+        this.savingCredits = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
     const prog = programa as any;
 
@@ -1366,7 +1394,7 @@ export class ListMeet implements OnInit {
 
                             // Use safe navigation for nested properties
                             const studentLevel = (student as any).nivel_id;
-                            
+
                             return {
                                 id: student.id,
                                 studentName: `${student.first_name} ${student.last_name}`,
@@ -1540,7 +1568,7 @@ export class ListMeet implements OnInit {
                     const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || (student as any).nivel);
                     const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
                     const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
-                    
+
                     // Combine Level and Subcategory for display
                     const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
 
@@ -1550,9 +1578,9 @@ export class ListMeet implements OnInit {
                     // Only calculate if student has a level and we have programs for that level
                     if (studentLevelId && levelProgramMap.has(studentLevelId)) {
                         const validProgramIds = levelProgramMap.get(studentLevelId);
-                        
+
                         if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
-                             const validAttendance = (student as any).asistencia_id.filter((a: any) => 
+                             const validAttendance = (student as any).asistencia_id.filter((a: any) =>
                                 a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
                             );
 
@@ -1579,7 +1607,7 @@ export class ListMeet implements OnInit {
                         creditos: (student as any).creditos
                     };
                 });
-                
+
                 this.originalAttendanceList = [...tempAttendanceList];
                 this.attendanceList = [...tempAttendanceList];
 
@@ -1786,7 +1814,7 @@ export class ListMeet implements OnInit {
           const rawNivel = student.nivel_id;
           const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || '');
           const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
-          
+
           // Use robust subcategory logic
           const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
 
@@ -1849,7 +1877,7 @@ export class ListMeet implements OnInit {
           { tematica: { _eq: true } }
         ]
       };
-      
+
       const res = await firstValueFrom(this.fileService.getFiles({
         sort: '-uploaded_on',
         type: 'image/jpeg,image/png,image/webp',
@@ -1927,7 +1955,7 @@ export class ListMeet implements OnInit {
 
   async saveProgramImage() {
     if (!this.selectedProgramForImageEdit) return;
-    
+
     if (!this.selectedFile && !this.selectedDirectusFileId) {
         // If nothing new selected, close
         this.closeFileModal();
@@ -1943,7 +1971,7 @@ export class ListMeet implements OnInit {
       if (this.selectedFile) {
         const uploadRes = await firstValueFrom(this.fileService.uploadFile(this.selectedFile));
         imageId = uploadRes.data.id;
-        
+
         // Update file metadata explicitly to ensure tematica is saved
         if (imageId) {
             await firstValueFrom(this.fileService.updateFile(imageId, { tematica: true }));
@@ -1957,14 +1985,14 @@ export class ListMeet implements OnInit {
         }));
 
 
-        
+
         // Update local data
         if (this.selectedProgramForImageEdit.img) {
              this.selectedProgramForImageEdit.img.id = imageId;
         } else {
              this.selectedProgramForImageEdit.img = { id: imageId } as any;
         }
-        
+
         // Also update in programGroups if applicable
         this.programGroups.forEach(group => {
             group.programs.forEach(p => {

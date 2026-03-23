@@ -1,12 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ApplicationRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../../../core/services/user.service';
 import { AttendanceService } from '../../../../../core/services/attendance.service';
+import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { Roles } from '../../../../../core/const/Roles';
 import { Router } from '@angular/router';
-import { Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, of, throwError } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 
 interface StudentStat {
   studentId: string;
@@ -52,10 +54,14 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
 
   selectedObservation: string | null = null;
   isObservationModalOpen = false;
+  deletingAttendanceId: string | null = null;
 
   constructor(
     private userService: UserService,
     private attendanceService: AttendanceService,
+    private confirmationService: ConfirmationService,
+    private appRef: ApplicationRef,
+    private cdr: ChangeDetectorRef,
     private router: Router
   ) {}
 
@@ -220,7 +226,13 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
 
 
   processDetailData() {
-    if (!this.selectedStudent || this.attendanceRecords.length === 0) return;
+    if (!this.selectedStudent) return;
+    if (this.attendanceRecords.length === 0) {
+      this.selectedStudent.averageRating = 0;
+      this.selectedStudent.totalEvaluations = 0;
+      this.selectedStudent.lastEvaluationDate = '';
+      return;
+    }
 
     // Calculate stats from attendance records
     const totalRecords = this.attendanceRecords.length;
@@ -244,6 +256,72 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
     this.selectedStudent.averageRating = validScores > 0 ? totalScore / validScores : 0;
     this.selectedStudent.totalEvaluations = totalRecords; // Or total attendances
     this.selectedStudent.lastEvaluationDate = lastDate;
+  }
+
+  deleteAttendanceRecord(record: any): void {
+    if (!this.selectedStudent || !record?.id) return;
+
+    this.confirmationService.showConfirmation(
+      {
+        title: 'Eliminar calificación',
+        message: '¿Estás seguro de que deseas eliminar esta calificación?',
+        confirmText: 'Sí, eliminar',
+        cancelText: 'Cancelar',
+        type: 'danger'
+      },
+      () => this.executeDeleteAttendanceRecord(record)
+    );
+  }
+
+  private executeDeleteAttendanceRecord(record: any): void {
+    if (!this.selectedStudent || !record?.id) return;
+
+    const attendanceId = String(record.id);
+    const studentId = this.selectedStudent.studentId;
+    const decrement = Number(record.calificacion);
+    const delta = Number.isFinite(decrement) ? decrement : 0;
+
+    this.deletingAttendanceId = attendanceId;
+
+    this.userService.getUserById(studentId, 'id,calificacion').pipe(
+      switchMap((userRes: any) => {
+        const prevCalificacion = Number(userRes?.data?.calificacion) || 0;
+        const nextCalificacion = Math.max(0, prevCalificacion - delta);
+
+        const update$ = delta > 0
+          ? this.userService.updateUser(studentId, { calificacion: nextCalificacion } as any)
+          : of(null);
+
+        return update$.pipe(
+          switchMap(() => this.attendanceService.deleteAttendance(attendanceId)),
+          catchError((err) => {
+            if (delta > 0) {
+              this.userService.updateUser(studentId, { calificacion: prevCalificacion } as any).subscribe();
+            }
+            return throwError(() => err);
+          })
+        );
+      }),
+      finalize(() => {
+        this.deletingAttendanceId = null;
+        this.appRef.tick();
+      })
+    ).subscribe({
+      next: () => {
+        this.attendanceRecords = this.attendanceRecords.filter(r => String(r.id) !== attendanceId);
+        if (this.attendanceRecords.length === 0) {
+          this.uniquePrograms = [];
+          this.uniqueCriteria = [];
+        }
+        this.processDetailData();
+        this.extractFilterOptions();
+        this.cdr.detectChanges();
+        this.appRef.tick();
+      },
+      error: (err) => {
+        console.error('Error deleting attendance record', err);
+      }
+    });
   }
 
   goBack() {

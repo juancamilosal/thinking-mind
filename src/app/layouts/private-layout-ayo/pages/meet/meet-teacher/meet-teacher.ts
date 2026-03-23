@@ -456,13 +456,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           'Reunión No Disponible',
           `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
         );
+        return;
       } else {
         this.notificationService.showInfo(
           'Reunión Finalizada',
           'Esta reunión ya ha finalizado.'
         );
+        return;
       }
-      return;
     }
 
     // Check if there's already an active session
@@ -531,13 +532,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           'Reunión No Disponible',
           `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
         );
+        return;
       } else {
         this.notificationService.showInfo(
           'Reunión Finalizada',
           'Esta reunión ya ha finalizado.'
         );
+        return;
       }
-      return;
     }
 
     const existingSession = this.timerService.getSession();
@@ -804,7 +806,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     // Check if students have already been graded today
     this.isLoading = true;
-
     this.checkIfAlreadyGradedToday().subscribe({
       next: (alreadyGraded) => {
         if (alreadyGraded) {
@@ -901,11 +902,12 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         attendanceDataList.push(evaluationData);
 
-        // Update student cumulative grade if they attended and have a rating
-        if (student.attended && student.rating > 0) {
-          const newRating = (Number(student.currentRating) || 0) + Number(student.rating);
-          const currentCredits = Number(student.currentCredits) || 0;
-          const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
+        const currentCredits = Number(student.currentCredits) || 0;
+        const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
+        const currentRating = Number(student.currentRating) || 0;
+        const newRating = student.attended && student.rating > 0
+          ? currentRating + Number(student.rating)
+          : currentRating;
 
           console.log(`Processing student ${student.name}:`, {
             currentCredits,
@@ -973,7 +975,6 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
           }
 
           usersToUpdate.push(updateData);
-        }
       });
 
       const requests: Observable<any>[] = [];

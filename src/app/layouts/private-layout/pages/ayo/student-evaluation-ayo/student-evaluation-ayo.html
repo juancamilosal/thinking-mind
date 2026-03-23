@@ -210,6 +210,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asistencia</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -251,10 +252,26 @@
                                     [title]="record.observaciones ? 'Clic para ver completo' : ''">
                                     {{ record.observaciones || '-' }}
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <button
+                                            type="button"
+                                            class="px-3 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            (click)="$event.stopPropagation(); deleteAttendanceRecord(record)"
+                                            [disabled]="deletingAttendanceId === (record.id + '')">
+                                        <span *ngIf="deletingAttendanceId === (record.id + '')" class="inline-flex items-center gap-2">
+                                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                            </svg>
+                                            Eliminando...
+                                        </span>
+                                        <span *ngIf="deletingAttendanceId !== (record.id + '')">Eliminar</span>
+                                    </button>
+                                </td>
                             </tr>
                             <!-- No results state for detail filter -->
                             <tr *ngIf="attendanceRecords.length === 0">
-                                <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                                <td colspan="7" class="px-6 py-10 text-center text-gray-500">
                                     No se encontraron registros con los filtros seleccionados.
                                 </td>
                             </tr>
