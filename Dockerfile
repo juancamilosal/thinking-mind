@@ -1,5 +1,5 @@
 # Etapa 1: Build de Angular
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -7,13 +7,13 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Instalar dependencias incluyendo dev (necesario para Angular CLI)
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 # Copiar el resto del código fuente
 COPY . .
 
 # Compilar la aplicación Angular usando npx para evitar problemas con ng global
-RUN npx ng build
+RUN npx ng build --verbose
 
 # Etapa 2: Servir con NGINX
 FROM nginx:alpine
