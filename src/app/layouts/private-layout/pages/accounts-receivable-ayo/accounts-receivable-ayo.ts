@@ -34,7 +34,8 @@ export class AccountsReceivableAyo implements OnInit {
   // Filtros
   filters = {
     colegio: '',
-    fechaFinalizacion: '',
+    fechaCreacionDesde: '',
+    fechaCreacionHasta: '',
     estado: ''
   };
 
@@ -117,8 +118,12 @@ export class AccountsReceivableAyo implements OnInit {
       filterParams.colegio = this.filters.colegio.trim();
     }
 
-    if (this.filters.fechaFinalizacion) {
-      filterParams.fecha_finalizacion = this.filters.fechaFinalizacion;
+    if (this.filters.fechaCreacionDesde) {
+      filterParams.fecha_creacion_desde = this.filters.fechaCreacionDesde;
+    }
+
+    if (this.filters.fechaCreacionHasta) {
+      filterParams.fecha_creacion_hasta = this.filters.fechaCreacionHasta;
     }
 
     if (this.filters.estado) {
@@ -166,7 +171,8 @@ export class AccountsReceivableAyo implements OnInit {
     return !!(
       this.searchTerm.trim() ||
       this.filters.colegio.trim() ||
-      this.filters.fechaFinalizacion ||
+      this.filters.fechaCreacionDesde ||
+      this.filters.fechaCreacionHasta ||
       this.filters.estado
     );
   }
@@ -187,7 +193,8 @@ export class AccountsReceivableAyo implements OnInit {
     this.searchTerm = '';
     this.filters = {
       colegio: '',
-      fechaFinalizacion: '',
+      fechaCreacionDesde: '',
+      fechaCreacionHasta: '',
       estado: ''
     };
     this.currentPage = 1;
