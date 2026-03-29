@@ -42,7 +42,8 @@ export class AccountsReceivable implements OnInit {
   // Filtros
   filters = {
     colegio: '',
-    fechaFinalizacion: '',
+    fechaCreacionDesde: '',
+    fechaCreacionHasta: '',
     estado: ''
   };
 
@@ -136,8 +137,12 @@ export class AccountsReceivable implements OnInit {
       filterParams.colegio = this.filters.colegio.trim();
     }
 
-    if (this.filters.fechaFinalizacion) {
-      filterParams.fecha_finalizacion = this.filters.fechaFinalizacion;
+    if (this.filters.fechaCreacionDesde) {
+      filterParams.fecha_creacion_desde = this.filters.fechaCreacionDesde;
+    }
+
+    if (this.filters.fechaCreacionHasta) {
+      filterParams.fecha_creacion_hasta = this.filters.fechaCreacionHasta;
     }
 
     if (this.filters.estado) {
@@ -226,7 +231,8 @@ export class AccountsReceivable implements OnInit {
   clearFilters(): void {
     this.filters = {
       colegio: '',
-      fechaFinalizacion: '',
+      fechaCreacionDesde: '',
+      fechaCreacionHasta: '',
       estado: ''
     };
     this.searchTerm = '';
@@ -333,7 +339,13 @@ export class AccountsReceivable implements OnInit {
   // Método para verificar si hay filtros activos (incluyendo búsqueda)
   // Nota: El filtro de estado vacío significa "Todos los estados" y NO cuenta como filtro activo
   private hasActiveFilters(): boolean {
-    return !!(this.filters.colegio.trim() || this.filters.fechaFinalizacion || this.filters.estado.trim() || this.searchTerm.trim());
+    return !!(
+      this.filters.colegio.trim() ||
+      this.filters.fechaCreacionDesde ||
+      this.filters.fechaCreacionHasta ||
+      this.filters.estado.trim() ||
+      this.searchTerm.trim()
+    );
   }
 
   loadAccountsPage(): void {

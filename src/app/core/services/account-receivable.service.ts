@@ -168,6 +168,15 @@ export class AccountReceivableService {
       params['filter[fecha_finalizacion][_eq]'] = filterParams.fecha_finalizacion;
     }
 
+    const fechaCreacionDesde = filterParams.fecha_creacion_desde || filterParams.fechaCreacionDesde;
+    const fechaCreacionHasta = filterParams.fecha_creacion_hasta || filterParams.fechaCreacionHasta;
+    if (fechaCreacionDesde) {
+      params['filter[fecha_creacion][_gte]'] = `${fechaCreacionDesde}T00:00:00`;
+    }
+    if (fechaCreacionHasta) {
+      params['filter[fecha_creacion][_lte]'] = `${fechaCreacionHasta}T23:59:59`;
+    }
+
     // Filtro por estado
     if (filterParams.estado) {
       if (filterParams.estado === 'SALDO_0') {
@@ -240,7 +249,7 @@ export class AccountReceivableService {
     params['filter[es_inscripcion][_eq]'] = 'FALSE';
 
     const queryString = new URLSearchParams(params).toString();
-    const baseFields = '*,id,monto,saldo,estado,fecha_finalizacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*';
+    const baseFields = '*,id,monto,saldo,estado,fecha_finalizacion,fecha_creacion,es_inscripcion,id_inscripcion.*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*';
     const url = this.apiUrl + `?fields=${baseFields}&` + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
@@ -377,6 +386,7 @@ export class AccountReceivableService {
       curso_id: item.curso_id,
       fecha_limite: item.fecha_limite,
       fecha_finalizacion: item.fecha_finalizacion, // Agregar mapeo de fecha_finalizacion
+      fecha_creacion: item.fecha_creacion,
       estado: item.estado,
       pin_entregado: item.pin_entregado,
       es_inscripcion: item.es_inscripcion,
