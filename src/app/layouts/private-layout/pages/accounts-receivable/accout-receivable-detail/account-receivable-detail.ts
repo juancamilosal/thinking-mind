@@ -575,6 +575,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   startEditingAmount() {
     this.isEditingAmount = true;
     this.editedAmount = this.account.monto;
+    this.cdr.detectChanges();
   }
 
   cancelEditingAmount(event?: Event) {
@@ -583,6 +584,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     }
     this.isEditingAmount = false;
     this.editedAmount = 0;
+    this.cdr.detectChanges();
   }
 
   saveAmount(event?: Event) {
@@ -998,6 +1000,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   startEditingDiscount(): void {
     this.isEditingDiscount = true;
+    this.cdr.detectChanges();
   }
 
   cancelEditingDiscount(event?: Event): void {
@@ -1009,6 +1012,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     const descuento = this.account.descuento;
     this.discountPercentage = typeof descuento === 'string' ? parseFloat(descuento) : (descuento || 0);
     this.calculateDiscount();
+    this.cdr.detectChanges();
   }
 
   saveDiscount(event?: Event): void {

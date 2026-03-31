@@ -577,6 +577,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   startEditingAmount() {
     this.isEditingAmount = true;
     this.editedAmount = this.account.monto;
+    this.cdr.detectChanges();
   }
 
   cancelEditingAmount(event?: Event) {
@@ -585,6 +586,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
     }
     this.isEditingAmount = false;
     this.editedAmount = 0;
+    this.cdr.detectChanges();
   }
 
   saveAmount(event?: Event) {
@@ -659,6 +661,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
 
   startEditingDiscount() {
     this.isEditingDiscount = true;
+    this.cdr.detectChanges();
   }
 
   cancelEditingDiscount(event?: Event) {
@@ -668,6 +671,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
     this.isEditingDiscount = false;
     // Restaurar valor visual si se cancela (aunque discountPercentage ya tiene el valor real)
     this.initializeDiscountValues();
+    this.cdr.detectChanges();
   }
 
   onDiscountPercentageChange() {
