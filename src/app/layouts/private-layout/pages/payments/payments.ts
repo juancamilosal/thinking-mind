@@ -22,6 +22,7 @@ export class Payments implements OnInit, OnDestroy {
   isLoading: boolean = false;
   selectedPayment: PaymentModel | null = null;
   showPaymentDetail: boolean = false;
+  isDownloadingExcel: boolean = false;
 
   // Propiedades para filtros de fecha
   startDate: string = '';
@@ -238,6 +239,74 @@ export class Payments implements OnInit, OnDestroy {
   backToPaymentHistory() {
     this.showPaymentDetail = false;
     this.selectedPayment = null;
+  }
+
+  async downloadExcel(): Promise<void> {
+    if (!this.payments || this.payments.length === 0) {
+      this.notificationService.showWarning('Sin datos', 'No hay pagos para descargar.');
+      return;
+    }
+
+    this.isDownloadingExcel = true;
+    try {
+      let ExcelJS: any;
+      let Workbook: any;
+
+      ExcelJS = await import('exceljs');
+      if (ExcelJS.default && ExcelJS.default.Workbook) {
+        Workbook = ExcelJS.default.Workbook;
+      } else if (ExcelJS.Workbook) {
+        Workbook = ExcelJS.Workbook;
+      } else {
+        throw new Error('No se pudo encontrar la clase Workbook');
+      }
+
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet('Pagos');
+
+      worksheet.columns = [
+        { header: 'Pagador', key: 'pagador', width: 28 },
+        { header: 'Responsable', key: 'responsable', width: 28 },
+        { header: 'Valor', key: 'valor', width: 16 },
+        { header: 'Fecha de Pago', key: 'fecha_pago', width: 16 },
+        { header: 'Método de Pago', key: 'metodo_pago', width: 22 },
+        { header: 'Estado', key: 'estado', width: 14 },
+        { header: 'Núm. Transacción', key: 'numero_transaccion', width: 20 }
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+
+      for (const payment of this.payments) {
+        const responsable = payment.responsable
+          ? `${payment.responsable?.first_name || ''} ${payment.responsable?.last_name || ''}`.trim()
+          : '';
+        worksheet.addRow({
+          pagador: payment.pagador || '',
+          responsable,
+          valor: payment.valor ?? 0,
+          fecha_pago: payment.fecha_pago ? this.formatDate(payment.fecha_pago) : '',
+          metodo_pago: payment.metodo_pago ? this.formatPaymentMethod(payment.metodo_pago) : '',
+          estado: payment.estado || '',
+          numero_transaccion: payment.numero_transaccion || ''
+        });
+      }
+
+      const datePart = new Date().toISOString().split('T')[0];
+      const fileName = `Pagos_${datePart}.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Error al generar Excel:', error);
+      this.notificationService.showError('Error', error?.message || 'No se pudo generar el Excel.');
+    } finally {
+      this.isDownloadingExcel = false;
+    }
   }
 
   formatCurrency(amount: number): string {

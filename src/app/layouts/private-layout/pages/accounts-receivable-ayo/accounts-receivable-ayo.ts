@@ -46,6 +46,7 @@ export class AccountsReceivableAyo implements OnInit {
   totalPages = 0;
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
+  isDownloadingExcel: boolean = false;
 
   constructor(
     private accountService: AccountReceivableService,
@@ -377,6 +378,77 @@ export class AccountsReceivableAyo implements OnInit {
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(amount);
+  }
+
+  async downloadExcel(): Promise<void> {
+    if (!this.accounts || this.accounts.length === 0) {
+      this.notificationService.showWarning('Sin datos', 'No hay cuentas para descargar.');
+      return;
+    }
+
+    this.isDownloadingExcel = true;
+    try {
+      let ExcelJS: any;
+      let Workbook: any;
+
+      ExcelJS = await import('exceljs');
+      if (ExcelJS.default && ExcelJS.default.Workbook) {
+        Workbook = ExcelJS.default.Workbook;
+      } else if (ExcelJS.Workbook) {
+        Workbook = ExcelJS.Workbook;
+      } else {
+        throw new Error('No se pudo encontrar la clase Workbook');
+      }
+
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet('Cuentas AYO');
+
+      worksheet.columns = [
+        { header: 'Cliente', key: 'cliente', width: 28 },
+        { header: 'Documento Cliente', key: 'doc_cliente', width: 20 },
+        { header: 'Estudiante', key: 'estudiante', width: 28 },
+        { header: 'Documento Estudiante', key: 'doc_estudiante', width: 22 },
+        { header: 'Colegio', key: 'colegio', width: 24 },
+        { header: 'Estado', key: 'estado', width: 14 },
+        { header: 'Monto', key: 'monto', width: 16 },
+        { header: 'Abonado', key: 'abonado', width: 16 },
+        { header: 'Fecha Creación', key: 'fecha_creacion', width: 16 }
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+
+      for (const account of this.accounts) {
+        const clienteDoc = `${this.getClientDocumentType(account)}: ${this.getClientDocument(account)}`.trim();
+        const estudianteDoc = `${this.getStudentDocumentType(account)}: ${this.getStudentDocument(account)}`.trim();
+        worksheet.addRow({
+          cliente: account.clientName || '',
+          doc_cliente: clienteDoc,
+          estudiante: account.studentName || '',
+          doc_estudiante: estudianteDoc,
+          colegio: account.schoolName || '',
+          estado: account.estado || '',
+          monto: account.monto ?? 0,
+          abonado: account.saldo ?? 0,
+          fecha_creacion: account.fecha_creacion ? new Date(account.fecha_creacion).toLocaleDateString('es-CO') : ''
+        });
+      }
+
+      const datePart = new Date().toISOString().split('T')[0];
+      const fileName = `Cuentas_AYO_${datePart}.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Error al generar Excel:', error);
+      this.notificationService.showError('Error', error?.message || 'No se pudo generar el Excel.');
+    } finally {
+      this.isDownloadingExcel = false;
+    }
   }
 
   backToList() {
