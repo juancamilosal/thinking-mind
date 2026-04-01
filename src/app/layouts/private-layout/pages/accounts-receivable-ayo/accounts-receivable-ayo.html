@@ -118,9 +118,19 @@
         </div>
       </div>
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800">
-          Cuentas por Cobrar ({{ totalItems }})
-        </h2>
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-xl font-semibold text-gray-800">
+            Cuentas por Cobrar ({{ totalItems }})
+          </h2>
+          <app-button
+            (btnClick)="downloadExcel()"
+            [disabled]="isLoading || isDownloadingExcel || accounts.length === 0"
+            [loading]="isDownloadingExcel"
+            variant="success"
+            customClass="w-full sm:w-auto font-medium">
+            Descargar Excel
+          </app-button>
+        </div>
       </div>
 
       <!-- Loading Skeleton -->

@@ -18,6 +18,7 @@ import { AppButtonComponent } from '../../../../components/app-button/app-button
   standalone: true
 })
 export class AccountsReceivable implements OnInit {
+  private readonly LIST_STATE_STORAGE_KEY = 'accounts_receivable_list_state';
   showForm = false;
   showDetail = false;
   selectedAccount: AccountReceivable | null = null;
@@ -54,6 +55,7 @@ export class AccountsReceivable implements OnInit {
   totalPages = 0;
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
+  isDownloadingExcel: boolean = false;
 
   constructor(
     private accountService: AccountReceivableService,
@@ -73,6 +75,8 @@ export class AccountsReceivable implements OnInit {
       this.userColegioId = user.colegio_id;
       this.isRector = user.role === 'a4ed6390-5421-46d1-b81e-5cad06115abc';
     }
+
+    this.restoreListState();
 
     // Si es rector, cargar solo las cuentas de su colegio
     if (this.isRector && this.userColegioId) {
@@ -109,6 +113,7 @@ export class AccountsReceivable implements OnInit {
   // Método para manejar cambios en los filtros
   onFilterChange(): void {
     this.currentPage = 1; // Resetear a la primera página cuando se aplican filtros
+    this.persistListState();
     this.applyFilters();
   }
 
@@ -237,6 +242,7 @@ export class AccountsReceivable implements OnInit {
     };
     this.searchTerm = '';
     this.currentPage = 1;
+    this.persistListState();
 
     // Si es rector, usar su método específico
     if (this.isRector && this.userColegioId) {
@@ -318,6 +324,7 @@ export class AccountsReceivable implements OnInit {
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
+      this.persistListState();
       // Siempre usar applyFilters para mantener consistencia en la paginación
       this.applyFilters();
     }
@@ -327,6 +334,7 @@ export class AccountsReceivable implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.itemsPerPage = parseInt(target.value, 10);
     this.currentPage = 1; // Reset to first page when changing items per page
+    this.persistListState();
 
     // Si es rector, usar su método específico
     if (this.isRector && this.userColegioId) {
@@ -401,6 +409,7 @@ export class AccountsReceivable implements OnInit {
   setActiveTab(tab: 'pending' | 'paid' | 'refund' | 'zero') {
     this.activeTab = tab;
     this.currentPage = 1; // Resetear a la primera página
+    this.persistListState();
     this.loadAccountsByTab(tab);
   }
 
@@ -497,6 +506,7 @@ export class AccountsReceivable implements OnInit {
   onSearchChange(term: string) {
     this.searchTerm = term;
     this.currentPage = 1; // Resetear a la primera página cuando se busca
+    this.persistListState();
     // Si hay filtros aplicados o término de búsqueda, usar applyFilters
     if (this.hasActiveFilters()) {
       this.applyFilters();
@@ -507,6 +517,7 @@ export class AccountsReceivable implements OnInit {
 
   onSearch(): void {
     this.currentPage = 1; // Resetear a la primera página
+    this.persistListState();
 
     // Si es rector, usar su método específico
     if (this.isRector && this.userColegioId) {
@@ -570,6 +581,79 @@ export class AccountsReceivable implements OnInit {
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(amount);
+  }
+
+  async downloadExcel(): Promise<void> {
+    if (!this.accounts || this.accounts.length === 0) {
+      this.notificationService.showWarning('Sin datos', 'No hay cuentas para descargar.');
+      return;
+    }
+
+    this.isDownloadingExcel = true;
+    try {
+      let ExcelJS: any;
+      let Workbook: any;
+
+      ExcelJS = await import('exceljs');
+      if (ExcelJS.default && ExcelJS.default.Workbook) {
+        Workbook = ExcelJS.default.Workbook;
+      } else if (ExcelJS.Workbook) {
+        Workbook = ExcelJS.Workbook;
+      } else {
+        throw new Error('No se pudo encontrar la clase Workbook');
+      }
+
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet('Cuentas');
+
+      worksheet.columns = [
+        { header: 'Cliente', key: 'cliente', width: 28 },
+        { header: 'Documento Cliente', key: 'doc_cliente', width: 20 },
+        { header: 'Estudiante', key: 'estudiante', width: 28 },
+        { header: 'Documento Estudiante', key: 'doc_estudiante', width: 22 },
+        { header: 'Colegio', key: 'colegio', width: 24 },
+        { header: 'Estado', key: 'estado', width: 14 },
+        { header: 'Monto', key: 'monto', width: 16 },
+        { header: 'Saldo', key: 'saldo', width: 16 },
+        { header: 'Fecha Finalización', key: 'fecha_finalizacion', width: 18 },
+        { header: 'Fecha Creación', key: 'fecha_creacion', width: 16 }
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+
+      for (const account of this.accounts) {
+        const clienteDoc = `${this.getClientDocumentType(account)}: ${this.getClientDocument(account)}`.trim();
+        const estudianteDoc = `${this.getStudentDocumentType(account)}: ${this.getStudentDocument(account)}`.trim();
+        worksheet.addRow({
+          cliente: account.clientName || '',
+          doc_cliente: clienteDoc,
+          estudiante: account.studentName || '',
+          doc_estudiante: estudianteDoc,
+          colegio: account.schoolName || '',
+          estado: account.estado || '',
+          monto: account.monto ?? 0,
+          saldo: account.saldo ?? 0,
+          fecha_finalizacion: account.fecha_finalizacion ? new Date(account.fecha_finalizacion).toLocaleDateString('es-CO') : '',
+          fecha_creacion: account.fecha_creacion ? new Date(account.fecha_creacion).toLocaleDateString('es-CO') : ''
+        });
+      }
+
+      const datePart = new Date().toISOString().split('T')[0];
+      const fileName = `Cuentas_${this.activeTab}_${datePart}.xlsx`;
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Error al generar Excel:', error);
+      this.notificationService.showError('Error', error?.message || 'No se pudo generar el Excel.');
+    } finally {
+      this.isDownloadingExcel = false;
+    }
   }
 
   private fetchServerSearch(): void {
@@ -697,6 +781,7 @@ export class AccountsReceivable implements OnInit {
   }
 
   viewDetail(account: AccountReceivable) {
+    this.persistListState();
     this.router.navigate(['/private/accounts-receivable', account.id]);
   }
 
@@ -706,6 +791,51 @@ export class AccountsReceivable implements OnInit {
     // Mantener los filtros aplicados al regresar
     this.applyFilters();
     this.cdr.detectChanges();
+  }
+
+  private persistListState(): void {
+    try {
+      if (typeof sessionStorage === 'undefined') return;
+      sessionStorage.setItem(this.LIST_STATE_STORAGE_KEY, JSON.stringify({
+        activeTab: this.activeTab,
+        currentPage: this.currentPage,
+        itemsPerPage: this.itemsPerPage,
+        searchTerm: this.searchTerm,
+        filters: this.filters
+      }));
+    } catch {
+    }
+  }
+
+  private restoreListState(): void {
+    try {
+      if (typeof sessionStorage === 'undefined') return;
+      const raw = sessionStorage.getItem(this.LIST_STATE_STORAGE_KEY);
+      if (!raw) return;
+      const parsed: any = JSON.parse(raw);
+
+      if (parsed?.activeTab) {
+        this.activeTab = parsed.activeTab;
+      }
+      if (Number.isFinite(parsed?.currentPage)) {
+        this.currentPage = Math.max(1, Number(parsed.currentPage));
+      }
+      if (Number.isFinite(parsed?.itemsPerPage)) {
+        this.itemsPerPage = Math.max(1, Number(parsed.itemsPerPage));
+      }
+      if (typeof parsed?.searchTerm === 'string') {
+        this.searchTerm = parsed.searchTerm;
+      }
+
+      const f = parsed?.filters || {};
+      this.filters = {
+        colegio: typeof f.colegio === 'string' ? f.colegio : '',
+        fechaCreacionDesde: typeof f.fechaCreacionDesde === 'string' ? f.fechaCreacionDesde : '',
+        fechaCreacionHasta: typeof f.fechaCreacionHasta === 'string' ? f.fechaCreacionHasta : '',
+        estado: typeof f.estado === 'string' ? f.estado : ''
+      };
+    } catch {
+    }
   }
 
   refreshAccountDetail(updatedAccount?: AccountReceivable) {

@@ -178,7 +178,17 @@
   <!-- Tabla de Pagos -->
   <div class="bg-white rounded-xl shadow-lg overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-800">Lista de Pagos</h2>
+      <div class="flex items-center justify-between gap-4">
+        <h2 class="text-lg font-semibold text-gray-800">Lista de Pagos</h2>
+        <app-button
+          (btnClick)="downloadExcel()"
+          [disabled]="isLoading || isDownloadingExcel || payments.length === 0"
+          [loading]="isDownloadingExcel"
+          variant="success"
+          customClass="inline-flex items-center">
+          Descargar Excel
+        </app-button>
+      </div>
     </div>
 
     <!-- Loading Skeleton -->
