@@ -341,8 +341,16 @@
               <input type="text"
                      [(ngModel)]="newPayerName"
                      (input)="onPayerNameChange($event)"
+                     maxlength="80"
                      class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                      placeholder="Nombre completo">
+            </div>
+            <div class="md:col-span-3">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones</label>
+              <textarea [(ngModel)]="newPaymentObservations"
+                        rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Observaciones"></textarea>
             </div>
           </div>
 
@@ -465,6 +473,9 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Comprobante
               </th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Observaciones
+              </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acción
               </th>
@@ -534,6 +545,17 @@
                     <span class="text-sm text-gray-500 italic">Sin Comprobante</span>
                   }
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <button type="button"
+                          (click)="openPaymentObservations(payment, $event)"
+                          class="inline-flex items-center justify-center text-indigo-600 hover:text-indigo-900"
+                          title="Ver observaciones">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  </button>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <app-button
                     (btnClick)="deletePayment(payment)"
@@ -554,7 +576,7 @@
             }
             @if (payments.length === 0){
               <tr >
-                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                <td colspan="11" class="px-6 py-8 text-center text-gray-500">
                   <div class="flex flex-col items-center">
                     <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -581,6 +603,31 @@
       }
     </div>
   </div>
+
+  @if (showPaymentObservationsModal) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-800">Observaciones</h2>
+          <button type="button" (click)="closePaymentObservationsModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="text-sm text-gray-700 whitespace-pre-wrap break-words max-h-80 overflow-auto">
+          {{ paymentObservationsText }}
+        </div>
+
+        <div class="flex justify-end mt-6">
+          <app-button (btnClick)="closePaymentObservationsModal()" variant="secondary">
+            Cerrar
+          </app-button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Modal de Devolución -->
   @if (showRefundModal) {
