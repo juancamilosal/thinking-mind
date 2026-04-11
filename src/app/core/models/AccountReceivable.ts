@@ -9,6 +9,7 @@ export class PaymentModel {
   fecha_pago: string;
   metodo_pago: string;
   pagador: string;
+  observaciones?: string;
   numero_transaccion?: string;
   estado: string;
   comprobante?: string;

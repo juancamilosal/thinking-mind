@@ -97,6 +97,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   newPaymentMethod: string = '';
   newPaymentReference: string = '';
   newPayerName: string = '';
+  newPaymentObservations: string = '';
   newApprovalNumber: string = '';
   newBank: string = '';
   newPaymentImage: File | null = null;
@@ -121,6 +122,8 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   refundFile: File | null = null;
   isProcessingRefund = false;
   returnTotalPaid: boolean = false;
+  showPaymentObservationsModal = false;
+  paymentObservationsText: string = '';
 
   constructor(
     private paymentService: PaymentService,
@@ -248,6 +251,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
       fecha_pago: new Date().toISOString(),
       metodo_pago: this.newPaymentMethod,
       pagador: this.newPayerName,
+      observaciones: this.newPaymentObservations,
       estado: 'PAGADO',
       comprobante: null,
       responsable: currentUser?.id
@@ -402,6 +406,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
     this.newPaymentMethod = '';
     this.newPaymentReference = '';
     this.newPayerName = '';
+    this.newPaymentObservations = '';
     this.newApprovalNumber = '';
     this.newBank = '';
     this.newPaymentImage = null;
@@ -448,6 +453,20 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
 
   hasPaymentImage(payment: PaymentModel): boolean {
     return payment.comprobante && payment.comprobante.trim() !== '';
+  }
+
+  openPaymentObservations(payment: PaymentModel) {
+    const raw = (payment as any)?.observaciones;
+    const text = raw === null || raw === undefined ? '' : String(raw);
+    this.paymentObservationsText = text.trim() ? text : 'Sin observaciones';
+    this.showPaymentObservationsModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closePaymentObservationsModal() {
+    this.showPaymentObservationsModal = false;
+    this.paymentObservationsText = '';
+    this.cdr.detectChanges();
   }
 
   viewPaymentDetail(payment: PaymentModel) {

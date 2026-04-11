@@ -21,6 +21,9 @@ import { AppButtonComponent } from '../../../../../components/app-button/app-but
 })
 export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   @Input() account!: AccountReceivable;
+  @Output() backToList = new EventEmitter<void>();
+  @Output() llamarFuncion = new EventEmitter<void>();
+  @Output() addPayment = new EventEmitter<PaymentModel>();
   isLoading = false;
 
   ngOnInit() {
@@ -69,10 +72,6 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     }
   }
 
-  @Output() backToList = new EventEmitter<void>();
-  @Output() llamarFuncion = new EventEmitter<void>();
-  @Output() addPayment = new EventEmitter<PaymentModel>();
-
   goBack() {
     if (this.route.snapshot.paramMap.get('id')) {
       this.router.navigate(['/private/accounts-receivable']);
@@ -94,6 +93,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   newPaymentMethod: string;
   newPaymentReference: string;
   newPayerName: string;
+  newPaymentObservations: string = '';
   newApprovalNumber: string;
   newBank: string;
   newPaymentImage: File | null = null;
@@ -119,6 +119,8 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   refundImagePreview: string | null = null;
   isProcessingRefund = false;
   returnTotalPaid: boolean = false;
+  showPaymentObservationsModal = false;
+  paymentObservationsText: string = '';
 
   constructor(
     private paymentService: PaymentService,
@@ -246,6 +248,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
       fecha_pago: new Date().toISOString(),
       metodo_pago: this.newPaymentMethod,
       pagador: this.newPayerName,
+      observaciones: this.newPaymentObservations,
       estado: 'PAGADO',
       comprobante: null,
       responsable: currentUser?.id
@@ -400,6 +403,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.newPaymentMethod = '';
     this.newPaymentReference = '';
     this.newPayerName = '';
+    this.newPaymentObservations = '';
     this.newApprovalNumber = '';
     this.newBank = '';
     this.newPaymentImage = null;
@@ -414,7 +418,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (file) {
       if (file.type.startsWith('image/')) {
         this.newPaymentImage = file;
-        
+
         // Generate preview
         const reader = new FileReader();
         reader.onload = (e: any) => {
@@ -446,6 +450,21 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
 
   hasPaymentImage(payment: PaymentModel): boolean {
     return payment.comprobante && payment.comprobante.trim() !== '';
+  }
+
+  openPaymentObservations(payment: PaymentModel, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    const raw = (payment as any)?.observaciones;
+    const text = raw === null || raw === undefined ? '' : String(raw);
+    this.paymentObservationsText = text.trim() ? text : 'Sin observaciones';
+    this.showPaymentObservationsModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closePaymentObservationsModal() {
+    this.showPaymentObservationsModal = false;
+    this.paymentObservationsText = '';
+    this.cdr.detectChanges();
   }
 
   viewPaymentDetail(payment: PaymentModel) {
@@ -669,7 +688,6 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.refundFile = null;
     this.returnTotalPaid = false;
     this.refundAmountDisplay = '';
-    // Forzar detección de cambios
     this.cdr.detectChanges();
   }
 
@@ -680,20 +698,15 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     this.refundFile = null;
     this.returnTotalPaid = false;
     this.isProcessingRefund = false;
-    // Forzar detección de cambios
     this.cdr.detectChanges();
   }
 
   toggleReturnTotalPaid(): void {
-    // No invertimos el valor aquí porque ngModel ya lo actualizó al hacer click
 
     if (this.returnTotalPaid) {
-      // Si se activa, usar el MÁXIMO DISPONIBLE (neto) como monto
       const maxAvailable = this.getMaxRefundAvailable();
       this.refundAmount = maxAvailable;
       this.refundAmountDisplay = this.formatRefundNumber(maxAvailable);
-
-      // Ocultar cualquier notificación de advertencia existente
       this.notificationService.hideNotification();
     } else {
       // Si se desactiva, limpiar el monto
@@ -703,55 +716,22 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   }
 
   onRefundAmountChange(event: any): void {
-    // Si el usuario edita manualmente, desmarcamos el checkbox de "Total Pagado"
     if (this.returnTotalPaid) {
       this.returnTotalPaid = false;
     }
 
-    // Remover comas (separadores de miles) y caracteres no válidos (dejar números y punto)
     let value = event.target.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
 
-    // Manejar múltiples puntos - mantener solo el primero
     const parts = value.split('.');
     if (parts.length > 2) {
       value = parts[0] + '.' + parts.slice(1).join('');
     }
 
-    // Calcular valor numérico (parseFloat usa punto nativamente)
     const numericValue = parseFloat(value) || 0;
-
-    // Validar que no exceda el máximo disponible (valor_neto)
-    // PERO si se seleccionó "Devolver Total Pagado", permitimos el valor bruto
     const maxRefundAvailable = this.getMaxRefundAvailable();
 
-    // NOTA: Aquí es donde estaba el conflicto. Si queremos que el usuario pueda devolver
-    // el total pagado (bruto), la validación debe ser flexible o basarse en el bruto.
-    // Sin embargo, el backend probablemente valide contra valor_neto si se trata de Wompi.
-    // Asumiremos que si el usuario selecciona "Total Pagado", queremos permitir ese valor
-    // en el input, pero el envío al backend y validación final dependerá de la lógica de negocio.
-    // Para cumplir con la solicitud visual: "El monto no puede ser mayor al máximo disponible"
-    // debe seguir validando contra lo que el sistema permite realmente (maxRefundAvailable).
 
     if (numericValue > maxRefundAvailable && !this.returnTotalPaid) {
-       // Si el valor ingresado manualmente supera el disponible REAL (neto), mostramos error.
-       // Pero si viene del checkbox (aunque aquí se desmarca al editar), la lógica es delicada.
-       // Si el usuario quiere devolver el bruto, pero el sistema solo tiene el neto disponible,
-       // técnicamente no se puede devolver más de lo que hay en la cuenta de Wompi.
-
-       // REVISIÓN: El usuario pidió:
-       // "Hay una sección que se llama Total Pagado. Ese valor debe ser lo máximo permitido cuando le doy check"
-       // Y "el Máximo disponible: no es como lo tenía antes. Esa sección debe quedar como estaba antes"
-
-       // Entonces:
-       // 1. getMaxRefundAvailable() debe retornar el valor NETO (como estaba antes).
-       // 2. toggleReturnTotalPaid() debe llenar el input con el valor BRUTO (Total Pagado).
-       // 3. La validación en onRefundAmountChange debe permitir este valor si es igual al Total Pagado,
-       //    O debemos ajustar la validación para que no bloquee la acción visual.
-
-       // Si el valor bruto es mayor al neto disponible, técnicamente hay un déficit para la devolución completa
-       // desde la pasarela, pero tal vez el negocio lo maneja diferente.
-       // Vamos a permitir que se llene el input, pero la validación de advertencia se disparará
-       // si el usuario edita y supera el límite.
 
        this.refundAmount = maxRefundAvailable;
        this.refundAmountDisplay = this.formatRefundNumber(maxRefundAvailable);
@@ -959,7 +939,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     if (!this.account) return;
     const descuento = this.account.descuento;
     this.discountPercentage = typeof descuento === 'string' ? parseFloat(descuento) : (descuento || 0);
-    
+
     if (this.discountPercentage > 0) {
       this.originalAmount = this.account.monto;
       this.finalAmount = this.originalAmount * (1 - this.discountPercentage / 100);
@@ -1073,9 +1053,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
         this.account.monto = previousMonto;
         this.account.descuento = previousDescuento;
         (this.account as any).monto_descuento = previousMontoDescuento;
-        this.initializeDiscountValues(); // Restaurar cálculos
-
-        console.error('Error al aplicar descuento:', error);
+        this.initializeDiscountValues();
         this.notificationService.showError('Error', 'Error al aplicar el descuento');
       }
     });
