@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy, NgZone} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -128,6 +128,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   constructor(
     private paymentService: PaymentService,
     private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
     private accountService: AccountReceivableService,
     private confirmationService: ConfirmationService,
     private notificationService: NotificationService,
@@ -529,10 +530,19 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
       'pago',
       () => {
 
-        this.isDeletingPayment = true;
-        this.deletingPaymentId = payment.id;
+        this.ngZone.run(() => {
+          this.isDeletingPayment = true;
+          this.deletingPaymentId = payment.id;
+          this.cdr.detectChanges();
+        });
         this.paymentService.deletePayment(payment.id).subscribe({
           next: (response) => {
+            this.ngZone.run(() => {
+              this.isDeletingPayment = false;
+              this.deletingPaymentId = null;
+              this.cdr.detectChanges();
+            });
+
             // Lógica correcta para eliminar pagos según su estado
             let newSaldo;
             let newEstado;
@@ -557,12 +567,13 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
             }).subscribe({
               next: (updateResponse) => {
                 // Eliminación exitosa - solo actualizar datos sin mostrar modal
-                this.account.saldo = newSaldo;
-                this.account.estado = newEstado;
-                this.refreshAccountData();
-                this.llamarFuncion.emit();
-                this.isDeletingPayment = false;
-                this.deletingPaymentId = null;
+                this.ngZone.run(() => {
+                  this.account.saldo = newSaldo;
+                  this.account.estado = newEstado;
+                  this.refreshAccountData();
+                  this.llamarFuncion.emit();
+                  this.cdr.detectChanges();
+                });
               },
               error: (updateError) => {
                 console.error('Error al actualizar el saldo:', updateError);
@@ -571,10 +582,11 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
                   'El pago fue eliminado pero no se pudo actualizar el saldo. Por favor, actualiza la página.'
                 );
 
-                this.refreshAccountData();
-                this.llamarFuncion.emit();
-                this.isDeletingPayment = false;
-                this.deletingPaymentId = null;
+                this.ngZone.run(() => {
+                  this.refreshAccountData();
+                  this.llamarFuncion.emit();
+                  this.cdr.detectChanges();
+                });
               }
             });
           },
@@ -584,8 +596,11 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
               'Error al eliminar',
               'No se pudo eliminar el pago. Inténtalo nuevamente.'
             );
-            this.isDeletingPayment = false;
-            this.deletingPaymentId = null;
+            this.ngZone.run(() => {
+              this.isDeletingPayment = false;
+              this.deletingPaymentId = null;
+              this.cdr.detectChanges();
+            });
           }
         });
       }

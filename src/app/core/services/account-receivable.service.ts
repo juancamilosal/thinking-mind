@@ -29,7 +29,7 @@ export class AccountReceivableService {
 
 
   getAccountById(id: string, fields?: string): Observable<ResponseAPI<AccountReceivable>> {
-    const defaultFields = '*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,pagos.*,pagos.responsable.*pagos.observaciones.,curso_id.*';
+    const defaultFields = '*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*,pagos.*,pagos.responsable.*,pagos.observaciones.,curso_id.*';
     const fieldsToUse = fields || defaultFields;
     return this.http.get<ResponseAPI<any>>(`${this.apiUrl}/${id}?fields=${fieldsToUse}`).pipe(
       map(response => {
