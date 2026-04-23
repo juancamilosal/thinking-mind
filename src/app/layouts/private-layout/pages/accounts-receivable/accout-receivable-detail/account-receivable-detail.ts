@@ -240,7 +240,10 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
   }
 
   addNewPayment() {
-    this.isSubmittingPayment = true;
+    this.ngZone.run(() => {
+      this.isSubmittingPayment = true;
+      this.cdr.detectChanges();
+    });
     const currentUser = StorageServices.getCurrentUser();
 
     const payment: any = {
