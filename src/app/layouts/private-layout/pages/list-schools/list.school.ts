@@ -38,7 +38,7 @@ export class ListSchool implements OnInit {
   selectedStudent: Student | null = null;
   selectedClient: Client | null = null;
   searchTerm = '';
-  yearFilter = ''; // Nueva propiedad para el filtro por año
+  yearFilter = new Date().getFullYear().toString();
   sortByInscriptionDate = false; // Nueva propiedad para el filtro de ordenamiento por fecha de inscripción
   currentDate = new Date();
   isRector = false;
@@ -127,7 +127,7 @@ export class ListSchool implements OnInit {
 
   private loadAllAccountsReceivable(): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos
-    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter, this.sortByInscriptionDate).subscribe({
+    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, undefined, this.sortByInscriptionDate).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -145,7 +145,7 @@ export class ListSchool implements OnInit {
 
   private loadAccountsForSchool(schoolId: string): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
-    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate).subscribe({
+    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, undefined, this.sortByInscriptionDate).subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -161,8 +161,8 @@ export class ListSchool implements OnInit {
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
-    // Filtrar cuentas por fecha de finalización solo para Rector
-    let filteredAccounts = accounts;
+    const targetYear = this.getTargetInscriptionYear();
+    const filteredAccounts = (accounts || []).filter(account => this.isAccountInInscriptionYear(account, targetYear));
 
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
@@ -223,6 +223,24 @@ export class ListSchool implements OnInit {
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
   }
 
+  private getTargetInscriptionYear(): number {
+    const parsed = parseInt((this.yearFilter || '').toString().trim(), 10);
+    if (!Number.isFinite(parsed)) {
+      return new Date().getFullYear();
+    }
+    return parsed;
+  }
+
+  private isAccountInInscriptionYear(account: AccountReceivable, targetYear: number): boolean {
+    const dateValue = account?.fecha_inscripcion;
+    if (!dateValue) return false;
+
+    const parsedDate = new Date(dateValue);
+    if (Number.isNaN(parsedDate.getTime())) return false;
+
+    return parsedDate.getFullYear() === targetYear;
+  }
+
   onSearchInputChange(event: any): void {
     this.searchTerm = event.target.value;
     this.currentPage = 1; // Resetear a la primera página al cambiar búsqueda
@@ -266,7 +284,7 @@ export class ListSchool implements OnInit {
       const userData = sessionStorage.getItem('current_user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, this.yearFilter, this.sortByInscriptionDate).subscribe({
+        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, undefined, this.sortByInscriptionDate).subscribe({
           next: (response) => {
             this.processAccountsReceivable(response.data);
             this.isLoading = false;
@@ -282,7 +300,7 @@ export class ListSchool implements OnInit {
       }
     } else {
       // Para otros usuarios, buscar en todas las cuentas con pagos
-      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, this.yearFilter, this.sortByInscriptionDate).subscribe({
+      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, undefined, this.sortByInscriptionDate).subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
           this.isLoading = false;
