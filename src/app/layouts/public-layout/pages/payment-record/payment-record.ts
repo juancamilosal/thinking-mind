@@ -20,7 +20,7 @@ import {
 } from '../../../../components/notification-modal/notification-modal';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { ExchangeRateService } from '../../../../core/services/exchange-rate.service';
-import { PaymentModel } from '../../../../core/models/AccountReceivable';
+import { AccountReceivable, PaymentModel } from '../../../../core/models/AccountReceivable';
 import { Grupo } from '../../../../core/models/School';
 import { environment } from '../../../../../environments/environment';
 import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
@@ -71,6 +71,7 @@ export class PaymentRecord implements OnInit {
   paymentModalData: any = null;
   totalAmountToPay = 0;
   editablePaymentAmount = 0;
+  selectedAccountReceivable: AccountReceivable | null = null;
 
   // Properties for discount modal
   showDiscountModal = false;
@@ -1514,6 +1515,7 @@ export class PaymentRecord implements OnInit {
     // Buscar la cuenta original por ID para validar si tiene inscripción pendiente
     const account = this.clientData?.cuentas_cobrar?.find((cuenta: any) => cuenta.id === courseData.id);
     if (account) {
+      this.selectedAccountReceivable = account as AccountReceivable;
       let hasPendingInscription = false;
       // Caso 1: la inscripción viene expandida en id_inscripcion
       if (account.id_inscripcion && typeof account.id_inscripcion === 'object') {
@@ -1569,6 +1571,7 @@ export class PaymentRecord implements OnInit {
     this.paymentModalData = null;
     this.totalAmountToPay = 0;
     this.editablePaymentAmount = 0;
+    this.selectedAccountReceivable = null;
   }
 
   openDiscountModal(course: any): void {
@@ -1628,6 +1631,29 @@ export class PaymentRecord implements OnInit {
   async confirmPayment(): Promise<void> {
     const reference = this.generatePaymentReference(this.paymentModalData?.id);
     const amountInCents = this.editablePaymentAmount * 100;
+
+    const selectedAccount: any = this.selectedAccountReceivable || ({ id: this.paymentModalData?.id } as AccountReceivable);
+    const email =
+      selectedAccount?.email ||
+      this.clientData?.email ||
+      this.paymentModalData?.clientEmail ||
+      this.paymentForm?.get('guardianEmail')?.value ||
+      null;
+    const clienteNombre = this.clientData?.nombre || (this.paymentModalData as any)?.clientName?.split(' ')?.[0] || null;
+    const clienteApellido = this.clientData?.apellido || null;
+    const fechaActual = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    this.paymentService.recordatorioPago({
+      cuentas_cobrar: [selectedAccount],
+      email,
+      cliente_nombre: clienteNombre,
+      cliente_apellido: clienteApellido,
+      fecha_actual: fechaActual,
+      reference,
+      amount: this.editablePaymentAmount,
+      amount_in_cents: amountInCents,
+      monto_pago: this.editablePaymentAmount,
+    }).subscribe({ next: () => {}, error: () => {} });
 
     const signature = await this.generateIntegrity(reference, amountInCents, 'COP', this.wompiConfig.integrityKey);
     const checkout = new (window as any).WidgetCheckout({

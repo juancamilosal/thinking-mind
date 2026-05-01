@@ -12,6 +12,7 @@ export class PaymentService {
   private apiUrl: string = environment.payment;
   private manualPayment: string = environment.manual_payment;
   private total: string =  environment.total_payment;
+  private recordatorioPagi: string = environment.recordatorio_pagi;
 
   constructor(private http: HttpClient) {}
 
@@ -72,5 +73,9 @@ export class PaymentService {
 
   totalPayment(): Observable<ResponseAPI<any>> {
     return this.http.get<ResponseAPI<any>>(this.total);
+  }
+
+  recordatorioPago(payload: any): Observable<any> {
+    return this.http.post<any>(this.recordatorioPagi, payload);
   }
 }
