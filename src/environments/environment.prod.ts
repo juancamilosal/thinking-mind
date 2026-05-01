@@ -76,6 +76,7 @@ export const environment = {
   verificacion_codigo: apiUrl + 'flows/trigger/3c8d3680-7f96-4311-9d8c-50d557bdb44e',
   cambio_contrasena: apiUrl + 'flows/trigger/0002d508-1d3e-40d4-a455-74d820d6683d',
   getClientByStudent: apiUrl + 'flows/trigger/67370d35-191d-4b93-9268-61b72dc85adb',
+  recordatorio_pagi: apiUrl + 'flows/trigger/c9c144b8-5c65-449d-afb7-8d1f3cb3219b',
   exchangeRates: {
     provider: 'erapi',
     alphavantageApiKey: '',
