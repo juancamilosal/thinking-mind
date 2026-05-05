@@ -593,7 +593,8 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.isLoading = true;
         this.studentService.getStudentByFlow(studentDocumentType, studentDocumentNumber).subscribe({
             next: (response) => {
-                const student = response.data || response;
+                const responseData: any = (response as any)?.data ?? response;
+                const student = Array.isArray(responseData) ? responseData[0] : responseData;
                 const guardianEmail = this.clientData?.email || this.paymentForm.get('email')?.value;
 
                 if (student && student.codigo_registro && guardianEmail) {

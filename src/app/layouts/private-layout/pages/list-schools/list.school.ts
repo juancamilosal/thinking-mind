@@ -168,9 +168,16 @@ export class ListSchool implements OnInit {
     const schoolsMap = new Map<string, SchoolWithAccounts>();
     filteredAccounts.forEach((account, index) => {
       // Verificar que el account tenga la estructura esperada
-      if (account.estudiante_id) {
-        if (typeof account.estudiante_id === 'object') {
-          const student = account.estudiante_id;
+      const studentSource: any =
+        (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
+          ? (account as any).estudiante_id
+          : ((account as any)?.id_inscripcion?.estudiante_id && typeof (account as any).id_inscripcion.estudiante_id === 'object'
+              ? (account as any).id_inscripcion.estudiante_id
+              : null);
+
+      if (studentSource) {
+        {
+          const student = studentSource;
           // Verificar que el estudiante tenga colegio_id
           if (student.colegio_id) {
             if (typeof student.colegio_id === 'object') {
@@ -196,11 +203,9 @@ export class ListSchool implements OnInit {
           } else {
             console.warn('⚠️ Estudiante sin colegio_id:', student);
           }
-        } else {
-          console.warn('⚠️ estudiante_id no es un objeto:', account.estudiante_id);
         }
       } else {
-        console.warn('⚠️ Cuenta sin estudiante_id:', account);
+        console.warn('⚠️ Cuenta sin estudiante expandido:', account);
       }
     });
     // Calcular total de estudiantes incluyendo duplicados (por cada cuenta/curso)
@@ -232,7 +237,7 @@ export class ListSchool implements OnInit {
   }
 
   private isAccountInInscriptionYear(account: AccountReceivable, targetYear: number): boolean {
-    const dateValue = account?.fecha_inscripcion;
+    const dateValue = account?.fecha_inscripcion || (account as any)?.id_inscripcion?.fecha_inscripcion;
     if (!dateValue) return false;
 
     const parsedDate = new Date(dateValue);
