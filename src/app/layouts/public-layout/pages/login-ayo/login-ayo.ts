@@ -10,6 +10,7 @@ import { Roles } from '../../../../core/const/Roles';
 import { StorageServices } from '../../../../core/services/storage.services';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ForgotPasswordAyoComponent } from './forgot-password-ayo/forgot-password-ayo';
+import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 
 @Component({
     selector: 'app-login-ayo',
@@ -21,7 +22,7 @@ import { ForgotPasswordAyoComponent } from './forgot-password-ayo/forgot-passwor
 export class LoginAyo implements OnInit {
     registerForm!: FormGroup;
     loginForm!: FormGroup;
-
+   DOCUMENT_TYPE = DOCUMENT_TYPE;
     isLoginMode: boolean = true; // Default to Login view
     showForgotPassword: boolean = false;
     isLoading: boolean = false;
