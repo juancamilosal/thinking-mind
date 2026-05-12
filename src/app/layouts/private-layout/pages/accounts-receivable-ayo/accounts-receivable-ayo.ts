@@ -47,6 +47,12 @@ export class AccountsReceivableAyo implements OnInit {
   itemsPerPageOptions = [5, 10, 15, 20, 50];
   Math = Math; // Para usar Math.min en el template
   isDownloadingExcel: boolean = false;
+  get totalAbonado(): number {
+    return (this.accounts || []).reduce((sum, account) => {
+      const value = Number((account as any)?.saldo ?? 0);
+      return sum + (Number.isFinite(value) ? value : 0);
+    }, 0);
+  }
 
   constructor(
     private accountService: AccountReceivableService,
