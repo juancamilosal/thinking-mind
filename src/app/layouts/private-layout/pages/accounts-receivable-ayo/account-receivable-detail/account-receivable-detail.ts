@@ -7,6 +7,7 @@ import { PaymentDetailComponent } from '../../accounts-receivable/payment-detail
 import {PAYMENT_METHOD} from '../../../../../core/const/PaymentMethod';
 import {PaymentService} from '../../../../../core/services/payment.service';
 import {AccountReceivableService} from '../../../../../core/services/account-receivable.service';
+import { UserService } from '../../../../../core/services/user.service';
 import { ConfirmationService } from '../../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { StorageServices } from '../../../../../core/services/storage.services';
@@ -22,6 +23,7 @@ import { AppButtonComponent } from '../../../../../components/app-button/app-but
 export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   @Input() account!: AccountReceivable;
   isLoading = false;
+  private isUpdatingDirectusUser = false;
 
   ngOnInit() {
     if (this.account) {
@@ -130,6 +132,7 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private accountService: AccountReceivableService,
+    private userService: UserService,
     private confirmationService: ConfirmationService,
     private notificationService: NotificationService,
     private route: ActivatedRoute,
@@ -309,6 +312,8 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
             this.account.saldo = newSaldo;
             this.account.estado = newEstado;
 
+            this.updateDirectusUserAfterPaymentSaved(newEstado);
+
             this.resetPaymentForm();
             this.showAddPaymentForm = false;
             this.isSubmittingPayment = false;
@@ -331,6 +336,59 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
         const msg = this.getErrorMessage(paymentError);
         this.notificationService.showError('Error al registrar pago', msg);
         this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private updateDirectusUserAfterPaymentSaved(accountEstado: string): void {
+    if (this.isUpdatingDirectusUser) return;
+
+    const studentFromAccount =
+      this.account?.estudiante_id && typeof this.account.estudiante_id === 'object'
+        ? (this.account.estudiante_id as any)
+        : null;
+
+    const tipoFromAccount = (studentFromAccount?.tipo_documento ?? '').toString().trim();
+    const numeroFromAccount = (studentFromAccount?.numero_documento ?? '').toString().trim();
+
+    if (tipoFromAccount && numeroFromAccount) {
+      this.isUpdatingDirectusUser = true;
+      this.userService.updateUserByDocument(tipoFromAccount, numeroFromAccount, {
+        estado_cuenta: accountEstado
+      }).subscribe({
+        next: () => (this.isUpdatingDirectusUser = false),
+        error: () => (this.isUpdatingDirectusUser = false)
+      });
+      return;
+    }
+
+    this.isUpdatingDirectusUser = true;
+    const fields = 'id,estado,estudiante_id.tipo_documento,estudiante_id.numero_documento';
+    this.accountService.getAccountById(this.account.id, fields).subscribe({
+      next: (res) => {
+        const student =
+          res?.data?.estudiante_id && typeof (res.data as any).estudiante_id === 'object'
+            ? (res.data as any).estudiante_id
+            : null;
+
+        const tipo = (student?.tipo_documento ?? '').toString().trim();
+        const numero = (student?.numero_documento ?? '').toString().trim();
+        const estado = ((res as any)?.data?.estado ?? accountEstado ?? '').toString().trim();
+
+        if (tipo && numero) {
+          this.userService.updateUserByDocument(tipo, numero, {
+            estado_cuenta: estado
+          }).subscribe({
+            next: () => (this.isUpdatingDirectusUser = false),
+            error: () => (this.isUpdatingDirectusUser = false)
+          });
+          return;
+        }
+
+        this.isUpdatingDirectusUser = false;
+      },
+      error: () => {
+        this.isUpdatingDirectusUser = false;
       }
     });
   }
