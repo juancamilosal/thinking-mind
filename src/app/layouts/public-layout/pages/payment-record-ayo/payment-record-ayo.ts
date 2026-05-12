@@ -93,6 +93,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             studentNombre: ['', [Validators.required, Validators.minLength(2)]],
             studentApellido: ['', [Validators.required, Validators.minLength(2)]],
             studentEmail: ['', [Validators.required, Validators.email]],
+            studentFechaNacimiento: [''],
             studentGrado: [''],
             studentGrupo: [''],
             studentSchool: [''], // Holds ID if selected
@@ -280,6 +281,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             studentNombre: student.nombre || '',
             studentApellido: student.apellido || '',
             studentEmail: student.email || '',
+            studentFechaNacimiento: student.fecha_nacimiento ? this.formatDateOnly(student.fecha_nacimiento) : '',
             studentGrado: student.grado || '',
             studentGrupo: '', // Often not in student model or variable
         });
@@ -330,8 +332,21 @@ export class PaymentRecordAyoComponent implements OnInit {
             studentNombre: '',
             studentApellido: '',
             studentEmail: '',
+            studentFechaNacimiento: '',
             studentColegio: ''
         });
+    }
+
+    private formatDateOnly(dateString: string): string {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return '';
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Bogota',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(date);
     }
 
     onSubmit() {
@@ -376,6 +391,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 nombre: formData.studentNombre,
                 apellido: formData.studentApellido,
                 email: formData.studentEmail,
+                fecha_nacimiento: formData.studentFechaNacimiento,
                 grado: formData.studentGrado,
                 colegio: colegioValue
             }),
