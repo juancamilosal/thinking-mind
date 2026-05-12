@@ -272,6 +272,19 @@
                 }
               }
             </tbody>
+            @if (accounts.length > 0) {
+              <tfoot class="bg-gray-50 border-t border-gray-200">
+                <tr>
+                  <td colspan="5" class="px-6 py-4 text-right text-xs font-semibold text-gray-700">
+                    Total Abonado:
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-xs font-bold text-gray-900">{{ formatCurrency(totalAbonado) }}</div>
+                  </td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            }
           </table>
         </div>
 
