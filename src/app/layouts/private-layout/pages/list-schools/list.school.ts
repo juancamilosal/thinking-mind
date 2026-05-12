@@ -672,6 +672,7 @@ export class ListSchool implements OnInit {
         { header: 'Celular Acudiente', key: 'celular_acudiente', width: 18 },
         { header: 'Email Acudiente', key: 'email_acudiente', width: 28 },
         { header: 'Valor Cuenta', key: 'valor_cuenta', width: 15 },
+        { header: 'Monto Descuento', key: 'monto_descuento', width: 16 },
         { header: 'Valor Pago', key: 'valor_pago', width: 15 },
         { header: 'Fecha Pago', key: 'fecha_pago', width: 20 },
         { header: 'Método Pago', key: 'metodo_pago', width: 15 },
@@ -687,7 +688,9 @@ export class ListSchool implements OnInit {
         const pagosPagados = (account.pagos || []).filter(pago => pago.estado === 'PAGADO');
         const totalPagos = pagosPagados.reduce((acc, p) => acc + this.toNumber((p as any)?.valor), 0);
         const valorCuenta = this.toNumber((account as any)?.monto);
-        const saldoPendiente = valorCuenta - totalPagos;
+        const montoDescuento = this.toNumber((account as any)?.monto_descuento);
+        const baseParaResta = montoDescuento > 0 ? montoDescuento : valorCuenta;
+        const saldoPendiente = baseParaResta - totalPagos;
 
         // Primero agregar la fila de la cuenta (sin datos de pagos)
         const accountRow = worksheet.addRow({
@@ -704,7 +707,8 @@ export class ListSchool implements OnInit {
           numero_documento_acudiente: client?.numero_documento || '',
           celular_acudiente: client?.celular || '',
           email_acudiente: client?.email || '',
-          valor_cuenta: this.toNumber((account as any)?.monto),
+          valor_cuenta: valorCuenta,
+          monto_descuento: montoDescuento > 0 ? montoDescuento : '',
           valor_pago: '',
           fecha_pago: '',
           metodo_pago: '',
@@ -723,7 +727,7 @@ export class ListSchool implements OnInit {
 
         if (pagosPagados.length > 0) {
           pagosPagados.forEach((pago, index) => {
-            worksheet.addRow({
+            const paymentRow = worksheet.addRow({
               estudiante: '',
               tipo_documento: '',
               numero_documento: '',
@@ -738,6 +742,7 @@ export class ListSchool implements OnInit {
               celular_acudiente: '',
               email_acudiente: '',
               valor_cuenta: '',
+              monto_descuento: '',
               valor_pago: (pago as any)?.valor || 0,
               fecha_pago: (pago as any)?.fecha_pago ? new Date((pago as any).fecha_pago).toLocaleDateString('es-CO') : '',
               metodo_pago: (pago as any)?.metodo_pago || '',
@@ -861,6 +866,7 @@ export class ListSchool implements OnInit {
       { header: 'Celular Acudiente', key: 'celular_acudiente', width: 18 },
       { header: 'Email Acudiente', key: 'email_acudiente', width: 28 },
       { header: 'Valor Cuenta', key: 'valor_cuenta', width: 15 },
+      { header: 'Monto Descuento', key: 'monto_descuento', width: 16 },
       { header: 'Valor Pago', key: 'valor_pago', width: 15 },
       { header: 'Fecha Pago', key: 'fecha_pago', width: 20 },
       { header: 'Método Pago', key: 'metodo_pago', width: 15 },
@@ -876,7 +882,9 @@ export class ListSchool implements OnInit {
     const pagosPagados = (account.pagos || []).filter(pago => pago.estado === 'PAGADO');
     const totalPagos = pagosPagados.reduce((acc, p) => acc + this.toNumber((p as any)?.valor), 0);
     const valorCuenta = this.toNumber((account as any)?.monto);
-    const saldoPendiente = valorCuenta - totalPagos;
+    const montoDescuento = this.toNumber((account as any)?.monto_descuento);
+    const baseParaResta = montoDescuento > 0 ? montoDescuento : valorCuenta;
+    const saldoPendiente = baseParaResta - totalPagos;
 
     const accountRow = worksheet.addRow({
       estudiante: student ? `${student.nombre || ''} ${student.apellido || ''}` : 'Sin estudiante',
@@ -892,7 +900,8 @@ export class ListSchool implements OnInit {
       numero_documento_acudiente: client?.numero_documento || '',
       celular_acudiente: client?.celular || '',
       email_acudiente: client?.email || '',
-      valor_cuenta: this.toNumber((account as any)?.monto),
+      valor_cuenta: valorCuenta,
+      monto_descuento: montoDescuento > 0 ? montoDescuento : '',
       valor_pago: '',
       fecha_pago: '',
       metodo_pago: '',
@@ -910,7 +919,7 @@ export class ListSchool implements OnInit {
 
     if (pagosPagados.length > 0) {
       pagosPagados.forEach((pago, index) => {
-        worksheet.addRow({
+        const paymentRow = worksheet.addRow({
           estudiante: '',
           tipo_documento: '',
           numero_documento: '',
@@ -925,6 +934,7 @@ export class ListSchool implements OnInit {
           celular_acudiente: '',
           email_acudiente: '',
           valor_cuenta: '',
+          monto_descuento: '',
           valor_pago: (pago as any)?.valor || 0,
           fecha_pago: (pago as any)?.fecha_pago ? new Date((pago as any).fecha_pago).toLocaleDateString('es-CO') : '',
           metodo_pago: (pago as any)?.metodo_pago || '',
