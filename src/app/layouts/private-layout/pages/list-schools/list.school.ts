@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SchoolService } from '../../../../core/services/school.service';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
-import { SchoolWithPaymentsService } from '../../../../core/services/school-with-payments.service';
 import { School } from '../../../../core/models/School';
 import { AccountReceivable } from '../../../../core/models/AccountReceivable';
 import { Student } from '../../../../core/models/Student';
@@ -33,6 +32,7 @@ export class ListSchool implements OnInit {
   schoolsWithAccounts: SchoolWithAccounts[] = [];
   schoolsWithCourses: SchoolWithCourses[] = [];
   coursesWithSchools: CourseWithSchools[] = [];
+  private allAccounts: AccountReceivable[] = [];
   isLoading = false;
   showDetail = false;
   selectedStudent: Student | null = null;
@@ -61,7 +61,6 @@ export class ListSchool implements OnInit {
   constructor(
     private schoolService: SchoolService,
     private accountReceivableService: AccountReceivableService,
-    private schoolWithPaymentsService: SchoolWithPaymentsService,
     private notificationService: NotificationService,
     private router: Router
   ) { }
@@ -126,10 +125,14 @@ export class ListSchool implements OnInit {
   }
 
   private loadAllAccountsReceivable(): void {
-    // Usar el nuevo servicio que solo trae cuentas con pagos
-    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, undefined, this.sortByInscriptionDate).subscribe({
+    this.schoolService.getAllListStudentsBySchool().subscribe({
       next: (response) => {
-        this.processAccountsReceivable(response.data);
+        const schools = (response.data || []).filter((s) => Array.isArray((s as any)?.estudiante_id) && (s as any).estudiante_id.length > 0);
+        this.allAccounts = this.extractAccountsFromSchools(schools);
+        const filtered = this.applyLocalAccountsFilters(this.allAccounts, {
+          searchTerm: this.searchTerm
+        });
+        this.processAccountsReceivable(filtered);
         this.isLoading = false;
       },
       error: (error) => {
@@ -144,10 +147,15 @@ export class ListSchool implements OnInit {
   }
 
   private loadAccountsForSchool(schoolId: string): void {
-    // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
-    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, undefined, this.sortByInscriptionDate).subscribe({
+    this.schoolService.getAllListStudentsBySchool().subscribe({
       next: (response) => {
-        this.processAccountsReceivable(response.data);
+        const schools = (response.data || []).filter((s) => Array.isArray((s as any)?.estudiante_id) && (s as any).estudiante_id.length > 0);
+        this.allAccounts = this.extractAccountsFromSchools(schools);
+        const filtered = this.applyLocalAccountsFilters(this.allAccounts, {
+          searchTerm: this.searchTerm,
+          schoolId
+        });
+        this.processAccountsReceivable(filtered);
         this.isLoading = false;
       },
       error: (error) => {
@@ -285,13 +293,18 @@ export class ListSchool implements OnInit {
     this.isLoading = true;
 
     if (this.isRector) {
-      // Si es rector, buscar solo en su colegio usando el nuevo servicio
       const userData = sessionStorage.getItem('current_user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, undefined, this.sortByInscriptionDate).subscribe({
+        this.schoolService.getAllListStudentsBySchool().subscribe({
           next: (response) => {
-            this.processAccountsReceivable(response.data);
+            const schools = (response.data || []).filter((s) => Array.isArray((s as any)?.estudiante_id) && (s as any).estudiante_id.length > 0);
+            this.allAccounts = this.extractAccountsFromSchools(schools);
+            const filtered = this.applyLocalAccountsFilters(this.allAccounts, {
+              searchTerm: this.searchTerm,
+              schoolId: user.colegio_id
+            });
+            this.processAccountsReceivable(filtered);
             this.isLoading = false;
           },
           error: (error) => {
@@ -304,10 +317,14 @@ export class ListSchool implements OnInit {
         });
       }
     } else {
-      // Para otros usuarios, buscar en todas las cuentas con pagos
-      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, undefined, this.sortByInscriptionDate).subscribe({
+      this.schoolService.getAllListStudentsBySchool().subscribe({
         next: (response) => {
-          this.processAccountsReceivable(response.data);
+          const schools = (response.data || []).filter((s) => Array.isArray((s as any)?.estudiante_id) && (s as any).estudiante_id.length > 0);
+          this.allAccounts = this.extractAccountsFromSchools(schools);
+          const filtered = this.applyLocalAccountsFilters(this.allAccounts, {
+            searchTerm: this.searchTerm
+          });
+          this.processAccountsReceivable(filtered);
           this.isLoading = false;
         },
         error: (error) => {
@@ -319,6 +336,118 @@ export class ListSchool implements OnInit {
         }
       });
     }
+  }
+
+  private extractAccountsFromSchools(schools: School[]): AccountReceivable[] {
+    const byId = new Map<string, AccountReceivable>();
+
+    (schools || []).forEach((school) => {
+      const students: any[] = Array.isArray((school as any)?.estudiante_id) ? ((school as any).estudiante_id as any[]) : [];
+      if (students.length === 0) return;
+      students.forEach((student) => {
+        if (student && (!student.colegio_id || typeof student.colegio_id !== 'object')) {
+          student.colegio_id = school;
+        }
+
+        const client: any = student?.acudiente && typeof student.acudiente === 'object' ? student.acudiente : null;
+        const accounts: any[] = Array.isArray(client?.cuentas_cobrar) ? client.cuentas_cobrar : [];
+
+        accounts.forEach((account) => {
+          const accountId = String((account as any)?.id || '');
+          if (!accountId) return;
+
+          const existing = byId.get(accountId);
+          if (existing) return;
+
+          const a: any = account;
+          if (!(a?.estudiante_id && typeof a.estudiante_id === 'object')) {
+            a.estudiante_id = student;
+          }
+          if (!(a?.cliente_id && typeof a.cliente_id === 'object')) {
+            a.cliente_id = client;
+          }
+
+          byId.set(accountId, a as AccountReceivable);
+        });
+      });
+    });
+
+    return Array.from(byId.values());
+  }
+
+  private applyLocalAccountsFilters(
+    accounts: AccountReceivable[],
+    options: { searchTerm?: string; schoolId?: string }
+  ): AccountReceivable[] {
+    const term = (options.searchTerm || '').trim().toLowerCase();
+
+    const filtered = (accounts || []).filter((account) => {
+      const esInscripcion = (account as any)?.es_inscripcion;
+      if (typeof esInscripcion === 'string' && esInscripcion.toUpperCase() === 'TRUE') return false;
+      if (esInscripcion === true) return false;
+
+      const saldo = Number((account as any)?.saldo ?? 0);
+      const saldoInscripcion = Number((account as any)?.id_inscripcion?.saldo ?? 0);
+      if (!(saldo > 0 || saldoInscripcion > 0)) return false;
+
+      if (options.schoolId) {
+        const accountSchoolId = this.getAccountSchoolId(account);
+        if (accountSchoolId !== options.schoolId) return false;
+      }
+
+      if (!term) return true;
+      return this.accountMatchesSearchTerm(account, term);
+    });
+
+    if (this.sortByInscriptionDate) {
+      filtered.sort((a, b) => this.getAccountInscriptionDateMs(b) - this.getAccountInscriptionDateMs(a));
+    }
+
+    return filtered;
+  }
+
+  private getAccountStudentSource(account: AccountReceivable): any {
+    const a: any = account as any;
+    if (a?.estudiante_id && typeof a.estudiante_id === 'object') return a.estudiante_id;
+    if (a?.id_inscripcion?.estudiante_id && typeof a.id_inscripcion.estudiante_id === 'object') return a.id_inscripcion.estudiante_id;
+    return null;
+  }
+
+  private getAccountSchoolId(account: AccountReceivable): string | null {
+    const student = this.getAccountStudentSource(account);
+    const school = student?.colegio_id && typeof student.colegio_id === 'object' ? student.colegio_id : null;
+    return school?.id || null;
+  }
+
+  private getAccountInscriptionDateMs(account: AccountReceivable): number {
+    const dateValue = (account as any)?.fecha_inscripcion || (account as any)?.id_inscripcion?.fecha_inscripcion;
+    const d = new Date(dateValue || '');
+    const ms = d.getTime();
+    return Number.isNaN(ms) ? 0 : ms;
+  }
+
+  private accountMatchesSearchTerm(account: AccountReceivable, term: string): boolean {
+    const a: any = account as any;
+    const student = this.getAccountStudentSource(account);
+    const school = student?.colegio_id && typeof student.colegio_id === 'object' ? student.colegio_id : null;
+    const client = a?.cliente_id && typeof a.cliente_id === 'object' ? a.cliente_id : null;
+    const course = a?.curso_id && typeof a.curso_id === 'object' ? a.curso_id : null;
+
+    const values = [
+      student?.nombre,
+      student?.apellido,
+      student?.numero_documento,
+      school?.nombre,
+      school?.ciudad,
+      client?.nombre,
+      client?.apellido,
+      client?.numero_documento,
+      course?.nombre
+    ]
+      .filter((v) => typeof v === 'string' && v.trim().length > 0)
+      .map((v: string) => v.toLowerCase());
+
+    return values.some((v) => v.includes(term));
   }
 
   onSearch(): void {
