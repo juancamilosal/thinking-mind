@@ -74,8 +74,7 @@ export class SchoolService {
   getAllListStudentsBySchool(): Observable<ResponseAPI<School[]>> {
     const params: any = {
       fields:
-        '*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,estudiante_id.acudiente.cuentas_cobrar.curso_id.*,estudiante_id.acudiente.cuentas_cobrar.pagos.*',
-      'filter[estudiante_id][_some][id][_nnull]': 'true'
+        '*,rector_id.*,estudiante_id.*,estudiante_id.acudiente.*,estudiante_id.acudiente.cuentas_cobrar.*,estudiante_id.acudiente.cuentas_cobrar.curso_id.*,estudiante_id.acudiente.cuentas_cobrar.pagos.*'
     };
 
     return this.http.get<ResponseAPI<School[]>>(this.apiSchool, { params });

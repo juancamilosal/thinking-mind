@@ -345,6 +345,10 @@ export class ListSchool implements OnInit {
       const students: any[] = Array.isArray((school as any)?.estudiante_id) ? ((school as any).estudiante_id as any[]) : [];
       if (students.length === 0) return;
       students.forEach((student) => {
+        if (student && (!student.colegio_id || typeof student.colegio_id !== 'object')) {
+          student.colegio_id = school;
+        }
+
         const client: any = student?.acudiente && typeof student.acudiente === 'object' ? student.acudiente : null;
         const accounts: any[] = Array.isArray(client?.cuentas_cobrar) ? client.cuentas_cobrar : [];
 
