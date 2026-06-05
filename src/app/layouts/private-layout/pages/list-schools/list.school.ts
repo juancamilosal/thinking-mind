@@ -38,12 +38,17 @@ export class ListSchool implements OnInit {
   selectedStudent: Student | null = null;
   selectedClient: Client | null = null;
   searchTerm = '';
+  schoolSuggestions: School[] = [];
+  showSchoolSuggestions = false;
+  isLoadingSchoolSuggestions = false;
+  selectedSchoolId: string | null = null;
   yearFilter = '';
   sortByInscriptionDate = false; // Nueva propiedad para el filtro de ordenamiento por fecha de inscripción
   currentDate = new Date();
   isRector = false;
   isSales = false;
   private searchTimeout: any;
+  private blurTimeout: any;
 
   // Modo de vista: 'table' para listado completo, 'courses' para vista por cursos
   viewMode: 'table' | 'courses' = 'table';
@@ -125,8 +130,9 @@ export class ListSchool implements OnInit {
       }
     }
 
-    // Si es ventas o admin/otro, cargar todas las cuentas
-    this.loadAllAccountsReceivable();
+    // Para ventas/admin: solo cargar información cuando se seleccione un colegio
+    this.clearResults();
+    this.isLoading = false;
   }
 
   private loadAllAccountsReceivable(): void {
@@ -172,6 +178,22 @@ export class ListSchool implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private loadAccountsForSelectedSchool(schoolId: string): void {
+    this.isLoading = true;
+    this.schoolWithPaymentsService
+      .getAccountsWithPaymentsBySchoolAll(schoolId, undefined, this.yearFilter, this.sortByInscriptionDate, false)
+      .subscribe({
+        next: (response) => {
+          this.processAccountsReceivable(response.data);
+          this.isLoading = false;
+        },
+        error: () => {
+          this.notificationService.showError('Error', 'Error al cargar las cuentas del colegio');
+          this.isLoading = false;
+        }
+      });
   }
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
@@ -283,16 +305,25 @@ export class ListSchool implements OnInit {
   onSearchInputChange(event: any): void {
     this.searchTerm = event.target.value;
     this.currentPage = 1; // Resetear a la primera página al cambiar búsqueda
+    this.selectedSchoolId = null;
+    this.clearResults();
 
     // Limpiar el timeout anterior si existe
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
 
-    // Establecer un nuevo timeout para la búsqueda
+    const trimmed = (this.searchTerm || '').trim();
+    if (!trimmed) {
+      this.schoolSuggestions = [];
+      this.showSchoolSuggestions = false;
+      this.isLoadingSchoolSuggestions = false;
+      return;
+    }
+
     this.searchTimeout = setTimeout(() => {
-      this.searchSchools();
-    }, 500); // Esperar 500ms después de que el usuario deje de escribir
+      this.fetchSchoolSuggestions(trimmed);
+    }, 300);
   }
 
   onYearFilterChange(event: any): void {
@@ -306,13 +337,17 @@ export class ListSchool implements OnInit {
 
     // Establecer un nuevo timeout para la búsqueda
     this.searchTimeout = setTimeout(() => {
-      this.searchSchools();
+      if (this.isRector || this.selectedSchoolId) {
+        this.searchSchools();
+      }
     }, 500); // Esperar 500ms después de que el usuario deje de escribir
   }
 
   onSortByInscriptionChange(): void {
     this.sortByInscriptionDate = !this.sortByInscriptionDate;
-    this.searchSchools();
+    if (this.isRector || this.selectedSchoolId) {
+      this.searchSchools();
+    }
   }
 
   searchSchools(): void {
@@ -329,12 +364,79 @@ export class ListSchool implements OnInit {
       return;
     }
 
-    this.loadAllAccountsReceivable();
+    if (this.selectedSchoolId) {
+      this.loadAccountsForSelectedSchool(this.selectedSchoolId);
+      return;
+    }
+
+    this.clearResults();
+    this.isLoading = false;
   }
 
   onSearch(): void {
     this.currentPage = 1; // Resetear a la primera página al buscar
+    if (this.isRector || this.selectedSchoolId) {
+      this.searchSchools();
+    }
+  }
+
+  onSearchFocus(): void {
+    if (this.blurTimeout) {
+      clearTimeout(this.blurTimeout);
+    }
+    if (this.schoolSuggestions.length > 0) {
+      this.showSchoolSuggestions = true;
+    }
+  }
+
+  onSearchBlur(): void {
+    if (this.blurTimeout) {
+      clearTimeout(this.blurTimeout);
+    }
+    this.blurTimeout = setTimeout(() => {
+      this.showSchoolSuggestions = false;
+    }, 150);
+  }
+
+  selectSchoolSuggestion(school: School): void {
+    if (!school?.id) return;
+    this.selectedSchoolId = school.id;
+    this.searchTerm = school.nombre || '';
+    this.schoolSuggestions = [];
+    this.showSchoolSuggestions = false;
     this.searchSchools();
+  }
+
+  private clearResults(): void {
+    this.schoolsWithAccounts = [];
+    this.schoolsWithCourses = [];
+    this.coursesWithSchools = [];
+    this.totalItems = 0;
+    this.totalPages = 0;
+  }
+
+  private fetchSchoolSuggestions(term: string): void {
+    const safeTerm = (term || '').trim();
+    if (safeTerm.length < 2) {
+      this.schoolSuggestions = [];
+      this.showSchoolSuggestions = false;
+      this.isLoadingSchoolSuggestions = false;
+      return;
+    }
+
+    this.isLoadingSchoolSuggestions = true;
+    this.schoolService.searchSchool(safeTerm, 1, 10).subscribe({
+      next: (resp) => {
+        this.schoolSuggestions = Array.isArray(resp?.data) ? resp.data : [];
+        this.showSchoolSuggestions = this.schoolSuggestions.length > 0;
+        this.isLoadingSchoolSuggestions = false;
+      },
+      error: () => {
+        this.schoolSuggestions = [];
+        this.showSchoolSuggestions = false;
+        this.isLoadingSchoolSuggestions = false;
+      }
+    });
   }
 
   // Métodos de paginación
