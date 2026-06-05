@@ -134,7 +134,7 @@ export class ListSchool implements OnInit {
     const term = this.searchTerm?.trim();
     const request$ = term
       ? this.schoolWithPaymentsService.getAccountsWithPaymentsAll(term, this.yearFilter, this.sortByInscriptionDate, false)
-      : this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, undefined, this.yearFilter, this.sortByInscriptionDate, true);
+      : this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, undefined, this.yearFilter, this.sortByInscriptionDate, false);
 
     request$.subscribe({
       next: (response) => {
@@ -157,7 +157,7 @@ export class ListSchool implements OnInit {
     const term = this.searchTerm?.trim();
     const request$ = term
       ? this.schoolWithPaymentsService.getAccountsWithPaymentsBySchoolAll(schoolId, term, this.yearFilter, this.sortByInscriptionDate, false)
-      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, true);
+      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, false);
 
     request$.subscribe({
       next: (response) => {
@@ -265,18 +265,7 @@ export class ListSchool implements OnInit {
   }
 
   private hasPositiveSaldo(account: AccountReceivable): boolean {
-    const explicitSaldo =
-      this.toNumber((account as any)?.saldo) || this.toNumber((account as any)?.id_inscripcion?.saldo);
-    if (explicitSaldo > 0) return true;
-
-    const pagos = Array.isArray((account as any)?.pagos) ? (account as any).pagos : [];
-    const pagosPagados = pagos.filter((p: any) => p?.estado === 'PAGADO');
-    const totalPagos = pagosPagados.reduce((acc: number, p: any) => acc + this.toNumber(p?.valor), 0);
-    const valorCuenta = this.toNumber((account as any)?.monto);
-    const montoDescuento = this.toNumber((account as any)?.monto_descuento);
-    const baseParaResta = montoDescuento > 0 ? montoDescuento : valorCuenta;
-    const saldoPendiente = baseParaResta - totalPagos;
-    return saldoPendiente > 0;
+    return this.toNumber((account as any)?.saldo) > 0;
   }
 
   onSearchInputChange(event: any): void {
@@ -396,7 +385,7 @@ export class ListSchool implements OnInit {
   toggleSchoolStudents(schoolData: SchoolWithAccounts): void {
     schoolData.showStudents = !schoolData.showStudents;
 
-    if (schoolData.showStudents && !schoolData.students) {
+    if (schoolData.showStudents) {
       this.loadSchoolStudents(schoolData);
     }
   }
@@ -408,6 +397,7 @@ export class ListSchool implements OnInit {
     const studentsWithAccounts: StudentWithAccount[] = [];
 
     schoolData.accounts.forEach(account => {
+      if (!this.hasPositiveSaldo(account)) return;
       if (account.estudiante_id) {
         const student = typeof account.estudiante_id === 'string'
           ? null
