@@ -368,7 +368,10 @@ export class AccountsReceivable implements OnInit {
     this.isLoadingCourses = true;
     this.accountService.getCoursesForFilter().subscribe({
       next: (response) => {
-        this.courses = Array.isArray(response?.data) ? response.data : [];
+        const list = Array.isArray(response?.data) ? response.data : [];
+        this.courses = list.sort((a: any, b: any) =>
+          (a?.nombre || '').toString().localeCompare((b?.nombre || '').toString(), 'es', { sensitivity: 'base' })
+        );
         this.isLoadingCourses = false;
       },
       error: () => {
