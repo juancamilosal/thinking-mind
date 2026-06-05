@@ -11,12 +11,14 @@ import {
   TotalAccounts,
    ReturnAccount
 } from '../models/AccountReceivable';
+import { Course } from '../models/Course';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AccountReceivableService {
   private apiUrl: string = environment.accountsReceivable;
+  private apiCourse: string = environment.courses;
   private apiUrlTotalAccounts = environment.total_accounts
   private apiUrlPaymentReceivable = environment.payment_record;
   private apiUrlPaymentRecordAyo = environment.payment_record_ayo;
@@ -91,7 +93,7 @@ export class AccountReceivableService {
     }
 
     const queryString = new URLSearchParams(params).toString();
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,id_inscripcion.*,id_inscripcion.curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -163,6 +165,13 @@ export class AccountReceivableService {
       params['filter[estudiante_id][colegio_id][id][_eq]'] = filterParams.colegio_id;
     }
 
+    // Filtro por programa (ID del curso)
+    if (filterParams.programa_id) {
+      params[`filter[_and][${nextAndIndex}][_or][0][curso_id][id][_eq]`] = filterParams.programa_id;
+      params[`filter[_and][${nextAndIndex}][_or][1][id_inscripcion][curso_id][id][_eq]`] = filterParams.programa_id;
+      nextAndIndex++;
+    }
+
     // Filtro por fecha de finalización
     if (filterParams.fecha_finalizacion) {
       params['filter[fecha_finalizacion][_eq]'] = filterParams.fecha_finalizacion;
@@ -179,7 +188,10 @@ export class AccountReceivableService {
 
     // Filtro por estado
     if (filterParams.estado) {
-      if (filterParams.estado === 'SALDO_0') {
+      if (filterParams.estado === 'ABONADO') {
+        params[`filter[_and][${nextAndIndex}][saldo][_gt]`] = '0';
+        nextAndIndex++;
+      } else if (filterParams.estado === 'SALDO_0') {
         // Incluir saldo menor o igual a 0 y saldo nulo
         // Usamos nextAndIndex para evitar conflictos con los índices de búsqueda múltiple
         params[`filter[_and][${nextAndIndex}][_or][0][saldo][_lte]`] = '0';
@@ -196,7 +208,7 @@ export class AccountReceivableService {
     }
 
     const queryString = new URLSearchParams(params).toString();
-    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
+    const url = this.apiUrl + '?fields=*,cliente_id.*,estudiante_id.*,estudiante_id.colegio_id.*, estudiante_id.colegio_id.rector_id.*,curso_id.*,id_inscripcion.*,id_inscripcion.curso_id.*,pagos.*,pagos.responsable.*, comprobante.*&' + queryString;
 
     return this.http.get<ResponseAPI<AccountReceivable[]>>(url).pipe(
       map(response => ({
@@ -204,6 +216,23 @@ export class AccountReceivableService {
         data: response.data?.map(item => this.mapToAccountReceivable(item)) || []
       }))
     );
+  }
+
+  getCoursesForFilter(searchTerm?: string, page: number = 1, limit: number = 200): Observable<ResponseAPI<Course[]>> {
+    const params: any = {
+      fields: 'id,nombre,sku',
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'filter_count'
+    };
+
+    const trimmed = (searchTerm || '').trim();
+    if (trimmed) {
+      params['filter[_or][0][nombre][_icontains]'] = trimmed;
+      params['filter[_or][1][sku][_icontains]'] = trimmed;
+    }
+
+    return this.http.get<ResponseAPI<Course[]>>(this.apiCourse, { params });
   }
 
   searchAccountReceivable(page: number = 1, limit: number = 10, searchTerm?: string, colegioId?: string): Observable<ResponseAPI<AccountReceivable[]>> {

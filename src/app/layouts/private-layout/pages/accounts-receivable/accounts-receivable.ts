@@ -6,6 +6,9 @@ import {AccountReceivableFormComponent} from './account-recevable-form/account-r
 import {AccountReceivableDetailComponent} from './accout-receivable-detail/account-receivable-detail';
 import {AccountReceivable, TotalAccounts} from '../../../../core/models/AccountReceivable';
 import {AccountReceivableService} from '../../../../core/services/account-receivable.service';
+import { Course } from '../../../../core/models/Course';
+import { SchoolService } from '../../../../core/services/school.service';
+import { School } from '../../../../core/models/School';
 import {ConfirmationService} from '../../../../core/services/confirmation.service';
 import {NotificationService} from '../../../../core/services/notification.service';
 import { StorageServices } from '../../../../core/services/storage.services';
@@ -43,10 +46,21 @@ export class AccountsReceivable implements OnInit {
   // Filtros
   filters = {
     colegio: '',
+    colegio_id: '',
     fechaCreacionDesde: '',
     fechaCreacionHasta: '',
-    estado: ''
+    estado: '',
+    programa_id: ''
   };
+
+  courses: Course[] = [];
+  isLoadingCourses = false;
+  schools: School[] = [];
+  schoolSuggestions: School[] = [];
+  showSchoolSuggestions = false;
+  isLoadingSchools = false;
+  private schoolSearchTimeout: any;
+  private schoolBlurTimeout: any;
 
   // Pagination properties
   currentPage = 1;
@@ -59,6 +73,7 @@ export class AccountsReceivable implements OnInit {
 
   constructor(
     private accountService: AccountReceivableService,
+    private schoolService: SchoolService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
@@ -78,13 +93,10 @@ export class AccountsReceivable implements OnInit {
 
     this.restoreListState();
 
-    // Si es rector, cargar solo las cuentas de su colegio
-    if (this.isRector && this.userColegioId) {
-      this.loadRectorAccounts();
-    } else {
-      // Para otros usuarios, aplicar filtros normales
-      this.applyFilters();
-    }
+    this.loadCourses();
+    this.loadSchoolsForAutocomplete();
+
+    this.applyFilters();
 
     this.route.queryParams.subscribe(params => {
       const cuentaCobrarId = params['cuentaCobrarId'];
@@ -119,12 +131,6 @@ export class AccountsReceivable implements OnInit {
 
   // Método para aplicar filtros
   private applyFilters(): void {
-    // Si es rector, usar su método específico
-    if (this.isRector && this.userColegioId) {
-      this.loadRectorAccounts();
-      return;
-    }
-
     this.isLoading = true;
 
     // Construir parámetros de filtro
@@ -133,13 +139,21 @@ export class AccountsReceivable implements OnInit {
       limit: this.itemsPerPage
     };
 
+    if (this.isRector && this.userColegioId) {
+      filterParams.colegio_id = this.userColegioId;
+    }
+
     // Incluir el término de búsqueda si existe
     if (this.searchTerm.trim()) {
       filterParams.search = this.searchTerm.trim();
     }
 
-    if (this.filters.colegio.trim()) {
-      filterParams.colegio = this.filters.colegio.trim();
+    if (!this.isRector && this.filters.colegio_id && this.filters.colegio_id.trim()) {
+      filterParams.colegio_id = this.filters.colegio_id.trim();
+    }
+
+    if (this.filters.programa_id && this.filters.programa_id.trim()) {
+      filterParams.programa_id = this.filters.programa_id.trim();
     }
 
     if (this.filters.fechaCreacionDesde) {
@@ -236,20 +250,17 @@ export class AccountsReceivable implements OnInit {
   clearFilters(): void {
     this.filters = {
       colegio: '',
+      colegio_id: '',
       fechaCreacionDesde: '',
       fechaCreacionHasta: '',
-      estado: ''
+      estado: '',
+      programa_id: ''
     };
     this.searchTerm = '';
     this.currentPage = 1;
     this.persistListState();
 
-    // Si es rector, usar su método específico
-    if (this.isRector && this.userColegioId) {
-      this.loadRectorAccounts();
-    } else {
-      this.applyFilters();
-    }
+    this.applyFilters();
   }
 
   // Método para obtener la clase CSS del estado
@@ -336,12 +347,7 @@ export class AccountsReceivable implements OnInit {
     this.currentPage = 1; // Reset to first page when changing items per page
     this.persistListState();
 
-    // Si es rector, usar su método específico
-    if (this.isRector && this.userColegioId) {
-      this.loadRectorAccounts();
-    } else {
-      this.applyFilters();
-    }
+    this.applyFilters();
   }
 
   // Método para verificar si hay filtros activos (incluyendo búsqueda)
@@ -349,11 +355,120 @@ export class AccountsReceivable implements OnInit {
   private hasActiveFilters(): boolean {
     return !!(
       this.filters.colegio.trim() ||
+      this.filters.colegio_id.trim() ||
       this.filters.fechaCreacionDesde ||
       this.filters.fechaCreacionHasta ||
       this.filters.estado.trim() ||
+      this.filters.programa_id.trim() ||
       this.searchTerm.trim()
     );
+  }
+
+  private loadCourses(): void {
+    this.isLoadingCourses = true;
+    this.accountService.getCoursesForFilter().subscribe({
+      next: (response) => {
+        this.courses = Array.isArray(response?.data) ? response.data : [];
+        this.isLoadingCourses = false;
+      },
+      error: () => {
+        this.courses = [];
+        this.isLoadingCourses = false;
+      }
+    });
+  }
+
+  private loadSchoolsForAutocomplete(): void {
+    this.isLoadingSchools = true;
+    this.schoolService.getSchoolsForAutocomplete(1, 2000).subscribe({
+      next: (response) => {
+        this.schools = Array.isArray(response?.data) ? response.data : [];
+        this.isLoadingSchools = false;
+      },
+      error: () => {
+        this.schools = [];
+        this.isLoadingSchools = false;
+      }
+    });
+  }
+
+  onColegioInputChange(event: any): void {
+    const value = (event?.target?.value ?? '').toString();
+    this.filters.colegio = value;
+    this.filters.colegio_id = '';
+    this.currentPage = 1;
+    this.persistListState();
+
+    if (this.schoolSearchTimeout) {
+      clearTimeout(this.schoolSearchTimeout);
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      this.schoolSuggestions = [];
+      this.showSchoolSuggestions = false;
+      this.onFilterChange();
+      return;
+    }
+
+    this.schoolSearchTimeout = setTimeout(() => {
+      const normalizedTerm = this.normalizeText(trimmed);
+      const base = this.schools || [];
+      this.schoolSuggestions = base
+        .filter(s => {
+          const name = this.normalizeText((s as any)?.nombre || '');
+          const city = this.normalizeText((s as any)?.ciudad || '');
+          return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+        })
+        .slice(0, 10);
+      this.showSchoolSuggestions = this.schoolSuggestions.length > 0;
+    }, 150);
+  }
+
+  onColegioFocus(): void {
+    if (this.schoolBlurTimeout) {
+      clearTimeout(this.schoolBlurTimeout);
+    }
+    if (this.schoolSuggestions.length > 0) {
+      this.showSchoolSuggestions = true;
+    }
+  }
+
+  onColegioBlur(): void {
+    if (this.schoolBlurTimeout) {
+      clearTimeout(this.schoolBlurTimeout);
+    }
+    this.schoolBlurTimeout = setTimeout(() => {
+      this.showSchoolSuggestions = false;
+    }, 150);
+  }
+
+  selectSchoolSuggestion(school: School): void {
+    if (!school?.id) return;
+    this.filters.colegio = (school as any)?.nombre || '';
+    this.filters.colegio_id = school.id as any;
+    this.schoolSuggestions = [];
+    this.showSchoolSuggestions = false;
+    this.onFilterChange();
+  }
+
+  private normalizeText(value: string): string {
+    return (value || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  getProgramName(account: AccountReceivable): string {
+    const courseSource: any =
+      (account as any)?.curso_id && typeof (account as any).curso_id === 'object'
+        ? (account as any).curso_id
+        : ((account as any)?.id_inscripcion?.curso_id && typeof (account as any).id_inscripcion.curso_id === 'object'
+            ? (account as any).id_inscripcion.curso_id
+            : null);
+    return courseSource?.nombre || 'N/A';
   }
 
   loadAccountsPage(): void {
@@ -612,6 +727,7 @@ export class AccountsReceivable implements OnInit {
         { header: 'Estudiante', key: 'estudiante', width: 28 },
         { header: 'Documento Estudiante', key: 'doc_estudiante', width: 22 },
         { header: 'Colegio', key: 'colegio', width: 24 },
+        { header: 'Programa', key: 'programa', width: 22 },
         { header: 'Estado', key: 'estado', width: 14 },
         { header: 'Monto', key: 'monto', width: 16 },
         { header: 'Saldo', key: 'saldo', width: 16 },
@@ -630,6 +746,7 @@ export class AccountsReceivable implements OnInit {
           estudiante: account.studentName || '',
           doc_estudiante: estudianteDoc,
           colegio: account.schoolName || '',
+          programa: this.getProgramName(account),
           estado: account.estado || '',
           monto: account.monto ?? 0,
           saldo: account.saldo ?? 0,
@@ -830,9 +947,11 @@ export class AccountsReceivable implements OnInit {
       const f = parsed?.filters || {};
       this.filters = {
         colegio: typeof f.colegio === 'string' ? f.colegio : '',
+        colegio_id: typeof f.colegio_id === 'string' ? f.colegio_id : '',
         fechaCreacionDesde: typeof f.fechaCreacionDesde === 'string' ? f.fechaCreacionDesde : '',
         fechaCreacionHasta: typeof f.fechaCreacionHasta === 'string' ? f.fechaCreacionHasta : '',
-        estado: typeof f.estado === 'string' ? f.estado : ''
+        estado: typeof f.estado === 'string' ? f.estado : '',
+        programa_id: typeof f.programa_id === 'string' ? f.programa_id : ''
       };
     } catch {
     }
