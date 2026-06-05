@@ -44,6 +44,17 @@ export class SchoolService {
     return this.http.get<ResponseAPI<School[]>>(this.apiSchool, { params });
   }
 
+  getSchoolsForAutocomplete(page: number = 1, limit: number = 2000): Observable<ResponseAPI<School[]>> {
+    const params: any = {
+      fields: 'id,nombre,ciudad',
+      sort: 'nombre',
+      page: page.toString(),
+      limit: limit.toString(),
+      meta: 'filter_count'
+    };
+    return this.http.get<ResponseAPI<School[]>>(this.apiSchool, { params });
+  }
+
   createSchool(school: School): Observable<ResponseAPI<School>> {
     return this.http.post<ResponseAPI<School>>(this.apiSchool, school);
   }
