@@ -231,7 +231,13 @@ export class ListSchool implements OnInit {
       // Contar todas las cuentas que tienen estudiante (incluyendo duplicados)
       let studentsCount = 0;
       schoolData.accounts.forEach(account => {
-        if (account.estudiante_id && typeof account.estudiante_id === 'object') {
+        const studentSource: any =
+          (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
+            ? (account as any).estudiante_id
+            : ((account as any)?.id_inscripcion?.estudiante_id && typeof (account as any).id_inscripcion.estudiante_id === 'object'
+                ? (account as any).id_inscripcion.estudiante_id
+                : null);
+        if (studentSource) {
           studentsCount++;
         }
       });
@@ -264,8 +270,14 @@ export class ListSchool implements OnInit {
     return parsedDate.getFullYear() === targetYear;
   }
 
+  getEffectiveSaldo(account: AccountReceivable): number {
+    const saldoCuenta = this.toNumber((account as any)?.saldo);
+    const saldoInscripcion = this.toNumber((account as any)?.id_inscripcion?.saldo);
+    return Math.max(saldoCuenta, saldoInscripcion);
+  }
+
   private hasPositiveSaldo(account: AccountReceivable): boolean {
-    return this.toNumber((account as any)?.saldo) > 0;
+    return this.getEffectiveSaldo(account) > 0;
   }
 
   onSearchInputChange(event: any): void {
@@ -398,17 +410,18 @@ export class ListSchool implements OnInit {
 
     schoolData.accounts.forEach(account => {
       if (!this.hasPositiveSaldo(account)) return;
-      if (account.estudiante_id) {
-        const student = typeof account.estudiante_id === 'string'
-          ? null
-          : account.estudiante_id;
+      const studentSource: any =
+        (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
+          ? (account as any).estudiante_id
+          : ((account as any)?.id_inscripcion?.estudiante_id && typeof (account as any).id_inscripcion.estudiante_id === 'object'
+              ? (account as any).id_inscripcion.estudiante_id
+              : null);
 
-        if (student) {
-          studentsWithAccounts.push({
-            student: student,
-            account: account
-          });
-        }
+      if (studentSource) {
+        studentsWithAccounts.push({
+          student: studentSource,
+          account: account
+        });
       }
     });
 
@@ -460,7 +473,7 @@ export class ListSchool implements OnInit {
     const pinValue = isChecked ? 'SI' : 'NO';
 
     // Verificar si el saldo es mayor a 0 (nueva validación)
-    if (!account.saldo || account.saldo <= 0) {
+    if (this.getEffectiveSaldo(account) <= 0) {
       event.target.checked = !isChecked; // Revertir el checkbox
       return;
     }
@@ -501,18 +514,17 @@ export class ListSchool implements OnInit {
   }
 
   viewStudent(student: Student, account: AccountReceivable): void {
-    if (account.estudiante_id && typeof account.estudiante_id === 'object') {
-      this.selectedStudent = account.estudiante_id;
+    this.selectedStudent = student;
 
-      // Obtener información del acudiente desde cliente_id
-      if (account.cliente_id && typeof account.cliente_id === 'object') {
-        this.selectedClient = account.cliente_id;
-      } else {
-        this.selectedClient = null;
-      }
+    const clientSource: any =
+      (account as any)?.cliente_id && typeof (account as any).cliente_id === 'object'
+        ? (account as any).cliente_id
+        : ((account as any)?.id_inscripcion?.cliente_id && typeof (account as any).id_inscripcion.cliente_id === 'object'
+            ? (account as any).id_inscripcion.cliente_id
+            : null);
+    this.selectedClient = clientSource || null;
 
-      this.showDetail = true;
-    }
+    this.showDetail = true;
   }
 
   closeDetail() {
@@ -535,10 +547,24 @@ export class ListSchool implements OnInit {
     const schoolsMap = new Map<string, any>();
 
     accounts.forEach(account => {
-      if (account.estudiante_id && typeof account.estudiante_id === 'object' &&
-        account.curso_id && typeof account.curso_id === 'object') {
-        const student = account.estudiante_id;
-        const course = account.curso_id;
+      if (!this.hasPositiveSaldo(account)) return;
+
+      const studentSource: any =
+        (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
+          ? (account as any).estudiante_id
+          : ((account as any)?.id_inscripcion?.estudiante_id && typeof (account as any).id_inscripcion.estudiante_id === 'object'
+              ? (account as any).id_inscripcion.estudiante_id
+              : null);
+      const courseSource: any =
+        (account as any)?.curso_id && typeof (account as any).curso_id === 'object'
+          ? (account as any).curso_id
+          : ((account as any)?.id_inscripcion?.curso_id && typeof (account as any).id_inscripcion.curso_id === 'object'
+              ? (account as any).id_inscripcion.curso_id
+              : null);
+
+      if (studentSource && courseSource) {
+        const student = studentSource;
+        const course = courseSource;
 
         if (student.colegio_id && typeof student.colegio_id === 'object') {
           const school = student.colegio_id;
