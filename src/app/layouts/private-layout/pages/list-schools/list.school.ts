@@ -38,6 +38,8 @@ export class ListSchool implements OnInit {
   selectedStudent: Student | null = null;
   selectedClient: Client | null = null;
   searchTerm = '';
+  schoolsAutocomplete: School[] = [];
+  isLoadingSchoolsAutocomplete = false;
   schoolSuggestions: School[] = [];
   showSchoolSuggestions = false;
   isLoadingSchoolSuggestions = false;
@@ -104,6 +106,7 @@ export class ListSchool implements OnInit {
   ngOnInit(): void {
     const userData = sessionStorage.getItem('current_user');
     const user = JSON.parse(userData);
+    this.loadSchoolsForAutocomplete();
     if (user.role === Roles.RECTOR && user.colegio_id) {
       this.loadSchools();
     }
@@ -425,18 +428,56 @@ export class ListSchool implements OnInit {
     }
 
     this.isLoadingSchoolSuggestions = true;
-    this.schoolService.searchSchool(safeTerm, 1, 10).subscribe({
+    if (this.schoolsAutocomplete.length > 0) {
+      this.applySchoolSuggestionsFromCache(safeTerm);
+      this.isLoadingSchoolSuggestions = false;
+      return;
+    }
+
+    if (this.isLoadingSchoolsAutocomplete) return;
+    this.loadSchoolsForAutocomplete(() => {
+      this.applySchoolSuggestionsFromCache(safeTerm);
+      this.isLoadingSchoolSuggestions = false;
+    });
+  }
+
+  private loadSchoolsForAutocomplete(onDone?: () => void): void {
+    if (this.isLoadingSchoolsAutocomplete) return;
+    this.isLoadingSchoolsAutocomplete = true;
+    this.schoolService.getSchoolsForAutocomplete(1, 2000).subscribe({
       next: (resp) => {
-        this.schoolSuggestions = Array.isArray(resp?.data) ? resp.data : [];
-        this.showSchoolSuggestions = this.schoolSuggestions.length > 0;
-        this.isLoadingSchoolSuggestions = false;
+        this.schoolsAutocomplete = Array.isArray(resp?.data) ? resp.data : [];
+        this.isLoadingSchoolsAutocomplete = false;
+        if (onDone) onDone();
       },
       error: () => {
-        this.schoolSuggestions = [];
-        this.showSchoolSuggestions = false;
+        this.schoolsAutocomplete = [];
+        this.isLoadingSchoolsAutocomplete = false;
         this.isLoadingSchoolSuggestions = false;
       }
     });
+  }
+
+  private applySchoolSuggestionsFromCache(term: string): void {
+    const normalizedTerm = this.normalizeText(term);
+    const base = this.schoolsAutocomplete || [];
+    this.schoolSuggestions = base
+      .filter(s => {
+        const name = this.normalizeText((s as any)?.nombre || '');
+        const city = this.normalizeText((s as any)?.ciudad || '');
+        return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+      })
+      .slice(0, 10);
+    this.showSchoolSuggestions = this.schoolSuggestions.length > 0;
+  }
+
+  private normalizeText(value: string): string {
+    return (value || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   // Métodos de paginación
