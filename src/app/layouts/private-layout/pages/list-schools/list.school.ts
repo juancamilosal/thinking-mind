@@ -38,7 +38,7 @@ export class ListSchool implements OnInit {
   selectedStudent: Student | null = null;
   selectedClient: Client | null = null;
   searchTerm = '';
-  yearFilter = new Date().getFullYear().toString();
+  yearFilter = '';
   sortByInscriptionDate = false; // Nueva propiedad para el filtro de ordenamiento por fecha de inscripción
   currentDate = new Date();
   isRector = false;
@@ -97,7 +97,11 @@ export class ListSchool implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadSchools();
+    const userData = sessionStorage.getItem('current_user');
+    const user = JSON.parse(userData);
+    if (user.role === Roles.RECTOR && user.colegio_id) {
+      this.loadSchools();
+    }
   }
 
   loadSchools(): void {
@@ -127,7 +131,12 @@ export class ListSchool implements OnInit {
 
   private loadAllAccountsReceivable(): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos
-    this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, undefined, this.sortByInscriptionDate).subscribe({
+    const term = this.searchTerm?.trim();
+    const request$ = term
+      ? this.schoolWithPaymentsService.getAccountsWithPaymentsAll(term, this.yearFilter, this.sortByInscriptionDate, false)
+      : this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, undefined, this.yearFilter, this.sortByInscriptionDate, true);
+
+    request$.subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -145,7 +154,12 @@ export class ListSchool implements OnInit {
 
   private loadAccountsForSchool(schoolId: string): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
-    this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, undefined, this.sortByInscriptionDate).subscribe({
+    const term = this.searchTerm?.trim();
+    const request$ = term
+      ? this.schoolWithPaymentsService.getAccountsWithPaymentsBySchoolAll(schoolId, term, this.yearFilter, this.sortByInscriptionDate, false)
+      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, true);
+
+    request$.subscribe({
       next: (response) => {
         this.processAccountsReceivable(response.data);
         this.isLoading = false;
@@ -162,7 +176,11 @@ export class ListSchool implements OnInit {
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
     const targetYear = this.getTargetInscriptionYear();
-    const filteredAccounts = (accounts || []).filter(account => this.isAccountInInscriptionYear(account, targetYear));
+    const saldoFilteredAccounts = (accounts || []).filter(account => this.hasPositiveSaldo(account));
+    const filteredAccounts =
+      targetYear === null
+        ? saldoFilteredAccounts
+        : saldoFilteredAccounts.filter(account => this.isAccountInInscriptionYear(account, targetYear));
 
     // Agrupar por colegio
     const schoolsMap = new Map<string, SchoolWithAccounts>();
@@ -228,12 +246,12 @@ export class ListSchool implements OnInit {
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
   }
 
-  private getTargetInscriptionYear(): number {
-    const parsed = parseInt((this.yearFilter || '').toString().trim(), 10);
-    if (!Number.isFinite(parsed)) {
-      return new Date().getFullYear();
-    }
-    return parsed;
+  private getTargetInscriptionYear(): number | null {
+    const trimmed = (this.yearFilter || '').toString().trim();
+    if (!trimmed) return null;
+
+    const parsed = parseInt(trimmed, 10);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private isAccountInInscriptionYear(account: AccountReceivable, targetYear: number): boolean {
@@ -244,6 +262,21 @@ export class ListSchool implements OnInit {
     if (Number.isNaN(parsedDate.getTime())) return false;
 
     return parsedDate.getFullYear() === targetYear;
+  }
+
+  private hasPositiveSaldo(account: AccountReceivable): boolean {
+    const explicitSaldo =
+      this.toNumber((account as any)?.saldo) || this.toNumber((account as any)?.id_inscripcion?.saldo);
+    if (explicitSaldo > 0) return true;
+
+    const pagos = Array.isArray((account as any)?.pagos) ? (account as any).pagos : [];
+    const pagosPagados = pagos.filter((p: any) => p?.estado === 'PAGADO');
+    const totalPagos = pagosPagados.reduce((acc: number, p: any) => acc + this.toNumber(p?.valor), 0);
+    const valorCuenta = this.toNumber((account as any)?.monto);
+    const montoDescuento = this.toNumber((account as any)?.monto_descuento);
+    const baseParaResta = montoDescuento > 0 ? montoDescuento : valorCuenta;
+    const saldoPendiente = baseParaResta - totalPagos;
+    return saldoPendiente > 0;
   }
 
   onSearchInputChange(event: any): void {
@@ -285,40 +318,17 @@ export class ListSchool implements OnInit {
     this.isLoading = true;
 
     if (this.isRector) {
-      // Si es rector, buscar solo en su colegio usando el nuevo servicio
       const userData = sessionStorage.getItem('current_user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(user.colegio_id, 1, 1000, undefined, this.sortByInscriptionDate).subscribe({
-          next: (response) => {
-            this.processAccountsReceivable(response.data);
-            this.isLoading = false;
-          },
-          error: (error) => {
-            this.notificationService.showError(
-              'Error',
-              'Error al buscar cuentas del colegio'
-            );
-            this.isLoading = false;
-          }
-        });
+        this.loadAccountsForSchool(user.colegio_id);
+        return;
       }
-    } else {
-      // Para otros usuarios, buscar en todas las cuentas con pagos
-      this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, this.searchTerm, undefined, this.sortByInscriptionDate).subscribe({
-        next: (response) => {
-          this.processAccountsReceivable(response.data);
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.notificationService.showError(
-            'Error',
-            'Error al buscar cuentas por cobrar'
-          );
-          this.isLoading = false;
-        }
-      });
+      this.isLoading = false;
+      return;
     }
+
+    this.loadAllAccountsReceivable();
   }
 
   onSearch(): void {
