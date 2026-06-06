@@ -18,6 +18,7 @@ export interface AttendanceItem {
   fecha: string | Date;
   studentName: string;
   email?: string;
+  estadoCuenta?: string;
   attended: boolean;
   score: string | number;
   attendancePercentage?: number;

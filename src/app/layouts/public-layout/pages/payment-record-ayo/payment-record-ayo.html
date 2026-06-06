@@ -552,12 +552,20 @@
 
                                   <div class="space-y-3 group">
                                     <label for="studentFechaNacimiento"
-                                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Fecha de Nacimiento</label>
+                                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Fecha de Nacimiento *</label>
                                     <input
                                       type="date"
                                       id="studentFechaNacimiento"
                                       formControlName="studentFechaNacimiento"
                                       class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400">
+                                    @if (paymentForm.get('studentFechaNacimiento')?.touched && paymentForm.get('studentFechaNacimiento')?.errors?.['required']) {
+                                      <p class="text-red-500 text-sm mt-2 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        La fecha de nacimiento es obligatoria
+                                      </p>
+                                    }
                                   </div>
 
                                     <div class="space-y-3 group md:col-span-2">
