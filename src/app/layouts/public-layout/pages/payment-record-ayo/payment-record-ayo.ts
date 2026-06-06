@@ -93,7 +93,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             studentNombre: ['', [Validators.required, Validators.minLength(2)]],
             studentApellido: ['', [Validators.required, Validators.minLength(2)]],
             studentEmail: ['', [Validators.required, Validators.email]],
-            studentFechaNacimiento: [''],
+            studentFechaNacimiento: ['', Validators.required],
             studentGrado: [''],
             studentGrupo: [''],
             studentSchool: [''], // Holds ID if selected
