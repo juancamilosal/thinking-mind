@@ -98,6 +98,7 @@ export class ListMeet implements OnInit {
   attendanceList: AttendanceItem[] = [];
   originalAttendanceList: AttendanceItem[] = [];
   savingCredits = false;
+  showLevelSubcategoryFilters = true;
 
   // Student Filters
   studentSearchTerm: string = '';
@@ -129,6 +130,7 @@ export class ListMeet implements OnInit {
 
   // External navigation helpers
   private meetingIdToOpen: string | null = null;
+  private isRefreshingProgramas = false;
 
   constructor(
     private programaAyoService: ProgramaAyoService,
@@ -147,7 +149,15 @@ export class ListMeet implements OnInit {
     private ngZone: NgZone
   ) { }
 
-  openStudyPlanModal(programa: ProgramaAyo): void {
+  openStudyPlanModal(programa: ProgramaAyo, skipRefresh: boolean = false): void {
+    if (!skipRefresh && (programa as any)?.id) {
+      const id = String((programa as any).id);
+      this.refreshProgramasSilently(() => {
+        const updated = this.programas.find(p => String((p as any)?.id) === id) || programa;
+        this.openStudyPlanModal(updated, true);
+      });
+      return;
+    }
     this.selectedProgramForStudyPlan = programa;
     if (Array.isArray(programa.plan_estudio_id)) {
       const rawPlan = programa.plan_estudio_id as any[];
@@ -330,7 +340,15 @@ export class ListMeet implements OnInit {
     this.novedadText = '';
   }
 
-  openNovedadModal(program: any): void {
+  openNovedadModal(program: any, skipRefresh: boolean = false): void {
+    if (!skipRefresh && program?.id) {
+      const id = String(program.id);
+      this.refreshProgramasSilently(() => {
+        const updated = this.programas.find(p => String((p as any)?.id) === id) || program;
+        this.openNovedadModal(updated, true);
+      });
+      return;
+    }
     this.selectedProgramForNovedad = program;
     this.showNovedadModal = true;
     this.novedadText = '';
@@ -1166,9 +1184,12 @@ export class ListMeet implements OnInit {
     this.isLoading = true;
     this.programaAyoService.getProgramaAyo(this.selectedLanguage || undefined, this.searchTerm).subscribe({
       next: (response) => {
-        this.programas = response.data || [];
-        this.groupPrograms();
-        this.isLoading = false;
+        this.ngZone.run(() => {
+          this.programas = response.data || [];
+          this.groupPrograms();
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
 
         if (this.meetingIdToOpen) {
           const targetId = this.meetingIdToOpen;
@@ -1184,29 +1205,57 @@ export class ListMeet implements OnInit {
           }
         }
 
-        // Refresh student panel if open
-        if (this.showStudentPanel && this.selectedProgramForFocus) {
-            // Check if it's "Ver Todos" view
-            if (this.selectedProgramForFocus.id_nivel?.tematica === 'Listado General') {
-                this.verTodosEstudiantes(true);
-            } else {
-                // Find the updated program in the new list
-                const updatedProgram = this.programas.find(p => p.id === this.selectedProgramForFocus?.id);
-                if (updatedProgram) {
-                    this.verEstudiante(updatedProgram, true);
-                } else {
-                     // Program might have been deleted or filtered out, but we might want to keep the panel open
-                     // or close it. For now, let's leave it as is if not found,
-                     // or we could close it. But safer to just not update if not found.
-                }
-            }
-        }
+        this.refreshStudentPanelAfterProgramsReload();
       },
       error: (error) => {
-        this.notificationService.showError('Error', 'No se pudieron cargar los programas AYO.');
-        this.isLoading = false;
+        this.ngZone.run(() => {
+          this.notificationService.showError('Error', 'No se pudieron cargar los programas AYO.');
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
       }
     });
+  }
+
+  private refreshProgramasSilently(onDone?: () => void): void {
+    if (this.isRefreshingProgramas) {
+      if (onDone) onDone();
+      return;
+    }
+    this.isRefreshingProgramas = true;
+    this.programaAyoService.getProgramaAyo(this.selectedLanguage || undefined, this.searchTerm).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          this.programas = response.data || [];
+          this.groupPrograms();
+          this.refreshStudentPanelAfterProgramsReload();
+          this.isRefreshingProgramas = false;
+          this.cdr.detectChanges();
+          if (onDone) onDone();
+        });
+      },
+      error: () => {
+        this.ngZone.run(() => {
+          this.isRefreshingProgramas = false;
+          this.cdr.detectChanges();
+          if (onDone) onDone();
+        });
+      }
+    });
+  }
+
+  private refreshStudentPanelAfterProgramsReload(): void {
+    if (!this.showStudentPanel || !this.selectedProgramForFocus) return;
+    if (this.selectedProgramForFocus.id_nivel?.tematica === 'Listado General') {
+      this.verTodosEstudiantes(true);
+      return;
+    }
+    const focusId = String((this.selectedProgramForFocus as any)?.id || '');
+    if (!focusId) return;
+    const updatedProgram = this.programas.find(p => String((p as any)?.id) === focusId);
+    if (updatedProgram) {
+      this.verEstudiante(updatedProgram, true, true);
+    }
   }
 
   groupPrograms(): void {
@@ -1266,6 +1315,7 @@ export class ListMeet implements OnInit {
   selectGroup(group: ProgramGroup): void {
     this.selectedGroup = group;
     this.viewMode = 'details';
+    this.refreshProgramasSilently();
   }
 
   goBack(): void {
@@ -1314,8 +1364,17 @@ export class ListMeet implements OnInit {
     });
   }
 
-  verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false) {
+  verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false, skipRefresh: boolean = false) {
+    if (!skipRefresh && !suppressWarnings && (programa as any)?.id) {
+      const id = String((programa as any).id);
+      this.refreshProgramasSilently(() => {
+        const updated = this.programas.find(p => String((p as any)?.id) === id) || programa;
+        this.verEstudiante(updated, suppressWarnings, true);
+      });
+      return;
+    }
     const prog = programa as any;
+    this.showLevelSubcategoryFilters = false;
 
     // Use estudiantes_id del programa or id_nivel.estudiantes_id para listar estudiantes
     let studentsSource: any[] = [];
@@ -1329,6 +1388,7 @@ export class ListMeet implements OnInit {
         const documents: {tipo: string, numero: string}[] = [];
         const seenDocs = new Set<string>();
         const studentAttendanceMap = new Map<string, any[]>();
+        const sourceUsersById = new Map<string, any>();
 
         studentsSource.forEach((student: any) => {
             // Determine user object (handle M2M junction or direct object)
@@ -1341,11 +1401,6 @@ export class ListMeet implements OnInit {
                 userObj = student.estudiantes_id;
             }
 
-            // Filter by estado_cuenta if available
-            if (userObj.estado_cuenta && userObj.estado_cuenta !== 'PAGADA') {
-                return;
-            }
-
             if (userObj.tipo_documento && userObj.numero_documento) {
                 const docKey = `${userObj.tipo_documento}-${userObj.numero_documento}`;
                 if (!seenDocs.has(docKey)) {
@@ -1356,81 +1411,90 @@ export class ListMeet implements OnInit {
                     });
                 }
             }
+
+            if (userObj.id) {
+              sourceUsersById.set(String(userObj.id), userObj);
+            }
             // Populate attendance map
             if (userObj.id && student.asistencia_id && Array.isArray(student.asistencia_id)) {
                 studentAttendanceMap.set(userObj.id, student.asistencia_id);
             }
         });
 
-        if (documents.length > 0) {
-            this.isLoadingStudents = true;
-            this.showStudentPanel = true;
-            this.selectedProgramForFocus = programa;
+        this.isLoadingStudents = true;
+        this.showStudentPanel = true;
+        this.selectedProgramForFocus = programa;
 
-            this.userService.getUsersByMultipleDocuments(documents).subscribe({
-                next: (response) => {
-                    this.isLoadingStudents = false;
-                    if (response.data && response.data.length > 0) {
-                        // Filter again in case the initial list didn't have estado_cuenta but the detailed fetch does
-                        this.selectedStudents = response.data.filter((s: any) => !s.estado_cuenta || s.estado_cuenta === 'PAGADA');
+        const buildAttendanceList = (students: any[]) => {
+          this.ngZone.run(() => {
+            this.selectedStudents = students;
+            this.attendanceList = (this.selectedStudents || []).map(student => {
+              let score: number = 0;
+              let attendancePercentage: number = 0;
 
-                        this.attendanceList = this.selectedStudents.map(student => {
-                            let score: number = 0;
-                            let attendancePercentage: number = 0;
+              const rawAttendance = studentAttendanceMap.get(student.id);
+              if (Array.isArray(rawAttendance)) {
+                const programAttendance = rawAttendance.filter((a: any) => a.programa_ayo_id === prog.id);
 
-                            const rawAttendance = studentAttendanceMap.get(student.id);
-                            if (rawAttendance) {
-                                const programAttendance = rawAttendance.filter((a: any) => a.programa_ayo_id === prog.id);
-
-                                if (programAttendance.length > 0) {
-                                    // Sum score
-                                    score = programAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
-
-                                    // Calculate percentage
-                                    const attendedCount = programAttendance.filter((a: any) => a.asiste === true).length;
-                                    attendancePercentage = (attendedCount / programAttendance.length) * 100;
-                                }
-                            }
-
-                            // Use safe navigation for nested properties
-                            const studentLevel = (student as any).nivel_id;
-
-                            return {
-                                id: student.id,
-                                studentName: `${student.first_name} ${student.last_name}`,
-                                email: student.email,
-                                fecha: new Date(),
-                                attended: false,
-                                score: score > 0 ? score : '',
-                                attendancePercentage: attendancePercentage,
-                                currentLevelId: studentLevel?.id || studentLevel, // Handle object or ID
-                                levelName: studentLevel?.nivel || '',
-                                level: studentLevel?.nivel || '',
-                                subcategoria: prog.id_nivel?.subcategoria || '',
-                                creditos: (student as any).creditos
-                            };
-                        });
-                        this.cdr.detectChanges();
-                    } else {
-                        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
-                        this.cdr.detectChanges();
-                    }
-                },
-                error: (error) => {
-                    this.isLoadingStudents = false;
-                    console.error('Error fetching students:', error);
-                    if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
-                    this.cdr.detectChanges();
+                if (programAttendance.length > 0) {
+                  score = programAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+                  const attendedCount = programAttendance.filter((a: any) => a.asiste === true).length;
+                  attendancePercentage = (attendedCount / programAttendance.length) * 100;
                 }
+              }
+
+              const studentLevel = (student as any).nivel_id;
+
+              return {
+                id: student.id,
+                studentName: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
+                email: student.email,
+                estadoCuenta: (student as any).estado_cuenta || (student as any).estadoCuenta || '',
+                fecha: new Date(),
+                attended: false,
+                score: score > 0 ? score : '',
+                attendancePercentage: attendancePercentage,
+                currentLevelId: studentLevel?.id || studentLevel,
+                levelName: studentLevel?.nivel || '',
+                level: studentLevel?.nivel || '',
+                subcategoria: prog.id_nivel?.subcategoria || '',
+                creditos: (student as any).creditos
+              };
             });
-            return;
-        } else {
-             if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes inscritos a este programa.');
-             // Reset list if no students found
-             this.selectedStudents = [];
-             this.attendanceList = [];
-             return;
+            this.isLoadingStudents = false;
+            this.cdr.detectChanges();
+          });
+        };
+
+        if (documents.length === 0) {
+          buildAttendanceList(Array.from(sourceUsersById.values()));
+          return;
         }
+
+        this.userService.getUsersByMultipleDocuments(documents).subscribe({
+          next: (response) => {
+            this.ngZone.run(() => {
+              const byId = new Map<string, any>();
+              for (const u of Array.from(sourceUsersById.values())) {
+                if (u?.id) byId.set(String(u.id), u);
+              }
+              const fetched = Array.isArray(response?.data) ? response.data : [];
+              for (const u of fetched) {
+                if (u?.id) byId.set(String((u as any).id), u);
+              }
+              buildAttendanceList(Array.from(byId.values()));
+            });
+          },
+          error: (error) => {
+            this.ngZone.run(() => {
+              this.isLoadingStudents = false;
+              console.error('Error fetching students:', error);
+              if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+              buildAttendanceList(Array.from(sourceUsersById.values()));
+            });
+          }
+        });
+        return;
     }
 
     // Fallback: Old Logic using cuentas_cobrar_id
@@ -1463,36 +1527,40 @@ export class ListMeet implements OnInit {
         this.userService.getUsersByMultipleDocuments(documents)
           .subscribe({
             next: (response) => {
-              this.isLoadingStudents = false;
-              if (response.data && response.data.length > 0) {
-                this.selectedStudents = response.data.filter((s: any) => s.estado_cuenta === 'PAGADA');
+              this.ngZone.run(() => {
+                this.isLoadingStudents = false;
+                if (response.data && response.data.length > 0) {
+                  this.selectedStudents = response.data;
 
-                // Filter students to ensure they belong to the current level
-                if (prog.id_nivel && prog.id_nivel.id) {
-                    this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
+                  if (prog.id_nivel && prog.id_nivel.id) {
+                      this.selectedStudents = this.selectedStudents.filter(s => (s as any).nivel_id === prog.id_nivel.id);
+                  }
+
+                  this.attendanceList = this.selectedStudents.map(student => ({
+                    id: student.id,
+                    studentName: `${student.first_name} ${student.last_name}`,
+                    email: student.email,
+                    estadoCuenta: (student as any).estado_cuenta || (student as any).estadoCuenta || '',
+                    fecha: new Date(),
+                    attended: false,
+                    score: student.calificacion || '',
+                    currentLevelId: (student as any).nivel_id,
+                    subcategoria: prog.id_nivel?.subcategoria || ''
+                  }));
+                  this.cdr.detectChanges();
+                } else {
+                  if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
+                  this.cdr.detectChanges();
                 }
-
-                this.attendanceList = this.selectedStudents.map(student => ({
-                  id: student.id,
-                  studentName: `${student.first_name} ${student.last_name}`,
-                  email: student.email,
-                  fecha: new Date(),
-                  attended: false,
-                  score: student.calificacion || '',
-                  currentLevelId: (student as any).nivel_id,
-                  subcategoria: prog.id_nivel?.subcategoria || ''
-                }));
-                this.cdr.detectChanges();
-              } else {
-                if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron usuarios registrados con esos documentos.');
-                this.cdr.detectChanges();
-              }
+              });
             },
             error: (error) => {
-              this.isLoadingStudents = false;
-              console.error('Error fetching students:', error);
-              if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
-              this.cdr.detectChanges();
+              this.ngZone.run(() => {
+                this.isLoadingStudents = false;
+                console.error('Error fetching students:', error);
+                if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar la información de los estudiantes.');
+                this.cdr.detectChanges();
+              });
             }
           });
       } else {
@@ -1515,6 +1583,7 @@ export class ListMeet implements OnInit {
     this.isLoadingStudents = true;
     this.showStudentPanel = true;
     this.studentPanelMode = 'general';
+    this.showLevelSubcategoryFilters = true;
 
     // Dummy object for view
     this.selectedProgramForFocus = {
@@ -1560,71 +1629,74 @@ export class ListMeet implements OnInit {
 
     this.userService.getStudentsWithAttendance(filters).subscribe({
         next: (response) => {
-            this.isLoadingStudents = false;
-            if (response.data && response.data.length > 0) {
-                this.selectedStudents = response.data;
-                const tempAttendanceList = this.selectedStudents.map(student => {
-                    const rawNivel = (student as any).nivel_id;
-                    const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || (student as any).nivel);
-                    const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
-                    const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
+            this.ngZone.run(() => {
+              this.isLoadingStudents = false;
+              if (response.data && response.data.length > 0) {
+                  this.selectedStudents = response.data;
+                  const tempAttendanceList = this.selectedStudents.map(student => {
+                      const rawNivel = (student as any).nivel_id;
+                      const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || (student as any).nivel);
+                      const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
+                      const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
 
-                    // Combine Level and Subcategory for display
-                    const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
+                      const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
 
-                    let score: number = 0;
-                    let attendancePercentage: number = 0;
+                      let score: number = 0;
+                      let attendancePercentage: number = 0;
 
-                    // Only calculate if student has a level and we have programs for that level
-                    if (studentLevelId && levelProgramMap.has(studentLevelId)) {
-                        const validProgramIds = levelProgramMap.get(studentLevelId);
+                      if (studentLevelId && levelProgramMap.has(studentLevelId)) {
+                          const validProgramIds = levelProgramMap.get(studentLevelId);
 
-                        if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
-                             const validAttendance = (student as any).asistencia_id.filter((a: any) =>
-                                a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
-                            );
+                          if ((student as any).asistencia_id && Array.isArray((student as any).asistencia_id)) {
+                              const validAttendance = (student as any).asistencia_id.filter((a: any) =>
+                                  a.programa_ayo_id && validProgramIds?.has(a.programa_ayo_id)
+                              );
 
-                            if (validAttendance.length > 0) {
-                                score = validAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
-                                const attendedCount = validAttendance.filter((a: any) => a.asiste === true).length;
-                                attendancePercentage = (attendedCount / validAttendance.length) * 100;
-                            }
-                        }
-                    }
+                              if (validAttendance.length > 0) {
+                                  score = validAttendance.reduce((acc: number, curr: any) => acc + (Number(curr.calificacion) || 0), 0);
+                                  const attendedCount = validAttendance.filter((a: any) => a.asiste === true).length;
+                                  attendancePercentage = (attendedCount / validAttendance.length) * 100;
+                              }
+                          }
+                      }
 
-                    return {
-                        id: student.id,
-                        studentName: `${student.first_name} ${student.last_name}`,
-                        email: student.email,
-                        fecha: new Date(),
-                        attended: false,
-                        score: score > 0 ? score : '',
-                        attendancePercentage: attendancePercentage,
-                        currentLevelId: studentLevelId,
-                        levelName: displayLevelName, // Use combined name
-                        level: studentLevelName, // Raw level name for filtering
-                        subcategoria: studentSubcategory,
-                        creditos: (student as any).creditos
-                    };
-                });
+                      return {
+                          id: student.id,
+                          studentName: `${student.first_name} ${student.last_name}`,
+                          email: student.email,
+                          estadoCuenta: (student as any).estado_cuenta || (student as any).estadoCuenta || '',
+                          fecha: new Date(),
+                          attended: false,
+                          score: score > 0 ? score : '',
+                          attendancePercentage: attendancePercentage,
+                          currentLevelId: studentLevelId,
+                          levelName: displayLevelName,
+                          level: studentLevelName,
+                          subcategoria: studentSubcategory,
+                          creditos: (student as any).creditos
+                      };
+                  });
 
-                this.originalAttendanceList = [...tempAttendanceList];
-                this.attendanceList = [...tempAttendanceList];
+                  this.originalAttendanceList = [...tempAttendanceList];
+                  this.attendanceList = [...tempAttendanceList];
 
-                this.cdr.detectChanges();
-            } else {
-                if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron estudiantes.');
-                this.selectedStudents = [];
-                this.attendanceList = [];
-                this.originalAttendanceList = [];
-                this.cdr.detectChanges();
-            }
+                  this.cdr.detectChanges();
+              } else {
+                  if (!suppressWarnings) this.notificationService.showWarning('Información', 'No se encontraron estudiantes.');
+                  this.selectedStudents = [];
+                  this.attendanceList = [];
+                  this.originalAttendanceList = [];
+                  this.cdr.detectChanges();
+              }
+            });
         },
         error: (error) => {
-            this.isLoadingStudents = false;
-            console.error('Error fetching students:', error);
-            if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar el listado de estudiantes.');
-            this.cdr.detectChanges();
+            this.ngZone.run(() => {
+              this.isLoadingStudents = false;
+              console.error('Error fetching students:', error);
+              if (!suppressWarnings) this.notificationService.showError('Error', 'Error al consultar el listado de estudiantes.');
+              this.cdr.detectChanges();
+            });
         }
     });
   }
@@ -1732,14 +1804,17 @@ export class ListMeet implements OnInit {
   loadStudentsWithoutProgramCount(): void {
     this.userService.getStudentsWithoutProgramaAyoCount(this.selectedLanguage || undefined).subscribe({
       next: (response) => {
-        // We use filter_count because total_count returns the count of all records in the collection ignoring filters
-        const total = response.meta?.filter_count || 0;
-        this.studentsWithoutProgramCount = total;
-        this.cdr.detectChanges();
+        this.ngZone.run(() => {
+          const total = response.meta?.filter_count || 0;
+          this.studentsWithoutProgramCount = total;
+          this.cdr.detectChanges();
+        });
       },
       error: () => {
-        this.studentsWithoutProgramCount = 0;
-        this.cdr.detectChanges();
+        this.ngZone.run(() => {
+          this.studentsWithoutProgramCount = 0;
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -1753,6 +1828,7 @@ export class ListMeet implements OnInit {
     this.isLoadingStudents = true;
     this.showStudentPanel = true;
     this.studentPanelMode = 'noProgram';
+    this.showLevelSubcategoryFilters = true;
     this.selectedProgramForFocus = {
       id_nivel: {
         tematica: 'Estudiantes sin Programa AYO',
@@ -1778,80 +1854,91 @@ export class ListMeet implements OnInit {
 
     this.userService.getStudentsWithoutProgramaAyo(this.selectedLanguage || undefined).subscribe({
       next: (response) => {
-        this.isLoadingStudents = false;
-        let students = response.data || [];
-        // Apply local filters for noProgram view
-        const search = (this.noProgramStudentSearchTerm || '').trim().toLowerCase();
-        const levelFilter = this.noProgramSelectedLevelFilter || '';
-        const subcatFilter = this.noProgramSelectedSubcategoryFilter || '';
+        this.ngZone.run(() => {
+          this.isLoadingStudents = false;
+          let students = response.data || [];
+          const search = (this.noProgramStudentSearchTerm || '').trim().toLowerCase();
+          const levelFilter = this.noProgramSelectedLevelFilter || '';
+          const subcatFilter = this.noProgramSelectedSubcategoryFilter || '';
 
-        if (search) {
-          students = students.filter((s: any) => {
-            const name = `${s.first_name || ''} ${s.last_name || ''}`.toLowerCase();
-            return name.includes(search);
+          if (search) {
+            students = students.filter((s: any) => {
+              const name = `${s.first_name || ''} ${s.last_name || ''}`.toLowerCase();
+              return name.includes(search);
+            });
+          }
+
+          if (levelFilter) {
+            students = students.filter((s: any) => {
+              const rawNivel = s.nivel_id;
+              const nivelName = rawNivel && typeof rawNivel === 'object' ? (rawNivel.nivel || '') : '';
+              return nivelName === levelFilter;
+            });
+          }
+
+          if (subcatFilter) {
+            students = students.filter((s: any) => {
+              const rawNivel = s.nivel_id;
+              const subcat = rawNivel && typeof rawNivel === 'object' ? (rawNivel.subcategoria || '') : '';
+              return subcat === subcatFilter;
+            });
+          }
+          this.selectedStudents = students;
+          this.studentsWithoutProgramCount = students.length;
+
+          const tempAttendanceList = students.map((student: any) => {
+            const rawNivel = student.nivel_id;
+            const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || '');
+            const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
+
+            const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
+
+            const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
+
+            return {
+              id: student.id,
+              studentName: `${student.first_name} ${student.last_name}`,
+              email: student.email,
+              estadoCuenta: (student as any).estado_cuenta || (student as any).estadoCuenta || '',
+              fecha: new Date(),
+              attended: false,
+              score: '',
+              attendancePercentage: 0,
+              currentLevelId: studentLevelId,
+              levelName: displayLevelName,
+              level: studentLevelName,
+              subcategoria: studentSubcategory,
+              creditos: (student as any).creditos
+            };
           });
-        }
 
-        if (levelFilter) {
-          students = students.filter((s: any) => {
-            const rawNivel = s.nivel_id;
-            const nivelName = rawNivel && typeof rawNivel === 'object' ? (rawNivel.nivel || '') : '';
-            return nivelName === levelFilter;
-          });
-        }
-
-        if (subcatFilter) {
-          students = students.filter((s: any) => {
-            const rawNivel = s.nivel_id;
-            const subcat = rawNivel && typeof rawNivel === 'object' ? (rawNivel.subcategoria || '') : '';
-            return subcat === subcatFilter;
-          });
-        }
-        this.selectedStudents = students;
-        this.studentsWithoutProgramCount = students.length;
-
-        const tempAttendanceList = students.map((student: any) => {
-          const rawNivel = student.nivel_id;
-          const studentLevelId = rawNivel && typeof rawNivel === 'object' ? rawNivel.id : (rawNivel || '');
-          const studentLevelName = rawNivel && typeof rawNivel === 'object' ? rawNivel.nivel : '';
-
-          // Use robust subcategory logic
-          const studentSubcategory = rawNivel && typeof rawNivel === 'object' ? rawNivel.subcategoria : (studentLevelId ? (levelSubcategoryMap.get(studentLevelId) || '') : '');
-
-          const displayLevelName = studentLevelName ? `${studentLevelName}${studentSubcategory ? ' - ' + studentSubcategory : ''}` : '';
-
-          return {
-            id: student.id,
-            studentName: `${student.first_name} ${student.last_name}`,
-            email: student.email,
-            fecha: new Date(),
-            attended: false,
-            score: '',
-            attendancePercentage: 0,
-            currentLevelId: studentLevelId,
-            levelName: displayLevelName,
-            level: studentLevelName,
-            subcategoria: studentSubcategory,
-            creditos: (student as any).creditos
-          };
+          this.originalAttendanceList = [...tempAttendanceList];
+          this.attendanceList = [...tempAttendanceList];
+          this.cdr.detectChanges();
         });
-
-        this.originalAttendanceList = [...tempAttendanceList];
-        this.attendanceList = [...tempAttendanceList];
-        this.cdr.detectChanges();
       },
       error: (error) => {
-        this.isLoadingStudents = false;
-        console.error('Error fetching students without program:', error);
-        this.notificationService.showError('Error', 'No se pudo cargar el listado de estudiantes sin programa.');
-        this.cdr.detectChanges();
+        this.ngZone.run(() => {
+          this.isLoadingStudents = false;
+          console.error('Error fetching students without program:', error);
+          this.notificationService.showError('Error', 'No se pudo cargar el listado de estudiantes sin programa.');
+          this.cdr.detectChanges();
+        });
       }
     });
   }
 
   // Image Edit Methods
-  openImageEditModal(programa: ProgramaAyo, event: Event): void {
-    event.stopPropagation(); // Prevent card click
+  openImageEditModal(programa: ProgramaAyo, event: Event, skipRefresh: boolean = false): void {
+    event.stopPropagation();
+    if (!skipRefresh && (programa as any)?.id) {
+      const id = String((programa as any).id);
+      this.refreshProgramasSilently(() => {
+        const updated = this.programas.find(p => String((p as any)?.id) === id) || programa;
+        this.openImageEditModal(updated, event, true);
+      });
+      return;
+    }
     this.selectedProgramForImageEdit = programa;
     this.previewImage = programa.img && programa.img.id ? `${this.assetsUrl}/${programa.img.id}` : null;
     this.selectedFile = null;
