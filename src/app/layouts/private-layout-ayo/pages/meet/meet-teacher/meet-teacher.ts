@@ -1055,14 +1055,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    * @returns true if meeting can be accessed
    */
   canAccessMeeting(meeting: any): boolean {
-    const now = new Date();
-    const start = new Date(meeting.fecha_inicio);
-    const end = new Date(meeting.fecha_finalizacion);
-
-    // Allow access 10 minutes before start
-    const accessStart = new Date(start.getTime() - 10 * 60 * 1000);
-
-    return now >= accessStart && now <= end;
+    // VALIDACIÓN DE FECHA DESHABILITADA: siempre permitir acceso a la reunión
+    // (antes mostraba "Disponible en..." y deshabilitaba el botón).
+    return true;
   }
 
   /**
@@ -1071,20 +1066,22 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    * @returns Descriptive message or null if can access
    */
   getMeetingAccessMessage(meeting: any): string | null {
-    if (this.canAccessMeeting(meeting)) return null;
-
-    const now = new Date();
-    const start = new Date(meeting.fecha_inicio);
-    const end = new Date(meeting.fecha_finalizacion);
-    const accessStart = new Date(start.getTime() - 10 * 60 * 1000);
-
-    if (now < accessStart) {
-      const minutesUntil = Math.ceil((accessStart.getTime() - now.getTime()) / 60000);
-      return `Disponible en ${minutesUntil} minutos`;
-    } else if (now > end) {
-      return 'Reunión finalizada';
-    }
-
+    // VALIDACIÓN DE FECHA DESHABILITADA (mensaje "Disponible en..."):
+    // if (this.canAccessMeeting(meeting)) return null;
+    //
+    // const now = new Date();
+    // const start = new Date(meeting.fecha_inicio);
+    // const end = new Date(meeting.fecha_finalizacion);
+    // const accessStart = new Date(start.getTime() - 10 * 60 * 1000);
+    //
+    // if (now < accessStart) {
+    //   const minutesUntil = Math.ceil((accessStart.getTime() - now.getTime()) / 60000);
+    //   return `Disponible en ${minutesUntil} minutos`;
+    // } else if (now > end) {
+    //   return 'Reunión finalizada';
+    // }
+    //
+    // return null;
     return null;
   }
 
