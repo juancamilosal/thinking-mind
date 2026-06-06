@@ -277,7 +277,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
      const programId = this.currentProgramId;
 
      const relevantRecords = records.filter((record: any) =>
-        record && typeof record === 'object' && record.programa_ayo_id === programId
+        record && typeof record === 'object' && (typeof record.programa_ayo_id === 'object' ? record.programa_ayo_id?.id : record.programa_ayo_id) === programId
      );
 
      const pastTotal = relevantRecords.length;
@@ -806,25 +806,25 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     // Check if students have already been graded today
     this.isLoading = true;
-    this.checkIfAlreadyGradedToday().subscribe({
-      next: (alreadyGraded) => {
-        if (alreadyGraded) {
-          this.isLoading = false;
-          this.notificationService.showWarning(
-            'Estudiantes Ya Calificados',
-            'Los estudiantes ya han sido calificados hoy para este programa. Solo se permite una calificación por día.'
-          );
-          return;
-        }
-        // Proceed with evaluation submission
-        this.processEvaluationSubmission();
-      },
-      error: (err) => {
-        console.error('Error checking if already graded:', err);
-        // Proceed anyway if check fails
-        this.processEvaluationSubmission();
-      }
-    });
+    // VALIDACIÓN "Estudiantes Ya Calificados" DESHABILITADA:
+    // this.checkIfAlreadyGradedToday().subscribe({
+    //   next: (alreadyGraded) => {
+    //     if (alreadyGraded) {
+    //       this.isLoading = false;
+    //       this.notificationService.showWarning(
+    //         'Estudiantes Ya Calificados',
+    //         'Los estudiantes ya han sido calificados hoy para este programa. Solo se permite una calificación por día.'
+    //       );
+    //       return;
+    //     }
+    //     this.processEvaluationSubmission();
+    //   },
+    //   error: (err) => {
+    //     console.error('Error checking if already graded:', err);
+    //     this.processEvaluationSubmission();
+    //   }
+    // });
+    this.processEvaluationSubmission();
   }
 
   /**
@@ -904,17 +904,27 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         const currentCredits = Number(student.currentCredits) || 0;
         const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
-        const currentRating = Number(student.currentRating) || 0;
-        const newRating = student.attended && student.rating > 0
-          ? currentRating + Number(student.rating)
-          : currentRating;
+        const programId = String(this.currentProgramId || '');
+        const pastRatingSum = Array.isArray(student.asistencia_id)
+          ? student.asistencia_id.reduce((sum: number, record: any) => {
+              if (!record || typeof record !== 'object') return sum;
+              const rid = record.programa_ayo_id;
+              const recProgramId = typeof rid === 'object' ? (rid && rid.id ? rid.id : rid) : rid;
+              if (String(recProgramId || '') !== programId) return sum;
+              if (record.asiste !== true) return sum;
+              const val = Number(record.calificacion);
+              return Number.isFinite(val) ? sum + val : sum;
+            }, 0)
+          : 0;
+        const currentMeetingRating = student.attended ? (Number(student.rating) || 0) : 0;
+        const projectedRatingSum = pastRatingSum + currentMeetingRating;
 
           console.log(`Processing student ${student.name}:`, {
             currentCredits,
             newCredits,
             creditsDecremented: currentCredits - newCredits,
-            currentRating: student.currentRating,
-            newRating: newRating
+            pastRatingSum,
+            projectedRatingSum
           });
 
           if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
@@ -937,19 +947,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
           const updateData: any = {
             id: student.id,
-            calificacion: newRating,
+            calificacion: projectedRatingSum,
             creditos: newCredits
           };
 
           // Logic for certification and approval
           if (newCredits === 0) {
             const finalAttendancePercent = this.calculateProjectedAttendance(student);
-            const passed = finalAttendancePercent >= 70 && newRating >= 70;
+            const passed = finalAttendancePercent >= 70 && projectedRatingSum >= 80;
 
             console.log(`Checking certification for ${student.name}:`, {
                 newCredits,
                 finalAttendancePercent,
-                newRating,
+                projectedRatingSum,
                 passed,
                 currentLevelId: this.currentLevelId
             });
@@ -970,7 +980,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
                    console.warn('Passed but no currentLevelId found. Certificate NOT created.');
                }
             } else {
-              console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${newRating}`);
+              console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${projectedRatingSum}`);
             }
           }
 
