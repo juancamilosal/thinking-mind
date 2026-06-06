@@ -141,7 +141,8 @@ export class UserService {
 
   getUsersByMultipleDocuments(documents: {tipo: string, numero: string}[]): Observable<ResponseAPI<User[]>> {
     let params: any = {
-      'fields': '*,asistencia_id.*'
+      'fields': '*,asistencia_id.*',
+      'limit': '-1'
     };
 
     documents.forEach((doc, index) => {

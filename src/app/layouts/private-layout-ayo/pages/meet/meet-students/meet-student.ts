@@ -288,14 +288,14 @@ export class MeetStudent implements OnInit {
    handleTestAndJoin(event: Event, reunion: any): void {
      event.preventDefault();
 
-     // Check if meeting can be accessed
-     if (!this.canAccessMeeting(reunion)) {
-       const message = this.getMeetingAccessMessage(reunion);
-       if (message) {
-         this.notificationService.showWarning('Reunión No Disponible', message);
-       }
-       return;
-     }
+     // VALIDACIÓN DE FECHA DESHABILITADA (mensaje "Disponible en..."):
+     // if (!this.canAccessMeeting(reunion)) {
+     //   const message = this.getMeetingAccessMessage(reunion);
+     //   if (message) {
+     //     this.notificationService.showWarning('Reunión No Disponible', message);
+     //   }
+     //   return;
+     // }
 
      if (reunion.link_reunion) {
          this.pendingReunion = reunion;
@@ -411,12 +411,9 @@ export class MeetStudent implements OnInit {
    * @returns true if meeting can be accessed
    */
   canAccessMeeting(meeting: any): boolean {
-    const now = new Date();
-    const start = new Date(meeting.fecha_inicio);
-    const end = new Date(meeting.fecha_finalizacion);
-
-    // Students can only access during exact meeting time (no early buffer)
-    return now >= start && now <= end;
+    // VALIDACIÓN DE FECHA DESHABILITADA: siempre permitir acceso a la reunión
+    // (antes mostraba "Disponible en..." y bloqueaba el ingreso).
+    return true;
   }
 
   /**
@@ -425,19 +422,21 @@ export class MeetStudent implements OnInit {
    * @returns Descriptive message or null if can access
    */
   getMeetingAccessMessage(meeting: any): string | null {
-    if (this.canAccessMeeting(meeting)) return null;
-
-    const now = new Date();
-    const start = new Date(meeting.fecha_inicio);
-    const end = new Date(meeting.fecha_finalizacion);
-
-    if (now < start) {
-      const minutesUntil = Math.ceil((start.getTime() - now.getTime()) / 60000);
-      return `Disponible en ${minutesUntil} minutos`;
-    } else if (now > end) {
-      return 'Reunión finalizada';
-    }
-
+    // VALIDACIÓN DE FECHA DESHABILITADA (mensaje "Disponible en..."):
+    // if (this.canAccessMeeting(meeting)) return null;
+    //
+    // const now = new Date();
+    // const start = new Date(meeting.fecha_inicio);
+    // const end = new Date(meeting.fecha_finalizacion);
+    //
+    // if (now < start) {
+    //   const minutesUntil = Math.ceil((start.getTime() - now.getTime()) / 60000);
+    //   return `Disponible en ${minutesUntil} minutos`;
+    // } else if (now > end) {
+    //   return 'Reunión finalizada';
+    // }
+    //
+    // return null;
     return null;
   }
 }
