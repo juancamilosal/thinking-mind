@@ -881,30 +881,55 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    */
   private processBatchAttendanceAndUpdates(): void {
     const studentsWithZeroCredits: { tipo_documento: string; numero_documento: string }[] = [];
-      const studentsWithFourCredits: string[] = [];
-      const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
+    const studentsWithFourCredits: string[] = [];
+    const ratedStudentsForUpdate: { tipo_documento: string; numero_documento: string }[] = [];
 
-      const attendanceDataList: any[] = [];
-      const usersToUpdate: any[] = [];
-      const certificatesToCreate: any[] = [];
+    const attendanceDataList: any[] = [];
+    const usersToUpdate: any[] = [];
+    const certificatesToCreate: any[] = [];
 
-      // Collect data for batch requests
-      this.students.forEach(student => {
-        const evaluationData: any = {
-          calificacion: student.rating,
-          estudiante_id: student.id,
-          programa_ayo_id: this.currentProgramId,
-          asiste: student.attended,
-          observaciones: student.comment,
-          fecha: new Date().toISOString().split('T')[0],
-          criterio_evaluacion_estudiante_id: student.selectedCriteriaId
-        };
+    const programId = String(this.currentProgramId || '');
 
-        attendanceDataList.push(evaluationData);
+    this.students.forEach(student => {
+      const evaluationData: any = {
+        calificacion: student.rating,
+        estudiante_id: student.id,
+        programa_ayo_id: this.currentProgramId,
+        asiste: student.attended,
+        observaciones: student.comment,
+        fecha: new Date().toISOString().split('T')[0],
+        criterio_evaluacion_estudiante_id: student.selectedCriteriaId
+      };
+      attendanceDataList.push(evaluationData);
 
-        const currentCredits = Number(student.currentCredits) || 0;
-        const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
-        const programId = String(this.currentProgramId || '');
+      const currentCredits = Number(student.currentCredits) || 0;
+      const newCredits = currentCredits > 0 ? currentCredits - 1 : 0;
+
+      if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
+        studentsWithZeroCredits.push({
+          tipo_documento: student.tipo_documento,
+          numero_documento: student.numero_documento
+        });
+      }
+
+      if (newCredits === 4 && student.email_acudiente) {
+        studentsWithFourCredits.push(student.email_acudiente);
+      }
+
+      if (student.tipo_documento && student.numero_documento) {
+        ratedStudentsForUpdate.push({
+          tipo_documento: student.tipo_documento,
+          numero_documento: student.numero_documento
+        });
+      }
+
+      const updateData: any = {
+        id: student.id,
+        creditos: newCredits
+      };
+
+      if (newCredits === 0) {
+        const finalAttendancePercent = this.calculateProjectedAttendance(student);
         const pastRatingSum = Array.isArray(student.asistencia_id)
           ? student.asistencia_id.reduce((sum: number, record: any) => {
               if (!record || typeof record !== 'object') return sum;
@@ -919,144 +944,78 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         const currentMeetingRating = student.attended ? (Number(student.rating) || 0) : 0;
         const projectedRatingSum = pastRatingSum + currentMeetingRating;
 
-          console.log(`Processing student ${student.name}:`, {
-            currentCredits,
-            newCredits,
-            creditsDecremented: currentCredits - newCredits,
-            pastRatingSum,
-            projectedRatingSum
+        const passed = finalAttendancePercent >= 70 && projectedRatingSum >= 80;
+        updateData.aprobo_ayo = passed;
+        updateData.programa_ayo_id = null;
+
+        if (passed && this.currentLevelId) {
+          certificatesToCreate.push({
+            estudiante_id: student.id,
+            nivel_id: this.currentLevelId
           });
-
-          if (newCredits === 0 && student.tipo_documento && student.numero_documento) {
-            studentsWithZeroCredits.push({
-              tipo_documento: student.tipo_documento,
-              numero_documento: student.numero_documento
-            });
-          }
-
-          if (newCredits === 4 && student.email_acudiente) {
-            studentsWithFourCredits.push(student.email_acudiente);
-          }
-
-          if (student.tipo_documento && student.numero_documento) {
-            ratedStudentsForUpdate.push({
-              tipo_documento: student.tipo_documento,
-              numero_documento: student.numero_documento
-            });
-          }
-
-          const updateData: any = {
-            id: student.id,
-            calificacion: projectedRatingSum,
-            creditos: newCredits
-          };
-
-          // Logic for certification and approval
-          if (newCredits === 0) {
-            const finalAttendancePercent = this.calculateProjectedAttendance(student);
-            const passed = finalAttendancePercent >= 70 && projectedRatingSum >= 80;
-
-            console.log(`Checking certification for ${student.name}:`, {
-                newCredits,
-                finalAttendancePercent,
-                projectedRatingSum,
-                passed,
-                currentLevelId: this.currentLevelId
-            });
-
-            updateData.aprobo_ayo = passed;
-            updateData.programa_ayo_id = null;
-
-            if (passed) {
-               // Create certificate directly using CertificacionService
-               if (this.currentLevelId) {
-                  const certificateData = {
-                     estudiante_id: student.id,
-                     nivel_id: this.currentLevelId
-                  };
-                  console.log('Adding certificate to create:', certificateData);
-                  certificatesToCreate.push(certificateData);
-               } else {
-                   console.warn('Passed but no currentLevelId found. Certificate NOT created.');
-               }
-            } else {
-              console.log(`Student ${student.name} did not pass. Attendance: ${finalAttendancePercent}%, Rating: ${projectedRatingSum}`);
-            }
-          }
-
-          usersToUpdate.push(updateData);
-      });
-
-      const requests: Observable<any>[] = [];
-
-      // 1. Batch create attendance
-      if (attendanceDataList.length > 0) {
-        requests.push(this.attendanceService.createAttendances(attendanceDataList));
-      }
-
-      // 2. Batch update users
-      if (usersToUpdate.length > 0) {
-        requests.push(this.userService.updateUsers(usersToUpdate));
-      }
-
-      // 3. Batch create certificates
-      if (certificatesToCreate.length > 0) {
-        requests.push(this.certificacionService.createCertificados(certificatesToCreate));
-      }
-
-      // Execute all batch requests
-      forkJoin(requests).subscribe({
-        next: (responses) => {
-          console.log('Batch operations completed', responses);
-
-          // Send students with zero credits to new service
-          if (studentsWithZeroCredits.length > 0) {
-            const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);
-            const numero_documento = studentsWithZeroCredits.map(s => s.numero_documento);
-
-            this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
-              next: () => console.log('Students sent to new service'),
-              error: (e) => console.error('Error sending students to new service', e)
-            });
-          }
-
-          // Update estudiante_ayo status for ALL rated students
-          if (ratedStudentsForUpdate.length > 0) {
-            ratedStudentsForUpdate.forEach(s => {
-              this.studentService.searchStudentByDocument(s.tipo_documento, s.numero_documento).subscribe({
-                next: (res) => {
-                  if (res.data && res.data.length > 0) {
-                    const studentId = res.data[0].id;
-                    if (studentId) {
-                      this.studentService.updateStudent(studentId, { estudiante_ayo: true } as any).subscribe({
-                        next: () => console.log(`Updated estudiante_ayo for student ${s.numero_documento}`),
-                        error: (e) => console.error(`Error updating estudiante_ayo for student ${s.numero_documento}`, e)
-                      });
-                    }
-                  }
-                },
-                error: (e) => console.error(`Error searching student ${s.numero_documento}`, e)
-              });
-            });
-          }
-
-          // Send students with 4 credits email
-          if (studentsWithFourCredits.length > 0) {
-            this.programaAyoService.notifyAcudientesFlow(studentsWithFourCredits).subscribe({
-              next: () => console.log('Notify Acudientes Flow triggered successfully'),
-              error: (e) => console.error('Error triggering Notify Acudientes Flow', e)
-            });
-          }
-
-          // Create payroll record
-          this.createPayrollRecord();
-        },
-        error: (err) => {
-          console.error('Error submitting evaluations:', err);
-          this.isLoading = false;
-          this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
         }
-      });
+      }
+
+      usersToUpdate.push(updateData);
+    });
+
+    const requests: Observable<any>[] = [];
+    if (attendanceDataList.length > 0) {
+      requests.push(this.attendanceService.createAttendances(attendanceDataList));
+    }
+    if (usersToUpdate.length > 0) {
+      requests.push(this.userService.updateUsers(usersToUpdate));
+    }
+    if (certificatesToCreate.length > 0) {
+      requests.push(this.certificacionService.createCertificados(certificatesToCreate));
+    }
+
+    forkJoin(requests).subscribe({
+      next: () => {
+        if (studentsWithZeroCredits.length > 0) {
+          const tipo_documento = studentsWithZeroCredits.map(s => s.tipo_documento);
+          const numero_documento = studentsWithZeroCredits.map(s => s.numero_documento);
+
+          this.accountReceivableService.newAccountAyo(tipo_documento, numero_documento).subscribe({
+            next: () => console.log('Students sent to new service'),
+            error: (e) => console.error('Error sending students to new service', e)
+          });
+        }
+
+        if (ratedStudentsForUpdate.length > 0) {
+          ratedStudentsForUpdate.forEach(s => {
+            this.studentService.searchStudentByDocument(s.tipo_documento, s.numero_documento).subscribe({
+              next: (res) => {
+                if (res.data && res.data.length > 0) {
+                  const studentId = res.data[0].id;
+                  if (studentId) {
+                    this.studentService.updateStudent(studentId, { estudiante_ayo: true } as any).subscribe({
+                      next: () => console.log(`Updated estudiante_ayo for student ${s.numero_documento}`),
+                      error: (e) => console.error(`Error updating estudiante_ayo for student ${s.numero_documento}`, e)
+                    });
+                  }
+                }
+              },
+              error: (e) => console.error(`Error searching student ${s.numero_documento}`, e)
+            });
+          });
+        }
+
+        if (studentsWithFourCredits.length > 0) {
+          this.programaAyoService.notifyAcudientesFlow(studentsWithFourCredits).subscribe({
+            next: () => console.log('Notify Acudientes Flow triggered successfully'),
+            error: (e) => console.error('Error triggering Notify Acudientes Flow', e)
+          });
+        }
+
+        this.createPayrollRecord();
+      },
+      error: (err) => {
+        console.error('Error submitting evaluations:', err);
+        this.isLoading = false;
+        this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
+      }
+    });
   }
 
   /**
