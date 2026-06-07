@@ -507,7 +507,9 @@
                          <img src="assets/icons/plan.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Plan de Estudio" title="Ver Plan de Estudio" (click)="openStudyPlanModal(programa)">
 
                          <!-- Student Icon -->
-                         <img src="assets/icons/students.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Estudiantes" title="Ver Estudiantes" (click)="verEstudiante(programa)">
+                         @if (hasStudentsInProgram(programa)) {
+                           <img src="assets/icons/students.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Estudiantes" title="Ver Estudiantes" (click)="verEstudiante(programa)">
+                         }
 
                          <!-- Novedad Icon -->
                          <img src="assets/icons/email.png" class="w-10 h-10 object-contain cursor-pointer hover:scale-110 transition-transform" alt="Novedad" title="Novedad" (click)="openNovedadModal(programa)">

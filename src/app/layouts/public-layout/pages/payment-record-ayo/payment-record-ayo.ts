@@ -354,6 +354,26 @@ export class PaymentRecordAyoComponent implements OnInit {
             this.paymentForm.markAllAsTouched();
             return;
         }
+        const studentDocType = String(this.paymentForm.get('studentTipoDocumento')?.value || '').trim().toUpperCase();
+        const studentDocNumber = String(this.paymentForm.get('studentNumeroDocumento')?.value || '').trim();
+        const hasPendingAccountForStudent = (this.registeredCourses || []).some((c: any) => {
+            const cDocType = String(c?.studentDocumentType || '').trim().toUpperCase();
+            const cDocNumber = String(c?.studentDocumentNumber || '').trim();
+            const status = String(c?.status || '').trim().toUpperCase();
+            return cDocType === studentDocType && cDocNumber === studentDocNumber && status === 'PENDIENTE';
+        });
+
+        if (studentDocType && studentDocNumber && hasPendingAccountForStudent) {
+            const programPrice =
+                (this.precioPrograma?.tiene_precio_especial && this.precioPrograma?.precio_especial)
+                    ? this.precioPrograma.precio_especial
+                    : (this.precioPrograma?.precio || 0);
+
+            this.showWarningNotification(
+                `El estudiante ya cuenta con una cuenta para pagar en estado PENDIENTE por valor ${this.formatCurrency(programPrice)}. Realice el pago sobre esa cuenta.`
+            );
+            return;
+        }
         this.isLoading = true;
 
         const formData = this.paymentForm.value;
@@ -455,6 +475,17 @@ export class PaymentRecordAyoComponent implements OnInit {
             title: 'Error',
             message: message,
             duration: 5000
+        };
+        this.showNotification = true;
+        this.cdRef.detectChanges();
+    }
+
+    showWarningNotification(message: string) {
+        this.notificationData = {
+            type: 'warning',
+            title: 'Advertencia',
+            message: message,
+            duration: 7000
         };
         this.showNotification = true;
         this.cdRef.detectChanges();
