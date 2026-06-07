@@ -1365,6 +1365,19 @@ export class ListMeet implements OnInit {
   }
 
   verEstudiante(programa: ProgramaAyo, suppressWarnings: boolean = false, skipRefresh: boolean = false) {
+    if (!this.hasStudentsInProgram(programa)) {
+      this.ngZone.run(() => {
+        this.isLoadingStudents = false;
+        this.showStudentPanel = true;
+        this.selectedProgramForFocus = programa;
+        this.selectedStudents = [];
+        this.attendanceList = [];
+        if (!suppressWarnings) this.notificationService.showWarning('Información', 'No hay estudiantes inscritos a este programa.');
+        this.cdr.detectChanges();
+      });
+      return;
+    }
+
     if (!skipRefresh && !suppressWarnings && (programa as any)?.id) {
       const id = String((programa as any).id);
       this.refreshProgramasSilently(() => {
@@ -1376,12 +1389,10 @@ export class ListMeet implements OnInit {
     const prog = programa as any;
     this.showLevelSubcategoryFilters = false;
 
-    // Use estudiantes_id del programa or id_nivel.estudiantes_id para listar estudiantes
+    // Use estudiantes_id del programa para listar estudiantes
     let studentsSource: any[] = [];
     if (prog.estudiantes_id && prog.estudiantes_id.length > 0) {
         studentsSource = prog.estudiantes_id;
-    } else if (prog.id_nivel && prog.id_nivel.estudiantes_id && Array.isArray(prog.id_nivel.estudiantes_id)) {
-        studentsSource = prog.id_nivel.estudiantes_id;
     }
 
     if (studentsSource.length > 0) {
@@ -1787,6 +1798,21 @@ export class ListMeet implements OnInit {
         });
         return group;
       });
+    });
+  }
+
+  hasStudentsInProgram(programa: any): boolean {
+    const rootStudents = Array.isArray(programa?.estudiantes_id) ? programa.estudiantes_id : [];
+    return rootStudents.some((student: any) => {
+      let userObj = student;
+      if (student?.directus_users_id && typeof student.directus_users_id === 'object') {
+        userObj = student.directus_users_id;
+      } else if (student?.estudiante_id && typeof student.estudiante_id === 'object') {
+        userObj = student.estudiante_id;
+      } else if (student?.estudiantes_id && typeof student.estudiantes_id === 'object') {
+        userObj = student.estudiantes_id;
+      }
+      return !!userObj?.id;
     });
   }
 
