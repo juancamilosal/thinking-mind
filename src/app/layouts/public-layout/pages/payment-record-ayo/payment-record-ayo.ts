@@ -143,11 +143,9 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     onGuardianDocumentTypeChange(event: any): void {
-        this.searchClientIfReady();
     }
 
     onGuardianDocumentNumberChange(event: any): void {
-        this.searchClientIfReady();
     }
 
     onGuardianNameChange(event: any): void {
@@ -165,49 +163,6 @@ export class PaymentRecordAyoComponent implements OnInit {
         return text.toLowerCase().replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
     }
 
-    private searchClientIfReady(): void {
-        const documentType = this.paymentForm.get('tipoDocumento')?.value;
-        const documentNumber = this.paymentForm.get('numeroDocumento')?.value;
-
-        if (documentType && documentNumber && documentNumber.length >= 6) {
-            this.searchClientPayment(documentType, documentNumber);
-        } else {
-            this.clearGuardianFields();
-        }
-    }
-
-    private searchClientPayment(documentType: string, documentNumber: string): void {
-        this.isSearchingClient = true;
-        this.programaAYOService.consultarAcudiente(documentType, documentNumber).subscribe({
-            next: (data) => {
-                this.isSearchingClient = false;
-                if (data.data && data.data.length > 0) {
-                    const client = data.data[0];
-                    this.clientData = client;
-                    this.fillGuardianFields(client);
-
-                    if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
-                        this.prepareRegisteredCoursesTable(client);
-                        this.showRegisteredCourses = true;
-                    } else {
-                        this.registeredCourses = [];
-                        this.showRegisteredCourses = false;
-                    }
-                } else {
-                    this.clearGuardianFields();
-                    this.clientData = null;
-                    this.registeredCourses = [];
-                    this.showRegisteredCourses = false;
-                }
-            },
-            error: (error) => {
-                this.isSearchingClient = false;
-                this.clearGuardianFields();
-                this.registeredCourses = [];
-                this.showRegisteredCourses = false;
-            }
-        });
-    }
 
     private fillGuardianFields(client: any): void {
         this.paymentForm.patchValue({
@@ -259,19 +214,60 @@ export class PaymentRecordAyoComponent implements OnInit {
     private searchStudentPayment(documentType: string, documentNumber: string): void {
         this.isSearchingStudent = true;
         this.studentService.searchStudentPayment(documentType, documentNumber).subscribe({
-            next: (data) => {
+            next: (data: any) => {
                 this.isSearchingStudent = false;
-                if (data.data && data.data.length > 0) {
-                    this.studentData = data.data[0];
+                const responseData = data.data;
+                const estudiantes: any[] = responseData?.estudiante || [];
+                const cuentasCobrar: any[] = (responseData?.cuentas_cobrar || []).filter((c: any) => c.es_programa_ayo === true);
+
+                if (estudiantes.length > 0) {
+                    this.studentData = estudiantes[0];
                     this.fillStudentFields(this.studentData);
+
+                    if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
+                        const acudiente = this.studentData.acudiente;
+                        this.paymentForm.patchValue({
+                            tipoDocumento: acudiente.tipo_documento || 'CC',
+                            numeroDocumento: acudiente.numero_documento || ''
+                        });
+                        this.fillGuardianFields(acudiente);
+                    } else {
+                        this.paymentForm.patchValue({ tipoDocumento: 'CC', numeroDocumento: '' });
+                        this.clearGuardianFields();
+                    }
+
+                    if (cuentasCobrar.length > 0) {
+                        const enrichedCuentas = cuentasCobrar.map((cuenta: any) => {
+                            const sid = typeof cuenta.estudiante_id === 'string' ? cuenta.estudiante_id : cuenta.estudiante_id?.id;
+                            const studentObj = estudiantes.find((s: any) => s.id === sid) || { id: sid };
+                            return { ...cuenta, estudiante_id: studentObj };
+                        });
+                        const adaptedClient = {
+                            ...(this.studentData.acudiente || {}),
+                            cuentas_cobrar: enrichedCuentas,
+                            estudiantes: estudiantes
+                        };
+                        this.clientData = adaptedClient;
+                        this.prepareRegisteredCoursesTable(adaptedClient);
+                        this.showRegisteredCourses = true;
+                    } else {
+                        this.registeredCourses = [];
+                        this.showRegisteredCourses = false;
+                        this.clientData = this.studentData.acudiente || null;
+                    }
                 } else {
                     this.clearStudentFields();
+                    this.registeredCourses = [];
+                    this.showRegisteredCourses = false;
+                    this.clientData = null;
                 }
             },
             error: (error) => {
                 this.isSearchingStudent = false;
-                console.error('Error searching student:', error);
                 this.clearStudentFields();
+                this.registeredCourses = [];
+                this.showRegisteredCourses = false;
+                this.clientData = null;
             }
         });
     }
@@ -428,24 +424,14 @@ export class PaymentRecordAyoComponent implements OnInit {
                 if (response.status === 'SUCCES') {
                     this.showSuccessNotification('Programa AYO inscrito correctamente');
 
-                    const docType = this.paymentForm.get('tipoDocumento')?.value;
-                    const docNum = this.paymentForm.get('numeroDocumento')?.value;
-
-                    this.programaAYOService.consultarAcudiente(docType, docNum).subscribe({
-                        next: (data) => {
-                            if (data.data && data.data.length > 0) {
-                                this.clientData = data.data[0];
-                                this.showConfirmation = false;
-                                this.showRegisteredCourses = true;
-                                this.prepareRegisteredCoursesTable(data.data[0]);
-                                window.scrollTo(0, 0);
-                                this.cdRef.markForCheck();
-                            }
-                        },
-                        error: (error) => {
-                            console.error('Error refreshing client data:', error);
-                        }
-                    });
+                    const studentDocType = this.paymentForm.get('studentTipoDocumento')?.value;
+                    const studentDocNum = this.paymentForm.get('studentNumeroDocumento')?.value;
+                    this.showConfirmation = false;
+                    this.cdRef.detectChanges();
+                    window.scrollTo(0, 0);
+                    setTimeout(() => {
+                        this.searchStudentPayment(studentDocType, studentDocNum);
+                    }, 500);
                 } else {
                     this.showErrorNotification('Error inesperado. Inténtelo más tarde.');
                 }
@@ -829,7 +815,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 this.closePaymentModal();
                 if (result.transaction && result.transaction.status === 'APPROVED') {
                     this.showSuccessNotification('Pago realizado con éxito');
-                    this.searchClientIfReady(); // Refresh table
+                    this.searchStudentIfReady();
                 } else if (result.transaction) {
                     this.showErrorNotification('El pago no fue aprobado: ' + result.transaction.status);
                 } else {
