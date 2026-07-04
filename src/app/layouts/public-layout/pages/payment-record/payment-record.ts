@@ -311,9 +311,11 @@ export class PaymentRecord implements OnInit {
   }
 
   onGuardianDocumentTypeChange(event: any): void {
+    this.searchClientIfReady();
   }
 
   onGuardianDocumentNumberChange(event: any): void {
+    this.searchClientIfReady();
   }
 
   onStudentDocumentTypeChange(event: any): void {
@@ -322,6 +324,33 @@ export class PaymentRecord implements OnInit {
 
   onStudentDocumentNumberChange(event: any): void {
     this.searchStudentIfReady();
+  }
+
+  private searchClientIfReady(): void {
+    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
+    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+
+    if (documentType && documentNumber && documentNumber.length >= 6) {
+      this.searchClientPayment(documentType, documentNumber);
+    } else {
+      this.clearGuardianFields();
+    }
+  }
+
+  private searchClientPayment(documentType: string, documentNumber: string): void {
+    this.isSearchingClient = true;
+    this.clientService.searchClientPayment(documentType, documentNumber).subscribe(data => {
+      this.isSearchingClient = false;
+      this.cliente = data.data;
+      if (data.data.length > 0) {
+        const client = data.data[0];
+        this.clientData = client;
+        this.fillGuardianFields(client);
+      } else {
+        this.clearGuardianFields();
+        this.clientData = null;
+      }
+    });
   }
 
   private searchStudentIfReady(): void {
@@ -351,6 +380,9 @@ export class PaymentRecord implements OnInit {
             guardianDocumentNumber: acudiente.numero_documento || ''
           });
           this.fillGuardianFields(acudiente);
+          if (acudiente.tipo_documento && acudiente.numero_documento) {
+            this.searchClientPayment(acudiente.tipo_documento, acudiente.numero_documento);
+          }
         } else {
           this.paymentForm.patchValue({
             guardianDocumentType: 'CC',
