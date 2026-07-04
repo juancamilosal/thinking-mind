@@ -60,6 +60,7 @@ export class PaymentRecord implements OnInit {
   cliente: Client[];
   student: Student[];
   showAddCourseForm = false;
+  studentId: string | null = null;
 
   // Properties for payments modal
   showPaymentsModal = false;
@@ -323,17 +324,6 @@ export class PaymentRecord implements OnInit {
     this.searchStudentIfReady();
   }
 
-  private searchClientIfReady(): void {
-    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
-    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
-
-    if (documentType && documentNumber && documentNumber.length >= 6) {
-      this.searchClientPayment(documentType, documentNumber);
-    } else {
-      this.clearGuardianFields();
-    }
-  }
-
   private searchStudentIfReady(): void {
     const documentType = this.paymentForm.get('studentDocumentType')?.value;
     const documentNumber = this.paymentForm.get('studentDocumentNumber')?.value;
@@ -341,31 +331,6 @@ export class PaymentRecord implements OnInit {
     if (documentType && documentNumber && documentNumber.length >= 6) {
       this.searchStudentPayment(documentType, documentNumber);
     }
-  }
-
-  private searchClientPayment(documentType: string, documentNumber: string): void {
-    this.isSearchingClient = true;
-    this.clientService.searchClientPayment(documentType, documentNumber).subscribe(data => {
-      this.isSearchingClient = false;
-      this.cliente = data.data;
-      if (data.data.length > 0) {
-        const client = data.data[0];
-        this.clientData = client;
-        this.fillGuardianFields(client);
-        if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
-          this.prepareRegisteredCoursesTable(client);
-          this.showRegisteredCourses = true;
-        } else {
-          this.registeredCourses = [];
-          this.showRegisteredCourses = false;
-        }
-      } else {
-        this.clearGuardianFields();
-        this.showRegisteredCourses = false;
-        this.clientData = null;
-        this.registeredCourses = [];
-      }
-    });
   }
 
   private searchStudentPayment(documentType: string, documentNumber: string): void {
@@ -386,6 +351,12 @@ export class PaymentRecord implements OnInit {
             guardianDocumentNumber: acudiente.numero_documento || ''
           });
           this.fillGuardianFields(acudiente);
+        } else {
+          this.paymentForm.patchValue({
+            guardianDocumentType: 'CC',
+            guardianDocumentNumber: ''
+          });
+          this.clearGuardianFields();
         }
 
         if (cuentasCobrar.length > 0) {
@@ -412,6 +383,9 @@ export class PaymentRecord implements OnInit {
         }
       } else {
         this.clearStudentFields();
+        this.registeredCourses = [];
+        this.showRegisteredCourses = false;
+        this.clientData = null;
       }
     });
   }
@@ -685,10 +659,13 @@ export class PaymentRecord implements OnInit {
       studentGrado: '',
       studentGrupo: '',
       studentSchool: '',
+      schoolSearchTerm: '',
       selectedCourse: '',
       coursePrice: '',
       courseInscriptionPrice: ''
     });
+    this.filteredSchools = [];
+    this.isSchoolSelected = false;
   }
 
   backToTableView(): void {
@@ -1286,20 +1263,36 @@ export class PaymentRecord implements OnInit {
   }
 
   confirmAndSubmit(): void {
-    // Validate for duplicate enrollment before submitting
     if (this.isDuplicateEnrollment()) {
       this.showDuplicateEnrollmentNotification();
       return;
     }
 
     this.isSubmitting = true;
+    const studentDocType = this.paymentForm.get('studentDocumentType')?.value;
+    const studentDocNumber = this.paymentForm.get('studentDocumentNumber')?.value;
+
+    this.studentService.searchStudentPayment(studentDocType, studentDocNumber).subscribe({
+      next: (data: any) => {
+        const estudiantes: any[] = data?.data?.estudiante || [];
+        this.studentId = estudiantes.length > 0 ? (estudiantes[0].id || null) : null;
+        this.proceedWithAccountCreation();
+      },
+      error: () => {
+        this.studentId = null;
+        this.proceedWithAccountCreation();
+      }
+    });
+  }
+
+  private proceedWithAccountCreation(): void {
     this.createAccountRecord();
     this.showAddCourseForm = false;
-    const documentType = this.paymentForm.get('guardianDocumentType')?.value;
-    const documentNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
+    const studentDocType = this.paymentForm.get('studentDocumentType')?.value;
+    const studentDocNumber = this.paymentForm.get('studentDocumentNumber')?.value;
     setTimeout(() => {
-      this.searchClientPayment(documentType, documentNumber);
-    }, 500)
+      this.searchStudentPayment(studentDocType, studentDocNumber);
+    }, 500);
   }
 
   createAccountRecord = () => {
@@ -1361,6 +1354,7 @@ export class PaymentRecord implements OnInit {
         direccion: this.paymentForm.get('guardianAddress')?.value,
       },
       estudiante: {
+        id: this.studentId,
         tipo_documento: this.paymentForm.get('studentDocumentType')?.value,
         numero_documento: this.paymentForm.get('studentDocumentNumber')?.value,
         nombre: this.paymentForm.get('studentFirstName')?.value,
@@ -1393,10 +1387,11 @@ export class PaymentRecord implements OnInit {
         // Si no hay error, proceder normalmente
         this.isSubmitting = false;
         this.showConfirmation = false;
+        this.cdRef.detectChanges();
         // Mostrar notificación de éxito
         this.showSuccessNotification();
         // Buscar nuevamente para actualizar la tabla
-        this.searchClientIfReady();
+        this.searchStudentIfReady();
       },
       error: (error) => {
         this.isSubmitting = false;
