@@ -310,11 +310,9 @@ export class PaymentRecord implements OnInit {
   }
 
   onGuardianDocumentTypeChange(event: any): void {
-    this.searchClientIfReady();
   }
 
   onGuardianDocumentNumberChange(event: any): void {
-    this.searchClientIfReady();
   }
 
   onStudentDocumentTypeChange(event: any): void {
@@ -371,16 +369,51 @@ export class PaymentRecord implements OnInit {
   }
 
   private searchStudentPayment(documentType: string, documentNumber: string): void {
+    this.studentService.searchStudentPayment(documentType, documentNumber).subscribe((data: any) => {
+      const responseData = data.data;
+      const estudiantes: any[] = responseData?.estudiante || [];
+      const cuentasCobrar: any[] = responseData?.cuentas_cobrar || [];
 
-    this.studentService.searchStudentPayment(documentType, documentNumber).subscribe(data => {
-      this.student = data.data;
+      if (estudiantes.length > 0) {
+        const studentData = estudiantes[0];
+        this.student = [studentData];
+        this.fillStudentFields(studentData);
 
-      if (data.data.length > 0) {
-        this.fillStudentFields(this.student[0]);
+        if (studentData.acudiente && typeof studentData.acudiente === 'object') {
+          const acudiente = studentData.acudiente as Client;
+          this.paymentForm.patchValue({
+            guardianDocumentType: acudiente.tipo_documento || 'CC',
+            guardianDocumentNumber: acudiente.numero_documento || ''
+          });
+          this.fillGuardianFields(acudiente);
+        }
+
+        if (cuentasCobrar.length > 0) {
+          // Enriquecer cada cuenta con el objeto completo del estudiante
+          const enrichedCuentas = cuentasCobrar.map((cuenta: any) => {
+            const sid = typeof cuenta.estudiante_id === 'string' ? cuenta.estudiante_id : cuenta.estudiante_id?.id;
+            const studentObj = estudiantes.find((s: any) => s.id === sid) || { id: sid };
+            return { ...cuenta, estudiante_id: studentObj };
+          });
+
+          const adaptedClient = {
+            ...(studentData.acudiente || {}),
+            cuentas_cobrar: enrichedCuentas,
+            estudiantes: estudiantes
+          };
+
+          this.clientData = adaptedClient;
+          this.prepareRegisteredCoursesTable(adaptedClient);
+          this.showRegisteredCourses = true;
+        } else {
+          this.registeredCourses = [];
+          this.showRegisteredCourses = false;
+          this.clientData = studentData.acudiente || null;
+        }
       } else {
         this.clearStudentFields();
       }
-    })
+    });
   }
 
   private fillGuardianFields(client: any): void {
