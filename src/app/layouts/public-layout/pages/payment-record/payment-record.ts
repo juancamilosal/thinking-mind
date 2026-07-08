@@ -433,10 +433,19 @@ export class PaymentRecord implements OnInit {
   }
 
   private fillStudentFields(student: any): void {
+    let gradoValue = '';
+    let grupoValue = '';
+    if (student.grado) {
+      const parts = student.grado.trim().split(' ');
+      gradoValue = parts[0] || '';
+      grupoValue = parts.slice(1).join(' ') || '';
+    }
+
     this.paymentForm.patchValue({
       studentFirstName: student.nombre || '',
       studentLastName: student.apellido || '',
-      studentGrado: student.grado || '',
+      studentGrado: gradoValue,
+      studentGrupo: grupoValue,
       studentSchool: student.colegio || '',
     });
 
