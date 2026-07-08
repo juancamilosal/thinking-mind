@@ -900,7 +900,7 @@ export class PaymentRecord implements OnInit {
 
   onOpenProgramChange(event: any): void {
     const checked = !!event.target.checked;
-    
+
     // Si se intenta marcar el check, mostrar confirmación
     if (checked) {
       this.showOpenProgramConfirmation();
@@ -908,7 +908,7 @@ export class PaymentRecord implements OnInit {
       this.paymentForm.get('isOpenProgram')?.setValue(false);
       return;
     }
-    
+
     // Si se desmarca, proceder normalmente
     this.processOpenProgramChange(false);
   }
@@ -924,7 +924,7 @@ export class PaymentRecord implements OnInit {
       }
     };
     this.showNotification = true;
-    
+
     // Crear botones personalizados para Sí/No
     setTimeout(() => {
       const modal = document.querySelector('.modal-content');
@@ -934,11 +934,11 @@ export class PaymentRecord implements OnInit {
         if (footer) {
           // Limpiar el botón existente
           footer.innerHTML = '';
-          
+
           // Crear contenedor para botones
           const buttonContainer = document.createElement('div');
           buttonContainer.className = 'flex gap-3';
-          
+
           // Botón NO
           const noButton = document.createElement('button');
           noButton.textContent = 'NO';
@@ -946,7 +946,7 @@ export class PaymentRecord implements OnInit {
           noButton.onclick = () => {
             this.onNotificationClose();
           };
-          
+
           // Botón SÍ
           const yesButton = document.createElement('button');
           yesButton.textContent = 'SI';
@@ -955,7 +955,7 @@ export class PaymentRecord implements OnInit {
             this.onNotificationClose();
             this.processOpenProgramChange(true);
           };
-          
+
           buttonContainer.appendChild(noButton);
           buttonContainer.appendChild(yesButton);
           footer.appendChild(buttonContainer);
@@ -1005,6 +1005,25 @@ export class PaymentRecord implements OnInit {
       const willGoTercerHermanoId = 'a218abdb-50e6-4b51-bc51-570e9efdfdc8';
 
       if (courseId === willGoSegundoHermanoId) {
+        // Verificar si ya existe una cuenta PENDIENTE de Will-Go Segundo Hermano
+        if (this.clientData?.cuentas_cobrar) {
+          const hasPendingSegundoHermano = this.clientData.cuentas_cobrar.some((cuenta: any) =>
+            cuenta.curso_id &&
+            cuenta.curso_id.id === willGoSegundoHermanoId &&
+            cuenta.estado === 'PENDIENTE'
+          );
+          if (hasPendingSegundoHermano) {
+            this.notificationData = {
+              title: 'Cuenta pendiente existente',
+              message: 'Tiene una cuenta Will-Go Segundo Hermano Pendiente.',
+              type: 'error'
+            };
+            this.showNotification = true;
+            this.resetCourseSelection();
+            return;
+          }
+        }
+
         // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go Estándar
         if (!this.clientData || !this.clientData.cuentas_cobrar) {
           this.showValidationNotification('Will Go Estandar');
@@ -1026,6 +1045,25 @@ export class PaymentRecord implements OnInit {
       }
 
       if (courseId === willGoTercerHermanoId) {
+        // Verificar si ya existe una cuenta PENDIENTE de Will-Go Tercer Hermano
+        if (this.clientData?.cuentas_cobrar) {
+          const hasPendingTercerHermano = this.clientData.cuentas_cobrar.some((cuenta: any) =>
+            cuenta.curso_id &&
+            cuenta.curso_id.id === willGoTercerHermanoId &&
+            cuenta.estado === 'PENDIENTE'
+          );
+          if (hasPendingTercerHermano) {
+            this.notificationData = {
+              title: 'Cuenta pendiente existente',
+              message: 'Tiene una cuenta Will-Go Tercer Hermano Pendiente.',
+              type: 'error'
+            };
+            this.showNotification = true;
+            this.resetCourseSelection();
+            return;
+          }
+        }
+
         // Verificar si el acudiente tiene al menos una cuenta por cobrar del curso Will Go (Segundo Hermano)
         if (!this.clientData || !this.clientData.cuentas_cobrar) {
           this.showValidationNotification('Will Go (Segundo Hermano)');
