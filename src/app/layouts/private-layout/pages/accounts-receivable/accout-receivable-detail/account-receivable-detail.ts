@@ -655,10 +655,7 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
       (this.account as any).monto_descuento = this.finalAmount;
 
       this.accountService.updateAccountReceivable(this.account.id, {
-        monto: this.editedAmount,
-        estado: newEstado,
-        descuento: this.discountPercentage,
-        monto_descuento: this.finalAmount
+        monto: this.editedAmount
       }).subscribe({
         next: (updatedAccount) => {
           this.notificationService.showSuccess('Éxito', `El monto de la cuenta ha sido actualizado. Estado: ${newEstado}`);
