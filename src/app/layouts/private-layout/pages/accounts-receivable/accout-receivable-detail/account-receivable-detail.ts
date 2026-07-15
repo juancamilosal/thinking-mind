@@ -1046,15 +1046,17 @@ export class AccountReceivableDetailComponent implements OnInit, OnChanges {
     const previousDescuento = this.account.descuento;
     const previousMontoDescuento = (this.account as any).monto_descuento;
 
+    const montoDescuento = this.discountPercentage === 0 ? 0 : this.finalAmount;
+
     // Actualización optimista del modelo local
     this.account.monto = this.originalAmount;
     this.account.descuento = this.discountPercentage;
-    (this.account as any).monto_descuento = this.finalAmount;
+    (this.account as any).monto_descuento = montoDescuento;
 
     const updateData = {
       monto: this.originalAmount,
       descuento: this.discountPercentage,
-      monto_descuento: this.finalAmount
+      monto_descuento: montoDescuento
     };
 
     this.accountService.updateAccountReceivable(this.account.id, updateData).subscribe({
