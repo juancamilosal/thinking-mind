@@ -88,188 +88,7 @@
         <div>
           <form [formGroup]="paymentForm" (ngSubmit)="onContinue()" class="space-y-8">
 
-            <!-- Student Info Card -->
-                          <div id="studentInfoCard" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                            <div class="flex flex-col md:flex-row items-center mb-6 border-b border-gray-100 pb-4 text-center md:text-left">
-                <div class="bg-gradient-to-r p-3 mb-4 md:mb-0 md:mr-4">
-                  <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24 mx-auto">
-                </div>
-                <h3 class="text-2xl font-bold text-[#13486e]">Información del Estudiante</h3>
-              </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                              <div class="space-y-3 group">
-                                <label for="studentTipoDocumento"
-                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo de Documento *</label>
-                                <select id="studentTipoDocumento" formControlName="studentTipoDocumento" (change)="onStudentDocumentTypeChange($event)"
-                                  class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
-                                  <option value="" disabled selected>Selecciona una opción</option>
-                                  @for (type  of DOCUMENT_TYPE; track type) {
-                                    <option [value]="type.id">{{ type.name }}</option>
-                                  }
-                                </select>
-                                @if (paymentForm.get('studentTipoDocumento')?.touched && paymentForm.get('studentTipoDocumento')?.errors?.['required']) {
-                                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    El tipo de documento es obligatorio
-                                  </p>
-                                }
-                              </div>
-
-                              <div class="space-y-3 group">
-                                <label for="studentNumeroDocumento"
-                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de Documento *</label>
-                                <div class="relative">
-                                  <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)" (keypress)="onlyNumbers($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Ej: 1000123456">
-                                  @if (isSearchingStudent) {
-                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                      <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
-                                    </div>
-                                  }
-                                </div>
-                                @if (paymentForm.get('studentNumeroDocumento')?.touched && paymentForm.get('studentNumeroDocumento')?.errors?.['required']) {
-                                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    El número de documento es obligatorio
-                                  </p>
-                                }
-                                @if (paymentForm.get('studentNumeroDocumento')?.touched && paymentForm.get('studentNumeroDocumento')?.errors?.['minlength']) {
-                                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Mínimo 6 caracteres requeridos
-                                  </p>
-                                }
-                                @if (paymentForm.get('studentNumeroDocumento')?.touched && paymentForm.get('studentNumeroDocumento')?.errors?.['pattern']) {
-                                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    Solo se permiten números
-                                  </p>
-                                }
-                              </div>
-
-                                <div class="space-y-3 group">
-                                  <label for="studentNombre"
-                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre *</label>
-                                  <input type="text" id="studentNombre" formControlName="studentNombre" (input)="onStudentNameChange($event)"
-                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                    placeholder="Nombre del estudiante">
-                                  @if (paymentForm.get('studentNombre')?.touched && paymentForm.get('studentNombre')?.errors?.['required']) {
-                                    <p class="text-red-500 text-sm mt-2 flex items-center">
-                                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                      </svg>
-                                      El nombre es obligatorio
-                                    </p>
-                                  }
-                                  @if (paymentForm.get('studentNombre')?.touched && paymentForm.get('studentNombre')?.errors?.['minlength']) {
-                                    <p class="text-red-500 text-sm mt-2 flex items-center">
-                                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                      </svg>
-                                      Mínimo 2 caracteres requeridos
-                                    </p>
-                                  }
-                                </div>
-
-                                  <div class="space-y-3 group">
-                                    <label for="studentApellido"
-                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido *</label>
-                                    <input type="text" id="studentApellido" formControlName="studentApellido" (input)="onStudentSurnameChange($event)"
-                                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                      placeholder="Apellido del estudiante">
-                                    @if (paymentForm.get('studentApellido')?.touched && paymentForm.get('studentApellido')?.errors?.['required']) {
-                                      <p class="text-red-500 text-sm mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        El apellido es obligatorio
-                                      </p>
-                                    }
-                                    @if (paymentForm.get('studentApellido')?.touched && paymentForm.get('studentApellido')?.errors?.['minlength']) {
-                                      <p class="text-red-500 text-sm mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        Mínimo 2 caracteres requeridos
-                                      </p>
-                                    }
-                                  </div>
-
-                                  <div class="space-y-3 group">
-                                    <label for="studentFechaNacimiento"
-                                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Fecha de Nacimiento *</label>
-                                    <input
-                                      type="date"
-                                      id="studentFechaNacimiento"
-                                      formControlName="studentFechaNacimiento"
-                                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400">
-                                    @if (paymentForm.get('studentFechaNacimiento')?.touched && paymentForm.get('studentFechaNacimiento')?.errors?.['required']) {
-                                      <p class="text-red-500 text-sm mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        La fecha de nacimiento es obligatoria
-                                      </p>
-                                    }
-                                  </div>
-
-                                    <div class="space-y-3 group md:col-span-2">
-                                      <label for="studentEmail"
-                                        class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo Electrónico *</label>
-                                      <input type="email" id="studentEmail" formControlName="studentEmail"
-                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                        placeholder="estudiante@gmail.com">
-                                      <p class="text-sm text-gray-600 mt-2 flex items-start gap-2">
-                                        <span class="text-orange-500 flex-shrink-0">ℹ️</span>
-                                        <span>Para poder registrarse, el correo del estudiante debe ser un correo electrónico de Gmail. Si no tiene
-                                        uno, lo invitamos a crearlo para poder registrarse.</span>
-                                      </p>
-                                      @if (paymentForm.get('studentEmail')?.touched && paymentForm.get('studentEmail')?.errors?.['required']) {
-                                        <p class="text-red-500 text-sm mt-2 flex items-center">
-                                          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                          </svg>
-                                          El correo electrónico es obligatorio
-                                        </p>
-                                      }
-                                      @if (paymentForm.get('studentEmail')?.touched && paymentForm.get('studentEmail')?.errors?.['email']) {
-                                        <p class="text-red-500 text-sm mt-2 flex items-center">
-                                          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                          </svg>
-                                          Ingrese un correo electrónico válido
-                                        </p>
-                                      }
-                                    </div>
-                                  <div class="space-y-3 md:col-span-2 group">
-                                          <label for="studentSchool" class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Colegio *</label>
-                                          <div class="relative">
-                                              <input
-
-                                                  type="text"
-                                                  id="studentSchool"
-                                                  formControlName="schoolSearchTerm"
-                                                  #schoolSearchInput
-                                                  placeholder="Colegio San Rafael"
-                                                  class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
-                                                  autocomplete="off">
-                                          </div>
-                                      </div>
-                                    </div>
-                            </div>
-
             <!-- Guardian Info Card -->
-            @if (!showRegisteredCourses || showAddCourseForm) {
             <!-- Using white card to keep AYO "clean" look but with payment-record structure -->
             <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
               <div class="flex flex-col md:flex-row items-center mb-6 border-b border-gray-100 pb-4 text-center md:text-left">
@@ -472,8 +291,190 @@
                       </p>
                     }
                   </div>
-                          </div>
-                        </div>
+                </div>
+              </div>
+
+            @if (!showRegisteredCourses || showAddCourseForm) {
+            <!-- Student Info Card -->
+                          <div id="studentInfoCard" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                            <div class="flex flex-col md:flex-row items-center mb-6 border-b border-gray-100 pb-4 text-center md:text-left">
+                <div class="bg-gradient-to-r p-3 mb-4 md:mb-0 md:mr-4">
+                  <img src="assets/icons/estudiante.png" alt="Icono Estudiante" class="w-24 h-24 mx-auto">
+                </div>
+                <h3 class="text-2xl font-bold text-[#13486e]">Información del Estudiante</h3>
+              </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <div class="space-y-3 group">
+                                <label for="studentTipoDocumento"
+                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Tipo de Documento *</label>
+                                <select id="studentTipoDocumento" formControlName="studentTipoDocumento" (change)="onStudentDocumentTypeChange($event)"
+                                  class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800">
+                                  <option value="" disabled selected>Selecciona una opción</option>
+                                  @for (type  of DOCUMENT_TYPE; track type) {
+                                    <option [value]="type.id">{{ type.name }}</option>
+                                  }
+                                </select>
+                                @if (paymentForm.get('studentTipoDocumento')?.touched && paymentForm.get('studentTipoDocumento')?.errors?.['required']) {
+                                  <p class="text-red-500 text-sm mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    El tipo de documento es obligatorio
+                                  </p>
+                                }
+                              </div>
+
+                              <div class="space-y-3 group">
+                                <label for="studentNumeroDocumento"
+                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de Documento *</label>
+                                <div class="relative">
+                                  <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)" (keypress)="onlyNumbers($event)"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Ej: 1000123456">
+                                  @if (isSearchingStudent) {
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                      <div class="animate-spin h-5 w-5 border-2 border-[#13486e] border-t-transparent rounded-full"></div>
+                                    </div>
+                                  }
+                                </div>
+                                @if (paymentForm.get('studentNumeroDocumento')?.touched && paymentForm.get('studentNumeroDocumento')?.errors?.['required']) {
+                                  <p class="text-red-500 text-sm mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    El número de documento es obligatorio
+                                  </p>
+                                }
+                                @if (paymentForm.get('studentNumeroDocumento')?.touched && paymentForm.get('studentNumeroDocumento')?.errors?.['minlength']) {
+                                  <p class="text-red-500 text-sm mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Mínimo 6 caracteres requeridos
+                                  </p>
+                                }
+                                @if (paymentForm.get('studentNumeroDocumento')?.touched && paymentForm.get('studentNumeroDocumento')?.errors?.['pattern']) {
+                                  <p class="text-red-500 text-sm mt-2 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Solo se permiten números
+                                  </p>
+                                }
+                              </div>
+
+                                <div class="space-y-3 group">
+                                  <label for="studentNombre"
+                                  class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Nombre *</label>
+                                  <input type="text" id="studentNombre" formControlName="studentNombre" (input)="onStudentNameChange($event)"
+                                    class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                    placeholder="Nombre del estudiante">
+                                  @if (paymentForm.get('studentNombre')?.touched && paymentForm.get('studentNombre')?.errors?.['required']) {
+                                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                      </svg>
+                                      El nombre es obligatorio
+                                    </p>
+                                  }
+                                  @if (paymentForm.get('studentNombre')?.touched && paymentForm.get('studentNombre')?.errors?.['minlength']) {
+                                    <p class="text-red-500 text-sm mt-2 flex items-center">
+                                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                      </svg>
+                                      Mínimo 2 caracteres requeridos
+                                    </p>
+                                  }
+                                </div>
+
+                                  <div class="space-y-3 group">
+                                    <label for="studentApellido"
+                                    class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Apellido *</label>
+                                    <input type="text" id="studentApellido" formControlName="studentApellido" (input)="onStudentSurnameChange($event)"
+                                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                      placeholder="Apellido del estudiante">
+                                    @if (paymentForm.get('studentApellido')?.touched && paymentForm.get('studentApellido')?.errors?.['required']) {
+                                      <p class="text-red-500 text-sm mt-2 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        El apellido es obligatorio
+                                      </p>
+                                    }
+                                    @if (paymentForm.get('studentApellido')?.touched && paymentForm.get('studentApellido')?.errors?.['minlength']) {
+                                      <p class="text-red-500 text-sm mt-2 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Mínimo 2 caracteres requeridos
+                                      </p>
+                                    }
+                                  </div>
+
+                                  <div class="space-y-3 group">
+                                    <label for="studentFechaNacimiento"
+                                      class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Fecha de Nacimiento *</label>
+                                    <input
+                                      type="date"
+                                      id="studentFechaNacimiento"
+                                      formControlName="studentFechaNacimiento"
+                                      class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400">
+                                    @if (paymentForm.get('studentFechaNacimiento')?.touched && paymentForm.get('studentFechaNacimiento')?.errors?.['required']) {
+                                      <p class="text-red-500 text-sm mt-2 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        La fecha de nacimiento es obligatoria
+                                      </p>
+                                    }
+                                  </div>
+
+                                    <div class="space-y-3 group md:col-span-2">
+                                      <label for="studentEmail"
+                                        class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Correo Electrónico *</label>
+                                      <input type="email" id="studentEmail" formControlName="studentEmail"
+                                        class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                        placeholder="estudiante@gmail.com">
+                                      <p class="text-sm text-gray-600 mt-2 flex items-start gap-2">
+                                        <span class="text-orange-500 flex-shrink-0">ℹ️</span>
+                                        <span>Para poder registrarse, el correo del estudiante debe ser un correo electrónico de Gmail. Si no tiene
+                                        uno, lo invitamos a crearlo para poder registrarse.</span>
+                                      </p>
+                                      @if (paymentForm.get('studentEmail')?.touched && paymentForm.get('studentEmail')?.errors?.['required']) {
+                                        <p class="text-red-500 text-sm mt-2 flex items-center">
+                                          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                          </svg>
+                                          El correo electrónico es obligatorio
+                                        </p>
+                                      }
+                                      @if (paymentForm.get('studentEmail')?.touched && paymentForm.get('studentEmail')?.errors?.['email']) {
+                                        <p class="text-red-500 text-sm mt-2 flex items-center">
+                                          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                          </svg>
+                                          Ingrese un correo electrónico válido
+                                        </p>
+                                      }
+                                    </div>
+                                  <div class="space-y-3 md:col-span-2 group">
+                                          <label for="studentSchool" class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Colegio *</label>
+                                          <div class="relative">
+                                              <input
+
+                                                  type="text"
+                                                  id="studentSchool"
+                                                  formControlName="schoolSearchTerm"
+                                                  #schoolSearchInput
+                                                  placeholder="Colegio San Rafael"
+                                                  class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+                                                  autocomplete="off">
+                                          </div>
+                                      </div>
+                                    </div>
+                            </div>
+            }
 
                                     <!-- Program Price Card -->
                                     <div class="bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-gray-100">
@@ -545,7 +546,6 @@
                                         Continuar
                                       </app-button>
                                     </div>
-            }
 
                         @if (showRegisteredCourses) {
                           <div class="bg-gradient-to-br from-gray-200 to-gray-100 rounded-2xl shadow-xl p-8 border  mb-8">
