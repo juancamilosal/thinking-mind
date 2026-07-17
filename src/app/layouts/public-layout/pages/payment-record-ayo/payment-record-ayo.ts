@@ -226,7 +226,8 @@ export class PaymentRecordAyoComponent implements OnInit {
                     this.fillGuardianFields(client);
                     const cuentasCobrar = (client.cuentas_cobrar || []).filter((c: any) => c.es_programa_ayo === true);
                     if (cuentasCobrar.length > 0) {
-                        this.prepareRegisteredCoursesTable(client);
+                        const filteredClient = { ...client, cuentas_cobrar: cuentasCobrar };
+                        this.prepareRegisteredCoursesTable(filteredClient);
                         this.showRegisteredCourses = true;
                     } else {
                         this.registeredCourses = [];
@@ -437,13 +438,13 @@ export class PaymentRecordAyoComponent implements OnInit {
                 if (response.status === 'SUCCES') {
                     this.showSuccessNotification('Programa AYO inscrito correctamente');
 
-                    const studentDocType = this.paymentForm.get('studentTipoDocumento')?.value;
-                    const studentDocNum = this.paymentForm.get('studentNumeroDocumento')?.value;
+                    const guardianDocType = this.paymentForm.get('tipoDocumento')?.value;
+                    const guardianDocNum = this.paymentForm.get('numeroDocumento')?.value;
                     this.showConfirmation = false;
                     this.cdRef.detectChanges();
                     window.scrollTo(0, 0);
                     setTimeout(() => {
-                        this.searchStudentPayment(studentDocType, studentDocNum);
+                        this.searchGuardianPayment(guardianDocType, guardianDocNum);
                     }, 500);
                 } else {
                     this.showErrorNotification('Error inesperado. Inténtelo más tarde.');
