@@ -143,9 +143,11 @@ export class PaymentRecordAyoComponent implements OnInit {
     }
 
     onGuardianDocumentTypeChange(event: any): void {
+        this.searchGuardianIfReady();
     }
 
     onGuardianDocumentNumberChange(event: any): void {
+        this.searchGuardianIfReady();
     }
 
     onGuardianNameChange(event: any): void {
@@ -202,6 +204,50 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.paymentForm.get('studentApellido')?.setValue(value, { emitEvent: false });
     }
 
+    private searchGuardianIfReady(): void {
+        const documentType = this.paymentForm.get('tipoDocumento')?.value;
+        const documentNumber = this.paymentForm.get('numeroDocumento')?.value;
+
+        if (documentType && documentNumber && documentNumber.length >= 6) {
+            this.searchGuardianPayment(documentType, documentNumber);
+        } else {
+            this.clearGuardianFields();
+        }
+    }
+
+    private searchGuardianPayment(documentType: string, documentNumber: string): void {
+        this.isSearchingClient = true;
+        this.programaAYOService.consultarAcudiente(documentType, documentNumber).subscribe({
+            next: (data: any) => {
+                this.isSearchingClient = false;
+                if (data.data && data.data.length > 0) {
+                    const client = data.data[0];
+                    this.clientData = client;
+                    this.fillGuardianFields(client);
+                    const cuentasCobrar = (client.cuentas_cobrar || []).filter((c: any) => c.es_programa_ayo === true);
+                    if (cuentasCobrar.length > 0) {
+                        this.prepareRegisteredCoursesTable(client);
+                        this.showRegisteredCourses = true;
+                    } else {
+                        this.registeredCourses = [];
+                        this.showRegisteredCourses = false;
+                    }
+                } else {
+                    this.clearGuardianFields();
+                    this.clientData = null;
+                    this.showRegisteredCourses = false;
+                    this.registeredCourses = [];
+                }
+            },
+            error: () => {
+                this.isSearchingClient = false;
+                this.clearGuardianFields();
+                this.showRegisteredCourses = false;
+                this.registeredCourses = [];
+            }
+        });
+    }
+
     private searchStudentIfReady(): void {
         const documentType = this.paymentForm.get('studentTipoDocumento')?.value;
         const documentNumber = this.paymentForm.get('studentNumeroDocumento')?.value;
@@ -218,43 +264,10 @@ export class PaymentRecordAyoComponent implements OnInit {
                 this.isSearchingStudent = false;
                 const responseData = data.data;
                 const estudiantes: any[] = responseData?.estudiante || [];
-                const cuentasCobrar: any[] = (responseData?.cuentas_cobrar || []).filter((c: any) => c.es_programa_ayo === true);
 
                 if (estudiantes.length > 0) {
                     this.studentData = estudiantes[0];
                     this.fillStudentFields(this.studentData);
-
-                    if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
-                        const acudiente = this.studentData.acudiente;
-                        this.paymentForm.patchValue({
-                            tipoDocumento: acudiente.tipo_documento || 'CC',
-                            numeroDocumento: acudiente.numero_documento || ''
-                        });
-                        this.fillGuardianFields(acudiente);
-                    } else {
-                        this.paymentForm.patchValue({ tipoDocumento: 'CC', numeroDocumento: '' });
-                        this.clearGuardianFields();
-                    }
-
-                    if (cuentasCobrar.length > 0) {
-                        const enrichedCuentas = cuentasCobrar.map((cuenta: any) => {
-                            const sid = typeof cuenta.estudiante_id === 'string' ? cuenta.estudiante_id : cuenta.estudiante_id?.id;
-                            const studentObj = estudiantes.find((s: any) => s.id === sid) || { id: sid };
-                            return { ...cuenta, estudiante_id: studentObj };
-                        });
-                        const adaptedClient = {
-                            ...(this.studentData.acudiente || {}),
-                            cuentas_cobrar: enrichedCuentas,
-                            estudiantes: estudiantes
-                        };
-                        this.clientData = adaptedClient;
-                        this.prepareRegisteredCoursesTable(adaptedClient);
-                        this.showRegisteredCourses = true;
-                    } else {
-                        this.registeredCourses = [];
-                        this.showRegisteredCourses = false;
-                        this.clientData = this.studentData.acudiente || null;
-                    }
                 } else {
                     this.clearStudentFields();
                     this.registeredCourses = [];

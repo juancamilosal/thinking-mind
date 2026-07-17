@@ -346,9 +346,18 @@ export class PaymentRecord implements OnInit {
         const client = data.data[0];
         this.clientData = client;
         this.fillGuardianFields(client);
+        if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
+          this.prepareRegisteredCoursesTable(client);
+          this.showRegisteredCourses = true;
+        } else {
+          this.registeredCourses = [];
+          this.showRegisteredCourses = false;
+        }
       } else {
         this.clearGuardianFields();
         this.clientData = null;
+        this.showRegisteredCourses = false;
+        this.registeredCourses = [];
       }
     });
   }
@@ -366,53 +375,13 @@ export class PaymentRecord implements OnInit {
     this.studentService.searchStudentPayment(documentType, documentNumber).subscribe((data: any) => {
       const responseData = data.data;
       const estudiantes: any[] = responseData?.estudiante || [];
-      const cuentasCobrar: any[] = responseData?.cuentas_cobrar || [];
 
       if (estudiantes.length > 0) {
         const studentData = estudiantes[0];
         this.student = [studentData];
         this.fillStudentFields(studentData);
 
-        if (studentData.acudiente && typeof studentData.acudiente === 'object') {
-          const acudiente = studentData.acudiente as Client;
-          this.paymentForm.patchValue({
-            guardianDocumentType: acudiente.tipo_documento || 'CC',
-            guardianDocumentNumber: acudiente.numero_documento || ''
-          });
-          this.fillGuardianFields(acudiente);
-          if (acudiente.tipo_documento && acudiente.numero_documento) {
-            this.searchClientPayment(acudiente.tipo_documento, acudiente.numero_documento);
-          }
-        } else {
-          this.paymentForm.patchValue({
-            guardianDocumentType: 'CC',
-            guardianDocumentNumber: ''
-          });
-          this.clearGuardianFields();
-        }
 
-        if (cuentasCobrar.length > 0) {
-          // Enriquecer cada cuenta con el objeto completo del estudiante
-          const enrichedCuentas = cuentasCobrar.map((cuenta: any) => {
-            const sid = typeof cuenta.estudiante_id === 'string' ? cuenta.estudiante_id : cuenta.estudiante_id?.id;
-            const studentObj = estudiantes.find((s: any) => s.id === sid) || { id: sid };
-            return { ...cuenta, estudiante_id: studentObj };
-          });
-
-          const adaptedClient = {
-            ...(studentData.acudiente || {}),
-            cuentas_cobrar: enrichedCuentas,
-            estudiantes: estudiantes
-          };
-
-          this.clientData = adaptedClient;
-          this.prepareRegisteredCoursesTable(adaptedClient);
-          this.showRegisteredCourses = true;
-        } else {
-          this.registeredCourses = [];
-          this.showRegisteredCourses = false;
-          this.clientData = studentData.acudiente || null;
-        }
       } else {
         this.clearStudentFields();
         this.registeredCourses = [];
