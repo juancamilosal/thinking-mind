@@ -229,6 +229,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                         const filteredClient = { ...client, cuentas_cobrar: cuentasCobrar };
                         this.prepareRegisteredCoursesTable(filteredClient);
                         this.showRegisteredCourses = true;
+                        this.showAddCourseForm = false;
                     } else {
                         this.registeredCourses = [];
                         this.showRegisteredCourses = false;
@@ -239,12 +240,14 @@ export class PaymentRecordAyoComponent implements OnInit {
                     this.showRegisteredCourses = false;
                     this.registeredCourses = [];
                 }
+                this.cdRef.detectChanges();
             },
             error: () => {
                 this.isSearchingClient = false;
                 this.clearGuardianFields();
                 this.showRegisteredCourses = false;
                 this.registeredCourses = [];
+                this.cdRef.detectChanges();
             }
         });
     }
@@ -829,7 +832,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                 this.closePaymentModal();
                 if (result.transaction && result.transaction.status === 'APPROVED') {
                     this.showSuccessNotification('Pago realizado con éxito');
-                    this.searchStudentIfReady();
+                    this.searchGuardianIfReady();
                 } else if (result.transaction) {
                     this.showErrorNotification('El pago no fue aprobado: ' + result.transaction.status);
                 } else {

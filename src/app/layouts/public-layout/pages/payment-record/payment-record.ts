@@ -1336,10 +1336,10 @@ export class PaymentRecord implements OnInit {
   private proceedWithAccountCreation(): void {
     this.createAccountRecord();
     this.showAddCourseForm = false;
-    const studentDocType = this.paymentForm.get('studentDocumentType')?.value;
-    const studentDocNumber = this.paymentForm.get('studentDocumentNumber')?.value;
+    const guardianDocType = this.paymentForm.get('guardianDocumentType')?.value;
+    const guardianDocNumber = this.paymentForm.get('guardianDocumentNumber')?.value;
     setTimeout(() => {
-      this.searchStudentPayment(studentDocType, studentDocNumber);
+      this.searchClientPayment(guardianDocType, guardianDocNumber);
     }, 500);
   }
 
@@ -1438,8 +1438,8 @@ export class PaymentRecord implements OnInit {
         this.cdRef.detectChanges();
         // Mostrar notificación de éxito
         this.showSuccessNotification();
-        // Buscar nuevamente para actualizar la tabla
-        this.searchStudentIfReady();
+        // Buscar nuevamente para actualizar la tabla de cuentas por cobrar
+        this.searchClientIfReady();
       },
       error: (error) => {
         this.isSubmitting = false;
