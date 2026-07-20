@@ -274,17 +274,11 @@ export class PaymentRecordAyoComponent implements OnInit {
                     this.fillStudentFields(this.studentData);
                 } else {
                     this.clearStudentFields();
-                    this.registeredCourses = [];
-                    this.showRegisteredCourses = false;
-                    this.clientData = null;
                 }
             },
             error: (error) => {
                 this.isSearchingStudent = false;
                 this.clearStudentFields();
-                this.registeredCourses = [];
-                this.showRegisteredCourses = false;
-                this.clientData = null;
             }
         });
     }
