@@ -277,18 +277,10 @@ export class PaymentRecordAyoComponent implements OnInit {
                 if (estudiantes.length > 0) {
                     this.studentData = estudiantes[0];
                     this.fillStudentFields(this.studentData);
-                } else {
-                    this.clearStudentFields();
                 }
-
-                // La búsqueda del estudiante nunca debe afectar Programas Registrados
-                // (solo el servicio del acudiente controla showRegisteredCourses)
-                this.cdRef.detectChanges();
             },
             error: (error) => {
                 this.isSearchingStudent = false;
-                this.clearStudentFields();
-                this.cdRef.detectChanges();
             }
         });
     }

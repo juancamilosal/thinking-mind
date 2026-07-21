@@ -374,19 +374,14 @@ export class PaymentRecord implements OnInit {
   private searchStudentPayment(documentType: string, documentNumber: string): void {
     this.studentService.searchStudentPayment(documentType, documentNumber).subscribe((data: any) => {
       const responseData = data.data;
-      const estudiantes: any[] = responseData?.estudiante || [];
+      const estudiantes: any[] = Array.isArray(responseData)
+        ? responseData
+        : (responseData?.estudiante || []);
 
       if (estudiantes.length > 0) {
         const studentData = estudiantes[0];
         this.student = [studentData];
         this.fillStudentFields(studentData);
-
-
-      } else {
-        this.clearStudentFields();
-        this.registeredCourses = [];
-        this.showRegisteredCourses = false;
-        this.clientData = null;
       }
     });
   }
