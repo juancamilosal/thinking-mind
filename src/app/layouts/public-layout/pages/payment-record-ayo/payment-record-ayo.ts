@@ -204,13 +204,21 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.paymentForm.get('studentApellido')?.setValue(value, { emitEvent: false });
     }
 
+    private lastSearchedGuardianDoc: string = '';
+
     private searchGuardianIfReady(): void {
         const documentType = this.paymentForm.get('tipoDocumento')?.value;
         const documentNumber = this.paymentForm.get('numeroDocumento')?.value;
 
         if (documentType && documentNumber && documentNumber.length >= 6) {
+            const key = `${documentType}-${documentNumber}`;
+            if (this.showRegisteredCourses && key === this.lastSearchedGuardianDoc) {
+                return;
+            }
+            this.lastSearchedGuardianDoc = key;
             this.searchGuardianPayment(documentType, documentNumber);
         } else {
+            this.lastSearchedGuardianDoc = '';
             this.clearGuardianFields();
         }
     }
@@ -244,9 +252,6 @@ export class PaymentRecordAyoComponent implements OnInit {
             },
             error: () => {
                 this.isSearchingClient = false;
-                this.clearGuardianFields();
-                this.showRegisteredCourses = false;
-                this.registeredCourses = [];
                 this.cdRef.detectChanges();
             }
         });
@@ -275,10 +280,15 @@ export class PaymentRecordAyoComponent implements OnInit {
                 } else {
                     this.clearStudentFields();
                 }
+
+                // La búsqueda del estudiante nunca debe afectar Programas Registrados
+                // (solo el servicio del acudiente controla showRegisteredCourses)
+                this.cdRef.detectChanges();
             },
             error: (error) => {
                 this.isSearchingStudent = false;
                 this.clearStudentFields();
+                this.cdRef.detectChanges();
             }
         });
     }
