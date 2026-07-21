@@ -128,7 +128,7 @@
                     class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de
                   Documento *</label>
                   <div class="relative">
-                    <input type="text" id="numeroDocumento" formControlName="numeroDocumento" (blur)="onGuardianDocumentNumberChange($event)" (keypress)="onlyNumbers($event)"
+                    <input type="text" id="numeroDocumento" formControlName="numeroDocumento" (blur)="onGuardianDocumentNumberChange($event)" (keypress)="onlyNumbers($event)" (keydown.enter)="$event.preventDefault()"
                       class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                       placeholder="Ej: 1000123456">
                       @if (isSearchingClient) {
@@ -328,7 +328,7 @@
                                 <label for="studentNumeroDocumento"
                                   class="block text-sm font-semibold text-[#13486e] uppercase tracking-wide">Número de Documento *</label>
                                 <div class="relative">
-                                  <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)" (keypress)="onlyNumbers($event)"
+                                  <input type="text" id="studentNumeroDocumento" formControlName="studentNumeroDocumento" (blur)="onStudentDocumentNumberChange($event)" (keypress)="onlyNumbers($event)" (keydown.enter)="$event.preventDefault()"
                                     class="w-full px-6 py-4 rounded-lg border border-gray-300 shadow-sm focus:border-[#13486e] focus:ring-2 focus:ring-[#13486e]/20 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
                                     placeholder="Ej: 1000123456">
                                   @if (isSearchingStudent) {
