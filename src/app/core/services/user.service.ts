@@ -14,14 +14,20 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  getUsersByRole(roleId: string, searchTerm?: string): Observable<ResponseAPI<User[]>> {
+  getUsersByRole(roleId: string, searchTerm?: string, page?: number, limit?: number): Observable<ResponseAPI<User[]>> {
     let params: any = {
       'filter[role][_eq]': roleId,
-      'fields': 'id,first_name,last_name,email,role,celular,colegio_id.*'
+      'fields': 'id,first_name,last_name,email,role,celular,colegio_id.*,creditos,nivel_id,programa_ayo_id'
     };
 
     if (searchTerm) {
       params['search'] = searchTerm;
+    }
+
+    if (page && limit) {
+      params['page'] = page.toString();
+      params['limit'] = limit.toString();
+      params['meta'] = 'filter_count';
     }
 
     return this.http.get<ResponseAPI<User[]>>(this.apiUrl, { params });
