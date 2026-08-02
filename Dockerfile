@@ -19,6 +19,11 @@ COPY . .
 # Compilar Angular
 RUN npx ng build --verbose
 
+# Angular genera index.csr.html como entrada para rutas no prerenderizadas (SSR/hybrid build),
+# pero aquí se sirve todo como SPA estática con Nginx, así que debe ser el index.html raíz
+# para que las rutas dinámicas (ej. /private/accounts-receivable/:id) no den 403/500 al refrescar.
+RUN mv /app/dist/thinkingmind-fe/browser/index.csr.html /app/dist/thinkingmind-fe/browser/index.html
+
 # Etapa 2: Servir con NGINX
 FROM nginx:alpine
 
