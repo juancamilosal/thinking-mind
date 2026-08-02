@@ -54,6 +54,12 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
   // Detail view data
   attendanceRecords: any[] = [];
 
+  // Pagination for attendance history (server-side, via Directus)
+  attendanceCurrentPage = 1;
+  attendanceItemsPerPage = 10;
+  attendanceItemsPerPageOptions = [10, 25, 50, 100];
+  attendanceTotalItems = 0;
+
   // Filters for detail view
   filterDateStart: string = '';
   filterDateEnd: string = '';
@@ -86,7 +92,8 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
     rating: 0,
     comment: '',
     selectedCriteriaId: undefined as string | undefined,
-    programId: ''
+    programId: '',
+    fecha: ''
   };
 
   constructor(
@@ -237,6 +244,9 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
 
     // Clear previous attendance data
     this.attendanceRecords = [];
+    this.uniquePrograms = [];
+    this.uniqueCriteria = [];
+    this.attendanceCurrentPage = 1;
 
     // Load Attendance
     this.loadAttendance(student.studentId);
@@ -244,17 +254,12 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
 
   applyFilters() {
     if (this.selectedStudent) {
+      this.attendanceCurrentPage = 1;
       this.loadAttendance(this.selectedStudent.studentId);
     }
   }
 
-  loadAttendance(studentId: string) {
-    this.isLoadingAttendance = true;
-    
-    // Fields to fetch: include related data for criteria and program
-    const fields = '*,criterio_evaluacion_estudiante_id.*,programa_ayo_id.*,programa_ayo_id.id_nivel.nivel';
-    
-    // Build Directus filter object
+  private buildAttendanceFilter(studentId: string): any {
     const filter: any = {
       'estudiante_id': studentId
     };
@@ -272,34 +277,109 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
       filter.criterio_evaluacion_estudiante_id = { nombre: { _eq: this.filterCriterion } };
     }
 
-    this.attendanceService.getAttendances(1, 100, undefined, filter, '-fecha', fields).subscribe({
-        next: (response) => {
-            this.attendanceRecords = response.data || [];
-            
-            // Only extract options if they haven't been populated yet (to preserve options during filtering)
-            if (this.uniquePrograms.length === 0 && this.uniqueCriteria.length === 0) {
-              this.extractFilterOptions();
-            }
-            
-            this.processDetailData();
-            this.isLoadingAttendance = false;
-            this.isLoadingDetail = false;
-            this.cdr.detectChanges();
-        },
-        error: (err) => {
-            console.error('Error loading attendance', err);
-            this.isLoadingAttendance = false;
-            this.isLoadingDetail = false;
-            this.cdr.detectChanges();
+    return filter;
+  }
+
+  loadAttendance(studentId: string) {
+    this.isLoadingAttendance = true;
+
+    const filter = this.buildAttendanceFilter(studentId);
+
+    // Campos completos para la tabla (página actual)
+    const tableFields = '*,criterio_evaluacion_estudiante_id.*,programa_ayo_id.*,programa_ayo_id.id_nivel.nivel';
+    // Campos livianos para estadísticas/opciones de filtro sobre TODO el historial que aplica a los filtros actuales
+    const statsFields = 'fecha,calificacion,programa_ayo_id.id_nivel.nivel,criterio_evaluacion_estudiante_id.nombre';
+
+    forkJoin({
+      page: this.attendanceService.getAttendances(this.attendanceCurrentPage, this.attendanceItemsPerPage, undefined, filter, '-fecha', tableFields),
+      all: this.attendanceService.getAttendances(1, -1, undefined, filter, '-fecha', statsFields)
+    }).subscribe({
+      next: ({ page, all }) => {
+        this.attendanceRecords = page.data || [];
+        this.attendanceTotalItems = page.meta?.filter_count ?? this.attendanceRecords.length;
+
+        // Si al eliminar/filtrar la página actual quedó fuera de rango, recargar en la última página válida
+        const maxPage = Math.max(1, Math.ceil(this.attendanceTotalItems / this.attendanceItemsPerPage));
+        if (this.attendanceCurrentPage > maxPage) {
+          this.attendanceCurrentPage = maxPage;
+          this.loadAttendance(studentId);
+          return;
         }
+
+        const allRecords = all.data || [];
+
+        if (allRecords.length === 0) {
+          this.uniquePrograms = [];
+          this.uniqueCriteria = [];
+        } else if (this.uniquePrograms.length === 0 && this.uniqueCriteria.length === 0) {
+          // Solo extraer opciones si aún no se han poblado (para preservarlas durante el filtrado)
+          this.extractFilterOptions(allRecords);
+        }
+
+        this.processDetailData(allRecords);
+        this.isLoadingAttendance = false;
+        this.isLoadingDetail = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading attendance', err);
+        this.isLoadingAttendance = false;
+        this.isLoadingDetail = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  extractFilterOptions() {
+  get attendanceTotalPages(): number {
+    return Math.max(1, Math.ceil(this.attendanceTotalItems / this.attendanceItemsPerPage));
+  }
+
+  goToAttendancePage(page: number): void {
+    if (page >= 1 && page <= this.attendanceTotalPages && page !== this.attendanceCurrentPage && this.selectedStudent) {
+      this.attendanceCurrentPage = page;
+      this.loadAttendance(this.selectedStudent.studentId);
+    }
+  }
+
+  goToPreviousAttendancePage(): void {
+    this.goToAttendancePage(this.attendanceCurrentPage - 1);
+  }
+
+  goToNextAttendancePage(): void {
+    this.goToAttendancePage(this.attendanceCurrentPage + 1);
+  }
+
+  getAttendancePageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.attendanceCurrentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.attendanceTotalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  onAttendanceItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.attendanceItemsPerPage = parseInt(target.value, 10);
+    this.attendanceCurrentPage = 1;
+    if (this.selectedStudent) {
+      this.loadAttendance(this.selectedStudent.studentId);
+    }
+  }
+
+  extractFilterOptions(records: any[]) {
     const programs = new Set<string>();
     const criteria = new Set<string>();
 
-    this.attendanceRecords.forEach(record => {
+    records.forEach(record => {
         if (record.programa_ayo_id?.id_nivel?.nivel) {
             programs.add(record.programa_ayo_id.id_nivel.nivel);
         }
@@ -314,9 +394,9 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
 
 
 
-  processDetailData() {
+  processDetailData(records: any[]) {
     if (!this.selectedStudent) return;
-    if (this.attendanceRecords.length === 0) {
+    if (records.length === 0) {
       this.selectedStudent.averageRating = 0;
       this.selectedStudent.totalEvaluations = 0;
       this.selectedStudent.lastEvaluationDate = '';
@@ -324,12 +404,12 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
     }
 
     // Calculate stats from attendance records
-    const totalRecords = this.attendanceRecords.length;
+    const totalRecords = records.length;
     let totalScore = 0;
     let validScores = 0;
     let lastDate = '';
 
-    this.attendanceRecords.forEach(record => {
+    records.forEach(record => {
       // Assuming 'calificacion' is the score field
       if (record.calificacion !== null && record.calificacion !== undefined) {
         totalScore += Number(record.calificacion);
@@ -410,7 +490,8 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
           rating: 0,
           comment: '',
           selectedCriteriaId: undefined,
-          programId: programId ? String(programId) : ''
+          programId: programId ? String(programId) : '',
+          fecha: new Date().toISOString().split('T')[0]
         };
 
         if (this.evaluationCriteria.length === 0) {
@@ -529,6 +610,14 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.newRating.fecha) {
+      this.notificationService.showWarning(
+        'Fecha Requerida',
+        'Por favor selecciona la fecha de la calificación.'
+      );
+      return;
+    }
+
     if (this.newRating.attended && this.newRating.rating === 0) {
       this.notificationService.showWarning(
         'Calificación Incompleta',
@@ -565,7 +654,7 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
       programa_ayo_id: this.newRating.programId || null,
       asiste: this.newRating.attended,
       observaciones: this.newRating.comment,
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: this.newRating.fecha,
       criterio_evaluacion_estudiante_id: this.newRating.attended ? this.newRating.selectedCriteriaId : null
     };
 
@@ -730,14 +819,7 @@ export class StudentEvaluationAyoComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: () => {
-        this.attendanceRecords = this.attendanceRecords.filter(r => String(r.id) !== attendanceId);
-        if (this.attendanceRecords.length === 0) {
-          this.uniquePrograms = [];
-          this.uniqueCriteria = [];
-        }
-        this.processDetailData();
-        this.extractFilterOptions();
-        this.cdr.detectChanges();
+        this.loadAttendance(studentId);
         this.appRef.tick();
       },
       error: (err) => {
