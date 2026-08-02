@@ -351,6 +351,60 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Paginación del historial de asistencia -->
+                <div *ngIf="!isLoadingAttendance && attendanceRecords.length > 0" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-gray-200">
+                    <div class="flex items-center gap-4">
+                        <p class="text-sm text-gray-600">
+                            Mostrando
+                            <span class="font-semibold text-gray-900">{{ (attendanceCurrentPage - 1) * attendanceItemsPerPage + 1 }}</span>
+                            a
+                            <span class="font-semibold text-gray-900">{{ Math.min(attendanceCurrentPage * attendanceItemsPerPage, attendanceTotalItems) }}</span>
+                            de
+                            <span class="font-semibold text-gray-900">{{ attendanceTotalItems }}</span>
+                            registros
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <label for="attendanceItemsPerPage" class="text-sm font-medium text-gray-700">Mostrar:</label>
+                            <select
+                                id="attendanceItemsPerPage"
+                                [value]="attendanceItemsPerPage"
+                                (change)="onAttendanceItemsPerPageChange($event)"
+                                class="border-gray-300 rounded-md text-sm py-1.5 pl-2 pr-8 focus:ring-green-500 focus:border-green-500">
+                                <option *ngFor="let option of attendanceItemsPerPageOptions" [value]="option">{{ option }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div *ngIf="attendanceTotalPages > 1" class="flex items-center gap-1">
+                        <button
+                            (click)="goToPreviousAttendancePage()"
+                            [disabled]="attendanceCurrentPage === 1"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <button
+                            *ngFor="let page of getAttendancePageNumbers()"
+                            (click)="goToAttendancePage(page)"
+                            [class.bg-green-600]="page === attendanceCurrentPage"
+                            [class.text-white]="page === attendanceCurrentPage"
+                            [class.text-gray-700]="page !== attendanceCurrentPage"
+                            [class.hover:bg-gray-100]="page !== attendanceCurrentPage"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium border border-gray-300 transition-colors">
+                            {{ page }}
+                        </button>
+                        <button
+                            (click)="goToNextAttendancePage()"
+                            [disabled]="attendanceCurrentPage === attendanceTotalPages"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -442,6 +496,16 @@
                             {{ newRating.attended ? 'Sí' : 'No' }}
                         </span>
                     </div>
+                </div>
+
+                <!-- Fecha de la calificación -->
+                <div class="mb-4">
+                    <label for="ratingDate" class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                    <input
+                        type="date"
+                        id="ratingDate"
+                        [(ngModel)]="newRating.fecha"
+                        class="block w-full text-base border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 py-2.5 px-4 bg-white">
                 </div>
 
                 <!-- Program (read-only, the one the student already has assigned) -->

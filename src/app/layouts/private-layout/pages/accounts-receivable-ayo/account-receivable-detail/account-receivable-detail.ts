@@ -531,15 +531,18 @@ export class AccountReceivableDetailAyoComponent implements OnInit, OnChanges {
   viewPaymentDetail(payment: PaymentModel) {
     this.selectedPayment = payment;
     this.showPaymentDetailView = true;
+    this.cdr.detectChanges();
   }
 
   closePaymentDetail() {
     this.showPaymentDetailView = false;
+    this.cdr.detectChanges();
   }
 
   backToPaymentHistory() {
     this.showPaymentDetailView = false;
     this.selectedPayment = null;
+    this.cdr.detectChanges();
   }
 
   // Construye el texto para la sección Curso, incluyendo prefijo "Inscripción -" si aplica
