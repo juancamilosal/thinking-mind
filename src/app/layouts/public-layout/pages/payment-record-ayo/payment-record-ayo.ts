@@ -272,11 +272,14 @@ export class PaymentRecordAyoComponent implements OnInit {
             next: (data: any) => {
                 this.isSearchingStudent = false;
                 const responseData = data.data;
-                const estudiantes: any[] = responseData?.estudiante || [];
+                const estudiantes: any[] = Array.isArray(responseData)
+                    ? responseData
+                    : (responseData?.estudiante || []);
 
                 if (estudiantes.length > 0) {
                     this.studentData = estudiantes[0];
                     this.fillStudentFields(this.studentData);
+                    this.cdRef.detectChanges();
                 }
             },
             error: (error) => {
@@ -318,6 +321,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                     if (response.data) {
                         this.paymentForm.get('schoolSearchTerm')?.setValue(response.data.nombre);
                         this.paymentForm.get('studentSchool')?.setValue(schoolId);
+                        this.cdRef.detectChanges();
                     }
                 },
                 error: (error) => {
