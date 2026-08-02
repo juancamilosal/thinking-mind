@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Instalar dependencias incluyendo dev (necesario para Angular CLI)
-RUN npm ci --no-audit --no-fund
+#RUN npm ci --no-audit --no-fund
 
 # Copiar el resto del código fuente
 COPY . .
