@@ -41,6 +41,7 @@ export class AccountReceivable {
   createdDate?: string;
   fecha_inscripcion?: string;
   fecha_finalizacion?: string;
+  edicion_programa?: number | string | null;
   descuento?: number | string;
   monto_descuento?: number;
   valor_final_descuento?: number;
