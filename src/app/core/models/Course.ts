@@ -61,6 +61,7 @@ export interface PrecioProgramaAyo {
 export class ColegioCurso {
   id?: number;
   fecha_finalizacion: string;
+  edicion?: number | null;
   curso_id: number;
   colegio_id: number;
   precio_curso?: number;

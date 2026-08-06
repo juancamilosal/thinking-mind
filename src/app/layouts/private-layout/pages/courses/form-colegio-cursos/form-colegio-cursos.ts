@@ -70,6 +70,7 @@ export class ColegioCursosComponent implements OnInit {
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
+      edicion: [null, Validators.pattern(/^\d+$/)], // Campo numérico opcional
       curso_id: [null, Validators.required],
       colegio_id: [null, Validators.required],
       precio_curso: [null, Validators.required],
@@ -205,6 +206,10 @@ export class ColegioCursosComponent implements OnInit {
     this.fechaFinalizacionForm.get('colegio_id')?.setValue('');
   }
 
+  onCancel(): void {
+    this.goBack.emit();
+  }
+
   onSubmit(): void {
     if (this.fechaFinalizacionForm.valid) {
       const precioEspecialLanzamiento = !!this.fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value;
@@ -217,8 +222,14 @@ export class ColegioCursosComponent implements OnInit {
       fechaCreacion.setHours(0, 0, 0, 0); // Establecer hora a 00:00:00
       const fechaCreacionISO = fechaCreacion.toISOString().split('T')[0]; // Formato YYYY-MM-DD
 
+      const rawEdicion = this.fechaFinalizacionForm.get('edicion')?.value;
+      const edicionValue = rawEdicion !== null && rawEdicion !== undefined && String(rawEdicion).trim() !== ''
+        ? parseInt(rawEdicion, 10)
+        : null;
+
       const formData = {
         fecha_finalizacion: this.fechaFinalizacionForm.get('fecha_finalizacion')?.value,
+        edicion: edicionValue,
         curso_id: this.fechaFinalizacionForm.get('curso_id')?.value,
         colegio_id: this.fechaFinalizacionForm.get('colegio_id')?.value,
         // Enviar el precio desformateado (sin puntos) como número
