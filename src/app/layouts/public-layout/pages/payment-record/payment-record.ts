@@ -41,6 +41,9 @@ export class PaymentRecord implements OnInit {
   isSubmitting = false;
   courses: Course[] = [];
   availableCourses: Course[] = [];
+  // Ediciones (colegios_cursos) disponibles del programa seleccionado para el colegio actual
+  availableEditions: any[] = [];
+  selectedColegioCurso: any = null;
   schools: School[] = [];
   filteredSchools: School[] = [];
   grado: Grupo[] = []; // Nueva propiedad para los grupos
@@ -239,6 +242,7 @@ export class PaymentRecord implements OnInit {
 
       // Course fields
       selectedCourse: ['', [Validators.required]],
+      selectedEdicion: [''],
       coursePrice: [{ value: '', disabled: true }, [Validators.required]],
       courseInscriptionPrice: [{ value: '', disabled: true }],
     });
@@ -666,11 +670,14 @@ export class PaymentRecord implements OnInit {
       studentSchool: '',
       schoolSearchTerm: '',
       selectedCourse: '',
+      selectedEdicion: '',
       coursePrice: '',
       courseInscriptionPrice: ''
     });
     this.filteredSchools = [];
     this.isSchoolSelected = false;
+    this.availableEditions = [];
+    this.selectedColegioCurso = null;
   }
 
   backToTableView(): void {
@@ -828,7 +835,7 @@ export class PaymentRecord implements OnInit {
     } catch (e) {
       // Ignorar errores de acceso al DOM
     }
-    // Validar precio del programa seleccionado con el colegio recién seleccionado
+    // Validar precio y ediciones del programa seleccionado con el colegio recién seleccionado
     const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
     this.updateAvailableCourses();
     if (selectedCourseId) {
@@ -836,17 +843,8 @@ export class PaymentRecord implements OnInit {
         this.resetCourseSelection();
         return;
       }
-      const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
-      if (selectedCourse) {
-        const price = this.computeCoursePrice(selectedCourse);
-        if (price !== null) {
-          this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
-        } else {
-          // Si no existe precio para el colegio, notificar y reiniciar programa
-          this.showCourseSchoolNotFoundNotification();
-          this.resetCourseSelection();
-        }
-      }
+      // Reutilizar la lógica de onCourseChange, que ya resuelve precio(s) y ediciones disponibles
+      this.onCourseChange(selectedCourseId);
     }
   }
 
@@ -1053,84 +1051,139 @@ export class PaymentRecord implements OnInit {
         // Actualizar imagen del curso seleccionado si existe
         this.selectedCourseImageUrl = selectedCourse.img_url || null;
 
-        // Obtener precio de inscripción y moneda desde colegios_cursos
+        // Buscar TODAS las ediciones (colegios_cursos) de este programa para el colegio seleccionado
         const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
-        let inscriptionNumber: number = 0;
-        let courseCurrency: string | null = null;
-        let coursePrice: number = 0;
+        this.availableEditions = this.getMatchingColegioCursos(selectedCourse, schoolId);
+        this.paymentForm.get('selectedEdicion')?.setValue('');
 
-        // Buscar en colegios_cursos el que corresponde al colegio seleccionado
-        if (schoolId && selectedCourse.colegios_cursos && selectedCourse.colegios_cursos.length > 0) {
-          const schoolCourseMatch = selectedCourse.colegios_cursos.find((cc: any) => {
-            const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
-            return ccSchoolId && ccSchoolId === schoolId;
-          });
-
-          if (schoolCourseMatch) {
-            // Obtener precio del curso (especial o regular)
-            if (schoolCourseMatch.tiene_precio_especial === "TRUE" && schoolCourseMatch.precio_especial) {
-              coursePrice = Number(schoolCourseMatch.precio_especial) || 0;
-            } else {
-              coursePrice = Number(schoolCourseMatch.precio_curso) || 0;
-            }
-
-            // Obtener precio de inscripción y moneda
-            inscriptionNumber = Number(schoolCourseMatch.precio_inscripcion) || 0;
-            courseCurrency = schoolCourseMatch.moneda || null;
-          }
+        if (this.availableEditions.length > 1) {
+          // Hay varias ediciones: esperar a que el usuario elija una antes de calcular el precio
+          this.selectedColegioCurso = null;
+          this.paymentForm.get('selectedEdicion')?.setValidators([Validators.required]);
+          this.paymentForm.get('selectedEdicion')?.updateValueAndValidity();
+          this.paymentForm.patchValue({ coursePrice: '', courseInscriptionPrice: '' });
+          this.hasInscription = false;
+        } else {
+          this.paymentForm.get('selectedEdicion')?.clearValidators();
+          this.paymentForm.get('selectedEdicion')?.updateValueAndValidity();
+          const onlyMatch = this.availableEditions[0] || null;
+          this.applySelectedColegioCurso(selectedCourse, onlyMatch);
         }
-
-        // Si no se encontró en colegios_cursos, usar valores del curso principal como fallback
-        if (coursePrice === 0) {
-          coursePrice = Number((selectedCourse as any).precio) || 0;
-        }
-        if (inscriptionNumber === 0 && courseCurrency === null) {
-          const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
-          inscriptionNumber = Number(inscriptionRaw) || 0;
-          courseCurrency = selectedCourse.moneda;
-        }
-
-        // Determinar si el curso usa EUR o USD basándose en el atributo moneda
-        this.isEuroCourse = courseCurrency === 'EUR';
-
-        // Formatear precios
-        const formattedPrice = coursePrice > 0 ? this.formatCurrency(coursePrice) : '';
-        const inscriptionFormatted = inscriptionNumber > 0
-          ? `${courseCurrency || 'COP'} ${new Intl.NumberFormat('es-CO', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(inscriptionNumber)}`
-          : '';
-
-        this.paymentForm.patchValue({
-          coursePrice: formattedPrice,
-          courseInscriptionPrice: inscriptionFormatted
-        });
-
-        // Si no se encontró el precio específico para el colegio seleccionado, mostrar notificación y ocultar imagen
-        if (coursePrice === 0 && this.paymentForm.get('studentSchool')?.value) {
-          this.showCourseSchoolNotFoundNotification();
-          this.selectedCourseImageUrl = null;
-        }
-
-        // Actualizar banderas para mostrar tasa de cambio
-        this.hasInscription = inscriptionNumber > 0;
-        this.selectedInscriptionAmount = inscriptionNumber;
-        this.updateInscriptionConversion();
       }
     } else {
       this.resetCourseSelection();
     }
   }
 
+  // Selección explícita de la edición del programa cuando hay más de una disponible
+  onEdicionChange(colegioCursoId: string): void {
+    const courseId = this.paymentForm.get('selectedCourse')?.value;
+    const selectedCourse = this.courses.find(course => course.id === courseId);
+    if (!selectedCourse) return;
+
+    const match = this.availableEditions.find((cc: any) => String(cc?.id) === String(colegioCursoId)) || null;
+    this.applySelectedColegioCurso(selectedCourse, match);
+  }
+
+  // Obtiene todas las coincidencias de colegios_cursos de un programa para un colegio (una por cada edición)
+  private getMatchingColegioCursos(course: Course, schoolId: string | null): any[] {
+    if (!course || !Array.isArray((course as any).colegios_cursos) || !schoolId) return [];
+    return (course as any).colegios_cursos.filter((cc: any) => {
+      const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
+      return ccSchoolId && ccSchoolId === schoolId;
+    });
+  }
+
+  // Resuelve la edición (colegio_curso) efectivamente seleccionada a partir de los valores
+  // ACTUALES del formulario, en lugar de depender de una propiedad de estado que podría
+  // haber quedado desactualizada. Se usa tanto para validar duplicados como al enviar la cuenta.
+  private getSelectedColegioCurso(): any | null {
+    const courseId = this.paymentForm.get('selectedCourse')?.value;
+    const schoolId = this.paymentForm.get('studentSchool')?.value;
+    if (!courseId) return null;
+
+    const course = this.courses.find(c => c.id === courseId);
+    if (!course) return null;
+
+    const matches = this.getMatchingColegioCursos(course, schoolId);
+    if (matches.length === 0) return null;
+    if (matches.length === 1) return matches[0];
+
+    const selectedEdicionId = this.paymentForm.get('selectedEdicion')?.value;
+    return matches.find((cc: any) => String(cc?.id) === String(selectedEdicionId)) || null;
+  }
+
+  // Formatea el número de edición para mostrarlo junto al programa
+  formatEdicion(edicion: any): string {
+    if (edicion === null || edicion === undefined || edicion === '') return 'Sin edición';
+    return `Edición ${edicion}`;
+  }
+
+  // Aplica el precio, la inscripción y la imagen a partir de una edición (colegio_curso) específica ya resuelta
+  private applySelectedColegioCurso(selectedCourse: Course, match: any | null): void {
+    this.selectedColegioCurso = match;
+    this.selectedCourseImageUrl = selectedCourse.img_url || null;
+
+    let inscriptionNumber: number = 0;
+    let courseCurrency: string | null = null;
+    let coursePrice: number = 0;
+
+    if (match) {
+      // Obtener precio del curso (especial o regular)
+      if (match.tiene_precio_especial === "TRUE" && match.precio_especial) {
+        coursePrice = Number(match.precio_especial) || 0;
+      } else {
+        coursePrice = Number(match.precio_curso) || 0;
+      }
+
+      // Obtener precio de inscripción y moneda
+      inscriptionNumber = Number(match.precio_inscripcion) || 0;
+      courseCurrency = match.moneda || null;
+    }
+
+    // Si no se encontró en colegios_cursos, usar valores del curso principal como fallback
+    if (coursePrice === 0) {
+      coursePrice = Number((selectedCourse as any).precio) || 0;
+    }
+    if (inscriptionNumber === 0 && courseCurrency === null) {
+      const inscriptionRaw: any = (selectedCourse as any).precio_inscripcion;
+      inscriptionNumber = Number(inscriptionRaw) || 0;
+      courseCurrency = selectedCourse.moneda;
+    }
+
+    // Determinar si el curso usa EUR o USD basándose en el atributo moneda
+    this.isEuroCourse = courseCurrency === 'EUR';
+
+    // Formatear precios
+    const formattedPrice = coursePrice > 0 ? this.formatCurrency(coursePrice) : '';
+    const inscriptionFormatted = inscriptionNumber > 0
+      ? `${courseCurrency || 'COP'} ${new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(inscriptionNumber)}`
+      : '';
+
+    this.paymentForm.patchValue({
+      coursePrice: formattedPrice,
+      courseInscriptionPrice: inscriptionFormatted
+    });
+
+    // Si no se encontró el precio específico para el colegio seleccionado, mostrar notificación y ocultar imagen
+    if (coursePrice === 0 && this.paymentForm.get('studentSchool')?.value) {
+      this.showCourseSchoolNotFoundNotification();
+      this.selectedCourseImageUrl = null;
+    }
+
+    // Actualizar banderas para mostrar tasa de cambio
+    this.hasInscription = inscriptionNumber > 0;
+    this.selectedInscriptionAmount = inscriptionNumber;
+    this.updateInscriptionConversion();
+  }
+
   // Obtiene el precio del curso específico del colegio seleccionado (si existe)
   private getSchoolSpecificPrice(course: Course, schoolId: string | null): number | null {
     try {
-      if (!course || !Array.isArray((course as any).colegios_cursos) || !schoolId) return null;
-      const match = (course as any).colegios_cursos.find((cc: any) => {
-        const ccSchoolId = typeof cc?.colegio_id === 'string' ? cc.colegio_id : cc?.colegio_id?.id;
-        return ccSchoolId && ccSchoolId === schoolId;
-      });
+      const match = this.getMatchingColegioCursos(course, schoolId)[0];
       if (!match) return null;
       // Normalizar flag de precio especial: acepta 'TRUE' | true | 1
       const hasSpecial = (() => {
@@ -1152,36 +1205,12 @@ export class PaymentRecord implements OnInit {
     }
   }
 
-  // Calcula el precio a mostrar priorizando el precio por colegio
-  private computeCoursePrice(course: Course): number | null {
-    const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
-    const schoolPrice = this.getSchoolSpecificPrice(course, schoolId);
-    if (schoolId) {
-      // Con colegio seleccionado, solo mostrar el precio específico del colegio; si no existe, retornamos null
-      if (schoolPrice !== null && schoolPrice !== undefined) {
-        return schoolPrice;
-      }
-      return null;
-    }
-    // Sin colegio seleccionado, usar el precio general del curso
-    const raw = (course as any).precio;
-    const num = typeof raw === 'string' ? parseFloat(raw) : Number(raw || 0);
-    return isNaN(num) ? 0 : num;
-  }
-
-  // Recalcula y actualiza el precio del curso en el formulario si hay curso seleccionado
+  // Recalcula y actualiza el precio y las ediciones del curso en el formulario si hay curso seleccionado
   private updateSelectedCoursePriceIfAny(): void {
     const selectedCourseId = this.paymentForm.get('selectedCourse')?.value;
     if (!selectedCourseId) return;
-    const selectedCourse = this.courses.find(c => c.id === selectedCourseId);
-    if (!selectedCourse) return;
-    const price = this.computeCoursePrice(selectedCourse);
-    if (price !== null) {
-      this.paymentForm.patchValue({ coursePrice: this.formatCurrency(price) });
-    } else {
-      // Solo limpiar precio si no existe para el colegio; la notificación se muestra al seleccionar programa
-      this.paymentForm.patchValue({ coursePrice: '' });
-    }
+    // Reutilizar la lógica de onCourseChange, que ya resuelve precio(s) y ediciones disponibles
+    this.onCourseChange(selectedCourseId);
   }
 
   // Verifica si la sección de Información del Estudiante está diligenciada completamente
@@ -1237,6 +1266,7 @@ export class PaymentRecord implements OnInit {
   private resetCourseSelection(): void {
     this.paymentForm.patchValue({
       selectedCourse: '',
+      selectedEdicion: '',
       coursePrice: '',
       courseInscriptionPrice: ''
     });
@@ -1247,10 +1277,14 @@ export class PaymentRecord implements OnInit {
     this.selectedInscriptionConvertedCop = null;
     this.selectedCourseImageUrl = null;
     this.isExchangeRateError = false;
+    this.availableEditions = [];
+    this.selectedColegioCurso = null;
     // Limpiar estado de validación del control de curso
     const courseControl = this.paymentForm.get('selectedCourse');
     courseControl?.markAsPristine();
     courseControl?.markAsUntouched();
+    this.paymentForm.get('selectedEdicion')?.clearValidators();
+    this.paymentForm.get('selectedEdicion')?.updateValueAndValidity();
   }
 
   private formatCurrency(amount: number): string {
@@ -1349,34 +1383,19 @@ export class PaymentRecord implements OnInit {
       this.paymentForm.get('studentSchool')?.setValue(this.openProgramSchoolId);
     }
 
-    // Buscar el curso seleccionado para obtener su array completo de colegios_cursos
-    const selectedCourse = this.courses.find(course => course.id === selectedCourseId);
-    let colegiosCursos = [];
+    // Resolver el colegio_curso EXACTO (colegio + edición) que el usuario seleccionó,
+    // en lugar de enviar el array completo de colegios_cursos del programa (todas las
+    // ediciones y colegios), que hacía llegar al backend una edición distinta a la elegida.
+    const selectedColegioCurso = this.getSelectedColegioCurso();
+    const colegiosCursos = selectedColegioCurso ? [selectedColegioCurso] : [];
 
-    if (selectedCourse && selectedCourse.colegios_cursos) {
-      // Enviar el array completo de colegios_cursos del curso seleccionado
-      colegiosCursos = selectedCourse.colegios_cursos;
-    }
-
-    // Obtener el precio de inscripción y moneda desde colegios_cursos
-    const schoolId: string | null = this.paymentForm.get('studentSchool')?.value || null;
+    // Obtener el precio de inscripción y moneda desde el colegio_curso ya resuelto
     let inscriptionNumber: number = 0;
     let inscriptionCurrency: string = 'USD'; // Por defecto USD
 
-
-    if (schoolId && selectedCourse && selectedCourse.colegios_cursos) {
-      // Buscar el colegio específico en colegios_cursos
-      const schoolCourse = selectedCourse.colegios_cursos.find((cc: any) =>
-        cc.colegio_id && (cc.colegio_id.id === schoolId || cc.colegio_id === schoolId)
-      );
-
-      if (schoolCourse) {
-        // Usar precio_inscripcion y moneda de colegios_cursos
-        inscriptionNumber = schoolCourse.precio_inscripcion || 0;
-        inscriptionCurrency = schoolCourse.moneda || 'USD';
-
-
-      }
+    if (selectedColegioCurso) {
+      inscriptionNumber = selectedColegioCurso.precio_inscripcion || 0;
+      inscriptionCurrency = selectedColegioCurso.moneda || 'USD';
     }
 
     // Convertir inscripción a COP usando la tasa correspondiente según la moneda
@@ -1408,6 +1427,8 @@ export class PaymentRecord implements OnInit {
       },
       curso_id: selectedCourseId,
       colegios_cursos: colegiosCursos,
+      // Edición específica del programa elegida (si el programa tiene varias ediciones)
+      edicion_programa: selectedColegioCurso?.edicion ?? null,
       precio: coursePriceNumber,
       // Enviar la inscripción ya convertida a COP
       precio_inscripcion: inscriptionConvertedCop,
@@ -1508,11 +1529,20 @@ export class PaymentRecord implements OnInit {
     const selectedStudentDoc = this.paymentForm.get('studentDocumentNumber')?.value;
     const currentYear = new Date().getFullYear();
 
-    // Check if there's already an account for the same course, school, and student in the current year
+    // Edición del programa que se está seleccionando actualmente (null si no aplica)
+    const selectedEdicion = this.getSelectedColegioCurso()?.edicion ?? null;
+
+    // Check if there's already an account for the same course, edition, school, and student in the current year
     return this.clientData.cuentas_cobrar.some((cuenta: any) => {
       // Check course ID (cuenta.curso_id is an object with id property)
       const accountCourseId = cuenta.curso_id?.id || cuenta.curso_id;
       if (accountCourseId !== selectedCourseId) {
+        return false;
+      }
+
+      // Si la edición es diferente, no se considera el mismo programa: se permite el registro
+      const accountEdicion = cuenta.edicion_programa ?? null;
+      if (!this.editionsMatch(accountEdicion, selectedEdicion)) {
         return false;
       }
 
@@ -1570,6 +1600,12 @@ export class PaymentRecord implements OnInit {
 
       return accountYear === currentYear;
     });
+  }
+
+  // Compara dos valores de edición tratando null/undefined/'' como equivalentes ("sin edición")
+  private editionsMatch(a: any, b: any): boolean {
+    const normalize = (val: any): string => (val === null || val === undefined || val === '') ? '' : String(val).trim();
+    return normalize(a) === normalize(b);
   }
 
   // Show notification for duplicate enrollment

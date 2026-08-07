@@ -863,6 +863,43 @@
                     Debe seleccionar un programa
                   </p>
                }
+
+               <!-- Edición del Programa: seleccionable cuando el programa tiene varias ediciones en este colegio -->
+               @if (availableEditions.length > 1) {
+                 <div class="mt-4">
+                   <label for="selectedEdicion" class="block text-sm font-semibold text-violet-700 mb-2">Edición del Programa *</label>
+                   <select
+                     id="selectedEdicion"
+                     formControlName="selectedEdicion"
+                     (change)="onEdicionChange($any($event.target).value)"
+                     class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 bg-white text-violet-800">
+                     <option value="">Seleccione una edición</option>
+                     @for (edition of availableEditions; track edition.id) {
+                       <option [value]="edition.id">{{ formatEdicion(edition.edicion) }}</option>
+                     }
+                   </select>
+                   @if (paymentForm.get('selectedEdicion')?.touched && paymentForm.get('selectedEdicion')?.errors?.['required']) {
+                     <p class="text-red-500 text-sm mt-2 flex items-center">
+                       <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                         <path fill-rule="evenodd"
+                               d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                               clip-rule="evenodd"/>
+                       </svg>
+                       Debe seleccionar una edición del programa
+                     </p>
+                   }
+                 </div>
+               } @else if (availableEditions.length === 1 && availableEditions[0].edicion !== null && availableEditions[0].edicion !== undefined && availableEditions[0].edicion !== '') {
+                 <div class="mt-3">
+                   <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-violet-100 text-violet-800 rounded-full text-sm font-semibold">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                     </svg>
+                     {{ formatEdicion(availableEditions[0].edicion) }}
+                   </span>
+                 </div>
+               }
+
                @if (paymentForm.get('selectedCourse')?.value && selectedCourseImageUrl) {
                  <div class="mt-4">
                    <div class="rounded-2xl p-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500 shadow-xl max-w-sm mx-auto">
@@ -1006,6 +1043,7 @@
           [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
           [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
           [selectedCourseImageUrl]="selectedCourseImageUrl"
+          [selectedColegioCurso]="selectedColegioCurso"
           (goBack)="goBackToForm()"
           (confirmSubmit)="confirmAndSubmit()">
         </app-payment-confirmation>

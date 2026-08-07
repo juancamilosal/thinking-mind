@@ -139,6 +139,9 @@
                 {{ course.nombre }}
               }
             }
+            @if (selectedColegioCurso) {
+              <span class="block text-sm font-medium text-violet-600 mt-1">{{ formatEdicion(selectedColegioCurso.edicion) }}</span>
+            }
           </span>
         </div>
 
