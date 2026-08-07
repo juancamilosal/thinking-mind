@@ -499,6 +499,19 @@ export class PaymentRecord implements OnInit {
     this.registeredCourses = [];
     if (client.cuentas_cobrar && client.estudiantes) {
       client.cuentas_cobrar.forEach((cuenta: any, index: number) => {
+        // No mostrar programas cuya fecha de finalización ya pasó
+        if (cuenta.fecha_finalizacion) {
+          const endDate = new Date(cuenta.fecha_finalizacion);
+          if (!isNaN(endDate.getTime())) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+            if (endDate < today) {
+              return;
+            }
+          }
+        }
+
         const student = client.estudiantes.find((est: any) => est.id === cuenta.estudiante_id.id);
 
         // Calcular el saldo pendiente (Precio del Curso - Total Abonado)
