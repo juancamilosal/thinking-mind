@@ -45,6 +45,7 @@ export class ListSchool implements OnInit {
   isLoadingSchoolSuggestions = false;
   selectedSchoolId: string | null = null;
   yearFilter = '';
+  editionFilter = '';
   sortByInscriptionDate = false; // Nueva propiedad para el filtro de ordenamiento por fecha de inscripción
   currentDate = new Date();
   isRector = false;
@@ -142,8 +143,8 @@ export class ListSchool implements OnInit {
     // Usar el nuevo servicio que solo trae cuentas con pagos
     const term = this.searchTerm?.trim();
     const request$ = term
-      ? this.schoolWithPaymentsService.getAccountsWithPaymentsAll(term, this.yearFilter, this.sortByInscriptionDate, false)
-      : this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, undefined, this.yearFilter, this.sortByInscriptionDate, false);
+      ? this.schoolWithPaymentsService.getAccountsWithPaymentsAll(term, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter)
+      : this.schoolWithPaymentsService.getAccountsWithPayments(1, 1000, undefined, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter);
 
     request$.subscribe({
       next: (response) => {
@@ -165,8 +166,8 @@ export class ListSchool implements OnInit {
     // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
     const term = this.searchTerm?.trim();
     const request$ = term
-      ? this.schoolWithPaymentsService.getAccountsWithPaymentsBySchoolAll(schoolId, term, this.yearFilter, this.sortByInscriptionDate, false)
-      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, false);
+      ? this.schoolWithPaymentsService.getAccountsWithPaymentsBySchoolAll(schoolId, term, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter)
+      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter);
 
     request$.subscribe({
       next: (response) => {
@@ -186,7 +187,7 @@ export class ListSchool implements OnInit {
   private loadAccountsForSelectedSchool(schoolId: string): void {
     this.isLoading = true;
     this.schoolWithPaymentsService
-      .getAccountsWithPaymentsBySchoolAll(schoolId, undefined, this.yearFilter, this.sortByInscriptionDate, false)
+      .getAccountsWithPaymentsBySchoolAll(schoolId, undefined, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter)
       .subscribe({
         next: (response) => {
           this.processAccountsReceivable(response.data);
@@ -201,15 +202,20 @@ export class ListSchool implements OnInit {
 
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
     const targetYear = this.getTargetInscriptionYear();
+    const targetEdition = this.getTargetEdition();
     const saldoFilteredAccounts = (accounts || []).filter(account => this.hasPositiveSaldo(account));
-    const filteredAccounts =
+    const yearFilteredAccounts =
       targetYear === null
         ? saldoFilteredAccounts
         : saldoFilteredAccounts.filter(account => this.isAccountInInscriptionYear(account, targetYear));
+    const filteredAccounts =
+      targetEdition === null
+        ? yearFilteredAccounts
+        : yearFilteredAccounts.filter(account => this.isAccountInEdition(account, targetEdition));
 
     // Agrupar por colegio
-    const schoolsMap = new Map<string, SchoolWithAccounts>();
-    filteredAccounts.forEach((account, index) => {
+    const schoolsMap = new Map<string, { school: School; accounts: AccountReceivable[] }>();
+    filteredAccounts.forEach((account) => {
       // Verificar que el account tenga la estructura esperada
       const studentSource: any =
         (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
@@ -227,19 +233,10 @@ export class ListSchool implements OnInit {
               const school = student.colegio_id;
               const schoolId = school.id;
               if (!schoolsMap.has(schoolId)) {
-                schoolsMap.set(schoolId, {
-                  school: school,
-                  accountsCount: 0,
-                  studentsCount: 0,
-                  totalAmount: 0,
-                  accounts: []
-                });
+                schoolsMap.set(schoolId, { school, accounts: [] });
               }
 
-              const schoolData = schoolsMap.get(schoolId)!;
-              schoolData.accounts.push(account);
-              schoolData.accountsCount++;
-              schoolData.totalAmount += account.monto;
+              schoolsMap.get(schoolId)!.accounts.push(account);
             } else {
               console.warn('⚠️ colegio_id no es un objeto:', student.colegio_id);
             }
@@ -251,30 +248,88 @@ export class ListSchool implements OnInit {
         console.warn('⚠️ Cuenta sin estudiante expandido:', account);
       }
     });
-    // Calcular total de estudiantes incluyendo duplicados (por cada cuenta/curso)
-    schoolsMap.forEach((schoolData, schoolId) => {
-      // Contar todas las cuentas que tienen estudiante (incluyendo duplicados)
-      let studentsCount = 0;
-      schoolData.accounts.forEach(account => {
-        const studentSource: any =
-          (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
-            ? (account as any).estudiante_id
-            : ((account as any)?.id_inscripcion?.estudiante_id && typeof (account as any).id_inscripcion.estudiante_id === 'object'
-                ? (account as any).id_inscripcion.estudiante_id
-                : null);
-        if (studentSource) {
-          studentsCount++;
-        }
+
+    // Por cada colegio: si todas sus cuentas comparten la misma edición de programa (caso habitual),
+    // se muestra un único listado. Si hay ediciones distintas, se divide en un listado independiente
+    // por cada edición, cada uno con solo los estudiantes de esa edición.
+    const result: SchoolWithAccounts[] = [];
+    schoolsMap.forEach(({ school, accounts: schoolAccounts }) => {
+      const editionGroups = this.groupAccountsByEdition(schoolAccounts);
+      const shouldSplit = editionGroups.length > 1;
+
+      editionGroups.forEach(group => {
+        result.push({
+          school,
+          accountsCount: group.accounts.length,
+          studentsCount: this.countStudentsWithAccounts(group.accounts),
+          totalAmount: group.accounts.reduce((sum, a) => sum + this.toNumber(a.monto), 0),
+          accounts: group.accounts,
+          edicionPrograma: shouldSplit ? group.edicion : undefined
+        });
       });
-      schoolData.studentsCount = studentsCount;
     });
 
-    this.schoolsWithAccounts = Array.from(schoolsMap.values());
+    this.schoolsWithAccounts = result;
     // Procesar datos para vista por cursos con las cuentas filtradas
     this.processCoursesData(filteredAccounts);
 
     this.totalItems = this.schoolsWithAccounts.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+  }
+
+  // Cuenta las cuentas que tienen estudiante expandido (incluyendo duplicados por cada cuenta/curso)
+  private countStudentsWithAccounts(accounts: AccountReceivable[]): number {
+    let studentsCount = 0;
+    accounts.forEach(account => {
+      const studentSource: any =
+        (account as any)?.estudiante_id && typeof (account as any).estudiante_id === 'object'
+          ? (account as any).estudiante_id
+          : ((account as any)?.id_inscripcion?.estudiante_id && typeof (account as any).id_inscripcion.estudiante_id === 'object'
+              ? (account as any).id_inscripcion.estudiante_id
+              : null);
+      if (studentSource) {
+        studentsCount++;
+      }
+    });
+    return studentsCount;
+  }
+
+  // Agrupa un conjunto de cuentas por su número de edición de programa
+  private groupAccountsByEdition(accounts: AccountReceivable[]): { edicion: string | number | null; accounts: AccountReceivable[] }[] {
+    const groups = new Map<string, AccountReceivable[]>();
+
+    accounts.forEach(account => {
+      const key = this.getEditionKey(account);
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)!.push(account);
+    });
+
+    return Array.from(groups.entries())
+      .map(([key, accs]) => ({ edicion: key === 'sin-edicion' ? null : key, accounts: accs }))
+      .sort((a, b) => (a.edicion ?? '').toString().localeCompare((b.edicion ?? '').toString(), undefined, { numeric: true }));
+  }
+
+  private getEditionKey(account: AccountReceivable): string {
+    const value = this.getEditionValue(account);
+    return value === null || value === undefined || String(value).trim() === '' ? 'sin-edicion' : String(value).trim();
+  }
+
+  private getEditionValue(account: AccountReceivable): string | number | null {
+    const value = (account as any)?.edicion_programa ?? (account as any)?.id_inscripcion?.edicion_programa;
+    return value === undefined ? null : value;
+  }
+
+  private getTargetEdition(): string | null {
+    const trimmed = (this.editionFilter || '').toString().trim();
+    return trimmed === '' ? null : trimmed;
+  }
+
+  private isAccountInEdition(account: AccountReceivable, targetEdition: string): boolean {
+    const value = this.getEditionValue(account);
+    if (value === null || value === undefined) return false;
+    return String(value).trim() === targetEdition;
   }
 
   private getTargetInscriptionYear(): number | null {
@@ -293,6 +348,12 @@ export class ListSchool implements OnInit {
     if (Number.isNaN(parsedDate.getTime())) return false;
 
     return parsedDate.getFullYear() === targetYear;
+  }
+
+  // Método para formatear el número de edición mostrado cuando un colegio/curso se divide en varios listados
+  formatEdition(edicion: string | number | null | undefined): string {
+    if (edicion === null || edicion === undefined || edicion === '') return 'Sin edición';
+    return `Edición ${edicion}`;
   }
 
   getEffectiveSaldo(account: AccountReceivable): number {
@@ -331,6 +392,23 @@ export class ListSchool implements OnInit {
 
   onYearFilterChange(event: any): void {
     this.yearFilter = event.target.value;
+    this.currentPage = 1; // Resetear a la primera página al cambiar filtro
+
+    // Limpiar el timeout anterior si existe
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    // Establecer un nuevo timeout para la búsqueda
+    this.searchTimeout = setTimeout(() => {
+      if (this.isRector || this.selectedSchoolId) {
+        this.searchSchools();
+      }
+    }, 500); // Esperar 500ms después de que el usuario deje de escribir
+  }
+
+  onEditionFilterChange(event: any): void {
+    this.editionFilter = event.target.value;
     this.currentPage = 1; // Resetear a la primera página al cambiar filtro
 
     // Limpiar el timeout anterior si existe
@@ -686,7 +764,7 @@ export class ListSchool implements OnInit {
   }
 
   private processCoursesData(accounts: AccountReceivable[]): void {
-    // Agrupar por colegio y luego por curso
+    // Agrupar por colegio, luego por curso y por edición dentro de cada curso
     const schoolsMap = new Map<string, any>();
 
     accounts.forEach(account => {
@@ -717,7 +795,7 @@ export class ListSchool implements OnInit {
           if (!schoolsMap.has(schoolId)) {
             schoolsMap.set(schoolId, {
               school: school,
-              courses: new Map<string, any>(),
+              courseGroups: new Map<string, Map<string, any>>(),
               totalStudents: 0,
               totalAmount: 0
             });
@@ -727,23 +805,30 @@ export class ListSchool implements OnInit {
 
           // Determinar si es un curso Will-Go y usar ID unificado
           const isWillGoCourse = this.isWillGoCourse(course.nombre);
-          const courseId = isWillGoCourse ? 'will-go-unified' : course.id;
+          const baseCourseId = isWillGoCourse ? 'will-go-unified' : course.id;
+          const editionKey = this.getEditionKey(account);
 
           // Crear entrada del curso dentro del colegio si no existe
-          if (!schoolData.courses.has(courseId)) {
-            const courseData = {
+          if (!schoolData.courseGroups.has(baseCourseId)) {
+            schoolData.courseGroups.set(baseCourseId, new Map<string, any>());
+          }
+          const editionMap = schoolData.courseGroups.get(baseCourseId)!;
+
+          // Crear entrada de la edición dentro del curso si no existe
+          if (!editionMap.has(editionKey)) {
+            editionMap.set(editionKey, {
               course: isWillGoCourse ? {
                 ...course,
                 id: 'will-go-unified',
                 nombre: 'WILL - GO'
               } : course,
               students: [],
-              isExpanded: false
-            };
-            schoolData.courses.set(courseId, courseData);
+              isExpanded: false,
+              edicionPrograma: editionKey === 'sin-edicion' ? null : editionKey
+            });
           }
 
-          const courseData = schoolData.courses.get(courseId)!;
+          const courseData = editionMap.get(editionKey)!;
 
           // Agregar estudiante al curso
           courseData.students.push({
@@ -758,11 +843,30 @@ export class ListSchool implements OnInit {
       }
     });
 
-    // Convertir Map a Array y ordenar
-    this.schoolsWithCourses = Array.from(schoolsMap.values()).map(schoolData => ({
-      ...schoolData,
-      courses: Array.from(schoolData.courses.values())
-    }));
+    // Convertir la estructura anidada colegio -> curso -> edición a un listado plano de cursos.
+    // Un mismo curso solo se etiqueta y divide por edición si tiene más de una edición distinta.
+    this.schoolsWithCourses = Array.from(schoolsMap.values()).map(schoolData => {
+      const flatCourses: any[] = [];
+
+      (schoolData.courseGroups as Map<string, Map<string, any>>).forEach(editionMap => {
+        const groups = Array.from(editionMap.values());
+        const shouldSplit = groups.length > 1;
+
+        groups.forEach(courseData => {
+          flatCourses.push({
+            ...courseData,
+            edicionPrograma: shouldSplit ? courseData.edicionPrograma : undefined
+          });
+        });
+      });
+
+      return {
+        school: schoolData.school,
+        totalStudents: schoolData.totalStudents,
+        totalAmount: schoolData.totalAmount,
+        courses: flatCourses
+      };
+    });
   }
 
   toggleSchool(schoolIndex: number): void {
@@ -930,7 +1034,10 @@ export class ListSchool implements OnInit {
       const a = document.createElement('a');
       const schoolName = this.sanitizeFileName(schoolData.school.nombre || 'Colegio');
       const datePart = this.getColombiaDateStamp();
-      const fileName = `Inscripciones ${schoolName} - ${datePart}.xlsx`;
+      const editionSuffix = schoolData.edicionPrograma !== undefined
+        ? ` - ${this.sanitizeFileName(this.formatEdition(schoolData.edicionPrograma))}`
+        : '';
+      const fileName = `Inscripciones ${schoolName}${editionSuffix} - ${datePart}.xlsx`;
       a.href = URL.createObjectURL(blob);
       a.download = fileName;
       a.click();

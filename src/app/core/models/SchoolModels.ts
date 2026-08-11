@@ -33,6 +33,9 @@ export class CourseWithStudentsAlternative {
   course: any;
   students: StudentWithAccount[];
   isExpanded?: boolean;
+  // Edición del programa de este grupo. Solo se define cuando un mismo curso tiene
+  // cuentas con ediciones distintas y se divide en varios listados.
+  edicionPrograma?: number | string | null;
 }
 
 export class SchoolWithAccounts {
@@ -44,6 +47,9 @@ export class SchoolWithAccounts {
   showStudents?: boolean;
   isLoadingStudents?: boolean;
   students?: StudentWithAccount[];
+  // Edición del programa de este grupo. Solo se define cuando un mismo colegio tiene
+  // cuentas con ediciones distintas y se divide en varios listados.
+  edicionPrograma?: number | string | null;
 }
 
 export class SchoolWithCourses {

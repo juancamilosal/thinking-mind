@@ -605,6 +605,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                     duration: 6000
                 };
                 this.showNotification = true;
+                this.cdRef.detectChanges();
                 return;
             }
         }
@@ -629,6 +630,7 @@ export class PaymentRecordAyoComponent implements OnInit {
         };
 
         this.showPaymentModal = true;
+        this.cdRef.detectChanges();
     }
 
     onResendCode(courseData: any): void {
@@ -693,6 +695,7 @@ export class PaymentRecordAyoComponent implements OnInit {
             this.selectedAccountData = courseData;
             this.selectedAccountPayments = account.pagos || [];
             this.showPaymentsModal = true;
+            this.cdRef.detectChanges();
         } else {
             console.error('No se encontró la cuenta para mostrar los pagos');
         }
@@ -702,6 +705,7 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.showPaymentsModal = false;
         this.selectedAccountData = null;
         this.selectedAccountPayments = [];
+        this.cdRef.detectChanges();
     }
 
     get totalPaid(): number {
@@ -753,6 +757,7 @@ export class PaymentRecordAyoComponent implements OnInit {
         this.totalAmountToPay = 0;
         this.editablePaymentAmount = 0;
         this.isLoading = false;
+        this.cdRef.detectChanges();
     }
 
     formatNumberWithCommas(value: number): string {

@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -70,7 +70,8 @@ export class Courses {
     private colegioCursosService: ColegioCursosService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {
     this.initEditForm();
   }
@@ -228,6 +229,7 @@ export class Courses {
     if (!this.showForm) {
       this.getCourse();
     }
+    this.cdr.detectChanges();
   }
 
   initForm() {
@@ -247,10 +249,12 @@ export class Courses {
           a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase())
         );
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading courses:', error);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -289,6 +293,7 @@ export class Courses {
   closeCourseInfo() {
     this.selectedCourse = null;
     this.showCourseInfo = false;
+    this.cdr.detectChanges();
   }
 
   onCourseUpdated() {
@@ -301,17 +306,20 @@ export class Courses {
     this.editMode = true;
     this.showForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.cdr.detectChanges();
   }
 
   showColegioFormForCourse(course: Course) {
     this.selectedCourse = course;
     this.showColegioForm = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.cdr.detectChanges();
   }
 
   closeColegioForm() {
     this.showColegioForm = false;
     this.selectedCourse = null;
+    this.cdr.detectChanges();
   }
 
   onColegioAdded() {
@@ -358,6 +366,7 @@ export class Courses {
     }
 
     this.showEditModal = true;
+    this.cdr.detectChanges();
   }
 
   deleteColegioCurso(colegioCurso: any) {
@@ -727,6 +736,7 @@ export class Courses {
     this.existingMeeting = null;
     this.isEditingMeeting = false;
     this.editFechaForm.reset();
+    this.cdr.detectChanges();
   }
 
   deleteCourse(course: Course) {
