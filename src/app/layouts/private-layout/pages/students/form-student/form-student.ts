@@ -87,14 +87,19 @@ export class FormStudent implements OnInit, OnChanges {
 
   loadStudentData(): void {
     if (this.studentData) {
+      const colegio = this.studentData.colegio_id;
+      const colegioId = colegio && typeof colegio === 'object' ? colegio.id : colegio;
+
       this.studentForm.patchValue({
         documentType: this.studentData.tipo_documento,
         documentNumber: this.studentData.numero_documento,
         firstName: this.studentData.nombre,
         lastName: this.studentData.apellido,
         grade: this.studentData.grado,
-        school: this.studentData.colegio_id.id
+        school: colegioId || null,
+        schoolSearchTerm: colegio && typeof colegio === 'object' ? (colegio.nombre || '') : ''
       });
+      this.isSchoolSelected = !!colegioId;
 
       if (this.studentData.acudiente && typeof this.studentData.acudiente === 'object') {
         this.guardianId = this.studentData.acudiente.id ? this.studentData.acudiente.id.toString() : '';
