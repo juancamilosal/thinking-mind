@@ -64,13 +64,16 @@ export class FormStudent implements OnInit, OnChanges {
   }
 
   initForm = (): void => {
+    // En modo edición todos los campos son opcionales para permitir actualizaciones parciales
+    const requiredValidator = this.editMode ? [] : [Validators.required];
     this.studentForm = this.fb.group({
-      documentType: ['TI', [Validators.required]],
-      documentNumber: [null, [Validators.required, Validators.minLength(6)]],
-      firstName: [null, [Validators.required, Validators.minLength(2)]],
-      lastName: [null, [Validators.required, Validators.minLength(2)]],
-      grade: [null, [Validators.required, Validators.minLength(1)]],
-      school: [null, [Validators.required]],
+      documentType: ['TI', [...requiredValidator]],
+      documentNumber: [null, [...requiredValidator, Validators.minLength(6)]],
+      firstName: [null, [...requiredValidator, Validators.minLength(2)]],
+      lastName: [null, [...requiredValidator, Validators.minLength(2)]],
+      grade: [null, [...requiredValidator, Validators.minLength(1)]],
+      email: [null, [Validators.email]],
+      school: [null, [...requiredValidator]],
       schoolSearchTerm: [''],
       guardianDocumentType: ['CC'],
       guardianDocumentNumber: [null, [Validators.minLength(6)]],
@@ -96,6 +99,7 @@ export class FormStudent implements OnInit, OnChanges {
         firstName: this.studentData.nombre,
         lastName: this.studentData.apellido,
         grade: this.studentData.grado,
+        email: this.studentData.email || null,
         school: colegioId || null,
         schoolSearchTerm: colegio && typeof colegio === 'object' ? (colegio.nombre || '') : ''
       });
@@ -169,6 +173,7 @@ export class FormStudent implements OnInit, OnChanges {
       nombre: this.studentForm.get('firstName')?.value,
       apellido: this.studentForm.get('lastName')?.value,
       grado: this.studentForm.get('grade')?.value,
+      email: this.studentForm.get('email')?.value,
       colegio_id: this.studentForm.get('school')?.value,
       acudiente: this.guardianId,
     };
@@ -308,6 +313,7 @@ export class FormStudent implements OnInit, OnChanges {
         nombre: this.studentForm.get('firstName')?.value,
         apellido: this.studentForm.get('lastName')?.value,
         grado: this.studentForm.get('grade')?.value,
+        email: this.studentForm.get('email')?.value,
         colegio_id: this.studentForm.get('school')?.value,
         acudiente: this.guardianId,
       };
