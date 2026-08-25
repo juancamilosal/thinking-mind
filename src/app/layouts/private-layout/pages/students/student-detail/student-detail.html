@@ -41,8 +41,12 @@
                 <p class="text-gray-900">{{ student.numero_documento }}</p>
               </div>
               <div>
+                <label class="block text-sm font-medium text-gray-600">Email</label>
+                <p class="text-gray-900">{{ student.email || 'Sin email' }}</p>
+              </div>
+              <div>
                 <label class="block text-sm font-medium text-gray-600">Colegio</label>
-                <p class="text-gray-900">{{ student.colegio_id.nombre }}</p>
+                <p class="text-gray-900">{{ student.colegio_id?.nombre || 'Sin colegio' }}</p>
               </div>
             </div>
           </div>

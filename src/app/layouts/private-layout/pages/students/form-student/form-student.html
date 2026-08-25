@@ -147,6 +147,25 @@
               }
             </div>
 
+            <!-- Email -->
+            <div class="space-y-3">
+              <label for="email" class="block text-sm font-semibold text-green-700">Correo Electrónico</label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                placeholder="estudiante@ejemplo.com"
+                class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-white">
+              @if(studentForm.get('email')?.touched && studentForm.get('email')?.errors?.['email']) {
+                <p class="text-red-500 text-sm mt-2 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  Ingrese un correo electrónico válido
+                </p>
+              }
+            </div>
+
             <!-- Colegio (Autocomplete) -->
             <div class="space-y-3 md:col-span-2 relative">
               <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
@@ -333,7 +352,7 @@
           <app-button
             class="w-full sm:w-auto"
             type="submit"
-            [disabled]="studentForm.invalid || isSubmitting"
+            [disabled]="(!editMode && studentForm.invalid) || isSubmitting"
             [loading]="isSubmitting"
             [fullWidth]="true"
             size="lg"
