@@ -131,10 +131,12 @@ export class FormCourse implements OnInit, OnChanges {
         this.isSubmitting = false;
         this.showImageSection = true;
         this.notificationService.showSuccess('Programa creado exitosamente', 'Ahora puedes agregar una imagen al programa');
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isSubmitting = false;
         this.notificationService.showError('Error al crear el programa', error.error?.message || 'Error desconocido');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -172,6 +174,7 @@ export class FormCourse implements OnInit, OnChanges {
             this.isUploadingImage = false;
             this.isSubmitting = false;
             this.notificationService.showError('Error al asociar la imagen', error.error?.message || 'Error desconocido');
+            this.cdr.detectChanges();
           }
         });
       },
@@ -179,6 +182,7 @@ export class FormCourse implements OnInit, OnChanges {
         this.isUploadingImage = false;
         this.isSubmitting = false;
         this.notificationService.showError('Error al subir la imagen', error.error?.message || 'Error desconocido');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -188,21 +192,6 @@ export class FormCourse implements OnInit, OnChanges {
     this.notificationService.showSuccess('Programa creado exitosamente', 'El programa ha sido creado correctamente.');
     this.cdr.detectChanges();
     this.courseUpdated.emit();
-  }
-
-  private submitCourse(course: any): void {
-    this.courseServices.createCourse(course).subscribe({
-      next: (response) => {
-        this.isSubmitting = false;
-        this.notificationService.showSuccess('Programa creado exitosamente',"");
-        this.courseUpdated.emit();
-        // Remover: this.goBack.emit();
-      },
-      error: (error) => {
-        this.isSubmitting = false;
-        this.notificationService.showError('Error al crear el programa');
-      }
-    });
   }
 
   updateCourse() {
@@ -223,6 +212,7 @@ export class FormCourse implements OnInit, OnChanges {
       error: (error) => {
         this.isUploadingImage = false;
         this.notificationService.showError('Error', 'No se pudo subir la imagen. Inténtalo nuevamente.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -237,10 +227,12 @@ export class FormCourse implements OnInit, OnChanges {
         this.isSubmitting = false;
         this.notificationService.showSuccess('Programa actualizado exitosamente', "");
         this.courseUpdated.emit();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isSubmitting = false;
         this.notificationService.showError('Error al actualizar el programa',"");
+        this.cdr.detectChanges();
       }
     });
   }
@@ -257,12 +249,16 @@ export class FormCourse implements OnInit, OnChanges {
         if (previousImageId) {
           this.courseServices.deleteFile(previousImageId).subscribe();
         }
+        this.isSubmitting = false;
         this.notificationService.showSuccess('Programa actualizado exitosamente', "");
         this.courseUpdated.emit();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error updating course:', error);
+        this.isSubmitting = false;
         this.notificationService.showError('Error al actualizar el programa');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -282,6 +278,7 @@ export class FormCourse implements OnInit, OnChanges {
                 `${this.courseData?.nombre} ha sido eliminado exitosamente.`
               );
               this.courseUpdated.emit();
+              this.cdr.detectChanges();
             },
             error: (error) => {
               this.isDeleting = false;
@@ -289,6 +286,7 @@ export class FormCourse implements OnInit, OnChanges {
                 'Error al eliminar',
                 'No se pudo eliminar el programa. Inténtalo nuevamente.'
               );
+              this.cdr.detectChanges();
             }
           });
         }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { CourseService } from '../../../../../core/services/course.service';
@@ -39,7 +39,8 @@ export class ColegioCursosComponent implements OnInit {
     private courseService: CourseService,
     private schoolService: SchoolService,
     private notificationService: NotificationService,
-    private colegioCursosService: ColegioCursosService
+    private colegioCursosService: ColegioCursosService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -70,7 +71,7 @@ export class ColegioCursosComponent implements OnInit {
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
-      edicion: [null, Validators.pattern(/^\d+$/)], // Campo numérico opcional
+      edicion: [null, [Validators.required, Validators.pattern(/^\d+$/)]], // Campo numérico obligatorio
       curso_id: [null, Validators.required],
       colegio_id: [null, Validators.required],
       precio_curso: [null, Validators.required],
@@ -120,10 +121,12 @@ export class ColegioCursosComponent implements OnInit {
           this.filteredCourses = [...this.courses];
         }
         this.isLoadingCourses = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading courses:', error);
         this.isLoadingCourses = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -140,6 +143,7 @@ export class ColegioCursosComponent implements OnInit {
   searchCourses(searchTerm: string): void {
     if (!searchTerm || searchTerm.length < 2) {
       this.filteredCourses = [];
+      this.cdr.detectChanges();
       return;
     }
 
@@ -147,6 +151,7 @@ export class ColegioCursosComponent implements OnInit {
       course.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.sku.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    this.cdr.detectChanges();
   }
 
   selectCourse(course: Course): void {
@@ -154,6 +159,7 @@ export class ColegioCursosComponent implements OnInit {
     this.fechaFinalizacionForm.get('courseSearchTerm')?.setValue(course.nombre);
     this.filteredCourses = [];
     this.isCourseSelected = true;
+    this.cdr.detectChanges();
   }
 
   clearCourseSearch(): void {
@@ -161,6 +167,7 @@ export class ColegioCursosComponent implements OnInit {
     this.filteredCourses = [];
     this.isCourseSelected = false;
     this.fechaFinalizacionForm.get('curso_id')?.setValue('');
+    this.cdr.detectChanges();
   }
 
   onSchoolSearch(event: any): void {
@@ -175,6 +182,7 @@ export class ColegioCursosComponent implements OnInit {
   searchSchools(searchTerm: string): void {
     if (!searchTerm || searchTerm.length < 2) {
       this.filteredSchools = [];
+      this.cdr.detectChanges();
       return;
     }
 
@@ -183,11 +191,13 @@ export class ColegioCursosComponent implements OnInit {
       next: (response) => {
         this.filteredSchools = response.data;
         this.isLoadingSchools = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error searching schools:', error);
         this.filteredSchools = [];
         this.isLoadingSchools = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -197,6 +207,7 @@ export class ColegioCursosComponent implements OnInit {
     this.fechaFinalizacionForm.get('schoolSearchTerm')?.setValue(school.nombre);
     this.filteredSchools = [];
     this.isSchoolSelected = true;
+    this.cdr.detectChanges();
   }
 
   clearSchoolSearch(): void {
@@ -204,6 +215,7 @@ export class ColegioCursosComponent implements OnInit {
     this.filteredSchools = [];
     this.isSchoolSelected = false;
     this.fechaFinalizacionForm.get('colegio_id')?.setValue('');
+    this.cdr.detectChanges();
   }
 
   onCancel(): void {
@@ -277,6 +289,7 @@ export class ColegioCursosComponent implements OnInit {
 
           // Emitir evento para regresar
           this.goBack.emit();
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error al crear colegio-curso:', error);
@@ -284,6 +297,7 @@ export class ColegioCursosComponent implements OnInit {
             'Error al guardar',
             'No se pudo guardar la información. Inténtalo nuevamente.'
           );
+          this.cdr.detectChanges();
         }
       });
     } else {

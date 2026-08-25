@@ -21,12 +21,18 @@ export class PaymentConfirmationComponent {
   @Input() independentInstitution: string = '';
   @Input() selectedInscriptionConvertedCop: number | null = null;
   @Input() selectedCourseImageUrl: string | null = null;
+  @Input() selectedColegioCurso: any = null;
 
   @Output() goBack = new EventEmitter<void>();
   @Output() confirmSubmit = new EventEmitter<void>();
 
   onGoBack(): void {
     this.goBack.emit();
+  }
+
+  formatEdicion(edicion: any): string {
+    if (edicion === null || edicion === undefined || edicion === '') return 'Sin edición';
+    return `Edición ${edicion}`;
   }
 
   onConfirmSubmit(): void {
