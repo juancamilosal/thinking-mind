@@ -84,6 +84,7 @@ export class Courses {
   initEditForm(): void {
     this.editFechaForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
+      edicion: [null, [Validators.required, Validators.pattern(/^\d+$/)]],
       precio_curso: [null, Validators.required],
       programa_con_inscripcion: [false],
       precio_inscripcion: [null],
@@ -332,6 +333,9 @@ export class Courses {
 
     this.editFechaForm.patchValue({
       fecha_finalizacion: this.formatDateForInput(colegioCurso.fecha_finalizacion),
+      edicion: (colegioCurso.edicion !== null && colegioCurso.edicion !== undefined)
+        ? colegioCurso.edicion
+        : null,
       precio_curso: (colegioCurso.precio_curso !== null && colegioCurso.precio_curso !== undefined)
         ? this.formatPrice(colegioCurso.precio_curso)
         : '',
@@ -590,6 +594,11 @@ export class Courses {
         fecha_finalizacion: this.toIsoDateString(this.editFechaForm.get('fecha_finalizacion')?.value)
       };
 
+      const rawEdicion = this.editFechaForm.get('edicion')?.value;
+      updatedData.edicion = (rawEdicion !== null && rawEdicion !== undefined && String(rawEdicion).trim() !== '')
+        ? Number(rawEdicion)
+        : null;
+
       const rawPrice = this.editFechaForm.get('precio_curso')?.value;
       const unformattedPrice = this.unformatPrice(rawPrice);
       if (rawPrice !== null && rawPrice !== undefined && String(rawPrice).trim() !== '') {
@@ -681,6 +690,18 @@ export class Courses {
     const digitsOnly = String(input.value || '').replace(/\D/g, '');
     const formatted = this.formatPrice(digitsOnly);
     this.editFechaForm.get('precio_especial')?.setValue(formatted, { emitEvent: false });
+  }
+
+  onlyNumbers(event: KeyboardEvent): void {
+    const charCode = event.which ? event.which : event.keyCode;
+    // Permitir: backspace, delete, tab, escape, enter y atajos Ctrl+A/C/V/X
+    if ([46, 8, 9, 27, 13].indexOf(charCode) !== -1 ||
+      ((charCode === 65 || charCode === 67 || charCode === 86 || charCode === 88) && event.ctrlKey)) {
+      return;
+    }
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
   }
 
   private formatPrice(value: any): string {
