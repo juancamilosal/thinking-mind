@@ -414,7 +414,7 @@
 
           <!-- Información del Estudiante -->
           @if (!showRegisteredCourses || showAddCourseForm) {
-          <div class="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-10">
+          <div class="relative z-30 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-10">
             <!-- Barra de acento superior -->
             <div class="absolute inset-x-0 top-0 h-1.5 rounded-t-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500"></div>
             <div class="flex items-center gap-4">
@@ -652,7 +652,7 @@
                   </div>
 
                   @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
-                    <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    <div class="absolute z-50 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                          (touchstart)="onResultsTouchStart()" (mousedown)="onResultsTouchStart()"
                          [ngStyle]="{ '-webkit-overflow-scrolling': 'touch' }">
                       @if (isLoadingSchools) {
@@ -680,7 +680,7 @@
                   }
 
                   @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
-                    <div class="absolute z-10 w-full bg-white border border-green-300 rounded-lg shadow-lg">
+                    <div class="absolute z-50 w-full bg-white border border-green-300 rounded-lg shadow-lg">
                       <div class="px-4 py-3 text-gray-500 text-center">
                         <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
