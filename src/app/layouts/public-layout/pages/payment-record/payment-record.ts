@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -111,6 +111,7 @@ export class PaymentRecord implements OnInit {
     private exchangeRateService: ExchangeRateService,
     private router: Router,
     private cdRef: ChangeDetectorRef,
+    private ngZone: NgZone,
   ) {
   }
 
@@ -791,9 +792,11 @@ export class PaymentRecord implements OnInit {
         });
 
         if (accentMatches.length > 0) {
-          this.filteredSchools = accentMatches.slice(0, 10);
-          this.isLoadingSchools = false;
-          this.cdRef.detectChanges();
+          this.ngZone.run(() => {
+            this.filteredSchools = accentMatches.slice(0, 10);
+            this.isLoadingSchools = false;
+            this.cdRef.detectChanges();
+          });
           return;
         }
 
@@ -801,26 +804,32 @@ export class PaymentRecord implements OnInit {
         this.schoolService.getAllSchools(1, 100).subscribe({
           next: (allResp) => {
             const all = allResp.data || [];
-            this.filteredSchools = all.filter(s => {
-              const name = this.normalize(s.nombre || '');
-              const city = this.normalize(s.ciudad || '');
-              return name.includes(normalizedTerm) || city.includes(normalizedTerm);
-            }).slice(0, 10);
-            this.isLoadingSchools = false;
-            this.cdRef.detectChanges();
+            this.ngZone.run(() => {
+              this.filteredSchools = all.filter(s => {
+                const name = this.normalize(s.nombre || '');
+                const city = this.normalize(s.ciudad || '');
+                return name.includes(normalizedTerm) || city.includes(normalizedTerm);
+              }).slice(0, 10);
+              this.isLoadingSchools = false;
+              this.cdRef.detectChanges();
+            });
           },
           error: () => {
-            this.filteredSchools = [];
-            this.isLoadingSchools = false;
-            this.cdRef.detectChanges();
+            this.ngZone.run(() => {
+              this.filteredSchools = [];
+              this.isLoadingSchools = false;
+              this.cdRef.detectChanges();
+            });
           }
         });
       },
       error: (error) => {
-        this.showServerErrorNotification('Error al buscar colegios.');
-        this.filteredSchools = [];
-        this.isLoadingSchools = false;
-        this.cdRef.detectChanges();
+        this.ngZone.run(() => {
+          this.showServerErrorNotification('Error al buscar colegios.');
+          this.filteredSchools = [];
+          this.isLoadingSchools = false;
+          this.cdRef.detectChanges();
+        });
       }
     });
   }
