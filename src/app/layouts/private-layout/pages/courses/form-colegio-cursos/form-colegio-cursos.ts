@@ -71,7 +71,7 @@ export class ColegioCursosComponent implements OnInit {
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
-      edicion: [null, [Validators.required, Validators.pattern(/^\d+$/)]], // Campo numérico obligatorio
+      edicion: [null, [Validators.pattern(/^\d+$/)]], // Campo numérico opcional
       curso_id: [null, Validators.required],
       colegio_id: [null, Validators.required],
       precio_curso: [null, Validators.required],
