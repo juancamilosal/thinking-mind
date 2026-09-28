@@ -84,6 +84,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   elapsedTime: string = '00:00';
   showNotificationBanner: boolean = false;
   private timerSubscription: Subscription | null = null;
+  private autoClosingSession: boolean = false;
+  private lastAutoCloseCheck: number = 0;
 
   // Evaluation modal
   showEvaluationModal: boolean = false;
@@ -137,6 +139,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.timerSubscription = this.timerService.session$.subscribe(session => {
       this.currentSession = session;
       if (session && session.isActive) {
+        // La comprobación de auto-cierre se ejecuta como máximo una vez por minuto.
+        // Si la hora actual ya pasó los 10 min posteriores a la fecha_finalizacion
+        // (y la sesión lleva al menos 10 min activa), cerrar automáticamente la sesión
+        // y marcar califico_hoy en el usuario.
+        const nowMs = Date.now();
+        if (nowMs - this.lastAutoCloseCheck >= 60 * 1000) {
+          this.lastAutoCloseCheck = nowMs;
+          if (this.hasSessionEndTimePassed(session) && !this.autoClosingSession) {
+            this.autoClosingSession = true;
+            this.handleGradingDeadlineExpired();
+            return;
+          }
+        }
         this.elapsedTime = this.timerService.getFormattedElapsedTime();
         if (session.elapsedMinutes >= 45 && !this.showNotificationBanner) {
           this.showNotificationBanner = true;
@@ -444,6 +459,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   async accessMeeting(meeting: any, programa: any): Promise<void> {
+    // Si el docente ya calificó hoy, no permitir acceder a más reuniones
+    if (this.isGradingClosedForToday()) {
+      this.notificationService.showWarning(
+        'Calificaciones cerradas',
+        'Calificaciones cerradas por el día de hoy.'
+      );
+      return;
+    }
+
     const status = this.getMeetingStatus(meeting);
 
     // Check if meeting is within allowed access window
@@ -522,6 +546,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   accessGeneralMeeting(meeting: any): void {
+    // Si el docente ya calificó hoy, no permitir acceder a más reuniones
+    if (this.isGradingClosedForToday()) {
+      this.notificationService.showWarning(
+        'Calificaciones cerradas',
+        'Calificaciones cerradas por el día de hoy.'
+      );
+      return;
+    }
+
     // Check if meeting is within allowed access window
     if (!this.canAccessMeeting(meeting)) {
       const start = new Date(meeting.fecha_inicio);
@@ -1074,6 +1107,92 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.showNotificationBanner = false;
   }
 
+  /**
+   * Determina si la hora actual ya pasó la fecha_finalizacion de la reunión activa,
+   * comparando SOLO la hora del día (hh:mm:ss), sin importar la fecha.
+   */
+  private hasSessionEndTimePassed(session: any): boolean {
+    const endTime = this.getActiveMeetingEndTime(session);
+
+    if (!endTime || isNaN(endTime.getTime())) {
+      console.log('[auto-cierre] No se encontró endTime válido -> no cierra');
+      return false;
+    }
+
+    // La sesión debe cerrarse 10 minutos DESPUÉS de la fecha_finalizacion.
+    // Ej: si la reunión termina a las 6:20, el cierre es a las 6:30 o después.
+    const deadline = new Date(endTime.getTime() + 10 * 60 * 1000);
+
+    const now = new Date();
+    const deadlineSeconds = deadline.getHours() * 3600 + deadline.getMinutes() * 60 + deadline.getSeconds();
+    const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const pastDeadline = nowSeconds > deadlineSeconds;
+
+    // DEBUG temporal - revisar consola del navegador
+    console.log('[auto-cierre] fin reunión:', endTime.getHours() + ':' + endTime.getMinutes(),
+      '| deadline (+10min):', deadline.getHours() + ':' + deadline.getMinutes() + ':' + deadline.getSeconds(),
+      '| ahora:', now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds(),
+      '| debe cerrar:', pastDeadline);
+
+    return pastDeadline;
+  }
+
+  /**
+   * Obtiene la fecha_finalizacion de la reunión activa. Busca primero en las reuniones
+   * cargadas (programas y generales) y, como respaldo, usa scheduledEndTime de la sesión.
+   */
+  private getActiveMeetingEndTime(session: any): Date | null {
+    const meetingId = session?.meetingId;
+    if (meetingId) {
+      for (const programa of this.programas) {
+        const meeting = (programa as any).id_reuniones_meet?.find((m: any) => m.id === meetingId);
+        if (meeting?.fecha_finalizacion) return new Date(meeting.fecha_finalizacion);
+      }
+      for (const program of this.generalPrograms) {
+        const meeting = (program as any).id_reuniones_meet?.find((m: any) => m.id === meetingId);
+        if (meeting?.fecha_finalizacion) return new Date(meeting.fecha_finalizacion);
+      }
+    }
+    if (session?.scheduledEndTime) return new Date(session.scheduledEndTime);
+    return null;
+  }
+
+  /**
+   * Se ejecuta cuando la hora actual ya pasó los 10 minutos posteriores a la fecha_finalizacion
+   * (comparando solo la hora del día) sin que el docente cierre/califique la reunión. Cierra la
+   * sesión, devuelve el temporizador a su estado normal y marca califico_hoy: true en el usuario.
+   */
+  private handleGradingDeadlineExpired(): void {
+    // Cerrar el temporizador y volver a su estado normal
+    this.timerService.endSession();
+    this.showEvaluationModal = false;
+    this.showNotificationBanner = false;
+    this.elapsedTime = '00:00';
+
+    this.markCalificoHoy();
+    this.autoClosingSession = false;
+  }
+
+  /**
+   * Marca califico_hoy: true en el usuario actual (docente): consume el servicio de
+   * actualización y sincroniza el current_user en storage.
+   */
+  private markCalificoHoy(): void {
+    const currentUser = StorageServices.getCurrentUser();
+    const userId = currentUser?.id;
+    if (!userId) return;
+
+    this.userService.updateUser(userId, { califico_hoy: true }).subscribe({
+      next: () => {
+        // Mantener sincronizado el current_user en storage
+        StorageServices.setUserData({ ...currentUser, califico_hoy: true });
+      },
+      error: (err) => {
+        console.error('Error actualizando califico_hoy:', err);
+      }
+    });
+  }
+
   createPayrollRecord(): void {
     const currentUser = StorageServices.getCurrentUser();
     const teacherId = currentUser?.id;
@@ -1137,6 +1256,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.timerService.endSession();
     this.showNotificationBanner = false;
 
+    // Marcar califico_hoy: true al guardar y finalizar la evaluación de estudiantes
+    this.markCalificoHoy();
+
     this.notificationService.showSuccess(
       'Sesión Finalizada',
       'La evaluación y calificaciones han sido guardadas exitosamente.'
@@ -1156,6 +1278,33 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   hasActiveSession(meetingId: string): boolean {
     return this.timerService.hasActiveSession(meetingId);
+  }
+
+  /**
+   * Indica si el docente ya cerró/calificó por el día de hoy (califico_hoy === true).
+   * Cuando es true no se permite acceder a nuevas reuniones.
+   */
+  isGradingClosedForToday(): boolean {
+    const currentUser = StorageServices.getCurrentUser();
+    return currentUser?.califico_hoy === true;
+  }
+
+  /**
+   * Indica si la hora actual está dentro del rango horario de la reunión
+   * (entre la hora de fecha_inicio y la de fecha_finalizacion), comparando solo la hora del día.
+   */
+  isWithinMeetingTimeRange(meeting: any): boolean {
+    if (!meeting?.fecha_inicio || !meeting?.fecha_finalizacion) return false;
+
+    const start = new Date(meeting.fecha_inicio);
+    const end = new Date(meeting.fecha_finalizacion);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return false;
+
+    const toSeconds = (d: Date) => d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+    const now = new Date();
+    const nowSeconds = toSeconds(now);
+
+    return nowSeconds >= toSeconds(start) && nowSeconds <= toSeconds(end);
   }
 
   openStudyPlanModal(programa: ProgramaAyo): void {
