@@ -15,4 +15,5 @@ export class User {
   calificacion?: number;
   valor_hora?: number;
   programa_ayo_id?: any;
+  califico_hoy?: boolean;
 }

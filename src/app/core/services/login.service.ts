@@ -80,6 +80,7 @@ export class LoginService {
             if (userData.role === Roles.TEACHER) {
               filteredUserData.tipo_documento = userData.tipo_documento;
               filteredUserData.numero_documento = userData.numero_documento;
+              filteredUserData.califico_hoy = userData.califico_hoy;
             }
 
             // Para estudiantes regulares (Estudiantes role), incluir resultado_test si existe
@@ -198,6 +199,7 @@ export class LoginService {
           if (userData.role === Roles.TEACHER) {
             filteredUserData.tipo_documento = userData.tipo_documento;
             filteredUserData.numero_documento = userData.numero_documento;
+            filteredUserData.califico_hoy = userData.califico_hoy;
           }
 
           StorageServices.setUserData(filteredUserData);
@@ -264,6 +266,7 @@ export class LoginService {
           if (userData.role === Roles.TEACHER) {
             filteredUserData.tipo_documento = userData.tipo_documento;
             filteredUserData.numero_documento = userData.numero_documento;
+            filteredUserData.califico_hoy = userData.califico_hoy;
           }
 
           StorageServices.setUserData(filteredUserData);
