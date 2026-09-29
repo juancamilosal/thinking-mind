@@ -332,7 +332,7 @@
                 </h4>
 
                 @for (reunion of programa.id_reuniones_meet; track reunion.id) {
-                  <div class="meeting-card bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-blue-300 transition-all"
+                  <div class="meeting-card bg-gray-50 rounded-xl p-4 border border-gray-200"
                        [ngClass]="{'ring-2 ring-green-400': hasActiveSession(reunion.id)}">
                     <!-- Meeting Status Badge -->
                     <div class="flex items-start justify-between mb-3">
@@ -346,7 +346,7 @@
                           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <circle cx="10" cy="10" r="4" />
                           </svg>
-                          Sesión Activa
+                          {{ 'teacherMeetings.sessionActive' | translate }}
                         </span>
                       }
                     </div>
@@ -364,24 +364,32 @@
                     </div>
 
                     <!-- Access Button -->
-                    <button
-                      (click)="accessMeeting(reunion, programa)"
-                      [disabled]="!hasActiveSession(reunion.id) && !isWithinMeetingTimeRange(reunion)"
-                      class="w-full py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-                      [ngClass]="{
-                        'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id) && isWithinMeetingTimeRange(reunion),
-                        'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id),
-                        'bg-gray-300 text-gray-500 cursor-not-allowed': !hasActiveSession(reunion.id) && !isWithinMeetingTimeRange(reunion)
-                      }">
-                      <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
-                      @if (hasActiveSession(reunion.id)) {
-                        <span>Sesión en Curso</span>
-                      } @else if (isWithinMeetingTimeRange(reunion)) {
-                        <span>Acceder a Reunión</span>
-                      } @else {
-                        <span>Fuera de horario</span>
-                      }
-                    </button>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                      <button
+                        (click)="accessMeeting(reunion, programa)"
+                        [disabled]="!hasActiveSession(reunion.id) && !isWithinMeetingTimeRange(reunion)"
+                        class="flex-1 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+                        [ngClass]="{
+                          'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg': !hasActiveSession(reunion.id) && isWithinMeetingTimeRange(reunion),
+                          'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg ring-2 ring-green-300': hasActiveSession(reunion.id),
+                          'bg-gray-300 text-gray-500 cursor-not-allowed': !hasActiveSession(reunion.id) && !isWithinMeetingTimeRange(reunion)
+                        }">
+                        <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
+                        @if (hasActiveSession(reunion.id)) {
+                          <span>{{ 'teacherMeetings.sessionInProgress' | translate }}</span>
+                        } @else if (isWithinMeetingTimeRange(reunion)) {
+                          <span>{{ 'teacherMeetings.accessMeeting' | translate }}</span>
+                        } @else {
+                          <span>{{ 'teacherMeetings.outOfSchedule' | translate }}</span>
+                        }
+                      </button>
+                      <button
+                        (click)="gradeOutOfSchedule(reunion, programa)"
+                        class="flex-1 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 shadow-md hover:shadow-lg">
+                        <img src="../../../../../../assets/icons/advertencia.png" class="w-6 h-6 object-contain" alt="Advertencia">
+                        <span>{{ 'teacherMeetings.gradeOutOfSchedule' | translate }}</span>
+                      </button>
+                    </div>
                   </div>
                 }
               </div>
@@ -474,11 +482,11 @@
                         }">
                         <img src="../../../../../../assets/icons/meet.png" class="w-6 h-6 object-contain" alt="Meet">
                         @if (hasActiveSession(reunion.id)) {
-                          <span>Sesión en Curso</span>
+                          <span>{{ 'teacherMeetings.sessionInProgress' | translate }}</span>
                         } @else if (isWithinMeetingTimeRange(reunion)) {
-                          <span>Acceder a Reunión</span>
+                          <span>{{ 'teacherMeetings.accessMeeting' | translate }}</span>
                         } @else {
-                          <span>Fuera de horario</span>
+                          <span>{{ 'teacherMeetings.outOfSchedule' | translate }}</span>
                         }
                       </button>
                     </div>
@@ -512,8 +520,8 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-xl font-bold">Evaluación de Estudiantes</h3>
-                <p class="text-sm opacity-90">Califica el desempeño de cada estudiante</p>
+                <h3 class="text-xl font-bold">{{ 'teacherMeetings.evaluation.title' | translate }}</h3>
+                <p class="text-sm opacity-90">{{ 'teacherMeetings.evaluation.subtitle' | translate }}</p>
               </div>
             </div>
             <button (click)="cancelEvaluation()" class="text-white/80 hover:text-white transition-colors">
@@ -526,6 +534,32 @@
 
         <!-- Modal Body -->
         <div class="p-6 space-y-6">
+          <!-- Advertencia de calificación fuera de horario -->
+          @if (isLateGrading) {
+            <div class="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 flex items-start gap-3">
+              <img src="../../../../../../assets/icons/advertencia.png" class="w-6 h-6 object-contain flex-shrink-0 mt-0.5" alt="Advertencia">
+              <div>
+                <p class="font-semibold text-amber-800">{{ 'teacherMeetings.lateGradingWarningTitle' | translate }}</p>
+                <p class="text-sm text-amber-700">
+                  {{ 'teacherMeetings.lateGradingWarningBody' | translate:{ penalty: LATE_GRADING_PENALTY } }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Fecha de la clase (fecha_clase) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                {{ 'teacherMeetings.classDate' | translate }}
+              </label>
+              <input
+                type="date"
+                [(ngModel)]="lateGradingDate"
+                [max]="todayDate"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              <p class="text-xs text-gray-500 mt-1">{{ 'teacherMeetings.classDateHint' | translate }}</p>
+            </div>
+          }
+
           @for (student of students; track student.id) {
             <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
               <!-- Student Name and Attendance -->
@@ -539,13 +573,13 @@
 
                 <!-- Attendance Switch -->
                 <div class="flex items-center gap-2">
-                  <label class="text-sm font-medium text-gray-700">Asistió:</label>
+                  <label class="text-sm font-medium text-gray-700">{{ 'teacherMeetings.evaluation.attended' | translate }}</label>
                   <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" [(ngModel)]="student.attended" class="sr-only peer">
                     <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                   </label>
                   <span class="text-sm font-medium" [class.text-green-600]="student.attended" [class.text-gray-500]="!student.attended">
-                    {{ student.attended ? 'Sí' : 'No' }}
+                    {{ (student.attended ? 'teacherMeetings.evaluation.yes' : 'teacherMeetings.evaluation.no') | translate }}
                   </span>
                 </div>
               </div>
@@ -553,7 +587,7 @@
               <!-- Star Rating (only show if attended) -->
               @if (student.attended) {
                 <div class="mb-4">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Calificación</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'teacherMeetings.evaluation.rating' | translate }}</label>
                   <div class="flex gap-2">
                     @for (star of getRatingArray(); track star) {
                       <button
@@ -575,7 +609,7 @@
 
                     <!-- Criteria Selection -->
                     <div class="mt-4 animate-fadeIn">
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Criterio de Evaluación</label>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'teacherMeetings.evaluation.criteria' | translate }}</label>
                       <div class="space-y-2">
                         @for (criteria of evaluationCriteria; track criteria.id) {
                           @if (criteria.calificacion === student.rating) {
@@ -601,14 +635,14 @@
                 <!-- Comment Box -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Comentarios (opcional)
-                    <span class="text-gray-500 font-normal">- máximo 250 caracteres</span>
+                    {{ 'teacherMeetings.evaluation.comments' | translate }}
+                    <span class="text-gray-500 font-normal">{{ 'teacherMeetings.evaluation.commentsMax' | translate }}</span>
                   </label>
                   <textarea
                     [(ngModel)]="student.comment"
                     [maxlength]="maxCommentLength"
                     rows="3"
-                    placeholder="Escribe tus observaciones sobre el estudiante..."
+                    [placeholder]="'teacherMeetings.evaluation.commentsPlaceholder' | translate"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"></textarea>
                   <div class="flex justify-end mt-1">
                     <span class="text-xs text-gray-500">
@@ -618,7 +652,7 @@
                 </div>
               } @else {
                 <div class="text-center py-4 text-gray-500">
-                  <p class="text-sm">Estudiante marcado como ausente</p>
+                  <p class="text-sm">{{ 'teacherMeetings.evaluation.absentStudent' | translate }}</p>
                 </div>
               }
             </div>
@@ -630,9 +664,9 @@
             <div class="px-6 pb-6 border-t border-gray-200 pt-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <img src="assets/icons/plan.png" class="w-6 h-6 object-contain" alt="Plan">
-                    Temas del Plan de Estudio
+                    {{ 'teacherMeetings.evaluation.studyPlanTitle' | translate }}
                 </h3>
-                <p class="text-sm text-gray-600 mb-3">Selecciona el tema que se cubrió en esta sesión:</p>
+                <p class="text-sm text-gray-600 mb-3">{{ 'teacherMeetings.evaluation.studyPlanSubtitle' | translate }}</p>
                 <div class="bg-gray-50 rounded-xl p-4 max-h-60 overflow-y-auto custom-scrollbar border border-gray-200">
                      <ul class="space-y-3">
                         @for (item of evaluationStudyPlan; track $index) {
@@ -648,7 +682,7 @@
                             @if (item.original.realizado) {
                                 <div class="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium">
                                     <img src="assets/icons/check.png" class="w-4 h-4 object-contain" alt="Realizado">
-                                    <span>Completado</span>
+                                    <span>{{ 'teacherMeetings.evaluation.completed' | translate }}</span>
                                 </div>
                             } @else {
                                 <div class="relative flex items-center" (click)="$event.stopPropagation()">
@@ -671,7 +705,7 @@
             (click)="cancelEvaluation()"
             type="button"
             class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
-            Cancelar
+            {{ 'teacherMeetings.evaluation.cancel' | translate }}
           </button>
           <button
             (click)="submitEvaluations()"
@@ -683,9 +717,9 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span>Guardando...</span>
+              <span>{{ 'teacherMeetings.evaluation.saving' | translate }}</span>
             } @else {
-              <span>Guardar y Finalizar</span>
+              <span>{{ 'teacherMeetings.evaluation.save' | translate }}</span>
             }
           </button>
         </div>

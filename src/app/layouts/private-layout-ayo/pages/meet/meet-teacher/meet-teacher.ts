@@ -21,7 +21,7 @@ import { AccountReceivableService } from '../../../../../core/services/account-r
 import { StudentService } from '../../../../../core/services/student.service';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
 import { Attendance } from '../../../../../core/models/Attendance';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReunionGeneral } from '../../../../../core/models/Meeting';
 import { ReunionGeneralService } from '../../../../../core/services/reunion-general.service';
 
@@ -89,6 +89,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   // Evaluation modal
   showEvaluationModal: boolean = false;
+  // Indica que la calificación se está haciendo fuera de horario (aplica penalización en nómina)
+  isLateGrading: boolean = false;
+  readonly LATE_GRADING_PENALTY: number = 5000;
+  // Reunión que se está calificando fuera de horario (cuando no hay sesión activa)
+  private lateGradingMeetingId: string | null = null;
+  // Fecha de la clase que se está calificando fuera de horario (formato yyyy-MM-dd)
+  lateGradingDate: string = '';
+  todayDate: string = new Date().toISOString().split('T')[0];
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
   currentProgramId: string | null = null;
@@ -121,6 +129,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private studentService = inject(StudentService);
   private certificacionService = inject(CertificacionService);
   private reunionGeneralService = inject(ReunionGeneralService);
+  private translate = inject(TranslateService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
@@ -139,19 +148,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.timerSubscription = this.timerService.session$.subscribe(session => {
       this.currentSession = session;
       if (session && session.isActive) {
+        // PRUEBAS: auto-cierre por horario DESACTIVADO temporalmente. Descomentar para reactivar.
         // La comprobación de auto-cierre se ejecuta como máximo una vez por minuto.
-        // Si la hora actual ya pasó los 10 min posteriores a la fecha_finalizacion
-        // (y la sesión lleva al menos 10 min activa), cerrar automáticamente la sesión
-        // y marcar califico_hoy en el usuario.
-        const nowMs = Date.now();
-        if (nowMs - this.lastAutoCloseCheck >= 60 * 1000) {
-          this.lastAutoCloseCheck = nowMs;
-          if (this.hasSessionEndTimePassed(session) && !this.autoClosingSession) {
-            this.autoClosingSession = true;
-            this.handleGradingDeadlineExpired();
-            return;
-          }
-        }
+        // Si la hora actual ya pasó los 10 min posteriores a la fecha_finalizacion,
+        // cerrar automáticamente la sesión y marcar califico_hoy en el usuario.
+        // const nowMs = Date.now();
+        // if (nowMs - this.lastAutoCloseCheck >= 60 * 1000) {
+        //   this.lastAutoCloseCheck = nowMs;
+        //   if (this.hasSessionEndTimePassed(session) && !this.autoClosingSession) {
+        //     this.autoClosingSession = true;
+        //     this.handleGradingDeadlineExpired();
+        //     return;
+        //   }
+        // }
         this.elapsedTime = this.timerService.getFormattedElapsedTime();
         if (session.elapsedMinutes >= 45 && !this.showNotificationBanner) {
           this.showNotificationBanner = true;
@@ -448,25 +457,26 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   getStatusLabel(status: string): string {
     switch (status) {
       case 'upcoming':
-        return 'Próxima';
+        return this.translate.instant('teacherMeetings.statusUpcoming');
       case 'in-progress':
-        return 'En Curso';
+        return this.translate.instant('teacherMeetings.statusInProgress');
       case 'completed':
-        return 'Finalizada';
+        return this.translate.instant('teacherMeetings.statusCompleted');
       default:
         return '';
     }
   }
 
   async accessMeeting(meeting: any, programa: any): Promise<void> {
+    // PRUEBAS: bloqueo por califico_hoy DESACTIVADO temporalmente. Descomentar para reactivar.
     // Si el docente ya calificó hoy, no permitir acceder a más reuniones
-    if (this.isGradingClosedForToday()) {
-      this.notificationService.showWarning(
-        'Calificaciones cerradas',
-        'Calificaciones cerradas por el día de hoy.'
-      );
-      return;
-    }
+    // if (this.isGradingClosedForToday()) {
+    //   this.notificationService.showWarning(
+    //     'Calificaciones cerradas',
+    //     'Calificaciones cerradas por el día de hoy.'
+    //   );
+    //   return;
+    // }
 
     const status = this.getMeetingStatus(meeting);
 
@@ -546,14 +556,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   accessGeneralMeeting(meeting: any): void {
+    // PRUEBAS: bloqueo por califico_hoy DESACTIVADO temporalmente. Descomentar para reactivar.
     // Si el docente ya calificó hoy, no permitir acceder a más reuniones
-    if (this.isGradingClosedForToday()) {
-      this.notificationService.showWarning(
-        'Calificaciones cerradas',
-        'Calificaciones cerradas por el día de hoy.'
-      );
-      return;
-    }
+    // if (this.isGradingClosedForToday()) {
+    //   this.notificationService.showWarning(
+    //     'Calificaciones cerradas',
+    //     'Calificaciones cerradas por el día de hoy.'
+    //   );
+    //   return;
+    // }
 
     // Check if meeting is within allowed access window
     if (!this.canAccessMeeting(meeting)) {
@@ -615,8 +626,71 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isLateGrading = false;
     this.initializeStudentEvaluations();
+
+    if (this.students.length === 0) {
+      this.notifyNoStudentsToGrade();
+      return;
+    }
+
     this.showEvaluationModal = true;
+  }
+
+  /**
+   * Notificación cuando no hay estudiantes para calificar.
+   */
+  private notifyNoStudentsToGrade(): void {
+    this.notificationService.showWarning(
+      this.translate.instant('teacherMeetings.noStudentsToGradeTitle'),
+      this.translate.instant('teacherMeetings.noStudentsToGradeBody')
+    );
+  }
+
+  /**
+   * Reinicia el estado de la calificación fuera de horario.
+   */
+  private resetLateGrading(): void {
+    this.isLateGrading = false;
+    this.lateGradingMeetingId = null;
+    this.lateGradingDate = '';
+  }
+
+  /**
+   * Abre la evaluación de estudiantes marcándola como calificación fuera de horario.
+   * No requiere sesión activa (se puede calificar sin acceder a la reunión).
+   * Advierte al docente que se aplicará una penalización sobre el valor_total de la nómina.
+   */
+  gradeOutOfSchedule(meeting: any, programa: any): void {
+    if (!this.hasStudents(programa)) {
+      this.notifyNoStudentsToGrade();
+      return;
+    }
+
+    this.confirmationService.showConfirmation(
+      {
+        title: this.translate.instant('teacherMeetings.lateGradingConfirmTitle'),
+        message: this.translate.instant('teacherMeetings.lateGradingConfirmMessage', { penalty: this.LATE_GRADING_PENALTY }),
+        confirmText: this.translate.instant('teacherMeetings.lateGradingConfirmYes'),
+        cancelText: this.translate.instant('teacherMeetings.lateGradingConfirmCancel'),
+        type: 'warning'
+      },
+      () => {
+        this.isLateGrading = true;
+        this.lateGradingMeetingId = meeting?.id || null;
+        // La fecha de la clase inicia en blanco: el docente debe seleccionarla
+        this.lateGradingDate = '';
+        this.initializeStudentEvaluations(programa);
+
+        if (this.students.length === 0) {
+          this.resetLateGrading();
+          this.notifyNoStudentsToGrade();
+          return;
+        }
+
+        this.showEvaluationModal = true;
+      }
+    );
   }
 
   private createPayrollRecordForGeneralMeeting(): void {
@@ -679,9 +753,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }, 1500);
   }
 
-  initializeStudentEvaluations(): void {
-    // Find the program that contains the current meeting
-    const currentProgram = this.programas.find(p =>
+  initializeStudentEvaluations(program?: any): void {
+    // Usar el programa recibido (calificación fuera de horario) o buscar el de la sesión activa
+    const currentProgram = program || this.programas.find(p =>
       p.id_reuniones_meet?.some(m => m.id === this.currentSession?.meetingId)
     );
 
@@ -825,6 +899,15 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     if (!this.currentProgramId) {
       this.notificationService.showError('Error', 'No se identificó el programa asociado.');
+      return;
+    }
+
+    // En calificación fuera de horario la fecha de la clase es obligatoria
+    if (this.isLateGrading && !this.lateGradingDate) {
+      this.notificationService.showWarning(
+        this.translate.instant('teacherMeetings.classDate'),
+        this.translate.instant('teacherMeetings.classDateRequired')
+      );
       return;
     }
 
@@ -979,6 +1062,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         const passed = finalAttendancePercent >= 70 && projectedRatingSum >= 80;
         updateData.aprobo_ayo = passed;
+        // Guardar el programa actual en programa_ayo_anterior antes de limpiar programa_ayo_id
+        updateData.programa_ayo_anterior = this.currentProgramId;
         updateData.programa_ayo_id = null;
 
         if (passed && this.currentLevelId) {
@@ -1090,15 +1175,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   cancelEvaluation(): void {
     this.confirmationService.showConfirmation(
       {
-        title: 'Cancelar Evaluación',
-        message: '¿Estás seguro de que deseas cancelar? Se perderán las evaluaciones.',
-        confirmText: 'Sí, cancelar',
-        cancelText: 'No, continuar',
+        title: this.translate.instant('teacherMeetings.cancelEvaluationTitle'),
+        message: this.translate.instant('teacherMeetings.cancelEvaluationMessage'),
+        confirmText: this.translate.instant('teacherMeetings.cancelEvaluationYes'),
+        cancelText: this.translate.instant('teacherMeetings.cancelEvaluationNo'),
         type: 'warning'
       },
       () => {
         this.showEvaluationModal = false;
         this.students = [];
+        this.resetLateGrading();
       }
     );
   }
@@ -1198,16 +1284,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const teacherId = currentUser?.id;
     const session = this.timerService.getSession();
 
-    if (!teacherId || !session || !this.currentProgramId) {
+    // En calificación fuera de horario puede no haber sesión activa
+    const meetingId = session?.meetingId || this.lateGradingMeetingId;
+
+    if (!teacherId || !meetingId || !this.currentProgramId) {
       this.finishEvaluationProcess();
       return;
     }
 
     // Get current program and meeting
     const currentProgram = this.programas.find(p =>
-      p.id_reuniones_meet?.some(m => m.id === session.meetingId)
+      p.id_reuniones_meet?.some(m => m.id === meetingId)
     );
-    const currentMeeting = currentProgram?.id_reuniones_meet?.find(m => m.id === session.meetingId);
+    const currentMeeting = currentProgram?.id_reuniones_meet?.find(m => m.id === meetingId);
 
     if (!currentMeeting || !currentMeeting.id) {
       console.error('Meeting not found or missing ID');
@@ -1218,18 +1307,26 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     // Get teacher hourly rate and create payroll
     this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
       next: (valorHora) => {
+        // Si se calificó fuera de horario, se descuenta la penalización del valor hora
+        const valorHoraFinal = this.isLateGrading
+          ? Math.max(0, valorHora - this.LATE_GRADING_PENALTY)
+          : valorHora;
+
         // Always pay 1 full hour per class, regardless of actual duration
         const payrollData: TeacherPayroll = {
           teacher_id: teacherId,
           reunion_meet_id: currentMeeting.id,
           programa_ayo_id: this.currentProgramId!,
-          fecha_clase: new Date().toISOString().split('T')[0],
-          hora_inicio_real: session.actualStartTime,
+          // En calificación fuera de horario se usa la fecha seleccionada por el docente
+          fecha_clase: this.isLateGrading && this.lateGradingDate
+            ? this.lateGradingDate
+            : new Date().toISOString().split('T')[0],
+          hora_inicio_real: session?.actualStartTime,
           hora_fin_evaluacion: new Date().toTimeString().split(' ')[0], // HH:mm:ss format for time-only field
           duracion_horas: 1,
-          calificado_a_tiempo: true,
+          calificado_a_tiempo: !this.isLateGrading,
           estado_pago: 'Pendiente',
-          valor_hora: valorHora,
+          valor_hora: valorHoraFinal,
           valor_total: valorHora
         };
 
@@ -1253,11 +1350,13 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   finishEvaluationProcess(): void {
     this.isLoading = false;
     this.showEvaluationModal = false;
+    this.resetLateGrading();
     this.timerService.endSession();
     this.showNotificationBanner = false;
 
+    // PRUEBAS: marcado de califico_hoy DESACTIVADO temporalmente. Descomentar para reactivar.
     // Marcar califico_hoy: true al guardar y finalizar la evaluación de estudiantes
-    this.markCalificoHoy();
+    // this.markCalificoHoy();
 
     this.notificationService.showSuccess(
       'Sesión Finalizada',
