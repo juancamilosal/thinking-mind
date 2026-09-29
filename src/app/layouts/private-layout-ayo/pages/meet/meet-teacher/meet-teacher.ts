@@ -21,7 +21,7 @@ import { AccountReceivableService } from '../../../../../core/services/account-r
 import { StudentService } from '../../../../../core/services/student.service';
 import { CertificacionService } from '../../../../../core/services/certificacion.service';
 import { Attendance } from '../../../../../core/models/Attendance';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReunionGeneral } from '../../../../../core/models/Meeting';
 import { ReunionGeneralService } from '../../../../../core/services/reunion-general.service';
 
@@ -89,6 +89,18 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   // Evaluation modal
   showEvaluationModal: boolean = false;
+  // Indica que la calificación se está haciendo fuera de horario (aplica penalización en nómina)
+  isLateGrading: boolean = false;
+  readonly LATE_GRADING_PENALTY: number = 5000;
+  // Reunión que se está calificando fuera de horario (cuando no hay sesión activa)
+  private lateGradingMeetingId: string | null = null;
+  // Fecha de la clase que se está calificando fuera de horario (formato yyyy-MM-dd)
+  lateGradingDate: string = '';
+  todayDate: string = new Date().toISOString().split('T')[0];
+
+  // Modo de prueba: permite practicar la calificación sin consumir servicios
+  isTestMode: boolean = false;
+  private readonly TEST_PROGRAM_ID = 'test-program';
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
   currentProgramId: string | null = null;
@@ -121,6 +133,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private studentService = inject(StudentService);
   private certificacionService = inject(CertificacionService);
   private reunionGeneralService = inject(ReunionGeneralService);
+  private translate = inject(TranslateService);
   private http = inject(HttpClient);
   private ngZone = inject(NgZone);
 
@@ -139,19 +152,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.timerSubscription = this.timerService.session$.subscribe(session => {
       this.currentSession = session;
       if (session && session.isActive) {
+        // PRUEBAS: auto-cierre por horario DESACTIVADO temporalmente. Descomentar para reactivar.
         // La comprobación de auto-cierre se ejecuta como máximo una vez por minuto.
-        // Si la hora actual ya pasó los 10 min posteriores a la fecha_finalizacion
-        // (y la sesión lleva al menos 10 min activa), cerrar automáticamente la sesión
-        // y marcar califico_hoy en el usuario.
-        const nowMs = Date.now();
-        if (nowMs - this.lastAutoCloseCheck >= 60 * 1000) {
-          this.lastAutoCloseCheck = nowMs;
-          if (this.hasSessionEndTimePassed(session) && !this.autoClosingSession) {
-            this.autoClosingSession = true;
-            this.handleGradingDeadlineExpired();
-            return;
-          }
-        }
+        // Si la hora actual ya pasó los 10 min posteriores a la fecha_finalizacion,
+        // cerrar automáticamente la sesión y marcar califico_hoy en el usuario.
+        // const nowMs = Date.now();
+        // if (nowMs - this.lastAutoCloseCheck >= 60 * 1000) {
+        //   this.lastAutoCloseCheck = nowMs;
+        //   if (this.hasSessionEndTimePassed(session) && !this.autoClosingSession) {
+        //     this.autoClosingSession = true;
+        //     this.handleGradingDeadlineExpired();
+        //     return;
+        //   }
+        // }
         this.elapsedTime = this.timerService.getFormattedElapsedTime();
         if (session.elapsedMinutes >= 45 && !this.showNotificationBanner) {
           this.showNotificationBanner = true;
@@ -226,7 +239,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         this.isLoadingRatingHistory = false;
         this.ratingHistory = [];
         this.ratingHistoryStats = null;
-        this.notificationService.showError('Error', 'No se pudo cargar el historial de calificaciones del estudiante.');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.ratingHistoryError'));
       }
     });
   }
@@ -240,6 +253,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   hasStudents(programa: ProgramaAyo): boolean {
+    // En modo de prueba siempre hay estudiantes (se generan ficticios)
+    if (this.isTestMode) return true;
+
     const studentsFromLevel = programa.id_nivel?.estudiantes_id;
     const studentsFromRoot = (programa as any).estudiantes_id;
 
@@ -448,25 +464,26 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   getStatusLabel(status: string): string {
     switch (status) {
       case 'upcoming':
-        return 'Próxima';
+        return this.translate.instant('teacherMeetings.statusUpcoming');
       case 'in-progress':
-        return 'En Curso';
+        return this.translate.instant('teacherMeetings.statusInProgress');
       case 'completed':
-        return 'Finalizada';
+        return this.translate.instant('teacherMeetings.statusCompleted');
       default:
         return '';
     }
   }
 
   async accessMeeting(meeting: any, programa: any): Promise<void> {
+    // PRUEBAS: bloqueo por califico_hoy DESACTIVADO temporalmente. Descomentar para reactivar.
     // Si el docente ya calificó hoy, no permitir acceder a más reuniones
-    if (this.isGradingClosedForToday()) {
-      this.notificationService.showWarning(
-        'Calificaciones cerradas',
-        'Calificaciones cerradas por el día de hoy.'
-      );
-      return;
-    }
+    // if (this.isGradingClosedForToday()) {
+    //   this.notificationService.showWarning(
+    //     'Calificaciones cerradas',
+    //     'Calificaciones cerradas por el día de hoy.'
+    //   );
+    //   return;
+    // }
 
     const status = this.getMeetingStatus(meeting);
 
@@ -477,14 +494,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       if (minutesUntilStart > 0) {
         this.notificationService.showWarning(
-          'Reunión No Disponible',
-          `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableBody', { minutes: minutesUntilStart })
         );
         return;
       } else {
         this.notificationService.showInfo(
-          'Reunión Finalizada',
-          'Esta reunión ya ha finalizado.'
+          this.translate.instant('teacherMeetings.notifications.meetingEndedTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingEndedBody')
         );
         return;
       }
@@ -494,16 +511,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
       this.notificationService.showWarning(
-        'Reunión Activa',
-        'Ya tienes una reunión activa. Por favor finaliza la sesión actual antes de iniciar otra.'
+        this.translate.instant('teacherMeetings.notifications.activeMeetingTitle'),
+        this.translate.instant('teacherMeetings.notifications.activeMeetingBody')
       );
       return;
     }
 
     if (!this.hasStudents(programa)) {
       this.notificationService.showWarning(
-        'Aviso',
-        'No puede iniciar una reunión si no hay estudiantes registrados.'
+        this.translate.instant('teacherMeetings.notifications.notice'),
+        this.translate.instant('teacherMeetings.notifications.noStudentsToStart')
       );
       return;
     }
@@ -524,7 +541,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
          currentProgramStudents = [...new Set([...currentProgramStudents, ...rootStudents])];
     }
 
-    if (currentProgramStudents.length > 0 && meeting.id_reunion) {
+    // En modo de prueba no se consume la API de Google Calendar
+    if (!this.isTestMode && currentProgramStudents.length > 0 && meeting.id_reunion) {
       try {
         await this.addParticipantsToMeeting(meeting, currentProgramStudents);
       } catch (error) {
@@ -536,24 +554,25 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ngZone.run(() => {
       const scheduledStart = new Date(meeting.fecha_inicio);
       const scheduledEnd = new Date(meeting.fecha_finalizacion);
-      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'program');
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'program', this.isTestMode);
 
-      // Open meeting in new tab
-      if (meeting.link_reunion) {
+      // Open meeting in new tab (en modo de prueba no se abre la reunión real)
+      if (!this.isTestMode && meeting.link_reunion) {
         window.open(meeting.link_reunion, '_blank');
       }
     });
   }
 
   accessGeneralMeeting(meeting: any): void {
+    // PRUEBAS: bloqueo por califico_hoy DESACTIVADO temporalmente. Descomentar para reactivar.
     // Si el docente ya calificó hoy, no permitir acceder a más reuniones
-    if (this.isGradingClosedForToday()) {
-      this.notificationService.showWarning(
-        'Calificaciones cerradas',
-        'Calificaciones cerradas por el día de hoy.'
-      );
-      return;
-    }
+    // if (this.isGradingClosedForToday()) {
+    //   this.notificationService.showWarning(
+    //     'Calificaciones cerradas',
+    //     'Calificaciones cerradas por el día de hoy.'
+    //   );
+    //   return;
+    // }
 
     // Check if meeting is within allowed access window
     if (!this.canAccessMeeting(meeting)) {
@@ -562,14 +581,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       if (minutesUntilStart > 0) {
         this.notificationService.showWarning(
-          'Reunión No Disponible',
-          `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableBody', { minutes: minutesUntilStart })
         );
         return;
       } else {
         this.notificationService.showInfo(
-          'Reunión Finalizada',
-          'Esta reunión ya ha finalizado.'
+          this.translate.instant('teacherMeetings.notifications.meetingEndedTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingEndedBody')
         );
         return;
       }
@@ -578,8 +597,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
       this.notificationService.showWarning(
-        'Reunión Activa',
-        'Ya tienes una reunión activa. Por favor finaliza la sesión actual antes de iniciar otra.'
+        this.translate.instant('teacherMeetings.notifications.activeMeetingTitle'),
+        this.translate.instant('teacherMeetings.notifications.activeMeetingBody')
       );
       return;
     }
@@ -587,9 +606,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ngZone.run(() => {
       const scheduledStart = new Date(meeting.fecha_inicio);
       const scheduledEnd = new Date(meeting.fecha_finalizacion);
-      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'general');
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'general', this.isTestMode);
 
-      if (meeting.link_reunion) {
+      // En modo de prueba no se abre la reunión real
+      if (!this.isTestMode && meeting.link_reunion) {
         window.open(meeting.link_reunion, '_blank');
       }
     });
@@ -602,10 +622,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     if (session.source === 'general') {
       this.confirmationService.showConfirmation(
         {
-          title: 'Finalizar Sesión',
-          message: '¿Deseas finalizar esta reunión? Se registrará la nómina y se cerrará la sesión.',
-          confirmText: 'Sí, finalizar',
-          cancelText: 'Cancelar',
+          title: this.translate.instant('teacherMeetings.notifications.endSessionTitle'),
+          message: this.translate.instant('teacherMeetings.notifications.endSessionMessage'),
+          confirmText: this.translate.instant('teacherMeetings.notifications.endSessionConfirm'),
+          cancelText: this.translate.instant('teacherMeetings.notifications.endSessionCancel'),
           type: 'warning'
         },
         () => {
@@ -615,11 +635,170 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isLateGrading = false;
     this.initializeStudentEvaluations();
+
+    if (this.students.length === 0) {
+      this.notifyNoStudentsToGrade();
+      return;
+    }
+
     this.showEvaluationModal = true;
   }
 
+  /**
+   * Cierra la reunión y devuelve todo a su estado normal sin consumir ningún servicio
+   * (ni nómina, ni asistencias, ni califico_hoy). Funciona igual en modo normal y de prueba.
+   */
+  closeMeeting(): void {
+    this.confirmationService.showConfirmation(
+      {
+        title: this.translate.instant('teacherMeetings.closeMeetingTitle'),
+        message: this.translate.instant('teacherMeetings.closeMeetingMessage'),
+        confirmText: this.translate.instant('teacherMeetings.closeMeetingConfirm'),
+        cancelText: this.translate.instant('teacherMeetings.closeMeetingCancel'),
+        type: 'warning'
+      },
+      () => {
+        this.resetMeetingState();
+        this.notificationService.showSuccess(
+          this.translate.instant('teacherMeetings.closeMeetingDoneTitle'),
+          this.translate.instant('teacherMeetings.closeMeetingDoneBody')
+        );
+      }
+    );
+  }
+
+  /**
+   * Devuelve la pantalla a su estado normal: cierra el temporizador, limpia la evaluación
+   * en curso y oculta banners. No consume ningún servicio.
+   */
+  private resetMeetingState(): void {
+    this.timerService.endSession();
+    this.showEvaluationModal = false;
+    this.students = [];
+    this.evaluationStudyPlan = [];
+    this.selectedPlanItemForEvaluation = null;
+    this.currentProgramId = null;
+    this.currentLevelId = null;
+    this.resetLateGrading();
+    this.elapsedTime = '00:00';
+    this.showNotificationBanner = false;
+    this.isLoading = false;
+  }
+
+  /**
+   * Activa/desactiva el modo de prueba. En modo de prueba el docente puede practicar
+   * la calificación con datos ficticios y sin consumir ningún servicio.
+   */
+  toggleTestMode(): void {
+    this.isTestMode = !this.isTestMode;
+
+    // Al cambiar de modo se limpia todo el estado: evaluación, temporizador y banners,
+    // para que la app quede exactamente como en su estado normal.
+    this.resetMeetingState();
+
+    if (this.isTestMode) {
+      this.notificationService.showInfo(
+        this.translate.instant('teacherMeetings.testMode.bannerTitle'),
+        this.translate.instant('teacherMeetings.testMode.bannerBody')
+      );
+    }
+  }
+
+  /**
+   * Genera estudiantes ficticios para practicar la calificación en modo de prueba.
+   */
+  private buildTestStudents(): StudentEvaluation[] {
+    const baseName = this.translate.instant('teacherMeetings.testMode.testStudent');
+    return [1, 2, 3].map(i => ({
+      id: `test-student-${i}`,
+      name: `${baseName} ${i}`,
+      attended: true,
+      rating: 0,
+      comment: '',
+      currentRating: 0,
+      currentCredits: 8,
+      asistencia_id: []
+    }));
+  }
+
+  /**
+   * Genera un plan de estudio ficticio para el modo de prueba.
+   */
+  private buildTestStudyPlan(): any[] {
+    const baseTopic = this.translate.instant('teacherMeetings.testMode.testTopic');
+    return [1, 2, 3].map(i => ({
+      number: i,
+      displayNumber: String(i),
+      text: `${baseTopic} ${i}`,
+      original: { id: `test-plan-${i}`, plan: `${i}. ${baseTopic} ${i}`, realizado: false }
+    }));
+  }
+
+  /**
+   * Notificación cuando no hay estudiantes para calificar.
+   */
+  private notifyNoStudentsToGrade(): void {
+    this.notificationService.showWarning(
+      this.translate.instant('teacherMeetings.noStudentsToGradeTitle'),
+      this.translate.instant('teacherMeetings.noStudentsToGradeBody')
+    );
+  }
+
+  /**
+   * Reinicia el estado de la calificación fuera de horario.
+   */
+  private resetLateGrading(): void {
+    this.isLateGrading = false;
+    this.lateGradingMeetingId = null;
+    this.lateGradingDate = '';
+  }
+
+  /**
+   * Abre la evaluación de estudiantes marcándola como calificación fuera de horario.
+   * No requiere sesión activa (se puede calificar sin acceder a la reunión).
+   * Advierte al docente que se aplicará una penalización sobre el valor_total de la nómina.
+   */
+  gradeOutOfSchedule(meeting: any, programa: any): void {
+    if (!this.hasStudents(programa)) {
+      this.notifyNoStudentsToGrade();
+      return;
+    }
+
+    this.confirmationService.showConfirmation(
+      {
+        title: this.translate.instant('teacherMeetings.lateGradingConfirmTitle'),
+        message: this.translate.instant('teacherMeetings.lateGradingConfirmMessage', { penalty: this.LATE_GRADING_PENALTY }),
+        confirmText: this.translate.instant('teacherMeetings.lateGradingConfirmYes'),
+        cancelText: this.translate.instant('teacherMeetings.lateGradingConfirmCancel'),
+        type: 'warning'
+      },
+      () => {
+        this.isLateGrading = true;
+        this.lateGradingMeetingId = meeting?.id || null;
+        // La fecha de la clase inicia en blanco: el docente debe seleccionarla
+        this.lateGradingDate = '';
+        this.initializeStudentEvaluations(programa);
+
+        if (this.students.length === 0) {
+          this.resetLateGrading();
+          this.notifyNoStudentsToGrade();
+          return;
+        }
+
+        this.showEvaluationModal = true;
+      }
+    );
+  }
+
   private createPayrollRecordForGeneralMeeting(): void {
+    // MODO DE PRUEBA: no se crea el registro de nómina
+    if (this.isTestMode) {
+      this.finishTestEvaluation();
+      return;
+    }
+
     const currentUser = StorageServices.getCurrentUser();
     const teacherId = currentUser?.id;
     const session = this.timerService.getSession();
@@ -670,8 +849,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.showNotificationBanner = false;
 
     this.notificationService.showSuccess(
-      'Sesión Finalizada',
-      'La sesión se cerró y la nómina fue registrada.'
+      this.translate.instant('teacherMeetings.notifications.sessionEndedTitle'),
+      this.translate.instant('teacherMeetings.notifications.sessionEndedGeneralBody')
     );
 
     setTimeout(() => {
@@ -679,9 +858,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }, 1500);
   }
 
-  initializeStudentEvaluations(): void {
-    // Find the program that contains the current meeting
-    const currentProgram = this.programas.find(p =>
+  initializeStudentEvaluations(program?: any): void {
+    // Usar el programa recibido (calificación fuera de horario) o buscar el de la sesión activa
+    const currentProgram = program || this.programas.find(p =>
       p.id_reuniones_meet?.some(m => m.id === this.currentSession?.meetingId)
     );
 
@@ -763,6 +942,20 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     } else {
       this.evaluationStudyPlan = [];
     }
+
+    // En modo de prueba se completan con datos ficticios los que no existan
+    if (this.isTestMode) {
+      if (this.students.length === 0) {
+        this.students = this.buildTestStudents();
+      }
+      if (this.evaluationStudyPlan.length === 0) {
+        this.evaluationStudyPlan = this.buildTestStudyPlan();
+      }
+      if (!this.currentProgramId) {
+        this.currentProgramId = this.TEST_PROGRAM_ID;
+      }
+    }
+
     this.selectedPlanItemForEvaluation = null;
   }
 
@@ -805,8 +998,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     if (attendedStudents.length > 0 && !allRated) {
       this.notificationService.showWarning(
-        'Calificaciones Incompletas',
-        'Por favor califica a todos los estudiantes que asistieron.'
+        this.translate.instant('teacherMeetings.notifications.incompleteRatingsTitle'),
+        this.translate.instant('teacherMeetings.notifications.incompleteRatingsBody')
       );
       return;
     }
@@ -817,22 +1010,31 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     if (ratedStudents.length > 0 && !allCriteriaSelected) {
       this.notificationService.showWarning(
-        'Criterios Incompletos',
-        'Por favor selecciona un criterio para cada calificación.'
+        this.translate.instant('teacherMeetings.notifications.incompleteCriteriaTitle'),
+        this.translate.instant('teacherMeetings.notifications.incompleteCriteriaBody')
       );
       return;
     }
 
     if (!this.currentProgramId) {
-      this.notificationService.showError('Error', 'No se identificó el programa asociado.');
+      this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.programNotFound'));
+      return;
+    }
+
+    // En calificación fuera de horario la fecha de la clase es obligatoria
+    if (this.isLateGrading && !this.lateGradingDate) {
+      this.notificationService.showWarning(
+        this.translate.instant('teacherMeetings.classDate'),
+        this.translate.instant('teacherMeetings.classDateRequired')
+      );
       return;
     }
 
     // Validate Study Plan Selection
     if (!this.selectedPlanItemForEvaluation && this.evaluationStudyPlan.some(i => !i.original.realizado)) {
       this.notificationService.showWarning(
-        'Plan de Estudio',
-        'Debe seleccionar un tema del plan de estudio como realizado para finalizar.'
+        this.translate.instant('teacherMeetings.notifications.studyPlanTitle'),
+        this.translate.instant('teacherMeetings.notifications.studyPlanBody')
       );
       return;
     }
@@ -893,6 +1095,12 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    * Process the evaluation submission after validations
    */
   private processEvaluationSubmission(): void {
+    // MODO DE PRUEBA: no se consume ningún servicio, solo se simula el cierre
+    if (this.isTestMode) {
+      this.finishTestEvaluation();
+      return;
+    }
+
     // First, update study plan if selected
     const planUpdateObservable = this.selectedPlanItemForEvaluation
       ? this.programaAyoService.updatePlanEstudio(this.selectedPlanItemForEvaluation.original.id, { realizado: true })
@@ -904,7 +1112,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        this.notificationService.showError('Error', 'No se pudo actualizar el plan de estudio.');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.studyPlanUpdateError'));
       }
     });
   }
@@ -979,6 +1187,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
         const passed = finalAttendancePercent >= 70 && projectedRatingSum >= 80;
         updateData.aprobo_ayo = passed;
+        // Guardar el programa actual en programa_ayo_anterior antes de limpiar programa_ayo_id
+        updateData.programa_ayo_anterior = this.currentProgramId;
         updateData.programa_ayo_id = null;
 
         if (passed && this.currentLevelId) {
@@ -1046,7 +1256,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error submitting evaluations:', err);
         this.isLoading = false;
-        this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.saveEvaluationsError'));
       }
     });
   }
@@ -1090,15 +1300,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   cancelEvaluation(): void {
     this.confirmationService.showConfirmation(
       {
-        title: 'Cancelar Evaluación',
-        message: '¿Estás seguro de que deseas cancelar? Se perderán las evaluaciones.',
-        confirmText: 'Sí, cancelar',
-        cancelText: 'No, continuar',
+        title: this.translate.instant('teacherMeetings.cancelEvaluationTitle'),
+        message: this.translate.instant('teacherMeetings.cancelEvaluationMessage'),
+        confirmText: this.translate.instant('teacherMeetings.cancelEvaluationYes'),
+        cancelText: this.translate.instant('teacherMeetings.cancelEvaluationNo'),
         type: 'warning'
       },
       () => {
         this.showEvaluationModal = false;
         this.students = [];
+        this.resetLateGrading();
       }
     );
   }
@@ -1198,16 +1409,19 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const teacherId = currentUser?.id;
     const session = this.timerService.getSession();
 
-    if (!teacherId || !session || !this.currentProgramId) {
+    // En calificación fuera de horario puede no haber sesión activa
+    const meetingId = session?.meetingId || this.lateGradingMeetingId;
+
+    if (!teacherId || !meetingId || !this.currentProgramId) {
       this.finishEvaluationProcess();
       return;
     }
 
     // Get current program and meeting
     const currentProgram = this.programas.find(p =>
-      p.id_reuniones_meet?.some(m => m.id === session.meetingId)
+      p.id_reuniones_meet?.some(m => m.id === meetingId)
     );
-    const currentMeeting = currentProgram?.id_reuniones_meet?.find(m => m.id === session.meetingId);
+    const currentMeeting = currentProgram?.id_reuniones_meet?.find(m => m.id === meetingId);
 
     if (!currentMeeting || !currentMeeting.id) {
       console.error('Meeting not found or missing ID');
@@ -1218,18 +1432,26 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     // Get teacher hourly rate and create payroll
     this.payrollService.getTeacherHourlyRate(teacherId).subscribe({
       next: (valorHora) => {
+        // Si se calificó fuera de horario, se descuenta la penalización del valor hora
+        const valorHoraFinal = this.isLateGrading
+          ? Math.max(0, valorHora - this.LATE_GRADING_PENALTY)
+          : valorHora;
+
         // Always pay 1 full hour per class, regardless of actual duration
         const payrollData: TeacherPayroll = {
           teacher_id: teacherId,
           reunion_meet_id: currentMeeting.id,
           programa_ayo_id: this.currentProgramId!,
-          fecha_clase: new Date().toISOString().split('T')[0],
-          hora_inicio_real: session.actualStartTime,
+          // En calificación fuera de horario se usa la fecha seleccionada por el docente
+          fecha_clase: this.isLateGrading && this.lateGradingDate
+            ? this.lateGradingDate
+            : new Date().toISOString().split('T')[0],
+          hora_inicio_real: session?.actualStartTime,
           hora_fin_evaluacion: new Date().toTimeString().split(' ')[0], // HH:mm:ss format for time-only field
           duracion_horas: 1,
-          calificado_a_tiempo: true,
+          calificado_a_tiempo: !this.isLateGrading,
           estado_pago: 'Pendiente',
-          valor_hora: valorHora,
+          valor_hora: valorHoraFinal,
           valor_total: valorHora
         };
 
@@ -1250,18 +1472,38 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  finishEvaluationProcess(): void {
+  /**
+   * Cierra el flujo de calificación en modo de prueba: no guarda nada, no crea nómina
+   * y no redirige. Solo limpia el estado para poder volver a practicar.
+   */
+  private finishTestEvaluation(): void {
     this.isLoading = false;
     this.showEvaluationModal = false;
+    this.students = [];
+    this.resetLateGrading();
     this.timerService.endSession();
     this.showNotificationBanner = false;
 
+    this.notificationService.showSuccess(
+      this.translate.instant('teacherMeetings.testMode.successTitle'),
+      this.translate.instant('teacherMeetings.testMode.successBody')
+    );
+  }
+
+  finishEvaluationProcess(): void {
+    this.isLoading = false;
+    this.showEvaluationModal = false;
+    this.resetLateGrading();
+    this.timerService.endSession();
+    this.showNotificationBanner = false;
+
+    // PRUEBAS: marcado de califico_hoy DESACTIVADO temporalmente. Descomentar para reactivar.
     // Marcar califico_hoy: true al guardar y finalizar la evaluación de estudiantes
-    this.markCalificoHoy();
+    // this.markCalificoHoy();
 
     this.notificationService.showSuccess(
-      'Sesión Finalizada',
-      'La evaluación y calificaciones han sido guardadas exitosamente.'
+      this.translate.instant('teacherMeetings.notifications.sessionEndedTitle'),
+      this.translate.instant('teacherMeetings.notifications.sessionEndedBody')
     );
 
     setTimeout(() => {
@@ -1294,6 +1536,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    * (entre la hora de fecha_inicio y la de fecha_finalizacion), comparando solo la hora del día.
    */
   isWithinMeetingTimeRange(meeting: any): boolean {
+    // En modo de prueba todos los botones quedan habilitados
+    if (this.isTestMode) return true;
+
     if (!meeting?.fecha_inicio || !meeting?.fecha_finalizacion) return false;
 
     const start = new Date(meeting.fecha_inicio);
@@ -1394,7 +1639,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   async addParticipantsToMeeting(reunion: any, emailsToAdd: string[]): Promise<void> {
     if (!reunion.id_reunion) {
-        this.notificationService.showError('Error', 'Reunión sin ID');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.meetingWithoutId'));
         return;
     }
 
@@ -1470,7 +1715,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     } catch (error: any) {
         const msg = error?.error?.error?.message || error.message || 'Error desconocido';
-        this.notificationService.showError('Error API Google', msg);
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.googleApiError'), msg);
         throw error;
     }
   }
