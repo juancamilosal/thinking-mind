@@ -12,6 +12,8 @@ export interface MeetingSession {
   actualStartTime?: string;
   gradingDeadline?: string;
   source?: 'program' | 'general';
+  /** true cuando la sesión se inició en modo de prueba (se descarta al recargar la app) */
+  isTest?: boolean;
 }
 
 @Injectable({
@@ -33,7 +35,7 @@ export class MeetingTimerService {
   /**
    * Start a new meeting session
    */
-  startSession(meetingId: string, scheduledStart?: Date, scheduledEnd?: Date, source: 'program' | 'general' = 'program'): void {
+  startSession(meetingId: string, scheduledStart?: Date, scheduledEnd?: Date, source: 'program' | 'general' = 'program', isTest: boolean = false): void {
     const existingSession = this.getSession();
 
     // If there's already an active session for a different meeting, end it first
@@ -56,7 +58,8 @@ export class MeetingTimerService {
       scheduledEndTime: scheduledEnd?.toISOString(),
       actualStartTime: actualStart,
       gradingDeadline,
-      source
+      source,
+      isTest
     };
 
     this.saveSession(session);
@@ -119,6 +122,12 @@ export class MeetingTimerService {
     if (stored) {
       try {
         const session: MeetingSession = JSON.parse(stored);
+
+        // Las sesiones de prueba no sobreviven a una recarga: se descartan
+        if (session.isTest) {
+          localStorage.removeItem(this.STORAGE_KEY);
+          return;
+        }
 
         // Calculate elapsed time since last save
         const now = Date.now();

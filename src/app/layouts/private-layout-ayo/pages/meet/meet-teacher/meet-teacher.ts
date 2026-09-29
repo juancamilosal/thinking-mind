@@ -97,6 +97,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   // Fecha de la clase que se está calificando fuera de horario (formato yyyy-MM-dd)
   lateGradingDate: string = '';
   todayDate: string = new Date().toISOString().split('T')[0];
+
+  // Modo de prueba: permite practicar la calificación sin consumir servicios
+  isTestMode: boolean = false;
+  private readonly TEST_PROGRAM_ID = 'test-program';
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
   currentProgramId: string | null = null;
@@ -235,7 +239,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         this.isLoadingRatingHistory = false;
         this.ratingHistory = [];
         this.ratingHistoryStats = null;
-        this.notificationService.showError('Error', 'No se pudo cargar el historial de calificaciones del estudiante.');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.ratingHistoryError'));
       }
     });
   }
@@ -249,6 +253,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   hasStudents(programa: ProgramaAyo): boolean {
+    // En modo de prueba siempre hay estudiantes (se generan ficticios)
+    if (this.isTestMode) return true;
+
     const studentsFromLevel = programa.id_nivel?.estudiantes_id;
     const studentsFromRoot = (programa as any).estudiantes_id;
 
@@ -487,14 +494,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       if (minutesUntilStart > 0) {
         this.notificationService.showWarning(
-          'Reunión No Disponible',
-          `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableBody', { minutes: minutesUntilStart })
         );
         return;
       } else {
         this.notificationService.showInfo(
-          'Reunión Finalizada',
-          'Esta reunión ya ha finalizado.'
+          this.translate.instant('teacherMeetings.notifications.meetingEndedTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingEndedBody')
         );
         return;
       }
@@ -504,16 +511,16 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
       this.notificationService.showWarning(
-        'Reunión Activa',
-        'Ya tienes una reunión activa. Por favor finaliza la sesión actual antes de iniciar otra.'
+        this.translate.instant('teacherMeetings.notifications.activeMeetingTitle'),
+        this.translate.instant('teacherMeetings.notifications.activeMeetingBody')
       );
       return;
     }
 
     if (!this.hasStudents(programa)) {
       this.notificationService.showWarning(
-        'Aviso',
-        'No puede iniciar una reunión si no hay estudiantes registrados.'
+        this.translate.instant('teacherMeetings.notifications.notice'),
+        this.translate.instant('teacherMeetings.notifications.noStudentsToStart')
       );
       return;
     }
@@ -534,7 +541,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
          currentProgramStudents = [...new Set([...currentProgramStudents, ...rootStudents])];
     }
 
-    if (currentProgramStudents.length > 0 && meeting.id_reunion) {
+    // En modo de prueba no se consume la API de Google Calendar
+    if (!this.isTestMode && currentProgramStudents.length > 0 && meeting.id_reunion) {
       try {
         await this.addParticipantsToMeeting(meeting, currentProgramStudents);
       } catch (error) {
@@ -546,10 +554,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ngZone.run(() => {
       const scheduledStart = new Date(meeting.fecha_inicio);
       const scheduledEnd = new Date(meeting.fecha_finalizacion);
-      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'program');
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'program', this.isTestMode);
 
-      // Open meeting in new tab
-      if (meeting.link_reunion) {
+      // Open meeting in new tab (en modo de prueba no se abre la reunión real)
+      if (!this.isTestMode && meeting.link_reunion) {
         window.open(meeting.link_reunion, '_blank');
       }
     });
@@ -573,14 +581,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
       if (minutesUntilStart > 0) {
         this.notificationService.showWarning(
-          'Reunión No Disponible',
-          `Esta reunión estará disponible ${minutesUntilStart} minutos antes de su inicio.`
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingUnavailableBody', { minutes: minutesUntilStart })
         );
         return;
       } else {
         this.notificationService.showInfo(
-          'Reunión Finalizada',
-          'Esta reunión ya ha finalizado.'
+          this.translate.instant('teacherMeetings.notifications.meetingEndedTitle'),
+          this.translate.instant('teacherMeetings.notifications.meetingEndedBody')
         );
         return;
       }
@@ -589,8 +597,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     const existingSession = this.timerService.getSession();
     if (existingSession && existingSession.meetingId !== meeting.id) {
       this.notificationService.showWarning(
-        'Reunión Activa',
-        'Ya tienes una reunión activa. Por favor finaliza la sesión actual antes de iniciar otra.'
+        this.translate.instant('teacherMeetings.notifications.activeMeetingTitle'),
+        this.translate.instant('teacherMeetings.notifications.activeMeetingBody')
       );
       return;
     }
@@ -598,9 +606,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ngZone.run(() => {
       const scheduledStart = new Date(meeting.fecha_inicio);
       const scheduledEnd = new Date(meeting.fecha_finalizacion);
-      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'general');
+      this.timerService.startSession(meeting.id, scheduledStart, scheduledEnd, 'general', this.isTestMode);
 
-      if (meeting.link_reunion) {
+      // En modo de prueba no se abre la reunión real
+      if (!this.isTestMode && meeting.link_reunion) {
         window.open(meeting.link_reunion, '_blank');
       }
     });
@@ -613,10 +622,10 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     if (session.source === 'general') {
       this.confirmationService.showConfirmation(
         {
-          title: 'Finalizar Sesión',
-          message: '¿Deseas finalizar esta reunión? Se registrará la nómina y se cerrará la sesión.',
-          confirmText: 'Sí, finalizar',
-          cancelText: 'Cancelar',
+          title: this.translate.instant('teacherMeetings.notifications.endSessionTitle'),
+          message: this.translate.instant('teacherMeetings.notifications.endSessionMessage'),
+          confirmText: this.translate.instant('teacherMeetings.notifications.endSessionConfirm'),
+          cancelText: this.translate.instant('teacherMeetings.notifications.endSessionCancel'),
           type: 'warning'
         },
         () => {
@@ -635,6 +644,96 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     }
 
     this.showEvaluationModal = true;
+  }
+
+  /**
+   * Cierra la reunión y devuelve todo a su estado normal sin consumir ningún servicio
+   * (ni nómina, ni asistencias, ni califico_hoy). Funciona igual en modo normal y de prueba.
+   */
+  closeMeeting(): void {
+    this.confirmationService.showConfirmation(
+      {
+        title: this.translate.instant('teacherMeetings.closeMeetingTitle'),
+        message: this.translate.instant('teacherMeetings.closeMeetingMessage'),
+        confirmText: this.translate.instant('teacherMeetings.closeMeetingConfirm'),
+        cancelText: this.translate.instant('teacherMeetings.closeMeetingCancel'),
+        type: 'warning'
+      },
+      () => {
+        this.resetMeetingState();
+        this.notificationService.showSuccess(
+          this.translate.instant('teacherMeetings.closeMeetingDoneTitle'),
+          this.translate.instant('teacherMeetings.closeMeetingDoneBody')
+        );
+      }
+    );
+  }
+
+  /**
+   * Devuelve la pantalla a su estado normal: cierra el temporizador, limpia la evaluación
+   * en curso y oculta banners. No consume ningún servicio.
+   */
+  private resetMeetingState(): void {
+    this.timerService.endSession();
+    this.showEvaluationModal = false;
+    this.students = [];
+    this.evaluationStudyPlan = [];
+    this.selectedPlanItemForEvaluation = null;
+    this.currentProgramId = null;
+    this.currentLevelId = null;
+    this.resetLateGrading();
+    this.elapsedTime = '00:00';
+    this.showNotificationBanner = false;
+    this.isLoading = false;
+  }
+
+  /**
+   * Activa/desactiva el modo de prueba. En modo de prueba el docente puede practicar
+   * la calificación con datos ficticios y sin consumir ningún servicio.
+   */
+  toggleTestMode(): void {
+    this.isTestMode = !this.isTestMode;
+
+    // Al cambiar de modo se limpia todo el estado: evaluación, temporizador y banners,
+    // para que la app quede exactamente como en su estado normal.
+    this.resetMeetingState();
+
+    if (this.isTestMode) {
+      this.notificationService.showInfo(
+        this.translate.instant('teacherMeetings.testMode.bannerTitle'),
+        this.translate.instant('teacherMeetings.testMode.bannerBody')
+      );
+    }
+  }
+
+  /**
+   * Genera estudiantes ficticios para practicar la calificación en modo de prueba.
+   */
+  private buildTestStudents(): StudentEvaluation[] {
+    const baseName = this.translate.instant('teacherMeetings.testMode.testStudent');
+    return [1, 2, 3].map(i => ({
+      id: `test-student-${i}`,
+      name: `${baseName} ${i}`,
+      attended: true,
+      rating: 0,
+      comment: '',
+      currentRating: 0,
+      currentCredits: 8,
+      asistencia_id: []
+    }));
+  }
+
+  /**
+   * Genera un plan de estudio ficticio para el modo de prueba.
+   */
+  private buildTestStudyPlan(): any[] {
+    const baseTopic = this.translate.instant('teacherMeetings.testMode.testTopic');
+    return [1, 2, 3].map(i => ({
+      number: i,
+      displayNumber: String(i),
+      text: `${baseTopic} ${i}`,
+      original: { id: `test-plan-${i}`, plan: `${i}. ${baseTopic} ${i}`, realizado: false }
+    }));
   }
 
   /**
@@ -694,6 +793,12 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   private createPayrollRecordForGeneralMeeting(): void {
+    // MODO DE PRUEBA: no se crea el registro de nómina
+    if (this.isTestMode) {
+      this.finishTestEvaluation();
+      return;
+    }
+
     const currentUser = StorageServices.getCurrentUser();
     const teacherId = currentUser?.id;
     const session = this.timerService.getSession();
@@ -744,8 +849,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.showNotificationBanner = false;
 
     this.notificationService.showSuccess(
-      'Sesión Finalizada',
-      'La sesión se cerró y la nómina fue registrada.'
+      this.translate.instant('teacherMeetings.notifications.sessionEndedTitle'),
+      this.translate.instant('teacherMeetings.notifications.sessionEndedGeneralBody')
     );
 
     setTimeout(() => {
@@ -837,6 +942,20 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     } else {
       this.evaluationStudyPlan = [];
     }
+
+    // En modo de prueba se completan con datos ficticios los que no existan
+    if (this.isTestMode) {
+      if (this.students.length === 0) {
+        this.students = this.buildTestStudents();
+      }
+      if (this.evaluationStudyPlan.length === 0) {
+        this.evaluationStudyPlan = this.buildTestStudyPlan();
+      }
+      if (!this.currentProgramId) {
+        this.currentProgramId = this.TEST_PROGRAM_ID;
+      }
+    }
+
     this.selectedPlanItemForEvaluation = null;
   }
 
@@ -879,8 +998,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     if (attendedStudents.length > 0 && !allRated) {
       this.notificationService.showWarning(
-        'Calificaciones Incompletas',
-        'Por favor califica a todos los estudiantes que asistieron.'
+        this.translate.instant('teacherMeetings.notifications.incompleteRatingsTitle'),
+        this.translate.instant('teacherMeetings.notifications.incompleteRatingsBody')
       );
       return;
     }
@@ -891,14 +1010,14 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     if (ratedStudents.length > 0 && !allCriteriaSelected) {
       this.notificationService.showWarning(
-        'Criterios Incompletos',
-        'Por favor selecciona un criterio para cada calificación.'
+        this.translate.instant('teacherMeetings.notifications.incompleteCriteriaTitle'),
+        this.translate.instant('teacherMeetings.notifications.incompleteCriteriaBody')
       );
       return;
     }
 
     if (!this.currentProgramId) {
-      this.notificationService.showError('Error', 'No se identificó el programa asociado.');
+      this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.programNotFound'));
       return;
     }
 
@@ -914,8 +1033,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     // Validate Study Plan Selection
     if (!this.selectedPlanItemForEvaluation && this.evaluationStudyPlan.some(i => !i.original.realizado)) {
       this.notificationService.showWarning(
-        'Plan de Estudio',
-        'Debe seleccionar un tema del plan de estudio como realizado para finalizar.'
+        this.translate.instant('teacherMeetings.notifications.studyPlanTitle'),
+        this.translate.instant('teacherMeetings.notifications.studyPlanBody')
       );
       return;
     }
@@ -976,6 +1095,12 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    * Process the evaluation submission after validations
    */
   private processEvaluationSubmission(): void {
+    // MODO DE PRUEBA: no se consume ningún servicio, solo se simula el cierre
+    if (this.isTestMode) {
+      this.finishTestEvaluation();
+      return;
+    }
+
     // First, update study plan if selected
     const planUpdateObservable = this.selectedPlanItemForEvaluation
       ? this.programaAyoService.updatePlanEstudio(this.selectedPlanItemForEvaluation.original.id, { realizado: true })
@@ -987,7 +1112,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        this.notificationService.showError('Error', 'No se pudo actualizar el plan de estudio.');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.studyPlanUpdateError'));
       }
     });
   }
@@ -1131,7 +1256,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error submitting evaluations:', err);
         this.isLoading = false;
-        this.notificationService.showError('Error', 'Hubo un error al guardar las evaluaciones.');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.saveEvaluationsError'));
       }
     });
   }
@@ -1347,6 +1472,24 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Cierra el flujo de calificación en modo de prueba: no guarda nada, no crea nómina
+   * y no redirige. Solo limpia el estado para poder volver a practicar.
+   */
+  private finishTestEvaluation(): void {
+    this.isLoading = false;
+    this.showEvaluationModal = false;
+    this.students = [];
+    this.resetLateGrading();
+    this.timerService.endSession();
+    this.showNotificationBanner = false;
+
+    this.notificationService.showSuccess(
+      this.translate.instant('teacherMeetings.testMode.successTitle'),
+      this.translate.instant('teacherMeetings.testMode.successBody')
+    );
+  }
+
   finishEvaluationProcess(): void {
     this.isLoading = false;
     this.showEvaluationModal = false;
@@ -1359,8 +1502,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     // this.markCalificoHoy();
 
     this.notificationService.showSuccess(
-      'Sesión Finalizada',
-      'La evaluación y calificaciones han sido guardadas exitosamente.'
+      this.translate.instant('teacherMeetings.notifications.sessionEndedTitle'),
+      this.translate.instant('teacherMeetings.notifications.sessionEndedBody')
     );
 
     setTimeout(() => {
@@ -1393,6 +1536,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
    * (entre la hora de fecha_inicio y la de fecha_finalizacion), comparando solo la hora del día.
    */
   isWithinMeetingTimeRange(meeting: any): boolean {
+    // En modo de prueba todos los botones quedan habilitados
+    if (this.isTestMode) return true;
+
     if (!meeting?.fecha_inicio || !meeting?.fecha_finalizacion) return false;
 
     const start = new Date(meeting.fecha_inicio);
@@ -1493,7 +1639,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   async addParticipantsToMeeting(reunion: any, emailsToAdd: string[]): Promise<void> {
     if (!reunion.id_reunion) {
-        this.notificationService.showError('Error', 'Reunión sin ID');
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.error'), this.translate.instant('teacherMeetings.notifications.meetingWithoutId'));
         return;
     }
 
@@ -1569,7 +1715,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
     } catch (error: any) {
         const msg = error?.error?.error?.message || error.message || 'Error desconocido';
-        this.notificationService.showError('Error API Google', msg);
+        this.notificationService.showError(this.translate.instant('teacherMeetings.notifications.googleApiError'), msg);
         throw error;
     }
   }
