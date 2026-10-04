@@ -1466,7 +1466,8 @@ export class PaymentRecord implements OnInit {
           this.showConfirmation = false;
 
           // Mostrar notificación de error específica del servidor
-          this.showServerErrorNotification(response.data);
+          this.showServerErrorNotification(response.message || response.data);
+          this.cdRef.detectChanges();
           return;
         }
 
@@ -1481,7 +1482,9 @@ export class PaymentRecord implements OnInit {
       },
       error: (error) => {
         this.isSubmitting = false;
+        this.showConfirmation = false;
         this.showErrorNotification();
+        this.cdRef.detectChanges();
       }
     })
   }
