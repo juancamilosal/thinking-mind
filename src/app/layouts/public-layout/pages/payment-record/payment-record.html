@@ -768,6 +768,7 @@
                               <app-button
                                 variant="success"
                                 size="sm"
+                                [disabled]="isGuardianDataIncomplete"
                                 (btnClick)="onPayCourse(courseData)"
                                 customClass="w-full text-xs">
                                 Pagar
@@ -837,6 +838,7 @@
                               <app-button
                                 variant="success"
                                 size="sm"
+                                [disabled]="isGuardianDataIncomplete"
                                 (btnClick)="onPayCourse(courseData)">
                                 Pagar
                               </app-button>
@@ -861,6 +863,7 @@
                   <app-button
                     variant="primary"
                     size="lg"
+                    [disabled]="isGuardianDataIncomplete"
                     (btnClick)="showAddCourseFormView()"
                     customClass="min-w-[250px] shadow-lg hover:shadow-xl">
                     <span class="flex items-center justify-center space-x-2">
