@@ -84,6 +84,8 @@ export class PaymentRecord implements OnInit {
   // Variables para el modal de notificaciones
   showNotification: boolean = false;
   notificationData: NotificationData | null = null;
+  // true cuando el acudiente existe pero tiene datos incompletos (bloquea pago y registro)
+  isGuardianDataIncomplete: boolean = false;
   // Exchange rates (consumidas sin mostrar)
   usdToCop: number | null = null;
   eurToCop: number | null = null;
@@ -339,6 +341,7 @@ export class PaymentRecord implements OnInit {
       this.searchClientPayment(documentType, documentNumber);
     } else {
       this.clearGuardianFields();
+      this.isGuardianDataIncomplete = false;
     }
   }
 
@@ -351,6 +354,13 @@ export class PaymentRecord implements OnInit {
         const client = data.data[0];
         this.clientData = client;
         this.fillGuardianFields(client);
+
+        // Si el acudiente existe pero tiene datos incompletos, avisar y bloquear acciones
+        this.isGuardianDataIncomplete = this.hasIncompleteGuardianData(client);
+        if (this.isGuardianDataIncomplete) {
+          this.showIncompleteGuardianNotification();
+        }
+
         if (client.cuentas_cobrar && client.cuentas_cobrar.length > 0) {
           this.prepareRegisteredCoursesTable(client);
           this.showRegisteredCourses = true;
@@ -363,6 +373,8 @@ export class PaymentRecord implements OnInit {
         this.clientData = null;
         this.showRegisteredCourses = false;
         this.registeredCourses = [];
+        // Acudiente nuevo: se diligencia el formulario, no hay bloqueo
+        this.isGuardianDataIncomplete = false;
       }
     });
   }
@@ -1525,6 +1537,34 @@ export class PaymentRecord implements OnInit {
       };
     }
     this.showNotification = true;
+  }
+
+  /**
+   * Indica si el acudiente existe pero le faltan datos obligatorios
+   * (nombre, apellido, celular, email o dirección vacíos o nulos).
+   */
+  private hasIncompleteGuardianData(client: any): boolean {
+    if (!client) return false;
+
+    const requiredFields = ['nombre', 'apellido', 'celular', 'email', 'direccion'];
+    return requiredFields.some(field => {
+      const value = client[field];
+      return value === null || value === undefined || String(value).trim() === '';
+    });
+  }
+
+  /**
+   * Notifica que el acudiente tiene información incompleta y no puede continuar.
+   */
+  private showIncompleteGuardianNotification(): void {
+    this.notificationData = {
+      type: 'warning',
+      title: 'Información del acudiente incompleta',
+      message: 'Comuníquese con el administrador para actualizar la información del acudiente y continuar con el pago o el registro de un programa.',
+      duration: 8000
+    };
+    this.showNotification = true;
+    this.cdRef.detectChanges();
   }
 
   showServerErrorNotification(errorMessage: string) {
