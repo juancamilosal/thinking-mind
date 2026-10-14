@@ -100,6 +100,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
 
   // Modo de prueba: permite practicar la calificación sin consumir servicios
   isTestMode: boolean = false;
+  now: Date = new Date();
+  private nowInterval: ReturnType<typeof setInterval> | null = null;
   private readonly TEST_PROGRAM_ID = 'test-program';
   students: StudentEvaluation[] = [];
   maxCommentLength: number = 250;
@@ -138,6 +140,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
 
   ngOnInit(): void {
+    // Refresca periódicamente la hora actual para que el estado de las reuniones se actualice
+    this.nowInterval = setInterval(() => this.now = new Date(), 30000);
     this.loadGoogleScripts();
     this.loadEvaluationCriteria();
 
@@ -177,6 +181,9 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.nowInterval) {
+      clearInterval(this.nowInterval);
+    }
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
     }
@@ -438,14 +445,61 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     return 'assets/icons/grupo.png';
   }
 
-  getMeetingStatus(meeting: any): 'upcoming' | 'in-progress' | 'completed' {
-    const now = new Date();
-    const start = new Date(meeting.fecha_inicio);
-    const end = new Date(meeting.fecha_finalizacion);
+  // Las reuniones se repiten semanalmente (RRULE WEEKLY) el mismo día de la semana de fecha_inicio,
+  // en el horario comprendido entre la hora de fecha_inicio y la hora de fecha_finalizacion.
+  getMeetingStatus(meeting: any): 'upcoming' | 'in-progress' | 'ended-today' | 'completed' {
+    const start = new Date(meeting?.fecha_inicio);
+    const end = new Date(meeting?.fecha_finalizacion);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 'upcoming';
 
+    const now = this.now;
     if (now < start) return 'upcoming';
-    if (now >= start && now <= end) return 'in-progress';
-    return 'completed';
+
+    // Si la fecha de finalización es un día posterior al inicio, marca el fin del programa
+    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    if (endDay > startDay && now > end) return 'completed';
+
+    if (!this.isMeetingDay(meeting)) return 'upcoming';
+
+    const toSeconds = (d: Date) => d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+    const nowSeconds = toSeconds(now);
+    if (nowSeconds < toSeconds(start)) return 'upcoming';
+    if (nowSeconds <= toSeconds(end)) return 'in-progress';
+    return 'ended-today';
+  }
+
+  isMeetingDay(meeting: any): boolean {
+    const start = new Date(meeting?.fecha_inicio);
+    if (isNaN(start.getTime())) return false;
+    return start.getDay() === this.now.getDay();
+  }
+
+  private getLocale(): string {
+    return (this.translate.currentLang || 'es').toLowerCase();
+  }
+
+  getMeetingWeekday(meeting: any): string {
+    const start = new Date(meeting?.fecha_inicio);
+    if (isNaN(start.getTime())) return '';
+    const day = start.toLocaleDateString(this.getLocale(), { weekday: 'long' });
+    return this.translate.instant('teacherMeetings.everyWeekday', { day });
+  }
+
+  // Próxima fecha en la que se realiza la reunión (hoy si aún no ha terminado)
+  getNextMeetingDate(meeting: any): string {
+    const start = new Date(meeting?.fecha_inicio);
+    const end = new Date(meeting?.fecha_finalizacion);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return '';
+
+    const now = this.now;
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), start.getHours(), start.getMinutes());
+    let daysAhead = (start.getDay() - now.getDay() + 7) % 7;
+    if (daysAhead === 0 && this.getMeetingStatus(meeting) === 'ended-today') daysAhead = 7;
+    next.setDate(next.getDate() + daysAhead);
+    if (next < start) next.setTime(start.getTime());
+
+    return next.toLocaleDateString(this.getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
   getStatusBadgeClass(status: string): string {
@@ -454,6 +508,7 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'in-progress':
         return 'bg-green-100 text-green-700 border-green-200';
+      case 'ended-today':
       case 'completed':
         return 'bg-gray-100 text-gray-600 border-gray-200';
       default:
@@ -467,6 +522,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
         return this.translate.instant('teacherMeetings.statusUpcoming');
       case 'in-progress':
         return this.translate.instant('teacherMeetings.statusInProgress');
+      case 'ended-today':
+        return this.translate.instant('teacherMeetings.statusEndedToday');
       case 'completed':
         return this.translate.instant('teacherMeetings.statusCompleted');
       default:
