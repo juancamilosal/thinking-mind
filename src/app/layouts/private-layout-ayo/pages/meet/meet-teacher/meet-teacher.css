@@ -92,3 +92,7 @@
 .animate-spin-clock {
   animation: spin-clock 4s linear infinite;
 }
+
+.capitalize-first::first-letter {
+  text-transform: uppercase;
+}
