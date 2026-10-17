@@ -1,13 +1,124 @@
-/* Estilos específicos para el componente de estado de pago */
-
-.payment-status-container {
-  animation: fadeIn 0.5s ease-in-out;
+/* Estado del pago con el diseño del portal Thinking Mind */
+:host {
+  display: block;
+  font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif;
 }
 
-@keyframes fadeIn {
+.tm-card {
+  background: #fff;
+  border: 1px solid #e2e7f0;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(20, 36, 92, 0.04), 0 8px 24px -12px rgba(20, 36, 92, 0.12);
+  animation: tm-fade-in 0.4s ease-out both;
+}
+
+.tm-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d4461a;
+}
+
+.tm-status-icon {
+  animation: tm-pop 0.5s ease-out 0.2s both;
+}
+
+.tm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.7rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tm-btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  border-radius: 0.55rem;
+}
+
+.tm-btn-navy {
+  background: #14245c;
+  color: #fff;
+  border: 1px solid #14245c;
+}
+
+.tm-btn-navy:hover {
+  background: #0e1a47;
+}
+
+.tm-btn-pay {
+  background: #d4461a;
+  color: #fff;
+  border: 1px solid #d4461a;
+}
+
+.tm-btn-pay:hover {
+  background: #a93612;
+  box-shadow: 0 0 0 4px rgba(212, 70, 26, 0.18);
+}
+
+.tm-btn-success {
+  background: #1e7b3c;
+  color: #fff;
+  border: 1px solid #1e7b3c;
+}
+
+.tm-btn-success:hover {
+  background: #17612f;
+}
+
+.tm-btn-outline {
+  background: #fff;
+  color: #14245c;
+  border: 1.5px solid #14245c;
+}
+
+.tm-btn-outline:hover {
+  background: #eef1f8;
+}
+
+.tm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.tm-badge::before {
+  content: '';
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.tm-badge-paid {
+  background: #e3f4e8;
+  color: #1e7b3c;
+}
+
+.tm-badge-rejected {
+  background: #fde4e1;
+  color: #b3261e;
+}
+
+@keyframes tm-fade-in {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -15,94 +126,30 @@
   }
 }
 
-/* Estilos para impresión */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  .print-only {
-    display: block !important;
-  }
-  
-  body {
-    background: white !important;
-  }
-  
-  .bg-gray-50 {
-    background: white !important;
-  }
-  
-  .shadow-lg {
-    box-shadow: none !important;
-    border: 1px solid #e5e7eb !important;
-  }
-  
-  .bg-green-500 {
-    background: #10b981 !important;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-  }
-  
-  .bg-red-500 {
-    background: #ef4444 !important;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-  }
-}
-
-/* Forzar estilos para pagos rechazados */
-.payment-rejected-header {
-  background: linear-gradient(to right, #ef4444, #dc2626) !important;
-  color: white !important;
-}
-
-/* Animación para el ícono de éxito */
-.success-icon {
-  animation: checkmark 0.6s ease-in-out 0.3s both;
-}
-
-@keyframes checkmark {
+@keyframes tm-pop {
   0% {
-    transform: scale(0);
+    transform: scale(0.6);
     opacity: 0;
   }
-  50% {
-    transform: scale(1.2);
+  60% {
+    transform: scale(1.08);
     opacity: 1;
   }
   100% {
     transform: scale(1);
-    opacity: 1;
   }
 }
 
-/* Hover effects para botones */
-.btn-hover {
-  transition: all 0.3s ease;
-}
-
-.btn-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Estilos para campos de información */
-.info-field {
-  transition: background-color 0.2s ease;
-}
-
-.info-field:hover {
-  background-color: #f9fafb;
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .payment-status-container {
-    padding: 1rem;
+/* Impresión del comprobante */
+@media print {
+  .tm-card {
+    box-shadow: none;
+    animation: none;
   }
-  
-  .grid-cols-1 {
-    grid-template-columns: 1fr;
+
+  .tm-status-icon,
+  .tm-badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

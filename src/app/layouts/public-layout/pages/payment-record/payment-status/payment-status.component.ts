@@ -3,12 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '../../../../../core/services/payment.service';
 import { PaymentModel } from '../../../../../core/models/AccountReceivable';
-import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-payment-status',
   standalone: true,
-  imports: [AppButtonComponent],
+  imports: [NgClass],
   templateUrl: './payment-status.component.html',
   styleUrl: './payment-status.component.css'
 })
@@ -145,16 +145,16 @@ export class PaymentStatusComponent implements OnInit {
 
   getHeaderTitle(): string {
     if (this.isPaymentSuccessful()) {
-      return 'Transacción Aprobada';
+      return 'Transacción aprobada';
     }
-    return 'Transacción RECHAZADA';
+    return 'Transacción rechazada';
   }
 
   getHeaderSubtitle(): string {
     if (this.isPaymentSuccessful()) {
-      return 'Su pago ha sido procesado exitosamente';
+      return 'Tu pago fue procesado con éxito.';
     }
-    return 'Su pago fue rechazado';
+    return 'Tu pago no pudo ser procesado.';
   }
 
   getHeaderIcon(): string {
@@ -173,9 +173,9 @@ export class PaymentStatusComponent implements OnInit {
 
   getAmountLabel(): string {
     if (this.isPaymentSuccessful()) {
-      return 'Monto Pagado';
+      return 'Monto pagado';
     }
-    return 'Monto Rechazado';
+    return 'Monto rechazado';
   }
 
   getAmountClass(): string {
