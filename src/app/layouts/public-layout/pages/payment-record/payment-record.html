@@ -2,7 +2,7 @@
 
   <!-- Navegación -->
   <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-[#e2e7f0]">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 h-16 flex items-center justify-between gap-4">
       <img src="assets/images/logo.png" alt="Thinking Mind" class="h-7 sm:h-8 w-auto">
       <nav class="flex items-center gap-2 sm:gap-6">
         <button type="button" (click)="scrollToSection('inscripcion')"
@@ -21,8 +21,8 @@
     </div>
   </header>
 
-  <div class="relative z-10 px-4 sm:px-6 pb-28 lg:pb-16">
-    <div class="max-w-6xl mx-auto">
+  <div class="relative z-10 pb-28 lg:pb-16">
+    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
 
       @if (!showConfirmation) {
       <!-- Hero -->
@@ -75,9 +75,9 @@
       </section>
 
       <!-- Banner SABE -->
-      <section class="grid grid-cols-1 lg:grid-cols-[1.65fr_1fr] rounded-[1.75rem] overflow-hidden shadow-xl mb-14 bg-[#14245c]">
+      <section class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] xl:grid-cols-[1.1fr_1fr] rounded-[1.75rem] overflow-hidden shadow-xl mb-14 bg-[#14245c]">
         <img src="assets/images/Mesa de trabajo 2.png" alt="Programas SABE - Thinking Mind"
-             class="w-full h-full object-cover min-h-[220px] max-h-[460px]">
+             class="w-full h-auto aspect-[3/2] object-cover">
         <div class="hidden lg:flex flex-col justify-center p-10 text-white">
           <p class="tm-eyebrow !text-[#f08a63] mb-3">Programas SABE</p>
           <h2 class="text-2xl font-bold leading-snug">Un idioma no se estudia, se vive</h2>
@@ -211,7 +211,7 @@
                     autocomplete="off"
                     (keypress)="onlyNumbers($event)"
                     (blur)="onGuardianDocumentNumberChange($event)"
-                    class="tm-input pr-10">
+                    class="tm-input !pr-10">
                   @if (isSearchingClient) {
                     <div class="absolute right-3 top-1/2 -translate-y-1/2">
                       <svg class="animate-spin h-5 w-5 text-[#14245c]" fill="none" viewBox="0 0 24 24">
@@ -467,7 +467,7 @@
                       #schoolSearchInput
                       (focus)="onSchoolSearchFocus()"
                       placeholder="Busca el colegio"
-                      class="tm-input pl-9"
+                      class="tm-input !pl-9"
                       autocomplete="off">
                   </div>
 
@@ -860,7 +860,7 @@
 
   <!-- Pie de página -->
   <footer class="border-t border-[#e2e7f0] bg-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7b859f]">
+    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7b859f]">
       <span>© Thinking Mind · Portal de inscripciones y pagos</span>
       <span class="flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
