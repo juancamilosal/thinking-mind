@@ -128,8 +128,16 @@ function mountPanel(): void {
   wrap.appendChild(pill);
   document.body.appendChild(wrap);
 
-  // En móvil la página tiene una barra fija abajo: subir el botón para no taparla
-  const adjust = () => { wrap.style.bottom = window.innerWidth < 1024 ? '84px' : '12px'; };
+  // En móvil la parte de abajo la usan la barra fija y las ventanas: el botón va arriba, bajo la cabecera
+  wrap.style.display = 'flex';
+  const adjust = () => {
+    const mobile = window.innerWidth < 1024;
+    wrap.style.top = mobile ? '72px' : 'auto';
+    wrap.style.bottom = mobile ? 'auto' : '12px';
+    wrap.style.flexDirection = mobile ? 'column-reverse' : 'column';
+    wrap.style.alignItems = 'flex-start';
+    panel.style.margin = mobile ? '8px 0 0' : '0 0 8px';
+  };
   adjust();
   window.addEventListener('resize', adjust);
 }
