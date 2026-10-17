@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci",
+  "buildCommand": "npx ng build --configuration development && mv dist/thinkingmind-fe/browser/index.csr.html dist/thinkingmind-fe/browser/index.html",
+  "outputDirectory": "dist/thinkingmind-fe/browser",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
