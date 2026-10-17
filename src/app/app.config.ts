@@ -1,4 +1,4 @@
-import { ApplicationConfig, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideAppInitializer } from '@angular/core';
 import { provideRouter, withPreloading, NoPreloading } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
@@ -8,6 +8,9 @@ import localeEs from '@angular/common/locales/es';
 import localeEsCO from '@angular/common/locales/es-CO';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+// MODO DEMOSTRACIÓN (solo rama de pruebas): datos simulados sin consumir el backend real
+import { demoInterceptor } from './demo/demo.interceptor';
+import { setupDemoMode } from './demo/demo-setup';
 
 // Registrar los datos de localización
 registerLocaleData(localeEs);
@@ -18,8 +21,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withPreloading(NoPreloading)),
     provideHttpClient(
       withFetch(),
-      withInterceptors([AuthInterceptor])
+      withInterceptors([demoInterceptor, AuthInterceptor])
     ),
+    provideAppInitializer(() => setupDemoMode()),
     {
       provide: LOCALE_ID,
       useValue: 'es-CO'
