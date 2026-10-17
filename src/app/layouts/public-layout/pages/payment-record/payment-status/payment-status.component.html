@@ -1,133 +1,141 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-  <div class="max-w-4xl mx-auto">
+<div class="min-h-[100dvh] flex flex-col bg-[#f5f7fb] text-[#4b5675]">
 
-    <!-- Loading State -->
-    @if (loading) {
-      <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">Cargando información del pago...</p>
-      </div>
-    } @else if (error) {
-      <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div class="text-red-500 mb-4">
-          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-          </svg>
+  <!-- Navegación -->
+  <header class="bg-white border-b border-[#e2e7f0] print:hidden">
+    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 h-16 flex items-center justify-between gap-4">
+      <img src="assets/images/logo.png" alt="Thinking Mind" class="h-7 sm:h-8 w-auto">
+      <button type="button" (click)="goBackToPayments()" class="tm-btn tm-btn-navy tm-btn-sm">
+        Consultar pagos
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 px-4 sm:px-6 py-10 sm:py-14">
+    <div class="max-w-2xl mx-auto">
+
+      @if (loading) {
+        <div class="tm-card p-10 text-center">
+          <div class="animate-spin rounded-full h-10 w-10 border-[3px] border-[#e2e7f0] border-t-[#14245c] mx-auto mb-4"></div>
+          <p class="text-sm">Cargando información del pago...</p>
         </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-        <p class="text-gray-600 mb-6">{{ error }}</p>
-        <app-button 
-          variant="primary" 
-          (btnClick)="goBackToPayments()">
-          Volver a Pagos
-        </app-button>
-      </div>
-    } @else {
-      <!-- Header dinámico según estado -->
-      <div [class]="getHeaderClass() + ' rounded-t-2xl p-6 shadow-lg'">
-        <div class="flex items-center justify-center space-x-3">
-          <svg class="w-12 h-12 stroke-white" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getHeaderIcon()"></path>
-          </svg>
-          <div class="text-white">
-            <h1 class="text-3xl font-bold">{{ getHeaderTitle() }}</h1>
-            <p class="text-base">{{ getHeaderSubtitle() }}</p>
+      } @else if (error) {
+        <div class="tm-card p-8 sm:p-10 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-[#fdf1d7] text-[#8a5a00] flex items-center justify-center mx-auto mb-5">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
           </div>
+          <h1 class="text-xl font-bold text-[#14245c] mb-2">No pudimos cargar el pago</h1>
+          <p class="text-sm mb-7">{{ error }}</p>
+          <button type="button" class="tm-btn tm-btn-navy" (click)="goBackToPayments()">Volver a pagos</button>
         </div>
-      </div>
-
-      <!-- Información de la transacción -->
-      <div class="bg-white rounded-b-2xl shadow-xl p-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <!-- Columna izquierda -->
-          <div class="space-y-6">
-            <div class="pb-4">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalles de la Transacción</h3>
-
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Número de Transacción</label>
-                  <p class="text-lg font-mono bg-gray-50 p-3 rounded-lg border">{{ transactionData.transactionNumber }}</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Referencia</label>
-                  <p class="text-lg font-mono bg-gray-50 p-3 rounded-lg border">{{ transactionData.reference }}</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Método de Pago</label>
-                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ formatPaymentMethod(transactionData.paymentMethod) }}</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Pagador</label>
-                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.payerName || 'N/A' }}</p>
-                </div>
+      } @else {
+        <div class="tm-card overflow-hidden">
+          <!-- Resultado -->
+          <div class="px-6 sm:px-10 pt-10 pb-8 text-center border-b border-[#eef1f6]">
+            @if (isPaymentSuccessful()) {
+              <div class="tm-status-icon w-16 h-16 rounded-2xl bg-[#e3f4e8] text-[#1e7b3c] flex items-center justify-center mx-auto mb-5">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
               </div>
+              <p class="tm-eyebrow !text-[#1e7b3c] mb-2">Pago aprobado</p>
+            } @else {
+              <div class="tm-status-icon w-16 h-16 rounded-2xl bg-[#fde4e1] text-[#b3261e] flex items-center justify-center mx-auto mb-5">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+              </div>
+              <p class="tm-eyebrow !text-[#b3261e] mb-2">Pago rechazado</p>
+            }
+            <h1 class="text-2xl sm:text-3xl font-bold text-[#14245c]">{{ getHeaderTitle() }}</h1>
+            <p class="mt-2 text-sm">{{ getHeaderSubtitle() }}</p>
+
+            <p class="mt-6 text-xs text-[#7b859f]">{{ getAmountLabel() }}</p>
+            <p class="text-4xl sm:text-5xl font-extrabold tracking-tight mt-1"
+               [ngClass]="isPaymentSuccessful() ? 'text-[#14245c]' : 'text-[#b3261e]'">
+              {{ formatCurrency(transactionData.amount) }}
+            </p>
+            @if (transactionData.course) {
+              <p class="mt-2 text-sm font-semibold text-[#14245c]">{{ transactionData.course }}</p>
+            }
+          </div>
+
+          <!-- Detalle -->
+          <div class="px-6 sm:px-10 py-7">
+            <p class="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#7b859f] mb-3">Detalle de la transacción</p>
+            <dl class="divide-y divide-[#eef1f6] text-sm">
+              <div class="flex justify-between gap-4 py-3">
+                <dt>Estado</dt>
+                <dd>
+                  <span class="tm-badge" [ngClass]="isPaymentSuccessful() ? 'tm-badge-paid' : 'tm-badge-rejected'">{{ transactionData.status }}</span>
+                </dd>
+              </div>
+              <div class="flex justify-between gap-4 py-3">
+                <dt>Número de transacción</dt>
+                <dd class="font-semibold text-[#14245c] text-right font-mono break-all">{{ transactionData.transactionNumber }}</dd>
+              </div>
+              <div class="flex justify-between gap-4 py-3">
+                <dt>Referencia</dt>
+                <dd class="font-semibold text-[#14245c] text-right font-mono break-all">{{ transactionData.reference }}</dd>
+              </div>
+              <div class="flex justify-between gap-4 py-3">
+                <dt>Método de pago</dt>
+                <dd class="font-semibold text-[#14245c] text-right">{{ formatPaymentMethod(transactionData.paymentMethod) }}</dd>
+              </div>
+              <div class="flex justify-between gap-4 py-3">
+                <dt>Pagador</dt>
+                <dd class="font-semibold text-[#14245c] text-right">{{ transactionData.payerName || 'N/A' }}</dd>
+              </div>
+              <div class="flex justify-between gap-4 py-3">
+                <dt>Fecha y hora</dt>
+                <dd class="font-semibold text-[#14245c] text-right">{{ transactionData.transactionDate }}</dd>
+              </div>
+            </dl>
+
+            @if (isPaymentSuccessful()) {
+              <div class="mt-6 flex items-start gap-2 rounded-xl bg-[#f1f4fa] px-4 py-3 text-xs leading-relaxed">
+                <svg class="w-4 h-4 text-[#14245c] flex-shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                El pago se verá reflejado en tu estado de cuenta. Consúltalo cuando quieras con el documento del acudiente.
+              </div>
+            } @else {
+              <div class="mt-6 flex items-start gap-2 rounded-xl bg-[#fde4e1] px-4 py-3 text-xs leading-relaxed text-[#8c1d17]">
+                <svg class="w-4 h-4 flex-shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                No se realizó ningún cobro. Puedes intentarlo de nuevo con otro medio de pago desde el portal.
+              </div>
+            }
+
+            <!-- Acciones -->
+            <div class="mt-7 flex flex-col sm:flex-row gap-3 print:hidden">
+              @if (isPaymentSuccessful()) {
+                <button type="button" class="tm-btn tm-btn-success flex-1" (click)="printReceipt()">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  Descargar comprobante
+                </button>
+                <button type="button" class="tm-btn tm-btn-outline flex-1" (click)="goBackToPayments()">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                  Volver a mis pagos
+                </button>
+              } @else {
+                <button type="button" class="tm-btn tm-btn-pay flex-1" (click)="goBackToPayments()">
+                  Intentar de nuevo
+                </button>
+                <button type="button" class="tm-btn tm-btn-outline flex-1" (click)="printReceipt()">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                  Imprimir
+                </button>
+              }
             </div>
           </div>
-
-          <!-- Columna derecha -->
-          <div class="space-y-6">
-            <div class="pb-4">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Información del Pago</h3>
-
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
-                  <div class="text-lg p-3 flex items-center">
-                    <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold"
-                          [class]="getStatusClass()">
-                      {{ transactionData.status }}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Programa</label>
-                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.course }}</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Fecha y Hora</label>
-                  <p class="text-lg bg-gray-50 p-3 rounded-lg border">{{ transactionData.transactionDate }}</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">{{ getAmountLabel() }}</label>
-                  <p [class]="getAmountClass()">
-                    {{ formatCurrency(transactionData.amount) }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
+      }
+    </div>
+  </main>
 
-        <!-- Botones de acción -->
-        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-gray-200">
-          <app-button
-            variant="primary"
-            (btnClick)="printReceipt()"
-            customClass="flex-1 flex items-center justify-center space-x-2">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-            </svg>
-            Imprimir Comprobante
-          </app-button>
-
-          <app-button
-            variant="secondary"
-            (btnClick)="goBackToPayments()"
-            customClass="flex-1 flex items-center justify-center space-x-2">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            Volver a Pagos
-          </app-button>
-        </div>
-      </div>
-    }
-  </div>
+  <!-- Pie de página -->
+  <footer class="border-t border-[#e2e7f0] bg-white print:hidden">
+    <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7b859f]">
+      <span>© Thinking Mind · Portal de inscripciones y pagos</span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        Pagos protegidos
+      </span>
+    </div>
+  </footer>
 </div>
