@@ -148,7 +148,8 @@
   }
 
   .tm-status-icon,
-  .tm-badge {
+  .tm-badge,
+  .tm-print-exact {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
