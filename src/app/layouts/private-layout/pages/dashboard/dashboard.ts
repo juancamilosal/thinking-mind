@@ -21,6 +21,7 @@ import { StorageServices } from '../../../../core/services/storage.services';
   templateUrl: './dashboard.html'
 })
 export class Dashboard implements OnInit {
+  paymentProgressFromFlow: number | null = null;
   stats: DashboardStats = {
     totalStudents: 0,
     totalAccountsReceivable: 0,
@@ -216,6 +217,9 @@ export class Dashboard implements OnInit {
       monthlyPayments: data.total_pagos_mes || 0,
       totalPendingAccountsReceivable: data.total_cuentas || 0
     };
+    // Porcentaje abonado de las cuentas pendientes, calculado en el flujo del dashboard
+    const progress = Number(data.porcentaje_pagado);
+    this.paymentProgressFromFlow = data.porcentaje_pagado !== undefined && data.porcentaje_pagado !== null && !isNaN(progress) ? progress : null;
   }
 
   private loadAdminDataFallback(): void {
@@ -405,6 +409,7 @@ export class Dashboard implements OnInit {
   }
 
   getPaymentProgress(): number {
+    if (this.paymentProgressFromFlow !== null) return this.paymentProgressFromFlow;
     if (this.stats.totalAmountReceivable === 0) return 0;
     return (this.stats.totalPaidAmount / this.stats.totalAmountReceivable) * 100;
   }
