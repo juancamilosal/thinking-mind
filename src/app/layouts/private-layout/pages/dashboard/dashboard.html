@@ -372,7 +372,7 @@
                 <span class="text-xl font-bold text-gray-900">{{ formatCurrency(stats.totalAmountReceivable) }}</span>
               </div>
               <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
-                <span class="text-gray-600 font-medium">Total Pagado:</span>
+                <span class="text-gray-600 font-medium">Total Pagado del Mes:</span>
                 <span class="text-xl font-bold text-green-600">{{ formatCurrency(stats.totalPaidAmount) }}</span>
               </div>
               <div class="flex justify-between items-center p-4 bg-red-50 rounded-lg">
@@ -393,7 +393,7 @@
             </div>
             <div class="text-center mb-6">
               <div class="text-2xl font-bold text-gray-900 mb-2">{{ getPaymentProgress().toFixed(1) }}%</div>
-              <p class="text-gray-600">Pagos completados</p>
+              <p class="text-gray-600">Abonado de las cuentas pendientes</p>
             </div>
             <!-- Progress Bar -->
             <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
