@@ -1,0 +1,270 @@
+/* Rediseño Portal de Pagos Thinking Mind */
+:host {
+  --tm-navy: #14245c;
+  --tm-navy-dark: #0e1a47;
+  --tm-orange: #d4461a;
+  --tm-orange-dark: #a93612;
+  --tm-green: #1e7b3c;
+  --tm-bg: #f5f7fb;
+  --tm-border: #e2e7f0;
+  --tm-text: #4b5675;
+  --tm-muted: #7b859f;
+  display: block;
+  font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif;
+}
+
+/* Tarjetas */
+.tm-card {
+  background: #fff;
+  border: 1px solid var(--tm-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(20, 36, 92, 0.04), 0 8px 24px -12px rgba(20, 36, 92, 0.12);
+}
+
+.tm-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tm-orange);
+}
+
+/* Campos de formulario */
+.tm-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tm-navy);
+  margin-bottom: 0.4rem;
+}
+
+.tm-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid #d5dbe6;
+  background: #fff;
+  color: var(--tm-navy);
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tm-input::placeholder {
+  color: #a1a9bd;
+}
+
+.tm-input:focus {
+  outline: none;
+  border-color: var(--tm-navy);
+  box-shadow: 0 0 0 3px rgba(20, 36, 92, 0.12);
+}
+
+.tm-input.ng-touched.ng-invalid {
+  border-color: #c2412d;
+}
+
+.tm-input:disabled {
+  background: #f1f3f8;
+  color: var(--tm-muted);
+}
+
+.tm-error {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #b3261e;
+}
+
+/* Botones */
+.tm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.7rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tm-btn:disabled {
+  cursor: not-allowed;
+  background: #e5e9f1 !important;
+  border-color: #e5e9f1 !important;
+  color: #8a93ab !important;
+  box-shadow: none !important;
+}
+
+.tm-btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  border-radius: 0.55rem;
+}
+
+.tm-btn-pay {
+  background: var(--tm-orange);
+  color: #fff;
+  border: 1px solid var(--tm-orange);
+}
+
+.tm-btn-pay:hover,
+.tm-btn-pay:focus-visible {
+  background: var(--tm-orange-dark);
+  border-color: var(--tm-orange-dark);
+  box-shadow: 0 0 0 4px rgba(212, 70, 26, 0.18);
+  outline: none;
+}
+
+.tm-btn-navy {
+  background: var(--tm-navy);
+  color: #fff;
+  border: 1px solid var(--tm-navy);
+}
+
+.tm-btn-navy:hover,
+.tm-btn-navy:focus-visible {
+  background: var(--tm-navy-dark);
+  outline: none;
+}
+
+.tm-btn-outline {
+  background: #fff;
+  color: var(--tm-navy);
+  border: 1.5px solid var(--tm-navy);
+}
+
+.tm-btn-outline:hover,
+.tm-btn-outline:focus-visible {
+  background: #eef1f8;
+  outline: none;
+}
+
+.tm-btn-ghost-light {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+}
+
+.tm-btn-ghost-light:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tm-btn-dashed {
+  background: #fff;
+  color: var(--tm-navy);
+  border: 1.5px dashed var(--tm-navy);
+}
+
+.tm-btn-dashed:hover {
+  background: #eef1f8;
+}
+
+/* Estados de pago */
+.tm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tm-badge::before {
+  content: '';
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.tm-badge-paid {
+  background: #e3f4e8;
+  color: #1e7b3c;
+}
+
+.tm-badge-pending {
+  background: #fdf1d7;
+  color: #8a5a00;
+}
+
+.tm-badge-rejected {
+  background: #fde4e1;
+  color: #b3261e;
+}
+
+.tm-badge-process {
+  background: #e6eaf5;
+  color: var(--tm-navy);
+}
+
+.tm-chip-special {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #fde7df;
+  color: #a93612;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Atajos de monto */
+.tm-preset {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #d5dbe6;
+  background: #fff;
+  color: var(--tm-navy);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.tm-preset:hover {
+  border-color: var(--tm-navy);
+}
+
+.tm-preset-active {
+  background: #e6eaf5;
+  border-color: var(--tm-navy);
+}
+
+/* Barra de progreso */
+.tm-progress {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #e5e9f1;
+  overflow: hidden;
+}
+
+.tm-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--tm-navy);
+}
+
+.tm-progress-done > span {
+  background: var(--tm-green);
+}
+
+/* Franjas decorativas del hero */
+.tm-stripe {
+  position: absolute;
+  height: 4.5rem;
+  width: 120%;
+  border-radius: 999px;
+  transform: rotate(-12deg);
+}

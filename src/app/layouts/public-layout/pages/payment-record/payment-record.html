@@ -1,201 +1,210 @@
-<div class="h-[100dvh] bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 relative overflow-y-auto print:hidden">
-  <!-- Elementos decorativos de fondo -->
-  <div class="absolute inset-0 overflow-hidden">
-    <!-- Auroras de color sutiles -->
-    <div
-      class="absolute -top-40 -right-40 w-[36rem] h-[36rem] bg-gradient-to-br from-indigo-600 to-sky-500 rounded-full opacity-[0.12] blur-3xl"></div>
-    <div
-      class="absolute -bottom-48 -left-40 w-[36rem] h-[36rem] bg-gradient-to-tr from-violet-600 to-indigo-500 rounded-full opacity-[0.12] blur-3xl"></div>
+<div class="h-[100dvh] bg-[#f5f7fb] text-[#4b5675] relative overflow-y-auto print:hidden">
 
-    <!-- Halo central -->
-    <div
-      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] bg-gradient-to-r from-sky-600 via-indigo-500 to-violet-500 rounded-full opacity-[0.08] blur-3xl"></div>
+  <!-- Navegación -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-[#e2e7f0]">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <img src="assets/images/logo.png" alt="Thinking Mind" class="h-7 sm:h-8 w-auto">
+      <nav class="flex items-center gap-2 sm:gap-6">
+        <button type="button" (click)="scrollToSection('inscripcion')"
+                class="hidden md:inline text-sm font-medium text-[#14245c] hover:text-[#d4461a] transition-colors">
+          Inscripción
+        </button>
+        <button type="button" (click)="scrollToSection(showRegisteredCourses ? 'programas-registrados' : 'inscripcion', showRegisteredCourses ? undefined : 'guardianDocumentNumber')"
+                class="hidden md:inline text-sm font-medium text-[#14245c] hover:text-[#d4461a] transition-colors">
+          Mis programas
+        </button>
+        <button type="button" (click)="scrollToSection('inscripcion', 'guardianDocumentNumber')"
+                class="tm-btn tm-btn-navy tm-btn-sm">
+          Consultar pagos
+        </button>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Acentos medianos -->
-    <div
-      class="absolute top-24 right-24 w-48 h-48 bg-gradient-to-br from-sky-500 to-indigo-500 rounded-full opacity-10 blur-2xl"></div>
-    <div
-      class="absolute bottom-24 left-24 w-56 h-56 bg-gradient-to-tr from-violet-500 to-fuchsia-500 rounded-full opacity-10 blur-2xl"></div>
-
-    <!-- Acentos pequeños -->
-    <div
-      class="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full opacity-[0.07] blur-xl"></div>
-    <div
-      class="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-tr from-indigo-500 to-sky-400 rounded-full opacity-[0.08] blur-xl"></div>
-    <div
-      class="absolute top-1/3 right-1/3 w-36 h-36 bg-gradient-to-tr from-violet-500 via-indigo-400 to-sky-400 rounded-full opacity-[0.06] blur-2xl"></div>
-
-    <!-- Trama sutil de puntos para dar textura profesional -->
-    <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 32px 32px;"></div>
-  </div>
-
-  <div class="relative z-10 p-6 pb-32">
+  <div class="relative z-10 px-4 sm:px-6 pb-28 lg:pb-16">
     <div class="max-w-6xl mx-auto">
 
       @if (!showConfirmation) {
-      <!-- Hero: Inscripción a Programas de Idiomas -->
-      <header class="text-center pt-6 sm:pt-10 mb-10">
-        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs sm:text-sm font-semibold uppercase tracking-widest mb-6">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+      <!-- Hero -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center pt-8 sm:pt-12 mb-10">
+        <div>
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e3f4e8] text-[#1e7b3c] text-[0.68rem] font-bold uppercase tracking-[0.14em] mb-5">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1e7b3c] opacity-60"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-[#1e7b3c]"></span>
+            </span>
+            Inscripciones abiertas
           </span>
-          Inscripciones Abiertas
-        </span>
-        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-[0.18em] text-white leading-tight drop-shadow-lg">
-          SABE
-        </h1>
-        <p class="mt-4 text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-300 via-yellow-300 to-orange-300 bg-clip-text text-transparent leading-snug">
-          No estás gastando. Estás invirtiendo.
-        </p>
-        <p class="mt-5 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Inscribe a tu estudiante en nuestros cursos de lenguas extranjeras con clases en vivo,
-          docentes certificados y acompañamiento personalizado durante todo el programa.
-        </p>
-        <div class="mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 text-sm backdrop-blur-sm">🌍 Lenguas extranjeras</span>
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 text-sm backdrop-blur-sm">🎓 Docentes certificados</span>
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 text-sm backdrop-blur-sm">💻 Clases en vivo</span>
-          <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 text-sm backdrop-blur-sm">📈 Seguimiento del progreso</span>
+          <h1 class="text-4xl sm:text-5xl font-extrabold leading-[1.05] tracking-tight">
+            <span class="block text-[#14245c]">No estás gastando.</span>
+            <span class="block text-[#d4461a]">Estás invirtiendo.</span>
+          </h1>
+          <p class="mt-5 text-base leading-relaxed max-w-lg">
+            Más que clases, experiencias. Tu hijo vive el idioma en fines de semana de inmersión en su colegio
+            con un equipo certificado, y puede viajar a destinos como Francia o Reino Unido.
+          </p>
+          <div class="mt-7 flex flex-col sm:flex-row gap-3">
+            <button type="button" (click)="scrollToSection('inscripcion')" class="tm-btn tm-btn-pay">
+              Inscribir a mi hijo
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+            <button type="button" (click)="scrollToSection('inscripcion', 'guardianDocumentNumber')" class="tm-btn tm-btn-outline">
+              Ya estoy inscrito<span class="sm:hidden">&nbsp;· Consultar pagos</span>
+            </button>
+          </div>
+          <ul class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-[#14245c]">
+            <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#1e7b3c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Equipo certificado</li>
+            <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#1e7b3c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Inmersión de fin de semana</li>
+            <li class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#1e7b3c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Viajes a Francia y Reino Unido</li>
+          </ul>
         </div>
-      </header>
 
-      <!-- Imagen Banner -->
-      <div class="relative rounded-3xl mb-14 shadow-2xl border border-white/10 overflow-hidden ring-1 ring-white/10">
-        <div class="bg-cover bg-[center_15%] bg-no-repeat min-h-[500px] md:min-h-[800px]"
-             style="background-image: url('assets/images/Mesa de trabajo 2.png');">
-        </div>
-        <!-- Degradado inferior para integrar la imagen con el fondo -->
-        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-      </div>
-
-      <!-- Beneficios del portal -->
-      <div class="text-center w-full mb-14">
-        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400 mb-2">Portal de Inscripciones y Pagos</p>
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8">Un proceso simple, seguro y transparente</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="group bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-xl hover:bg-white/10 hover:border-sky-400/40 transition-all duration-300 transform hover:-translate-y-1 text-center">
-            <div class="flex justify-center mb-5">
-              <div class="p-4 bg-gradient-to-br from-sky-500/20 to-sky-500/5 rounded-2xl ring-1 ring-sky-400/30 group-hover:ring-sky-400/60 transition-all">
-                <svg class="w-8 h-8 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-              </div>
+        <!-- Tarjeta decorativa -->
+        <div class="hidden lg:block relative h-[320px] rounded-[1.75rem] overflow-hidden bg-[#14245c] shadow-xl">
+          <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5"></div>
+          <div class="tm-stripe bg-[#1e7b3c] top-[22%] -left-[10%]"></div>
+          <div class="tm-stripe bg-[#d4461a] top-[45%] -left-[4%]"></div>
+          <div class="absolute left-6 right-6 bottom-6 bg-white rounded-2xl px-5 py-4 flex items-center gap-3 shadow-lg">
+            <img src="assets/images/Logo_Thinking_Mind.png" alt="" class="w-9 h-9 object-contain">
+            <div>
+              <p class="text-sm font-bold text-[#14245c]">Programas SABE · Lenguas extranjeras</p>
+              <p class="text-xs text-[#7b859f]">Experiencias de inmersión con equipo certificado</p>
             </div>
-            <h3 class="font-bold mb-2 text-white text-lg">Inscripción Segura</h3>
-            <p class="text-sm text-slate-300 leading-relaxed">Tu información viaja protegida y encriptada de principio a fin</p>
-          </div>
-
-          <div class="group bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-xl hover:bg-white/10 hover:border-indigo-400/40 transition-all duration-300 transform hover:-translate-y-1 text-center">
-            <div class="flex justify-center mb-5">
-              <div class="p-4 bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 rounded-2xl ring-1 ring-indigo-400/30 group-hover:ring-indigo-400/60 transition-all">
-                <svg class="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-              </div>
-            </div>
-            <h3 class="font-bold mb-2 text-white text-lg">Proceso Ágil</h3>
-            <p class="text-sm text-slate-300 leading-relaxed">Inscríbete y realiza el pago del programa en pocos minutos</p>
-          </div>
-
-          <div class="group bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-xl hover:bg-white/10 hover:border-violet-400/40 transition-all duration-300 transform hover:-translate-y-1 text-center">
-            <div class="flex justify-center mb-5">
-              <div class="p-4 bg-gradient-to-br from-violet-500/20 to-violet-500/5 rounded-2xl ring-1 ring-violet-400/30 group-hover:ring-violet-400/60 transition-all">
-                <svg class="w-8 h-8 text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-            </div>
-            <h3 class="font-bold mb-2 text-white text-lg">Consultas 24/7</h3>
-            <p class="text-sm text-slate-300 leading-relaxed">Consulta tus estados de cuenta y pagos cuando lo necesites</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Instrucciones -->
-      <div class="bg-white/5 backdrop-blur-md shadow-xl p-6 sm:p-8 mb-10 rounded-2xl border border-white/10">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="flex-shrink-0 p-3 bg-gradient-to-br from-amber-500/20 to-amber-500/5 rounded-xl ring-1 ring-amber-400/40">
-            <svg class="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <h3 class="text-lg sm:text-xl font-bold text-white">¿Cómo inscribirte y consultar tus pagos?</h3>
+      <!-- Banner SABE -->
+      <section class="grid grid-cols-1 lg:grid-cols-[1.65fr_1fr] rounded-[1.75rem] overflow-hidden shadow-xl mb-14 bg-[#14245c]">
+        <img src="assets/images/Mesa de trabajo 2.png" alt="Programas SABE - Thinking Mind"
+             class="w-full h-full object-cover min-h-[220px] max-h-[460px]">
+        <div class="hidden lg:flex flex-col justify-center p-10 text-white">
+          <p class="tm-eyebrow !text-[#f08a63] mb-3">Programas SABE</p>
+          <h2 class="text-2xl font-bold leading-snug">Un idioma no se estudia, se vive</h2>
+          <p class="mt-4 text-sm leading-relaxed text-white/75">
+            Fines de semana de inmersión en el colegio con un equipo certificado y viajes al extranjero que tu hijo recordará siempre.
+          </p>
         </div>
-        <ol class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-          <li class="flex items-start gap-3">
-            <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-sky-500/20 text-sky-300 text-sm font-bold ring-1 ring-sky-400/40">1</span>
-            <span class="text-slate-300 text-sm sm:text-base leading-relaxed">Completa la información del <span class="text-white font-semibold">acudiente</span> (persona responsable del pago)</span>
+      </section>
+
+      <!-- Experiencias -->
+      <section class="mb-14">
+        <p class="tm-eyebrow mb-2">Más que clases</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-[#14245c] mb-7">Experiencias que tu hijo va a vivir</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="tm-card p-6 border-t-4 !border-t-[#14245c]">
+            <div class="w-9 h-9 rounded-lg bg-[#e6eaf5] text-[#14245c] flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>
+            </div>
+            <h3 class="font-bold text-[#14245c] mb-1.5">Inmersión en el colegio</h3>
+            <p class="text-sm leading-relaxed">Un fin de semana nuestro equipo certificado llega al colegio y tu hijo vive el idioma con actividades, juegos y retos.</p>
+          </div>
+          <div class="tm-card p-6 border-t-4 !border-t-[#d4461a]">
+            <div class="w-9 h-9 rounded-lg bg-[#fde7df] text-[#d4461a] flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+            </div>
+            <h3 class="font-bold text-[#14245c] mb-1.5">Viajes al extranjero</h3>
+            <p class="text-sm leading-relaxed">Experiencias internacionales en destinos como Francia y Reino Unido para practicar el idioma donde se habla.</p>
+          </div>
+          <div class="tm-card p-6 border-t-4 !border-t-[#1e7b3c]">
+            <div class="w-9 h-9 rounded-lg bg-[#e3f4e8] text-[#1e7b3c] flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h3 class="font-bold text-[#14245c] mb-1.5">Equipo certificado</h3>
+            <p class="text-sm leading-relaxed">Profesionales certificados acompañan a tu hijo en cada experiencia, con seguridad y cercanía.</p>
+          </div>
+          <div class="tm-card p-6">
+            <div class="w-9 h-9 rounded-lg bg-[#e6eaf5] text-[#14245c] flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <h3 class="font-bold text-[#14245c] mb-1.5">Inscripción segura</h3>
+            <p class="text-sm leading-relaxed">Tu información viaja protegida y encriptada de principio a fin.</p>
+          </div>
+          <div class="tm-card p-6">
+            <div class="w-9 h-9 rounded-lg bg-[#fde7df] text-[#d4461a] flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 class="font-bold text-[#14245c] mb-1.5">Proceso ágil</h3>
+            <p class="text-sm leading-relaxed">Inscríbete y realiza el pago del programa en pocos minutos.</p>
+          </div>
+          <div class="tm-card p-6">
+            <div class="w-9 h-9 rounded-lg bg-[#e3f4e8] text-[#1e7b3c] flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="font-bold text-[#14245c] mb-1.5">Consultas 24/7</h3>
+            <p class="text-sm leading-relaxed">Consulta tus estados de cuenta y pagos cuando lo necesites.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cómo funciona -->
+      <section class="mb-14">
+        <p class="tm-eyebrow mb-2">Cómo funciona</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-[#14245c] mb-7">Inscríbete en cuatro pasos</h2>
+        <ol class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <li class="border-t-2 border-[#14245c] pt-4">
+            <p class="text-xs font-bold text-[#14245c] mb-1">Paso 01</p>
+            <p class="font-bold text-[#14245c]">Datos del acudiente</p>
+            <p class="text-sm mt-1">La persona responsable del pago.</p>
           </li>
-          <li class="flex items-start gap-3">
-            <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-sky-500/20 text-sky-300 text-sm font-bold ring-1 ring-sky-400/40">2</span>
-            <span class="text-slate-300 text-sm sm:text-base leading-relaxed">Ingresa los datos del <span class="text-white font-semibold">estudiante</span> que tomará el programa de idiomas</span>
+          <li class="border-t-2 border-[#14245c] pt-4">
+            <p class="text-xs font-bold text-[#14245c] mb-1">Paso 02</p>
+            <p class="font-bold text-[#14245c]">Datos de tu hijo</p>
+            <p class="text-sm mt-1">Quien tomará el programa de idiomas.</p>
           </li>
-          <li class="flex items-start gap-3">
-            <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-sky-500/20 text-sky-300 text-sm font-bold ring-1 ring-sky-400/40">3</span>
-            <span class="text-slate-300 text-sm sm:text-base leading-relaxed">Selecciona el <span class="text-white font-semibold">programa</span> y confirma la inscripción — los campos con (*) son obligatorios</span>
+          <li class="border-t-2 border-[#1e7b3c] pt-4">
+            <p class="text-xs font-bold text-[#1e7b3c] mb-1">Paso 03</p>
+            <p class="font-bold text-[#14245c]">Elige el programa</p>
+            <p class="text-sm mt-1">Confirma la inscripción. Los campos con * son obligatorios.</p>
           </li>
-          <li class="flex items-start gap-3">
-            <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-sky-500/20 text-sky-300 text-sm font-bold ring-1 ring-sky-400/40">4</span>
-            <span class="text-slate-300 text-sm sm:text-base leading-relaxed">Consulta y paga cuando quieras ingresando el <span class="text-white font-semibold">documento del estudiante</span></span>
+          <li class="border-t-2 border-[#d4461a] pt-4">
+            <p class="text-xs font-bold text-[#d4461a] mb-1">Paso 04</p>
+            <p class="font-bold text-[#14245c]">Paga cuando quieras</p>
+            <p class="text-sm mt-1">Ingresa con el documento de tu hijo.</p>
           </li>
         </ol>
-      </div>
+      </section>
 
-      <div>
-        <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="space-y-8">
+      <div id="inscripcion" class="scroll-mt-24">
+        <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <!-- Información del Acudiente -->
-          <div class="relative overflow-hidden bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-10">
-            <!-- Barra de acento superior -->
-            <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500"></div>
-            <div class="flex items-center gap-4">
-              <div class="flex-shrink-0 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-3.5 shadow-lg shadow-sky-500/30">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          <div class="tm-card p-5 sm:p-7" [ngClass]="{'lg:col-span-2': showRegisteredCourses && !showAddCourseForm}">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-[#14245c] text-white flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </div>
               <div class="min-w-0">
-                <h3 class="text-xl sm:text-2xl font-bold text-slate-800">Información del Acudiente</h3>
-                <p class="text-sm text-slate-500 mt-0.5">Persona responsable del pago del programa</p>
+                <h3 class="text-lg font-bold text-[#14245c] leading-tight">Información del acudiente</h3>
+                <p class="text-xs text-[#7b859f]">Responsable del pago</p>
               </div>
             </div>
-            <div class="h-px bg-gradient-to-r from-slate-200 via-slate-100 to-transparent my-7"></div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
               <!-- Tipo de Documento del Acudiente -->
-              <div class="space-y-3">
-                <label for="guardianDocumentType" class="block text-sm font-semibold text-sky-700">Tipo de Documento
-                  *</label>
+              <div>
+                <label for="guardianDocumentType" class="tm-label">Tipo de documento *</label>
                 <select
                   id="guardianDocumentType"
                   formControlName="guardianDocumentType"
                   (change)="onGuardianDocumentTypeChange($event)"
-                  class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                  class="tm-input">
                   <option value="">Seleccione un tipo de documento</option>
                   @for (type of DOCUMENT_TYPE; track type.id) {
                     <option [value]="type.id">{{ type.name }}</option>
                   }
                 </select>
                 @if (paymentForm.get('guardianDocumentType')?.touched && paymentForm.get('guardianDocumentType')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El tipo de documento es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El tipo de documento es obligatorio</p>
                 }
               </div>
 
               <!-- Número de Documento del Acudiente -->
-              <div class="space-y-3">
-                <label for="guardianDocumentNumber" class="block text-sm font-semibold text-sky-700">Número de
-                  Documento *</label>
+              <div>
+                <label for="guardianDocumentNumber" class="tm-label">Número de documento *</label>
                 <div class="relative">
                   <input
                     type="text"
@@ -207,10 +216,10 @@
                     autocomplete="off"
                     (keypress)="onlyNumbers($event)"
                     (blur)="onGuardianDocumentNumberChange($event)"
-                    class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                    class="tm-input pr-10">
                   @if (isSearchingClient) {
-                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <svg class="animate-spin h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                      <svg class="animate-spin h-5 w-5 text-[#14245c]" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -218,195 +227,101 @@
                   }
                 </div>
                 @if (paymentForm.get('guardianDocumentNumber')?.touched && paymentForm.get('guardianDocumentNumber')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El número de documento es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de documento es obligatorio</p>
                 }
                 @if (paymentForm.get('guardianDocumentNumber')?.touched && paymentForm.get('guardianDocumentNumber')?.errors?.['minlength']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El número de documento debe tener al menos 6 caracteres
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de documento debe tener al menos 6 caracteres</p>
                 }
                 @if (paymentForm.get('guardianDocumentNumber')?.touched && paymentForm.get('guardianDocumentNumber')?.errors?.['pattern']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El número de documento solo puede contener números
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de documento solo puede contener números</p>
                 }
               </div>
 
               <!-- Nombre del Acudiente -->
-              <div class="space-y-3">
-                <label for="guardianFirstName" class="block text-sm font-semibold text-sky-700">Nombre *</label>
+              <div>
+                <label for="guardianFirstName" class="tm-label">Nombre *</label>
                 <input
                   type="text"
                   id="guardianFirstName"
                   formControlName="guardianFirstName"
                   (input)="onGuardianFirstNameChange($event)"
                   placeholder="Ingrese el nombre"
-                  class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                  class="tm-input">
                 @if (paymentForm.get('guardianFirstName')?.touched && paymentForm.get('guardianFirstName')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El nombre es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El nombre es obligatorio</p>
                 }
                 @if (paymentForm.get('guardianFirstName')?.touched && paymentForm.get('guardianFirstName')?.errors?.['minlength']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El nombre debe tener al menos 2 caracteres
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El nombre debe tener al menos 2 caracteres</p>
                 }
               </div>
 
               <!-- Apellido del Acudiente -->
-              <div class="space-y-3">
-                <label for="guardianLastName" class="block text-sm font-semibold text-sky-700">Apellido *</label>
+              <div>
+                <label for="guardianLastName" class="tm-label">Apellido *</label>
                 <input
                   type="text"
                   id="guardianLastName"
                   formControlName="guardianLastName"
                   (input)="onGuardianLastNameChange($event)"
                   placeholder="Ingrese el apellido"
-                  class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                  class="tm-input">
                 @if (paymentForm.get('guardianLastName')?.touched && paymentForm.get('guardianLastName')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El apellido es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El apellido es obligatorio</p>
                 }
                 @if (paymentForm.get('guardianLastName')?.touched && paymentForm.get('guardianLastName')?.errors?.['minlength']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El apellido debe tener al menos 2 caracteres
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El apellido debe tener al menos 2 caracteres</p>
                 }
               </div>
 
               <!-- Teléfono del Acudiente -->
-              <div class="space-y-3">
-                <label for="guardianPhoneNumber" class="block text-sm font-semibold text-sky-700">Número de Celular
-                  *</label>
+              <div>
+                <label for="guardianPhoneNumber" class="tm-label">Celular *</label>
                 <input
                   type="tel"
                   id="guardianPhoneNumber"
                   formControlName="guardianPhoneNumber"
                   placeholder="Ingrese el número de celular"
-                  class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                  class="tm-input">
                 @if (paymentForm.get('guardianPhoneNumber')?.touched && paymentForm.get('guardianPhoneNumber')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El número de celular es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de celular es obligatorio</p>
                 }
                 @if (paymentForm.get('guardianPhoneNumber')?.touched && paymentForm.get('guardianPhoneNumber')?.errors?.['pattern']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                              clip-rule="evenodd"/>
-                    </svg>
-                    Ingrese un número de celular válido (10 dígitos)
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Ingrese un número de celular válido (10 dígitos)</p>
                 }
               </div>
 
               <!-- Email del Acudiente -->
-              <div class="space-y-3">
-                <label for="guardianEmail" class="block text-sm font-semibold text-sky-700">Correo Electrónico
-                  *</label>
+              <div>
+                <label for="guardianEmail" class="tm-label">Correo electrónico *</label>
                 <input
                   type="email"
                   id="guardianEmail"
                   formControlName="guardianEmail"
                   placeholder="Ingrese el correo electrónico"
-                  class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                  class="tm-input">
                 @if (paymentForm.get('guardianEmail')?.touched && paymentForm.get('guardianEmail')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El correo electrónico es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El correo electrónico es obligatorio</p>
                 }
                 @if (paymentForm.get('guardianEmail')?.touched && paymentForm.get('guardianEmail')?.errors?.['email']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    Ingrese un correo electrónico válido
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Ingrese un correo electrónico válido</p>
                 }
               </div>
 
               <!-- Dirección del Acudiente -->
-              <div class="space-y-3 md:col-span-2">
-                <label for="guardianAddress" class="block text-sm font-semibold text-sky-700">Dirección
-                  *</label>
+              <div class="md:col-span-2">
+                <label for="guardianAddress" class="tm-label">Dirección *</label>
                 <input
                   type="text"
                   id="guardianAddress"
                   formControlName="guardianAddress"
                   maxlength="80"
-                  placeholder="Ingrese la dirección completa"
-                  class="w-full px-6 py-4 rounded-lg border border-sky-300 shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all duration-200 bg-white text-sky-800">
+                  placeholder="Calle, número, barrio"
+                  class="tm-input">
                 @if (paymentForm.get('guardianAddress')?.touched && paymentForm.get('guardianAddress')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    La dirección es obligatoria
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>La dirección es obligatoria</p>
                 }
                 @if (paymentForm.get('guardianAddress')?.touched && paymentForm.get('guardianAddress')?.errors?.['minlength']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    La dirección debe tener al menos 10 caracteres
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>La dirección debe tener al menos 10 caracteres</p>
                 }
               </div>
             </div>
@@ -414,54 +329,41 @@
 
           <!-- Información del Estudiante -->
           @if (!showRegisteredCourses || showAddCourseForm) {
-          <div class="relative z-30 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-10">
-            <!-- Barra de acento superior -->
-            <div class="absolute inset-x-0 top-0 h-1.5 rounded-t-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500"></div>
-            <div class="flex items-center gap-4">
-              <div class="flex-shrink-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-3.5 shadow-lg shadow-emerald-500/30">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14l-9-5 9 5z"/>
+          <div class="tm-card p-5 sm:p-7 relative z-30">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-[#1e7b3c] text-white flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
                 </svg>
               </div>
               <div class="min-w-0">
-                <h3 class="text-xl sm:text-2xl font-bold text-slate-800">Información del Estudiante</h3>
-                <p class="text-sm text-slate-500 mt-0.5">Estudiante que tomará el programa de idiomas</p>
+                <h3 class="text-lg font-bold text-[#14245c] leading-tight">Información de tu hijo</h3>
+                <p class="text-xs text-[#7b859f]">Quien toma el programa</p>
               </div>
             </div>
-            <div class="h-px bg-gradient-to-r from-slate-200 via-slate-100 to-transparent my-7"></div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
               <!-- Tipo de Documento del Estudiante -->
-              <div class="space-y-3">
-                <label for="studentDocumentType" class="block text-sm font-semibold text-green-700">Tipo de Documento
-                  *</label>
+              <div>
+                <label for="studentDocumentType" class="tm-label">Tipo de documento *</label>
                 <select
                   id="studentDocumentType"
                   formControlName="studentDocumentType"
                   (input)="onStudentDocumentTypeChange($event)"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                  class="tm-input">
                   <option value="">Seleccione un tipo de documento</option>
                   @for (type of DOCUMENT_TYPE; track type.id) {
                     <option [value]="type.id">{{ type.name }}</option>
                   }
                 </select>
                 @if (paymentForm.get('studentDocumentType')?.touched && paymentForm.get('studentDocumentType')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El tipo de documento es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El tipo de documento es obligatorio</p>
                 }
               </div>
 
               <!-- Número de Documento del Estudiante -->
-              <div class="space-y-3">
-                <label for="studentDocumentNumber" class="block text-sm font-semibold text-green-700">Número de Documento
-                  *</label>
+              <div>
+                <label for="studentDocumentNumber" class="tm-label">Número de documento *</label>
                 <input
                   type="text"
                   id="studentDocumentNumber"
@@ -472,135 +374,79 @@
                   autocomplete="off"
                   (keypress)="onlyNumbers($event)"
                   (blur)="onStudentDocumentNumberChange($event)"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                  class="tm-input">
                 @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['required']) {
-                   <p class="text-red-500 text-sm mt-2 flex items-center">
-                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                       <path fill-rule="evenodd"
-                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                             clip-rule="evenodd"/>
-                     </svg>
-                     El número de documento es obligatorio
-                   </p>
-                 }
-                 @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['minlength']) {
-                   <p class="text-red-500 text-sm mt-2 flex items-center">
-                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                       <path fill-rule="evenodd"
-                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                             clip-rule="evenodd"/>
-                     </svg>
-                     El número de documento debe tener al menos 6 caracteres
-                   </p>
-                 }
-                 @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['pattern']) {
-                   <p class="text-red-500 text-sm mt-2 flex items-center">
-                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                       <path fill-rule="evenodd"
-                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                             clip-rule="evenodd"/>
-                     </svg>
-                     El número de documento solo puede contener números
-                   </p>
-                 }
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de documento es obligatorio</p>
+                }
+                @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['minlength']) {
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de documento debe tener al menos 6 caracteres</p>
+                }
+                @if (paymentForm.get('studentDocumentNumber')?.touched && paymentForm.get('studentDocumentNumber')?.errors?.['pattern']) {
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El número de documento solo puede contener números</p>
+                }
               </div>
 
               <!-- Nombre del Estudiante -->
-              <div class="space-y-3">
-                <label for="studentFirstName" class="block text-sm font-semibold text-green-700">Nombre *</label>
+              <div>
+                <label for="studentFirstName" class="tm-label">Nombre *</label>
                 <input
                   type="text"
                   id="studentFirstName"
                   formControlName="studentFirstName"
                   (input)="onStudentFirstNameChange($event)"
                   placeholder="Ingrese el nombre"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                  class="tm-input">
                 @if (paymentForm.get('studentFirstName')?.touched && paymentForm.get('studentFirstName')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El nombre es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El nombre es obligatorio</p>
                 }
                 @if (paymentForm.get('studentFirstName')?.touched && paymentForm.get('studentFirstName')?.errors?.['minlength']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El nombre debe tener al menos 2 caracteres
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El nombre debe tener al menos 2 caracteres</p>
                 }
               </div>
 
               <!-- Apellido del Estudiante -->
-              <div class="space-y-3">
-                <label for="studentLastName" class="block text-sm font-semibold text-green-700">Apellido *</label>
+              <div>
+                <label for="studentLastName" class="tm-label">Apellido *</label>
                 <input
                   type="text"
                   id="studentLastName"
                   formControlName="studentLastName"
                   (input)="onStudentLastNameChange($event)"
                   placeholder="Ingrese el apellido"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                  class="tm-input">
                 @if (paymentForm.get('studentLastName')?.touched && paymentForm.get('studentLastName')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El apellido es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El apellido es obligatorio</p>
                 }
                 @if (paymentForm.get('studentLastName')?.touched && paymentForm.get('studentLastName')?.errors?.['minlength']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El apellido debe tener al menos 2 caracteres
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El apellido debe tener al menos 2 caracteres</p>
                 }
               </div>
 
               <!-- Grado del Estudiante -->
-              <div class="space-y-3">
-                <label for="studentGrado" class="block text-sm font-semibold text-green-700">Grado *</label>
+              <div>
+                <label for="studentGrado" class="tm-label">Grado *</label>
                 <select
                   id="studentGrado"
                   formControlName="studentGrado"
                   (change)="onStudentGradoChange($event)"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                  class="tm-input">
                   <option disabled value="">Seleccione el grado</option>
                   @for (gradoItem of grados; track gradoItem.grado) {
                     <option [value]="gradoItem.grado">{{ gradoItem.grado }}</option>
                   }
                 </select>
                 @if (paymentForm.get('studentGrado')?.touched && paymentForm.get('studentGrado')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    El grado es obligatorio
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El grado es obligatorio</p>
                 }
               </div>
 
               <!-- Grupo del Estudiante -->
-              <div class="space-y-3">
-                <label for="studentGrupo" class="block text-sm font-semibold text-green-700">Grupo *</label>
+              <div>
+                <label for="studentGrupo" class="tm-label">Grupo *</label>
                 <select
                   id="studentGrupo"
                   formControlName="studentGrupo"
-                  class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                  class="tm-input">
                   <option value="">Seleccione un grupo</option>
                   <option [value]="' '">No Aplica</option>
                   @for (grado of grado; track grado.id) {
@@ -608,36 +454,16 @@
                   }
                 </select>
                 @if (paymentForm.get('studentGrupo')?.touched && paymentForm.get('studentGrupo')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    Debe seleccionar un grupo
-                  </p>
+                  <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Debe seleccionar un grupo</p>
                 }
               </div>
 
-            <!--  &lt;!&ndash; Programa Abierto &ndash;&gt;
-              <div class="space-y-2 md:col-span-2">
-                <div class="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="isOpenProgram"
-                    formControlName="isOpenProgram"
-                    (change)="onOpenProgramChange($event)"
-                    class="h-5 w-5 rounded border-green-300 text-green-600 focus:ring-green-500" />
-                  <label for="isOpenProgram" class="text-sm font-semibold text-green-700">Es un Programa Independiente</label>
-                </div>
-                <p class="text-xs text-gray-600">Este campo es opcional.</p>
-              </div>-->
-
               @if (!paymentForm.get('isOpenProgram')?.value) {
                 <!-- Colegio del Estudiante -->
-                <div class="space-y-3 md:col-span-2 relative">
-                  <label for="studentSchool" class="block text-sm font-semibold text-green-700">Colegio *</label>
+                <div class="md:col-span-2 relative">
+                  <label for="studentSchool" class="tm-label">Colegio *</label>
                   <div class="relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a1a9bd] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
                     <input
                       type="text"
                       id="studentSchool"
@@ -645,22 +471,19 @@
                       (input)="onSchoolSearch($event)"
                       #schoolSearchInput
                       (focus)="onSchoolSearchFocus()"
-                      placeholder="Buscar colegio..."
-                      class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800"
+                      placeholder="Busca el colegio"
+                      class="tm-input pl-9"
                       autocomplete="off">
-
                   </div>
 
                   @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && (filteredSchools.length > 0 || isLoadingSchools)) {
-                    <div class="absolute z-50 w-full bg-white border border-green-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    <div class="absolute z-50 mt-1 w-full bg-white border border-[#e2e7f0] rounded-xl shadow-lg max-h-60 overflow-y-auto"
                          (touchstart)="onResultsTouchStart()" (mousedown)="onResultsTouchStart()"
                          [ngStyle]="{ '-webkit-overflow-scrolling': 'touch' }">
                       @if (isLoadingSchools) {
-                        <div class="px-4 py-3 text-center">
-                          <div class="flex items-center justify-center space-x-2">
-                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                            <span class="text-green-600 text-sm">Buscando colegios...</span>
-                          </div>
+                        <div class="px-4 py-3 flex items-center justify-center gap-2">
+                          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-[#14245c]"></div>
+                          <span class="text-[#14245c] text-sm">Buscando colegios...</span>
                         </div>
                       }
 
@@ -668,10 +491,10 @@
                         @for (school of filteredSchools; track school.id) {
                           <div
                             (click)="selectSchool(school); $event.stopPropagation()"
-                            class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                            <span class="text-green-800">{{ school.nombre }}</span>
+                            class="px-4 py-3 hover:bg-[#f1f4fa] cursor-pointer border-b border-[#eef1f6] last:border-b-0 text-sm">
+                            <span class="text-[#14245c] font-medium">{{ school.nombre }}</span>
                             @if (school.ciudad) {
-                              <span class="text-gray-500 text-sm ml-2">- {{ school.ciudad }}</span>
+                              <span class="text-[#7b859f] ml-2">· {{ school.ciudad }}</span>
                             }
                           </div>
                         }
@@ -680,548 +503,445 @@
                   }
 
                   @if (paymentForm.get('schoolSearchTerm')?.value && !isSchoolSelected && !isLoadingSchools && filteredSchools.length === 0) {
-                    <div class="absolute z-50 w-full bg-white border border-green-300 rounded-lg shadow-lg">
-                      <div class="px-4 py-3 text-gray-500 text-center">
-                        <svg class="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Colegio no encontrado
-                      </div>
+                    <div class="absolute z-50 mt-1 w-full bg-white border border-[#e2e7f0] rounded-xl shadow-lg px-4 py-4 text-center text-sm text-[#7b859f]">
+                      Colegio no encontrado
                     </div>
                   }
 
                   @if (paymentForm.get('studentSchool')?.touched && paymentForm.get('studentSchool')?.errors?.['required']) {
-                    <p class="text-red-500 text-sm mt-2 flex items-center">
-                      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                              clip-rule="evenodd"/>
-                      </svg>
-                      El colegio es obligatorio
-                    </p>
+                    <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>El colegio es obligatorio</p>
                   }
                 </div>
               } @else {
                 <!-- Institución Educativa -->
-                <div class="space-y-3 md:col-span-2">
-                  <label for="independentInstitution" class="block text-sm font-semibold text-green-700">Institución Educativa</label>
+                <div class="md:col-span-2">
+                  <label for="independentInstitution" class="tm-label">Institución educativa</label>
                   <input
                     type="text"
                     id="independentInstitution"
                     formControlName="independentInstitution"
                     placeholder="Ingrese la institución educativa"
-                    class="w-full px-6 py-4 rounded-lg border border-green-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 bg-white text-green-800">
+                    class="tm-input">
                 </div>
               }
             </div>
           </div>
           }
+          </div>
 
-
-          <!-- Tabla de Cursos Registrados -->
+          <!-- Programas registrados -->
           @if (showRegisteredCourses) {
-            <div class="relative overflow-hidden bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-10 mb-8">
-              <!-- Barra de acento superior -->
-              <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500"></div>
-              <div class="flex items-center gap-4">
-                <div class="flex-shrink-0 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-3.5 shadow-lg shadow-emerald-500/30">
-                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
+            <div id="programas-registrados" class="tm-card p-5 sm:p-7 scroll-mt-24">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+                <div>
+                  <h3 class="text-lg font-bold text-[#14245c] leading-tight">Programas registrados</h3>
+                  <p class="text-xs text-[#7b859f]">Estado de cuenta de cada programa</p>
                 </div>
-                <div class="min-w-0">
-                  <h3 class="text-xl sm:text-2xl font-bold text-slate-800">Programas Registrados</h3>
-                  <p class="text-sm text-slate-500 mt-0.5">Consulta el estado de cuenta y realiza tus pagos</p>
-                </div>
-              </div>
-              <div class="h-px bg-gradient-to-r from-slate-200 via-slate-100 to-transparent my-7"></div>
-
-              <!-- Indicador de scroll para móviles -->
-              <div class="md:hidden flex items-center justify-end mb-2 text-indigo-600 animate-pulse">
-                <span class="text-xs font-semibold mr-1">Desliza para ver más</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                </svg>
+                @if (!showAddCourseForm) {
+                  <button type="button" class="tm-btn tm-btn-dashed tm-btn-sm self-start sm:self-auto"
+                          [disabled]="isGuardianDataIncomplete"
+                          (click)="showAddCourseFormView()">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                    Registrar otro programa
+                  </button>
+                }
               </div>
 
-              <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
-                <table class="w-full bg-white">
-                  <thead class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+              <!-- Tabla (escritorio) -->
+              <div class="hidden md:block overflow-x-auto rounded-xl border border-[#e2e7f0]">
+                <table class="w-full text-sm">
+                  <thead class="bg-[#f7f9fc] text-[0.68rem] uppercase tracking-[0.1em] text-[#7b859f]">
                     <tr>
-                      <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider md:hidden">Acción</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Programa</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre Del Estudiante</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Precio del Programa</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Total Abonado</th>
-                      <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Saldo Pendiente</th>
-                      <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Estado</th>
-                      <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider hidden md:table-cell">Acción</th>
+                      <th class="px-4 py-3 text-left font-bold">Programa</th>
+                      <th class="px-4 py-3 text-left font-bold">Tu hijo</th>
+                      <th class="px-4 py-3 text-left font-bold">Precio</th>
+                      <th class="px-4 py-3 text-left font-bold min-w-[140px]">Progreso de pago</th>
+                      <th class="px-4 py-3 text-left font-bold">Saldo</th>
+                      <th class="px-4 py-3 text-left font-bold">Estado</th>
+                      <th class="px-4 py-3 text-right font-bold">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-emerald-100">
+                  <tbody class="divide-y divide-[#eef1f6]">
                     @for (courseData of registeredCourses; track courseData.id) {
-                        <tr class="transition-colors duration-200">
-                          <!-- Columna Acción (Mobile) -->
-                          <td class="px-6 py-4 text-center md:hidden">
-                            <div class="flex flex-col gap-2 justify-center">
-                              <app-button
-                                variant="success"
-                                size="sm"
-                                [disabled]="isGuardianDataIncomplete"
-                                (btnClick)="onPayCourse(courseData)"
-                                customClass="w-full text-xs">
-                                Pagar
-                              </app-button>
-                              <app-button
-                                variant="primary"
-                                size="sm"
-                                (btnClick)="onViewPayments(courseData)"
-                                customClass="w-full text-xs whitespace-nowrap">
-                                Ver Pagos
-                              </app-button>
-                            </div>
-                          </td>
-                          <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                            @if (courseData.isInscription) {
-                              <div class="flex flex-col">
-                                <span class="text-red-700 font-bold uppercase tracking-wide">INSCRIPCIÓN</span>
-                                <span class="text-gray-900 font-medium">{{ courseData.courseName }}</span>
-                              </div>
-                            } @else {
-                              {{ courseData.courseName }}
-                            }
-                          </td>
-                          <td class="px-6 py-4 text-sm text-gray-900">
-                            <div class="flex flex-col">
-                              <span class="font-medium">{{ courseData.studentName }}</span>
-                              <span class="text-xs text-gray-500 mt-1">{{ courseData.studentDocumentType }}: {{ courseData.studentDocumentNumber }}</span>
-                            </div>
-                          </td>
-                          <td class="px-6 py-4 text-sm text-gray-900">
-                            <div class="flex flex-col items-start" [class.cursor-pointer]="courseData.hasDiscount" [class.group]="courseData.hasDiscount" (click)="courseData.hasDiscount && openDiscountModal(courseData)">
-                              <span [class]="courseData.hasDiscount ? 'font-bold text-violet-700 group-hover:text-violet-900 transition-colors' : 'font-semibold text-black'">
-                                {{ courseData.coursePrice }}
-                              </span>
-                              @if (courseData.hasDiscount) {
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold text-white mt-1 shadow-md bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 animate-pulse transform group-hover:scale-105 transition-transform duration-300">
-                                  <svg class="mr-1 h-3.5 w-3.5 text-yellow-100" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 5a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0v-1H3a1 1 0 010-2h1v-1a1 1 0 011-1zm5-5a1 1 0 011 1v1h1a1 1 0 010 2h-1v1a1 1 0 01-2 0v-1h-1a1 1 0 010-2h1V3a1 1 0 011-1zm0 5a1 1 0 011 1v1h1a1 1 0 010 2h-1v1a1 1 0 01-2 0v-1h-1a1 1 0 010-2h1v-1a1 1 0 011-1zM6 13a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
-                                  </svg>
-                                  ¡Precio Especial!
-                                </span>
-                                <span class="text-xs text-violet-600 mt-1 font-medium group-hover:underline group-hover:text-violet-800 transition-colors flex items-center">
-                                  Ver desglose
-                                  <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </span>
-                              }
-                            </div>
-                          </td>
-                          <td
-                            class="px-6 py-4 text-sm font-semibold text-gray-900">{{ courseData.balance }}
-                          </td>
-                          <td class="px-6 py-4 text-sm font-semibold">
-                            <span [class]="courseData.pendingBalanceNumber > 0 ? 'text-red-600' : 'text-green-600'">
-                              {{ courseData.pendingBalance }}
-                            </span>
-                          </td>
-                          <td class="px-6 py-4 text-center">
-                            <span
-                              [class]="courseData.status === 'PAGADA' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' :
-                                       (courseData.status === 'RECHAZADA' || courseData.status === 'RECHAZADO') ? 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold' :
-                                       'bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold'">
-                              {{ courseData.status }}
-                            </span>
-                          </td>
-                          <td class="px-6 py-4 text-center hidden md:table-cell">
-                            <div class="flex gap-2 justify-center">
-                              <app-button
-                                variant="success"
-                                size="sm"
-                                [disabled]="isGuardianDataIncomplete"
-                                (btnClick)="onPayCourse(courseData)">
-                                Pagar
-                              </app-button>
-                              <app-button
-                                variant="primary"
-                                size="sm"
-                                (btnClick)="onViewPayments(courseData)"
-                                customClass="whitespace-nowrap">
-                                Ver Pagos
-                              </app-button>
-                            </div>
-                          </td>
-                        </tr>
+                      <tr class="hover:bg-[#fafbfd] transition-colors">
+                        <td class="px-4 py-4">
+                          @if (courseData.isInscription) {
+                            <span class="block text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#d4461a]">Inscripción</span>
+                          }
+                          <span class="font-semibold text-[#14245c]">{{ courseData.courseName }}</span>
+                        </td>
+                        <td class="px-4 py-4">
+                          <span class="block font-medium text-[#14245c]">{{ courseData.studentName }}</span>
+                          <span class="block text-xs text-[#7b859f]">{{ courseData.studentDocumentType }} {{ courseData.studentDocumentNumber }}</span>
+                        </td>
+                        <td class="px-4 py-4">
+                          <span class="block font-semibold text-[#14245c] whitespace-nowrap">{{ courseData.coursePrice }}</span>
+                          @if (courseData.hasDiscount) {
+                            <button type="button" class="tm-chip-special mt-1 hover:brightness-95" (click)="openDiscountModal(courseData)">
+                              Precio especial · ver desglose
+                            </button>
+                          }
+                        </td>
+                        <td class="px-4 py-4">
+                          <div class="tm-progress" [class.tm-progress-done]="getPaymentProgress(courseData) >= 100">
+                            <span [style.width.%]="getPaymentProgress(courseData)"></span>
+                          </div>
+                          <span class="block mt-1 text-xs text-[#7b859f] whitespace-nowrap">
+                            @if (getPaymentProgress(courseData) >= 100) { 100% abonado } @else { {{ courseData.balance }} abonado }
+                          </span>
+                        </td>
+                        <td class="px-4 py-4 font-bold whitespace-nowrap"
+                            [ngClass]="courseData.pendingBalanceNumber > 0 ? 'text-[#b3261e]' : 'text-[#1e7b3c]'">
+                          {{ courseData.pendingBalance }}
+                        </td>
+                        <td class="px-4 py-4">
+                          <span [class]="getStatusBadgeClass(courseData.status)">{{ courseData.status }}</span>
+                        </td>
+                        <td class="px-4 py-4">
+                          <div class="flex gap-2 justify-end">
+                            <button type="button" class="tm-btn tm-btn-pay tm-btn-sm"
+                                    [disabled]="isGuardianDataIncomplete"
+                                    (click)="onPayCourse(courseData)">
+                              Pagar
+                            </button>
+                            <button type="button" class="tm-btn tm-btn-outline tm-btn-sm"
+                                    (click)="onViewPayments(courseData)">
+                              Ver pagos
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     }
                   </tbody>
                 </table>
               </div>
 
-              <!-- Botón Registrar Otro Curso -->
-              @if (!showAddCourseForm) {
-                <div class="flex justify-center mt-6">
-                  <app-button
-                    variant="primary"
-                    size="lg"
-                    [disabled]="isGuardianDataIncomplete"
-                    (btnClick)="showAddCourseFormView()"
-                    customClass="min-w-[250px] shadow-lg hover:shadow-xl">
-                    <span class="flex items-center justify-center space-x-2">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                      </svg>
-                      <span>Registrar Otro Programa</span>
-                    </span>
-                  </app-button>
-                </div>
-              }
+              <!-- Tarjetas (móvil) -->
+              <div class="md:hidden space-y-4">
+                @for (courseData of registeredCourses; track courseData.id) {
+                  <div class="rounded-2xl border border-[#e2e7f0] p-4">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        @if (courseData.isInscription) {
+                          <span class="block text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#d4461a]">Inscripción</span>
+                        }
+                        <p class="font-bold text-[#14245c] text-base leading-tight">{{ courseData.courseName }}</p>
+                        <p class="text-xs text-[#7b859f] mt-1">{{ courseData.studentName }} · {{ courseData.studentDocumentType }} {{ courseData.studentDocumentNumber }}</p>
+                      </div>
+                      <span [class]="getStatusBadgeClass(courseData.status)">{{ courseData.status }}</span>
+                    </div>
+
+                    <div class="tm-progress mt-4" [class.tm-progress-done]="getPaymentProgress(courseData) >= 100">
+                      <span [style.width.%]="getPaymentProgress(courseData)"></span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 mt-3">
+                      <div>
+                        <p class="text-[0.7rem] text-[#7b859f]">Precio</p>
+                        <p class="text-sm font-bold text-[#14245c]">{{ courseData.coursePrice }}</p>
+                      </div>
+                      <div>
+                        <p class="text-[0.7rem] text-[#7b859f]">Abonado</p>
+                        <p class="text-sm font-bold text-[#1e7b3c]">{{ courseData.balance }}</p>
+                      </div>
+                      <div>
+                        <p class="text-[0.7rem] text-[#7b859f]">Saldo</p>
+                        <p class="text-sm font-bold" [ngClass]="courseData.pendingBalanceNumber > 0 ? 'text-[#b3261e]' : 'text-[#1e7b3c]'">{{ courseData.pendingBalance }}</p>
+                      </div>
+                    </div>
+
+                    @if (courseData.hasDiscount) {
+                      <button type="button" class="tm-chip-special mt-3" (click)="openDiscountModal(courseData)">
+                        Precio especial · ver desglose
+                      </button>
+                    }
+
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                      <button type="button" class="tm-btn tm-btn-pay"
+                              [disabled]="isGuardianDataIncomplete"
+                              (click)="onPayCourse(courseData)">
+                        Pagar
+                      </button>
+                      <button type="button" class="tm-btn tm-btn-outline"
+                              (click)="onViewPayments(courseData)">
+                        Ver pagos
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
             </div>
           }
 
-          <!-- Selección del Curso -->
+          <!-- Selección del programa -->
           @if (isStudentInfoComplete() && (!showRegisteredCourses || showAddCourseForm)) {
-          <div class="relative overflow-hidden bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 p-6 sm:p-10">
-            <!-- Barra de acento superior -->
-            <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500"></div>
-            <div class="flex items-center gap-4">
-              <div class="flex-shrink-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-3.5 shadow-lg shadow-violet-500/30">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-              </div>
-              <div class="min-w-0">
-                <h3 class="text-xl sm:text-2xl font-bold text-slate-800">Selección del Programa</h3>
-                <p class="text-sm text-slate-500 mt-0.5">Elige el programa de idiomas para tu estudiante</p>
-              </div>
-            </div>
-            <div class="h-px bg-gradient-to-r from-slate-200 via-slate-100 to-transparent my-7"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+            <div class="tm-card p-5 sm:p-7">
+              <h3 class="text-lg font-bold text-[#14245c] mb-5">Selección del programa</h3>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <!-- Selección del Curso -->
-              <div class="space-y-3">
-                <label for="selectedCourse" class="block text-sm font-semibold text-violet-700">Programa *</label>
-                @if (isLoadingCourses) {
-                  <div class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm bg-white text-violet-800 flex items-center">
-                    <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor"
-                            d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Cargando programas...
-                  </div>
-                } @else {
-                  <select
-                    id="selectedCourse"
-                    formControlName="selectedCourse"
-                    (change)="onCourseChange($any($event.target).value)"
-                    class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 bg-white text-violet-800">
-                    <option value="">Seleccione un programa</option>
-                    @for (course of availableCourses; track course.id) {
-                      <option [value]="course.id">{{ course.nombre }}</option>
+              <div class="space-y-4">
+                <div>
+                  <label for="selectedCourse" class="tm-label">Programa *</label>
+                  @if (isLoadingCourses) {
+                    <div class="tm-input flex items-center gap-2 text-[#7b859f]">
+                      <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Cargando programas...
+                    </div>
+                  } @else {
+                    <select
+                      id="selectedCourse"
+                      formControlName="selectedCourse"
+                      (change)="onCourseChange($any($event.target).value)"
+                      class="tm-input">
+                      <option value="">Seleccione un programa</option>
+                      @for (course of availableCourses; track course.id) {
+                        <option [value]="course.id">{{ course.nombre }}</option>
+                      }
+                    </select>
+                  }
+                  @if (isStudentInfoComplete() && paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
+                    <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Debe seleccionar un programa</p>
+                  }
+                </div>
+
+                <!-- Edición del Programa: seleccionable cuando el programa tiene varias ediciones en este colegio -->
+                @if (availableEditions.length > 1) {
+                  <div>
+                    <label for="selectedEdicion" class="tm-label">Edición del programa *</label>
+                    <select
+                      id="selectedEdicion"
+                      formControlName="selectedEdicion"
+                      (change)="onEdicionChange($any($event.target).value)"
+                      class="tm-input">
+                      <option value="">Seleccione una edición</option>
+                      @for (edition of availableEditions; track edition.id) {
+                        <option [value]="edition.id">{{ formatEdicion(edition.edicion) }}</option>
+                      }
+                    </select>
+                    @if (paymentForm.get('selectedEdicion')?.touched && paymentForm.get('selectedEdicion')?.errors?.['required']) {
+                      <p class="tm-error"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Debe seleccionar una edición del programa</p>
                     }
-                  </select>
+                  </div>
                 }
-               @if (isStudentInfoComplete() && paymentForm.get('selectedCourse')?.touched && paymentForm.get('selectedCourse')?.errors?.['required']) {
-                  <p class="text-red-500 text-sm mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"/>
-                    </svg>
-                    Debe seleccionar un programa
-                  </p>
-               }
 
-               <!-- Edición del Programa: seleccionable cuando el programa tiene varias ediciones en este colegio -->
-               @if (availableEditions.length > 1) {
-                 <div class="mt-4">
-                   <label for="selectedEdicion" class="block text-sm font-semibold text-violet-700 mb-2">Edición del Programa *</label>
-                   <select
-                     id="selectedEdicion"
-                     formControlName="selectedEdicion"
-                     (change)="onEdicionChange($any($event.target).value)"
-                     class="w-full px-6 py-4 rounded-lg border border-violet-300 shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200 bg-white text-violet-800">
-                     <option value="">Seleccione una edición</option>
-                     @for (edition of availableEditions; track edition.id) {
-                       <option [value]="edition.id">{{ formatEdicion(edition.edicion) }}</option>
-                     }
-                   </select>
-                   @if (paymentForm.get('selectedEdicion')?.touched && paymentForm.get('selectedEdicion')?.errors?.['required']) {
-                     <p class="text-red-500 text-sm mt-2 flex items-center">
-                       <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                         <path fill-rule="evenodd"
-                               d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                               clip-rule="evenodd"/>
-                       </svg>
-                       Debe seleccionar una edición del programa
-                     </p>
-                   }
-                 </div>
-               } @else if (availableEditions.length === 1 && availableEditions[0].edicion !== null && availableEditions[0].edicion !== undefined && availableEditions[0].edicion !== '') {
-                 <div class="mt-3">
-                   <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-violet-100 text-violet-800 rounded-full text-sm font-semibold">
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
-                     </svg>
-                     {{ formatEdicion(availableEditions[0].edicion) }}
-                   </span>
-                 </div>
-               }
+                <!-- Programa seleccionado -->
+                @if (paymentForm.get('selectedCourse')?.value) {
+                  <div class="flex items-center gap-4 rounded-2xl border-[1.5px] border-[#14245c] p-4">
+                    @if (selectedCourseImageUrl) {
+                      <img [src]="selectedCourseImageUrl" alt="Imagen del programa"
+                           class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-contain bg-white border border-[#e2e7f0] flex-shrink-0">
+                    }
+                    <div class="min-w-0">
+                      <p class="tm-eyebrow !text-[#1e7b3c]">Programa seleccionado</p>
+                      <p class="text-lg font-bold text-[#14245c] leading-tight mt-0.5">{{ selectedCourseName }}</p>
+                      @if (selectedColegioCurso && selectedColegioCurso.edicion !== null && selectedColegioCurso.edicion !== undefined && selectedColegioCurso.edicion !== '') {
+                        <p class="text-xs text-[#7b859f] mt-1">{{ formatEdicion(selectedColegioCurso.edicion) }}</p>
+                      } @else if (availableEditions.length === 1 && availableEditions[0].edicion !== null && availableEditions[0].edicion !== undefined && availableEditions[0].edicion !== '') {
+                        <p class="text-xs text-[#7b859f] mt-1">{{ formatEdicion(availableEditions[0].edicion) }}</p>
+                      }
+                    </div>
+                  </div>
+                }
 
-               @if (paymentForm.get('selectedCourse')?.value && selectedCourseImageUrl) {
-                 <div class="mt-4">
-                   <div class="rounded-2xl p-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500 shadow-xl max-w-sm mx-auto">
-                     <div class="bg-white rounded-2xl p-2">
-                       <img
-                         [src]="selectedCourseImageUrl"
-                         alt="Imagen del Programa"
-                         class="w-full rounded-xl shadow-md" />
-                     </div>
-                   </div>
-                 </div>
-               }
+                <div class="flex items-start gap-2 rounded-xl bg-[#f1f4fa] px-4 py-3 text-xs leading-relaxed">
+                  <svg class="w-4 h-4 text-[#14245c] flex-shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Puedes pagar el programa completo o realizar abonos. Consulta tu saldo en cualquier momento con el documento de tu hijo.
+                </div>
               </div>
-
-
-
-              <!-- Precio del Curso -->
-               @if (paymentForm.get('coursePrice')?.value) {
-                 <div class="space-y-4">
-                   <label class="block text-sm font-semibold text-violet-700">Precio del Programa</label>
-                   <div class="bg-gradient-to-br from-violet-100 via-purple-50 to-indigo-100 p-6 rounded-xl border-2 border-violet-200 shadow-lg">
-                     <div class="flex items-center justify-center space-x-3">
-                       <div class="bg-violet-600 p-3 rounded-full shadow-md">
-                         <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
-                         </svg>
-                       </div>
-                       <div class="text-center w-full">
-                         <p class="text-sm font-medium text-violet-600 uppercase tracking-wide mb-1">Valor del Programa</p>
-                         <p class="text-2xl sm:text-3xl font-bold text-violet-800 leading-tight truncate">{{ paymentForm.get('coursePrice')?.value }}</p>
-                       </div>
-                     </div>
-                   </div>
-
-                   @if (paymentForm.get('courseInscriptionPrice')?.value) {
-                     <div class="space-y-4 mt-4">
-                       <label class="block text-sm font-semibold text-emerald-700">Precio de Inscripción</label>
-                       <div class="bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100 p-6 rounded-xl border-2 border-emerald-200 shadow-lg">
-                         <div class="flex items-center justify-center space-x-3">
-                           <div class="bg-emerald-600 p-3 rounded-full shadow-md">
-                             <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151a4.535 4.535 0 011.676-.662A1 1 0 1011 3v.092a4.535 4.535 0 00-1.676.662C8.602 4.234 8 5.009 8 6c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.223V14a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 11.766 14 10.991 14 10c0-.99-.602-1.765-1.324-2.246-.48-.32-1.054-.545-1.676-.662V5.151z" clip-rule="evenodd" />
-                             </svg>
-                           </div>
-                           <div class="text-center w-full">
-                             <p class="text-sm font-medium text-emerald-600 uppercase tracking-wide mb-1">Valor de Inscripción</p>
-                             <p class="text-2xl sm:text-3xl font-bold text-emerald-800 leading-tight truncate">{{ paymentForm.get('courseInscriptionPrice')?.value }}</p>
-                             @if (selectedInscriptionConvertedCop) {
-                               <p class="mt-2 text-xl sm:text-2xl font-semibold text-emerald-700 whitespace-nowrap">≈ $ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</p>
-                             } @else {
-                               <p class="mt-2 text-sm text-gray-500">(esperando tasa de cambio)</p>
-                             }
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   }
-                   @if (paymentForm.get('selectedCourse')?.value && hasInscription) {
-                     <div class="space-y-4 mt-6">
-                       <label class="block text-sm font-semibold text-indigo-700">Tasa de Cambio (referencia)</label>
-                       @if (isEuroCourse) {
-                         @if (eurToCop) {
-                           <div class="grid grid-cols-1 gap-4">
-                             <div class="bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 p-4 rounded-xl border border-violet-200 shadow">
-                               <div class="flex items-center justify-center space-x-2">
-                                 <span class="text-sm font-medium text-violet-700">1 EUR ≈</span>
-                                 <span class="text-xl font-bold text-violet-900">{{ eurToCop | number:'1.0-0' }} COP</span>
-                               </div>
-                             </div>
-                           </div>
-                         } @else {
-                           <p class="text-sm text-gray-600">Cargando tasa de cambio...</p>
-                         }
-                       } @else {
-                         @if (usdToCop) {
-                           <div class="grid grid-cols-1 gap-4">
-                             <div class="bg-gradient-to-br from-indigo-50 via-blue-50 to-violet-50 p-4 rounded-xl border border-indigo-200 shadow">
-                               <div class="flex items-center justify-center space-x-2">
-                                 <span class="text-sm font-medium text-indigo-700">1 USD ≈</span>
-                                 <span class="text-xl font-bold text-indigo-900">{{ usdToCop | number:'1.0-0' }} COP</span>
-                               </div>
-                             </div>
-                           </div>
-                         } @else {
-                           <p class="text-sm text-gray-600">Cargando tasa de cambio...</p>
-                         }
-                       }
-                     </div>
-                   }
-                 </div>
-               }
             </div>
 
-            <!-- Botones de Acción -->
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8 pt-6 border-t border-violet-200/50">
-              <!-- Botón Volver (solo cuando showAddCourseForm es true) -->
-              @if (showAddCourseForm) {
-              <app-button
-                variant="secondary"
-                size="lg"
-                (btnClick)="backToTableView()"
-                customClass="min-w-[200px] w-full sm:w-auto shadow-lg hover:shadow-xl">
-                <span class="flex items-center justify-center space-x-2">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                  </svg>
-                  <span>Volver</span>
+            <!-- Resumen -->
+            <aside class="rounded-[1.25rem] bg-[#14245c] text-white p-6 shadow-xl lg:sticky lg:top-24">
+              <p class="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/60 mb-4">Resumen</p>
+              <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-3">
+                  <dt class="text-white/75">Precio del programa</dt>
+                  <dd class="font-semibold text-right">{{ paymentForm.get('coursePrice')?.value || '—' }}</dd>
+                </div>
+                @if (paymentForm.get('courseInscriptionPrice')?.value) {
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-white/75">Inscripción</dt>
+                    <dd class="font-semibold text-right">
+                      {{ paymentForm.get('courseInscriptionPrice')?.value }}
+                      @if (selectedInscriptionConvertedCop) {
+                        <span class="block text-xs font-medium text-white/70">≈ $ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</span>
+                      } @else {
+                        <span class="block text-xs font-medium text-white/60">(esperando tasa de cambio)</span>
+                      }
+                    </dd>
+                  </div>
+                }
+                @if (paymentForm.get('selectedCourse')?.value && hasInscription) {
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-white/75">Tasa de cambio (ref.)</dt>
+                    <dd class="font-semibold text-right">
+                      @if (isEuroCourse) {
+                        @if (eurToCop) { 1 EUR ≈ {{ eurToCop | number:'1.0-0' }} } @else { Cargando... }
+                      } @else {
+                        @if (usdToCop) { 1 USD ≈ {{ usdToCop | number:'1.0-0' }} } @else { Cargando... }
+                      }
+                    </dd>
+                  </div>
+                }
+              </dl>
+              <div class="border-t border-white/15 my-5"></div>
+              <div class="flex items-end justify-between gap-3 mb-6">
+                <span class="text-sm text-white/75">Total</span>
+                <span class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  @if (summaryTotalCop) { $ {{ summaryTotalCop | number:'1.0-0' }} } @else { — }
                 </span>
-              </app-button>
+              </div>
+              <div class="space-y-3">
+                <button type="submit" class="tm-btn tm-btn-pay w-full hidden lg:flex"
+                        [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError">
+                  @if (isSubmitting) {
+                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                  }
+                  Confirmar inscripción
+                </button>
+                @if (showAddCourseForm) {
+                  <button type="button" class="tm-btn tm-btn-ghost-light w-full" (click)="backToTableView()">
+                    Volver
+                  </button>
+                }
+              </div>
+            </aside>
+          </div>
+
+          <!-- Barra fija de confirmación (móvil) -->
+          <div class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-[#e2e7f0] px-4 py-3 flex items-center justify-between gap-4 shadow-[0_-8px_24px_-12px_rgba(20,36,92,0.25)]">
+            <div class="min-w-0">
+              <p class="text-[0.7rem] text-[#7b859f]">Total</p>
+              <p class="text-lg font-extrabold text-[#14245c] leading-tight truncate">
+                @if (summaryTotalCop) { $ {{ summaryTotalCop | number:'1.0-0' }} } @else { — }
+              </p>
+            </div>
+            <button type="submit" class="tm-btn tm-btn-pay"
+                    [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError">
+              @if (isSubmitting) {
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
               }
-
-              <!-- Botón de Envío -->
-              <app-button
-                type="submit"
-                variant="primary"
-                size="lg"
-                [disabled]="paymentForm.invalid || isSubmitting || isExchangeRateError"
-                [loading]="isSubmitting"
-                customClass="min-w-[250px] w-full sm:w-auto shadow-lg hover:shadow-xl">
-                <span class="flex items-center justify-center space-x-2">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Registrar Información</span>
-                </span>
-              </app-button>
-            </div>
+              Confirmar
+            </button>
           </div>
           }
         </form>
       </div>
       } @else {
         <!-- Componente de Confirmación -->
-        <app-payment-confirmation
-          [paymentForm]="paymentForm"
-          [courses]="availableCourses"
-          [isSubmitting]="isSubmitting"
-          [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
-          [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
-          [selectedCourseImageUrl]="selectedCourseImageUrl"
-          [selectedColegioCurso]="selectedColegioCurso"
-          (goBack)="goBackToForm()"
-          (confirmSubmit)="confirmAndSubmit()">
-        </app-payment-confirmation>
+        <div class="pt-8">
+          <app-payment-confirmation
+            [paymentForm]="paymentForm"
+            [courses]="availableCourses"
+            [isSubmitting]="isSubmitting"
+            [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
+            [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
+            [selectedCourseImageUrl]="selectedCourseImageUrl"
+            [selectedColegioCurso]="selectedColegioCurso"
+            (goBack)="goBackToForm()"
+            (confirmSubmit)="confirmAndSubmit()">
+          </app-payment-confirmation>
+        </div>
       }
     </div>
   </div>
+
+  <!-- Pie de página -->
+  <footer class="border-t border-[#e2e7f0] bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7b859f]">
+      <span>© Thinking Mind · Portal de inscripciones y pagos</span>
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        Pagos protegidos
+      </span>
+    </div>
+  </footer>
 </div>
 
 <!-- Modal para Ver Pagos -->
 @if (showPaymentsModal) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-      <!-- Header del Modal -->
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 sm:px-6 py-4 flex-shrink-0">
-        <div class="flex justify-between items-center">
-          <h3 class="text-lg sm:text-xl font-semibold">Historial de Pagos</h3>
-          <app-button
-            variant="ghost"
-            size="icon"
-            (btnClick)="closePaymentsModal()"
-            customClass="text-white hover:text-gray-200">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </app-button>
-        </div>
-        @if (selectedAccountData) {
-          <div class="mt-2 text-xs sm:text-sm opacity-90">
-            <p><strong>Estudiante:</strong> {{ selectedAccountData.studentName }}</p>
-            <p><strong>Programa:</strong> {{ selectedAccountData.courseName }}</p>
-            <p><strong>Monto Total:</strong> ${{ selectedAccountData.coursePriceNumber | number }}</p>
-            <p><strong>Total Abonado:</strong> {{ selectedAccountData.balance }}</p>
-            <p><strong>Estado:</strong> {{ selectedAccountData.status }}</p>
-          </div>
-        }
-      </div>
-
-      <!-- Contenido del Modal -->
-      <div class="p-4 sm:p-6 overflow-y-auto flex-1">
-        @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
-          <div class="space-y-4">
-            @for (payment of selectedAccountPayments; track payment.id) {
-              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div>
-                    <label class="text-sm font-medium text-gray-600">ID del Pago</label>
-                    <p class="text-sm text-gray-900 font-mono">{{ payment.id }}</p>
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium text-gray-600">Valor</label>
-                    <p class="text-lg font-semibold text-green-600">${{ payment.valor | number }}</p>
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium text-gray-600">Fecha de Pago</label>
-                    <p class="text-sm text-gray-900">{{ payment.fecha_pago | date:'dd/MM/yyyy HH:mm' }}</p>
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium text-gray-600">Método de Pago</label>
-                    <p class="text-sm text-gray-900">{{ formatPaymentMethod(payment.metodo_pago) }}</p>
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium text-gray-600">Pagador</label>
-                    <p class="text-sm text-gray-900">{{ payment.pagador }}</p>
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium text-gray-600">Número de Transacion</label>
-                    <p class="text-sm text-gray-900 font-mono">{{ payment.numero_transaccion }}</p>
-                  </div>
-                  <div class="md:col-span-2 lg:col-span-3">
-                    <label class="text-sm font-medium text-gray-600">Estado</label>
-                    <span
-                      [class]="payment.estado === 'PAGADO' ? 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold' : 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold'">
-                      {{ payment.estado }}
-                    </span>
-                  </div>
-                </div>
-              </div>
+  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-[#0e1a47]/60 backdrop-blur-[2px] print:hidden">
+    <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+      <div class="px-6 pt-6 pb-4 border-b border-[#eef1f6] flex-shrink-0">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h3 class="text-lg font-bold text-[#14245c]">Historial de pagos</h3>
+            @if (selectedAccountData) {
+              <p class="text-xs text-[#7b859f] mt-1">{{ selectedAccountData.courseName }} · {{ selectedAccountData.studentName }}</p>
             }
           </div>
-        } @else {
-          <div class="text-center py-8">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No hay pagos registrados</h3>
-            <p class="mt-1 text-sm text-gray-500">Esta cuenta no tiene pagos asociados.</p>
+          <button type="button" (click)="closePaymentsModal()" aria-label="Cerrar"
+                  class="!p-0 w-9 h-9 flex-shrink-0 rounded-xl bg-[#f1f4fa] text-[#14245c] flex items-center justify-center hover:bg-[#e6eaf5]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        @if (selectedAccountData) {
+          <div class="grid grid-cols-3 gap-2 mt-4 rounded-xl bg-[#f5f7fb] p-3 text-xs">
+            <div>
+              <p class="text-[#7b859f]">Monto total</p>
+              <p class="font-bold text-[#14245c]">${{ selectedAccountData.coursePriceNumber | number }}</p>
+            </div>
+            <div>
+              <p class="text-[#7b859f]">Total abonado</p>
+              <p class="font-bold text-[#1e7b3c]">{{ selectedAccountData.balance }}</p>
+            </div>
+            <div>
+              <p class="text-[#7b859f]">Estado</p>
+              <span [class]="getStatusBadgeClass(selectedAccountData.status)">{{ selectedAccountData.status }}</span>
+            </div>
           </div>
         }
       </div>
 
-      <!-- Footer del Modal -->
-      <div class="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-3 sm:justify-between flex-shrink-0">
-        <app-button
-          variant="primary"
-          (btnClick)="printPaymentHistory()"
-          customClass="w-full sm:w-auto">
-          <div class="flex items-center justify-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+      <div class="px-6 overflow-y-auto flex-1">
+        @if (selectedAccountPayments && selectedAccountPayments.length > 0) {
+          <ul class="divide-y divide-[#eef1f6]">
+            @for (payment of selectedAccountPayments; track payment.id) {
+              <li class="flex items-start gap-3 py-4">
+                @if (payment.estado === 'PAGADO') {
+                  <span class="w-9 h-9 flex-shrink-0 rounded-xl bg-[#e3f4e8] text-[#1e7b3c] flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  </span>
+                } @else {
+                  <span class="w-9 h-9 flex-shrink-0 rounded-xl bg-[#fde4e1] text-[#b3261e] flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </span>
+                }
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-3">
+                    <p class="font-bold text-[#14245c]">${{ payment.valor | number }}</p>
+                    <span class="text-[0.68rem] font-bold uppercase tracking-wide"
+                          [ngClass]="payment.estado === 'PAGADO' ? 'text-[#1e7b3c]' : 'text-[#b3261e]'">{{ payment.estado }}</span>
+                  </div>
+                  <p class="text-xs text-[#4b5675] mt-0.5">
+                    {{ payment.fecha_pago | date:'dd/MM/yyyy HH:mm' }} · {{ formatPaymentMethod(payment.metodo_pago) }}@if (payment.pagador) { · {{ payment.pagador }} }
+                  </p>
+                  <p class="text-[0.7rem] text-[#7b859f] mt-0.5 break-all">
+                    Transacción #{{ payment.numero_transaccion || 'N/A' }} · ID {{ payment.id }}
+                  </p>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="text-center py-10">
+            <svg class="mx-auto h-10 w-10 text-[#a1a9bd]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span class="text-sm sm:text-base">Imprimir Historial de Pagos</span>
+            <p class="mt-2 text-sm font-semibold text-[#14245c]">No hay pagos registrados</p>
+            <p class="mt-1 text-xs text-[#7b859f]">Esta cuenta no tiene pagos asociados.</p>
           </div>
-        </app-button>
-        <app-button
-          variant="secondary"
-          (btnClick)="closePaymentsModal()"
-          customClass="w-full sm:w-auto">
-          <span class="text-sm sm:text-base">Cerrar</span>
-        </app-button>
+        }
+      </div>
+
+      <div class="px-6 py-5 border-t border-[#eef1f6] flex-shrink-0">
+        <button type="button" class="tm-btn tm-btn-outline w-full" (click)="printPaymentHistory()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Imprimir estado de cuenta
+        </button>
       </div>
     </div>
   </div>
@@ -1229,118 +949,81 @@
 
 <!-- Modal de Pago -->
 @if (showPaymentModal) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-      <!-- Header del Modal -->
-      <div class="flex items-center justify-between p-6 border-b border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900">Realizar Pago</h3>
-        </div>
-        <app-button
-          variant="ghost"
-          size="icon"
-          (btnClick)="closePaymentModal()"
-          customClass="text-gray-400 hover:text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </app-button>
+  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-[#0e1a47]/60 backdrop-blur-[2px] print:hidden">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto font-['Plus_Jakarta_Sans',sans-serif]">
+      <div class="sm:hidden flex justify-center pt-3">
+        <span class="w-10 h-1.5 rounded-full bg-[#d5dbe6]"></span>
       </div>
-
-      <!-- Contenido del Modal -->
-      <div class="p-6">
-        <!-- Información del Curso -->
-        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 mb-6">
-          <div class="flex items-start space-x-4">
+      <div class="px-6 pt-5 sm:pt-6">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0">
             @if (paymentModalData?.courseImageUrl) {
-              <img
-                [src]="paymentModalData.courseImageUrl"
-                [alt]="paymentModalData.courseName"
-                class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-              />
-            } @else {
-              <div class="w-16 h-16 bg-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-              </div>
+              <img [src]="paymentModalData.courseImageUrl" [alt]="paymentModalData.courseName"
+                   class="w-12 h-12 rounded-xl object-contain border border-[#e2e7f0] flex-shrink-0">
             }
-            <div class="flex-1 min-w-0">
-              <h4 class="text-lg font-semibold text-gray-900 truncate">{{ paymentModalData?.courseName }}</h4>
-              <p class="text-sm text-gray-600 mt-1">{{ paymentModalData?.studentName }}</p>
+            <div class="min-w-0">
+              <p class="tm-eyebrow">Realizar pago</p>
+              <h3 class="text-xl font-bold text-[#14245c] leading-tight truncate">{{ paymentModalData?.courseName }}</h3>
+              <p class="text-xs text-[#7b859f] mt-0.5">{{ paymentModalData?.studentName }}</p>
               @if (paymentModalData?.clientName) {
-                <p class="text-sm text-gray-500">Acudiente: {{ paymentModalData.clientName }}</p>
+                <p class="text-xs text-[#7b859f]">Acudiente: {{ paymentModalData.clientName }}</p>
               }
             </div>
           </div>
+          <button type="button" (click)="closePaymentModal()" aria-label="Cerrar"
+                  class="!p-0 w-9 h-9 flex-shrink-0 rounded-xl bg-[#f1f4fa] text-[#14245c] flex items-center justify-center hover:bg-[#e6eaf5]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
 
-        <!-- Resumen de Pago -->
-        <div class="bg-gray-50 rounded-xl p-4 mb-6">
-          <h5 class="text-sm font-semibold text-gray-700 mb-3">Resumen del Pago</h5>
-
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">Valor del programa:</span>
-              <span class="text-sm font-medium text-gray-900">${{ (paymentModalData?.coursePriceNumber || 0) | number:'1.0-0' }}</span>
-            </div>
-
-            @if ((paymentModalData?.balance || 0) > 0) {
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Pagos realizados:</span>
-                <span class="text-sm font-medium text-green-600">-${{ (paymentModalData?.balance || 0) | number:'1.0-0' }}</span>
-              </div>
-            }
-
-            <div class="border-t border-gray-200 pt-2 mt-2">
-              <div class="flex justify-between items-center">
-                <span class="text-base font-semibold text-gray-900">Total a pagar:</span>
-                <span class="text-lg font-bold text-emerald-600">${{ totalAmountToPay | number:'1.0-0' }}</span>
-              </div>
-            </div>
+        <dl class="mt-5 rounded-2xl bg-[#f5f7fb] p-4 space-y-2 text-sm">
+          <div class="flex justify-between">
+            <dt>Precio del programa</dt>
+            <dd class="font-semibold text-[#14245c]">${{ (paymentModalData?.coursePriceNumber || 0) | number:'1.0-0' }}</dd>
           </div>
-        </div>
-
-        <!-- Input de Monto del Pago -->
-        <div class="mb-6">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Monto del pago
-          </label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
-            <input
-              type="text"
-              [value]="getFormattedPaymentAmount()"
-              (input)="onPaymentAmountChange($event)"
-              class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-medium"
-              placeholder="0"
-            />
+          @if ((paymentModalData?.balanceNumber || 0) > 0) {
+            <div class="flex justify-between">
+              <dt>Total abonado</dt>
+              <dd class="font-semibold text-[#1e7b3c]">${{ (paymentModalData?.balanceNumber || 0) | number:'1.0-0' }}</dd>
+            </div>
+          }
+          <div class="flex justify-between">
+            <dt>Saldo pendiente</dt>
+            <dd class="font-bold text-[#b3261e]">${{ totalAmountToPay | number:'1.0-0' }}</dd>
           </div>
-          <p class="text-xs text-gray-500 mt-1">
-            Máximo: ${{ totalAmountToPay | number:'1.0-0' }}
-          </p>
+        </dl>
+
+        <label for="paymentAmount" class="tm-label mt-5">Monto a pagar</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-[#14245c]">$</span>
+          <input
+            #amountInput
+            id="paymentAmount"
+            type="text"
+            inputmode="numeric"
+            [value]="getFormattedPaymentAmount()"
+            (input)="onPaymentAmountChange($event)"
+            class="tm-input !py-3.5 !pl-9 !text-xl !font-bold"
+            placeholder="0"
+          />
         </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button type="button" class="tm-preset" [class.tm-preset-active]="activePaymentPreset === 'half'" (click)="setPaymentPreset('half')">50%</button>
+          <button type="button" class="tm-preset" [class.tm-preset-active]="activePaymentPreset === 'total'" (click)="setPaymentPreset('total')">Saldo total</button>
+          <button type="button" class="tm-preset" [class.tm-preset-active]="activePaymentPreset === 'other'" (click)="setPaymentPreset('other'); amountInput.focus()">Otro valor</button>
+        </div>
+        <p class="text-xs text-[#7b859f] mt-2">Máximo: ${{ totalAmountToPay | number:'1.0-0' }}</p>
       </div>
 
-      <!-- Footer del Modal -->
-      <div class="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <app-button
-          variant="secondary"
-          (btnClick)="closePaymentModal()"
-          customClass="flex-1 bg-white border border-gray-300">
+      <div class="flex flex-col-reverse sm:flex-row gap-3 px-6 py-6">
+        <button type="button" class="tm-btn tm-btn-outline !border-[#d5dbe6] sm:w-auto" (click)="closePaymentModal()">
           Cancelar
-        </app-button>
-        <app-button
-          variant="success"
-          (btnClick)="confirmPayment()"
-          customClass="flex-1 shadow-lg">
-          Confirmar Pago
-        </app-button>
+        </button>
+        <button type="button" class="tm-btn tm-btn-pay flex-1"
+                [disabled]="editablePaymentAmount <= 0"
+                (click)="confirmPayment()">
+          Ir a pagar ${{ editablePaymentAmount | number:'1.0-0' }}
+        </button>
       </div>
     </div>
   </div>
@@ -1348,132 +1031,55 @@
 
 <!-- Modal de Descuento -->
 @if (showDiscountModal && selectedDiscountCourse) {
-  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-    <!-- Overlay con blur y fade -->
-    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" (click)="closeDiscountModal()"></div>
+  <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4 print:hidden">
+    <div class="absolute inset-0 bg-[#0e1a47]/60 backdrop-blur-[2px]" (click)="closeDiscountModal()"></div>
 
-    <!-- Modal Card -->
-    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100 ring-1 ring-black/5">
-
-      <!-- Header con gradiente animado y decoraciones -->
-      <div class="relative bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 p-8 text-white overflow-hidden">
-        <!-- Decoraciones de fondo -->
-        <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
-        <div class="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-purple-500/30 rounded-full blur-xl"></div>
-
-        <!-- Partículas/Estrellas (SVG) -->
-        <svg class="absolute top-4 right-10 w-6 h-6 text-yellow-300 opacity-60 animate-bounce" style="animation-duration: 3s;" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-        <svg class="absolute bottom-6 left-10 w-4 h-4 text-pink-300 opacity-40 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-
-        <div class="relative z-10 flex justify-between items-start">
-          <div>
-            <h3 class="text-2xl font-bold tracking-tight text-white drop-shadow-sm">Desglose del Precio</h3>
-            <p class="text-indigo-100 text-sm mt-1 font-medium bg-white/10 inline-block px-3 py-1 rounded-full backdrop-blur-md">
-              {{ selectedDiscountCourse.courseName }}
-            </p>
-          </div>
-          <button
-            (click)="closeDiscountModal()"
-            class="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all focus:outline-none focus:ring-2 focus:ring-white/50">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
+    <div class="relative bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+      <div class="bg-[#14245c] text-white px-6 py-5 flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h3 class="text-xl font-bold">Desglose del precio</h3>
+          <p class="text-xs text-white/70 mt-1">{{ selectedDiscountCourse.courseName }}</p>
         </div>
+        <button type="button" (click)="closeDiscountModal()" aria-label="Cerrar"
+                class="!p-0 w-9 h-9 flex-shrink-0 rounded-xl bg-white/10 text-white flex items-center justify-center hover:bg-white/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
 
-      <!-- Contenido -->
-      <div class="p-8 space-y-6 bg-white">
-        <!-- Precio Original -->
-        <div class="flex justify-between items-center group">
-          <span class="text-gray-500 font-medium group-hover:text-violet-600 transition-colors">Precio Base</span>
-          <span class="text-gray-400 font-medium text-lg line-through decoration-red-400 decoration-2 group-hover:text-gray-600 transition-colors">
-            {{ selectedDiscountCourse.originalPrice }}
-          </span>
+      <div class="p-6 space-y-4">
+        <div class="flex justify-between items-center text-sm">
+          <span>Precio original</span>
+          <span class="font-semibold text-[#7b859f] line-through">{{ selectedDiscountCourse.originalPrice }}</span>
         </div>
 
-        <!-- Descuento (si existe) -->
         @if (selectedDiscountCourse.hasDiscount) {
-          <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 shadow-sm p-4 group hover:shadow-md transition-all duration-300">
-            <!-- Pattern decorativo -->
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 8px 8px;"></div>
-
-            <div class="relative flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                  </svg>
-                </div>
-                <div class="flex flex-col">
-                  <span class="text-emerald-900 font-bold text-sm">Descuento Aplicado</span>
-                  <span class="text-emerald-600 text-xs font-medium">Cupón Automático</span>
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="block text-emerald-700 font-black text-xl tracking-tight">- {{ selectedDiscountCourse.discountAmount }}</span>
-                <span class="inline-flex items-center justify-end px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
-                  {{ selectedDiscountCourse.discountPercentage }}% OFF
-                </span>
-              </div>
-            </div>
+          <div class="flex justify-between items-center gap-3 rounded-xl bg-[#fde7df] px-4 py-3 text-sm font-bold text-[#a93612]">
+            <span>Descuento aplicado@if (selectedDiscountCourse.discountPercentage) { · {{ selectedDiscountCourse.discountPercentage }}%}</span>
+            <span class="whitespace-nowrap">- {{ selectedDiscountCourse.discountAmount }}</span>
           </div>
         } @else {
-          <div class="flex justify-between items-center p-4 rounded-xl bg-gray-50 border border-gray-100 border-dashed">
-            <span class="text-gray-400 font-medium italic flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Sin descuentos aplicados
-            </span>
-            <span class="text-gray-300 font-bold">- $ 0</span>
+          <div class="flex justify-between items-center rounded-xl bg-[#f5f7fb] px-4 py-3 text-sm text-[#7b859f]">
+            <span>Sin descuentos aplicados</span>
+            <span class="font-semibold">- $ 0</span>
           </div>
         }
 
-        <!-- Separador -->
-        <div class="border-t border-gray-100 my-2"></div>
+        <div class="border-t border-[#eef1f6]"></div>
 
-        <!-- Precio Final -->
-        <div class="flex justify-between items-end bg-slate-50 p-4 rounded-xl border border-slate-100">
-          <div class="flex flex-col">
-            <span class="text-gray-600 font-semibold text-sm uppercase tracking-wide">Total a Pagar</span>
-            <span class="text-xs text-violet-500 font-medium mt-1">Precio Final</span>
-          </div>
-          <div class="text-right">
-            <span class="block text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 tracking-tighter filter drop-shadow-sm">
-              {{ selectedDiscountCourse.coursePrice }}
-            </span>
-          </div>
+        <div class="flex justify-between items-end">
+          <span class="text-sm">Precio final</span>
+          <span class="text-3xl font-extrabold text-[#14245c] tracking-tight">{{ selectedDiscountCourse.coursePrice }}</span>
         </div>
 
-        <!-- Mensaje Motivacional -->
-         @if (selectedDiscountCourse.hasDiscount) {
-          <div class="relative bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 p-4 rounded-xl shadow-sm mt-4 overflow-hidden">
-            <div class="absolute -right-2 -top-2 text-yellow-100 opacity-50 transform rotate-12">
-               <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-            </div>
-            <div class="relative flex items-start gap-3 z-10">
-              <div class="bg-yellow-100 p-2 rounded-full text-amber-500 flex-shrink-0 animate-bounce" style="animation-duration: 2s;">
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 5a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0v-1H3a1 1 0 010-2h1v-1a1 1 0 011-1zm5-5a1 1 0 011 1v1h1a1 1 0 010 2h-1v1a1 1 0 01-2 0v-1h-1a1 1 0 010-2h1v-1a1 1 0 011-1zM6 13a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <h4 class="text-amber-800 font-bold text-sm">¡Ahorro Exclusivo!</h4>
-                <p class="text-sm text-amber-700 leading-relaxed mt-0.5">
-                  Estás obteniendo este programa con un precio preferencial. ¡Aprovecha esta oportunidad!
-                </p>
-              </div>
-            </div>
+        @if (selectedDiscountCourse.hasDiscount) {
+          <div class="flex items-center gap-2 rounded-xl bg-[#e3f4e8] px-4 py-3 text-sm font-semibold text-[#1e7b3c]">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+            Ahorras {{ selectedDiscountCourse.discountAmount }} en este programa
           </div>
         }
-      </div>
 
-      <!-- Footer -->
-      <div class="bg-gray-50 px-8 py-5 flex justify-center border-t border-gray-100">
-        <button
-          (click)="closeDiscountModal()"
-          class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-violet-200 hover:shadow-xl hover:shadow-violet-300 transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 flex items-center justify-center gap-2 group">
-          <span>Entendido, gracias</span>
-          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        <button type="button" class="tm-btn tm-btn-navy w-full" (click)="closeDiscountModal()">
+          Entendido
         </button>
       </div>
     </div>
@@ -1610,5 +1216,3 @@
   </div>
 </div>
 }
-
-

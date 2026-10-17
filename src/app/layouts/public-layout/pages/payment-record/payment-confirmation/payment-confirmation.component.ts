@@ -1,14 +1,13 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup } from '@angular/forms';
-import { AppButtonComponent } from '../../../../../components/app-button/app-button.component';
 
 import { Course } from '../../../../../core/models/Course';
 
 @Component({
   selector: 'app-payment-confirmation',
   standalone: true,
-  imports: [CommonModule, AppButtonComponent],
+  imports: [CommonModule],
   templateUrl: './payment-confirmation.component.html',
   styleUrls: ['./payment-confirmation.component.css']
 })

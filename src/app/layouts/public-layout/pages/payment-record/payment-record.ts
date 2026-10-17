@@ -23,7 +23,6 @@ import { ExchangeRateService } from '../../../../core/services/exchange-rate.ser
 import { AccountReceivable, PaymentModel } from '../../../../core/models/AccountReceivable';
 import { Grupo } from '../../../../core/models/School';
 import { environment } from '../../../../../environments/environment';
-import { AppButtonComponent } from '../../../../components/app-button/app-button.component';
 import * as CryptoJS from 'crypto-js';
 
 declare var WidgetCheckout: any;
@@ -31,7 +30,7 @@ declare var WidgetCheckout: any;
 @Component({
   selector: 'app-payment-record',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent, AppButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })
@@ -1758,6 +1757,62 @@ export class PaymentRecord implements OnInit {
     this.selectedDiscountCourse = null;
   }
 
+  // ---- Ayudas de presentación del rediseño (no alteran la lógica de negocio) ----
+
+  // Atajo de monto activo en el modal de pago, según el valor actual
+  get activePaymentPreset(): 'half' | 'total' | 'other' {
+    if (this.totalAmountToPay > 0 && this.editablePaymentAmount === this.totalAmountToPay) return 'total';
+    if (this.totalAmountToPay > 0 && this.editablePaymentAmount === Math.round(this.totalAmountToPay / 2)) return 'half';
+    return 'other';
+  }
+
+  setPaymentPreset(preset: 'half' | 'total' | 'other'): void {
+    if (preset === 'half') {
+      this.editablePaymentAmount = Math.round(this.totalAmountToPay / 2);
+    } else if (preset === 'total') {
+      this.editablePaymentAmount = this.totalAmountToPay;
+    } else {
+      this.editablePaymentAmount = 0;
+    }
+  }
+
+  // Porcentaje abonado de una cuenta (0-100)
+  getPaymentProgress(courseData: any): number {
+    const price = Number(courseData?.coursePriceNumber || 0);
+    const paid = Number(courseData?.balanceNumber || 0);
+    if (price <= 0) return paid > 0 ? 100 : 0;
+    return Math.max(0, Math.min(100, Math.round((paid / price) * 100)));
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const value = (status || '').toUpperCase();
+    if (value === 'PAGADA' || value === 'PAGADO') return 'tm-badge tm-badge-paid';
+    if (value === 'RECHAZADA' || value === 'RECHAZADO') return 'tm-badge tm-badge-rejected';
+    if (value === 'EN PROCESO' || value === 'EN_PROCESO') return 'tm-badge tm-badge-process';
+    return 'tm-badge tm-badge-pending';
+  }
+
+  get selectedCourseName(): string {
+    const id = this.paymentForm?.get('selectedCourse')?.value;
+    return this.availableCourses.find(course => course.id === id)?.nombre || '';
+  }
+
+  // Total estimado en COP: precio del programa + inscripción convertida
+  get summaryTotalCop(): number | null {
+    const priceText: string = this.paymentForm?.get('coursePrice')?.value || '';
+    const price = priceText ? this.parseCurrencyToNumber(priceText) || 0 : 0;
+    if (!price) return null;
+    return price + (this.hasInscription ? (this.selectedInscriptionConvertedCop || 0) : 0);
+  }
+
+  scrollToSection(sectionId: string, focusId?: string): void {
+    const el = document.getElementById(sectionId);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (focusId) {
+      setTimeout(() => (document.getElementById(focusId) as HTMLElement | null)?.focus({ preventScroll: true }), 500);
+    }
+  }
+
   onPaymentAmountChange(event: any): void {
     let inputValue = event.target.value.replace(/[^0-9]/g, '');
 
@@ -1780,7 +1835,7 @@ export class PaymentRecord implements OnInit {
     if (this.editablePaymentAmount === 0) {
       return '';
     }
-    return 'COP   ' + this.formatNumberWithCommas(this.editablePaymentAmount);
+    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(this.editablePaymentAmount);
   }
 
   // Función para generar referencia única usando el ID de la cuenta de cobro
