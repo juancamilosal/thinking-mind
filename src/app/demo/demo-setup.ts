@@ -103,6 +103,11 @@ class DemoWidgetCheckout {
 
 function mountPanel(): void {
   const wrap = el('div', 'position:fixed;left:12px;bottom:12px;z-index:9999;font-family:Plus Jakarta Sans,Poppins,sans-serif;');
+  wrap.id = 'tm-demo-panel';
+  // El panel no debe salir en el comprobante impreso
+  const printStyle = document.createElement('style');
+  printStyle.textContent = '@media print { #tm-demo-panel { display: none !important; } }';
+  document.head.appendChild(printStyle);
   const pill = el('button', 'background:#d4461a;color:#fff;border:none;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer;', 'Modo demostración');
   const panel = el('div', 'display:none;margin-bottom:8px;width:270px;background:#fff;color:#14245c;border-radius:16px;padding:14px;box-shadow:0 12px 30px rgba(14,26,71,.25);border:1px solid #e2e7f0;font-size:12px;');
   panel.innerHTML =
