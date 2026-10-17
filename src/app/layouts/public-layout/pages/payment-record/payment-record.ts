@@ -9,7 +9,6 @@ import { Course } from '../../../../core/models/Course';
 import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
 import { ClientService } from '../../../../core/services/client.service';
 import { SchoolService } from '../../../../core/services/school.service';
-import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
 import { Client } from '../../../../core/models/Clients';
 import { StudentService } from '../../../../core/services/student.service';
 import { Student } from '../../../../core/models/Student';
@@ -30,7 +29,7 @@ declare var WidgetCheckout: any;
 @Component({
   selector: 'app-payment-record',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaymentConfirmationComponent, NotificationModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NotificationModalComponent],
   templateUrl: './payment-record.html',
   styleUrl: './payment-record.css'
 })
@@ -52,6 +51,7 @@ export class PaymentRecord implements OnInit {
   isLoadingCourses = false;
   isLoadingSchools = false;
   isSchoolSelected = false;
+  // Controla la ventana de confirmación de la inscripción
   showConfirmation = false;
   isSearchingClient = false;
   @ViewChild('schoolSearchInput') schoolSearchInputRef?: ElementRef<HTMLInputElement>;

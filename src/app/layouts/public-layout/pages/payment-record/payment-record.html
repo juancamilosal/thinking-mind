@@ -24,7 +24,6 @@
   <div class="relative z-10 pb-28 lg:pb-16">
     <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-14">
 
-      @if (!showConfirmation) {
       <!-- Hero -->
       <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center pt-8 sm:pt-12 mb-10">
         <div>
@@ -839,22 +838,6 @@
           }
         </form>
       </div>
-      } @else {
-        <!-- Componente de Confirmación -->
-        <div class="pt-8">
-          <app-payment-confirmation
-            [paymentForm]="paymentForm"
-            [courses]="availableCourses"
-            [isSubmitting]="isSubmitting"
-            [schoolSearchTerm]="paymentForm.get('schoolSearchTerm')?.value || ''"
-            [selectedInscriptionConvertedCop]="selectedInscriptionConvertedCop"
-            [selectedCourseImageUrl]="selectedCourseImageUrl"
-            [selectedColegioCurso]="selectedColegioCurso"
-            (goBack)="goBackToForm()"
-            (confirmSubmit)="confirmAndSubmit()">
-          </app-payment-confirmation>
-        </div>
-      }
     </div>
   </div>
 
@@ -1089,6 +1072,101 @@
 
         <button type="button" class="tm-btn tm-btn-navy w-full" (click)="closeDiscountModal()">
           Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirmación de la inscripción -->
+@if (showConfirmation) {
+  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-[#0e1a47]/60 backdrop-blur-[2px] print:hidden">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="sm:hidden flex justify-center pt-3">
+        <span class="w-10 h-1.5 rounded-full bg-[#d5dbe6]"></span>
+      </div>
+      <div class="px-6 pt-5 sm:pt-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="tm-eyebrow">Confirmar inscripción</p>
+            <h3 class="text-xl font-bold text-[#14245c] leading-tight mt-0.5">¿Todo está correcto?</h3>
+            <p class="text-xs text-[#7b859f] mt-1">Revisa estos datos antes de registrar la inscripción.</p>
+          </div>
+          <button type="button" (click)="goBackToForm()" aria-label="Cerrar" [disabled]="isSubmitting"
+                  class="!p-0 w-9 h-9 flex-shrink-0 rounded-xl bg-[#f1f4fa] text-[#14245c] flex items-center justify-center hover:bg-[#e6eaf5]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        @if (paymentForm.get('selectedCourse')?.value) {
+          <div class="mt-5 flex items-center gap-3 rounded-2xl border-[1.5px] border-[#14245c] p-3">
+            @if (selectedCourseImageUrl) {
+              <img [src]="selectedCourseImageUrl" alt="Imagen del programa"
+                   class="w-14 h-14 rounded-xl object-contain bg-white border border-[#e2e7f0] flex-shrink-0">
+            }
+            <div class="min-w-0">
+              <p class="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#1e7b3c]">Programa</p>
+              <p class="font-bold text-[#14245c] leading-tight">{{ selectedCourseName }}</p>
+              @if (selectedColegioCurso && selectedColegioCurso.edicion !== null && selectedColegioCurso.edicion !== undefined && selectedColegioCurso.edicion !== '') {
+                <p class="text-xs text-[#7b859f] mt-0.5">{{ formatEdicion(selectedColegioCurso.edicion) }}</p>
+              }
+            </div>
+          </div>
+        }
+
+        <dl class="mt-4 divide-y divide-[#eef1f6] text-sm">
+          <div class="flex justify-between gap-4 py-2.5">
+            <dt>Tu hijo</dt>
+            <dd class="font-semibold text-[#14245c] text-right">
+              {{ paymentForm.get('studentFirstName')?.value }} {{ paymentForm.get('studentLastName')?.value }}
+              <span class="block text-xs font-medium text-[#7b859f]">{{ paymentForm.get('studentDocumentType')?.value }} {{ paymentForm.get('studentDocumentNumber')?.value }}</span>
+            </dd>
+          </div>
+          <div class="flex justify-between gap-4 py-2.5">
+            <dt>Colegio</dt>
+            <dd class="font-semibold text-[#14245c] text-right">
+              {{ paymentForm.get('schoolSearchTerm')?.value || 'No seleccionado' }}
+              <span class="block text-xs font-medium text-[#7b859f]">Grado {{ getCombinedGrado() }}</span>
+            </dd>
+          </div>
+          <div class="flex justify-between gap-4 py-2.5">
+            <dt>Acudiente</dt>
+            <dd class="font-semibold text-[#14245c] text-right">{{ paymentForm.get('guardianFirstName')?.value }} {{ paymentForm.get('guardianLastName')?.value }}</dd>
+          </div>
+        </dl>
+
+        <dl class="mt-3 rounded-2xl bg-[#f5f7fb] p-4 space-y-2 text-sm">
+          <div class="flex justify-between gap-3">
+            <dt>Precio del programa</dt>
+            <dd class="font-semibold text-[#14245c]">{{ paymentForm.get('coursePrice')?.value }}</dd>
+          </div>
+          @if (hasInscription && selectedInscriptionConvertedCop) {
+            <div class="flex justify-between gap-3">
+              <dt>Inscripción</dt>
+              <dd class="font-semibold text-[#14245c]">$ {{ selectedInscriptionConvertedCop | number:'1.0-0' }}</dd>
+            </div>
+          }
+          <div class="flex justify-between gap-3 pt-2 border-t border-[#e2e7f0]">
+            <dt class="font-semibold text-[#14245c]">Total</dt>
+            <dd class="text-lg font-extrabold text-[#14245c]">
+              @if (summaryTotalCop) { $ {{ summaryTotalCop | number:'1.0-0' }} } @else { — }
+            </dd>
+          </div>
+        </dl>
+        <p class="mt-3 text-xs text-[#7b859f]">No se realiza ningún cobro ahora. Podrás pagar el total o hacer abonos desde "Programas registrados".</p>
+      </div>
+
+      <div class="flex flex-col-reverse sm:flex-row gap-3 px-6 py-6">
+        <button type="button" class="tm-btn tm-btn-outline !border-[#d5dbe6] sm:w-auto" [disabled]="isSubmitting" (click)="goBackToForm()">
+          Revisar
+        </button>
+        <button type="button" class="tm-btn tm-btn-pay flex-1" [disabled]="isSubmitting" (click)="confirmAndSubmit()">
+          @if (isSubmitting) {
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            Registrando...
+          } @else {
+            Sí, inscribir
+          }
         </button>
       </div>
     </div>
