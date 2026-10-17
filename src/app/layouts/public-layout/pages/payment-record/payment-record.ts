@@ -565,6 +565,7 @@ export class PaymentRecord implements OnInit {
         const courseData = {
           id: cuenta.id,
           courseName: cuenta.curso_id?.nombre || 'N/A',
+          courseImageUrl: cuenta.curso_id?.img ? `${environment.assets}/${cuenta.curso_id.img}` : (this.courses.find(c => c.id === cuenta.curso_id?.id)?.img_url || null),
           isInscription: isInscription,
           studentName: student ? `${student.nombre} ${student.apellido}` : `${cuenta.estudiante_id.nombre} ${cuenta.estudiante_id.apellido}`,
           studentDocumentType: student ? student.tipo_documento : cuenta.estudiante_id.tipo_documento,
@@ -1782,6 +1783,11 @@ export class PaymentRecord implements OnInit {
     const paid = Number(courseData?.balanceNumber || 0);
     if (price <= 0) return paid > 0 ? 100 : 0;
     return Math.max(0, Math.min(100, Math.round((paid / price) * 100)));
+  }
+
+  // Imagen del programa de una cuenta registrada (con respaldo en el listado de cursos cargado)
+  getRegisteredCourseImage(courseData: any): string | null {
+    return courseData?.courseImageUrl || this.courses.find(c => c.id === courseData?.courseId)?.img_url || null;
   }
 
   getStatusBadgeClass(status: string): string {
