@@ -5,6 +5,16 @@
   "buildCommand": "npx ng build --configuration development && mv dist/thinkingmind-fe/browser/index.csr.html dist/thinkingmind-fe/browser/index.html",
   "outputDirectory": "dist/thinkingmind-fe/browser",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/propuesta-web",
+      "destination": "/propuesta-web/",
+      "permanent": false
+    }
   ]
 }

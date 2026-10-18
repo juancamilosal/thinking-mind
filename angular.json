@@ -22,6 +22,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "propuesta-web",
+                "output": "propuesta-web"
               }
             ],
             "styles": [
