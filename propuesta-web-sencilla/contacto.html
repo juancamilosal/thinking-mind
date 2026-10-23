@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Contacto · Thinking Mind</title>
+<meta name="description" content="Contáctanos: correo, teléfonos, dirección en Chía y formulario de contacto de Thinking Mind.">
+<link rel="icon" href="img/simbolo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/datos.js" defer></script>
+<script src="js/idiomas.js" defer></script>
+<script src="js/sitio.js" defer></script>
+</head>
+<body data-pagina="contacto">
+<main id="contenido">
+
+  <section class="portadilla">
+    <img src="media/programas/will-go-1.jpg" alt="">
+    <div class="contenedor portadilla__texto">
+      <nav class="migas" aria-label="Ruta"><a href="index.html">Inicio</a><span aria-hidden="true">/</span><span>Contacto</span></nav>
+      <p class="etiqueta etiqueta--clara">Contáctanos</p>
+      <h1>Hablemos de tu próxima aventura</h1>
+      <p>¿Tienes preguntas, comentarios o sugerencias? ¡No dudes en decirnos!</p>
+    </div>
+  </section>
+
+  <section class="seccion seccion--crema" id="formulario">
+    <div class="contenedor contacto">
+      <div>
+        <p class="etiqueta">Escríbenos</p>
+        <h2 class="titulo-grande">Estamos para ayudarte</h2>
+        <p class="espacio-arriba texto-suave">Un asesor te ayuda a elegir el programa ideal y resuelve tus dudas sobre fechas, precios y planes de pago.</p>
+        <ul class="contacto__datos">
+          <li><span class="icono" data-icono="correo"></span><div><span>Correo</span><a href="mailto:tm@thinkingmind.co">tm@thinkingmind.co</a></div></li>
+          <li><span class="icono" data-icono="telefono"></span><div><span>Teléfonos</span><a href="tel:+5718841826">+57 1 884 1826</a> · <a href="tel:+573132807204">+57 313 280 7204</a></div></li>
+          <li><span class="icono" data-icono="chat"></span><div><span>WhatsApp</span><a href="https://wa.me/573213711595" target="_blank" rel="noopener">+57 321 371 1595</a></div></li>
+          <li><span class="icono" data-icono="ubicacion"></span><div><span>Visítanos</span><a href="https://www.google.com/maps/search/?api=1&query=Cra%203%20%23%2022-01%20Ch%C3%ADa%20Cundinamarca" target="_blank" rel="noopener">Cra 3 # 22 – 01, Bl. 06, Of. 105 · Chía, Cundinamarca</a></div></li>
+          <li><span class="icono" data-icono="reloj"></span><div><span>Atención</span>Atención internacional 24/7</div></li>
+        </ul>
+        <p class="etiqueta espacio-grande">Síguenos en redes</p>
+        <div class="redes" data-redes></div>
+      </div>
+      <form class="formulario" data-prototipo novalidate>
+        <div class="campo campo--completo"><label for="c-nombre">Nombre completo *</label><input id="c-nombre" autocomplete="name" required></div>
+        <div class="campo"><label for="c-correo">Correo electrónico *</label><input id="c-correo" type="email" autocomplete="email" required></div>
+        <div class="campo"><label for="c-telefono">Teléfono o celular (opcional)</label><input id="c-telefono" type="tel" inputmode="numeric" autocomplete="tel"></div>
+        <div class="campo campo--completo"><label for="c-asunto">Asunto</label>
+          <select id="c-asunto"><option>Información de un programa</option><option>Inscripciones</option><option>Pagos</option><option>Programas para colegios</option><option>Trabaja con nosotros</option><option>Otro</option></select></div>
+        <div class="campo campo--completo"><label for="c-mensaje">Mensaje *</label><textarea id="c-mensaje" rows="5" required placeholder="Cuéntanos en qué te podemos ayudar"></textarea></div>
+        <button type="submit" class="boton boton--naranja campo--completo">Enviar mensaje</button>
+        <p class="formulario__ok campo--completo" role="status" hidden>¡Gracias! Recibimos tu mensaje y te responderemos pronto. (Prototipo: el formulario no envía información.)</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Atajos</p>
+        <h2>¿Qué estás buscando?</h2>
+      </div>
+      <div class="lineas">
+        <a class="linea" href="programas.html"><img src="media/programas/summer-camp-1.jpg" alt="" loading="lazy"><div class="linea__cuerpo"><h3>Conocer los programas</h3><p>Viajes internacionales, experiencias en Colombia y programas online.</p></div></a>
+        <a class="linea" href="inscripcion.html#formulario"><img src="media/programas/grow-camp-4.jpg" alt="" loading="lazy"><div class="linea__cuerpo"><h3>Inscribirme a un viaje</h3><p>Llena el formulario de inscripción y te contactamos.</p></div></a>
+        <a class="linea" href="https://appthinkingmind.com/payment-record"><img src="media/programas/ace-programme-3.jpg" alt="" loading="lazy"><div class="linea__cuerpo"><h3>Hacer un pago</h3><p>Consulta tu saldo y abona en línea desde el portal de pagos.</p></div></a>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

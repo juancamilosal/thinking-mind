@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cómo inscribirte · Thinking Mind</title>
+<meta name="description" content="Inscríbete a los programas de Thinking Mind: pasos, formulario de inscripción, pagos en línea y preguntas frecuentes.">
+<link rel="icon" href="img/simbolo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/datos.js" defer></script>
+<script src="js/idiomas.js" defer></script>
+<script src="js/sitio.js" defer></script>
+</head>
+<body data-pagina="inscripcion">
+<main id="contenido">
+
+  <section class="portadilla">
+    <img src="media/programas/winter-camp-6.jpg" alt="">
+    <div class="contenedor portadilla__texto">
+      <nav class="migas" aria-label="Ruta"><a href="index.html">Inicio</a><span aria-hidden="true">/</span><span>Cómo inscribirte</span></nav>
+      <p class="etiqueta etiqueta--clara">Inscripciones</p>
+      <h1>El primer paso hacia una gran aventura</h1>
+      <p>Déjanos tu información y te contactaremos pronto para continuar con el proceso de inscripción.</p>
+    </div>
+  </section>
+
+  <!-- Pasos -->
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Cómo inscribirte</p>
+        <h2>Cuatro pasos para empezar</h2>
+      </div>
+      <ol class="pasos">
+        <li><span class="pasos__num">1</span><b>Elige el programa</b><span>Viajes, Colombia u online, según la edad y el momento del año.</span></li>
+        <li><span class="pasos__num">2</span><b>Llena el formulario</b><span>Con los datos del estudiante y del acudiente.</span></li>
+        <li><span class="pasos__num">3</span><b>Habla con un asesor</b><span>Te contactamos para resolver tus dudas y contarte fechas y precios.</span></li>
+        <li><span class="pasos__num">4</span><b>Paga en línea</b><span>Paga el total o por abonos desde el portal de pagos.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Formulario -->
+  <section class="seccion seccion--crema" id="formulario">
+    <div class="contenedor dos-col dos-col--formulario">
+      <div>
+        <p class="etiqueta">Inscripción a programas</p>
+        <h2 class="titulo-grande">Formulario de inscripción</h2>
+        <div class="texto-largo espacio-arriba">
+          <p>Si deseas inscribirte a alguno de nuestros programas de viaje y descubrimiento, déjanos tu información y te contactaremos prontamente para continuar con el proceso.</p>
+          <p>Ten en cuenta las fechas y el enfoque de cada programa. Si aún no estás seguro, elige “No estoy seguro/a” y te asesoramos.</p>
+        </div>
+        <img src="media/programas/ace-programme-4.jpg" alt="Estudiantes de Thinking Mind" class="foto-redonda espacio-grande" loading="lazy">
+      </div>
+      <form class="formulario" data-prototipo novalidate>
+        <p class="formulario__titulo">Datos del estudiante</p>
+        <div class="campo"><label for="e-nombre">Nombre *</label><input id="e-nombre" autocomplete="given-name" required></div>
+        <div class="campo"><label for="e-apellidos">Apellidos *</label><input id="e-apellidos" autocomplete="family-name" required></div>
+        <div class="campo"><label for="e-colegio">Colegio o institución educativa *</label><input id="e-colegio" required></div>
+        <div class="campo"><label for="e-ciudad">Ciudad</label><input id="e-ciudad" autocomplete="address-level2"></div>
+        <div class="campo"><label for="e-curso">Curso *</label>
+          <select id="e-curso" required><option value="">Curso del estudiante</option><option>5°</option><option>6°</option><option>7°</option><option>8°</option><option>9°</option><option>10°</option><option>11°</option><option value="No aplica">No aplica</option></select></div>
+        <div class="campo"><label for="e-edad">Edad *</label>
+          <select id="e-edad" required><option value="">Edad del estudiante</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18+</option></select></div>
+        <div class="campo"><label for="e-tipo">Tipo de documento *</label>
+          <select id="e-tipo" required><option value="">Selecciona</option><option value="TI">Tarjeta de identidad</option><option value="CC">Cédula de ciudadanía</option><option value="PA">Pasaporte</option></select></div>
+        <div class="campo"><label for="e-documento">Número de documento *</label><input id="e-documento" inputmode="numeric" required></div>
+        <div class="campo"><label for="e-correo">Correo del estudiante (opcional)</label><input id="e-correo" type="email"></div>
+        <div class="campo"><label for="e-celular">Celular del estudiante (opcional)</label><input id="e-celular" type="tel" inputmode="numeric"></div>
+        <div class="campo"><label for="e-rh">RH (grupo sanguíneo)</label>
+          <select id="e-rh"><option value="">Selecciona</option><option>O-</option><option>O+</option><option>A-</option><option>A+</option><option>B-</option><option>B+</option><option>AB-</option><option>AB+</option></select></div>
+        <div class="campo"><label for="e-alergias">Alergias o condiciones médicas</label><input id="e-alergias" placeholder="Opcional"></div>
+
+        <p class="formulario__titulo">Programa</p>
+        <div class="campo campo--completo"><label for="f-programa">¿A qué programa te quieres inscribir? *</label>
+          <select id="f-programa" required>
+            <option value="">Selecciona un programa</option>
+            <optgroup label="Viajes internacionales"><option value="Summer Camp">Summer Camp</option><option value="Winter Camp">Winter Camp</option><option value="ACE Programme">ACE Programme</option><option value="EuroTour Graduation Trip">EuroTour Graduation Trip</option><option value="Inmersión en inglés">Programa de inmersión en inglés</option><option value="Inmersión en francés">Programa de inmersión en francés</option></optgroup>
+            <optgroup label="En Colombia"><option value="Will Go!">Will Go!</option><option value="Grow Camp">Grow Camp</option></optgroup>
+            <optgroup label="Online"><option value="AYO Weekend">AYO Weekend</option><option value="AYO Conversational Club">AYO Conversational Club</option><option value="E-Summer Camp">E-Summer Camp</option><option value="E-Winter Camp">E-Winter Camp</option><option value="Talky">Talky</option></optgroup>
+            <option value="No estoy seguro">No estoy seguro/a</option>
+          </select></div>
+
+        <p class="formulario__titulo">Datos del padre, madre o acudiente</p>
+        <div class="campo"><label for="a-nombre">Nombre *</label><input id="a-nombre" autocomplete="given-name" required></div>
+        <div class="campo"><label for="a-apellidos">Apellidos *</label><input id="a-apellidos" autocomplete="family-name" required></div>
+        <div class="campo"><label for="a-tipo">Tipo de documento *</label>
+          <select id="a-tipo" required><option value="">Selecciona</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="PA">Pasaporte</option></select></div>
+        <div class="campo"><label for="a-documento">Número de documento *</label><input id="a-documento" inputmode="numeric" required></div>
+        <div class="campo"><label for="a-correo">Correo del acudiente *</label><input id="a-correo" type="email" autocomplete="email" required></div>
+        <div class="campo"><label for="a-celular">Celular del acudiente</label><input id="a-celular" type="tel" inputmode="numeric" autocomplete="tel"></div>
+        <label class="campo campo--check"><input type="checkbox" required><span>Como padre o acudiente del menor, autorizo a Thinking Mind a comunicarse conmigo por medio de los datos de este formulario para continuar con el proceso de inscripción.</span></label>
+        <button type="submit" class="boton boton--naranja campo--completo">Enviar inscripción</button>
+        <p class="formulario__ok campo--completo" role="status" hidden>¡Gracias! Recibimos tu inscripción y un asesor te contactará pronto. (Prototipo: el formulario no envía información.)</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Pagos -->
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="destacado">
+        <img src="media/programas/summer-camp-3.jpg" alt="" class="destacado__foto" loading="lazy">
+        <div class="destacado__texto">
+          <p class="etiqueta">Pagos en línea</p>
+          <h2>Paga el total o por abonos</h2>
+          <p>Ofrecemos diferentes planes de pago para los programas de viaje. Desde el portal de pagos puedes consultar tu saldo y abonar en línea de forma segura.</p>
+          <div class="botones"><a href="https://appthinkingmind.com/payment-record" class="boton boton--naranja">Ir al portal de pagos</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Preguntas frecuentes -->
+  <section class="seccion seccion--crema" id="preguntas">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Preguntas frecuentes</p>
+        <h2>Resolvemos tus dudas</h2>
+        <p>Algunas de las inquietudes más comunes sobre nuestros programas de viaje.</p>
+      </div>
+      <div class="acordeon">
+        <details open><summary>¿El costo de la visa está incluido en el precio del programa?</summary><p>Sí. Además te ofrecemos apoyo con todos los procedimientos sin costo adicional.</p></details>
+        <details><summary>¿El costo del tiquete aéreo está incluido en el precio del programa?</summary><p>Sí. Aunque el precio del programa no varía, el del tiquete depende de la aerolínea: si se reserva con anticipación, los precios son menores. Es muy importante cumplir con las fechas de pago establecidas para evitar costos adicionales.</p></details>
+        <details><summary>¿Ofrecen flexibilidad de pago?</summary><p>Sí. Ofrecemos diferentes planes de pago para los programas de viaje. Conoce el que mejor se ajusta a tus necesidades con nuestro departamento de finanzas.</p></details>
+        <details><summary>¿Cuánto dinero de bolsillo debería llevar?</summary><p>Cada familia decide el presupuesto. Aconsejamos unas £80 GBP o €100 EUR por semana para compras personales; todo lo esencial ya está pago dentro del programa.</p></details>
+        <details><summary>¿Es necesario hablar los idiomas para inscribirse a los programas de viaje?</summary><p>No. En la mayoría de los programas hay clases para todos los niveles, de principiante a avanzado, y los estudiantes se ubican según su edad y una prueba inicial. Solo el ACE Programme requiere un nivel básico de inglés por su naturaleza competitiva.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Maleta -->
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Tu maleta inteligente</p>
+        <h2>Consejos para preparar el viaje</h2>
+        <p>La clave es viajar ligero y empacar solamente lo necesario.</p>
+      </div>
+      <div class="consejos">
+        <div class="consejo"><span class="icono" data-icono="maleta"></span><h3>Peso ideal del equipaje</h3><p>Avianca permite, desde y hacia Europa, 2 piezas de máximo 23 kg cada una, y la suma de alto, largo y ancho no puede superar 158 cm. La aerolínea puede variar según el destino y la temporada.</p></div>
+        <div class="consejo"><span class="icono" data-icono="lavadora"></span><h3>Cuentas con lavandería</h3><p>En la escuela tienes servicio de lavandería sin costo adicional: dejas tu ropa y estará lista en la tarde o al día siguiente. Las normas dependen de cada campus.</p></div>
+        <div class="consejo"><span class="icono" data-icono="camiseta"></span><h3>Qué ropa llevar</h3><p>En verano, ropa casual, cómoda y liviana. En invierno, ropa abrigada: chaquetas, guantes, bufanda, medias gruesas y botas o zapatos deportivos.</p></div>
+        <div class="consejo"><span class="icono" data-icono="enchufe"></span><h3>Otros elementos</h3><p>Tus medicamentos con la fórmula médica, un convertidor de enchufe, tus elementos de aseo personal y traje de baño para las tardes de piscina.</p></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

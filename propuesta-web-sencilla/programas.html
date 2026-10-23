@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Programas · Thinking Mind</title>
+<meta name="description" content="Todos los programas de Thinking Mind: viajes internacionales, experiencias en Colombia y programas online de inglés y francés.">
+<link rel="icon" href="img/simbolo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/datos.js" defer></script>
+<script src="js/idiomas.js" defer></script>
+<script src="js/sitio.js" defer></script>
+</head>
+<body data-pagina="programas">
+<main id="contenido">
+
+  <section class="portadilla">
+    <img src="media/programas/summer-camp-4.jpg" alt="">
+    <div class="contenedor portadilla__texto">
+      <nav class="migas" aria-label="Ruta"><a href="index.html">Inicio</a><span aria-hidden="true">/</span><span>Programas</span></nav>
+      <p class="etiqueta etiqueta--clara">Nuestros programas</p>
+      <h1>Elige la experiencia ideal</h1>
+      <p>Programas de inglés y francés para cada edad y cada momento del año: viajes internacionales, experiencias en Colombia y programas online.</p>
+    </div>
+  </section>
+
+  <!-- Tipos de programa -->
+  <section class="seccion seccion--crema">
+    <div class="contenedor">
+      <div class="lineas">
+        <a class="linea" href="programas.html?cat=viajes#todos">
+          <img src="media/programas/winter-camp-2.jpg" alt="" loading="lazy">
+          <div class="linea__cuerpo">
+            <span class="chip chip--azul">Viajes internacionales</span>
+            <h3>Vive el idioma donde se habla</h3>
+            <p>Campamentos de verano e invierno y competencias internacionales en los campus de Inglaterra, con excursiones por Europa.</p>
+          </div>
+        </a>
+        <a class="linea" href="programas.html?cat=colombia#todos">
+          <img src="media/programas/grow-camp-1.jpg" alt="" loading="lazy">
+          <div class="linea__cuerpo">
+            <span class="chip chip--verde">En Colombia</span>
+            <h3>Inmersión sin salir del país</h3>
+            <p>Fines de semana de inmersión y campamentos en Colombia, con actividades, juegos y retos en el idioma.</p>
+          </div>
+        </a>
+        <a class="linea" href="programas.html?cat=online#todos">
+          <img src="media/programas/ayo-weekend-0.jpg" alt="" loading="lazy">
+          <div class="linea__cuerpo">
+            <span class="chip chip--naranja">Online</span>
+            <h3>Aprende desde casa</h3>
+            <p>Inmersión virtual y clases conversacionales con docentes nativos y activity leaders, para niños y adultos.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Todos los programas -->
+  <section class="seccion" id="todos">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Todos los programas</p>
+        <h2>Encuentra tu programa</h2>
+        <p>Los más vistos aparecen primero.</p>
+      </div>
+      <div class="filtros" role="group" aria-label="Filtrar programas">
+        <button type="button" data-filtro="todos" aria-pressed="true">Todos <span></span></button>
+        <button type="button" data-filtro="viajes" aria-pressed="false">Viajes internacionales <span></span></button>
+        <button type="button" data-filtro="colombia" aria-pressed="false">En Colombia <span></span></button>
+        <button type="button" data-filtro="online" aria-pressed="false">Online <span></span></button>
+      </div>
+      <div class="rejilla" data-programas="todos"></div>
+    </div>
+  </section>
+
+  <!-- Ayuda -->
+  <section class="seccion seccion--crema">
+    <div class="contenedor">
+      <div class="destacado">
+        <img src="media/programas/will-go-2.jpg" alt="" class="destacado__foto" loading="lazy">
+        <div class="destacado__texto">
+          <p class="etiqueta">¿No sabes cuál elegir?</p>
+          <h2>Te ayudamos a encontrar el programa ideal</h2>
+          <p>Cuéntanos la edad del estudiante, su nivel de idioma y las fechas que te interesan, y un asesor te recomendará la mejor opción.</p>
+          <div class="botones"><a href="contacto.html#formulario" class="boton boton--naranja">Agenda una asesoría</a><a href="inscripcion.html#preguntas" class="boton boton--borde">Preguntas frecuentes</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
