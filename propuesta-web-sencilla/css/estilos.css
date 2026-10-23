@@ -227,3 +227,18 @@ p { margin: 0; }
   .pie__columnas { grid-template-columns: 1fr 1fr; }
   .aliados__logos { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Selector de idioma */
+.cabecera__fila { gap: 16px; }
+.cabecera__fila .menu { margin-left: auto; }
+.idioma { display: flex; background: var(--crema); border: 1px solid var(--borde); border-radius: 999px; padding: 3px; flex: none; }
+.idioma button { font: inherit; font-size: 13px; font-weight: 800; color: var(--suave); background: none; border: 0; border-radius: 999px; padding: 6px 10px; cursor: pointer; letter-spacing: .04em; }
+.idioma button:hover { color: var(--azul); }
+.idioma button[aria-pressed="true"] { background: var(--azul); color: #fff; }
+.menu a { white-space: nowrap; }
+.menu__pagos { display: none; }
+.aviso__pagos { font-weight: 800; color: #ffd2a3; }
+@media (max-width: 1240px) { .menu { gap: 18px; font-size: 15px; } .menu__cta { padding: 10px 16px; } }
+@media (max-width: 1080px) { .menu { gap: 14px; } }
+@media (max-width: 960px) { .menu { gap: 11px; font-size: 14px; } .menu__cta { padding: 9px 13px; font-size: 14px; } .cabecera__logo img { width: 150px; } .cabecera__fila { gap: 12px; } }
+@media (max-width: 860px) { .idioma { margin-left: auto; } .idioma button { padding: 6px 9px; } .menu .menu__pagos { display: block; } }

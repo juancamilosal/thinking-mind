@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
+<script src="js/idiomas.js" defer></script>
 <script src="js/sitio.js" defer></script>
 </head>
 <body>
@@ -24,6 +25,7 @@
     <div class="aviso__datos">
       <a href="tel:+573213711595">+57 321 371 1595</a>
       <a href="mailto:tm@thinkingmind.co">tm@thinkingmind.co</a>
+      <a href="https://appthinkingmind.com/payment-record" class="aviso__pagos">Pagos en línea</a>
     </div>
   </div>
 </div>
@@ -41,6 +43,11 @@
       <a href="https://appthinkingmind.com/payment-record" class="menu__pagos">Pagos en línea</a>
       <a href="#contacto" class="boton boton--naranja menu__cta">Agenda una asesoría</a>
     </nav>
+    <div class="idioma" role="group" aria-label="Idioma de la página">
+      <button type="button" data-idioma="es" aria-pressed="true" title="Español">ES</button>
+      <button type="button" data-idioma="en" aria-pressed="false" title="English">EN</button>
+      <button type="button" data-idioma="fr" aria-pressed="false" title="Français">FR</button>
+    </div>
     <button type="button" class="cabecera__abrir" aria-controls="menu" aria-expanded="false" aria-label="Abrir menú">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
@@ -271,10 +278,10 @@
         <div class="campo">
           <label for="f-programa">Programa de interés</label>
           <select id="f-programa" name="programa">
-            <option>Viajes internacionales</option>
-            <option>En Colombia</option>
-            <option>Online</option>
-            <option>Aún no lo sé</option>
+            <option value="Viajes internacionales">Viajes internacionales</option>
+            <option value="En Colombia">En Colombia</option>
+            <option value="Online">Online</option>
+            <option value="Aún no lo sé">Aún no lo sé</option>
           </select>
         </div>
         <div class="campo campo--completo">
