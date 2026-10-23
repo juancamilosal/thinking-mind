@@ -675,5 +675,7 @@ window.TRADUCCIONES = {
   "Los tres componentes juntos crean los hábitos necesarios para hablar el idioma.": ["Together, the three components build the habits needed to speak the language.", "Ensemble, les trois composantes créent les habitudes nécessaires pour parler la langue."],
   "Inglés o francés": ["English or French", "Anglais ou français"],
   "Tres veces a la semana": ["Three times a week", "Trois fois par semaine"],
-  "5 niveles": ["5 levels", "5 niveaux"]
+  "5 niveles": ["5 levels", "5 niveaux"],
+  "¿Listo para empezar?": ["Ready to get started?", "Prêt à commencer ?"],
+  "Inscríbete hoy y comienza tu viaje hacia la fluidez.": ["Enrol today and start your journey to fluency.", "Inscris-toi aujourd’hui et commence ton voyage vers la fluidité."]
 };

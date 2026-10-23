@@ -394,9 +394,13 @@ a.linea:hover h3 { color: var(--naranja-osc); }
 
 /* ---------- Llamado final ---------- */
 .llamado { background: var(--azul-medio); color: #fff; }
-.llamado__fila { display: flex; align-items: center; gap: 24px; padding: 34px 0; }
-.llamado__simbolo { width: 64px; height: 64px; background: #fff; border-radius: 50%; padding: 10px; object-fit: contain; flex: none; }
-.llamado__texto { flex: 1; font-family: var(--serifa); font-size: clamp(22px, 2.4vw, 30px); line-height: 1.25; }
+.llamado__fila { display: flex; align-items: center; gap: 32px; padding: 40px 0; }
+.llamado__texto { flex: 1; }
+.llamado__texto .etiqueta { margin-bottom: 6px; }
+.llamado__titulo { font-family: var(--serifa); font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; }
+.boton--whatsapp { background: #fff; color: var(--azul); }
+.boton--whatsapp:hover { background: #eafbf0; }
+.boton--whatsapp img { width: 24px; height: 24px; }
 .llamado__botones { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* ---------- Pie ---------- */
@@ -406,9 +410,9 @@ a.linea:hover h3 { color: var(--naranja-osc); }
 .pie h2 { font-family: var(--sans); font-size: 14px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--naranja); margin-bottom: 6px; }
 .pie a { text-decoration: none; }
 .pie a:hover { color: #fff; text-decoration: underline; }
-.pie__marca b { font-family: var(--serifa); font-size: 22px; color: #fff; font-weight: 600; }
-.pie__simbolo { width: 52px; height: 52px; background: #fff; border-radius: 50%; padding: 8px; margin-bottom: 6px; }
-.pie__simbolo img { width: 100%; height: 100%; object-fit: contain; }
+.pie__logo { align-self: flex-start; background: #fff; border-radius: 14px; padding: 10px 14px; margin-bottom: 8px; }
+.pie__logo img { width: 170px; height: auto; mix-blend-mode: multiply; }
+.pie a.pie__logo:hover { text-decoration: none; }
 .pie .redes a { background: rgba(255,255,255,.1); }
 .pie .redes a:hover { background: var(--naranja); text-decoration: none; }
 .pie__base { margin-top: 44px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.15); display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 14px; }
@@ -417,8 +421,9 @@ a.linea:hover h3 { color: var(--naranja-osc); }
 .pie__sellos img { height: 48px; width: auto; }
 
 /* ---------- WhatsApp flotante ---------- */
-.whatsapp { position: fixed; right: 20px; bottom: 20px; width: 58px; height: 58px; border-radius: 50%; background: #25d366; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.25); z-index: 60; }
-.whatsapp svg { width: 30px; height: 30px; fill: #fff; }
+.whatsapp { position: fixed; right: 20px; bottom: 20px; width: 62px; height: 62px; z-index: 60; filter: drop-shadow(0 6px 14px rgba(0,0,0,.28)); transition: transform .2s; }
+.whatsapp:hover { transform: scale(1.08); }
+.whatsapp img { width: 100%; height: 100%; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1240px) {

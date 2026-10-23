@@ -101,11 +101,13 @@ function pie() {
   return `
 <section class="llamado">
   <div class="contenedor llamado__fila">
-    <img src="img/simbolo.png" alt="" class="llamado__simbolo">
-    <p class="llamado__texto">¡Inscríbete hoy mismo y comienza tu viaje hacia la fluidez con Thinking Mind!</p>
+    <div class="llamado__texto">
+      <p class="etiqueta etiqueta--clara">¿Listo para empezar?</p>
+      <p class="llamado__titulo">Inscríbete hoy y comienza tu viaje hacia la fluidez.</p>
+    </div>
     <div class="llamado__botones">
       <a href="inscripcion.html" class="boton boton--naranja">Inscríbete</a>
-      <a href="${WHATSAPP}" class="boton boton--claro" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+      <a href="${WHATSAPP}" class="boton boton--whatsapp" target="_blank" rel="noopener"><img src="img/whatsapp.png" alt="" width="24" height="24">Escríbenos por WhatsApp</a>
     </div>
   </div>
 </section>
@@ -113,8 +115,7 @@ function pie() {
   <div class="contenedor">
     <div class="pie__columnas">
       <div class="pie__marca">
-        <span class="pie__simbolo"><img src="img/simbolo.png" alt=""></span>
-        <b>Thinking Mind</b>
+        <a href="index.html" class="pie__logo"><img src="img/logo.webp" alt="Thinking Mind" width="176" height="47"></a>
         <p>Doing the impossible in education.</p>
         <div class="redes">${redes()}</div>
       </div>
@@ -155,9 +156,7 @@ function pie() {
     </div>
   </div>
 </footer>
-<a class="whatsapp" href="${WHATSAPP}" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3.2 17.3L2 22l4.8-1.2A11 11 0 0 0 20.5 3.5zM12 20a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8 1-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.7-1.8c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.2-.2-.5-.3z"/></svg>
-</a>
+<a class="whatsapp" href="${WHATSAPP}" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp"><img src="img/whatsapp.png" alt="" width="62" height="62"></a>
 <div class="visor" role="dialog" aria-modal="true" aria-label="Galería de fotos">
   <img src="" alt="">
   <button type="button" class="visor__cerrar" aria-label="Cerrar">×</button>
