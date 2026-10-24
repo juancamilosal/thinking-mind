@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Experiencia · Thinking Mind</title>
+<meta name="description" content="Viajes de estudio y descubrimiento, campus en Inglaterra y viajes de inmersión en Niza y Londres.">
+<link rel="icon" href="img/simbolo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script src="js/datos.js" defer></script>
+<script src="js/idiomas.js" defer></script>
+<script src="js/sitio.js" defer></script>
+</head>
+<body data-pagina="experiencia">
+<main id="contenido">
+
+  <section class="portadilla">
+    <video src="media/banner-12f.mp4" poster="media/banner-12f.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
+    <div class="contenedor portadilla__texto">
+      <nav class="migas" aria-label="Ruta"><a href="index.html">Inicio</a><span aria-hidden="true">/</span><span>Experiencia</span></nav>
+      <p class="etiqueta etiqueta--clara">Viajes de temporada</p>
+      <h1>Aventuras de aprendizaje</h1>
+      <p>Viajes de temporada que crean experiencias inolvidables y generan un impacto académico y personal.</p>
+    </div>
+  </section>
+
+  <!-- Viajes de estudio -->
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Nuestros viajes</p>
+        <h2>De estudio y descubrimiento</h2>
+        <p>Viajes durante el año con un programa de inglés, campus residenciales y excursiones por diferentes países con todo incluido.</p>
+      </div>
+      <div class="viajes">
+        <a class="viaje" href="programa.html?p=summer-camp">
+          <img src="media/fotos/londres-2.jpg" alt="" loading="lazy">
+          <div class="viaje__texto"><h3>Summer Camp</h3><p>Aprende inglés en Inglaterra y descubre la vida escolar británica.</p><span class="viaje__mas">Conoce más →</span></div>
+        </a>
+        <a class="viaje" href="programa.html?p=ace-programme">
+          <img src="media/fotos/oundle-5.jpg" alt="" loading="lazy">
+          <div class="viaje__texto"><h3>ACE Programme</h3><p>Competencia lingüística internacional en Rugby, Inglaterra.</p><span class="viaje__mas">Conoce más →</span></div>
+        </a>
+        <a class="viaje" href="programa.html?p=winter-camp">
+          <img src="media/fotos/trafalgar.jpg" alt="" loading="lazy">
+          <div class="viaje__texto"><h3>Winter Camp</h3><p>Europa en invierno: clases, actividades y excursiones.</p><span class="viaje__mas">Conoce más →</span></div>
+        </a>
+        <a class="viaje" href="inscripcion.html?p=eurotour#formulario">
+          <img src="media/fotos/louvre.jpg" alt="" loading="lazy">
+          <div class="viaje__texto"><h3>EuroTour Graduation Trip</h3><p>El viaje de grado para recorrer Europa antes de la universidad.</p><span class="viaje__mas">Pide información →</span></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Campus -->
+  <section class="seccion seccion--crema" id="campus">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Campus en Inglaterra</p>
+        <h2>Conoce nuestros campus</h2>
+        <p>En estas escuelas se desarrollan los programas de viaje del Summer Camp y el ACE Programme. Son reconocidas como algunas de las mejores de Inglaterra, con increíbles instalaciones en comunidades muy seguras y tranquilas.</p>
+      </div>
+      <div class="pestanas" role="tablist" aria-label="Campus">
+        <button type="button" role="tab" id="tab-oundle" aria-controls="campus-oundle" aria-selected="true">Oundle</button>
+        <button type="button" role="tab" id="tab-rugby" aria-controls="campus-rugby" aria-selected="false">Rugby</button>
+        <button type="button" role="tab" id="tab-uppingham" aria-controls="campus-uppingham" aria-selected="false">Uppingham</button>
+      </div>
+
+      <div class="campus" id="campus-oundle" role="tabpanel" aria-labelledby="tab-oundle">
+        <div class="campus__fotos">
+          <img src="media/fotos/oundle-grupo.jpg" alt="Estudiantes en el campus de Oundle" loading="lazy">
+          <img src="media/fotos/oundle-2.jpg" alt="Edificios de Oundle School" loading="lazy">
+          <img src="media/fotos/oundle-3.jpg" alt="Clase en Oundle" loading="lazy">
+        </div>
+        <div>
+          <h3>Oundle</h3>
+          <p class="campus__lugar">Northamptonshire, Inglaterra · A 2 horas de Londres</p>
+          <div class="texto-largo">
+            <p>Situado en el centro del país, es una de las escuelas más antiguas y prestigiosas de Inglaterra. Sus edificios datan desde el siglo XVII hasta el siglo XXI y están dispersos por todo el pueblo, lo que le da a la escuela un carácter único.</p>
+            <p>Además de ser un lugar muy seguro, ofrece a los estudiantes una experiencia verdaderamente inglesa. Es una ubicación excepcional para el programa del Summer Camp.</p>
+          </div>
+          <div class="campus__datos">
+            <div><b>Hospedaje</b>5 casas residenciales, lavandería semanal y personal disponible 24/7.</div>
+            <div><b>El pueblo</b>Unos 7.000 habitantes, con tiendas tradicionales inglesas y restaurantes.</div>
+            <div><b>Instalaciones</b>Más de 500 acres de campos, piscina, canchas de tenis y 15 aulas modernas.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="campus" id="campus-rugby" role="tabpanel" aria-labelledby="tab-rugby" hidden>
+        <div class="campus__fotos">
+          <img src="media/fotos/rugby-campus.jpg" alt="Campus de Rugby School" loading="lazy">
+          <img src="media/fotos/rugby-2.jpg" alt="Estudiantes en Rugby" loading="lazy">
+          <img src="media/fotos/rugby-3.jpg" alt="Actividades en Rugby" loading="lazy">
+        </div>
+        <div>
+          <h3>Rugby</h3>
+          <p class="campus__lugar">Warwickshire, Inglaterra · A 2 horas de Londres</p>
+          <div class="texto-largo">
+            <p>Visita el lugar de origen del deporte que lleva su nombre. Rugby es una escuela grande, la ubicación ideal para el ACE Programme y el Summer Camp: es segura, está estratégicamente ubicada y tiene instalaciones fantásticas.</p>
+            <p>Se encuentra en el centro de Inglaterra, a 80 millas al norte de Londres y a menos de media hora de Birmingham. En Rugby pasarás el tiempo aprendiendo, jugando y haciendo nuevos amigos todos los días.</p>
+          </div>
+          <div class="campus__datos">
+            <div><b>Hospedaje</b>7 casas residenciales, lavandería semanal y personal disponible 24/7.</div>
+            <div><b>El pueblo</b>Unos 70.000 habitantes; una ciudad pequeña, muy segura y fácil de caminar.</div>
+            <div><b>Instalaciones</b>2 salones deportivos, canchas de fútbol, cricket y rugby, piscina y tenis.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="campus" id="campus-uppingham" role="tabpanel" aria-labelledby="tab-uppingham" hidden>
+        <div class="campus__fotos">
+          <img src="media/fotos/uppingham-aerea.jpg" alt="Vista aérea de Uppingham" loading="lazy">
+          <img src="media/fotos/uppingham-4.jpg" alt="Estudiantes en Uppingham" loading="lazy">
+          <img src="media/fotos/uppingham-2.jpg" alt="Salón de Uppingham School" loading="lazy">
+        </div>
+        <div>
+          <h3>Uppingham</h3>
+          <p class="campus__lugar">Leicestershire, Inglaterra · A 2,5 horas de Londres</p>
+          <div class="texto-largo">
+            <p>Ven a conocer este hermoso e histórico destino. Fundada en 1584, Uppingham School es una de las escuelas más antiguas y celebradas del país.</p>
+            <p>Con instalaciones increíbles para clases y actividades, y el campus con el área más grande para deportes de toda Inglaterra, Uppingham tiene todo lo que se necesita para un grandioso Summer Camp.</p>
+          </div>
+          <div class="campus__datos">
+            <div><b>Hospedaje</b>Casas residenciales tradicionales con zonas sociales y personal 24/7.</div>
+            <div><b>El pueblo</b>Unos 6.000 habitantes y una hermosa plaza central con mercado.</div>
+            <div><b>Instalaciones</b>Salones deportivos y canchas múltiples; una de las mejores escuelas para deportes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Viajes de inmersión -->
+  <section class="seccion" id="inmersion">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Viajes de inmersión</p>
+        <h2>La mejor forma de aprender un idioma es viviendo en él</h2>
+        <p>Una inmersión lingüístico-cultural para fortalecer un idioma, hacer amistades de todo el mundo y crear recuerdos inolvidables. Para estudiantes de todas las edades, durante todo el año.</p>
+      </div>
+      <div class="cifras">
+        <div class="cifra"><b>8–17</b><span>años: programa para niños</span></div>
+        <div class="cifra"><b>18+</b><span>años: programa para adultos</span></div>
+        <div class="cifra"><b>2</b><span>semanas de duración mínima</span></div>
+        <div class="cifra"><b>1</b><span>año de duración máxima</span></div>
+      </div>
+      <div class="destinos espacio-grande">
+        <article class="destino">
+          <div class="destino__fotos"><img src="media/fotos/niza-1.jpg" alt="Playa de Niza" loading="lazy"><img src="media/fotos/niza-escuela.jpg" alt="Escuela de idiomas en Niza" loading="lazy"></div>
+          <div class="destino__cuerpo">
+            <span class="chip chip--azul">Francés</span>
+            <h3>Niza, Francia</h3>
+            <p>Esta hermosa ciudad ofrece un ambiente seguro y fácil de recorrer. Podrás conocer esta y más ciudades de la Costa Azul después de tus clases. El clima, las playas, los monumentos y las calles hacen de Niza un destino ideal para estudiar.</p>
+          </div>
+        </article>
+        <article class="destino">
+          <div class="destino__fotos"><img src="media/fotos/londres-1.jpg" alt="Estudiantes en Londres" loading="lazy"><img src="media/fotos/clases-azurlingua.jpg" alt="Clase de idiomas" loading="lazy"></div>
+          <div class="destino__cuerpo">
+            <span class="chip chip--azul">Inglés</span>
+            <h3>Londres, Inglaterra</h3>
+            <p>Una de las ciudades más importantes del mundo: siempre hay algo por hacer y lugares por conocer. Desplazarse es fácil y te permite vivir la experiencia de estar en otro país mientras mejoras tu inglés.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion seccion--azul">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta etiqueta--clara">Los viajes de inmersión son…</p>
+        <h2>Flexibles, certificados y a tu medida</h2>
+      </div>
+      <div class="rasgos">
+        <div class="rasgo"><h3>Todo el año</h3><p>Operan durante todo el año y se reservan por semanas.</p></div>
+        <div class="rasgo"><h3>Cursos certificados</h3><p>Al final del curso recibirás un certificado académico por tu tiempo y desempeño.</p></div>
+        <div class="rasgo"><h3>Por niveles</h3><p>Antes de comenzar, una prueba determina el nivel de idioma más adecuado.</p></div>
+        <div class="rasgo"><h3>Excursiones</h3><p>Planea tus propias excursiones por la ciudad o a pueblos cercanos después de clases.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Tus opciones de hospedaje</p>
+        <h2>Familia de acogida o campus estudiantil</h2>
+        <p>Cada opción tiene sus ventajas y ofrece experiencias distintas, pero todas son excelentes formas de aprender cosas nuevas.</p>
+      </div>
+      <div class="hospedajes">
+        <div class="hospedaje"><h3>Campus estudiantil</h3><p>Los campus están en puntos centrales de las ciudades y es fácil ir y venir. Compartirás espacios con estudiantes de otras nacionalidades y tendrás más independencia cuidando tu espacio y tus tiempos.</p></div>
+        <div class="hospedaje"><h3>Familia de acogida</h3><p>Vivirás con una familia nativa del idioma: con ella aprenderás más del estilo de vida del país y compartirás tiempo en familia.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Galería -->
+  <section class="seccion seccion--crema">
+    <div class="contenedor">
+      <div class="encabezado">
+        <p class="etiqueta">Galería</p>
+        <h2>Así se vive Thinking Mind</h2>
+      </div>
+      <div class="mosaico">
+        <img src="media/programas/winter-camp-4.jpg" alt="Estudiantes del Winter Camp" loading="lazy">
+        <img src="media/programas/summer-camp-1.jpg" alt="Grupo del Summer Camp" loading="lazy">
+        <img src="media/programas/ace-programme-1.jpg" alt="Estudiantes del ACE Programme" loading="lazy">
+        <img src="media/programas/grow-camp-2.jpg" alt="Campistas del Grow Camp" loading="lazy">
+        <img src="media/programas/will-go-5.jpg" alt="Actividades del Will Go!" loading="lazy">
+        <img src="media/programas/winter-camp-7.jpg" alt="Estudiante en la Torre Eiffel" loading="lazy">
+        <img src="media/fotos/rugby-1.jpg" alt="Estudiantes en Rugby" loading="lazy">
+        <img src="media/fotos/uppingham-3.jpg" alt="Uppingham" loading="lazy">
+        <img src="media/fotos/niza-2.jpg" alt="Estudiantes en Niza" loading="lazy">
+        <img src="media/programas/summer-camp-4.jpg" alt="Excursión del Summer Camp" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

@@ -27,6 +27,11 @@
                 "glob": "**/*",
                 "input": "propuesta-web",
                 "output": "propuesta-web"
+              },
+              {
+                "glob": "**/*",
+                "input": "propuesta-web-sencilla",
+                "output": "propuesta-web-sencilla"
               }
             ],
             "styles": [

@@ -15,6 +15,11 @@
       "source": "/propuesta-web",
       "destination": "/propuesta-web/",
       "permanent": false
+    },
+    {
+      "source": "/propuesta-web-sencilla",
+      "destination": "/propuesta-web-sencilla/",
+      "permanent": false
     }
   ]
 }
