@@ -259,17 +259,44 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.ratingHistoryStats = null;
   }
 
+  /**
+   * Solo se puede iniciar (o calificar) una reunión si hay estudiantes para calificar.
+   * Usa la misma lista que la calificación para que ambas validaciones coincidan.
+   */
   hasStudents(programa: ProgramaAyo): boolean {
     // En modo de prueba siempre hay estudiantes (se generan ficticios)
     if (this.isTestMode) return true;
 
-    const studentsFromLevel = programa.id_nivel?.estudiantes_id;
-    const studentsFromRoot = (programa as any).estudiantes_id;
+    return this.getGradableStudents(programa).length > 0;
+  }
 
-    const hasLevelStudents = Array.isArray(studentsFromLevel) && studentsFromLevel.length > 0;
-    const hasRootStudents = Array.isArray(studentsFromRoot) && studentsFromRoot.length > 0;
+  /**
+   * Estudiantes que se califican en un programa: los del programa y, si el programa
+   * no trae esa lista, los del nivel. Resuelve la tabla intermedia (M2M) y quita repetidos.
+   */
+  private getGradableStudents(programa: any): any[] {
+    const programStudents = programa && Array.isArray(programa.estudiantes_id)
+      ? programa.estudiantes_id
+      : (programa?.id_nivel?.estudiantes_id || []);
 
-    return hasLevelStudents || hasRootStudents;
+    const uniqueStudentsMap = new Map();
+    programStudents.forEach((student: any) => {
+      let userObj = student;
+
+      if (student.directus_users_id && typeof student.directus_users_id === 'object') {
+        userObj = student.directus_users_id;
+        // Conservar la asistencia de la tabla intermedia si el usuario no la trae
+        if (!userObj.asistencia_id && student.asistencia_id) {
+          userObj = { ...userObj, asistencia_id: student.asistencia_id };
+        }
+      }
+
+      if (userObj.id && !uniqueStudentsMap.has(userObj.id)) {
+        uniqueStudentsMap.set(userObj.id, userObj);
+      }
+    });
+
+    return Array.from(uniqueStudentsMap.values());
   }
 
   getStudentAttendance(student: any): number {
@@ -924,39 +951,8 @@ export class TeacherMeetingsComponent implements OnInit, OnDestroy {
     this.currentProgramId = currentProgram?.id ? String(currentProgram.id) : null;
     this.currentLevelId = currentProgram?.id_nivel?.id ? String(currentProgram.id_nivel.id) : null;
 
-    const programStudents = currentProgram && Array.isArray((currentProgram as any).estudiantes_id)
-      ? (currentProgram as any).estudiantes_id
-      : (currentProgram?.id_nivel?.estudiantes_id || []);
-
-    if (currentProgram && programStudents && Array.isArray(programStudents)) {
-      // Map students from id_nivel to evaluation objects, ensuring uniqueness
-      const uniqueStudentsMap = new Map();
-
-      programStudents.forEach((student: any) => {
-        // Determine the actual user object
-        // 1. If it's a direct user object (O2M), it has first_name, email etc directly.
-        // 2. If it's a junction (M2M), it has directus_users_id (which should be expanded to object).
-
-        let userObj = student;
-
-        if (student.directus_users_id && typeof student.directus_users_id === 'object') {
-            userObj = student.directus_users_id;
-            // Preserve junction specific fields if needed, but usually we want user fields
-            // If asistencia_id is on junction, we might lose it, but usually it's on user.
-            // If userObj doesn't have asistencia_id but student does, copy it?
-            if (!userObj.asistencia_id && student.asistencia_id) {
-                userObj = { ...userObj, asistencia_id: student.asistencia_id };
-            }
-        }
-
-        const userId = userObj.id;
-
-        if (userId && !uniqueStudentsMap.has(userId)) {
-          uniqueStudentsMap.set(userId, userObj);
-        }
-      });
-
-      this.students = Array.from(uniqueStudentsMap.values()).map((student: any) => ({
+    if (currentProgram) {
+      this.students = this.getGradableStudents(currentProgram).map((student: any) => ({
         id: student.id,
         name: `${student.first_name || ''} ${student.last_name || ''}`.trim(),
         attended: true,
