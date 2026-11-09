@@ -25,7 +25,6 @@ import { AyoComponent } from './layouts/private-layout/pages/ayo/ayo';
 import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/form-programa-ayo/form-programa-ayo';
 import { FormMeetGeneralComponent } from './layouts/private-layout/pages/ayo/general-meeting/form-meet-general/form-meet-general';
 import { GeneralMeetingComponent } from './layouts/private-layout/pages/ayo/general-meeting/general-meeting';
-import { SessionExpiredComponent } from './layouts/public-layout/pages/session-expired/session-expired';
 import { ayoRoutes } from './ayo.routes';
 import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payroll-admin';
 import { TeacherEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/teacher-evaluation-ayo/teacher-evaluation-ayo';
@@ -49,11 +48,6 @@ export const routes: Routes = [
     path: 'login',
     title: 'Thinking Mind | Login',
     component: Login
-  },
-  {
-    path: 'session-expired',
-    title: 'Thinking Mind | Sesión Expirada',
-    component: SessionExpiredComponent
   },
   {
     path: 'payment-record',
@@ -214,7 +208,7 @@ export const routes: Routes = [
       },
       {
         path: '**',
-        redirectTo: '/session-expired'
+        redirectTo: 'dashboard'
       }
     ]
   }

@@ -4,4 +4,9 @@ export class Roles {
   public static STUDENT: string = 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
   public static TEACHER: string = 'fe83d2f3-1b89-477d-984a-de3b56e12001';
   public static CEO: string = 'ad299f85-8137-4709-a3ad-beaeb579cdb3';
+
+  /** Login al que debe volver un usuario: el de AYO para estudiantes y docentes, el general para el resto. */
+  public static loginRoute(role?: string | null): string {
+    return role === Roles.STUDENT || role === Roles.TEACHER ? '/login-ayo' : '/login';
+  }
 }
