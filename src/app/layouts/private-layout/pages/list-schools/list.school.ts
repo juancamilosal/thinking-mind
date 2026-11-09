@@ -203,7 +203,11 @@ export class ListSchool implements OnInit {
   private processAccountsReceivable(accounts: AccountReceivable[]): void {
     const targetYear = this.getTargetInscriptionYear();
     const targetEdition = this.getTargetEdition();
-    const saldoFilteredAccounts = (accounts || []).filter(account => this.hasPositiveSaldo(account));
+    // El rector solo ve inscripciones de programas que no han finalizado
+    const visibleAccounts = this.isRector
+      ? (accounts || []).filter(account => !this.isProgramFinished(account))
+      : (accounts || []);
+    const saldoFilteredAccounts = visibleAccounts.filter(account => this.hasPositiveSaldo(account));
     const yearFilteredAccounts =
       targetYear === null
         ? saldoFilteredAccounts
@@ -360,6 +364,15 @@ export class ListSchool implements OnInit {
     const saldoCuenta = this.toNumber((account as any)?.saldo);
     const saldoInscripcion = this.toNumber((account as any)?.id_inscripcion?.saldo);
     return Math.max(saldoCuenta, saldoInscripcion);
+  }
+
+  /** El programa finalizó si su fecha de finalización es anterior a hoy. Sin fecha, se considera vigente. */
+  private isProgramFinished(account: AccountReceivable): boolean {
+    const endDate = (account.fecha_finalizacion || '').slice(0, 10);
+    if (!endDate) return false;
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return endDate < today;
   }
 
   private hasPositiveSaldo(account: AccountReceivable): boolean {

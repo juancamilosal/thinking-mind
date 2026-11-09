@@ -106,7 +106,7 @@ function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshServic
     if (shouldRedirectToAyo) {
       router.navigate(['/login-ayo']);
     } else {
-      router.navigate(['/session-expired']);
+      router.navigate(['/login']);
     }
   }
 

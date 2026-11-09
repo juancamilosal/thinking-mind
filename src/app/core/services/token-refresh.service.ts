@@ -42,7 +42,7 @@ export class TokenRefreshService implements OnDestroy {
       this.refreshTimer = null;
     }
 
-    // Si estamos en el navegador y hay una sesión activa que expiró, redirigir a session-expired
+    // Si estamos en el navegador y hay una sesión activa que expiró, volver al login
     if (typeof window !== 'undefined' && StorageServices.getAccessToken()) {
       const currentUser = StorageServices.getCurrentUser();
       const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
@@ -53,7 +53,7 @@ export class TokenRefreshService implements OnDestroy {
       if (shouldRedirectToAyo) {
         this.router.navigate(['/login-ayo']);
       } else {
-        this.router.navigate(['/session-expired']);
+        this.router.navigate(['/login']);
       }
     }
   }
