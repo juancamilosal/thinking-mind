@@ -165,9 +165,10 @@ export class ListSchool implements OnInit {
   private loadAccountsForSchool(schoolId: string): void {
     // Usar el nuevo servicio que solo trae cuentas con pagos para el colegio específico
     const term = this.searchTerm?.trim();
+    // Para el rector, Directus solo devuelve cuentas con pagos de programas que no han finalizado
     const request$ = term
-      ? this.schoolWithPaymentsService.getAccountsWithPaymentsBySchoolAll(schoolId, term, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter)
-      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, false, this.editionFilter);
+      ? this.schoolWithPaymentsService.getAccountsWithPaymentsBySchoolAll(schoolId, term, this.yearFilter, this.sortByInscriptionDate, true, this.editionFilter, true)
+      : this.schoolWithPaymentsService.getAccountsWithPaymentsBySchool(schoolId, 1, 1000, this.yearFilter, this.sortByInscriptionDate, true, this.editionFilter, true);
 
     request$.subscribe({
       next: (response) => {

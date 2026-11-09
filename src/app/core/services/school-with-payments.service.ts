@@ -24,7 +24,8 @@ export class SchoolWithPaymentsService {
     sortByInscription: boolean = false,
     schoolId?: string,
     onlyWithSaldo: boolean = false,
-    editionFilter?: string
+    editionFilter?: string,
+    onlyActivePrograms: boolean = false
   ): any {
     const params: any = {
       fields: '*,estudiante_id.*,estudiante_id.colegio_id.*,estudiante_id.colegio_id.rector_id.*,cliente_id.*,curso_id.*,pagos.*,id_inscripcion.*,id_inscripcion.estudiante_id.*,id_inscripcion.estudiante_id.colegio_id.*,id_inscripcion.estudiante_id.colegio_id.rector_id.*,id_inscripcion.cliente_id.*,id_inscripcion.curso_id.*,id_inscripcion.pagos.*',
@@ -49,6 +50,15 @@ export class SchoolWithPaymentsService {
     if (onlyWithSaldo) {
       params[`filter[_and][${andIndex}][_or][0][saldo][_gt]`] = '0';
       params[`filter[_and][${andIndex}][_or][1][id_inscripcion][saldo][_gt]`] = '0';
+      andIndex++;
+    }
+
+    // Solo programas que no han finalizado: fecha de finalización hoy o después, o sin fecha
+    if (onlyActivePrograms) {
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      params[`filter[_and][${andIndex}][_or][0][fecha_finalizacion][_gte]`] = today;
+      params[`filter[_and][${andIndex}][_or][1][fecha_finalizacion][_null]`] = 'true';
       andIndex++;
     }
 
@@ -94,9 +104,10 @@ export class SchoolWithPaymentsService {
     sortByInscription: boolean = false,
     schoolId?: string,
     onlyWithSaldo: boolean = false,
-    editionFilter?: string
+    editionFilter?: string,
+    onlyActivePrograms: boolean = false
   ): Observable<ResponseAPI<AccountReceivable[]>> {
-    const params = this.buildAccountsWithPaymentsParams(page, limit, searchTerm, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter);
+    const params = this.buildAccountsWithPaymentsParams(page, limit, searchTerm, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter, onlyActivePrograms);
     return this.http.get<ResponseAPI<AccountReceivable[]>>(this.apiUrl, { params }).pipe(
       map(response => {
         // Los datos ya vienen filtrados desde Directus, solo necesitamos mapearlos
@@ -186,9 +197,10 @@ export class SchoolWithPaymentsService {
     yearFilter?: string,
     sortByInscription: boolean = false,
     onlyWithSaldo: boolean = false,
-    editionFilter?: string
+    editionFilter?: string,
+    onlyActivePrograms: boolean = false
   ): Observable<ResponseAPI<AccountReceivable[]>> {
-    return this.fetchAccountsWithPaymentsPage(page, limit, undefined, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter);
+    return this.fetchAccountsWithPaymentsPage(page, limit, undefined, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter, onlyActivePrograms);
   }
 
   getAccountsWithPaymentsBySchoolAll(
@@ -197,14 +209,15 @@ export class SchoolWithPaymentsService {
     yearFilter?: string,
     sortByInscription: boolean = false,
     onlyWithSaldo: boolean = false,
-    editionFilter?: string
+    editionFilter?: string,
+    onlyActivePrograms: boolean = false
   ): Observable<ResponseAPI<AccountReceivable[]>> {
     const pageSize = 500;
     let page = 1;
     let fetched = 0;
     let total: number | undefined;
 
-    return defer(() => this.fetchAccountsWithPaymentsPage(page, pageSize, searchTerm, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter)).pipe(
+    return defer(() => this.fetchAccountsWithPaymentsPage(page, pageSize, searchTerm, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter, onlyActivePrograms)).pipe(
       tap((resp) => {
         fetched += (resp?.data || []).length;
         const metaTotal = resp?.meta?.filter_count ?? resp?.meta?.total_count;
@@ -218,7 +231,7 @@ export class SchoolWithPaymentsService {
           lastLen > 0 && (typeof total !== 'number' || fetched < total);
         if (!shouldContinue) return EMPTY;
         page += 1;
-        return this.fetchAccountsWithPaymentsPage(page, pageSize, searchTerm, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter).pipe(
+        return this.fetchAccountsWithPaymentsPage(page, pageSize, searchTerm, yearFilter, sortByInscription, schoolId, onlyWithSaldo, editionFilter, onlyActivePrograms).pipe(
           tap((nextResp) => {
             fetched += (nextResp?.data || []).length;
             const metaTotal = nextResp?.meta?.filter_count ?? nextResp?.meta?.total_count;
