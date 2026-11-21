@@ -1,0 +1,25 @@
+{
+  "name": "directus-extension-wge",
+  "description": "Operaciones con billetes de WILL-GO ECONOMY (transferencias, GO•STORE, W-Funds y tipo de cambio)",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "keywords": ["directus", "directus-extension", "directus-extension-bundle"],
+  "files": ["dist"],
+  "directus:extension": {
+    "type": "bundle",
+    "path": { "app": "dist/app.js", "api": "dist/api.js" },
+    "entries": [
+      { "type": "endpoint", "name": "wge", "source": "src/endpoint.js" },
+      { "type": "hook", "name": "wge-fx", "source": "src/hook.js" }
+    ],
+    "host": "^11.0.0"
+  },
+  "scripts": {
+    "build": "directus-extension build",
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@directus/extensions-sdk": "^13.0.0"
+  }
+}
