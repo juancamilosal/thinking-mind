@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, MonoTypeOperatorFunction, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { StorageServices } from './storage.services';
 
@@ -55,12 +55,27 @@ const PERFIL = 'wge_perfil';
 @Injectable({ providedIn: 'root' })
 export class WillGoService {
   private api = environment.willGo;
+  private zone = inject(NgZone);
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Las respuestas de la API pueden llegar fuera de la zona de Angular. Si no se devuelven a ella,
+   * lo que se abre con la respuesta (por ejemplo, la ventana de la clave temporal) no se redibuja
+   * al pulsar sus botones.
+   */
+  private enZona<T>(): MonoTypeOperatorFunction<T> {
+    return (origen) => new Observable<T>((obs) => origen.subscribe({
+      next: (v) => this.zone.run(() => obs.next(v)),
+      error: (e) => this.zone.run(() => obs.error(e)),
+      complete: () => this.zone.run(() => obs.complete()),
+    }));
+  }
 
   /** Quién inició sesión. También deja guardado el usuario para el guard y el interceptor. */
   yo(): Observable<PerfilWillGo> {
     return this.http.get<{ data: PerfilWillGo }>(`${this.api}/yo`).pipe(
+      this.enZona(),
       map((r) => r.data),
       tap((p) => {
         StorageServices.setUserData({ id: p.id, email: p.email, first_name: p.nombre, last_name: p.apellido, role: p.role });
@@ -80,6 +95,7 @@ export class WillGoService {
 
   cambiarClave(nueva: string): Observable<void> {
     return this.http.post(`${this.api}/cambiar-clave`, { nueva }).pipe(
+      this.enZona(),
       map(() => undefined),
       tap(() => {
         const p = WillGoService.perfilGuardado();
@@ -89,21 +105,21 @@ export class WillGoService {
   }
 
   funcionarios(): Observable<Funcionario[]> {
-    return this.http.get<{ data: Funcionario[] }>(`${this.api}/funcionarios`).pipe(map((r) => r.data));
+    return this.http.get<{ data: Funcionario[] }>(`${this.api}/funcionarios`).pipe(this.enZona(), map((r) => r.data));
   }
 
   crearFuncionario(datos: NuevoFuncionario): Observable<{ funcionario: Funcionario; clave_temporal: string }> {
     return this.http.post<{ data: { funcionario: Funcionario; clave_temporal: string } }>(`${this.api}/funcionarios`, datos)
-      .pipe(map((r) => r.data));
+      .pipe(this.enZona(), map((r) => r.data));
   }
 
   actualizarFuncionario(id: string, cambios: Partial<NuevoFuncionario> & { estado?: string }): Observable<Funcionario> {
-    return this.http.patch<{ data: Funcionario }>(`${this.api}/funcionarios/${id}`, cambios).pipe(map((r) => r.data));
+    return this.http.patch<{ data: Funcionario }>(`${this.api}/funcionarios/${id}`, cambios).pipe(this.enZona(), map((r) => r.data));
   }
 
   restablecerClave(id: string): Observable<{ funcionario: Funcionario; clave_temporal: string }> {
     return this.http.post<{ data: { funcionario: Funcionario; clave_temporal: string } }>(`${this.api}/funcionarios/${id}/restablecer-clave`, {})
-      .pipe(map((r) => r.data));
+      .pipe(this.enZona(), map((r) => r.data));
   }
 
   /** Mensaje en español que devuelve la extensión, o uno genérico. */
