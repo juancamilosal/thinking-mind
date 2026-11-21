@@ -60,7 +60,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 
 	const funcionarioExistente = async (id) => {
 		const u = await consultaFuncionarios().where('u.id', id).first();
-		if (!u) throw new WgeError(404, 'NO_EXISTE', 'El funcionario no existe o no es de Will Go');
+		if (!u) throw new WgeError(404, 'NO_EXISTE', 'El colaborador no existe o no es de Will Go');
 		return u;
 	};
 

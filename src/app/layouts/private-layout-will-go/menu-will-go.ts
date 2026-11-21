@@ -23,13 +23,13 @@ const INICIO: OpcionMenu = { texto: 'Inicio', ruta: '/private-will-go/inicio', i
 export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
   administrativo: [
     INICIO,
-    { texto: 'Funcionarios', ruta: '/private-will-go/funcionarios', icono: ICONOS.personas },
+    { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
     { texto: 'Edición y participantes', icono: ICONOS.edicion },
     { texto: 'Tipo de cambio', icono: ICONOS.tasas },
   ],
   administrador: [
     INICIO,
-    { texto: 'Funcionarios', ruta: '/private-will-go/funcionarios', icono: ICONOS.personas },
+    { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
     { texto: 'Edición y participantes', icono: ICONOS.edicion },
     { texto: 'Tipo de cambio', icono: ICONOS.tasas },
   ],

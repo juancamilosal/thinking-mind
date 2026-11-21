@@ -8,7 +8,7 @@ import { InicioWillGo } from './layouts/private-layout-will-go/pages/inicio/inic
 import { CambiarClaveWillGo } from './layouts/private-layout-will-go/pages/cambiar-clave/cambiar-clave-will-go';
 import { FuncionariosWillGo } from './layouts/private-layout-will-go/pages/funcionarios/funcionarios-will-go';
 
-/** Solo entran funcionarios de Will Go, y quien tiene clave temporal solo puede ir a cambiarla. */
+/** Solo entran colaboradores de Will Go, y quien tiene clave temporal solo puede ir a cambiarla. */
 export const willGoGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const perfil = WillGoService.perfilGuardado();
@@ -37,8 +37,8 @@ export const willGoRoutes: Routes = [
       { path: 'inicio', title: 'Will-Go Economy | Inicio', component: InicioWillGo },
       { path: 'cambiar-clave', title: 'Will-Go Economy | Cambiar contraseña', component: CambiarClaveWillGo },
       {
-        path: 'funcionarios',
-        title: 'Will-Go Economy | Funcionarios',
+        path: 'colaboradores',
+        title: 'Will-Go Economy | Colaboradores',
         component: FuncionariosWillGo,
         data: { roles: ['administrativo', 'administrador'] },
       },

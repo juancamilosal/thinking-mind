@@ -1,13 +1,13 @@
 <div class="max-w-6xl mx-auto">
   <div class="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">Funcionarios</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Colaboradores</h1>
       <p class="text-gray-500 mt-1">Crea los perfiles de docentes, banco y caja, y entrégales su clave de ingreso.</p>
     </div>
     <button type="button" (click)="abrirNuevo()"
             class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 shadow hover:brightness-110">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Nuevo funcionario
+      Nuevo colaborador
     </button>
   </div>
 
@@ -25,7 +25,7 @@
 
   <!-- Búsqueda -->
   <div class="mt-5 flex flex-col sm:flex-row gap-3">
-    <input type="search" [value]="busqueda" (input)="busqueda = $any($event.target).value" placeholder="Buscar funcionario…" aria-label="Buscar por nombre, correo o documento"
+    <input type="search" [value]="busqueda" (input)="busqueda = $any($event.target).value" placeholder="Buscar colaborador…" aria-label="Buscar por nombre, correo o documento"
            class="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
     <select [value]="filtroRol" (change)="filtroRol = $any($event.target).value"
             class="sm:w-48 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
@@ -41,7 +41,7 @@
   <!-- Lista -->
   <div class="mt-5">
     @if (cargando) {
-      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando funcionarios…</div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando colaboradores…</div>
     } @else if (errorCarga) {
       <div class="bg-white rounded-2xl border border-red-200 p-8 text-center">
         <p class="text-red-700">{{ errorCarga }}</p>
@@ -49,9 +49,9 @@
       </div>
     } @else if (!filtrados.length) {
       <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center">
-        <p class="text-gray-700 font-semibold">{{ funcionarios.length ? 'Ningún funcionario coincide con la búsqueda' : 'Todavía no hay funcionarios' }}</p>
+        <p class="text-gray-700 font-semibold">{{ funcionarios.length ? 'Ningún colaborador coincide con la búsqueda' : 'Todavía no hay colaboradores' }}</p>
         @if (!funcionarios.length) {
-          <p class="text-gray-500 text-sm mt-1">Crea el primero con el botón «Nuevo funcionario».</p>
+          <p class="text-gray-500 text-sm mt-1">Crea el primero con el botón «Nuevo colaborador».</p>
         }
       </div>
     } @else {
@@ -110,7 +110,7 @@
   <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" (click)="formularioAbierto = false">
     <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-form">
       <div class="px-6 pt-6 pb-2 flex items-start justify-between">
-        <h2 id="titulo-form" class="text-xl font-bold text-gray-800">{{ editando ? 'Editar funcionario' : 'Nuevo funcionario' }}</h2>
+        <h2 id="titulo-form" class="text-xl font-bold text-gray-800">{{ editando ? 'Editar colaborador' : 'Nuevo colaborador' }}</h2>
         <button type="button" (click)="formularioAbierto = false" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="guardar()" class="px-6 pb-6 space-y-4" novalidate>
