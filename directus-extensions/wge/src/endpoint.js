@@ -4,12 +4,13 @@ import {
 	WgeError, ROLES, rolDelUsuario, exigirRol, enteroPositivo, exigirTexto,
 	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar,
 } from './lib.js';
+import { rutasFuncionarios } from './funcionarios.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
 export default {
 	id: 'wge',
-	handler: (router, { database: db, logger }) => {
+	handler: (router, { database: db, logger, services, getSchema }) => {
 		const ruta = (fn) => async (req, res) => {
 			try {
 				if (!req.accountability?.user) throw new WgeError(401, 'SIN_SESION', 'Debes iniciar sesión');
@@ -201,7 +202,7 @@ export default {
 		 * La variación sale de una semilla guardada en la ronda, así el resultado se puede auditar y repetir.
 		 */
 		router.post('/rondas/:id/cerrar', ruta(async (req, rol) => {
-			exigirRol(rol);
+			exigirRol(rol, ROLES.ADMIN_WG);
 			const actor = req.accountability.user;
 			return db.transaction(async (trx) => {
 				const ronda = await trx('wge_rondas').where('id', req.params.id).forUpdate().first();
@@ -242,7 +243,7 @@ export default {
 
 		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos en el programa de la edición. */
 		router.post('/ediciones/:id/sincronizar-participantes', ruta(async (req, rol) => {
-			exigirRol(rol);
+			exigirRol(rol, ROLES.ADMIN_WG);
 			const edicion = await db('wge_ediciones').where('id', req.params.id).first();
 			if (!edicion?.curso_id) throw new WgeError(409, 'SIN_PROGRAMA', 'La edición no tiene programa asignado');
 			const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
@@ -275,7 +276,7 @@ export default {
 		 * Se puede llamar varias veces: lo ya entregado no se repite.
 		 */
 		router.post('/ediciones/:id/abrir', ruta(async (req, rol) => {
-			exigirRol(rol);
+			exigirRol(rol, ROLES.ADMIN_WG);
 			const actor = req.accountability.user;
 			return db.transaction(async (trx) => {
 				const edicion = await trx('wge_ediciones').where('id', req.params.id).forUpdate().first();
@@ -310,6 +311,8 @@ export default {
 				return resumen;
 			});
 		}));
+
+		rutasFuncionarios(router, { ruta, db, services, getSchema });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

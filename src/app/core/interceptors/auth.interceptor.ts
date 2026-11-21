@@ -94,8 +94,6 @@ function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshServic
   isRefreshing = false;
   
   const currentUser = StorageServices.getCurrentUser();
-  const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
-  const shouldRedirectToAyo = currentUser && currentUser.role && ayoRoles.includes(currentUser.role);
 
   tokenRefreshService.stopTokenRefreshService();
 
@@ -103,11 +101,7 @@ function redirectToLogin(router: Router, tokenRefreshService: TokenRefreshServic
   if (StorageServices.getCurrentUser()) {
     StorageServices.clearSession();
     
-    if (shouldRedirectToAyo) {
-      router.navigate(['/login-ayo']);
-    } else {
-      router.navigate(['/login']);
-    }
+    router.navigate([Roles.loginRoute(currentUser?.role)]);
   }
 
   return throwError(() => 'Token refresh failed');

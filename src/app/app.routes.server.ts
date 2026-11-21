@@ -20,6 +20,14 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'private-will-go',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'private-will-go/**',
+    renderMode: RenderMode.Client
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender
   }

@@ -1,3 +1,4 @@
+import { Roles } from '../const/Roles';
 import { Injectable, OnDestroy } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
 import { StorageServices } from './storage.services';
@@ -45,16 +46,10 @@ export class TokenRefreshService implements OnDestroy {
     // Si estamos en el navegador y hay una sesión activa que expiró, volver al login
     if (typeof window !== 'undefined' && StorageServices.getAccessToken()) {
       const currentUser = StorageServices.getCurrentUser();
-      const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
-      const shouldRedirectToAyo = currentUser && currentUser.role && ayoRoles.includes(currentUser.role);
 
       StorageServices.clearSession();
       
-      if (shouldRedirectToAyo) {
-        this.router.navigate(['/login-ayo']);
-      } else {
-        this.router.navigate(['/login']);
-      }
+      this.router.navigate([Roles.loginRoute(currentUser?.role)]);
     }
   }
 
@@ -117,16 +112,10 @@ export class TokenRefreshService implements OnDestroy {
    */
   private handleRefreshError(): void {
     const currentUser = StorageServices.getCurrentUser();
-    const ayoRoles = ['fe83d2f3-1b89-477d-984a-de3b56e12001', 'ca8ffc29-c040-439f-8017-0dcb141f0fd3'];
-    const shouldRedirectToAyo = currentUser && currentUser.role && ayoRoles.includes(currentUser.role);
 
     StorageServices.clearSession();
     
-    if (shouldRedirectToAyo) {
-      this.router.navigate(['/login-ayo']);
-    } else {
-      this.router.navigate(['/login']);
-    }
+    this.router.navigate([Roles.loginRoute(currentUser?.role)]);
   }
 
   /**

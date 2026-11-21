@@ -26,6 +26,7 @@ import { FormProgramaAyoComponent } from './layouts/private-layout/pages/ayo/for
 import { FormMeetGeneralComponent } from './layouts/private-layout/pages/ayo/general-meeting/form-meet-general/form-meet-general';
 import { GeneralMeetingComponent } from './layouts/private-layout/pages/ayo/general-meeting/general-meeting';
 import { ayoRoutes } from './ayo.routes';
+import { willGoRoutes } from './will-go.routes';
 import { PayrollAdmin } from './layouts/private-layout/pages/payroll-admin/payroll-admin';
 import { TeacherEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/teacher-evaluation-ayo/teacher-evaluation-ayo';
 import { StudentEvaluationAyoComponent } from './layouts/private-layout/pages/ayo/student-evaluation-ayo/student-evaluation-ayo';
@@ -39,6 +40,7 @@ import { AccountReceivableDetailAyoComponent } from './layouts/private-layout/pa
 
 export const routes: Routes = [
   ...ayoRoutes,
+  ...willGoRoutes,
   {
     path: '',
     pathMatch: 'full',

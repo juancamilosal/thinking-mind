@@ -4,9 +4,23 @@ export class Roles {
   public static STUDENT: string = 'ca8ffc29-c040-439f-8017-0dcb141f0fd3';
   public static TEACHER: string = 'fe83d2f3-1b89-477d-984a-de3b56e12001';
   public static CEO: string = 'ad299f85-8137-4709-a3ad-beaeb579cdb3';
+  public static ADMIN: string = 'ca89252c-6b5c-4f51-a6e4-34ab4d0e2a02';
 
-  /** Login al que debe volver un usuario: el de AYO para estudiantes y docentes, el general para el resto. */
+  // WILL-GO ECONOMY
+  public static WG_ADMINISTRATIVO: string = 'a503069d-e76a-474f-8a91-f852dbfae4e6';
+  public static WG_DOCENTE: string = '7d3849bf-bd47-4673-bba2-c64e2afa0304';
+  public static WG_BANCO: string = '819c2de5-cad6-44e4-9f20-c815b4975882';
+  public static WG_CAJERO: string = '2c8d1334-5a49-4d0b-8637-9926fa373bef';
+  public static WG_ACUDIENTE: string = '1c8141e4-e5b0-41e9-add4-a777662a9de3';
+
+  /** Funcionarios que entran por el login de Will Go. */
+  public static readonly WILL_GO_STAFF: string[] = [
+    Roles.WG_ADMINISTRATIVO, Roles.WG_DOCENTE, Roles.WG_BANCO, Roles.WG_CAJERO
+  ];
+
+  /** Login al que debe volver un usuario: Will Go, AYO (estudiantes y docentes) o el general para el resto. */
   public static loginRoute(role?: string | null): string {
+    if (role && Roles.WILL_GO_STAFF.includes(role)) return '/login-will-go';
     return role === Roles.STUDENT || role === Roles.TEACHER ? '/login-ayo' : '/login';
   }
 }

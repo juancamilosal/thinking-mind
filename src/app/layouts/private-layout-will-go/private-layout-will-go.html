@@ -1,0 +1,74 @@
+<div class="min-h-screen bg-gray-50 md:flex">
+
+  <!-- Fondo oscuro del menú en celular -->
+  @if (menuAbierto) {
+    <div class="fixed inset-0 z-30 bg-black/50 md:hidden" (click)="menuAbierto = false"></div>
+  }
+
+  <!-- Menú lateral: fijo en computador, deslizable en celular -->
+  <aside class="fixed md:sticky top-0 left-0 z-40 h-screen w-72 shrink-0 flex flex-col text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700 transition-transform duration-300 md:translate-x-0"
+         [class.-translate-x-full]="!menuAbierto">
+    <div class="px-6 pt-6 pb-5 border-b border-white/10">
+      <p class="text-xs font-semibold tracking-[0.2em] text-teal-300">THINKING MIND</p>
+      <p class="text-xl font-extrabold tracking-wide">WILL-GO ECONOMY</p>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Menú de Will Go">
+      @for (op of menu; track op.texto) {
+        @if (op.ruta && !bloqueado) {
+          <a [routerLink]="op.ruta" routerLinkActive="bg-white/15 text-white" (click)="menuAbierto = false"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-200 hover:bg-white/10 hover:text-white transition">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="op.icono"/></svg>
+            <span class="font-medium">{{ op.texto }}</span>
+          </a>
+        } @else {
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 cursor-not-allowed" aria-disabled="true">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="op.icono"/></svg>
+            <span class="font-medium">{{ op.texto }}</span>
+            @if (!op.ruta) {
+              <span class="ml-auto text-[10px] uppercase tracking-wide bg-white/10 text-slate-300 px-2 py-0.5 rounded-full">Pronto</span>
+            }
+          </div>
+        }
+      }
+    </nav>
+
+    <div class="px-3 pb-5 pt-3 border-t border-white/10 space-y-1">
+      <a routerLink="/private-will-go/cambiar-clave" routerLinkActive="bg-white/15 text-white" (click)="menuAbierto = false"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-200 hover:bg-white/10 hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+        <span class="font-medium">Cambiar contraseña</span>
+      </a>
+      <button type="button" (click)="salir()" [disabled]="saliendo"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-200 hover:bg-red-500/20 hover:text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        <span class="font-medium">{{ saliendo ? 'Saliendo…' : 'Cerrar sesión' }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <!-- Barra superior -->
+    <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-200">
+      <div class="flex items-center gap-3 px-4 sm:px-6 h-16">
+        <button type="button" class="md:hidden -ml-1 p-2 rounded-lg text-gray-600 hover:bg-gray-100" (click)="menuAbierto = true" aria-label="Abrir menú">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <p class="md:hidden font-extrabold tracking-wide text-slate-800">WILL-GO</p>
+        <div class="ml-auto flex items-center gap-3">
+          <div class="text-right leading-tight hidden sm:block">
+            <p class="text-sm font-semibold text-gray-800">{{ perfil?.nombre }} {{ perfil?.apellido }}</p>
+            <p class="text-xs text-gray-500">{{ nombreRol }}</p>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-blue-600 text-white font-bold flex items-center justify-center" [attr.title]="nombreRol">
+            {{ iniciales }}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 sm:p-6 lg:p-8">
+      <router-outlet />
+    </main>
+  </div>
+</div>

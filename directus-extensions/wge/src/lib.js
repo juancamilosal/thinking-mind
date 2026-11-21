@@ -14,6 +14,7 @@ export const ROLES = {
 	BANCO: 'Banco Will Go',
 	DOCENTE: 'Docente Will Go',
 	CAJERO: 'Cajero Will Go',
+	ADMIN_WG: 'Administrativo Will Go',
 	ADMIN: 'Administrador',
 };
 

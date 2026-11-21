@@ -4,18 +4,20 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const leer = (archivo) => readFileSync(new URL(`./src/${archivo}`, import.meta.url), 'utf8');
-const sinImports = (codigo) => codigo.replace(/^import[\s\S]*?from '\.\/lib\.js';\n/m, '');
+const sinImports = (codigo) => codigo.replace(/^import[\s\S]*?from '\.\/[a-z]+\.js';\n/gm, '');
 
 const lib = leer('lib.js').replace(/^export (?=(async )?function|class|const)/gm, '');
+const funcionarios = sinImports(leer('funcionarios.js')).replace(/^export (?=(async )?function|const)/gm, '');
 const hook = sinImports(leer('hook.js'))
 	.replace(/^export default /m, 'const configHook = ')
 	.replace(/^export (?=(async )?function|const)/gm, '');
 const endpoint = sinImports(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
 
-if (/^\s*(import|export)\b/m.test(lib + hook + endpoint)) throw new Error('Quedó un import/export sin convertir');
+if (/^\s*(import|export)\b/m.test(lib + funcionarios + hook + endpoint)) throw new Error('Quedó un import/export sin convertir');
 
 const api = `// Generado por build.mjs: no editar a mano.
 ${lib}
+${funcionarios}
 ${hook}
 ${endpoint}
 export default {
