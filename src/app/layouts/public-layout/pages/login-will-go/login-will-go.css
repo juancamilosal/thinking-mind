@@ -1,17 +1,423 @@
-/* Mismo fondo del login general de Thinking Mind */
-.wg-fondo {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%);
+/* Login de Will-Go Economy: misma estructura que el login de AYO (panel de marca + formulario). */
+:host {
+  --naranja: #ff6b1a;
+  --naranja-oscuro: #e85a0c;
+  --azul: #1b2a4a;
+  --azul-noche: #0f1a33;
+  --crema: #ffe3c7;
+  display: block;
 }
 
-.wg-entrada {
-  animation: wgEntrada 0.5s ease-out;
+.wg-pantalla {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6f9;
 }
 
-@keyframes wgEntrada {
-  from { opacity: 0; transform: translateY(24px) scale(0.97); }
-  to { opacity: 1; transform: none; }
+/* ---------- Panel de marca ---------- */
+.wg-marca {
+  position: relative;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 107, 26, 0.35), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(255, 227, 199, 0.18), transparent 40%),
+    linear-gradient(150deg, var(--azul) 0%, var(--azul-noche) 100%);
+}
+
+.wg-billetes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wg-billete-fondo {
+  position: absolute;
+  opacity: 0.18;
+  transform: rotate(var(--giro, 0deg));
+  animation: flotar 9s ease-in-out infinite;
+}
+
+@keyframes flotar {
+  0%, 100% { transform: translateY(0) rotate(var(--giro, 0deg)); }
+  50% { transform: translateY(-18px) rotate(calc(var(--giro, 0deg) + 4deg)); }
+}
+
+.wg-marca-contenido {
+  position: relative;
+  z-index: 1;
+  max-width: 460px;
+}
+
+.wg-logo-imagen {
+  width: min(420px, 80%);
+  height: auto;
+  margin: 0 auto 2rem;
+  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.35));
+}
+
+.wg-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.25rem;
+  padding: 1.1rem 1.6rem 1.1rem 1.1rem;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.wg-logo-billete {
+  width: 104px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.wg-logo-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.wg-logo-will {
+  font-size: 2.35rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--naranja);
+}
+
+.wg-logo-economy {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  color: var(--azul);
+}
+
+.wg-saludo {
+  margin: 0;
+  font-size: 2.75rem;
+  font-weight: 800;
+}
+
+.wg-lema {
+  margin: 0.75rem 0 2rem;
+  font-size: 1.1rem;
+  font-weight: 300;
+  opacity: 0.85;
+}
+
+.wg-paises {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wg-paises li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.wg-punto {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.wg-pie {
+  position: absolute;
+  bottom: 1.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  z-index: 1;
+}
+
+/* ---------- Formulario ---------- */
+.wg-formulario {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.wg-tarjeta {
+  width: 100%;
+  max-width: 440px;
+  padding: 3rem;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(15, 26, 51, 0.08);
+}
+
+.wg-etiqueta {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--naranja-oscuro);
+  background: #fff1e8;
+}
+
+.wg-titulo {
+  margin: 0.9rem 0 0.35rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--azul);
+}
+
+.wg-subtitulo {
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+  color: #7a8597;
+}
+
+.wg-campo {
+  margin-bottom: 1.25rem;
+}
+
+.wg-campo label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.wg-input-icono {
+  position: relative;
+}
+
+.wg-input-icono > svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  color: #a0aec0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.wg-input-icono input {
+  width: 100%;
+  padding: 14px 46px 14px 44px;
+  font-size: 0.95rem;
+  color: #2d3748;
+  background: #eef2f7;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.wg-input-icono input::placeholder {
+  color: #a0aec0;
+}
+
+.wg-input-icono input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--naranja);
+  box-shadow: 0 0 0 4px rgba(255, 107, 26, 0.15);
+}
+
+.wg-input-icono input.wg-invalido {
+  border-color: #e53e3e;
+  background: #fff5f5;
+}
+
+.wg-ver {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  display: flex;
+  padding: 8px;
+  color: #94a3b8;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.wg-ver:hover {
+  color: var(--naranja);
+}
+
+.wg-ver svg {
+  width: 20px;
+  height: 20px;
+}
+
+.wg-error-campo {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #e53e3e;
+}
+
+.wg-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #b42318;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.wg-error svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.wg-boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--naranja) 0%, var(--naranja-oscuro) 100%);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(255, 107, 26, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.wg-boton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.wg-boton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(255, 107, 26, 0.42);
+}
+
+.wg-boton:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.wg-girando {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+.wg-ayuda {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.wg-ayuda button {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--azul);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.wg-ayuda button:hover {
+  color: var(--naranja-oscuro);
+}
+
+.wg-ayuda p {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #5b6474;
+  background: #fff7ee;
+  border: 1px solid #ffe3c7;
+  border-radius: 12px;
+}
+
+/* ---------- Celular y tablet: una sola columna ---------- */
+@media (max-width: 1023px) {
+  .wg-pantalla {
+    flex-direction: column;
+  }
+
+  .wg-marca {
+    width: 100%;
+    padding: 2.25rem 1.25rem 4.5rem;
+  }
+
+  .wg-logo {
+    margin-bottom: 1.25rem;
+    padding: 0.8rem 1.1rem 0.8rem 0.8rem;
+    gap: 0.7rem;
+    border-radius: 20px;
+  }
+
+  .wg-logo-billete { width: 72px; }
+  .wg-logo-will { font-size: 1.65rem; }
+  .wg-logo-economy { font-size: 0.75rem; }
+  .wg-logo-imagen { width: min(280px, 75%); margin-bottom: 1rem; }
+
+  .wg-saludo { font-size: 1.9rem; }
+  .wg-lema { margin: 0.4rem 0 0; font-size: 0.95rem; }
+  .wg-paises, .wg-pie { display: none; }
+
+  .wg-formulario {
+    width: 100%;
+    margin-top: -2.75rem;
+    padding: 0 1rem 2rem;
+    align-items: flex-start;
+  }
+
+  .wg-tarjeta {
+    position: relative;
+    padding: 1.75rem 1.4rem;
+    box-shadow: 0 14px 40px rgba(15, 26, 51, 0.14);
+  }
+
+  .wg-titulo { font-size: 1.6rem; }
+  .wg-subtitulo { margin-bottom: 1.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wg-entrada { animation: none; }
+  .wg-billete-fondo { animation: none; }
 }
