@@ -5,6 +5,7 @@ import {
 	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar,
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
+import { rutasAdmin } from './admin.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
@@ -313,6 +314,7 @@ export default {
 		}));
 
 		rutasFuncionarios(router, { ruta, db, services, getSchema });
+		rutasAdmin(router, { ruta, db, services, getSchema });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

@@ -19,18 +19,18 @@ const ICONOS = {
 
 const INICIO: OpcionMenu = { texto: 'Inicio', ruta: '/private-will-go/inicio', icono: ICONOS.inicio };
 
-/** Lo que ve cada funcionario en su menú. */
+/** Lo que ve cada colaborador en su menú. */
 export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
   administrativo: [
     INICIO,
     { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
-    { texto: 'Edición y participantes', icono: ICONOS.edicion },
+    { texto: 'Ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
     { texto: 'Tipo de cambio', icono: ICONOS.tasas },
   ],
   administrador: [
     INICIO,
     { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
-    { texto: 'Edición y participantes', icono: ICONOS.edicion },
+    { texto: 'Ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
     { texto: 'Tipo de cambio', icono: ICONOS.tasas },
   ],
   docente: [

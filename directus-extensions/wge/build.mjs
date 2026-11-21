@@ -1,25 +1,29 @@
 // Arma dist/api.js sin dependencias (no hace falta npm install).
-// Une lib.js, hook.js y endpoint.js en un solo módulo con el formato de "bundle" que lee Directus 11.
+// Une los archivos de src/ en un solo módulo con el formato de "bundle" que lee Directus 11.
 // Si tienes acceso a npm también sirve `npm run build` con @directus/extensions-sdk.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const leer = (archivo) => readFileSync(new URL(`./src/${archivo}`, import.meta.url), 'utf8');
-const sinImports = (codigo) => codigo.replace(/^import[\s\S]*?from '\.\/[a-z]+\.js';\n/gm, '');
+const externos = new Set();
+const preparar = (codigo) => codigo
+	// Los imports de Node (node:stream, ...) van una sola vez al inicio del archivo final
+	.replace(/^import [^;]*? from 'node:[a-z/]+';\n/gm, (linea) => { externos.add(linea.trim()); return ''; })
+	// Los imports entre archivos propios sobran: todo queda en el mismo módulo
+	.replace(/^import[\s\S]*?from '\.\/[a-z]+\.js';\n/gm, '')
+	.replace(/^export (?=(async )?function|class|const)/gm, '');
 
-const lib = leer('lib.js').replace(/^export (?=(async )?function|class|const)/gm, '');
-const funcionarios = sinImports(leer('funcionarios.js')).replace(/^export (?=(async )?function|const)/gm, '');
-const hook = sinImports(leer('hook.js'))
-	.replace(/^export default /m, 'const configHook = ')
-	.replace(/^export (?=(async )?function|const)/gm, '');
-const endpoint = sinImports(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
+const lib = preparar(leer('lib.js'));
+const funcionarios = preparar(leer('funcionarios.js'));
+const admin = preparar(leer('admin.js'));
+const hook = preparar(leer('hook.js')).replace(/^export default /m, 'const configHook = ');
+const endpoint = preparar(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
 
-if (/^\s*(import|export)\b/m.test(lib + funcionarios + hook + endpoint)) throw new Error('Quedó un import/export sin convertir');
+const cuerpo = [lib, funcionarios, admin, hook, endpoint].join('\n');
+if (/^\s*(import|export)\b/m.test(cuerpo)) throw new Error('Quedó un import/export sin convertir');
 
 const api = `// Generado por build.mjs: no editar a mano.
-${lib}
-${funcionarios}
-${hook}
-${endpoint}
+${[...externos].join('\n')}
+${cuerpo}
 export default {
 	hooks: [{ name: 'wge-fx', config: configHook }],
 	endpoints: [{ name: 'wge', config: configEndpoint }],

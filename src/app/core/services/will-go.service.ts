@@ -41,6 +41,50 @@ export interface NuevoFuncionario {
   celular?: string;
 }
 
+export interface Franja { dia?: string; fecha?: string; inicio: string; fin: string; }
+
+export interface Edicion {
+  id: string;
+  nombre: string;
+  colegio_id: string | null;
+  curso_id: string | null;
+  colegio_nombre: string | null;
+  programa_nombre: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  horario: Franja[] | null;
+  tasa_inicial: number;
+  tope_minimo: number | string;
+  tope_maximo: number | string;
+  investment_bill: number;
+  estado: 'borrador' | 'abierta' | 'cerrada';
+  participantes: number;
+  sin_pais: number;
+}
+
+export interface Pais {
+  id: string; nombre: string; codigo_moneda: string | null; color: string | null;
+  provision_inicial: number; tasa_actual: number | null; orden: number | null;
+}
+
+export interface Producto {
+  id: string; nombre: string; foto: string | null; precio_cop: number; stock: number;
+  maximo_por_estudiante: number | null; activo: boolean;
+}
+
+export interface Fondo {
+  id: string; nombre: string; historia: string | null; riesgo: 'bajo' | 'medio' | 'alto';
+  rendimiento_base: number | string; rendimiento_alterno: number | string | null; variacion: number | string;
+  activo: boolean; orden: number | null;
+}
+
+export interface Participante {
+  id: string; codigo: string; pais_id: string | null; presente: boolean;
+  nombre: string; apellido: string; grado: string | null; colegio: string | null; saldo: number;
+}
+
+export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
+
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
   administrativo: 'Administrativo',
   docente: 'Docente',
@@ -120,6 +164,69 @@ export class WillGoService {
   restablecerClave(id: string): Observable<{ funcionario: Funcionario; clave_temporal: string }> {
     return this.http.post<{ data: { funcionario: Funcionario; clave_temporal: string } }>(`${this.api}/funcionarios/${id}/restablecer-clave`, {})
       .pipe(this.enZona(), map((r) => r.data));
+  }
+
+  // ---------- Administración de ediciones ----------
+
+  catalogos(): Observable<{ colegios: { id: string; nombre: string }[]; programas: { id: string; nombre: string }[] }> {
+    return this.http.get<{ data: any }>(`${this.api}/admin/catalogos`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  ediciones(): Observable<Edicion[]> {
+    return this.http.get<{ data: Edicion[] }>(`${this.api}/admin/ediciones`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  edicion(id: string): Observable<Edicion> {
+    return this.http.get<{ data: Edicion }>(`${this.api}/admin/ediciones/${id}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  crearEdicion(datos: Partial<Edicion>): Observable<Edicion> {
+    return this.http.post<{ data: Edicion }>(`${this.api}/admin/ediciones`, datos).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  actualizarEdicion(id: string, datos: Partial<Edicion>): Observable<Edicion> {
+    return this.http.patch<{ data: Edicion }>(`${this.api}/admin/ediciones/${id}`, datos).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  seccion<T>(edicionId: string, seccion: SeccionEdicion): Observable<T[]> {
+    return this.http.get<{ data: T[] }>(`${this.api}/admin/ediciones/${edicionId}/${seccion}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  crearEnSeccion<T>(edicionId: string, seccion: SeccionEdicion, datos: Partial<T>): Observable<T> {
+    return this.http.post<{ data: T }>(`${this.api}/admin/ediciones/${edicionId}/${seccion}`, datos).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  actualizarEnSeccion<T>(seccion: SeccionEdicion, id: string, datos: Partial<T>): Observable<T> {
+    return this.http.patch<{ data: T }>(`${this.api}/admin/${seccion}/${id}`, datos).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  borrarProducto(id: string): Observable<{ borrado: boolean; desactivado?: boolean }> {
+    return this.http.delete<{ data: any }>(`${this.api}/admin/productos/${id}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  participantes(edicionId: string): Observable<Participante[]> {
+    return this.http.get<{ data: Participante[] }>(`${this.api}/admin/ediciones/${edicionId}/participantes`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  actualizarParticipantes(ids: string[], cambios: { pais_id?: string | null; presente?: boolean }): Observable<{ actualizados: number }> {
+    return this.http.patch<{ data: any }>(`${this.api}/admin/participantes`, { ids, ...cambios }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  sincronizarParticipantes(edicionId: string): Observable<{ inscritos: number; nuevos: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/ediciones/${edicionId}/sincronizar-participantes`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  abrirEdicion(edicionId: string): Observable<{ provisiones: number; bienvenidas: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/ediciones/${edicionId}/abrir`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  subirFoto(nombre: string, tipo: string, base64: string): Observable<{ id: string }> {
+    return this.http.post<{ data: { id: string } }>(`${this.api}/admin/fotos`, { nombre, tipo, base64 }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** URL de la foto de un producto (las imágenes no envían el token en el encabezado). */
+  urlFoto(id: string): string {
+    return `${this.api}/foto/${id}?access_token=${encodeURIComponent(StorageServices.getAccessToken() ?? '')}`;
   }
 
   /** Mensaje en español que devuelve la extensión, o uno genérico. */

@@ -7,6 +7,8 @@ import { PrivateLayoutWillGo } from './layouts/private-layout-will-go/private-la
 import { InicioWillGo } from './layouts/private-layout-will-go/pages/inicio/inicio-will-go';
 import { CambiarClaveWillGo } from './layouts/private-layout-will-go/pages/cambiar-clave/cambiar-clave-will-go';
 import { FuncionariosWillGo } from './layouts/private-layout-will-go/pages/funcionarios/funcionarios-will-go';
+import { EdicionesWillGo } from './layouts/private-layout-will-go/pages/ediciones/ediciones-will-go';
+import { EdicionWillGo } from './layouts/private-layout-will-go/pages/ediciones/edicion-will-go';
 
 /** Solo entran colaboradores de Will Go, y quien tiene clave temporal solo puede ir a cambiarla. */
 export const willGoGuard: CanActivateFn = (route, state) => {
@@ -40,6 +42,18 @@ export const willGoRoutes: Routes = [
         path: 'colaboradores',
         title: 'Will-Go Economy | Colaboradores',
         component: FuncionariosWillGo,
+        data: { roles: ['administrativo', 'administrador'] },
+      },
+      {
+        path: 'ediciones',
+        title: 'Will-Go Economy | Ediciones',
+        component: EdicionesWillGo,
+        data: { roles: ['administrativo', 'administrador'] },
+      },
+      {
+        path: 'ediciones/:id',
+        title: 'Will-Go Economy | Edición',
+        component: EdicionWillGo,
         data: { roles: ['administrativo', 'administrador'] },
       },
       { path: '**', redirectTo: 'inicio' },
