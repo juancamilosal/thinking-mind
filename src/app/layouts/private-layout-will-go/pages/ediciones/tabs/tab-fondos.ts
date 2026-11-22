@@ -12,7 +12,16 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
   standalone: true,
   imports: [FormsModule, NumeroMilesDirective, TarjetaFondoComponent],
   template: `
-    <p class="text-sm text-gray-500">Así ven las empresas los estudiantes y acudientes.</p>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+      <p class="text-sm text-gray-500">Así ven las empresas los estudiantes y acudientes.</p>
+      @if (hayVacios && logos.length) {
+        <button type="button" (click)="completar()" [disabled]="completando"
+                class="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold text-orange-700 bg-orange-50 border border-orange-200 hover:bg-orange-100 disabled:opacity-50">
+          {{ completando ? 'Completando…' : 'Usar los logos y textos ya cargados' }}
+        </button>
+      }
+    </div>
+    @if (aviso) { <p class="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm text-emerald-800" role="status">{{ aviso }}</p> }
     @if (cargando) {
       <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando fondos…</div>
     } @else {
@@ -53,6 +62,21 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
                 @else if (b.logo) { <button type="button" (click)="b.logo = null; b.logoVista = null" class="text-xs text-red-600 mt-1 hover:underline">Quitar logo</button> }
               </div>
             </div>
+
+            @if (logos.length) {
+              <div>
+                <p class="etiqueta">O elige un logo ya cargado</p>
+                <div class="flex flex-wrap gap-2">
+                  @for (l of logos; track l.id) {
+                    <button type="button" (click)="b.logo = l.id; b.logoVista = null" [attr.aria-pressed]="b.logo === l.id" [title]="l.nombre"
+                            class="w-14 h-14 rounded-xl overflow-hidden border-2 p-0 transition"
+                            [class]="b.logo === l.id ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200 hover:border-gray-400'">
+                      <img [src]="urlFoto(l.id)" [alt]="'Logo de ' + l.nombre" class="w-full h-full object-cover">
+                    </button>
+                  }
+                </div>
+              </div>
+            }
 
             <div>
               <label class="etiqueta" for="f-dedica">¿A qué se dedica?</label>
@@ -120,8 +144,12 @@ export class TabFondos implements OnInit {
   subiendo = false;
   guardado: string | null = null;
   error = '';
+  aviso = '';
+  logos: { id: string; nombre: string }[] = [];
+  completando = false;
 
   ngOnInit(): void {
+    this.willGo.logosFondos().subscribe({ next: (l) => (this.logos = l), error: () => (this.logos = []) });
     this.willGo.seccion<Fondo>(this.edicion.id, 'fondos').subscribe({
       next: (l) => { this.fondos = l.map((f) => this.editable(f)); this.cargando = false; },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
@@ -135,6 +163,24 @@ export class TabFondos implements OnInit {
   }
 
   logo(f: Fondo): string | null { return f.logo ? this.willGo.urlFoto(f.logo) : null; }
+  urlFoto(id: string): string { return this.willGo.urlFoto(id); }
+
+  /** Hay fondos sin logo o sin descripción. */
+  get hayVacios(): boolean { return this.fondos.some((f) => !f.logo || !f.a_que_se_dedica); }
+
+  completar(): void {
+    this.completando = true;
+    this.error = '';
+    this.willGo.completarFondos(this.edicion.id).subscribe({
+      next: (r) => {
+        this.completando = false;
+        this.aviso = r.completados ? `Listo: se completaron ${r.completados} ${r.completados === 1 ? 'empresa' : 'empresas'}.` : 'No había nada para completar.';
+        setTimeout(() => (this.aviso = ''), 5000);
+        this.ngOnInit();
+      },
+      error: (e) => { this.completando = false; this.error = WillGoService.mensajeDeError(e); },
+    });
+  }
 
   editar(f: FondoEditable): void {
     this.error = '';

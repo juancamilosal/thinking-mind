@@ -460,6 +460,16 @@ export class WillGoService {
   }
 
   /** URL de la foto de un producto (las imágenes no envían el token en el encabezado). */
+  /** Logos de empresas ya cargados en cualquier edición. */
+  logosFondos(): Observable<{ id: string; nombre: string }[]> {
+    return this.http.get<{ data: { id: string; nombre: string }[] }>(`${this.api}/admin/logos-fondos`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Llena los fondos sin logo o sin textos de la edición con lo ya cargado. */
+  completarFondos(edicionId: string): Observable<{ completados: number }> {
+    return this.http.post<{ data: { completados: number } }>(`${this.api}/admin/ediciones/${edicionId}/fondos/completar`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
   urlFoto(id: string): string {
     return `${this.api}/foto/${id}?access_token=${encodeURIComponent(StorageServices.getAccessToken() ?? '')}`;
   }

@@ -42,6 +42,26 @@ export const FONDOS_POR_DEFECTO = [
 		por_que_invertir: 'La inteligencia artificial está en todas partes\nSi nuestro invento funciona, es el fondo que más gana\nOjo: si el invento falla, puedes perder billetes' },
 ];
 
+/**
+ * Lo último que se cargó de cada empresa en cualquier edición (por nombre): logo y textos.
+ * Sirve para que las ediciones nuevas y los fondos vacíos los reutilicen.
+ */
+export async function fondosCargados(db) {
+	const filas = await db('wge_fondos').where((w) => w.whereNotNull('logo').orWhereNotNull('a_que_se_dedica'))
+		.orderBy('date_created', 'desc').select('nombre', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'date_created');
+	const porNombre = new Map();
+	for (const f of filas) {
+		const n = String(f.nombre ?? '').trim().toUpperCase();
+		const previo = porNombre.get(n) ?? {};
+		porNombre.set(n, {
+			logo: previo.logo ?? f.logo ?? null,
+			a_que_se_dedica: previo.a_que_se_dedica ?? f.a_que_se_dedica ?? null,
+			por_que_invertir: previo.por_que_invertir ?? f.por_que_invertir ?? null,
+		});
+	}
+	return porNombre;
+}
+
 /** Texto de ejemplo para un fondo (por su nombre o, si no, por su posición). */
 export function ejemploDeFondo(fondo) {
 	const n = String(fondo?.nombre ?? '').trim().toUpperCase();
@@ -178,7 +198,15 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			});
 			await trx('wge_ediciones').insert(edicion);
 			await trx('wge_paises').insert(PAISES_POR_DEFECTO.map((p) => nueva(actor, { ...p, edicion_id: edicion.id, provision_inicial: 0 })));
-			await trx('wge_fondos').insert(FONDOS_POR_DEFECTO.map((f, i) => nueva(actor, { ...f, edicion_id: edicion.id, activo: true, orden: i + 1 })));
+			// Cada fondo trae el logo y los textos que ya se cargaron en otras ediciones (si no, los de ejemplo)
+			const cargados = await fondosCargados(trx);
+			await trx('wge_fondos').insert(FONDOS_POR_DEFECTO.map((f, i) => {
+				const c = cargados.get(f.nombre);
+				return nueva(actor, {
+					...f, edicion_id: edicion.id, activo: true, orden: i + 1, logo: c?.logo ?? null,
+					a_que_se_dedica: c?.a_que_se_dedica || f.a_que_se_dedica, por_que_invertir: c?.por_que_invertir || f.por_que_invertir,
+				});
+			}));
 			return edicion.id;
 		});
 		return resumenEdicion(await edicionExistente(id));
@@ -528,6 +556,33 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} billetes sin entregar en esta edición; primero debe entregarlos`);
 		await db('wge_equipo').where('id', fila.id).delete();
 		return { quitado: true };
+	}));
+
+	/** GET /wge/admin/logos-fondos: logos ya cargados en cualquier edición (para elegir uno sin volver a subirlo). */
+	router.get('/admin/logos-fondos', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const filas = await db('wge_fondos').whereNotNull('logo').orderBy('date_created', 'desc').select('logo', 'nombre');
+		const vistos = new Map();
+		for (const f of filas) if (!vistos.has(f.logo)) vistos.set(f.logo, { id: f.logo, nombre: f.nombre });
+		return [...vistos.values()];
+	}));
+
+	/** POST /wge/admin/ediciones/:id/fondos/completar: llena los fondos sin logo o sin textos con lo ya cargado (por nombre). */
+	router.post('/admin/ediciones/:id/fondos/completar', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		const cargados = await fondosCargados(db);
+		let completados = 0;
+		for (const f of await db('wge_fondos').where('edicion_id', e.id)) {
+			const c = cargados.get(String(f.nombre ?? '').trim().toUpperCase());
+			const ej = ejemploDeFondo(f);
+			const cambios = {};
+			if (!f.logo && c?.logo) cambios.logo = c.logo;
+			if (!f.a_que_se_dedica && (c?.a_que_se_dedica || ej?.a_que_se_dedica)) cambios.a_que_se_dedica = c?.a_que_se_dedica || ej.a_que_se_dedica;
+			if (!f.por_que_invertir && (c?.por_que_invertir || ej?.por_que_invertir)) cambios.por_que_invertir = c?.por_que_invertir || ej.por_que_invertir;
+			if (Object.keys(cambios).length) { await db('wge_fondos').where('id', f.id).update(cambios); completados++; }
+		}
+		return { completados };
 	}));
 
 	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto o logo de un fondo (la pantalla la reduce antes de enviarla). */
