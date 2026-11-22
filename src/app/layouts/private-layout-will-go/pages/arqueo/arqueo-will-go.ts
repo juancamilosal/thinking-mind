@@ -12,8 +12,8 @@ import { ArqueoComponent } from '../../arqueo.component';
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Arqueo</h1>
-          <p class="text-gray-500 mt-1">Cuenta los billetes del banco y revisa que cuadren.</p>
+          <h1 class="text-2xl font-bold text-gray-800">Banco</h1>
+          <p class="text-gray-500 mt-1">Tus billetes y el arqueo del banco.</p>
         </div>
         @if (ediciones.length > 1) {
           <select [(ngModel)]="edicionId" aria-label="Edición" class="sm:w-80 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">

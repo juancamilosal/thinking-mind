@@ -42,7 +42,7 @@ export class TabEconomia {
     { id: 'reglas', texto: 'Economía' },
     { id: 'horario', texto: 'Horario' },
     { id: 'fondos', texto: 'Fondos' },
-    { id: 'arqueo', texto: 'Arqueo' },
+    { id: 'arqueo', texto: 'Banco' },
   ];
   seccion: Seccion = 'paises';
 }

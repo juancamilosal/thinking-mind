@@ -112,7 +112,13 @@ export interface MiembroEquipo {
   billetes: number;
 }
 
-export interface PaisArqueo { id: string; nombre: string; codigo_moneda: string | null; color: string | null; saldo_sistema: number; }
+export interface PaisArqueo {
+  id: string; nombre: string; codigo_moneda: string | null; color: string | null;
+  /** Billetes que hoy tiene el banco según el sistema. */
+  saldo_sistema: number;
+  /** Billetes asignados al banco (total y por denominación) y los que ya salieron. */
+  provision_inicial: number; provision_billetes: Record<string, number>; en_circulacion: number;
+}
 
 export interface Arqueo {
   id: string; pais_id: string; conteo: Record<string, number>; total_contado: number; saldo_sistema: number;

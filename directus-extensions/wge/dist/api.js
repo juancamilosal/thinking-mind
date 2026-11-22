@@ -969,8 +969,17 @@ function rutasArqueo(router, { ruta, db }) {
 		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id', 'nombre', 'estado');
 		if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
 		await permitir(req, rol, edicion.id);
-		const paises = await db('wge_paises').where('edicion_id', edicion.id).orderBy('orden').select('id', 'nombre', 'codigo_moneda', 'color');
-		for (const p of paises) p.saldo_sistema = await saldoBanco(edicion.id, p.id);
+		const consulta = db('wge_paises').where('edicion_id', edicion.id).orderBy('orden')
+			.select('id', 'nombre', 'codigo_moneda', 'color', 'provision_inicial', 'provision_billetes', 'responsable_banco');
+		// El colaborador del banco solo ve los países donde es el responsable del banco
+		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) consulta.where('responsable_banco', req.accountability.user);
+		const paises = await consulta;
+		for (const p of paises) {
+			p.saldo_sistema = await saldoBanco(edicion.id, p.id);
+			p.provision_inicial = Number(p.provision_inicial ?? 0);
+			p.provision_billetes = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
+			p.en_circulacion = p.provision_inicial - p.saldo_sistema;
+		}
 		const historial = await db('wge_arqueos as a').leftJoin('directus_users as u', 'u.id', 'a.user_created')
 			.where('a.edicion_id', edicion.id).orderBy('a.date_created', 'desc').limit(50)
 			.select('a.id', 'a.pais_id', 'a.conteo', 'a.total_contado', 'a.saldo_sistema', 'a.diferencia', 'a.observaciones', 'a.date_created',

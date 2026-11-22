@@ -21,6 +21,11 @@ export function imagenBillete(pais: { nombre: string } | undefined, denominacion
     } @else if (error && !datos) {
       <div class="bg-white rounded-2xl border border-red-200 p-8 text-center text-red-700">{{ error }}</div>
     } @else if (datos) {
+      @if (!datos.paises.length) {
+        <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">
+          No eres responsable del banco de ningún país en esta edición.
+        </div>
+      }
       <!-- País -->
       <div class="flex flex-wrap gap-2">
         @for (p of datos.paises; track p.id) {
@@ -33,6 +38,43 @@ export function imagenBillete(pais: { nombre: string } | undefined, denominacion
       </div>
 
       @if (pais) {
+        <div class="mt-4 inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="tablist">
+          <button type="button" role="tab" [attr.aria-selected]="vista === 'billetes'" (click)="vista = 'billetes'"
+                  class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'billetes' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">Mis billetes</button>
+          <button type="button" role="tab" [attr.aria-selected]="vista === 'arqueo'" (click)="vista = 'arqueo'"
+                  class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'arqueo' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">Arqueo</button>
+        </div>
+      }
+
+      @if (pais && vista === 'billetes') {
+        <div class="mt-4 grid grid-cols-3 gap-3">
+          <div class="bg-white rounded-2xl border border-gray-200 p-4"><p class="text-xs text-gray-500">Asignados al banco</p><p class="text-2xl font-bold text-gray-800">{{ miles(pais.provision_inicial) }}</p></div>
+          <div class="bg-white rounded-2xl border-2 p-4" [style.border-color]="pais.color || '#e5e7eb'"><p class="text-xs text-gray-500">En el banco hoy</p><p class="text-2xl font-bold text-gray-800">{{ miles(pais.saldo_sistema) }}</p></div>
+          <div class="bg-white rounded-2xl border border-gray-200 p-4"><p class="text-xs text-gray-500">En circulación</p><p class="text-2xl font-bold text-gray-800">{{ miles(pais.en_circulacion) }}</p></div>
+        </div>
+        @if (!pais.provision_inicial) {
+          <div class="mt-4 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">Todavía no se le han asignado billetes al banco de {{ pais.nombre }}.</div>
+        } @else {
+          <h3 class="font-bold text-gray-800 mt-5 mb-3">Billetes asignados</h3>
+          <div class="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            @for (d of datos.denominaciones; track d) {
+              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" [class.opacity-40]="!asignados(d)">
+                @if (imagen(d); as src) {
+                  <img [src]="src" [alt]="'Billete de ' + miles(d) + ' de ' + pais.nombre" class="w-full aspect-[520/281] object-cover" loading="lazy">
+                } @else {
+                  <div class="w-full aspect-[520/281] flex items-center justify-center text-2xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
+                }
+                <div class="p-3 text-center">
+                  <p class="text-lg font-bold text-gray-800">× {{ miles(asignados(d)) }}</p>
+                  <p class="text-xs text-gray-500">{{ asignados(d) ? '= ' + miles(d * asignados(d)) : 'Sin billetes' }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      @if (pais && vista === 'arqueo') {
         <!-- Billetes -->
         <div class="mt-4 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           @for (d of datos.denominaciones; track d) {
@@ -110,6 +152,7 @@ export class ArqueoComponent implements OnChanges {
 
   datos: DatosArqueo | null = null;
   pais: PaisArqueo | null = null;
+  vista: 'billetes' | 'arqueo' = 'billetes';
   /** Conteo en curso por país: { paisId: { denominación: cantidad } } */
   conteos: Record<string, Record<number, number | null>> = {};
   observaciones = '';
@@ -142,6 +185,10 @@ export class ArqueoComponent implements OnChanges {
 
   poner(d: number, valor: number | null): void {
     if (this.pais) this.conteos[this.pais.id][d] = valor;
+  }
+
+  asignados(d: number): number {
+    return Number(this.pais?.provision_billetes?.[d] ?? 0) || 0;
   }
 
   imagen(d: number): string | null {
