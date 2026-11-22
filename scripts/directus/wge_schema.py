@@ -212,7 +212,9 @@ rel('wge_rondas', 'edicion_id', 'wge_ediciones')
 coleccion('wge_inversiones', 'trending_up', 'Billetes que un estudiante pone en un fondo', [
     m2o('participante_id', requerido=True), m2o('fondo_id', requerido=True), m2o('ronda_id', requerido=True),
     campo('monto', 'integer', requerido=True), campo('rendimiento_final', 'decimal'), campo('monto_pagado', 'integer'),
-    campo('estado', 'string', 'abierta → por_cobrar (ronda cerrada) → cobrada', default='abierta', opciones=['abierta', 'por_cobrar', 'cobrada']),
+    campo('estado', 'string', 'abierta = sigue invertida ronda tras ronda; retirada = el estudiante sacó su dinero; cobrada = regla anterior', default='abierta', opciones=['abierta', 'retirada', 'cobrada']),
+    campo('valor_actual', 'integer', 'Lo que vale hoy la inversión (sube o baja en cada cierre de ronda)'),
+    campo('historial', 'json', 'Valor antes y después de cada ronda: [{ronda, rendimiento, antes, despues}]', interfaz='input-code'),
     campo('clave_idempotencia', 'string', unico=True),
     campo('billetes', 'json', 'Billetes que entregó el estudiante al invertir', interfaz='input-code'),
     campo('billetes_pago', 'json', 'Billetes que le entregó el banco al cobrar', interfaz='input-code'),

@@ -9,7 +9,7 @@ import { GraficaRendimientoComponent } from '../../grafica-rendimiento.component
 import { ProcesandoRondaComponent } from '../../procesando-ronda.component';
 
 type Estudiante = PaisWfunds['estudiantes'][number];
-type Vista = 'invertir' | 'liquidadas' | 'resultados';
+type Vista = 'invertir' | 'invertido' | 'resultados';
 
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const RIESGO: Record<string, { texto: string; clase: string }> = {
@@ -18,7 +18,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
   alto: { texto: 'Riesgo alto', clase: 'bg-red-100 text-red-800' },
 };
 
-/** W-Funds (banco): abrir y cerrar rondas y recibir inversiones; al cerrar, la ganancia se abona sola. */
+/** W-Funds (banco): rondas, inversiones (siguen invertidas ronda tras ronda) y retiros cuando el estudiante los pide. */
 @Component({
   selector: 'app-wfunds-will-go',
   standalone: true,
@@ -72,7 +72,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
               <p class="text-xs opacity-90 mt-1">a las {{ r.cierre_programado | date:'h:mm a' }}{{ recortada(r) ? ' (fin del horario)' : '' }}</p>
             }
             <div class="mt-4 rounded-xl bg-white/15 px-4 py-3 flex items-center justify-between gap-3">
-              <span class="text-sm">Invertido en {{ pais.nombre }}<br><span class="text-xs opacity-90">{{ pais.inversiones.length }} {{ pais.inversiones.length === 1 ? 'inversión' : 'inversiones' }}</span></span>
+              <span class="text-sm">Invertido en {{ pais.nombre }}<br><span class="text-xs opacity-90">{{ pais.vigentes.length }} {{ pais.vigentes.length === 1 ? 'inversión' : 'inversiones' }} · {{ pais.inversiones.length }} nuevas en esta ronda</span></span>
               <span class="text-xl font-extrabold break-all">{{ miles(totalInvertido) }}</span>
             </div>
             <button type="button" (click)="confirmarCierre = true" class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">Cerrar ronda ahora</button>
@@ -162,23 +162,46 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           }
         }
 
-        <!-- Liquidadas: lo que recibió cada estudiante al cerrar la ronda -->
-        @if (vista === 'liquidadas') {
-          @if (!pais.cobradas.length) {
-            <p class="mt-4 text-sm text-gray-500">Cuando se cierre una ronda, aquí verás lo que recibió cada estudiante: lo invertido más la ganancia (o menos la pérdida). Se abona solo.</p>
+        <!-- Invertido: el dinero sigue en las empresas ronda tras ronda hasta que el estudiante lo retire -->
+        @if (vista === 'invertido') {
+          @if (!pais.vigentes.length) {
+            <p class="mt-4 text-sm text-gray-500">Nadie tiene dinero invertido. Lo que inviertan sigue en la empresa ronda tras ronda, ganando o perdiendo, hasta que pidan retirarlo.</p>
           } @else {
             <ul class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-              @for (i of pais.cobradas; track i.id) {
-                <li class="flex items-center gap-3 px-4 py-3">
-                  <div class="min-w-0 flex-1">
+              @for (i of pais.vigentes; track i.id) {
+                <li class="px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    <div class="min-w-0 flex-1">
+                      <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
+                      <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · desde la {{ i.ronda }}</p>
+                      <p class="text-sm mt-0.5 text-gray-500">Invirtió {{ miles(i.monto) }} → <b class="text-gray-800">hoy vale {{ miles(i.valor_actual) }}</b></p>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <p class="font-bold" [class]="ganancia(i) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ ganancia(i) >= 0 ? '+' : '−' }}{{ miles(abs(ganancia(i))) }}</p>
+                      <button type="button" (click)="aRetirar = i" class="mt-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900">Retirar</button>
+                    </div>
+                  </div>
+                  @if (i.historial?.length) {
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                      @for (h of i.historial; track $index) {
+                        <span class="text-[11px] px-2 py-0.5 rounded-full" [class]="h.rendimiento >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">{{ h.ronda }}: {{ porcentaje(h.rendimiento) }}</span>
+                      }
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          @if (pais.retiradas.length) {
+            <h2 class="mt-6 text-sm font-bold text-gray-700">Retiros</h2>
+            <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+              @for (i of pais.retiradas; track i.id) {
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                  <div class="min-w-0">
                     <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · {{ i.ronda }} · {{ i.cobrado_en | date:'h:mm a' }}</p>
-                    <p class="text-sm mt-0.5 text-gray-500">Invirtió {{ miles(i.monto) }} → <b class="text-gray-800">recibió {{ miles(i.monto_pagado) }}</b></p>
+                    <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · invirtió {{ miles(i.monto) }} · {{ i.cobrado_en | date:'d MMM, h:mm a' }}</p>
                   </div>
-                  <div class="text-right shrink-0">
-                    <p class="font-bold" [class]="ganancia(i) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ ganancia(i) >= 0 ? '+' : '−' }}{{ miles(abs(ganancia(i))) }}</p>
-                    <p class="text-xs" [class]="Number(i.rendimiento_final) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ porcentaje(i.rendimiento_final) }}</p>
-                  </div>
+                  <p class="font-bold whitespace-nowrap text-gray-800">{{ miles(i.monto_pagado) }}</p>
                 </li>
               }
             </ul>
@@ -265,12 +288,30 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
       </div>
     }
 
+    <!-- Confirmar retiro de una inversión -->
+    @if (aRetirar) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="aRetirar = null">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-retiro">
+          <h2 id="titulo-retiro" class="text-lg font-bold text-gray-800">¿Retirar la inversión de {{ aRetirar.nombre }}?</h2>
+          <p class="text-sm text-gray-600 mt-2">
+            Sale de <b>{{ fondo(aRetirar.fondo_id)?.nombre }}</b> y recibe <b>{{ miles(aRetirar.valor_actual) }}</b> en su saldo
+            (invirtió {{ miles(aRetirar.monto) }}). Ese dinero ya no sigue ganando ni perdiendo.
+          </p>
+          @if (errorPanel) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
+          <div class="mt-5 flex gap-2">
+            <button type="button" (click)="aRetirar = null" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
+            <button type="button" (click)="retirar()" [disabled]="enviando" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ enviando ? 'Retirando…' : 'Retirar ' + miles(aRetirar.valor_actual) }}</button>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Confirmar cierre de ronda -->
     @if (confirmarCierre && datos?.ronda) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="confirmarCierre = false">
         <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre">
           <h2 id="titulo-cierre" class="text-lg font-bold text-gray-800">¿Cerrar {{ datos!.ronda!.nombre }} ahora?</h2>
-          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y a cada estudiante se le abona de una vez lo invertido más la ganancia. Se cierra para todos los países de la edición.</p>
+          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y se actualiza lo que vale cada inversión; el dinero sigue invertido en la ronda siguiente. Se cierra para todos los países de la edición.</p>
           <div class="mt-5 space-y-2">
             <button type="button" (click)="cerrarRonda(true)" [disabled]="trabajando" class="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-50">
               {{ trabajando ? 'Cerrando…' : 'Cerrar y abrir la siguiente' }}
@@ -289,7 +330,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   readonly Number = Number;
   readonly vistas: { id: Vista; texto: string }[] = [
     { id: 'invertir', texto: 'Invertir' },
-    { id: 'liquidadas', texto: 'Liquidadas' },
+    { id: 'invertido', texto: 'Invertido' },
     { id: 'resultados', texto: 'Resultados' },
   ];
 
@@ -365,7 +406,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
         if (d.ronda?.duracion_minutos) this.duracion = d.ronda.duracion_minutos;
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
         if (!this.reloj$) this.reloj$ = setInterval(() => this.tic(), 1000);
-        if (!this.refresco$) this.refresco$ = setInterval(() => { if (!this.estudiante && !this.confirmarCierre && !this.enviando && !this.trabajando) this.cargar(); }, 20000);
+        if (!this.refresco$) this.refresco$ = setInterval(() => { if (!this.estudiante && !this.aRetirar && !this.confirmarCierre && !this.enviando && !this.trabajando) this.cargar(); }, 20000);
         this.tic();
         this.cargando = false;
       },
@@ -384,7 +425,8 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   get cerradas() { return (this.datos?.rondas ?? []).filter((r) => r.estado !== 'abierta'); }
   /** Rondas cerradas de la más vieja a la más nueva (para la gráfica); se recalcula solo cuando cambian los datos. */
   cronologicas: DatosWfunds['rondas'] = [];
-  get totalInvertido(): number { return (this.pais?.inversiones ?? []).reduce((t, i) => t + Number(i.monto), 0); }
+  /** Lo que valen hoy todas las inversiones vigentes del país. */
+  get totalInvertido(): number { return (this.pais?.vigentes ?? []).reduce((t, i) => t + Number(i.valor_actual ?? i.monto), 0); }
   get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.elegidos[d]) || 0), 0); }
 
   invertidoPor(e: Estudiante): number {
@@ -402,9 +444,12 @@ export class WfundsWillGo implements OnInit, OnDestroy {
     return `${v > 0 ? '+' : ''}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`;
   }
 
+  private temporizadorAviso: ReturnType<typeof setTimeout> | null = null;
+  /** Muestra un aviso 5 s; si llega otro antes, el nuevo dura sus 5 s completos. */
   private mostrarAviso(texto: string): void {
     this.aviso = texto;
-    setTimeout(() => (this.aviso = ''), 5000);
+    if (this.temporizadorAviso) clearTimeout(this.temporizadorAviso);
+    this.temporizadorAviso = setTimeout(() => (this.aviso = ''), 5000);
   }
 
   abrirRonda(): void {
@@ -426,8 +471,8 @@ export class WfundsWillGo implements OnInit, OnDestroy {
       next: (x) => {
         this.trabajando = false;
         this.confirmarCierre = false;
-        this.vista = 'liquidadas';
-        this.mostrarAviso(`${r.nombre} cerrada: se abonaron ${this.miles(x.pagado)} a ${x.inversiones} ${x.inversiones === 1 ? 'inversión' : 'inversiones'}.${x.siguiente ? ` Abierta ${x.siguiente.nombre}.` : ''}`);
+        this.vista = 'invertido';
+        this.mostrarAviso(`${r.nombre} cerrada: lo invertido pasó de ${this.miles(x.valor_antes)} a ${this.miles(x.valor_despues)}.${x.siguiente ? ` Abierta ${x.siguiente.nombre}.` : ''}`);
         this.cargar();
       },
       error: (e) => { this.trabajando = false; this.confirmarCierre = false; this.error = WillGoService.mensajeDeError(e); },
@@ -448,7 +493,19 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   }
 
   /** Ganancia (o pérdida, negativa) de una inversión liquidada. */
-  ganancia(i: InversionWfunds): number { return Number(i.monto_pagado ?? 0) - Number(i.monto); }
+  ganancia(i: InversionWfunds): number { return Number(i.valor_actual ?? i.monto) - Number(i.monto); }
+
+  aRetirar: InversionWfunds | null = null;
+  retirar(): void {
+    const i = this.aRetirar;
+    if (!i || this.enviando) return;
+    this.enviando = true;
+    this.errorPanel = '';
+    this.willGo.retirarInversion(i.id).subscribe({
+      next: (r) => { this.enviando = false; this.aRetirar = null; this.mostrarAviso(`${i.nombre} retiró ${this.miles(r.monto_pagado)} de ${this.fondo(i.fondo_id)?.nombre}.`); this.cargar(); },
+      error: (e) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(e); },
+    });
+  }
   abs(v: number): number { return Math.abs(v); }
 
   private billetesElegidos(): Record<string, number> {

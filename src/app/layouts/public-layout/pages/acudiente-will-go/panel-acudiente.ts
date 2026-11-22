@@ -92,14 +92,15 @@ import { ProcesandoRondaComponent } from '../../../private-layout-will-go/proces
                         <li class="py-2.5 flex items-center justify-between gap-3">
                           <div class="min-w-0">
                             <p class="font-semibold text-gray-800 truncate">{{ i.fondo }}</p>
-                            <p class="text-xs text-gray-500">{{ i.ronda }} · invirtió {{ miles(i.monto) }}</p>
+                            <p class="text-xs text-gray-500">Desde la {{ i.ronda }} · invirtió {{ miles(i.monto) }}</p>
                           </div>
                           <div class="text-right shrink-0">
+                            <p class="font-bold" [class]="i.valor >= i.monto ? 'text-emerald-700' : 'text-red-600'">{{ miles(i.valor) }}</p>
+                            <p class="text-xs" [class]="i.valor >= i.monto ? 'text-emerald-700' : 'text-red-600'">{{ i.valor >= i.monto ? '+' : '−' }}{{ miles(abs(i.valor - i.monto)) }}</p>
                             @if (i.estado === 'abierta') {
-                              <span class="text-xs font-semibold px-2 py-1 rounded-full bg-sky-100 text-sky-800">En curso</span>
+                              <span class="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">Sigue invertido</span>
                             } @else {
-                              <p class="font-bold" [class]="Number(i.rendimiento_final) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ miles(i.monto_pagado) }}</p>
-                              <p class="text-xs" [class]="Number(i.rendimiento_final) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ pct(i.rendimiento_final) }}{{ i.estado === 'por_cobrar' ? ' · por cobrar' : '' }}</p>
+                              <span class="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Retirado</span>
                             }
                           </div>
                         </li>
@@ -149,6 +150,7 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   private servicio = inject(AcudienteWillGoService);
   private router = inject(Router);
   readonly Number = Number;
+  abs(v: number): number { return Math.abs(v); }
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   datos: DatosPanelAcudiente | null = null;

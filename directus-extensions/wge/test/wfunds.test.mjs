@@ -64,3 +64,10 @@ test('W-Funds: la ronda dura lo elegido, pero se recorta al final del horario', 
 	assert.equal(cierreDeRonda(horario, hora('2026-11-28', '11:57'), 30), null); // quedan menos de 5 min
 	assert.equal(cierreDeRonda(horario, hora('2026-11-28', '13:00'), 30), null); // fuera del horario
 });
+
+test('W-Funds: la inversión sigue invertida y crece ronda tras ronda (interés compuesto, hacia arriba)', () => {
+	let valor = 100;
+	for (const r of [0.0578, 0.0417, -0.1047, 0.0384]) valor = pagoDeInversion(valor, r);
+	// 100 → 106 (105,78) → 111 (110,42) → 100 (99,38) → 104 (103,84)
+	assert.equal(valor, 104);
+});

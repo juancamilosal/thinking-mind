@@ -164,11 +164,13 @@ export interface FondoWfunds { id: string; nombre: string; riesgo: 'bajo' | 'med
 export interface InversionWfunds {
   id: string; participante_id?: string; fondo_id: string; monto: number; billetes?: Record<string, number> | string | null;
   monto_pagado?: number; rendimiento_final?: number | string; ronda?: string; cobrado_en?: string; date_created?: string; nombre: string; apellido: string;
+  /** Lo que vale hoy (sigue invertida) y cómo cambió en cada ronda. */
+  valor_actual?: number; historial?: { ronda: string; rendimiento: number; antes: number; despues: number }[];
 }
 export interface PaisWfunds {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null; saldo_banco: number; inventario: Record<string, number>;
   estudiantes: { id: string; nombre: string; apellido: string; saldo: number }[];
-  inversiones: InversionWfunds[]; cobradas: InversionWfunds[];
+  inversiones: InversionWfunds[]; vigentes: InversionWfunds[]; retiradas: InversionWfunds[];
 }
 export interface DatosWfunds {
   edicion: { id: string; nombre: string; estado: string }; denominaciones: number[];
@@ -376,9 +378,14 @@ export class WillGoService {
     return this.http.post<{ data: RondaWfunds }>(`${this.api}/ediciones/${edicionId}/rondas`, { duracion_minutos: duracionMinutos }).pipe(this.enZona(), map((r) => r.data));
   }
 
+  /** El estudiante saca su dinero de una empresa: recibe lo que vale hoy su inversión. */
+  retirarInversion(inversionId: string): Observable<{ monto_pagado: number }> {
+    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/retirar`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
   /** Cierra la ronda ya; con `continuar` se abre la siguiente con la misma duración. */
-  cerrarRonda(rondaId: string, continuar: boolean): Observable<{ inversiones: number; pagado: number; siguiente: RondaWfunds | null }> {
-    return this.http.post<{ data: { inversiones: number; pagado: number; siguiente: RondaWfunds | null } }>(`${this.api}/rondas/${rondaId}/cerrar`, { continuar })
+  cerrarRonda(rondaId: string, continuar: boolean): Observable<{ inversiones: number; valor_antes: number; valor_despues: number; siguiente: RondaWfunds | null }> {
+    return this.http.post<{ data: { inversiones: number; valor_antes: number; valor_despues: number; siguiente: RondaWfunds | null } }>(`${this.api}/rondas/${rondaId}/cerrar`, { continuar })
       .pipe(this.enZona(), map((r) => r.data));
   }
 

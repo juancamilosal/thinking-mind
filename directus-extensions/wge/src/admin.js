@@ -3,6 +3,7 @@
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
 import { totalDelConteo } from './arqueo.js';
+import { retirarInversion } from './wfunds.js';
 import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
@@ -429,10 +430,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 				.whereIn('p.id', ids).orderBy('p.id').select('p.*', 'e.nombre', 'e.apellido');
 			if (lista.length !== ids.length) throw new WgeError(404, 'NO_EXISTE', 'Algún estudiante no existe');
 			if (new Set(lista.map((p) => p.edicion_id)).size !== 1) throw new WgeError(400, 'VALOR_INVALIDO', 'Los estudiantes deben ser de la misma edición');
-			const conInversion = await trx('wge_inversiones as i').join('wge_participantes as p', 'p.id', 'i.participante_id')
-				.join('estudiantes as e', 'e.id', 'p.estudiante_id').whereIn('i.participante_id', ids).whereIn('i.estado', ['abierta', 'por_cobrar'])
-				.first('e.nombre', 'e.apellido');
-			if (conInversion) throw new WgeError(409, 'INVERSION_ABIERTA', `${conInversion.nombre} ${conInversion.apellido} tiene una inversión en W-Funds sin terminar; retíralo cuando la ronda se cierre y haya cobrado`);
+			// Sus inversiones en W-Funds se retiran primero (vuelven a su saldo) y luego todo su saldo vuelve al banco
+			const vigentes = await trx('wge_inversiones').whereIn('participante_id', ids).whereIn('estado', ['abierta', 'por_cobrar']).orderBy('id').forUpdate();
+			for (const inv of vigentes) await retirarInversion(trx, inv, actor);
 			let devueltos = 0;
 			for (const p of lista) {
 				if (p.retirado) continue;

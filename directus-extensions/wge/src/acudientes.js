@@ -151,9 +151,10 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		for (const h of hijos) {
 			Object.assign(h, h.pais_id ? await movimientosEstudiante(db, h.id, h.pais_id) : { movimientos: [], total_entro: 0, total_salio: 0 });
 			delete h.pais_id;
-			h.inversiones = await db('wge_inversiones as i').join('wge_fondos as f', 'f.id', 'i.fondo_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
+			h.inversiones = (await db('wge_inversiones as i').join('wge_fondos as f', 'f.id', 'i.fondo_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
 				.where('i.participante_id', h.id).orderBy('i.date_created', 'desc').limit(30)
-				.select('i.id', 'i.monto', 'i.estado', 'i.monto_pagado', 'i.rendimiento_final', 'f.nombre as fondo', 'r.nombre as ronda');
+				.select('i.id', 'i.monto', 'i.estado', 'i.monto_pagado', 'i.valor_actual', 'i.historial', 'f.nombre as fondo', 'r.nombre as ronda'))
+				.map((i) => ({ ...i, valor: i.estado === 'abierta' ? Number(i.valor_actual ?? i.monto) : Number(i.monto_pagado ?? i.monto), historial: deJson(i.historial) ?? [] }));
 		}
 		const ediciones = [];
 		for (const edicionId of [...new Set(hijos.map((h) => h.edicion_id))]) {
