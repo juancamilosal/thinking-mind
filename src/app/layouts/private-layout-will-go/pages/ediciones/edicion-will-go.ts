@@ -135,9 +135,9 @@ export class EdicionWillGo implements OnInit {
     { id: 'general', texto: 'General' },
     { id: 'paises', texto: 'Países y banco' },
     { id: 'participantes', texto: 'Participantes' },
-    { id: 'equipo', texto: 'Colaboradores' },
     { id: 'tienda', texto: 'GO•STORE' },
     { id: 'fondos', texto: 'W-Funds' },
+    { id: 'equipo', texto: 'Colaboradores' },
   ];
 
   edicion: Edicion | null = null;
