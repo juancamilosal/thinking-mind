@@ -107,6 +107,20 @@ export interface MiembroEquipo {
   billetes: number;
 }
 
+export interface PaisArqueo { id: string; nombre: string; codigo_moneda: string | null; color: string | null; saldo_sistema: number; }
+
+export interface Arqueo {
+  id: string; pais_id: string; conteo: Record<string, number>; total_contado: number; saldo_sistema: number;
+  diferencia: number; observaciones: string | null; date_created: string; responsable?: string;
+}
+
+export interface DatosArqueo {
+  edicion: { id: string; nombre: string; estado: string };
+  denominaciones: number[];
+  paises: PaisArqueo[];
+  historial: Arqueo[];
+}
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -270,6 +284,21 @@ export class WillGoService {
 
   quitarDelEquipo(miembroId: string): Observable<{ quitado: boolean }> {
     return this.http.delete<{ data: any }>(`${this.api}/admin/equipo/${miembroId}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  // ---------- Arqueo del banco ----------
+
+  misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {
+    return this.http.get<{ data: any[] }>(`${this.api}/mis-ediciones`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  arqueo(edicionId: string): Observable<DatosArqueo> {
+    return this.http.get<{ data: DatosArqueo }>(`${this.api}/ediciones/${edicionId}/arqueo`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  guardarArqueo(edicionId: string, paisId: string, conteo: Record<string, number>, observaciones: string): Observable<Arqueo> {
+    return this.http.post<{ data: Arqueo }>(`${this.api}/ediciones/${edicionId}/arqueos`, { pais_id: paisId, conteo, observaciones })
+      .pipe(this.enZona(), map((r) => r.data));
   }
 
   subirFoto(nombre: string, tipo: string, base64: string): Observable<{ id: string }> {

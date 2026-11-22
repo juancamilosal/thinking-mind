@@ -6,6 +6,7 @@ import {
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
+import { rutasArqueo } from './arqueo.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
@@ -290,6 +291,7 @@ export default {
 
 		rutasFuncionarios(router, { ruta, db, services, getSchema });
 		rutasAdmin(router, { ruta, db, services, getSchema });
+		rutasArqueo(router, { ruta, db });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

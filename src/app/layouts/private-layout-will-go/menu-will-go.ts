@@ -41,6 +41,7 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
   banco: [
     INICIO,
     { texto: 'Repartir a docentes', icono: ICONOS.billetes },
+    { texto: 'Arqueo', ruta: '/private-will-go/arqueo', icono: ICONOS.caja },
     { texto: 'W-Funds', icono: ICONOS.fondos },
   ],
   cajero: [

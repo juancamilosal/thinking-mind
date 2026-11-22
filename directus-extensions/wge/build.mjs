@@ -15,10 +15,11 @@ const preparar = (codigo) => codigo
 const lib = preparar(leer('lib.js'));
 const funcionarios = preparar(leer('funcionarios.js'));
 const admin = preparar(leer('admin.js'));
+const arqueo = preparar(leer('arqueo.js'));
 const hook = preparar(leer('hook.js')).replace(/^export default /m, 'const configHook = ');
 const endpoint = preparar(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
 
-const cuerpo = [lib, funcionarios, admin, hook, endpoint].join('\n');
+const cuerpo = [lib, funcionarios, admin, arqueo, hook, endpoint].join('\n');
 if (/^\s*(import|export)\b/m.test(cuerpo)) throw new Error('Quedó un import/export sin convertir');
 
 const api = `// Generado por build.mjs: no editar a mano.
