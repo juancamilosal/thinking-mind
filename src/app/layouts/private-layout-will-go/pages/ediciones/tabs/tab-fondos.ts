@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { NumeroMilesDirective } from '../../../numero-miles.directive';
 import { TarjetaFondoComponent } from '../../../tarjeta-fondo.component';
 import { Edicion, Fondo, WillGoService } from '../../../../../core/services/will-go.service';
@@ -10,27 +11,27 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
 @Component({
   selector: 'app-tab-fondos',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, TarjetaFondoComponent],
+  imports: [FormsModule, NumeroMilesDirective, TarjetaFondoComponent, TranslatePipe],
   template: `
     <div class="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-      <p class="text-sm text-gray-500">Así ven las empresas los estudiantes y acudientes.</p>
+      <p class="text-sm text-gray-500">{{ 'wg.pestanas.fondos.intro' | translate }}</p>
       @if (hayVacios && logos.length) {
         <button type="button" (click)="completar()" [disabled]="completando"
                 class="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold text-orange-700 bg-orange-50 border border-orange-200 hover:bg-orange-100 disabled:opacity-50">
-          {{ completando ? 'Completando…' : 'Usar los logos y textos ya cargados' }}
+          {{ (completando ? 'wg.pestanas.fondos.completando' : 'wg.pestanas.fondos.usarCargados') | translate }}
         </button>
       }
     </div>
     @if (aviso) { <p class="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm text-emerald-800" role="status">{{ aviso }}</p> }
     @if (cargando) {
-      <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando fondos…</div>
+      <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.pestanas.fondos.cargando' | translate }}</div>
     } @else {
       <div class="mt-4 grid gap-4 md:grid-cols-2 md:auto-rows-fr">
         @for (f of fondos; track f.id) {
           <wg-tarjeta-fondo [fondo]="f" [logoUrl]="logo(f)" [class.opacity-50]="!f.activo">
             <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-gray-100">
-              <span class="text-xs text-gray-500">{{ f.activo ? 'Disponible' : 'No disponible' }}{{ guardado === f.id ? ' · ✓ Guardado' : '' }}</span>
-              <button type="button" (click)="editar(f)" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900">Editar</button>
+              <span class="text-xs text-gray-500">{{ (f.activo ? 'wg.pestanas.fondos.disponible' : 'wg.pestanas.fondos.noDisponible') | translate }}{{ guardado === f.id ? ' · ✓ ' + ('wg.pestanas.fondos.guardadoCorto' | translate) : '' }}</span>
+              <button type="button" (click)="editar(f)" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900">{{ 'wg.pestanas.comun.editar' | translate }}</button>
             </div>
           </wg-tarjeta-fondo>
         }
@@ -42,36 +43,36 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrar()">
         <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-fondo">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
-            <h2 id="titulo-fondo" class="text-lg font-bold text-gray-800">Editar empresa</h2>
-            <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+            <h2 id="titulo-fondo" class="text-lg font-bold text-gray-800">{{ 'wg.pestanas.fondos.editarEmpresa' | translate }}</h2>
+            <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.pestanas.comun.cerrar' | translate">✕</button>
           </div>
           <div class="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
             <div class="flex items-center gap-4">
               <label class="w-20 h-20 shrink-0 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer hover:border-orange-400">
                 @if (b.logoVista || b.logo) {
-                  <img [src]="b.logoVista || logo(b)" alt="Logo" class="w-full h-full object-cover">
+                  <img [src]="b.logoVista || logo(b)" [alt]="'wg.pestanas.fondos.logo' | translate" class="w-full h-full object-cover">
                 } @else {
-                  <span class="text-xs text-gray-500 text-center px-1">Subir logo</span>
+                  <span class="text-xs text-gray-500 text-center px-1">{{ 'wg.pestanas.fondos.subirLogo' | translate }}</span>
                 }
-                <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="elegirLogo($event)" aria-label="Logo de la empresa">
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="elegirLogo($event)" [attr.aria-label]="'wg.pestanas.fondos.logoEmpresa' | translate">
               </label>
               <div class="flex-1 min-w-0">
-                <label class="etiqueta" for="f-nombre">Nombre</label>
+                <label class="etiqueta" for="f-nombre">{{ 'wg.pestanas.comun.nombre' | translate }}</label>
                 <input id="f-nombre" [(ngModel)]="b.nombre" class="campo font-bold">
-                @if (subiendo) { <p class="text-xs text-gray-500 mt-1">Subiendo logo…</p> }
-                @else if (b.logo) { <button type="button" (click)="b.logo = null; b.logoVista = null" class="text-xs text-red-600 mt-1 hover:underline">Quitar logo</button> }
+                @if (subiendo) { <p class="text-xs text-gray-500 mt-1">{{ 'wg.pestanas.fondos.subiendoLogo' | translate }}</p> }
+                @else if (b.logo) { <button type="button" (click)="b.logo = null; b.logoVista = null" class="text-xs text-red-600 mt-1 hover:underline">{{ 'wg.pestanas.fondos.quitarLogo' | translate }}</button> }
               </div>
             </div>
 
             @if (logos.length) {
               <div>
-                <p class="etiqueta">O elige un logo ya cargado</p>
+                <p class="etiqueta">{{ 'wg.pestanas.fondos.elegirLogo' | translate }}</p>
                 <div class="flex flex-wrap gap-2">
                   @for (l of logos; track l.id) {
                     <button type="button" (click)="b.logo = l.id; b.logoVista = null" [attr.aria-pressed]="b.logo === l.id" [title]="l.nombre"
                             class="w-14 h-14 rounded-xl overflow-hidden border-2 p-0 transition"
                             [class]="b.logo === l.id ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200 hover:border-gray-400'">
-                      <img [src]="urlFoto(l.id)" [alt]="'Logo de ' + l.nombre" class="w-full h-full object-cover">
+                      <img [src]="urlFoto(l.id)" [alt]="'wg.pestanas.comun.logoDe' | translate: { nombre: l.nombre }" class="w-full h-full object-cover">
                     </button>
                   }
                 </div>
@@ -79,47 +80,47 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
             }
 
             <div>
-              <label class="etiqueta" for="f-dedica">¿A qué se dedica?</label>
-              <textarea id="f-dedica" [(ngModel)]="b.a_que_se_dedica" rows="2" maxlength="160" class="campo" placeholder="Ej.: Limpiamos los océanos y reciclamos plástico."></textarea>
+              <label class="etiqueta" for="f-dedica">{{ 'wg.pestanas.fondos.aQueSeDedica' | translate }}</label>
+              <textarea id="f-dedica" [(ngModel)]="b.a_que_se_dedica" rows="2" maxlength="160" class="campo" [placeholder]="'wg.pestanas.fondos.ejemploDedica' | translate"></textarea>
             </div>
             <div>
-              <label class="etiqueta" for="f-razones">¿Por qué invertir? <span class="font-normal text-gray-400">(una razón por línea)</span></label>
-              <textarea id="f-razones" [(ngModel)]="b.por_que_invertir" rows="5" maxlength="600" class="campo" placeholder="Todo el mundo necesita…"></textarea>
+              <label class="etiqueta" for="f-razones">{{ 'wg.pestanas.fondos.porQueInvertir' | translate }} <span class="font-normal text-gray-400">{{ 'wg.pestanas.fondos.unaRazon' | translate }}</span></label>
+              <textarea id="f-razones" [(ngModel)]="b.por_que_invertir" rows="5" maxlength="600" class="campo" [placeholder]="'wg.pestanas.fondos.ejemploRazones' | translate"></textarea>
               @if (b.ejemplo) {
-                <button type="button" (click)="usarEjemplo(b)" class="mt-1 text-sm font-semibold text-orange-600 hover:underline">Usar texto de ejemplo</button>
+                <button type="button" (click)="usarEjemplo(b)" class="mt-1 text-sm font-semibold text-orange-600 hover:underline">{{ 'wg.pestanas.fondos.usarEjemplo' | translate }}</button>
               }
             </div>
 
             <details class="rounded-xl border border-gray-200 p-3" [open]="!b.a_que_se_dedica">
-              <summary class="text-sm font-semibold text-gray-700 cursor-pointer">Datos del juego <span class="font-normal text-gray-400">(solo los ve el equipo)</span></summary>
+              <summary class="text-sm font-semibold text-gray-700 cursor-pointer">{{ 'wg.pestanas.fondos.datosJuego' | translate }} <span class="font-normal text-gray-400">{{ 'wg.pestanas.fondos.soloEquipo' | translate }}</span></summary>
               <div class="grid grid-cols-2 gap-2 mt-3">
                 <div>
-                  <label class="etiqueta" for="f-riesgo">Riesgo</label>
+                  <label class="etiqueta" for="f-riesgo">{{ 'wg.pestanas.fondos.riesgo' | translate }}</label>
                   <select id="f-riesgo" [(ngModel)]="b.riesgo" class="campo">
-                    <option value="bajo">Bajo</option><option value="medio">Medio</option><option value="alto">Alto</option>
+                    <option value="bajo">{{ 'wg.pestanas.fondos.riesgos.bajo' | translate }}</option><option value="medio">{{ 'wg.pestanas.fondos.riesgos.medio' | translate }}</option><option value="alto">{{ 'wg.pestanas.fondos.riesgos.alto' | translate }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="etiqueta" for="f-base">Base %</label>
+                  <label class="etiqueta" for="f-base">{{ 'wg.pestanas.fondos.base' | translate }}</label>
                   <input id="f-base" wgNumero [decimales]="2" [negativos]="true" [(ngModel)]="b.base" class="campo">
                 </div>
                 <div>
-                  <label class="etiqueta" for="f-alterno">Alterno %</label>
+                  <label class="etiqueta" for="f-alterno">{{ 'wg.pestanas.fondos.alterno' | translate }}</label>
                   <input id="f-alterno" wgNumero [decimales]="2" [negativos]="true" [(ngModel)]="b.alterno" class="campo" placeholder="—" [disabled]="b.riesgo !== 'alto'">
                 </div>
                 <div>
-                  <label class="etiqueta" for="f-varia">Variación ±%</label>
+                  <label class="etiqueta" for="f-varia">{{ 'wg.pestanas.fondos.variacion' | translate }}</label>
                   <input id="f-varia" wgNumero [decimales]="2" [(ngModel)]="b.varia" class="campo">
                 </div>
               </div>
-              <label class="flex items-center gap-2 text-sm text-gray-700 mt-3"><input type="checkbox" [(ngModel)]="b.activo"> Disponible para invertir</label>
+              <label class="flex items-center gap-2 text-sm text-gray-700 mt-3"><input type="checkbox" [(ngModel)]="b.activo"> {{ 'wg.pestanas.fondos.disponibleInvertir' | translate }}</label>
             </details>
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
             @if (error) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ error }}</p> }
             <button type="button" (click)="guardar()" [disabled]="guardando || subiendo || !b.nombre.trim()"
                     class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-              {{ guardando ? 'Guardando…' : 'Guardar' }}
+              {{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}
             </button>
           </div>
         </div>
@@ -136,6 +137,7 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
 export class TabFondos implements OnInit {
   @Input({ required: true }) edicion!: Edicion;
   private willGo = inject(WillGoService);
+  private t = inject(TranslateService);
 
   fondos: FondoEditable[] = [];
   borrador: FondoEditable | null = null;
@@ -174,7 +176,9 @@ export class TabFondos implements OnInit {
     this.willGo.completarFondos(this.edicion.id).subscribe({
       next: (r) => {
         this.completando = false;
-        this.aviso = r.completados ? `Listo: se completaron ${r.completados} ${r.completados === 1 ? 'empresa' : 'empresas'}.` : 'No había nada para completar.';
+        this.aviso = r.completados
+          ? this.t.instant(r.completados === 1 ? 'wg.pestanas.fondos.completadosUno' : 'wg.pestanas.fondos.completados', { n: r.completados })
+          : this.t.instant('wg.pestanas.fondos.nadaCompletar');
         setTimeout(() => (this.aviso = ''), 5000);
         this.ngOnInit();
       },

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Edicion, Funcionario, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { imagenBillete } from '../../../imagen-billete';
@@ -12,10 +13,10 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
 @Component({
   selector: 'app-tab-paises',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, BuscadorPersonaComponent],
+  imports: [FormsModule, NumeroMilesDirective, BuscadorPersonaComponent, TranslatePipe],
   template: `
     @if (cargando) {
-      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.pestanas.comun.cargando' | translate }}</div>
     } @else {
       <!-- Resumen de los países -->
       <div class="grid gap-3 sm:grid-cols-3">
@@ -33,13 +34,13 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               <span class="font-extrabold" [style.color]="p.color || '#475569'">$</span> {{ miles(enBanco(p)) }}
               @if (p.codigo_moneda) { <span class="text-sm font-semibold text-gray-500">{{ p.codigo_moneda }}</span> }
             </p>
-            <p class="text-xs text-gray-500">dinero en el banco</p>
-            @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">⚠ Falta el detalle de billetes</p> }
-            <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || 'Sin responsable del banco' }}</p>
+            <p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.dineroBanco' | translate }}</p>
+            @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">{{ 'wg.pestanas.paises.faltaDetalle' | translate }}</p> }
+            <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || ('wg.pestanas.paises.sinResponsable' | translate) }}</p>
             @if (p.provision_inicial) {
               <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">Impresos</span><br><b class="text-gray-800">$ {{ miles(p.provision_inicial) }}</b></div>
-                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En circulación</span><br><b class="text-gray-800">$ {{ miles(p.en_circulacion) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">{{ 'wg.pestanas.paises.impresos' | translate }}</span><br><b class="text-gray-800">$ {{ miles(p.provision_inicial) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">{{ 'wg.pestanas.paises.enCirculacion' | translate }}</span><br><b class="text-gray-800">$ {{ miles(p.en_circulacion) }}</b></div>
               </div>
             }
           </button>
@@ -51,34 +52,34 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
         <section class="tarjeta mt-4">
           <div class="grid gap-4 sm:grid-cols-[auto_1fr_7rem]">
             <div>
-              <label class="etiqueta" [attr.for]="'color-' + actual.id">Color</label>
+              <label class="etiqueta" [attr.for]="'color-' + actual.id">{{ 'wg.pestanas.paises.color' | translate }}</label>
               <input [id]="'color-' + actual.id" type="color" [(ngModel)]="actual.color" class="block w-14 h-[46px] rounded-xl border-2 border-gray-200 cursor-pointer p-1 bg-gray-50">
             </div>
             <div>
-              <label class="etiqueta" [attr.for]="'nombre-' + actual.id">País</label>
+              <label class="etiqueta" [attr.for]="'nombre-' + actual.id">{{ 'wg.pestanas.comun.pais' | translate }}</label>
               <input [id]="'nombre-' + actual.id" [(ngModel)]="actual.nombre" class="campo font-semibold">
             </div>
             <div>
-              <label class="etiqueta" [attr.for]="'mon-' + actual.id">Moneda</label>
+              <label class="etiqueta" [attr.for]="'mon-' + actual.id">{{ 'wg.pestanas.paises.moneda' | translate }}</label>
               <input [id]="'mon-' + actual.id" [(ngModel)]="actual.codigo_moneda" maxlength="5" class="campo uppercase" placeholder="WON">
             </div>
           </div>
           <div class="grid gap-4 sm:grid-cols-[1fr_10rem] mt-4">
             <div>
-              <label class="etiqueta" [attr.for]="'banco-' + actual.id">Responsable del banco</label>
+              <label class="etiqueta" [attr.for]="'banco-' + actual.id">{{ 'wg.pestanas.paises.responsableBanco' | translate }}</label>
               <wg-buscador-persona [inputId]="'banco-' + actual.id" [(ngModel)]="actual.responsable_banco" [personas]="banqueros"
-                                   placeholder="Buscar colaborador del banco…" vacio="No hay colaboradores con rol Banco" />
-              @if (!banqueros.length) { <p class="ayuda">Crea primero un colaborador con rol Banco en <b>Colaboradores</b>.</p> }
+                                   [placeholder]="'wg.pestanas.paises.buscarBanco' | translate" [vacio]="'wg.pestanas.paises.sinBanqueros' | translate" />
+              @if (!banqueros.length) { <p class="ayuda" [innerHTML]="'wg.pestanas.paises.crearBanquero' | translate"></p> }
             </div>
             <div>
-              <p class="etiqueta">Tasa actual</p>
+              <p class="etiqueta">{{ 'wg.pestanas.paises.tasaActual' | translate }}</p>
               <p class="campo !bg-gray-100 text-gray-700">{{ miles(actual.tasa_actual || edicion.tasa_inicial) }}</p>
             </div>
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center gap-3 mt-4">
             @if (errorDatos) { <p class="text-sm text-red-700" role="alert">{{ errorDatos }}</p> }
-            @if (guardadoDatos) { <p class="text-sm text-emerald-700" role="status">Guardado.</p> }
-            <button type="button" (click)="guardarDatos()" [disabled]="guardando" class="boton-guardar sm:ml-auto">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+            @if (guardadoDatos) { <p class="text-sm text-emerald-700" role="status">{{ 'wg.pestanas.comun.guardado' | translate }}</p> }
+            <button type="button" (click)="guardarDatos()" [disabled]="guardando" class="boton-guardar sm:ml-auto">{{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}</button>
           </div>
         </section>
 
@@ -86,40 +87,40 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
         <section class="tarjeta mt-4">
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div class="flex-1 min-w-0">
-              <h3 class="font-bold text-gray-800">{{ bloqueada ? 'Billetes del banco' : 'Billetes impresos para el banco' }}</h3>
+              <h3 class="font-bold text-gray-800">{{ (bloqueada ? 'wg.pestanas.paises.billetesBanco' : 'wg.pestanas.paises.billetesImpresos') | translate }}</h3>
               <p class="text-sm text-gray-500">
-                Hoy hay {{ miles(actual.provision_inicial) }} provistos.
-                @if (verBilletes && bloqueada) { Escribe solo los billetes nuevos. }
+                {{ 'wg.pestanas.paises.hoyProvistos' | translate: { n: miles(actual.provision_inicial) } }}
+                @if (verBilletes && bloqueada) { {{ 'wg.pestanas.paises.soloNuevos' | translate }} }
               </p>
             </div>
             <button type="button" (click)="verBilletes = !verBilletes" [attr.aria-expanded]="verBilletes"
                     class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border"
                     [class]="verBilletes ? 'border-gray-200 text-gray-700 hover:bg-gray-50' : 'border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100'">
-              {{ verBilletes ? 'Ocultar' : (bloqueada ? '+ Agregar billetes' : 'Ver billetes') }}
+              {{ (verBilletes ? 'wg.pestanas.paises.ocultar' : (bloqueada ? 'wg.pestanas.paises.agregarBilletes' : 'wg.pestanas.paises.verBilletes')) | translate }}
               <svg class="w-4 h-4 transition-transform" [class.rotate-180]="verBilletes" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
             </button>
           </div>
           @if (verBilletes || sinDetalle(actual)) {
           @if (sinDetalle(actual)) {
             <p class="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
-              La provisión de {{ actual.nombre }} ({{ miles(actual.provision_inicial) }}) no tiene el detalle por billete, así que no se puede cuadrar por denominación.
-              {{ bloqueada ? 'Para las próximas ediciones, regístrala por billetes antes de abrir.' : 'Escribe cuántos billetes hay de cada denominación y guarda.' }}
+              {{ 'wg.pestanas.paises.sinDetalle' | translate: { pais: actual.nombre, n: miles(actual.provision_inicial) } }}
+              {{ (bloqueada ? 'wg.pestanas.paises.sinDetalleBloqueada' : 'wg.pestanas.paises.sinDetalleBorrador') | translate }}
             </p>
           }
           <div class="mt-3 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             @for (d of denominaciones; track d) {
               <div class="rounded-xl border border-gray-200 overflow-hidden">
                 @if (imagen(d); as src) {
-                  <img [src]="src" [alt]="'Billete de ' + miles(d)" class="w-full aspect-[520/281] object-cover" loading="lazy">
+                  <img [src]="src" [alt]="'wg.pestanas.paises.billeteDe' | translate: { n: miles(d) }" class="w-full aspect-[520/281] object-cover" loading="lazy">
                 } @else {
                   <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="actual.color || '#64748b'">{{ miles(d) }}</div>
                 }
                 <div class="p-2">
-                  <label class="sr-only" [attr.for]="'prov-' + d">Billetes de {{ miles(d) }}</label>
+                  <label class="sr-only" [attr.for]="'prov-' + d">{{ 'wg.pestanas.paises.billetesDe' | translate: { n: miles(d) } }}</label>
                   <input [id]="'prov-' + d" wgNumero [ngModel]="bloqueada ? extra[d] : billetes[actual.id][d]" (ngModelChange)="poner(d, $event)" [placeholder]="bloqueada ? '+0' : '0'"
                          class="w-full px-2 py-1.5 bg-gray-50 border-2 border-gray-200 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300">
                   <p class="text-[11px] text-gray-500 text-center mt-1">
-                    @if (bloqueada) { {{ impresos(d) ? 'Impresos: ' + miles(impresos(d)) : '' }} } @else { {{ cantidad(d) ? '= ' + miles(d * cantidad(d)) : '' }} }&nbsp;
+                    @if (bloqueada) { {{ impresos(d) ? ('wg.pestanas.paises.impresosN' | translate: { n: miles(impresos(d)) }) : '' }} } @else { {{ cantidad(d) ? '= ' + miles(d * cantidad(d)) : '' }} }&nbsp;
                   </p>
                 </div>
               </div>
@@ -128,22 +129,22 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
           <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="flex gap-6">
               @if (bloqueada) {
-                <div><p class="text-xs text-gray-500">Entran al banco</p><p class="text-xl font-bold text-emerald-700">+{{ miles(totalExtra) }}</p></div>
-                <div><p class="text-xs text-gray-500">Provisión total</p><p class="text-xl font-bold text-gray-800">{{ miles((actual.provision_inicial || 0) + totalExtra) }}</p></div>
+                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.entranBanco' | translate }}</p><p class="text-xl font-bold text-emerald-700">+{{ miles(totalExtra) }}</p></div>
+                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.provisionTotal' | translate }}</p><p class="text-xl font-bold text-gray-800">{{ miles((actual.provision_inicial || 0) + totalExtra) }}</p></div>
               } @else {
-                <div><p class="text-xs text-gray-500">Total del banco</p><p class="text-xl font-bold text-gray-800">{{ miles(totalActual) }}</p></div>
-                <div><p class="text-xs text-gray-500">Billetes</p><p class="text-xl font-bold text-gray-800">{{ miles(piezas) }}</p></div>
+                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.totalBanco' | translate }}</p><p class="text-xl font-bold text-gray-800">{{ miles(totalActual) }}</p></div>
+                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.billetes' | translate }}</p><p class="text-xl font-bold text-gray-800">{{ miles(piezas) }}</p></div>
                 @if (necesarios > totalActual) {
-                  <div><p class="text-xs text-red-600">Bienvenida necesita</p><p class="text-xl font-bold text-red-600">{{ miles(necesarios) }}</p></div>
+                  <div><p class="text-xs text-red-600">{{ 'wg.pestanas.paises.bienvenidaNecesita' | translate }}</p><p class="text-xl font-bold text-red-600">{{ miles(necesarios) }}</p></div>
                 }
               }
             </div>
             @if (error) { <p class="text-sm text-red-700 sm:ml-auto" role="alert">{{ error }}</p> }
-            @if (guardado) { <p class="text-sm text-emerald-700 sm:ml-auto" role="status">{{ bloqueada ? 'Billetes agregados al banco.' : 'Guardado.' }}</p> }
+            @if (guardado) { <p class="text-sm text-emerald-700 sm:ml-auto" role="status">{{ (bloqueada ? 'wg.pestanas.paises.agregados' : 'wg.pestanas.comun.guardado') | translate }}</p> }
             @if (bloqueada) {
-              <button type="button" (click)="agregarAlBanco()" [disabled]="guardando || !totalExtra" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ guardando ? 'Agregando…' : 'Agregar al banco' }}</button>
+              <button type="button" (click)="agregarAlBanco()" [disabled]="guardando || !totalExtra" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ (guardando ? 'wg.pestanas.comun.agregando' : 'wg.pestanas.paises.agregarAlBanco') | translate }}</button>
             } @else {
-              <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+              <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}</button>
             }
           </div>
           }
@@ -159,6 +160,7 @@ export class TabPaises implements OnInit {
   @Input({ required: true }) edicion!: Edicion;
   @Output() paisesCambiaron = new EventEmitter<Pais[]>();
   private willGo = inject(WillGoService);
+  private t = inject(TranslateService);
   readonly denominaciones = DENOMINACIONES;
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
@@ -289,7 +291,7 @@ export class TabPaises implements OnInit {
   agregarAlBanco(): void {
     const p = this.actual;
     if (!p || !this.totalExtra) return;
-    if (!confirm(`¿Agregar ${this.miles(this.totalExtra)} billetes al banco de ${p.nombre}?`)) return;
+    if (!confirm(this.t.instant('wg.pestanas.paises.confirmarAgregar', { n: this.miles(this.totalExtra), pais: p.nombre }))) return;
     const billetes: Record<string, number> = {};
     for (const d of DENOMINACIONES) if (Number(this.extra[d])) billetes[d] = Number(this.extra[d]);
     this.guardando = true;

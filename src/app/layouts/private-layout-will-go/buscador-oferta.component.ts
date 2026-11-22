@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
+import { FechaWillGoPipe } from './fecha.pipe';
 import { Oferta } from '../../core/services/will-go.service';
 
 /** Quita tildes y mayúsculas para comparar ("Británico" = "britanico"). */
@@ -14,20 +15,20 @@ export interface OfertaElegida { colegio_id: string | null; curso_id: string; ed
 @Component({
   selector: 'wg-buscador-oferta',
   standalone: true,
-  imports: [DatePipe],
+  imports: [TranslatePipe, FechaWillGoPipe],
   template: `
     <div class="relative">
       @if (seleccionada && !cambiando) {
         <div class="flex gap-3 w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl" [class.items-start]="!compacto" [class.items-center]="compacto">
           <svg class="w-5 h-5 mt-0.5 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-gray-800 truncate">{{ seleccionada.colegio || 'Sin colegio' }}</p>
+            <p class="font-semibold text-gray-800 truncate">{{ seleccionada.colegio || ('wg.nucleo.oferta.sinColegio' | translate) }}</p>
             @if (!compacto) {
-              <p class="text-sm text-gray-600">{{ seleccionada.programa }} · <b>Edición {{ seleccionada.edicion }}</b>{{ seleccionada.fecha_finalizacion ? ' · termina ' + (seleccionada.fecha_finalizacion | date:'d MMM y') : '' }}</p>
+              <p class="text-sm text-gray-600">{{ seleccionada.programa }} · <b>{{ 'wg.nucleo.oferta.edicion' | translate: { n: seleccionada.edicion } }}</b>{{ seleccionada.fecha_finalizacion ? ('wg.nucleo.oferta.termina' | translate: { fecha: (seleccionada.fecha_finalizacion | wgFecha:'d MMM y') }) : '' }}</p>
             }
           </div>
           @if (!desactivado) {
-            <button type="button" (click)="abrir()" class="text-sm font-semibold text-orange-700 hover:underline">Cambiar</button>
+            <button type="button" (click)="abrir()" class="text-sm font-semibold text-orange-700 hover:underline">{{ 'wg.nucleo.oferta.cambiar' | translate }}</button>
           }
         </div>
       } @else {
@@ -35,7 +36,7 @@ export interface OfertaElegida { colegio_id: string | null; curso_id: string; ed
           <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input type="text" [id]="inputId" [value]="texto" (input)="alEscribir($any($event.target).value)" (focus)="lista = true"
                  (keydown)="teclado($event)" autocomplete="off" role="combobox" [attr.aria-expanded]="lista" [attr.aria-controls]="inputId + '-lista'"
-                 placeholder="Escribe el colegio o el programa…"
+                 [placeholder]="'wg.nucleo.oferta.placeholder' | translate"
                  class="w-full pl-11 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400">
         </div>
         @if (lista) {
@@ -43,15 +44,15 @@ export interface OfertaElegida { colegio_id: string | null; curso_id: string; ed
             @for (o of coincidencias; track o.id; let i = $index) {
               <li role="option" [attr.aria-disabled]="ocupada(o)" (mousedown)="elegir(o)"
                   class="px-4 py-2.5 text-sm" [class]="ocupada(o) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-orange-50'" [class.bg-orange-50]="activo === i && !ocupada(o)">
-                <p class="font-semibold text-gray-800">{{ o.colegio || 'Sin colegio' }}</p>
-                <p class="text-gray-600">{{ o.programa }} · Edición {{ o.edicion }}{{ o.fecha_finalizacion ? ' · termina ' + (o.fecha_finalizacion | date:'d MMM y') : '' }}</p>
-                @if (ocupada(o)) { <p class="text-xs font-semibold text-amber-700">Ya tiene la edición de Will-Go «{{ o.edicion_will_go }}»</p> }
+                <p class="font-semibold text-gray-800">{{ o.colegio || ('wg.nucleo.oferta.sinColegio' | translate) }}</p>
+                <p class="text-gray-600">{{ o.programa }} · {{ 'wg.nucleo.oferta.edicion' | translate: { n: o.edicion } }}{{ o.fecha_finalizacion ? ('wg.nucleo.oferta.termina' | translate: { fecha: (o.fecha_finalizacion | wgFecha:'d MMM y') }) : '' }}</p>
+                @if (ocupada(o)) { <p class="text-xs font-semibold text-amber-700">{{ 'wg.nucleo.oferta.ocupada' | translate: { nombre: o.edicion_will_go } }}</p> }
               </li>
             }
             @if (!coincidencias.length) {
-              <li class="px-4 py-3 text-sm text-gray-500">{{ texto.trim() ? 'Nada coincide con «' + texto + '»' : 'No hay programas habilitados con número de edición' }}</li>
+              <li class="px-4 py-3 text-sm text-gray-500">{{ texto.trim() ? ('wg.nucleo.oferta.nadaCoincide' | translate: { texto: texto }) : ('wg.nucleo.oferta.sinProgramas' | translate) }}</li>
             }
-            @if (hayMas) { <li class="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">Sigue escribiendo para ver más</li> }
+            @if (hayMas) { <li class="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">{{ 'wg.nucleo.oferta.sigueEscribiendo' | translate }}</li> }
           </ul>
         }
       }

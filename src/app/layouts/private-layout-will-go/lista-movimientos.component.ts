@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
+import { FechaWillGoPipe } from './fecha.pipe';
 import { formatearNumero } from './numero-miles.directive';
 import { imagenBillete } from './imagen-billete';
 
@@ -17,18 +18,18 @@ export interface MovimientoLista {
 @Component({
   selector: 'wg-lista-movimientos',
   standalone: true,
-  imports: [DatePipe],
+  imports: [TranslatePipe, FechaWillGoPipe],
   template: `
     @if (!movimientos.length) {
-      <p class="text-sm text-gray-500">{{ vacio }}</p>
+      <p class="text-sm text-gray-500">{{ vacio || ('wg.nucleo.movimientos.vacio' | translate) }}</p>
     } @else {
       <div class="grid grid-cols-2 gap-3">
         <div class="bg-white rounded-2xl border border-gray-200 p-3">
-          <p class="text-xs text-gray-500">Entró</p>
+          <p class="text-xs text-gray-500">{{ 'wg.nucleo.movimientos.entro' | translate }}</p>
           <p class="text-lg font-extrabold text-emerald-700 break-all">+{{ miles(totalEntro) }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-200 p-3">
-          <p class="text-xs text-gray-500">Salió</p>
+          <p class="text-xs text-gray-500">{{ 'wg.nucleo.movimientos.salio' | translate }}</p>
           <p class="text-lg font-extrabold text-gray-800 break-all">−{{ miles(totalSalio) }}</p>
         </div>
       </div>
@@ -42,7 +43,7 @@ export interface MovimientoLista {
               </span>
               <span class="min-w-0 flex-1">
                 <span class="block font-semibold text-gray-800 leading-snug line-clamp-2">{{ m.titulo }}</span>
-                <span class="block text-xs text-gray-500 truncate">{{ m.fecha | date:'d MMM, h:mm a' }}{{ m.quien ? ' · ' + m.quien : '' }}</span>
+                <span class="block text-xs text-gray-500 truncate">{{ m.fecha | wgFecha: ('wg.nucleo.movimientos.formatoFecha' | translate) }}{{ m.quien ? ' · ' + m.quien : '' }}</span>
               </span>
               <span class="font-bold whitespace-nowrap" [class]="m.entra ? 'text-emerald-700' : 'text-gray-800'">{{ m.entra ? '+' : '−' }}{{ miles(m.monto) }}</span>
             </button>
@@ -50,7 +51,7 @@ export interface MovimientoLista {
               <div class="px-4 pb-4 grid grid-cols-3 sm:grid-cols-5 gap-2">
                 @for (b of billetes(m); track b.d) {
                   <div class="rounded-lg border border-gray-200 overflow-hidden bg-white">
-                    @if (imagen(b.d); as src) { <img [src]="src" [alt]="'Billete de ' + miles(b.d)" class="w-full aspect-[520/281] object-cover"> }
+                    @if (imagen(b.d); as src) { <img [src]="src" [alt]="'wg.nucleo.billetes.billeteDe' | translate: { n: miles(b.d) }" class="w-full aspect-[520/281] object-cover"> }
                     @else { <div class="w-full aspect-[520/281] flex items-center justify-center text-sm font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(b.d) }}</div> }
                     <p class="text-center text-xs py-1 text-gray-600"><b class="text-gray-800">{{ miles(b.n) }}</b> × {{ miles(b.d) }}</p>
                   </div>
@@ -71,7 +72,8 @@ export class ListaMovimientosComponent {
   @Input({ required: true }) pais!: { nombre: string; color: string | null };
   @Input() totalEntro: number | null | undefined = 0;
   @Input() totalSalio: number | null | undefined = 0;
-  @Input() vacio = 'Todavía no hay movimientos.';
+  /** Vacío = texto por defecto traducido (wg.nucleo.movimientos.vacio). */
+  @Input() vacio = '';
 
   abierto: string | null = null;
   private cache = new Map<string, { d: number; n: number }[]>();

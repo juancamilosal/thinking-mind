@@ -1,5 +1,6 @@
 import { Component, ElementRef, Input, NgZone, OnChanges, OnDestroy, ViewChild, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
+import { FechaWillGoPipe } from './fecha.pipe';
 import { formatearNumero } from './numero-miles.directive';
 
 export interface PaisTasa {
@@ -13,14 +14,14 @@ const IZQ = 52, DER = 14, ARRIBA = 14, ABAJO = 30;
 @Component({
   selector: 'wg-grafica-tasa',
   standalone: true,
-  imports: [DatePipe],
+  imports: [TranslatePipe, FechaWillGoPipe],
   template: `
     <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-      <h3 class="font-bold text-gray-800">Tipo de cambio en el tiempo</h3>
-      <p class="text-xs text-gray-500">Pesos por billete. La línea punteada es la tasa inicial ({{ miles(tasaInicial) }}).</p>
+      <h3 class="font-bold text-gray-800">{{ 'wg.nucleo.tasa.titulo' | translate }}</h3>
+      <p class="text-xs text-gray-500">{{ 'wg.nucleo.tasa.subtitulo' | translate: { n: miles(tasaInicial) } }}</p>
 
       @if (!momentos.length) {
-        <p class="mt-4 text-sm text-gray-500">La gráfica aparece cuando se haga el primer cálculo (cada {{ intervalo }} minutos dentro del horario).</p>
+        <p class="mt-4 text-sm text-gray-500">{{ 'wg.nucleo.tasa.vacio' | translate: { n: intervalo } }}</p>
       } @else {
         <div class="mt-3 flex flex-wrap items-center gap-x-1 gap-y-1">
           @for (s of series; track s.id) {
@@ -34,7 +35,7 @@ const IZQ = 52, DER = 14, ARRIBA = 14, ABAJO = 30;
         </div>
 
         <div #lienzo class="mt-2 w-full">
-          <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" aria-label="Gráfica del tipo de cambio de cada país">
+          <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" [attr.aria-label]="'wg.nucleo.tasa.aria' | translate">
             @for (t of marcas; track t) {
               <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(t)" [attr.y2]="y(t)" stroke="#eef0f2" stroke-width="1" />
               <text [attr.x]="izq - 6" [attr.y]="y(t) + 3.5" text-anchor="end" font-size="11" fill="#6b7280">{{ miles(t) }}</text>
@@ -42,7 +43,7 @@ const IZQ = 52, DER = 14, ARRIBA = 14, ABAJO = 30;
             <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(tasaInicial)" [attr.y2]="y(tasaInicial)" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5 4" />
             @for (m of momentos; track $index; let i = $index) {
               @if (i === elegida || i % saltoEtiquetas === 0 || i === momentos.length - 1) {
-                <text [attr.x]="x(i)" [attr.y]="alto - 9" text-anchor="middle" font-size="11" [attr.fill]="i === elegida ? '#111827' : '#6b7280'" [attr.font-weight]="i === elegida ? 700 : 400">{{ m ? (m | date:'h:mm') : 'Inicio' }}</text>
+                <text [attr.x]="x(i)" [attr.y]="alto - 9" text-anchor="middle" font-size="11" [attr.fill]="i === elegida ? '#111827' : '#6b7280'" [attr.font-weight]="i === elegida ? 700 : 400">{{ m ? (m | wgFecha: ('wg.nucleo.tasa.formatoHora' | translate)) : ('wg.nucleo.tasa.inicio' | translate) }}</text>
               }
             }
             @if (elegida !== null) {
@@ -55,7 +56,7 @@ const IZQ = 52, DER = 14, ARRIBA = 14, ABAJO = 30;
               }
             }
             @if (!visibles.length) {
-              <text [attr.x]="(izq + ancho - der) / 2" [attr.y]="(arriba + alto - abajo) / 2" text-anchor="middle" font-size="12" fill="#9ca3af">Marca un país para ver su línea</text>
+              <text [attr.x]="(izq + ancho - der) / 2" [attr.y]="(arriba + alto - abajo) / 2" text-anchor="middle" font-size="12" fill="#9ca3af">{{ 'wg.nucleo.tasa.marcaPais' | translate }}</text>
             }
             @for (m of momentos; track $index; let i = $index) {
               <rect [attr.x]="x(i) - paso / 2" y="0" [attr.width]="paso" [attr.height]="alto" fill="transparent" class="cursor-pointer" (click)="elegida = i" (mouseenter)="elegida = i" />
@@ -65,7 +66,7 @@ const IZQ = 52, DER = 14, ARRIBA = 14, ABAJO = 30;
 
         @if (elegida !== null) {
           <div class="mt-2 rounded-xl bg-gray-50 border border-gray-100 p-3">
-            <p class="text-xs font-semibold text-gray-500 mb-2">{{ momentos[elegida] ? (momentos[elegida] | date:"d MMM, h:mm a") : 'Al inicio' }}</p>
+            <p class="text-xs font-semibold text-gray-500 mb-2">{{ momentos[elegida] ? (momentos[elegida] | wgFecha: ('wg.nucleo.tasa.formatoFecha' | translate)) : ('wg.nucleo.tasa.alInicio' | translate) }}</p>
             <ul class="space-y-1.5">
               @for (s of visibles; track s.id) {
                 @if (s.valores[elegida] !== null) {

@@ -1,4 +1,6 @@
 import { InstalarAppComponent } from '../../../private-layout-will-go/instalar-app.component';
+import { SelectorIdiomaComponent } from '../../../private-layout-will-go/selector-idioma.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,7 +13,7 @@ import { WillGoService } from '../../../../core/services/will-go.service';
 @Component({
   selector: 'app-login-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule, InstalarAppComponent],
+  imports: [ReactiveFormsModule, InstalarAppComponent, SelectorIdiomaComponent, TranslatePipe],
   templateUrl: './login-will-go.html',
   styleUrls: ['./login-will-go.css'],
 })
@@ -39,7 +41,8 @@ export class LoginWillGo implements OnInit {
     private willGo: WillGoService,
     private tokenRefresh: TokenRefreshService,
     private cdr: ChangeDetectorRef,
-    private zone: NgZone
+    private zone: NgZone,
+    private t: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -77,7 +80,7 @@ export class LoginWillGo implements OnInit {
             // Usuario válido de otra parte de la plataforma: no entra por aquí
             StorageServices.clearSession();
             WillGoService.olvidarPerfil();
-            this.terminar('Este usuario no pertenece a Will Go Economy. Ingresa por el portal que te corresponde.');
+            this.terminar(this.t.instant('wg.nucleo.login.noPertenece'));
             return;
           }
           this.tokenRefresh.startTokenRefreshService();
@@ -89,8 +92,8 @@ export class LoginWillGo implements OnInit {
           StorageServices.clearSession();
           WillGoService.olvidarPerfil();
           this.terminar(e?.status === 401 || e?.status === 400
-            ? 'Correo o contraseña incorrectos.'
-            : WillGoService.mensajeDeError(e, 'No pudimos iniciar sesión. Intenta de nuevo.'));
+            ? this.t.instant('wg.nucleo.login.incorrectos')
+            : WillGoService.mensajeDeError(e, this.t.instant('wg.nucleo.login.errorGeneral')));
         },
       });
   }

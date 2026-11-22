@@ -1,58 +1,59 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { formatearNumero } from '../../../numero-miles.directive';
 import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/services/will-go.service';
 
 @Component({
   selector: 'app-tab-participantes',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   template: `
     <!-- Acciones -->
     <div class="flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
-      <p class="text-sm text-gray-500">Los inscritos aparecen aquí solos. Asigna a cada uno su país.</p>
+      <p class="text-sm text-gray-500">{{ 'wg.pestanas.participantes.intro' | translate }}</p>
       <div class="flex flex-wrap gap-2">
         <button type="button" (click)="repartir()" [disabled]="trabajando || !sinPais.length || !paises.length"
                 class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">
-          Repartir {{ sinPais.length }} sin país en partes iguales
+          {{ 'wg.pestanas.participantes.repartir' | translate: { n: sinPais.length } }}
         </button>
       </div>
     </div>
 
     <!-- Conteo por país -->
     <div class="mt-4 flex flex-wrap gap-2">
-      <button type="button" (click)="filtro = ''" class="chip" [class.activo]="filtro === ''">Todos · {{ activos.length }}</button>
+      <button type="button" (click)="filtro = ''" class="chip" [class.activo]="filtro === ''">{{ 'wg.pestanas.comun.todos' | translate }} · {{ activos.length }}</button>
       @for (p of paises; track p.id) {
         <button type="button" (click)="filtro = p.id" class="chip" [class.activo]="filtro === p.id">
           <span class="w-2.5 h-2.5 rounded-full" [style.background]="p.color"></span>{{ p.nombre }} · {{ cuantos(p.id) }}
         </button>
       }
-      <button type="button" (click)="filtro = 'sin'" class="chip" [class.activo]="filtro === 'sin'" [class.text-amber-800]="sinPais.length">Sin país · {{ sinPais.length }}</button>
+      <button type="button" (click)="filtro = 'sin'" class="chip" [class.activo]="filtro === 'sin'" [class.text-amber-800]="sinPais.length">{{ 'wg.pestanas.participantes.sinPais' | translate }} · {{ sinPais.length }}</button>
       @if (retirados.length) {
-        <button type="button" (click)="filtro = 'retirados'" class="chip" [class.activo]="filtro === 'retirados'">Retirados · {{ retirados.length }}</button>
+        <button type="button" (click)="filtro = 'retirados'" class="chip" [class.activo]="filtro === 'retirados'">{{ 'wg.pestanas.participantes.retirados' | translate }} · {{ retirados.length }}</button>
       }
       @if (conReembolso.length) {
-        <button type="button" (click)="filtro = 'reembolso'" class="chip !border-red-200 !text-red-700" [class.activo]="filtro === 'reembolso'">⚠ Pidieron reembolso · {{ conReembolso.length }}</button>
+        <button type="button" (click)="filtro = 'reembolso'" class="chip !border-red-200 !text-red-700" [class.activo]="filtro === 'reembolso'">{{ 'wg.pestanas.participantes.pidieronReembolso' | translate }} · {{ conReembolso.length }}</button>
       }
     </div>
 
-    <input type="search" [(ngModel)]="busqueda" placeholder="Buscar estudiante…" aria-label="Buscar por nombre o código"
+    <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.pestanas.participantes.buscar' | translate" [attr.aria-label]="'wg.pestanas.participantes.buscarAria' | translate"
            class="mt-3 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
 
     <!-- Barra de selección -->
     @if (seleccion.size) {
       <div class="sticky top-16 z-10 mt-3 flex flex-wrap items-center gap-2 rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-lg">
-        <span class="text-sm font-semibold mr-2">{{ seleccion.size }} seleccionados</span>
+        <span class="text-sm font-semibold mr-2">{{ 'wg.pestanas.participantes.seleccionados' | translate: { n: seleccion.size } }}</span>
         @if (filtro === 'retirados') {
-          <button type="button" (click)="reintegrar(seleccionLista)" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-600">Reintegrar</button>
+          <button type="button" (click)="reintegrar(seleccionLista)" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-600">{{ 'wg.pestanas.participantes.reintegrar' | translate }}</button>
         } @else {
-          <span class="text-sm text-slate-300">Asignar a:</span>
+          <span class="text-sm text-slate-300">{{ 'wg.pestanas.participantes.asignarA' | translate }}</span>
           @for (p of paises; track p.id) {
             <button type="button" (click)="asignarSeleccion(p.id)" class="px-3 py-1.5 rounded-lg text-sm font-semibold" [style.background]="p.color">{{ p.nombre }}</button>
           }
-          <button type="button" (click)="pedirRetiro(seleccionLista)" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-red-600">Retirar</button>
+          <button type="button" (click)="pedirRetiro(seleccionLista)" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-red-600">{{ 'wg.pestanas.participantes.retirar' | translate }}</button>
         }
-        <button type="button" (click)="seleccion.clear()" class="ml-auto text-sm text-slate-300 hover:text-white">Quitar selección</button>
+        <button type="button" (click)="seleccion.clear()" class="ml-auto text-sm text-slate-300 hover:text-white">{{ 'wg.pestanas.participantes.quitarSeleccion' | translate }}</button>
       </div>
     }
 
@@ -63,57 +64,57 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
     <!-- Lista -->
     <div class="mt-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       @if (cargando) {
-        <p class="p-10 text-center text-gray-500">Cargando estudiantes…</p>
+        <p class="p-10 text-center text-gray-500">{{ 'wg.pestanas.participantes.cargando' | translate }}</p>
       } @else if (!activos.length && filtro !== 'retirados') {
         <div class="p-10 text-center">
-          <p class="font-semibold text-gray-700">Todavía no hay inscritos</p>
-          <p class="text-sm text-gray-500 mt-1">Cuando un estudiante se inscriba en el programa{{ edicion.colegio_nombre ? ' desde ' + edicion.colegio_nombre : '' }}, aparecerá aquí automáticamente.</p>
+          <p class="font-semibold text-gray-700">{{ 'wg.pestanas.participantes.sinInscritos' | translate }}</p>
+          <p class="text-sm text-gray-500 mt-1">{{ edicion.colegio_nombre ? ('wg.pestanas.participantes.sinInscritosAyudaColegio' | translate: { colegio: edicion.colegio_nombre }) : ('wg.pestanas.participantes.sinInscritosAyuda' | translate) }}</p>
         </div>
       } @else {
         <div class="hidden md:grid grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] gap-3 px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
-          <label class="flex items-center"><input type="checkbox" [checked]="todosSeleccionados" (change)="seleccionarTodos($any($event.target).checked)" aria-label="Seleccionar todos"></label>
-          <span>Estudiante</span><span title="Código corto del estudiante para buscarlo o escanearlo (QR) en la caja y al entregar billetes">Código ⓘ</span><span>País</span><span class="text-right">Saldo</span><span class="text-center">Presente</span><span></span>
+          <label class="flex items-center"><input type="checkbox" [checked]="todosSeleccionados" (change)="seleccionarTodos($any($event.target).checked)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarTodos' | translate"></label>
+          <span>{{ 'wg.pestanas.participantes.estudiante' | translate }}</span><span [title]="'wg.pestanas.participantes.codigoAyuda' | translate">{{ 'wg.pestanas.participantes.codigo' | translate }} ⓘ</span><span>{{ 'wg.pestanas.comun.pais' | translate }}</span><span class="text-right">{{ 'wg.pestanas.participantes.saldo' | translate }}</span><span class="text-center">{{ 'wg.pestanas.participantes.presente' | translate }}</span><span></span>
         </div>
         <ul class="divide-y divide-gray-100">
           @for (p of filtrados; track p.id) {
             <li class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] gap-x-3 gap-y-2 items-center px-4 py-3" [class.bg-gray-50]="p.retirado">
-              <label class="flex items-center"><input type="checkbox" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'Seleccionar a ' + p.nombre"></label>
+              <label class="flex items-center"><input type="checkbox" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarA' | translate: { nombre: p.nombre }"></label>
               <div class="min-w-0">
                 <p class="font-semibold truncate" [class]="p.retirado ? 'text-gray-500 line-through' : 'text-gray-800'">{{ p.nombre }} {{ p.apellido }}</p>
                 @if (p.retirado) {
-                  <p class="text-xs text-red-700 truncate">Retirado: {{ p.motivo_retiro }}</p>
+                  <p class="text-xs text-red-700 truncate">{{ 'wg.pestanas.participantes.retiradoMotivo' | translate: { motivo: p.motivo_retiro } }}</p>
                 } @else if (p.pidio_reembolso) {
-                  <p class="text-xs font-semibold text-red-700">⚠ Pidió reembolso</p>
+                  <p class="text-xs font-semibold text-red-700">{{ 'wg.pestanas.participantes.pidioReembolso' | translate }}</p>
                 } @else if (!p.corresponde) {
-                  <p class="text-xs font-semibold text-red-700" title="Ya tiene movimientos, por eso no salió solo. Retíralo para devolver sus billetes al banco.">⚠ No corresponde a esta edición{{ p.colegio_id !== edicion.colegio_id ? ' (es de ' + (p.colegio || 'otro colegio') + ')' : ' (no está inscrito en la edición ' + edicion.edicion_programa + ')' }}</p>
+                  <p class="text-xs font-semibold text-red-700" [title]="'wg.pestanas.participantes.noCorrespondeAyuda' | translate">{{ 'wg.pestanas.participantes.noCorresponde' | translate }}{{ p.colegio_id !== edicion.colegio_id ? ' ' + ('wg.pestanas.participantes.esDe' | translate: { colegio: p.colegio || ('wg.pestanas.participantes.otroColegio' | translate) }) : ' ' + ('wg.pestanas.participantes.noInscrito' | translate: { edicion: edicion.edicion_programa }) }}</p>
                 }
                 <!-- El colegio solo se muestra si la edición reúne varios colegios -->
                 @if (!edicion.colegio_id || p.grado) {
-                  <p class="text-xs text-gray-500 truncate">{{ edicion.colegio_id ? '' : (p.colegio || 'Sin colegio') }}{{ !edicion.colegio_id && p.grado ? ' · ' : '' }}{{ p.grado ? 'Grado ' + p.grado : '' }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ edicion.colegio_id ? '' : (p.colegio || ('wg.pestanas.participantes.sinColegio' | translate)) }}{{ !edicion.colegio_id && p.grado ? ' · ' : '' }}{{ p.grado ? ('wg.pestanas.participantes.grado' | translate: { n: p.grado }) : '' }}</p>
                 }
               </div>
               <span class="col-start-2 md:col-start-auto font-mono text-sm text-gray-700">{{ p.codigo }}</span>
               <select class="col-start-2 md:col-start-auto px-3 py-2 rounded-lg border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
-                      [style.border-color]="colorDe(p.pais_id) || '#fcd34d'" [disabled]="!!p.retirado" [ngModel]="p.pais_id" (ngModelChange)="asignar([p.id], $event)" [attr.aria-label]="'País de ' + p.nombre">
-                <option [ngValue]="null">Sin país</option>
+                      [style.border-color]="colorDe(p.pais_id) || '#fcd34d'" [disabled]="!!p.retirado" [ngModel]="p.pais_id" (ngModelChange)="asignar([p.id], $event)" [attr.aria-label]="'wg.pestanas.participantes.paisDe' | translate: { nombre: p.nombre }">
+                <option [ngValue]="null">{{ 'wg.pestanas.participantes.sinPais' | translate }}</option>
                 @for (pa of paises; track pa.id) { <option [ngValue]="pa.id">{{ pa.nombre }}</option> }
               </select>
               <span class="col-start-2 md:col-start-auto md:text-right text-sm font-semibold text-gray-800">{{ miles(p.saldo) }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
               <label class="col-start-2 md:col-start-auto flex md:justify-center items-center gap-2 text-sm text-gray-600">
                 <input type="checkbox" [checked]="p.presente" [disabled]="!!p.retirado" (change)="marcarPresente(p, $any($event.target).checked)">
-                <span class="md:hidden">Presente</span>
+                <span class="md:hidden">{{ 'wg.pestanas.participantes.presente' | translate }}</span>
               </label>
               <div class="col-start-2 md:col-start-auto md:text-right">
                 @if (p.retirado) {
-                  <button type="button" (click)="reintegrar([p])" class="text-sm font-semibold text-emerald-700 hover:underline">Reintegrar</button>
+                  <button type="button" (click)="reintegrar([p])" class="text-sm font-semibold text-emerald-700 hover:underline">{{ 'wg.pestanas.participantes.reintegrar' | translate }}</button>
                 } @else {
-                  <button type="button" (click)="pedirRetiro([p])" class="text-sm font-semibold text-red-700 hover:underline">Retirar</button>
+                  <button type="button" (click)="pedirRetiro([p])" class="text-sm font-semibold text-red-700 hover:underline">{{ 'wg.pestanas.participantes.retirar' | translate }}</button>
                 }
               </div>
             </li>
           }
         </ul>
-        @if (!filtrados.length) { <p class="p-6 text-center text-sm text-gray-500">Nadie coincide con el filtro.</p> }
+        @if (!filtrados.length) { <p class="p-6 text-center text-sm text-gray-500">{{ 'wg.pestanas.participantes.nadieCoincide' | translate }}</p> }
       }
     </div>
 
@@ -121,28 +122,28 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="retiro = null">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true" aria-labelledby="titulo-retiro">
           <h2 id="titulo-retiro" class="text-lg font-bold text-gray-800">
-            {{ retiro.length === 1 ? '¿Retirar a ' + retiro[0].nombre + ' ' + retiro[0].apellido + '?' : '¿Retirar a ' + retiro.length + ' estudiantes?' }}
+            {{ retiro.length === 1 ? ('wg.pestanas.participantes.confirmarUno' | translate: { nombre: retiro[0].nombre + ' ' + retiro[0].apellido }) : ('wg.pestanas.participantes.confirmarVarios' | translate: { n: retiro.length }) }}
           </h2>
-          <p class="text-sm text-gray-600 mt-2">Sale de la edición: no recibe billetes, no compra y no cuenta para el tipo de cambio. Su inscripción y sus pagos en la plataforma no cambian, y se puede reintegrar después.</p>
+          <p class="text-sm text-gray-600 mt-2">{{ 'wg.pestanas.participantes.retiroExplica' | translate }}</p>
           @if (billetesARetirar > 0) {
-            <p class="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3 mt-3">Sus {{ miles(billetesARetirar) }} billetes vuelven al banco de su país.</p>
+            <p class="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3 mt-3">{{ 'wg.pestanas.participantes.billetesVuelven' | translate: { n: miles(billetesARetirar) } }}</p>
           }
-          <p class="text-sm font-semibold text-gray-700 mt-4 mb-2">Motivo</p>
+          <p class="text-sm font-semibold text-gray-700 mt-4 mb-2">{{ 'wg.pestanas.participantes.motivo' | translate }}</p>
           <div class="space-y-2">
             @for (m of motivos; track m) {
-              <label class="flex items-center gap-2 text-sm text-gray-700"><input type="radio" name="motivo" [value]="m" [(ngModel)]="motivo"> {{ m }}</label>
+              <label class="flex items-center gap-2 text-sm text-gray-700"><input type="radio" name="motivo" [value]="m" [(ngModel)]="motivo"> {{ claveMotivo[m] | translate }}</label>
             }
           </div>
           @if (motivo === 'Otro') {
-            <input [(ngModel)]="motivoOtro" placeholder="Escribe el motivo" aria-label="Otro motivo"
+            <input [(ngModel)]="motivoOtro" [placeholder]="'wg.pestanas.participantes.escribeMotivo' | translate" [attr.aria-label]="'wg.pestanas.participantes.otroMotivo' | translate"
                    class="mt-2 w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-300">
           }
           @if (errorRetiro) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ errorRetiro }}</p> }
           <div class="flex gap-3 mt-6">
-            <button type="button" (click)="retiro = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+            <button type="button" (click)="retiro = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.comun.cancelar' | translate }}</button>
             <button type="button" (click)="confirmarRetiro()" [disabled]="trabajando || (motivo === 'Otro' && !motivoOtro.trim())"
                     class="flex-1 py-2.5 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
-              {{ trabajando ? 'Retirando…' : 'Retirar' }}
+              {{ (trabajando ? 'wg.pestanas.participantes.retirando' : 'wg.pestanas.participantes.retirar') | translate }}
             </button>
           </div>
         </div>
@@ -158,6 +159,7 @@ export class TabParticipantes implements OnInit {
   @Input({ required: true }) edicion!: Edicion;
   @Output() cambio = new EventEmitter<void>();
   private willGo = inject(WillGoService);
+  private t = inject(TranslateService);
 
   lista: Participante[] = [];
   paises: Pais[] = [];
@@ -175,7 +177,13 @@ export class TabParticipantes implements OnInit {
     this.cargar();
   }
 
+  /** El motivo se guarda en español (dato del servidor); en pantalla se muestra traducido. */
   readonly motivos = ['No asistirá', 'Reembolso', 'Otro'];
+  readonly claveMotivo: Record<string, string> = {
+    'No asistirá': 'wg.pestanas.participantes.motivos.noAsistira',
+    Reembolso: 'wg.pestanas.participantes.motivos.reembolso',
+    Otro: 'wg.pestanas.participantes.motivos.otro',
+  };
   retiro: Participante[] | null = null;
   motivo = 'No asistirá';
   motivoOtro = '';
@@ -262,7 +270,7 @@ export class TabParticipantes implements OnInit {
       const par = pendientes.shift();
       if (!par) {
         this.trabajando = false;
-        this.mostrar('Estudiantes repartidos entre los países.' + (bienvenidas ? ` ${bienvenidas} recibieron su bienvenida.` : ''), false);
+        this.mostrar(this.t.instant('wg.pestanas.participantes.repartidos') + (bienvenidas ? ' ' + this.t.instant('wg.pestanas.participantes.repartidosBienvenida', { n: bienvenidas }) : ''), false);
         this.cargar();
         this.cambio.emit();
         return;
@@ -291,8 +299,8 @@ export class TabParticipantes implements OnInit {
         this.trabajando = false;
         this.retiro = null;
         this.seleccion.clear();
-        this.mostrar((r.retirados === 1 ? 'Estudiante retirado.' : `${r.retirados} estudiantes retirados.`)
-          + (r.billetes_devueltos ? ` ${formatearNumero(r.billetes_devueltos)} billetes volvieron al banco.` : ''), false);
+        this.mostrar((r.retirados === 1 ? this.t.instant('wg.pestanas.participantes.retiradoUno') : this.t.instant('wg.pestanas.participantes.retiradosN', { n: r.retirados }))
+          + (r.billetes_devueltos ? ' ' + this.t.instant('wg.pestanas.participantes.billetesVolvieron', { n: formatearNumero(r.billetes_devueltos) }) : ''), false);
         this.cargar();
         this.cambio.emit();
       },
@@ -304,7 +312,7 @@ export class TabParticipantes implements OnInit {
     this.willGo.reintegrarParticipantes(lista.map((p) => p.id)).subscribe({
       next: (r) => {
         this.seleccion.clear();
-        this.mostrar(r.reintegrados === 1 ? 'Estudiante reintegrado a la edición.' : `${r.reintegrados} estudiantes reintegrados.`, false);
+        this.mostrar(r.reintegrados === 1 ? this.t.instant('wg.pestanas.participantes.reintegradoUno') : this.t.instant('wg.pestanas.participantes.reintegradosN', { n: r.reintegrados }), false);
         if (!this.lista.some((p) => p.retirado && !lista.includes(p))) this.filtro = '';
         this.cargar();
         this.cambio.emit();
@@ -322,8 +330,10 @@ export class TabParticipantes implements OnInit {
       next: (r) => {
         for (const p of this.lista) if (ids.includes(p.id)) p.pais_id = paisId;
         this.seleccion.clear();
-        const asignados = ids.length > 1 ? `${ids.length} estudiantes asignados.` : 'País asignado.';
-        const bienvenida = r.bienvenidas ? ` ${r.bienvenidas === 1 ? 'Recibió' : r.bienvenidas + ' recibieron'} sus ${this.edicion.investment_bill} billetes de bienvenida.` : '';
+        const asignados = ids.length > 1 ? this.t.instant('wg.pestanas.participantes.asignadosN', { n: ids.length }) : this.t.instant('wg.pestanas.participantes.paisAsignado');
+        const bienvenida = r.bienvenidas
+          ? ' ' + this.t.instant(r.bienvenidas === 1 ? 'wg.pestanas.participantes.bienvenidaUno' : 'wg.pestanas.participantes.bienvenidaVarios', { n: r.bienvenidas, billetes: this.edicion.investment_bill })
+          : '';
         this.mostrar(asignados + bienvenida, false);
         if (r.bienvenidas) this.cargar(); // para ver el saldo nuevo
         this.cambio.emit();

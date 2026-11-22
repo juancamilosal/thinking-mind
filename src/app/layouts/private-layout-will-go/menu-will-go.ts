@@ -1,7 +1,7 @@
 import { AccesoMenu, RolWillGo } from '../../core/services/will-go.service';
 
 export interface OpcionMenu {
-  texto: string;
+  texto: string; // clave de traducción (wg.nucleo.menu.*): se muestra con | translate
   ruta?: string; // sin ruta = todavía no está lista ("Próximamente")
   icono: string; // path de un ícono de 24x24 (heroicons outline)
   /** Solo se muestra si el colaborador puede usarla hoy (ver GET /wge/mi-menu). Sin esto, se muestra siempre. */
@@ -20,40 +20,40 @@ const ICONOS = {
   tasas: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
 };
 
-const INICIO: OpcionMenu = { texto: 'Inicio', ruta: '/private-will-go/inicio', icono: ICONOS.inicio };
+const INICIO: OpcionMenu = { texto: 'wg.nucleo.menu.inicio', ruta: '/private-will-go/inicio', icono: ICONOS.inicio };
 
 /** Lo que ve cada colaborador en su menú. */
 export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
   administrativo: [
     INICIO,
-    { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
-    { texto: 'Ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
-    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
+    { texto: 'wg.nucleo.menu.colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
+    { texto: 'wg.nucleo.menu.ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
+    { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
   administrador: [
     INICIO,
-    { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
-    { texto: 'Ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
-    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
+    { texto: 'wg.nucleo.menu.colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
+    { texto: 'wg.nucleo.menu.ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
+    { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
   docente: [
     INICIO,
-    { texto: 'Entregar billetes', ruta: '/private-will-go/entregar', icono: ICONOS.billetes, requiere: 'equipo' },
-    { texto: 'Rúbrica', ruta: '/private-will-go/rubrica', icono: ICONOS.rubrica, requiere: 'equipo' },
-    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
+    { texto: 'wg.nucleo.menu.entregarBilletes', ruta: '/private-will-go/entregar', icono: ICONOS.billetes, requiere: 'equipo' },
+    { texto: 'wg.nucleo.menu.rubrica', ruta: '/private-will-go/rubrica', icono: ICONOS.rubrica, requiere: 'equipo' },
+    { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
   ],
   banco: [
     INICIO,
-    { texto: 'Repartir a docentes', ruta: '/private-will-go/repartir', icono: ICONOS.billetes, requiere: 'banco' },
-    { texto: 'Banco', ruta: '/private-will-go/banco', icono: ICONOS.caja, requiere: 'banco' },
-    { texto: 'W-Funds', ruta: '/private-will-go/wfunds', icono: ICONOS.fondos, requiere: 'banco' },
-    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
+    { texto: 'wg.nucleo.menu.repartirDocentes', ruta: '/private-will-go/repartir', icono: ICONOS.billetes, requiere: 'banco' },
+    { texto: 'wg.nucleo.menu.banco', ruta: '/private-will-go/banco', icono: ICONOS.caja, requiere: 'banco' },
+    { texto: 'wg.nucleo.menu.wfunds', ruta: '/private-will-go/wfunds', icono: ICONOS.fondos, requiere: 'banco' },
+    { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
   ],
   cajero: [
     INICIO,
-    { texto: 'Caja GO•STORE', ruta: '/private-will-go/caja', icono: ICONOS.caja, requiere: 'caja' },
-    { texto: 'Productos', ruta: '/private-will-go/productos', icono: ICONOS.tienda, requiere: 'caja' },
-    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
+    { texto: 'wg.nucleo.menu.cajaGoStore', ruta: '/private-will-go/caja', icono: ICONOS.caja, requiere: 'caja' },
+    { texto: 'wg.nucleo.menu.productos', ruta: '/private-will-go/productos', icono: ICONOS.tienda, requiere: 'caja' },
+    { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
   ],
 };
 

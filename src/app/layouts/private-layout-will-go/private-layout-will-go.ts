@@ -1,15 +1,17 @@
 import { InstalarAppComponent } from './instalar-app.component';
+import { SelectorIdiomaComponent } from './selector-idioma.component';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
-import { NOMBRE_ROL, PerfilWillGo, WillGoService } from '../../core/services/will-go.service';
+import { PerfilWillGo, WillGoService } from '../../core/services/will-go.service';
 import { OpcionMenu, menuPara } from './menu-will-go';
 
 @Component({
   selector: 'app-private-layout-will-go',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, InstalarAppComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, InstalarAppComponent, SelectorIdiomaComponent, TranslatePipe],
   templateUrl: './private-layout-will-go.html',
 })
 export class PrivateLayoutWillGo implements OnInit {
@@ -32,8 +34,9 @@ export class PrivateLayoutWillGo implements OnInit {
     if (this.perfil?.rol) this.willGo.miMenu().subscribe((acceso) => (this.menu = menuPara(this.perfil?.rol, acceso)));
   }
 
-  get nombreRol(): string {
-    return this.perfil?.rol ? NOMBRE_ROL[this.perfil.rol] : '';
+  /** Clave de traducción del nombre del rol (wg.nucleo.rol.*). */
+  get claveRol(): string {
+    return this.perfil?.rol ? `wg.nucleo.rol.${this.perfil.rol}` : '';
   }
 
   get iniciales(): string {

@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, NgZone, OnChanges, OnDestroy, ViewChild, inject } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export interface RondaGrafica { nombre: string; resultados: { fondo_id: string; rendimiento: number }[] }
 export interface FondoGrafica { id: string; nombre: string }
@@ -14,13 +15,14 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
 @Component({
   selector: 'wg-grafica-rendimiento',
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-      <h3 class="font-bold text-gray-800">Rendimiento por ronda</h3>
-      <p class="text-xs text-gray-500">Cuánto ganó (+) o perdió (−) cada empresa en cada ronda.</p>
+      <h3 class="font-bold text-gray-800">{{ 'wg.nucleo.rendimiento.titulo' | translate }}</h3>
+      <p class="text-xs text-gray-500">{{ 'wg.nucleo.rendimiento.subtitulo' | translate }}</p>
 
       @if (!rondas.length) {
-        <p class="mt-4 text-sm text-gray-500">La gráfica aparece cuando se cierre la primera ronda.</p>
+        <p class="mt-4 text-sm text-gray-500">{{ 'wg.nucleo.rendimiento.vacio' | translate }}</p>
       } @else {
         <!-- Empresas: el check muestra u oculta su línea -->
         <div class="mt-3 flex flex-wrap items-center gap-x-1 gap-y-1">
@@ -34,12 +36,12 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
           }
         </div>
         <div class="mt-1 flex gap-3 text-xs">
-          <button type="button" (click)="mostrarTodas()" [disabled]="!ocultas.size" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">Todas</button>
-          <button type="button" (click)="ocultarTodas()" [disabled]="ocultas.size === series.length" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">Ninguna</button>
+          <button type="button" (click)="mostrarTodas()" [disabled]="!ocultas.size" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">{{ 'wg.nucleo.rendimiento.todas' | translate }}</button>
+          <button type="button" (click)="ocultarTodas()" [disabled]="ocultas.size === series.length" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">{{ 'wg.nucleo.rendimiento.ninguna' | translate }}</button>
         </div>
 
         <div #lienzo class="mt-2 w-full">
-        <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" [attr.aria-label]="'Gráfica del rendimiento de las empresas en ' + rondas.length + ' rondas'">
+        <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" [attr.aria-label]="'wg.nucleo.rendimiento.aria' | translate: { n: rondas.length }">
           <!-- Rejilla y eje -->
           @for (t of marcas; track t) {
             <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(t)" [attr.y2]="y(t)" [attr.stroke]="t === 0 ? '#9ca3af' : '#eef0f2'" [attr.stroke-width]="t === 0 ? 1.5 : 1" vector-effect="non-scaling-stroke" />
@@ -65,7 +67,7 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
             }
           }
           @if (!seriesVisibles.length) {
-            <text [attr.x]="(izq + ancho - der) / 2" [attr.y]="(arriba + alto - abajo) / 2" text-anchor="middle" font-size="12" fill="#9ca3af">Marca una empresa para ver su línea</text>
+            <text [attr.x]="(izq + ancho - der) / 2" [attr.y]="(arriba + alto - abajo) / 2" text-anchor="middle" font-size="12" fill="#9ca3af">{{ 'wg.nucleo.rendimiento.marcaEmpresa' | translate }}</text>
           }
           <!-- Zonas para tocar cada ronda (más grandes que los puntos) -->
           @for (r of rondas; track $index; let i = $index) {
@@ -91,12 +93,12 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
           </div>
         }
 
-        <button type="button" (click)="verTabla = !verTabla" class="mt-3 text-sm font-semibold text-orange-600 hover:underline">{{ verTabla ? 'Ocultar tabla' : 'Ver tabla' }}</button>
+        <button type="button" (click)="verTabla = !verTabla" class="mt-3 text-sm font-semibold text-orange-600 hover:underline">{{ (verTabla ? 'wg.nucleo.rendimiento.ocultarTabla' : 'wg.nucleo.rendimiento.verTabla') | translate }}</button>
         @if (verTabla) {
           <div class="mt-2 overflow-x-auto">
             <table class="w-full text-sm">
               <thead><tr class="text-left text-xs text-gray-500">
-                <th class="py-1.5 pr-3 font-semibold">Empresa</th>
+                <th class="py-1.5 pr-3 font-semibold">{{ 'wg.nucleo.rendimiento.empresa' | translate }}</th>
                 @for (r of rondas; track $index) { <th class="py-1.5 px-2 font-semibold text-right whitespace-nowrap">{{ corto(r.nombre) }}</th> }
               </tr></thead>
               <tbody>
