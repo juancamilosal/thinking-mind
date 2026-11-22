@@ -22,12 +22,12 @@ const RIESGOS = {
       <div class="p-5">
         <div class="flex items-center gap-4">
           @if (logoUrl) {
-            <img [src]="logoUrl" [alt]="'Logo de ' + fondo.nombre" class="w-16 h-16 shrink-0 rounded-2xl object-cover border border-gray-100">
+            <img [src]="logoUrl" [alt]="'Logo de ' + fondo.nombre" class="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-3xl object-cover bg-gray-50 shadow-md ring-1 ring-black/5">
           } @else {
-            <div class="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br text-white text-xl font-black flex items-center justify-center" [class]="r.fondo" aria-hidden="true">{{ iniciales }}</div>
+            <div class="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-3xl bg-gradient-to-br text-white text-3xl font-black flex items-center justify-center shadow-md" [class]="r.fondo" aria-hidden="true">{{ iniciales }}</div>
           }
           <div class="min-w-0">
-            <h3 class="text-lg font-extrabold text-gray-800 leading-tight">{{ fondo.nombre }}</h3>
+            <h3 class="text-lg sm:text-xl font-extrabold text-gray-800 leading-tight">{{ fondo.nombre }}</h3>
             <span class="inline-flex items-center gap-1.5 mt-1 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="r.pastilla">
               <span class="flex gap-0.5" aria-hidden="true">
                 @for (n of [1, 2, 3]; track n) { <span class="w-1.5 h-3 rounded-sm" [class]="n <= r.nivel ? 'bg-current' : 'bg-current opacity-20'"></span> }
