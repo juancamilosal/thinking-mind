@@ -27,17 +27,18 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
         <p class="text-sm text-gray-500 mt-1">Agrega los productos con su foto, precio y unidades disponibles.</p>
       </div>
     } @else {
-      <div class="mt-4 grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div class="mt-4 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         @for (p of productos; track p.id) {
-          <article class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col" [class.opacity-60]="!p.activo">
-            <div class="aspect-[4/3] bg-orange-50 flex items-center justify-center">
+          <article class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-row sm:flex-col" [class.opacity-60]="!p.activo">
+            <!-- Celular: foto a la izquierda (una tarjeta por línea). Computador: foto arriba -->
+            <div class="w-28 sm:w-auto shrink-0 sm:aspect-[4/3] bg-orange-50 flex items-center justify-center">
               @if (p.foto) {
                 <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover" loading="lazy">
               } @else {
                 <span class="text-5xl" aria-hidden="true">🛍️</span>
               }
             </div>
-            <div class="p-4 flex-1 flex flex-col">
+            <div class="p-4 flex-1 min-w-0 flex flex-col">
               <p class="font-semibold text-gray-800 leading-tight">{{ p.nombre }}</p>
               <p class="text-sm text-gray-500 mt-1">{{ p.precio_cop | number }} pesos</p>
               <div class="mt-2 flex flex-wrap gap-1">
@@ -100,12 +101,13 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
               <input type="checkbox" [(ngModel)]="borrador.activo"> Visible en la caja
             </label>
             @if (error) { <p class="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ error }}</p> }
-            <div class="flex gap-3 pt-2">
+            <!-- Celular: un botón por línea (Guardar arriba). Computador: en fila -->
+            <div class="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2">
               @if (borrador.id) {
-                <button type="button" (click)="borrar()" [disabled]="guardando" class="px-4 py-3 rounded-xl border border-red-200 font-semibold text-red-700 hover:bg-red-50">Eliminar</button>
+                <button type="button" (click)="borrar()" [disabled]="guardando" class="w-full sm:w-auto px-4 py-3 rounded-xl border border-red-200 font-semibold text-red-700 hover:bg-red-50">Eliminar</button>
               }
-              <button type="button" (click)="borrador = null" class="flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
-              <button type="button" (click)="guardar()" [disabled]="guardando || subiendo" class="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-60">
+              <button type="button" (click)="borrador = null" class="w-full sm:w-auto sm:flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+              <button type="button" (click)="guardar()" [disabled]="guardando || subiendo" class="w-full sm:w-auto sm:flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-60">
                 {{ guardando ? 'Guardando…' : 'Guardar' }}
               </button>
             </div>
