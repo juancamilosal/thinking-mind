@@ -1735,6 +1735,154 @@ function rutasRubrica(router, { ruta, db }) {
 	}));
 }
 
+// Tipo de cambio de WILL-GO ECONOMY.
+// Cada 5 minutos revisa si terminó una ventana (por defecto de 30 min) dentro del horario de la edición.
+// Si terminó, calcula la nueva tasa de cada país con la fórmula del documento y la guarda.
+// Fuera del horario no hace nada: la tasa queda congelada y el día siguiente continúa desde el último valor.
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+
+// Valores del documento; cada edición puede cambiarlos en parametros_fx.
+const FX_POR_DEFECTO = {
+	intervalo_minutos: 30,
+	referencia: 2, // B: índice con el que la tasa no se mueve
+	sensibilidad: 0.006, // cambio de la tasa por cada punto del índice sobre B
+	variacion_minima: -0.012,
+	variacion_maxima: 0.024,
+	indice_maximo: 6,
+};
+
+/** ¿La hora local (HH:MM) de esa fecha está dentro del horario? Acepta {fecha:"2026-11-28"} o {dia:"sabado"}. */
+function dentroDelHorario(horario, fecha, hora) {
+	if (!Array.isArray(horario) || !horario.length) return false;
+	const dia = DIAS[new Date(`${fecha}T12:00:00Z`).getUTCDay()];
+	return horario.some((h) => {
+		const aplica = h.fecha ? h.fecha === fecha : String(h.dia ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() === dia;
+		return aplica && h.inicio <= hora && hora < h.fin;
+	});
+}
+
+/** Fórmula del documento: I = P / N; variación = s·(I − B), limitada; nueva tasa limitada a los topes. */
+function nuevaTasa({ tasa, puntos, presentes, tasaInicial, topeMinimo, topeMaximo, parametros }) {
+	const p = { ...FX_POR_DEFECTO, ...(parametros ?? {}) };
+	const indice = limitar(puntos / Math.max(presentes, 1), 0, p.indice_maximo);
+	const variacion = limitar(p.sensibilidad * (indice - p.referencia), p.variacion_minima, p.variacion_maxima);
+	const nueva = limitar(Math.round(tasa * (1 + variacion)), Math.round(topeMinimo * tasaInicial), Math.round(topeMaximo * tasaInicial));
+	return { indice, variacion, nueva };
+}
+
+const configHook = ({ schedule }, { database: db, logger }) => {
+	// W-Funds: cada minuto cierra las rondas que ya cumplieron su tiempo y abre la siguiente
+	schedule('* * * * *', async () => {
+		try {
+			const abonadas = await abonarPendientes(db);
+			if (abonadas) logger.info(`wge: ${abonadas} inversiones pendientes abonadas`);
+			const hechas = await cerrarRondasVencidas(db);
+			for (const h of hechas) logger.info(`wge: ronda ${h.ronda_id} cerrada sola (${h.inversiones} inversiones)${h.siguiente ? `; abierta ${h.siguiente.nombre}` : ''}`);
+			// Al empezar una nueva franja del horario, las rondas arrancan solas con la misma duración
+			for (const r of await reanudarRondas(db)) logger.info(`wge: ${r.nombre} abierta sola al empezar el horario`);
+		} catch (error) {
+			logger.error(error, 'wge: cierre de rondas');
+		}
+	});
+
+	schedule('*/5 * * * *', async () => {
+		try {
+			const ediciones = await db('wge_ediciones').where('estado', 'abierta');
+			for (const edicion of ediciones) await procesarEdicion(db, edicion, new Date());
+		} catch (error) {
+			logger.error(error, 'wge: tipo de cambio');
+		}
+	});
+};
+
+async function procesarEdicion(db, edicion, ahora) {
+	const parametros = { ...FX_POR_DEFECTO, ...(edicion.parametros_fx ?? {}) };
+	const minutos = Math.max(5, Number(parametros.intervalo_minutos) || 30);
+	// La ventana que acaba de terminar: [inicio, fin)
+	const fin = new Date(Math.floor(ahora.getTime() / (minutos * 60000)) * minutos * 60000);
+	const inicio = new Date(fin.getTime() - minutos * 60000);
+	// Solo cuenta si toda la ventana estuvo dentro del horario (se mira su primer y último minuto)
+	const a = ahoraColombia(inicio);
+	const b = ahoraColombia(new Date(fin.getTime() - 60000));
+	if (!dentroDelHorario(edicion.horario, a.fecha, a.hora) || !dentroDelHorario(edicion.horario, b.fecha, b.hora)) return [];
+
+	const paises = await db('wge_paises').where('edicion_id', edicion.id).orderBy('id');
+	const resultados = [];
+	for (const pais of paises) {
+		const r = await db.transaction(async (trx) => {
+			const actual = await trx('wge_paises').where('id', pais.id).forUpdate().first();
+			// Una sola tasa por país y ventana, aunque el proceso corra dos veces
+			if (await trx('wge_fx').where({ pais_id: pais.id, ventana: fin }).first()) return null;
+			const { suma } = await trx('wge_evaluaciones as e').join('wge_participantes as p', 'p.id', 'e.participante_id')
+				.where('p.pais_id', pais.id).whereRaw('coalesce(p.retirado, false) = false').where('e.date_created', '>=', inicio).where('e.date_created', '<', fin)
+				.sum({ suma: 'e.puntaje' }).first();
+			const { n } = await trx('wge_participantes').where({ pais_id: pais.id, presente: true }).whereRaw('coalesce(retirado, false) = false').count({ n: '*' }).first();
+			const tasa = Number(actual.tasa_actual || edicion.tasa_inicial);
+			const calculo = nuevaTasa({
+				// Puntos de inmersión = puntaje de la rúbrica (0 a 12) ÷ 3
+				tasa, puntos: Number(suma ?? 0) / 3, presentes: Number(n), tasaInicial: Number(edicion.tasa_inicial),
+				topeMinimo: Number(edicion.tope_minimo), topeMaximo: Number(edicion.tope_maximo), parametros,
+			});
+			await trx('wge_fx').insert({
+				id: crypto.randomUUID(), pais_id: pais.id, ventana: fin, participantes_presentes: Number(n),
+				puntos: Number(suma ?? 0) / 3, indice: calculo.indice, tasa_anterior: tasa, tasa_nueva: calculo.nueva,
+				date_created: new Date(),
+			});
+			await trx('wge_paises').where('id', pais.id).update({ tasa_actual: calculo.nueva });
+			return { pais: pais.nombre, tasa_anterior: tasa, ...calculo };
+		});
+		if (r) resultados.push(r);
+	}
+	return resultados;
+}
+
+// Tipo de cambio: cuánto vale hoy un billete de cada país y cómo ha cambiado cada 30 minutos.
+// El cálculo lo hace hook.js; aquí solo se consulta (para el equipo y para el portal del acudiente).
+
+const deJsonFx = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+
+/** Tasas de cada país de una edición con su historial (lo más viejo primero) y cuándo es el próximo cálculo. */
+async function datosTipoCambio(db, edicionId, { limite = 200 } = {}) {
+	const edicion = await db('wge_ediciones').where('id', edicionId)
+		.first('id', 'nombre', 'estado', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'horario');
+	if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
+	const parametros = { ...FX_POR_DEFECTO, ...(deJsonFx(edicion.parametros_fx) ?? {}) };
+	const minutos = Math.max(5, Number(parametros.intervalo_minutos) || 30);
+	const inicial = Number(edicion.tasa_inicial);
+	const paises = await db('wge_paises').where('edicion_id', edicion.id).orderBy('orden').select('id', 'nombre', 'codigo_moneda', 'color', 'tasa_actual');
+	for (const p of paises) {
+		p.tasa_actual = Number(p.tasa_actual ?? inicial);
+		p.presentes = Number((await db('wge_participantes').where({ pais_id: p.id, presente: true }).whereRaw('coalesce(retirado, false) = false').count({ n: '*' }).first())?.n ?? 0);
+		p.historial = (await db('wge_fx').where('pais_id', p.id).orderBy('ventana', 'desc').limit(limite)
+			.select('ventana', 'participantes_presentes', 'puntos', 'indice', 'tasa_anterior', 'tasa_nueva'))
+			.reverse().map((h) => ({ ...h, puntos: Number(h.puntos), indice: Number(h.indice), participantes_presentes: Number(h.participantes_presentes) }));
+	}
+	// El próximo cálculo es al terminar la ventana actual, si estamos dentro del horario
+	const ahora = new Date();
+	const enHorario = !!finDeFranja(deJsonFx(edicion.horario), ahora);
+	const proximo = enHorario && edicion.estado === 'abierta' ? new Date(Math.ceil(ahora.getTime() / (minutos * 60000)) * minutos * 60000) : null;
+	return {
+		edicion: { id: edicion.id, nombre: edicion.nombre, estado: edicion.estado },
+		tasa_inicial: inicial,
+		tope_minimo: Math.round(Number(edicion.tope_minimo ?? 0.7) * inicial),
+		tope_maximo: Math.round(Number(edicion.tope_maximo ?? 1.8) * inicial),
+		intervalo_minutos: minutos,
+		referencia: Number(parametros.referencia),
+		ahora, proximo_calculo: proximo,
+		paises,
+	};
+}
+
+function rutasTipoCambio(router, { ruta, db }) {
+	/** GET /wge/ediciones/:id/tipo-cambio: para todo el equipo de la edición. */
+	router.get('/ediciones/:id/tipo-cambio', ruta(async (req, rol) => {
+		exigirRol(rol, ROLES.ADMIN_WG, ROLES.BANCO, ROLES.DOCENTE, ROLES.CAJERO);
+		await exigirEquipo(db, { edicionId: req.params.id, usuarioId: req.accountability.user, rol });
+		return datosTipoCambio(db, req.params.id);
+	}));
+}
+
 // Portal del acudiente: entra con su documento y un código de 6 dígitos que le llega al correo.
 // No usa usuarios de Directus: la sesión es un token propio (se guarda cifrado) que viaja en el cuerpo de cada petición.
 // Nunca responde 401 (la plataforma lo toma como "sesión de colaborador vencida"); la sesión vencida es 403.
@@ -1902,7 +2050,13 @@ function rutasAcudientes(router, { db, services, getSchema, logger }) {
 			const cerradas = (await db('wge_rondas').where({ edicion_id: edicionId, estado: 'liquidada' }).orderBy('apertura')
 				.select('id', 'nombre', 'resultados')).map((r) => ({ ...r, resultados: (deJson(r.resultados) ?? []).map((x) => ({ fondo_id: x.fondo_id, rendimiento: x.rendimiento })) }));
 			const { proxima } = ronda ? { proxima: null } : await estadoRondas(db, edicionId);
-			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, proxima_ronda: proxima, fondos, rondas: cerradas });
+			const fx = await datosTipoCambio(db, edicionId, { limite: 100 });
+			const tipoCambio = {
+				tasa_inicial: fx.tasa_inicial, proximo_calculo: fx.proximo_calculo, intervalo_minutos: fx.intervalo_minutos,
+				paises: fx.paises.map((p) => ({ id: p.id, nombre: p.nombre, codigo_moneda: p.codigo_moneda, color: p.color, tasa_actual: p.tasa_actual,
+					historial: p.historial.map((h) => ({ ventana: h.ventana, tasa_anterior: h.tasa_anterior, tasa_nueva: h.tasa_nueva })) })),
+			};
+			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, proxima_ronda: proxima, fondos, rondas: cerradas, tipo_cambio: tipoCambio });
 		}
 		return { acudiente, ahora: new Date(), hijos, ediciones };
 	}));
@@ -1950,108 +2104,6 @@ function rutasAcudientes(router, { db, services, getSchema, logger }) {
 			res.status(404).end();
 		}
 	});
-}
-
-// Tipo de cambio de WILL-GO ECONOMY.
-// Cada 5 minutos revisa si terminó una ventana (por defecto de 30 min) dentro del horario de la edición.
-// Si terminó, calcula la nueva tasa de cada país con la fórmula del documento y la guarda.
-// Fuera del horario no hace nada: la tasa queda congelada y el día siguiente continúa desde el último valor.
-
-const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-
-// Valores del documento; cada edición puede cambiarlos en parametros_fx.
-const FX_POR_DEFECTO = {
-	intervalo_minutos: 30,
-	referencia: 2, // B: índice con el que la tasa no se mueve
-	sensibilidad: 0.006, // cambio de la tasa por cada punto del índice sobre B
-	variacion_minima: -0.012,
-	variacion_maxima: 0.024,
-	indice_maximo: 6,
-};
-
-/** ¿La hora local (HH:MM) de esa fecha está dentro del horario? Acepta {fecha:"2026-11-28"} o {dia:"sabado"}. */
-function dentroDelHorario(horario, fecha, hora) {
-	if (!Array.isArray(horario) || !horario.length) return false;
-	const dia = DIAS[new Date(`${fecha}T12:00:00Z`).getUTCDay()];
-	return horario.some((h) => {
-		const aplica = h.fecha ? h.fecha === fecha : String(h.dia ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() === dia;
-		return aplica && h.inicio <= hora && hora < h.fin;
-	});
-}
-
-/** Fórmula del documento: I = P / N; variación = s·(I − B), limitada; nueva tasa limitada a los topes. */
-function nuevaTasa({ tasa, puntos, presentes, tasaInicial, topeMinimo, topeMaximo, parametros }) {
-	const p = { ...FX_POR_DEFECTO, ...(parametros ?? {}) };
-	const indice = limitar(puntos / Math.max(presentes, 1), 0, p.indice_maximo);
-	const variacion = limitar(p.sensibilidad * (indice - p.referencia), p.variacion_minima, p.variacion_maxima);
-	const nueva = limitar(Math.round(tasa * (1 + variacion)), Math.round(topeMinimo * tasaInicial), Math.round(topeMaximo * tasaInicial));
-	return { indice, variacion, nueva };
-}
-
-const configHook = ({ schedule }, { database: db, logger }) => {
-	// W-Funds: cada minuto cierra las rondas que ya cumplieron su tiempo y abre la siguiente
-	schedule('* * * * *', async () => {
-		try {
-			const abonadas = await abonarPendientes(db);
-			if (abonadas) logger.info(`wge: ${abonadas} inversiones pendientes abonadas`);
-			const hechas = await cerrarRondasVencidas(db);
-			for (const h of hechas) logger.info(`wge: ronda ${h.ronda_id} cerrada sola (${h.inversiones} inversiones)${h.siguiente ? `; abierta ${h.siguiente.nombre}` : ''}`);
-			// Al empezar una nueva franja del horario, las rondas arrancan solas con la misma duración
-			for (const r of await reanudarRondas(db)) logger.info(`wge: ${r.nombre} abierta sola al empezar el horario`);
-		} catch (error) {
-			logger.error(error, 'wge: cierre de rondas');
-		}
-	});
-
-	schedule('*/5 * * * *', async () => {
-		try {
-			const ediciones = await db('wge_ediciones').where('estado', 'abierta');
-			for (const edicion of ediciones) await procesarEdicion(db, edicion, new Date());
-		} catch (error) {
-			logger.error(error, 'wge: tipo de cambio');
-		}
-	});
-};
-
-async function procesarEdicion(db, edicion, ahora) {
-	const parametros = { ...FX_POR_DEFECTO, ...(edicion.parametros_fx ?? {}) };
-	const minutos = Math.max(5, Number(parametros.intervalo_minutos) || 30);
-	// La ventana que acaba de terminar: [inicio, fin)
-	const fin = new Date(Math.floor(ahora.getTime() / (minutos * 60000)) * minutos * 60000);
-	const inicio = new Date(fin.getTime() - minutos * 60000);
-	// Solo cuenta si toda la ventana estuvo dentro del horario (se mira su primer y último minuto)
-	const a = ahoraColombia(inicio);
-	const b = ahoraColombia(new Date(fin.getTime() - 60000));
-	if (!dentroDelHorario(edicion.horario, a.fecha, a.hora) || !dentroDelHorario(edicion.horario, b.fecha, b.hora)) return [];
-
-	const paises = await db('wge_paises').where('edicion_id', edicion.id).orderBy('id');
-	const resultados = [];
-	for (const pais of paises) {
-		const r = await db.transaction(async (trx) => {
-			const actual = await trx('wge_paises').where('id', pais.id).forUpdate().first();
-			// Una sola tasa por país y ventana, aunque el proceso corra dos veces
-			if (await trx('wge_fx').where({ pais_id: pais.id, ventana: fin }).first()) return null;
-			const { suma } = await trx('wge_evaluaciones as e').join('wge_participantes as p', 'p.id', 'e.participante_id')
-				.where('p.pais_id', pais.id).whereRaw('coalesce(p.retirado, false) = false').where('e.date_created', '>=', inicio).where('e.date_created', '<', fin)
-				.sum({ suma: 'e.puntaje' }).first();
-			const { n } = await trx('wge_participantes').where({ pais_id: pais.id, presente: true }).whereRaw('coalesce(retirado, false) = false').count({ n: '*' }).first();
-			const tasa = Number(actual.tasa_actual || edicion.tasa_inicial);
-			const calculo = nuevaTasa({
-				// Puntos de inmersión = puntaje de la rúbrica (0 a 12) ÷ 3
-				tasa, puntos: Number(suma ?? 0) / 3, presentes: Number(n), tasaInicial: Number(edicion.tasa_inicial),
-				topeMinimo: Number(edicion.tope_minimo), topeMaximo: Number(edicion.tope_maximo), parametros,
-			});
-			await trx('wge_fx').insert({
-				id: crypto.randomUUID(), pais_id: pais.id, ventana: fin, participantes_presentes: Number(n),
-				puntos: Number(suma ?? 0) / 3, indice: calculo.indice, tasa_anterior: tasa, tasa_nueva: calculo.nueva,
-				date_created: new Date(),
-			});
-			await trx('wge_paises').where('id', pais.id).update({ tasa_actual: calculo.nueva });
-			return { pais: pais.nombre, tasa_anterior: tasa, ...calculo };
-		});
-		if (r) resultados.push(r);
-	}
-	return resultados;
 }
 
 // Endpoints de WILL-GO ECONOMY: /wge/...
@@ -2340,6 +2392,7 @@ const configEndpoint = {
 		rutasArqueo(router, { ruta, db });
 		rutasWfunds(router, { ruta, db });
 		rutasRubrica(router, { ruta, db });
+		rutasTipoCambio(router, { ruta, db });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

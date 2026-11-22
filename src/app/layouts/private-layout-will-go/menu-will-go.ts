@@ -25,27 +25,30 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
     INICIO,
     { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
     { texto: 'Ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
-    { texto: 'Tipo de cambio', icono: ICONOS.tasas },
+    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
   administrador: [
     INICIO,
     { texto: 'Colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
     { texto: 'Ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
-    { texto: 'Tipo de cambio', icono: ICONOS.tasas },
+    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
   docente: [
     INICIO,
     { texto: 'Entregar billetes', ruta: '/private-will-go/entregar', icono: ICONOS.billetes },
     { texto: 'Rúbrica', ruta: '/private-will-go/rubrica', icono: ICONOS.rubrica },
+    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
   banco: [
     INICIO,
     { texto: 'Repartir a docentes', ruta: '/private-will-go/repartir', icono: ICONOS.billetes },
     { texto: 'Banco', ruta: '/private-will-go/banco', icono: ICONOS.caja },
     { texto: 'W-Funds', ruta: '/private-will-go/wfunds', icono: ICONOS.fondos },
+    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
   cajero: [
     INICIO,
     { texto: 'Caja GO•STORE', icono: ICONOS.caja },
+    { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
 };

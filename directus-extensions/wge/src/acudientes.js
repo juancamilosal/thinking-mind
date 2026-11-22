@@ -6,6 +6,7 @@ import { WgeError } from './lib.js';
 import { movimientosEstudiante } from './arqueo.js';
 import { estadoRondas } from './wfunds.js';
 import { CRITERIOS, resumenCalificaciones } from './rubrica.js';
+import { datosTipoCambio } from './tipocambio.js';
 
 const MINUTOS_CODIGO = 10;
 const MAX_INTENTOS = 5;
@@ -170,7 +171,13 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 			const cerradas = (await db('wge_rondas').where({ edicion_id: edicionId, estado: 'liquidada' }).orderBy('apertura')
 				.select('id', 'nombre', 'resultados')).map((r) => ({ ...r, resultados: (deJson(r.resultados) ?? []).map((x) => ({ fondo_id: x.fondo_id, rendimiento: x.rendimiento })) }));
 			const { proxima } = ronda ? { proxima: null } : await estadoRondas(db, edicionId);
-			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, proxima_ronda: proxima, fondos, rondas: cerradas });
+			const fx = await datosTipoCambio(db, edicionId, { limite: 100 });
+			const tipoCambio = {
+				tasa_inicial: fx.tasa_inicial, proximo_calculo: fx.proximo_calculo, intervalo_minutos: fx.intervalo_minutos,
+				paises: fx.paises.map((p) => ({ id: p.id, nombre: p.nombre, codigo_moneda: p.codigo_moneda, color: p.color, tasa_actual: p.tasa_actual,
+					historial: p.historial.map((h) => ({ ventana: h.ventana, tasa_anterior: h.tasa_anterior, tasa_nueva: h.tasa_nueva })) })),
+			};
+			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, proxima_ronda: proxima, fondos, rondas: cerradas, tipo_cambio: tipoCambio });
 		}
 		return { acudiente, ahora: new Date(), hijos, ediciones };
 	}));

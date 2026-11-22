@@ -10,6 +10,7 @@ import { rutasArqueo, totalDelConteo, inventarioBanco, inventarioDocente } from 
 import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
 import { rutasAcudientes } from './acudientes.js';
 import { rutasRubrica } from './rubrica.js';
+import { rutasTipoCambio } from './tipocambio.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
@@ -294,6 +295,7 @@ export default {
 		rutasArqueo(router, { ruta, db });
 		rutasWfunds(router, { ruta, db });
 		rutasRubrica(router, { ruta, db });
+		rutasTipoCambio(router, { ruta, db });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

@@ -190,6 +190,13 @@ export interface CalificacionRubrica {
 }
 export interface DatosRubrica { edicion: { id: string; nombre: string; estado: string }; paises: PaisRubrica[]; recientes: CalificacionRubrica[]; criterios: CriterioRubrica[]; nivel_maximo: number; puntaje_maximo: number; }
 
+export interface CalculoTasa { ventana: string; participantes_presentes: number; puntos: number; indice: number; tasa_anterior: number; tasa_nueva: number; }
+export interface PaisTasaCambio { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; presentes: number; historial: CalculoTasa[]; }
+export interface DatosTipoCambio {
+  edicion: { id: string; nombre: string; estado: string }; tasa_inicial: number; tope_minimo: number; tope_maximo: number;
+  intervalo_minutos: number; referencia: number; ahora: string; proximo_calculo: string | null; paises: PaisTasaCambio[];
+}
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -427,6 +434,10 @@ export class WillGoService {
 
   marcarAsistencia(participanteId: string, presente: boolean): Observable<{ presente: boolean }> {
     return this.http.patch<{ data: { presente: boolean } }>(`${this.api}/asistencia`, { participante_id: participanteId, presente }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  tipoCambio(edicionId: string): Observable<DatosTipoCambio> {
+    return this.http.get<{ data: DatosTipoCambio }>(`${this.api}/ediciones/${edicionId}/tipo-cambio`).pipe(this.enZona(), map((r) => r.data));
   }
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {

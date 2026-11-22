@@ -7,6 +7,7 @@ import { GraficaRendimientoComponent } from '../../../private-layout-will-go/gra
 import { formatearNumero } from '../../../private-layout-will-go/numero-miles.directive';
 import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista-movimientos.component';
 import { ProcesandoRondaComponent } from '../../../private-layout-will-go/procesando-ronda.component';
+import { GraficaTasaComponent } from '../../../private-layout-will-go/grafica-tasa.component';
 
 type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
 
@@ -14,7 +15,7 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
 @Component({
   selector: 'app-panel-acudiente',
   standalone: true,
-  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent, ProcesandoRondaComponent],
+  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent, ProcesandoRondaComponent, GraficaTasaComponent],
   template: `
     <div class="min-h-screen bg-slate-50">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
@@ -177,6 +178,24 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
               </section>
             }
 
+            <!-- Tipo de cambio -->
+            @if (ed.tipo_cambio; as fx) {
+              <h2 class="mt-6 text-lg font-bold text-gray-800">Tipo de cambio</h2>
+              <p class="text-sm text-gray-500">Cuánto vale un billete de cada país. Sube cuando los estudiantes practican el idioma.</p>
+              <div class="mt-3 grid grid-cols-3 gap-2">
+                @for (p of fx.paises; track p.id) {
+                  <div class="rounded-2xl p-3 text-white shadow-sm" [style.background]="p.color || '#1e293b'">
+                    <p class="text-xs font-semibold opacity-95 truncate">{{ p.nombre }}</p>
+                    <p class="text-xl font-extrabold leading-tight">{{ miles(p.tasa_actual) }}</p>
+                    <p class="text-[11px] opacity-90">{{ cambioDesdeInicio(p.tasa_actual, fx.tasa_inicial) }}</p>
+                  </div>
+                }
+              </div>
+              <div class="mt-3">
+                <wg-grafica-tasa [paises]="fx.paises" [tasaInicial]="fx.tasa_inicial" [intervalo]="fx.intervalo_minutos" />
+              </div>
+            }
+
             <!-- Gráfica: ayuda a decidir el voto -->
             <div class="mt-6">
               <wg-grafica-rendimiento [fondos]="ed.fondos" [rondas]="ed.rondas" />
@@ -217,6 +236,10 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   private router = inject(Router);
   readonly Number = Number;
   abs(v: number): number { return Math.abs(v); }
+  cambioDesdeInicio(tasa: number, inicial: number): string {
+    const v = ((tasa - inicial) / (inicial || 1)) * 100;
+    return `${v > 0 ? '▲ +' : v < 0 ? '▼ ' : ''}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })} % desde el inicio`;
+  }
   nivel(v: number): string { return Number(v).toLocaleString('es-CO', { maximumFractionDigits: 1 }); }
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 

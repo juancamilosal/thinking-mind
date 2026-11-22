@@ -7,6 +7,9 @@ export interface FondoPortal { id: string; nombre: string; riesgo: 'bajo' | 'med
 export interface EdicionPortal {
   id: string; nombre: string; estado: string;
   ronda: { id: string; nombre: string; apertura: string; cierre_programado: string | null; duracion_minutos: number | null; mis_votos: string[]; votos_por_ronda: number } | null;
+  /** Tipo de cambio: tasa de hoy y su historial por país. */
+  tipo_cambio: { tasa_inicial: number; proximo_calculo: string | null; intervalo_minutos: number;
+    paises: { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; historial: { ventana: string; tasa_anterior: number; tasa_nueva: number }[] }[] };
   /** Cuándo arranca la próxima ronda (si no hay una abierta y las rondas siguen solas). */
   proxima_ronda: string | null;
   fondos: FondoPortal[];
