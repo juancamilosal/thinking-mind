@@ -11,9 +11,9 @@ export type IdiomaWillGo = 'en' | 'fr' | 'es';
 
 /** Idiomas de Will-Go. El español es solo para pruebas: en producción no se ofrece. */
 export const IDIOMAS_WILL_GO: { id: IdiomaWillGo; corto: string; nombre: string; bandera: string; locale: string }[] = [
-  { id: 'en', corto: 'EN', nombre: 'English', bandera: '🇬🇧', locale: 'en-US' },
-  { id: 'fr', corto: 'FR', nombre: 'Français', bandera: '🇫🇷', locale: 'fr-FR' },
-  ...(environment.production ? [] : [{ id: 'es' as IdiomaWillGo, corto: 'ES', nombre: 'Español (prueba)', bandera: '🇨🇴', locale: 'es-CO' }]),
+  { id: 'en', corto: 'EN', nombre: 'English', bandera: '/will-go/banderas/en.svg', locale: 'en-US' },
+  { id: 'fr', corto: 'FR', nombre: 'Français', bandera: '/will-go/banderas/fr.svg', locale: 'fr-FR' },
+  ...(environment.production ? [] : [{ id: 'es' as IdiomaWillGo, corto: 'ES', nombre: 'Español (prueba)', bandera: '/will-go/banderas/es.svg', locale: 'es-CO' }]),
 ];
 
 const CLAVE = 'wg_idioma';
