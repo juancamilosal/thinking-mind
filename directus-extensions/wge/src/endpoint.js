@@ -6,7 +6,7 @@ import {
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
-import { rutasArqueo, totalDelConteo, inventarioBanco } from './arqueo.js';
+import { rutasArqueo, totalDelConteo, inventarioBanco, inventarioDocente } from './arqueo.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
@@ -98,6 +98,12 @@ export default {
 					const docenteId = rol === ROLES.ADMIN && req.body.docente_id ? req.body.docente_id : actor;
 					await exigirEquipo(trx, { edicionId: participante.edicion_id, usuarioId: docenteId, rol: docenteId === actor ? rol : ROLES.DOCENTE, paisId, quien: docenteId === actor ? 'Tu usuario' : 'El docente' });
 					origen = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: 'docente', docenteId });
+					if (detalle) {
+						const tiene = await inventarioDocente(trx, participante.edicion_id, paisId, docenteId);
+						for (const [d, n] of Object.entries(detalle.limpio)) {
+							if (n > tiene[d]) throw new WgeError(409, 'SIN_BILLETES', `Solo tienes ${Math.max(tiene[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
+						}
+					}
 					destino = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: 'estudiante', participanteId: participante.id });
 				} else {
 					throw new WgeError(400, 'VALOR_INVALIDO', 'tipo debe ser banco_docente o docente_estudiante');

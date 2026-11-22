@@ -38,6 +38,22 @@ export async function inventarioBanco(db, edicionId, paisId) {
 	return quedan;
 }
 
+/** Billetes que tiene un docente por denominación: los que recibió del banco menos los que entregó. */
+export async function inventarioDocente(db, edicionId, paisId, docenteId) {
+	const quedan = Object.fromEntries(DENOMINACIONES.map((d) => [d, 0]));
+	const billetera = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'docente', docente_id: docenteId }).first('id');
+	if (!billetera) return quedan;
+	const sumar = (lista, signo) => {
+		for (const b of lista) {
+			const detalle = typeof b === 'string' ? JSON.parse(b) : b;
+			for (const [d, n] of Object.entries(detalle ?? {})) if (d in quedan) quedan[d] += signo * Number(n);
+		}
+	};
+	sumar(await db('wge_transferencias').where({ billetera_destino_id: billetera.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes'), 1);
+	sumar(await db('wge_transferencias').where({ billetera_origen_id: billetera.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes'), -1);
+	return quedan;
+}
+
 export function rutasArqueo(router, { ruta, db }) {
 	const saldoBanco = async (edicionId, paisId) => {
 		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
@@ -79,6 +95,40 @@ export function rutasArqueo(router, { ruta, db }) {
 				.where({ 'bo.pais_id': p.id, 'bo.tipo_dueno': 'banco', 'bd.tipo_dueno': 'docente' })
 				.orderBy('t.date_created', 'desc').limit(20)
 				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'u.first_name as nombre', 'u.last_name as apellido');
+		}
+		return { edicion, denominaciones: DENOMINACIONES, paises };
+	}));
+
+	/**
+	 * GET /wge/ediciones/:id/docente: lo que necesita la pantalla del docente, por cada país que maneja:
+	 * sus billetes (saldo y por denominación), lo recibido del banco, sus entregas y los estudiantes del país.
+	 */
+	router.get('/ediciones/:id/docente', ruta(async (req, rol) => {
+		exigirRol(rol, ROLES.DOCENTE, ROLES.ADMIN_WG);
+		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id', 'nombre', 'estado');
+		if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
+		const docenteId = rol === ROLES.DOCENTE ? req.accountability.user : (req.query?.docente_id || req.accountability.user);
+		const miembro = await exigirEquipo(db, { edicionId: edicion.id, usuarioId: req.accountability.user, rol });
+		const consulta = db('wge_paises').where('edicion_id', edicion.id).orderBy('orden').select('id', 'nombre', 'codigo_moneda', 'color');
+		if (miembro?.pais_id) consulta.where('id', miembro.pais_id); // docente de un solo país
+		const paises = await consulta;
+		for (const p of paises) {
+			const billetera = await db('wge_billeteras').where({ edicion_id: edicion.id, pais_id: p.id, tipo_dueno: 'docente', docente_id: docenteId }).first('id', 'saldo');
+			p.saldo = Number(billetera?.saldo ?? 0);
+			p.inventario = await inventarioDocente(db, edicion.id, p.id, docenteId);
+			p.recibidos = billetera ? await db('wge_transferencias as t').join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
+				.leftJoin('directus_users as u', 'u.id', 't.user_created')
+				.where('t.billetera_destino_id', billetera.id).orderBy('t.date_created', 'desc').limit(20)
+				.select('t.id', 't.monto', 't.billetes', 't.date_created', db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien")) : [];
+			p.entregas = billetera ? await db('wge_transferencias as t').join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id')
+				.join('wge_participantes as pa', 'pa.id', 'bd.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
+				.where('t.billetera_origen_id', billetera.id).orderBy('t.date_created', 'desc').limit(20)
+				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'e.nombre', 'e.apellido') : [];
+			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
+				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })
+				.where({ 'pa.edicion_id': edicion.id, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
+				.select('pa.id', 'pa.codigo', 'pa.presente', 'e.nombre', 'e.apellido', 'e.grado', db.raw('coalesce(b.saldo, 0)::int as saldo'))
+				.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);
 		}
 		return { edicion, denominaciones: DENOMINACIONES, paises };
 	}));

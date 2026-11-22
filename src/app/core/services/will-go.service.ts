@@ -140,6 +140,14 @@ export interface PaisReparto {
 }
 export interface DatosReparto { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisReparto[]; }
 
+export interface MovimientoDocente { id: string; monto: number; billetes: Record<string, number> | string | null; date_created: string; quien?: string; nombre?: string; apellido?: string; }
+export interface EstudianteDocente { id: string; codigo: string; presente: boolean; nombre: string; apellido: string; grado: string | null; saldo: number; }
+export interface PaisDocente {
+  id: string; nombre: string; codigo_moneda: string | null; color: string | null;
+  saldo: number; inventario: Record<string, number>; recibidos: MovimientoDocente[]; entregas: MovimientoDocente[]; estudiantes: EstudianteDocente[];
+}
+export interface DatosDocente { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisDocente[]; }
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -318,6 +326,16 @@ export class WillGoService {
   entregarADocente(paisId: string, docenteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
     return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
       tipo: 'banco_docente', pais_id: paisId, docente_id: docenteId, billetes, clave_idempotencia: clave,
+    }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  panelDocente(edicionId: string): Observable<DatosDocente> {
+    return this.http.get<{ data: DatosDocente }>(`${this.api}/ediciones/${edicionId}/docente`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  entregarAEstudiante(participanteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
+      tipo: 'docente_estudiante', participante_id: participanteId, billetes, clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
   }
 

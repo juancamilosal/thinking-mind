@@ -35,7 +35,7 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
   ],
   docente: [
     INICIO,
-    { texto: 'Entregar billetes', icono: ICONOS.billetes },
+    { texto: 'Entregar billetes', ruta: '/private-will-go/entregar', icono: ICONOS.billetes },
     { texto: 'Rúbrica', icono: ICONOS.rubrica },
   ],
   banco: [
