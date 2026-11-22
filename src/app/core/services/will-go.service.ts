@@ -62,6 +62,7 @@ export interface Edicion {
   participantes: number;
   sin_pais: number;
   retirados?: number;
+  equipo?: number;
   /** Inscritos que llegaron en esta consulta (se traen solos). */
   nuevos?: number;
   /** Participantes de otro colegio que salieron solos (no tenían historial). */
@@ -96,6 +97,14 @@ export interface Participante {
   nombre: string; apellido: string; grado: string | null; colegio_id: string | null; colegio: string | null; saldo: number;
   corresponde: boolean;
   retirado: boolean | null; motivo_retiro: string | null; fecha_retiro: string | null; pidio_reembolso: boolean;
+}
+
+export interface MiembroEquipo {
+  id: string; usuario_id: string; pais_id: string | null; pais: string | null;
+  nombre: string; apellido: string; email: string; estado: string;
+  rol: 'docente' | 'banco' | 'cajero' | 'administrativo' | null;
+  /** Billetes que el docente tiene en mano en esta edición. */
+  billetes: number;
 }
 
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
@@ -245,6 +254,22 @@ export class WillGoService {
 
   abrirEdicion(edicionId: string): Observable<{ provisiones: number; bienvenidas: number }> {
     return this.http.post<{ data: any }>(`${this.api}/ediciones/${edicionId}/abrir`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  equipo(edicionId: string): Observable<MiembroEquipo[]> {
+    return this.http.get<{ data: MiembroEquipo[] }>(`${this.api}/admin/ediciones/${edicionId}/equipo`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  agregarAlEquipo(edicionId: string, usuarioIds: string[]): Observable<{ agregados: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/ediciones/${edicionId}/equipo`, { usuario_ids: usuarioIds }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  asignarPaisDocente(miembroId: string, paisId: string | null): Observable<{ ok: boolean }> {
+    return this.http.patch<{ data: any }>(`${this.api}/admin/equipo/${miembroId}`, { pais_id: paisId }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  quitarDelEquipo(miembroId: string): Observable<{ quitado: boolean }> {
+    return this.http.delete<{ data: any }>(`${this.api}/admin/equipo/${miembroId}`).pipe(this.enZona(), map((r) => r.data));
   }
 
   subirFoto(nombre: string, tipo: string, base64: string): Observable<{ id: string }> {

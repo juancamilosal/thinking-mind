@@ -9,13 +9,14 @@ import { TabPaises } from './tabs/tab-paises';
 import { TabParticipantes } from './tabs/tab-participantes';
 import { TabTienda } from './tabs/tab-tienda';
 import { TabFondos } from './tabs/tab-fondos';
+import { TabEquipo } from './tabs/tab-equipo';
 
-type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
+type Pestana = 'general' | 'paises' | 'participantes' | 'equipo' | 'tienda' | 'fondos';
 
 @Component({
   selector: 'app-edicion-will-go',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabPaises, TabParticipantes, TabTienda, TabFondos],
+  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabPaises, TabParticipantes, TabTienda, TabFondos, TabEquipo],
   template: `
     <div class="max-w-6xl mx-auto">
       <a routerLink="/private-will-go/ediciones" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-orange-700">← Ediciones</a>
@@ -79,6 +80,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
             @case ('general') { <app-tab-general [edicion]="edicion" (guardada)="edicion = $event" /> }
             @case ('paises') { <app-tab-paises [edicion]="edicion" (paisesCambiaron)="paises = $event" /> }
             @case ('participantes') { <app-tab-participantes [edicion]="edicion" (cambio)="recargar()" /> }
+            @case ('equipo') { <app-tab-equipo [edicion]="edicion" (cambio)="recargar()" /> }
             @case ('tienda') { <app-tab-tienda [edicion]="edicion" /> }
             @case ('fondos') { <app-tab-fondos [edicion]="edicion" /> }
           }
@@ -133,6 +135,7 @@ export class EdicionWillGo implements OnInit {
     { id: 'general', texto: 'General' },
     { id: 'paises', texto: 'Países y banco' },
     { id: 'participantes', texto: 'Participantes' },
+    { id: 'equipo', texto: 'Colaboradores' },
     { id: 'tienda', texto: 'GO•STORE' },
     { id: 'fondos', texto: 'W-Funds' },
   ];
@@ -193,6 +196,10 @@ export class EdicionWillGo implements OnInit {
           {
             texto: e.sin_pais ? `${e.sin_pais} participantes sin país (no recibirán billetes de bienvenida hasta tener uno)` : 'Todos los participantes tienen país',
             ok: !e.sin_pais, bloquea: false,
+          },
+          {
+            texto: e.equipo ? `${e.equipo} colaboradores en el equipo` : 'La edición no tiene colaboradores: nadie podrá entregar billetes ni cobrar',
+            ok: !!e.equipo, bloquea: false,
           },
           { texto: `Horario con ${e.horario?.length ?? 0} franjas (fuera de ellas la tasa no cambia)`, ok: !!e.horario?.length, bloquea: false },
           {

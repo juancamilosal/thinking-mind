@@ -100,11 +100,12 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		const [{ total }] = await activos().count({ total: '*' });
 		const [{ sinPais }] = await activos().whereNull('pais_id').count({ sinPais: '*' });
 		const [{ retirados }] = await db('wge_participantes').where({ edicion_id: e.id, retirado: true }).count({ retirados: '*' });
+		const [{ equipo }] = await db('wge_equipo').where('edicion_id', e.id).count({ equipo: '*' });
 		const colegio = e.colegio_id ? await db('colegios').where('id', e.colegio_id).first('nombre') : null;
 		const programa = e.curso_id ? await db('Cursos').where('id', e.curso_id).first('nombre') : null;
 		return {
 			...e, colegio_nombre: colegio?.nombre ?? null, programa_nombre: programa?.nombre ?? null,
-			participantes: Number(total), sin_pais: Number(sinPais), retirados: Number(retirados),
+			participantes: Number(total), sin_pais: Number(sinPais), retirados: Number(retirados), equipo: Number(equipo),
 		};
 	};
 
@@ -209,6 +210,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			await trx('wge_participantes').where('edicion_id', e.id).delete();
 			await trx('wge_productos').where('edicion_id', e.id).delete();
 			await trx('wge_fondos').where('edicion_id', e.id).delete();
+			await trx('wge_equipo').where('edicion_id', e.id).delete();
 			await trx('wge_paises').where('edicion_id', e.id).delete();
 			await trx('wge_ediciones').where('id', e.id).delete();
 			return { eliminada: true, nombre: e.nombre };
@@ -367,6 +369,66 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		if (!ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay estudiantes seleccionados');
 		const n = await db('wge_participantes').whereIn('id', ids).update({ retirado: false, motivo_retiro: null, fecha_retiro: null });
 		return { reintegrados: n };
+	}));
+
+	// ---------- Equipo de la edición ----------
+	const ROLES_EQUIPO = { [ROLES.DOCENTE]: 'docente', [ROLES.BANCO]: 'banco', [ROLES.CAJERO]: 'cajero', [ROLES.ADMIN_WG]: 'administrativo' };
+
+	/** GET /wge/admin/ediciones/:id/equipo: colaboradores de la edición con su rol, país y billetes en mano. */
+	router.get('/admin/ediciones/:id/equipo', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		const filas = await db('wge_equipo as q').join('directus_users as u', 'u.id', 'q.usuario_id')
+			.leftJoin('directus_roles as r', 'r.id', 'u.role').leftJoin('wge_paises as pa', 'pa.id', 'q.pais_id')
+			.where('q.edicion_id', e.id)
+			.select('q.id', 'q.usuario_id', 'q.pais_id', 'pa.nombre as pais', 'u.first_name as nombre', 'u.last_name as apellido', 'u.email',
+				'u.status as estado', 'r.name as rol_nombre',
+				db.raw(`coalesce((select sum(b.saldo) from wge_billeteras b where b.edicion_id = q.edicion_id
+					and b.tipo_dueno = 'docente' and b.docente_id = q.usuario_id), 0)::int as billetes`))
+			.orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
+		return filas.map((f) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null }));
+	}));
+
+	/** POST /wge/admin/ediciones/:id/equipo { usuario_ids }: agrega colaboradores (solo usuarios con rol de Will Go). */
+	router.post('/admin/ediciones/:id/equipo', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		const ids = Array.isArray(req.body?.usuario_ids) ? req.body.usuario_ids.filter((x) => typeof x === 'string') : [];
+		if (!ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay colaboradores seleccionados');
+		const validos = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
+			.whereIn('u.id', ids).whereIn('r.name', Object.keys(ROLES_EQUIPO)).pluck('u.id');
+		if (validos.length !== ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'Algún usuario no es colaborador de Will Go');
+		const r = await db('wge_equipo').insert(validos.map((usuario_id) => nueva(req.accountability.user, {
+			edicion_id: e.id, usuario_id, clave_unica: `${e.id}:${usuario_id}`,
+		}))).onConflict('clave_unica').ignore().returning('id');
+		return { agregados: r.length };
+	}));
+
+	/** PATCH /wge/admin/equipo/:id { pais_id }: país del docente (o null para que maneje todos). */
+	router.patch('/admin/equipo/:id', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const fila = await db('wge_equipo').where('id', req.params.id).first();
+		if (!fila) throw new WgeError(404, 'NO_EXISTE', 'No hace parte del equipo');
+		const paisId = req.body?.pais_id || null;
+		if (paisId && !(await db('wge_paises').where({ id: paisId, edicion_id: fila.edicion_id }).first('id'))) {
+			throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
+		}
+		const conBilletes = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, tipo_dueno: 'docente', docente_id: fila.usuario_id })
+			.where('saldo', '>', 0).modify((q) => { if (paisId) q.whereNot('pais_id', paisId); }).first('id');
+		if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', 'El docente tiene billetes de otro país; primero debe entregarlos o devolverlos');
+		await db('wge_equipo').where('id', fila.id).update({ pais_id: paisId });
+		return { ok: true };
+	}));
+
+	/** DELETE /wge/admin/equipo/:id: lo saca del equipo (si no tiene billetes en mano en esta edición). */
+	router.delete('/admin/equipo/:id', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const fila = await db('wge_equipo').where('id', req.params.id).first();
+		if (!fila) throw new WgeError(404, 'NO_EXISTE', 'No hace parte del equipo');
+		const [{ suma }] = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, tipo_dueno: 'docente', docente_id: fila.usuario_id }).sum({ suma: 'saldo' });
+		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} billetes sin entregar en esta edición; primero debe entregarlos`);
+		await db('wge_equipo').where('id', fila.id).delete();
+		return { quitado: true };
 	}));
 
 	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto (la pantalla la reduce antes de enviarla). */

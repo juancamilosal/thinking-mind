@@ -2,7 +2,7 @@
 // Cada operación con billetes corre dentro de una transacción; si algo falla, no queda nada a medias.
 import {
 	WgeError, ROLES, rolDelUsuario, exigirRol, enteroPositivo, exigirTexto,
-	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar, traerInscritos, darBienvenida,
+	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar, traerInscritos, darBienvenida, exigirEquipo,
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
@@ -75,6 +75,8 @@ export default {
 					const pais = await trx('wge_paises').where('id', paisId).first();
 					if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 					await edicionAbierta(trx, pais.edicion_id);
+					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: actor, rol });
+					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: docenteId, rol: ROLES.DOCENTE, paisId, quien: 'El docente' });
 					// Bloqueo en orden fijo (banco antes que docente) para evitar bloqueos cruzados
 					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'banco' });
 					destino = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'docente', docenteId });
@@ -84,6 +86,7 @@ export default {
 					await edicionAbierta(trx, participante.edicion_id);
 					paisId = participante.pais_id;
 					const docenteId = rol === ROLES.ADMIN && req.body.docente_id ? req.body.docente_id : actor;
+					await exigirEquipo(trx, { edicionId: participante.edicion_id, usuarioId: docenteId, rol: docenteId === actor ? rol : ROLES.DOCENTE, paisId, quien: docenteId === actor ? 'Tu usuario' : 'El docente' });
 					origen = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: 'docente', docenteId });
 					destino = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: 'estudiante', participanteId: participante.id });
 				} else {
@@ -124,6 +127,7 @@ export default {
 			return unaSolaVez('wge_ventas', clave, async (trx) => {
 				const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
 				const edicion = await edicionAbierta(trx, participante.edicion_id);
+				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
 				const pais = await trx('wge_paises').where('id', participante.pais_id).first(); // la tasa vigente al momento de la compra
 				const tasa = Number(pais.tasa_actual || edicion.tasa_inicial);
 				const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'estudiante', participanteId: participante.id });
@@ -180,6 +184,7 @@ export default {
 			return unaSolaVez('wge_inversiones', clave, async (trx) => {
 				const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
 				const edicion = await edicionAbierta(trx, participante.edicion_id);
+				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
 				const ronda = await trx('wge_rondas').where('id', exigirTexto(req.body.ronda_id, 'ronda_id')).forUpdate().first();
 				if (!ronda || ronda.edicion_id !== edicion.id) throw new WgeError(404, 'NO_EXISTE', 'La ronda no existe en esta edición');
 				if (ronda.estado !== 'abierta') throw new WgeError(409, 'RONDA_CERRADA', 'La ronda ya no recibe inversiones');

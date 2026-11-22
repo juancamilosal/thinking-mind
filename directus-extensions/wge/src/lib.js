@@ -215,3 +215,18 @@ export async function darBienvenida(trx, edicion, participantes, actor) {
 	}
 	return entregadas;
 }
+
+/**
+ * Un colaborador solo opera en las ediciones donde está en el equipo (los administrativos, en todas).
+ * Si el docente tiene país asignado, solo maneja billetes de ese país. Devuelve la fila del equipo.
+ */
+export async function exigirEquipo(db, { edicionId, usuarioId, rol, paisId = null, quien = 'Tu usuario' }) {
+	if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return null;
+	const fila = await db('wge_equipo').where({ edicion_id: edicionId, usuario_id: usuarioId }).first();
+	if (!fila) throw new WgeError(403, 'FUERA_DEL_EQUIPO', `${quien} no hace parte del equipo de esta edición`);
+	if (paisId && fila.pais_id && fila.pais_id !== paisId) {
+		const pais = await db('wge_paises').where('id', fila.pais_id).first('nombre');
+		throw new WgeError(409, 'OTRO_PAIS', `${quien === 'Tu usuario' ? 'Eres' : quien + ' es'} docente de ${pais?.nombre ?? 'otro país'}; no maneja billetes de este país`);
+	}
+	return fila;
+}

@@ -217,6 +217,16 @@ rel('wge_votos', 'fondo_id', 'wge_fondos')
 rel('wge_votos', 'ronda_id', 'wge_rondas')
 
 
+coleccion('wge_equipo', 'groups', 'Colaboradores de cada edición (docentes, banco, caja, administrativos)', [
+    m2o('edicion_id', requerido=True), m2o('usuario_id', 'Colaborador (usuario de Will Go)', requerido=True),
+    m2o('pais_id', 'País del docente (opcional)'),
+    campo('clave_unica', 'string', 'edicion:usuario (evita duplicados)', unico=True),
+])
+rel('wge_equipo', 'edicion_id', 'wge_ediciones', 'CASCADE')
+rel('wge_equipo', 'usuario_id', 'directus_users', 'CASCADE')
+rel('wge_equipo', 'pais_id', 'wge_paises', 'SET NULL')
+
+
 def main():
     existentes = {c['collection'] for c in call('GET', '/collections?limit=-1')['data']}
     print(f'{len(COLECCIONES)} colecciones, {len(RELACIONES)} relaciones' + (' (simulación)' if DRY else ''))
