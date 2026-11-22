@@ -3,6 +3,7 @@
 // Nunca responde 401 (la plataforma lo toma como "sesión de colaborador vencida"); la sesión vencida es 403.
 import { createHash as sha256Base, randomInt as enteroSeguro, randomBytes as bytesSeguros } from 'node:crypto';
 import { WgeError } from './lib.js';
+import { movimientosEstudiante } from './arqueo.js';
 
 const MINUTOS_CODIGO = 10;
 const MAX_INTENTOS = 5;
@@ -144,8 +145,10 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		const hijos = await participantesDe(familia).leftJoin('wge_paises as pa', 'pa.id', 'p.pais_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
 			.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }])
-			.select('p.id', 'p.edicion_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda', db.raw('coalesce(b.saldo, 0)::int as saldo'));
+			.select('p.id', 'p.edicion_id', 'p.pais_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda', db.raw('coalesce(b.saldo, 0)::int as saldo'));
 		for (const h of hijos) {
+			Object.assign(h, h.pais_id ? await movimientosEstudiante(db, h.id, h.pais_id) : { movimientos: [], total_entro: 0, total_salio: 0 });
+			delete h.pais_id;
 			h.inversiones = await db('wge_inversiones as i').join('wge_fondos as f', 'f.id', 'i.fondo_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
 				.where('i.participante_id', h.id).orderBy('i.date_created', 'desc').limit(30)
 				.select('i.id', 'i.monto', 'i.estado', 'i.monto_pagado', 'i.rendimiento_final', 'f.nombre as fondo', 'r.nombre as ronda');

@@ -5,12 +5,13 @@ import { AcudienteWillGoService, EdicionPortal, FondoPortal, HijoPortal, DatosPa
 import { TarjetaFondoComponent } from '../../../private-layout-will-go/tarjeta-fondo.component';
 import { GraficaRendimientoComponent } from '../../../private-layout-will-go/grafica-rendimiento.component';
 import { formatearNumero } from '../../../private-layout-will-go/numero-miles.directive';
+import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista-movimientos.component';
 
 /** Panel del acudiente: reloj de la ronda, su hijo (saldo e inversiones), votar por una empresa y la gráfica. */
 @Component({
   selector: 'app-panel-acudiente',
   standalone: true,
-  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent],
+  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent],
   template: `
     <div class="min-h-screen bg-slate-50">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
@@ -63,11 +64,19 @@ import { formatearNumero } from '../../../private-layout-will-go/numero-miles.di
                   <p class="text-xs opacity-90">billetes en su bolsillo</p>
                 </div>
                 <div class="p-4">
-                  <h2 class="text-sm font-bold text-gray-700">Sus inversiones</h2>
-                  @if (!h.inversiones.length) {
-                    <p class="text-sm text-gray-500 mt-1">Todavía no ha invertido en ninguna empresa.</p>
+                  <div class="inline-flex gap-1 bg-gray-100 rounded-xl p-1" role="tablist" [attr.aria-label]="'Información de ' + h.nombre">
+                    @for (v of vistasHijo; track v.id) {
+                      <button type="button" role="tab" [attr.aria-selected]="vistaDe(h) === v.id" (click)="vista[h.id] = v.id"
+                              class="px-4 py-1.5 rounded-lg text-sm font-semibold" [class]="vistaDe(h) === v.id ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'">{{ v.texto }}</button>
+                    }
+                  </div>
+                  @if (vistaDe(h) === 'movimientos') {
+                    <wg-lista-movimientos class="block mt-3" [movimientos]="h.movimientos" [pais]="{ nombre: h.pais || '', color: h.color }"
+                                          [totalEntro]="h.total_entro" [totalSalio]="h.total_salio" vacio="Todavía no tiene movimientos." />
+                  } @else if (!h.inversiones.length) {
+                    <p class="text-sm text-gray-500 mt-3">Todavía no ha invertido en ninguna empresa.</p>
                   } @else {
-                    <ul class="mt-2 divide-y divide-gray-100">
+                    <ul class="mt-3 divide-y divide-gray-100">
                       @for (i of h.inversiones; track i.id) {
                         <li class="py-2.5 flex items-center justify-between gap-3">
                           <div class="min-w-0">
@@ -128,6 +137,12 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   datos: DatosPanelAcudiente | null = null;
+  readonly vistasHijo: { id: 'inversiones' | 'movimientos'; texto: string }[] = [
+    { id: 'inversiones', texto: 'Inversiones' },
+    { id: 'movimientos', texto: 'Movimientos' },
+  ];
+  vista: Record<string, 'inversiones' | 'movimientos'> = {};
+  vistaDe(h: HijoPortal): 'inversiones' | 'movimientos' { return this.vista[h.id] ?? 'inversiones'; }
   cargando = true;
   votando = false;
   error = '';

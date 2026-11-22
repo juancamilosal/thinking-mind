@@ -13,6 +13,8 @@ export interface EdicionPortal {
 export interface HijoPortal {
   id: string; edicion_id: string; nombre: string; apellido: string; pais: string | null; color: string | null; codigo_moneda: string | null; saldo: number;
   inversiones: { id: string; monto: number; estado: string; monto_pagado: number | null; rendimiento_final: number | string | null; fondo: string; ronda: string }[];
+  movimientos: { id: string; entra: boolean; titulo: string; monto: number; fecha: string; billetes: Record<string, number> | null }[];
+  total_entro: number; total_salio: number;
 }
 export interface DatosPanelAcudiente { acudiente: { nombre: string; apellido: string }; ahora: string; hijos: HijoPortal[]; ediciones: EdicionPortal[]; }
 

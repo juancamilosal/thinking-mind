@@ -1087,6 +1087,50 @@ async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 	return { movimientos, total_entro: Number(totales?.entro ?? 0), total_salio: Number(totales?.salio ?? 0) };
 }
 
+/**
+ * Movimientos del bolsillo de un estudiante (para el portal del acudiente): bienvenida, billetes del docente,
+ * inversiones, pagos de las empresas, compras y devoluciones, con sus billetes cuando se registraron.
+ */
+async function movimientosEstudiante(db, participanteId, paisId, limite = 50) {
+	const billetera = await db('wge_billeteras').where({ participante_id: participanteId, pais_id: paisId, tipo_dueno: 'estudiante' }).first('id');
+	if (!billetera) return { movimientos: [], total_entro: 0, total_salio: 0 };
+	const totales = await db('wge_movimientos').where('billetera_id', billetera.id)
+		.select(db.raw('coalesce(sum(case when monto > 0 then monto else 0 end), 0)::bigint as entro'), db.raw('coalesce(sum(case when monto < 0 then -monto else 0 end), 0)::bigint as salio'))
+		.first();
+	const filas = await db('wge_movimientos').where('billetera_id', billetera.id).orderBy('consecutivo', 'desc').limit(limite)
+		.select('id', 'tipo', 'monto', 'referencia_tipo', 'referencia_id', 'date_created');
+	const ids = (tipo) => [...new Set(filas.filter((f) => f.referencia_tipo === tipo && f.referencia_id).map((f) => f.referencia_id))];
+	const transferencias = new Map((ids('transferencia').length ? await db('wge_transferencias as t')
+		.leftJoin('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id').leftJoin('directus_users as u', 'u.id', 'bo.docente_id')
+		.whereIn('t.id', ids('transferencia')).select('t.id', 't.billetes', 'u.first_name', 'u.last_name') : []).map((t) => [t.id, t]));
+	const inversiones = new Map((ids('inversion').length ? await db('wge_inversiones as i').leftJoin('wge_fondos as f', 'f.id', 'i.fondo_id')
+		.whereIn('i.id', ids('inversion')).select('i.id', 'i.billetes', 'i.billetes_pago', 'f.nombre as fondo') : []).map((i) => [i.id, i]));
+
+	const movimientos = filas.map((f) => {
+		const entra = Number(f.monto) > 0;
+		let titulo = entra ? 'Entrada' : 'Salida';
+		let billetes = null;
+		if (f.referencia_tipo === 'transferencia') {
+			const t = transferencias.get(f.referencia_id);
+			const docente = `${t?.first_name ?? ''} ${t?.last_name ?? ''}`.trim();
+			titulo = docente ? `Recibió de ${docente}` : 'Recibió de su docente';
+			billetes = leerBilletes(t?.billetes);
+		} else if (f.referencia_tipo === 'inversion') {
+			const i = inversiones.get(f.referencia_id);
+			titulo = entra ? `Cobró de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
+			billetes = leerBilletes(entra ? i?.billetes_pago : i?.billetes);
+		} else if (f.referencia_tipo === 'bienvenida' || f.tipo === 'bienvenida') {
+			titulo = 'Billetes de bienvenida';
+		} else if (f.referencia_tipo === 'venta' || f.tipo === 'compra') {
+			titulo = 'Compra en GO•STORE';
+		} else if (f.referencia_tipo === 'retiro') {
+			titulo = 'Devolvió sus billetes al banco';
+		}
+		return { id: f.id, entra, titulo, monto: Math.abs(Number(f.monto)), fecha: f.date_created, billetes };
+	});
+	return { movimientos, total_entro: Number(totales?.entro ?? 0), total_salio: Number(totales?.salio ?? 0) };
+}
+
 function rutasArqueo(router, { ruta, db }) {
 	const saldoBanco = async (edicionId, paisId) => {
 		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
@@ -1554,8 +1598,10 @@ function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		const hijos = await participantesDe(familia).leftJoin('wge_paises as pa', 'pa.id', 'p.pais_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
 			.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }])
-			.select('p.id', 'p.edicion_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda', db.raw('coalesce(b.saldo, 0)::int as saldo'));
+			.select('p.id', 'p.edicion_id', 'p.pais_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda', db.raw('coalesce(b.saldo, 0)::int as saldo'));
 		for (const h of hijos) {
+			Object.assign(h, h.pais_id ? await movimientosEstudiante(db, h.id, h.pais_id) : { movimientos: [], total_entro: 0, total_salio: 0 });
+			delete h.pais_id;
 			h.inversiones = await db('wge_inversiones as i').join('wge_fondos as f', 'f.id', 'i.fondo_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
 				.where('i.participante_id', h.id).orderBy('i.date_created', 'desc').limit(30)
 				.select('i.id', 'i.monto', 'i.estado', 'i.monto_pagado', 'i.rendimiento_final', 'f.nombre as fondo', 'r.nombre as ronda');
