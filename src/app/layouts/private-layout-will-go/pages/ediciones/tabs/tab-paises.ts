@@ -27,12 +27,13 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               <span class="font-bold text-gray-800">{{ p.nombre }}</span>
               <span class="ml-auto text-xs text-gray-400">{{ p.codigo_moneda }}</span>
             </div>
-            <p class="text-2xl font-bold text-gray-800 mt-2">{{ miles(totalDe(p)) }}</p>
-            <p class="text-xs text-gray-500">billetes del banco</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2">{{ miles(enBanco(p)) }}</p>
+            <p class="text-xs text-gray-500">{{ edicion.estado === 'borrador' ? 'billetes que recibirá el banco' : 'billetes en el banco' }}</p>
+            @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">⚠ Falta el detalle de billetes</p> }
             <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || 'Sin responsable del banco' }}</p>
             @if (edicion.estado !== 'borrador') {
               <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En el banco</span><br><b class="text-gray-800">{{ miles(p.saldo_banco) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">Impresos</span><br><b class="text-gray-800">{{ miles(p.provision_inicial) }}</b></div>
                 <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En circulación</span><br><b class="text-gray-800">{{ miles(p.en_circulacion) }}</b></div>
               </div>
             }
@@ -82,6 +83,12 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
             <h3 class="font-bold text-gray-800">{{ bloqueada ? 'Agregar billetes al banco' : 'Billetes impresos para el banco' }}</h3>
             @if (bloqueada) { <span class="text-sm text-gray-500">Hoy hay {{ miles(actual.provision_inicial) }} provistos. Escribe solo los billetes nuevos.</span> }
           </div>
+          @if (sinDetalle(actual)) {
+            <p class="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
+              La provisión de {{ actual.nombre }} ({{ miles(actual.provision_inicial) }}) no tiene el detalle por billete, así que no se puede cuadrar por denominación.
+              {{ bloqueada ? 'Para las próximas ediciones, regístrala por billetes antes de abrir.' : 'Escribe cuántos billetes hay de cada denominación y guarda.' }}
+            </p>
+          }
           <div class="mt-3 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             @for (d of denominaciones; track d) {
               <div class="rounded-xl border border-gray-200 overflow-hidden">
@@ -211,6 +218,18 @@ export class TabPaises implements OnInit {
 
   get totalExtra(): number {
     return DENOMINACIONES.reduce((t, d) => t + d * (Number(this.extra[d]) || 0), 0);
+  }
+
+  /** Billetes del banco: los que tiene hoy (edición abierta) o los que recibirá al abrir (en preparación). */
+  enBanco(p: Pais): number {
+    return this.edicion.estado === 'borrador' ? this.totalDe(p) : (p.saldo_banco ?? 0);
+  }
+
+  /** Provisión escrita como número sin el detalle de billetes (no se puede cuadrar por denominación). */
+  sinDetalle(p: Pais): boolean {
+    const b = this.billetes[p.id] ?? {};
+    const suma = DENOMINACIONES.reduce((t, d) => t + d * (Number(b[d]) || 0), 0);
+    return (p.provision_inicial || 0) > 0 && suma !== (p.provision_inicial || 0);
   }
 
   /** Total de un país: con detalle de billetes si lo tiene; si no, la provisión guardada. */

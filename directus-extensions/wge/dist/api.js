@@ -401,7 +401,7 @@ const CAMPOS_JSON = ['horario', 'parametros_fx'];
 
 /** Qué se puede leer y escribir de cada parte de una edición. */
 const SECCIONES = {
-	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'provision_inicial', 'orden', 'responsable_banco'], orden: 'orden' },
+	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'orden', 'responsable_banco'], orden: 'orden' },
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };

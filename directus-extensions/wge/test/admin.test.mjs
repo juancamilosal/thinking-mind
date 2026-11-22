@@ -2,9 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { limpiar, validarHorario, SECCIONES } from '../src/admin.js';
 
-test('solo pasan los campos permitidos (nunca saldos ni tasas vigentes)', () => {
+test('solo pasan los campos permitidos (nunca saldos, tasas vigentes ni provisión suelta)', () => {
+	// La provisión del banco solo se define por billetes (provision_billetes), nunca como número suelto
 	const f = limpiar({ nombre: 'Wonderland', tasa_actual: 5, saldo: 99, provision_inicial: '10000' }, SECCIONES.paises.campos);
-	assert.deepEqual(f, { nombre: 'Wonderland', provision_inicial: 10000 });
+	assert.deepEqual(f, { nombre: 'Wonderland' });
 });
 test('números inválidos se rechazan', () => {
 	assert.throws(() => limpiar({ precio_cop: -1 }, SECCIONES.productos.campos));
