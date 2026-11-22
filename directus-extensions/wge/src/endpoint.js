@@ -247,39 +247,6 @@ export default {
 			return r;
 		}));
 
-		/**
-		 * POST /wge/inversiones/:id/cobrar  { billetes }
-		 * El banco entrega al estudiante exactamente lo que le toca, con billetes que tenga en su inventario.
-		 */
-		router.post('/inversiones/:id/cobrar', ruta(async (req, rol) => {
-			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
-			const { limpio, total } = totalDelConteo(req.body?.billetes);
-			const actor = req.accountability.user;
-			return db.transaction(async (trx) => {
-				const inv = await trx('wge_inversiones').where('id', req.params.id).forUpdate().first();
-				if (!inv) throw new WgeError(404, 'NO_EXISTE', 'La inversión no existe');
-				if (inv.estado === 'cobrada') return { ...inv, repetida: true };
-				if (inv.estado !== 'por_cobrar') throw new WgeError(409, 'RONDA_ABIERTA', 'Esta inversión se cobra cuando se cierre la ronda');
-				const participante = await trx('wge_participantes').where('id', inv.participante_id).first();
-				const edicion = await edicionAbierta(trx, participante.edicion_id);
-				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
-				await exigirResponsableBanco(trx, { paisId: participante.pais_id, usuarioId: actor, rol });
-				const pago = Number(inv.monto_pagado);
-				if (total !== pago) throw new WgeError(400, 'VALOR_INVALIDO', `Debes entregar exactamente ${pago} (elegiste ${total})`);
-				const quedan = await inventarioBanco(trx, edicion.id, participante.pais_id);
-				for (const [d, n] of Object.entries(limpio)) {
-					if (n > (quedan[d] ?? 0)) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(0, quedan[d] ?? 0)} billetes de ${d}`);
-				}
-				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
-				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
-				await moverSaldo(trx, banco, { tipo: 'pago_fondo', monto: -pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
-				await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
-				const cambios = { estado: 'cobrada', billetes_pago: JSON.stringify(limpio), cobrado_en: new Date(), cobrado_por: actor };
-				await trx('wge_inversiones').where('id', inv.id).update(cambios);
-				return { ...inv, ...cambios, billetes_pago: limpio, saldo: estudiante.saldo };
-			});
-		}));
-
 		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos (también se hace solo al consultar). */
 		router.post('/ediciones/:id/sincronizar-participantes', ruta(async (req, rol) => {
 			exigirRol(rol, ROLES.ADMIN_WG);

@@ -8,7 +8,7 @@ import { TarjetaFondoComponent } from '../../tarjeta-fondo.component';
 import { GraficaRendimientoComponent } from '../../grafica-rendimiento.component';
 
 type Estudiante = PaisWfunds['estudiantes'][number];
-type Vista = 'invertir' | 'cobrar' | 'resultados';
+type Vista = 'invertir' | 'liquidadas' | 'resultados';
 
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const RIESGO: Record<string, { texto: string; clase: string }> = {
@@ -17,7 +17,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
   alto: { texto: 'Riesgo alto', clase: 'bg-red-100 text-red-800' },
 };
 
-/** W-Funds (banco): abrir y cerrar rondas, recibir inversiones y pagar a quien pasa a cobrar. */
+/** W-Funds (banco): abrir y cerrar rondas y recibir inversiones; al cerrar, la ganancia se abona sola. */
 @Component({
   selector: 'app-wfunds-will-go',
   standalone: true,
@@ -110,9 +110,6 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
             <button type="button" role="tab" [attr.aria-selected]="vista === v.id" (click)="vista = v.id"
                     class="px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-1.5" [class]="vista === v.id ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">
               {{ v.texto }}
-              @if (v.id === 'cobrar' && pais.por_cobrar.length) {
-                <span class="min-w-5 px-1.5 rounded-full bg-orange-500 text-white text-xs leading-5">{{ pais.por_cobrar.length }}</span>
-              }
             </button>
           }
         </div>
@@ -160,38 +157,23 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           }
         }
 
-        <!-- Por cobrar -->
-        @if (vista === 'cobrar') {
-          @if (!pais.por_cobrar.length) {
-            <p class="mt-4 text-sm text-gray-500">Nadie tiene pagos pendientes. Cuando cierres una ronda, aquí aparecen los estudiantes que deben pasar a cobrar.</p>
+        <!-- Liquidadas: lo que recibió cada estudiante al cerrar la ronda -->
+        @if (vista === 'liquidadas') {
+          @if (!pais.cobradas.length) {
+            <p class="mt-4 text-sm text-gray-500">Cuando se cierre una ronda, aquí verás lo que recibió cada estudiante: lo invertido más la ganancia (o menos la pérdida). Se abona solo.</p>
           } @else {
             <ul class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-              @for (i of pais.por_cobrar; track i.id) {
+              @for (i of pais.cobradas; track i.id) {
                 <li class="flex items-center gap-3 px-4 py-3">
                   <div class="min-w-0 flex-1">
                     <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · {{ i.ronda }}</p>
-                    <p class="text-sm mt-0.5">
-                      <span class="text-gray-500">Invirtió {{ miles(i.monto) }} →</span>
-                      <b class="text-gray-800"> recibe {{ miles(i.monto_pagado) }}</b>
-                      <span class="ml-1 text-xs font-bold" [class]="Number(i.rendimiento_final) >= 0 ? 'text-emerald-600' : 'text-red-600'">{{ porcentaje(i.rendimiento_final) }}</span>
-                    </p>
-                  </div>
-                  <button type="button" (click)="abrirPago(i)" class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900">Pagar</button>
-                </li>
-              }
-            </ul>
-          }
-          @if (pais.cobradas.length) {
-            <h2 class="mt-6 text-sm font-bold text-gray-700">Ya cobraron</h2>
-            <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-              @for (i of pais.cobradas; track i.id) {
-                <li class="flex items-center justify-between gap-3 px-4 py-3">
-                  <div class="min-w-0">
-                    <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
                     <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · {{ i.ronda }} · {{ i.cobrado_en | date:'h:mm a' }}</p>
+                    <p class="text-sm mt-0.5 text-gray-500">Invirtió {{ miles(i.monto) }} → <b class="text-gray-800">recibió {{ miles(i.monto_pagado) }}</b></p>
                   </div>
-                  <p class="font-bold whitespace-nowrap" [class]="i.monto_pagado ? 'text-emerald-700' : 'text-red-600'">{{ i.monto_pagado ? '+' + miles(i.monto_pagado) : 'Perdió todo' }}</p>
+                  <div class="text-right shrink-0">
+                    <p class="font-bold" [class]="ganancia(i) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ ganancia(i) >= 0 ? '+' : '−' }}{{ miles(abs(ganancia(i))) }}</p>
+                    <p class="text-xs" [class]="Number(i.rendimiento_final) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ porcentaje(i.rendimiento_final) }}</p>
+                  </div>
                 </li>
               }
             </ul>
@@ -278,42 +260,12 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
       </div>
     }
 
-    <!-- Pagar a quien pasa a cobrar -->
-    @if (pago && pais && datos) {
-      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarPanel()">
-        <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-pago">
-          <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <h2 id="titulo-pago" class="text-lg font-bold text-gray-800">Pagar a {{ pago.nombre }} {{ pago.apellido }}</h2>
-              <p class="text-sm text-gray-500">{{ fondo(pago.fondo_id)?.nombre }} · le toca <b class="text-gray-800">{{ miles(pago.monto_pagado) }}</b></p>
-            </div>
-            <button type="button" (click)="cerrarPanel()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
-          </div>
-          <div class="flex-1 overflow-y-auto px-5 pb-3">
-            <button type="button" (click)="sugerirBilletes()" class="mb-3 text-sm font-semibold text-orange-600 hover:underline">Sugerir billetes</button>
-            <wg-selector-billetes [pais]="pais" [denominaciones]="conInventario" [elegidos]="elegidos" [topes]="pais.inventario" [topeTotal]="pago.monto_pagado ?? 0" textoTope="En el banco:" />
-          </div>
-          <div class="px-5 py-4 border-t border-gray-100">
-            @if (errorPanel) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm" [class]="falta ? 'text-orange-700 font-semibold' : 'text-emerald-700 font-semibold'">{{ falta ? 'Faltan ' + miles(falta) : '✓ Completo' }}</span>
-              <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">de {{ miles(pago.monto_pagado) }}</span></span>
-            </div>
-            <button type="button" (click)="pagar()" [disabled]="falta !== 0 || enviando"
-                    class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-              {{ enviando ? 'Guardando…' : (falta ? 'Elige los billetes' : 'Pagar ' + miles(total)) }}
-            </button>
-          </div>
-        </div>
-      </div>
-    }
-
     <!-- Confirmar cierre de ronda -->
     @if (confirmarCierre && datos?.ronda) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="confirmarCierre = false">
         <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre">
           <h2 id="titulo-cierre" class="text-lg font-bold text-gray-800">¿Cerrar {{ datos!.ronda!.nombre }} ahora?</h2>
-          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y los estudiantes pasan al banco a cobrar. Se cierra para todos los países de la edición.</p>
+          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y a cada estudiante se le abona de una vez lo invertido más la ganancia. Se cierra para todos los países de la edición.</p>
           <div class="mt-5 space-y-2">
             <button type="button" (click)="cerrarRonda(true)" [disabled]="trabajando" class="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-50">
               {{ trabajando ? 'Cerrando…' : 'Cerrar y abrir la siguiente' }}
@@ -332,7 +284,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   readonly Number = Number;
   readonly vistas: { id: Vista; texto: string }[] = [
     { id: 'invertir', texto: 'Invertir' },
-    { id: 'cobrar', texto: 'Por cobrar' },
+    { id: 'liquidadas', texto: 'Liquidadas' },
     { id: 'resultados', texto: 'Resultados' },
   ];
 
@@ -350,7 +302,6 @@ export class WfundsWillGo implements OnInit, OnDestroy {
 
   estudiante: Estudiante | null = null;
   empresa: FondoWfunds | null = null;
-  pago: InversionWfunds | null = null;
   elegidos: Record<number, number | null> = {};
   clave = '';
   enviando = false;
@@ -409,7 +360,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
         if (d.ronda?.duracion_minutos) this.duracion = d.ronda.duracion_minutos;
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
         if (!this.reloj$) this.reloj$ = setInterval(() => this.tic(), 1000);
-        if (!this.refresco$) this.refresco$ = setInterval(() => { if (!this.estudiante && !this.pago && !this.confirmarCierre && !this.enviando && !this.trabajando) this.cargar(); }, 20000);
+        if (!this.refresco$) this.refresco$ = setInterval(() => { if (!this.estudiante && !this.confirmarCierre && !this.enviando && !this.trabajando) this.cargar(); }, 20000);
         this.tic();
         this.cargando = false;
       },
@@ -429,9 +380,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   /** Rondas cerradas de la más vieja a la más nueva (para la gráfica); se recalcula solo cuando cambian los datos. */
   cronologicas: DatosWfunds['rondas'] = [];
   get totalInvertido(): number { return (this.pais?.inversiones ?? []).reduce((t, i) => t + Number(i.monto), 0); }
-  get conInventario(): number[] { return (this.datos?.denominaciones ?? []).filter((d) => (this.pais?.inventario?.[d] ?? 0) > 0); }
   get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.elegidos[d]) || 0), 0); }
-  get falta(): number { return Number(this.pago?.monto_pagado ?? 0) - this.total; }
 
   invertidoPor(e: Estudiante): number {
     return (this.pais?.inversiones ?? []).filter((i) => i.participante_id === e.id).reduce((t, i) => t + Number(i.monto), 0);
@@ -472,8 +421,8 @@ export class WfundsWillGo implements OnInit, OnDestroy {
       next: (x) => {
         this.trabajando = false;
         this.confirmarCierre = false;
-        this.vista = x.siguiente ? 'cobrar' : 'resultados';
-        this.mostrarAviso(`${r.nombre} cerrada.${x.siguiente ? ` Abierta ${x.siguiente.nombre}.` : ''} Los estudiantes ya pueden pasar a cobrar.`);
+        this.vista = 'liquidadas';
+        this.mostrarAviso(`${r.nombre} cerrada: se abonaron ${this.miles(x.pagado)} a ${x.inversiones} ${x.inversiones === 1 ? 'inversión' : 'inversiones'}.${x.siguiente ? ` Abierta ${x.siguiente.nombre}.` : ''}`);
         this.cargar();
       },
       error: (e) => { this.trabajando = false; this.confirmarCierre = false; this.error = WillGoService.mensajeDeError(e); },
@@ -488,29 +437,14 @@ export class WfundsWillGo implements OnInit, OnDestroy {
     this.clave = crypto.randomUUID();
   }
 
-  abrirPago(i: InversionWfunds): void {
-    this.pago = i;
-    this.elegidos = {};
-    this.errorPanel = '';
-  }
-
   cerrarPanel(): void {
     if (this.enviando) return;
     this.estudiante = null;
-    this.pago = null;
   }
 
-  /** Llena el pago con los billetes más grandes que haya en el banco. */
-  sugerirBilletes(): void {
-    let falta = Number(this.pago?.monto_pagado ?? 0);
-    const elegidos: Record<number, number> = {};
-    for (const d of [...this.conInventario].sort((a, b) => b - a)) {
-      const n = Math.min(Math.floor(falta / d), this.pais?.inventario?.[d] ?? 0);
-      if (n > 0) { elegidos[d] = n; falta -= n * d; }
-    }
-    this.elegidos = elegidos;
-    this.errorPanel = falta ? `En el banco no hay billetes para completar ${this.miles(falta)}.` : '';
-  }
+  /** Ganancia (o pérdida, negativa) de una inversión liquidada. */
+  ganancia(i: InversionWfunds): number { return Number(i.monto_pagado ?? 0) - Number(i.monto); }
+  abs(v: number): number { return Math.abs(v); }
 
   private billetesElegidos(): Record<string, number> {
     const b: Record<string, number> = {};
@@ -529,14 +463,4 @@ export class WfundsWillGo implements OnInit, OnDestroy {
     });
   }
 
-  pagar(): void {
-    const i = this.pago;
-    if (!i || this.falta !== 0) return;
-    this.enviando = true;
-    this.errorPanel = '';
-    this.willGo.cobrarInversion(i.id, this.billetesElegidos()).subscribe({
-      next: () => { this.enviando = false; this.pago = null; this.mostrarAviso(`Pagaste ${this.miles(i.monto_pagado)} a ${i.nombre}.`); this.cargar(); },
-      error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },
-    });
-  }
 }

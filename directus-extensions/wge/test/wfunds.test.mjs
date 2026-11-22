@@ -31,10 +31,14 @@ test('W-Funds: los votos dan un bono de máximo ±2 %', () => {
 	assert.equal(con.bono, 0.02);
 });
 
-test('W-Funds: el pago nunca es negativo y se redondea hacia abajo', () => {
-	assert.equal(pagoDeInversion(100, 0.05), 105);
-	assert.equal(pagoDeInversion(150, -0.08), 138);
-	assert.equal(pagoDeInversion(7, 0.1), 7);
+test('W-Funds: el pago se redondea siempre hacia arriba y nunca es negativo', () => {
+	assert.equal(pagoDeInversion(100, 0.05), 105); // exacto (sin el error binario 105,0000000001)
+	assert.equal(pagoDeInversion(100, 0.0578), 106); // 105,78 → 106
+	assert.equal(pagoDeInversion(100, 0.052), 106); // 105,2 → 106
+	assert.equal(pagoDeInversion(10, 0.05), 11); // 10,5 → 11
+	assert.equal(pagoDeInversion(100, -0.0578), 95); // pérdida: 94,22 → 95
+	assert.equal(pagoDeInversion(150, -0.08), 138); // exacto
+	assert.equal(pagoDeInversion(7, 0.1), 8); // 7,7 → 8
 	assert.equal(pagoDeInversion(10, -2), 0);
 });
 

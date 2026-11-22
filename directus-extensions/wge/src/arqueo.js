@@ -103,7 +103,7 @@ export async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 			billetes = leerBilletes(t?.billetes);
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);
-			titulo = entra ? `Inversión de ${nombre(i)}${i?.fondo ? ' en ' + i.fondo : ''}` : `Pago a ${nombre(i)}${i?.fondo ? ' (' + i.fondo + ')' : ''}`;
+			titulo = entra ? `Inversión de ${nombre(i)}${i?.fondo ? ' en ' + i.fondo : ''}` : `Liquidación a ${nombre(i)}${i?.fondo ? ' (' + i.fondo + ')' : ''}`;
 			billetes = leerBilletes(entra ? i?.billetes : i?.billetes_pago);
 		} else if (f.referencia_tipo === 'bienvenida') {
 			titulo = `Bienvenida a ${nombre(estudiantes.get(f.referencia_id)) || 'un estudiante'}`;
@@ -149,7 +149,7 @@ export async function movimientosEstudiante(db, participanteId, paisId, limite =
 			billetes = leerBilletes(t?.billetes);
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);
-			titulo = entra ? `Cobró de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
+			titulo = entra ? `Liquidación de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
 			billetes = leerBilletes(entra ? i?.billetes_pago : i?.billetes);
 		} else if (f.referencia_tipo === 'bienvenida' || f.tipo === 'bienvenida') {
 			titulo = 'Billetes de bienvenida';

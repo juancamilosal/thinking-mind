@@ -1,7 +1,7 @@
 // W-Funds: rondas de inversión en las empresas (fondos) de la edición.
-// El estudiante entrega billetes al banco para invertir; al cerrar la ronda se calcula cuánto le toca
-// y pasa a cobrar al banco, que le entrega billetes. Así el inventario físico del banco siempre cuadra.
-import { WgeError, ROLES, exigirRol, exigirEquipo, limitar, aleatorioConSemilla, finDeFranja } from './lib.js';
+// El estudiante entrega billetes al banco para invertir; al cerrar la ronda se calcula el rendimiento de cada
+// empresa y a cada estudiante se le abona solo lo invertido más la ganancia (o menos la pérdida), redondeado hacia arriba.
+import { WgeError, ROLES, exigirRol, exigirEquipo, limitar, aleatorioConSemilla, finDeFranja, billeteraBloqueada, moverSaldo } from './lib.js';
 import { DENOMINACIONES, inventarioBanco } from './arqueo.js';
 
 /**
@@ -24,8 +24,34 @@ export function calcularResultados(fondos, votosPorFondo, azar) {
 	return resultados;
 }
 
-/** Lo que recibe el estudiante al cobrar: lo invertido más (o menos) el rendimiento, sin bajar de 0. */
-export const pagoDeInversion = (monto, rendimiento) => Math.max(0, Math.floor(Number(monto) * (1 + Number(rendimiento))));
+/**
+ * Lo que recibe el estudiante al cerrar la ronda: lo invertido más (o menos) el rendimiento,
+ * redondeado SIEMPRE hacia arriba (105,2 → 106; 94,22 → 95) y sin bajar de 0.
+ * Se quitan los decimales del cálculo binario (100 × 1,05 = 105,0000000001) antes de redondear.
+ */
+export const pagoDeInversion = (monto, rendimiento) => {
+	const exacto = Math.round(Number(monto) * (1 + Number(rendimiento)) * 1e6) / 1e6;
+	return Math.max(0, Math.ceil(exacto));
+};
+
+/**
+ * Abona al estudiante lo que le toca de una inversión (sale del banco de su país) y la deja liquidada.
+ * El abono es automático: no hay que pasar por el banco a cobrar.
+ */
+async function abonarInversion(trx, inv, rendimiento, actor) {
+	const pago = pagoDeInversion(inv.monto, rendimiento);
+	const participante = await trx('wge_participantes').where('id', inv.participante_id).first('id', 'edicion_id', 'pais_id');
+	if (pago > 0 && participante?.pais_id) {
+		const banco = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'banco' });
+		const estudiante = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
+		await moverSaldo(trx, banco, { tipo: 'pago_fondo', monto: -pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
+		await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
+	}
+	await trx('wge_inversiones').where('id', inv.id).update({
+		rendimiento_final: rendimiento, monto_pagado: pago, estado: 'cobrada', cobrado_en: new Date(), cobrado_por: actor ?? null,
+	});
+	return pago;
+}
 
 const leerJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
@@ -59,8 +85,8 @@ async function crearRonda(trx, edicion, duracion, actor, ahora = new Date()) {
 }
 
 /**
- * Cierra una ronda (bloqueada con forUpdate): calcula el rendimiento de cada empresa y deja cada inversión
- * "por cobrar" con lo que le toca al estudiante. Los billetes se mueven cuando pasa a cobrar al banco.
+ * Cierra una ronda (bloqueada con forUpdate): calcula el rendimiento de cada empresa y abona de una vez
+ * a cada estudiante lo invertido más la ganancia (o menos la pérdida).
  * La variación sale de una semilla guardada en la ronda, así el resultado se puede auditar y repetir.
  */
 export async function liquidarRonda(trx, ronda, actor) {
@@ -71,18 +97,10 @@ export async function liquidarRonda(trx, ronda, actor) {
 	const porFondo = new Map(resultados.map((r) => [r.fondo_id, r.rendimiento]));
 
 	const inversiones = await trx('wge_inversiones').where({ ronda_id: ronda.id, estado: 'abierta' }).orderBy('id');
-	let porCobrar = 0;
-	for (const inv of inversiones) {
-		const r = porFondo.get(inv.fondo_id) ?? 0;
-		const pago = pagoDeInversion(inv.monto, r);
-		// Si perdió todo no hay nada que cobrar
-		await trx('wge_inversiones').where('id', inv.id).update(pago > 0
-			? { rendimiento_final: r, monto_pagado: pago, estado: 'por_cobrar' }
-			: { rendimiento_final: r, monto_pagado: 0, estado: 'cobrada', cobrado_en: new Date(), cobrado_por: actor ?? null, billetes_pago: JSON.stringify({}) });
-		porCobrar += pago;
-	}
+	let pagado = 0;
+	for (const inv of inversiones) pagado += await abonarInversion(trx, inv, porFondo.get(inv.fondo_id) ?? 0, actor);
 	await trx('wge_rondas').where('id', ronda.id).update({ estado: 'liquidada', semilla, cierre: new Date(), resultados: JSON.stringify(resultados) });
-	return { ronda_id: ronda.id, semilla, inversiones: inversiones.length, por_cobrar: porCobrar, fondos: resultados };
+	return { ronda_id: ronda.id, semilla, inversiones: inversiones.length, pagado, fondos: resultados };
 }
 
 /** Cierra una ronda y, si `continuar`, abre la siguiente con la misma duración (si el horario lo permite). */
@@ -100,6 +118,24 @@ export async function cerrarYSeguir(db, rondaId, { actor, continuar, soloVencida
 		}
 		return { ...resumen, siguiente };
 	});
+}
+
+/**
+ * Inversiones que quedaron "por cobrar" con la regla anterior (cobro en el banco): se abonan solas,
+ * recalculadas con el redondeo hacia arriba. Corre con la tarea de cada minuto.
+ */
+export async function abonarPendientes(db) {
+	const pendientes = await db('wge_inversiones').where('estado', 'por_cobrar').pluck('id');
+	let n = 0;
+	for (const id of pendientes) {
+		await db.transaction(async (trx) => {
+			const inv = await trx('wge_inversiones').where('id', id).forUpdate().first();
+			if (inv?.estado !== 'por_cobrar') return;
+			await abonarInversion(trx, inv, Number(inv.rendimiento_final ?? 0), null);
+			n++;
+		});
+	}
+	return n;
 }
 
 /** Tarea de cada minuto: cierra las rondas vencidas y abre la siguiente. */
@@ -153,9 +189,7 @@ export function rutasWfunds(router, { ruta, db }) {
 				.where({ 'r.edicion_id': edicion.id, 'pa.pais_id': p.id });
 			p.inversiones = abierta ? await base().where('i.ronda_id', abierta.id).orderBy('i.date_created', 'desc')
 				.select('i.id', 'i.participante_id', 'i.fondo_id', 'i.monto', 'i.billetes', 'i.date_created', 'e.nombre', 'e.apellido') : [];
-			p.por_cobrar = await base().where('i.estado', 'por_cobrar').orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }])
-				.select('i.id', 'i.participante_id', 'i.fondo_id', 'i.monto', 'i.monto_pagado', 'i.rendimiento_final', 'r.nombre as ronda', 'e.nombre', 'e.apellido');
-			p.cobradas = await base().where('i.estado', 'cobrada').orderBy('i.cobrado_en', 'desc').limit(20)
+			p.cobradas = await base().where('i.estado', 'cobrada').orderBy('i.cobrado_en', 'desc').limit(50)
 				.select('i.id', 'i.fondo_id', 'i.monto', 'i.monto_pagado', 'i.rendimiento_final', 'i.cobrado_en', 'r.nombre as ronda', 'e.nombre', 'e.apellido');
 		}
 		const horario = leerJson((await db('wge_ediciones').where('id', edicion.id).first('horario'))?.horario);

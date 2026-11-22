@@ -1071,7 +1071,7 @@ async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 			billetes = leerBilletes(t?.billetes);
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);
-			titulo = entra ? `Inversión de ${nombre(i)}${i?.fondo ? ' en ' + i.fondo : ''}` : `Pago a ${nombre(i)}${i?.fondo ? ' (' + i.fondo + ')' : ''}`;
+			titulo = entra ? `Inversión de ${nombre(i)}${i?.fondo ? ' en ' + i.fondo : ''}` : `Liquidación a ${nombre(i)}${i?.fondo ? ' (' + i.fondo + ')' : ''}`;
 			billetes = leerBilletes(entra ? i?.billetes : i?.billetes_pago);
 		} else if (f.referencia_tipo === 'bienvenida') {
 			titulo = `Bienvenida a ${nombre(estudiantes.get(f.referencia_id)) || 'un estudiante'}`;
@@ -1117,7 +1117,7 @@ async function movimientosEstudiante(db, participanteId, paisId, limite = 50) {
 			billetes = leerBilletes(t?.billetes);
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);
-			titulo = entra ? `Cobró de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
+			titulo = entra ? `Liquidación de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
 			billetes = leerBilletes(entra ? i?.billetes_pago : i?.billetes);
 		} else if (f.referencia_tipo === 'bienvenida' || f.tipo === 'bienvenida') {
 			titulo = 'Billetes de bienvenida';
@@ -1292,8 +1292,34 @@ function calcularResultados(fondos, votosPorFondo, azar) {
 	return resultados;
 }
 
-/** Lo que recibe el estudiante al cobrar: lo invertido más (o menos) el rendimiento, sin bajar de 0. */
-const pagoDeInversion = (monto, rendimiento) => Math.max(0, Math.floor(Number(monto) * (1 + Number(rendimiento))));
+/**
+ * Lo que recibe el estudiante al cerrar la ronda: lo invertido más (o menos) el rendimiento,
+ * redondeado SIEMPRE hacia arriba (105,2 → 106; 94,22 → 95) y sin bajar de 0.
+ * Se quitan los decimales del cálculo binario (100 × 1,05 = 105,0000000001) antes de redondear.
+ */
+const pagoDeInversion = (monto, rendimiento) => {
+	const exacto = Math.round(Number(monto) * (1 + Number(rendimiento)) * 1e6) / 1e6;
+	return Math.max(0, Math.ceil(exacto));
+};
+
+/**
+ * Abona al estudiante lo que le toca de una inversión (sale del banco de su país) y la deja liquidada.
+ * El abono es automático: no hay que pasar por el banco a cobrar.
+ */
+async function abonarInversion(trx, inv, rendimiento, actor) {
+	const pago = pagoDeInversion(inv.monto, rendimiento);
+	const participante = await trx('wge_participantes').where('id', inv.participante_id).first('id', 'edicion_id', 'pais_id');
+	if (pago > 0 && participante?.pais_id) {
+		const banco = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'banco' });
+		const estudiante = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
+		await moverSaldo(trx, banco, { tipo: 'pago_fondo', monto: -pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
+		await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
+	}
+	await trx('wge_inversiones').where('id', inv.id).update({
+		rendimiento_final: rendimiento, monto_pagado: pago, estado: 'cobrada', cobrado_en: new Date(), cobrado_por: actor ?? null,
+	});
+	return pago;
+}
 
 const leerJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
@@ -1327,8 +1353,8 @@ async function crearRonda(trx, edicion, duracion, actor, ahora = new Date()) {
 }
 
 /**
- * Cierra una ronda (bloqueada con forUpdate): calcula el rendimiento de cada empresa y deja cada inversión
- * "por cobrar" con lo que le toca al estudiante. Los billetes se mueven cuando pasa a cobrar al banco.
+ * Cierra una ronda (bloqueada con forUpdate): calcula el rendimiento de cada empresa y abona de una vez
+ * a cada estudiante lo invertido más la ganancia (o menos la pérdida).
  * La variación sale de una semilla guardada en la ronda, así el resultado se puede auditar y repetir.
  */
 async function liquidarRonda(trx, ronda, actor) {
@@ -1339,18 +1365,10 @@ async function liquidarRonda(trx, ronda, actor) {
 	const porFondo = new Map(resultados.map((r) => [r.fondo_id, r.rendimiento]));
 
 	const inversiones = await trx('wge_inversiones').where({ ronda_id: ronda.id, estado: 'abierta' }).orderBy('id');
-	let porCobrar = 0;
-	for (const inv of inversiones) {
-		const r = porFondo.get(inv.fondo_id) ?? 0;
-		const pago = pagoDeInversion(inv.monto, r);
-		// Si perdió todo no hay nada que cobrar
-		await trx('wge_inversiones').where('id', inv.id).update(pago > 0
-			? { rendimiento_final: r, monto_pagado: pago, estado: 'por_cobrar' }
-			: { rendimiento_final: r, monto_pagado: 0, estado: 'cobrada', cobrado_en: new Date(), cobrado_por: actor ?? null, billetes_pago: JSON.stringify({}) });
-		porCobrar += pago;
-	}
+	let pagado = 0;
+	for (const inv of inversiones) pagado += await abonarInversion(trx, inv, porFondo.get(inv.fondo_id) ?? 0, actor);
 	await trx('wge_rondas').where('id', ronda.id).update({ estado: 'liquidada', semilla, cierre: new Date(), resultados: JSON.stringify(resultados) });
-	return { ronda_id: ronda.id, semilla, inversiones: inversiones.length, por_cobrar: porCobrar, fondos: resultados };
+	return { ronda_id: ronda.id, semilla, inversiones: inversiones.length, pagado, fondos: resultados };
 }
 
 /** Cierra una ronda y, si `continuar`, abre la siguiente con la misma duración (si el horario lo permite). */
@@ -1368,6 +1386,24 @@ async function cerrarYSeguir(db, rondaId, { actor, continuar, soloVencida = fals
 		}
 		return { ...resumen, siguiente };
 	});
+}
+
+/**
+ * Inversiones que quedaron "por cobrar" con la regla anterior (cobro en el banco): se abonan solas,
+ * recalculadas con el redondeo hacia arriba. Corre con la tarea de cada minuto.
+ */
+async function abonarPendientes(db) {
+	const pendientes = await db('wge_inversiones').where('estado', 'por_cobrar').pluck('id');
+	let n = 0;
+	for (const id of pendientes) {
+		await db.transaction(async (trx) => {
+			const inv = await trx('wge_inversiones').where('id', id).forUpdate().first();
+			if (inv?.estado !== 'por_cobrar') return;
+			await abonarInversion(trx, inv, Number(inv.rendimiento_final ?? 0), null);
+			n++;
+		});
+	}
+	return n;
 }
 
 /** Tarea de cada minuto: cierra las rondas vencidas y abre la siguiente. */
@@ -1421,9 +1457,7 @@ function rutasWfunds(router, { ruta, db }) {
 				.where({ 'r.edicion_id': edicion.id, 'pa.pais_id': p.id });
 			p.inversiones = abierta ? await base().where('i.ronda_id', abierta.id).orderBy('i.date_created', 'desc')
 				.select('i.id', 'i.participante_id', 'i.fondo_id', 'i.monto', 'i.billetes', 'i.date_created', 'e.nombre', 'e.apellido') : [];
-			p.por_cobrar = await base().where('i.estado', 'por_cobrar').orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }])
-				.select('i.id', 'i.participante_id', 'i.fondo_id', 'i.monto', 'i.monto_pagado', 'i.rendimiento_final', 'r.nombre as ronda', 'e.nombre', 'e.apellido');
-			p.cobradas = await base().where('i.estado', 'cobrada').orderBy('i.cobrado_en', 'desc').limit(20)
+			p.cobradas = await base().where('i.estado', 'cobrada').orderBy('i.cobrado_en', 'desc').limit(50)
 				.select('i.id', 'i.fondo_id', 'i.monto', 'i.monto_pagado', 'i.rendimiento_final', 'i.cobrado_en', 'r.nombre as ronda', 'e.nombre', 'e.apellido');
 		}
 		const horario = leerJson((await db('wge_ediciones').where('id', edicion.id).first('horario'))?.horario);
@@ -1695,6 +1729,8 @@ const configHook = ({ schedule }, { database: db, logger }) => {
 	// W-Funds: cada minuto cierra las rondas que ya cumplieron su tiempo y abre la siguiente
 	schedule('* * * * *', async () => {
 		try {
+			const abonadas = await abonarPendientes(db);
+			if (abonadas) logger.info(`wge: ${abonadas} inversiones pendientes abonadas`);
 			const hechas = await cerrarRondasVencidas(db);
 			for (const h of hechas) logger.info(`wge: ronda ${h.ronda_id} cerrada sola (${h.inversiones} inversiones)${h.siguiente ? `; abierta ${h.siguiente.nombre}` : ''}`);
 		} catch (error) {
@@ -1990,39 +2026,6 @@ const configEndpoint = {
 			const r = await cerrarYSeguir(db, ronda.id, { actor, continuar: req.body?.continuar === true });
 			if (!r) throw new WgeError(409, 'YA_LIQUIDADA', 'La ronda ya fue cerrada');
 			return r;
-		}));
-
-		/**
-		 * POST /wge/inversiones/:id/cobrar  { billetes }
-		 * El banco entrega al estudiante exactamente lo que le toca, con billetes que tenga en su inventario.
-		 */
-		router.post('/inversiones/:id/cobrar', ruta(async (req, rol) => {
-			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
-			const { limpio, total } = totalDelConteo(req.body?.billetes);
-			const actor = req.accountability.user;
-			return db.transaction(async (trx) => {
-				const inv = await trx('wge_inversiones').where('id', req.params.id).forUpdate().first();
-				if (!inv) throw new WgeError(404, 'NO_EXISTE', 'La inversión no existe');
-				if (inv.estado === 'cobrada') return { ...inv, repetida: true };
-				if (inv.estado !== 'por_cobrar') throw new WgeError(409, 'RONDA_ABIERTA', 'Esta inversión se cobra cuando se cierre la ronda');
-				const participante = await trx('wge_participantes').where('id', inv.participante_id).first();
-				const edicion = await edicionAbierta(trx, participante.edicion_id);
-				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
-				await exigirResponsableBanco(trx, { paisId: participante.pais_id, usuarioId: actor, rol });
-				const pago = Number(inv.monto_pagado);
-				if (total !== pago) throw new WgeError(400, 'VALOR_INVALIDO', `Debes entregar exactamente ${pago} (elegiste ${total})`);
-				const quedan = await inventarioBanco(trx, edicion.id, participante.pais_id);
-				for (const [d, n] of Object.entries(limpio)) {
-					if (n > (quedan[d] ?? 0)) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(0, quedan[d] ?? 0)} billetes de ${d}`);
-				}
-				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
-				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
-				await moverSaldo(trx, banco, { tipo: 'pago_fondo', monto: -pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
-				await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
-				const cambios = { estado: 'cobrada', billetes_pago: JSON.stringify(limpio), cobrado_en: new Date(), cobrado_por: actor };
-				await trx('wge_inversiones').where('id', inv.id).update(cambios);
-				return { ...inv, ...cambios, billetes_pago: limpio, saldo: estudiante.saldo };
-			});
 		}));
 
 		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos (también se hace solo al consultar). */

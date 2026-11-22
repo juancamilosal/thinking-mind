@@ -168,7 +168,7 @@ export interface InversionWfunds {
 export interface PaisWfunds {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null; saldo_banco: number; inventario: Record<string, number>;
   estudiantes: { id: string; nombre: string; apellido: string; saldo: number }[];
-  inversiones: InversionWfunds[]; por_cobrar: InversionWfunds[]; cobradas: InversionWfunds[];
+  inversiones: InversionWfunds[]; cobradas: InversionWfunds[];
 }
 export interface DatosWfunds {
   edicion: { id: string; nombre: string; estado: string }; denominaciones: number[];
@@ -377,8 +377,8 @@ export class WillGoService {
   }
 
   /** Cierra la ronda ya; con `continuar` se abre la siguiente con la misma duración. */
-  cerrarRonda(rondaId: string, continuar: boolean): Observable<{ inversiones: number; por_cobrar: number; siguiente: RondaWfunds | null }> {
-    return this.http.post<{ data: { inversiones: number; por_cobrar: number; siguiente: RondaWfunds | null } }>(`${this.api}/rondas/${rondaId}/cerrar`, { continuar })
+  cerrarRonda(rondaId: string, continuar: boolean): Observable<{ inversiones: number; pagado: number; siguiente: RondaWfunds | null }> {
+    return this.http.post<{ data: { inversiones: number; pagado: number; siguiente: RondaWfunds | null } }>(`${this.api}/rondas/${rondaId}/cerrar`, { continuar })
       .pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -386,10 +386,6 @@ export class WillGoService {
     return this.http.post<{ data: { monto: number } }>(`${this.api}/inversiones`, {
       participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, billetes, clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
-  }
-
-  cobrarInversion(inversionId: string, billetes: Record<string, number>): Observable<{ monto_pagado: number }> {
-    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/cobrar`, { billetes }).pipe(this.enZona(), map((r) => r.data));
   }
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {
