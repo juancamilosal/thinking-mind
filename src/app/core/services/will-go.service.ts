@@ -218,6 +218,12 @@ export interface DatosCaja {
   entregas: { id: string; pais_id: string; monto: number; billetes: Record<string, number> | string; date_created: string; quien: string }[];
 }
 
+/** Edición vigente del usuario (para el selector de edición de cada pantalla). */
+export interface EdicionVigente {
+  id: string; nombre: string; estado: string; edicion_programa?: string | null;
+  fecha_inicio?: string | null; fecha_fin?: string | null; colegio?: string | null; programa?: string | null;
+}
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -482,7 +488,7 @@ export class WillGoService {
       .pipe(this.enZona(), map((r) => r.data));
   }
 
-  misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {
+  misEdiciones(): Observable<EdicionVigente[]> {
     return this.http.get<{ data: any[] }>(`${this.api}/mis-ediciones`).pipe(this.enZona(), map((r) => r.data));
   }
 

@@ -1,15 +1,16 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { DatosTipoCambio, PaisTasaCambio, WillGoService } from '../../../../core/services/will-go.service';
+import { DatosTipoCambio, PaisTasaCambio, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { formatearNumero } from '../../numero-miles.directive';
+import { SelectorEdicionComponent } from '../../selector-edicion.component';
 import { GraficaTasaComponent } from '../../grafica-tasa.component';
 
 /** Tipo de cambio de cada país: cuánto vale hoy un billete, cómo ha cambiado y por qué. */
 @Component({
   selector: 'app-tipo-cambio-will-go',
   standalone: true,
-  imports: [FormsModule, DatePipe, GraficaTasaComponent],
+  imports: [FormsModule, DatePipe, GraficaTasaComponent, SelectorEdicionComponent],
   template: `
     <div class="max-w-4xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -17,12 +18,8 @@ import { GraficaTasaComponent } from '../../grafica-tasa.component';
           <h1 class="text-2xl font-bold text-gray-800">Tipo de cambio</h1>
           <p class="text-gray-500 mt-1">Cuánto vale un billete de cada país. Cambia cada {{ datos?.intervalo_minutos ?? 30 }} minutos según la rúbrica.</p>
         </div>
-        @if (ediciones.length > 1) {
-          <select [(ngModel)]="edicionId" (ngModelChange)="cargar()" aria-label="Edición" class="sm:w-72 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-            @for (e of ediciones; track e.id) { <option [value]="e.id">{{ e.nombre }}</option> }
-          </select>
-        }
       </div>
+      <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" (cambio)="cargar()" />
 
       @if (cargando && !datos) {
         <div class="mt-5 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
@@ -116,7 +113,7 @@ import { GraficaTasaComponent } from '../../grafica-tasa.component';
 export class TipoCambioWillGo implements OnInit, OnDestroy {
   private willGo = inject(WillGoService);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
-  ediciones: { id: string; nombre: string; estado: string }[] = [];
+  ediciones: EdicionVigente[] = [];
   edicionId = '';
   datos: DatosTipoCambio | null = null;
   paisHistorial = '';

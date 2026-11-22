@@ -2,8 +2,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { CalificacionRubrica, CriterioRubrica, DatosRubrica, EstudianteRubrica, PaisRubrica, WillGoService } from '../../../../core/services/will-go.service';
+import { CalificacionRubrica, CriterioRubrica, DatosRubrica, EstudianteRubrica, PaisRubrica, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { formatearNumero } from '../../numero-miles.directive';
+import { SelectorEdicionComponent } from '../../selector-edicion.component';
 
 type Idioma = 'ingles' | 'frances';
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -32,7 +33,7 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
 @Component({
   selector: 'app-rubrica-will-go',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, SelectorEdicionComponent],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -40,12 +41,8 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
           <h1 class="text-2xl font-bold text-gray-800">Rúbrica</h1>
           <p class="text-gray-500 mt-1">Califica a tus estudiantes (0 a 3 por criterio). Sus puntos mueven el tipo de cambio de su país.</p>
         </div>
-        @if (ediciones.length > 1) {
-          <select [(ngModel)]="edicionId" (ngModelChange)="cargar()" aria-label="Edición" class="sm:w-72 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-            @for (e of ediciones; track e.id) { <option [value]="e.id">{{ e.nombre }}</option> }
-          </select>
-        }
       </div>
+      <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" (cambio)="cargar()" />
 
       @if (cargando && !datos) {
         <div class="mt-5 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
@@ -229,7 +226,7 @@ export class RubricaWillGo implements OnInit {
   readonly criterios = CRITERIOS;
   readonly idiomas: { id: Idioma; texto: string }[] = [{ id: 'ingles', texto: 'Inglés' }, { id: 'frances', texto: 'Francés' }];
 
-  ediciones: { id: string; nombre: string; estado: string }[] = [];
+  ediciones: EdicionVigente[] = [];
   edicionId = '';
   datos: DatosRubrica | null = null;
   pais: PaisRubrica | null = null;

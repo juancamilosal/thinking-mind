@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { DatosCaja, EstudianteCaja, PaisCaja, ProductoCaja, VentaCaja, WillGoService } from '../../../../core/services/will-go.service';
+import { DatosCaja, EstudianteCaja, PaisCaja, ProductoCaja, VentaCaja, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { formatearNumero } from '../../numero-miles.directive';
+import { SelectorEdicionComponent } from '../../selector-edicion.component';
 import { SelectorBilletesComponent } from '../../selector-billetes.component';
 import { imagenBillete } from '../../imagen-billete';
 
@@ -15,7 +16,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
 @Component({
   selector: 'app-caja-will-go',
   standalone: true,
-  imports: [FormsModule, DatePipe, SelectorBilletesComponent],
+  imports: [FormsModule, DatePipe, SelectorBilletesComponent, SelectorEdicionComponent],
   template: `
     <div class="max-w-3xl mx-auto pb-28">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -23,12 +24,8 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           <h1 class="text-2xl font-bold text-gray-800">Caja GO•STORE</h1>
           <p class="text-gray-500 mt-1">Vende los productos de la tienda y da el vuelto.</p>
         </div>
-        @if (ediciones.length > 1) {
-          <select [(ngModel)]="edicionId" (ngModelChange)="cargar()" aria-label="Edición" class="sm:w-72 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-            @for (e of ediciones; track e.id) { <option [value]="e.id">{{ e.nombre }}</option> }
-          </select>
-        }
       </div>
+      <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" (cambio)="cargar()" />
 
       @if (cargando && !datos) {
         <div class="mt-5 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
@@ -298,7 +295,7 @@ export class CajaWillGo implements OnInit {
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
   readonly vistas: { id: Vista; texto: string }[] = [{ id: 'vender', texto: 'Vender' }, { id: 'caja', texto: 'Caja' }, { id: 'ventas', texto: 'Ventas' }];
 
-  ediciones: { id: string; nombre: string; estado: string }[] = [];
+  ediciones: EdicionVigente[] = [];
   edicionId = '';
   datos: DatosCaja | null = null;
   vista: Vista = 'vender';
