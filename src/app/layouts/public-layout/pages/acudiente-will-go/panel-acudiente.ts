@@ -113,10 +113,15 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
                 <div class="p-4">
                   <div class="inline-flex gap-1 bg-gray-100 rounded-xl p-1" role="tablist" [attr.aria-label]="'Información de ' + h.nombre">
                     @for (v of vistasHijo; track v.id) {
-                      <button type="button" role="tab" [attr.aria-selected]="vistaDe(h) === v.id" (click)="vista[h.id] = v.id"
+                      <button type="button" role="tab" [attr.aria-selected]="vistaDe(h) === v.id" (click)="verVista(h, v.id)"
                               class="px-4 py-1.5 rounded-lg text-sm font-semibold" [class]="vistaDe(h) === v.id ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'">{{ v.texto }}</button>
                     }
                   </div>
+                  @if (actualizando === h.id) {
+                    <p class="mt-3 flex items-center gap-2 text-xs text-gray-500" role="status">
+                      <span class="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" aria-hidden="true"></span>Actualizando…
+                    </p>
+                  }
                   @if (vistaDe(h) === 'rubrica') {
                     @if (!h.rubrica?.total) {
                       <p class="text-sm text-gray-500 mt-3">Todavía no lo han calificado. Sus docentes califican su participación durante la jornada.</p>
@@ -228,6 +233,16 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   ];
   vista: Record<string, VistaHijo> = {};
   vistaDe(h: HijoPortal): VistaHijo { return this.vista[h.id] ?? 'inversiones'; }
+  /** Hijo cuya información se está consultando al abrir una pestaña. */
+  actualizando: string | null = null;
+
+  /** Al abrir Rúbrica o Movimientos se consulta el servicio de una vez, sin esperar ni recargar la página. */
+  verVista(h: HijoPortal, id: VistaHijo): void {
+    this.vista[h.id] = id;
+    if (id === 'inversiones' || this.actualizando) return;
+    this.actualizando = h.id;
+    this.cargar(() => (this.actualizando = null));
+  }
   cargando = true;
   votando = false;
   error = '';
@@ -260,12 +275,13 @@ export class PanelAcudiente implements OnInit, OnDestroy {
     if (vencida && !this.cargando && this.ahoraLocal % 5000 < 1000) this.cargar();
   }
 
-  cargar(): void {
+  cargar(listo?: () => void): void {
     this.cargando = true;
     this.servicio.panel().subscribe({
-      next: (d) => { this.datos = d; this.desfase = new Date(d.ahora).getTime() - Date.now(); this.cargando = false; this.error = ''; },
+      next: (d) => { this.datos = d; this.desfase = new Date(d.ahora).getTime() - Date.now(); this.cargando = false; this.error = ''; listo?.(); },
       error: (e) => {
         this.cargando = false;
+        listo?.();
         if (AcudienteWillGoService.sesionVencida(e)) { this.salir(); return; }
         this.error = AcudienteWillGoService.mensaje(e);
       },
