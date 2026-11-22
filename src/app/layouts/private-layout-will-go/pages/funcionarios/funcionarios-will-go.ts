@@ -45,7 +45,7 @@ export class FuncionariosWillGo implements OnInit {
   copiada = false;
 
   // Confirmaciones
-  confirmar: { tipo: 'clave' | 'estado'; funcionario: Funcionario } | null = null;
+  confirmar: { tipo: 'clave' | 'estado' | 'eliminar'; funcionario: Funcionario } | null = null;
   procesando = false;
   aviso = '';
 
@@ -143,7 +143,7 @@ export class FuncionariosWillGo implements OnInit {
     }
   }
 
-  pedirConfirmacion(tipo: 'clave' | 'estado', funcionario: Funcionario): void {
+  pedirConfirmacion(tipo: 'clave' | 'estado' | 'eliminar', funcionario: Funcionario): void {
     this.confirmar = { tipo, funcionario };
   }
 
@@ -153,7 +153,16 @@ export class FuncionariosWillGo implements OnInit {
     this.procesando = true;
     const terminar = () => { this.procesando = false; this.confirmar = null; this.cdr.detectChanges(); };
 
-    if (tipo === 'clave') {
+    if (tipo === 'eliminar') {
+      this.willGo.eliminarFuncionario(funcionario.id).subscribe({
+        next: () => {
+          this.funcionarios = this.funcionarios.filter((x) => x.id !== funcionario.id);
+          terminar();
+          this.mostrarAviso(`${funcionario.nombre} ${funcionario.apellido} fue eliminado.`);
+        },
+        error: (e) => { terminar(); this.mostrarAviso(WillGoService.mensajeDeError(e)); },
+      });
+    } else if (tipo === 'clave') {
       this.willGo.restablecerClave(funcionario.id).subscribe({
         next: ({ funcionario: f, clave_temporal }) => { this.reemplazar(f); terminar(); this.mostrarClave(f, clave_temporal, false); },
         error: (e) => { terminar(); this.mostrarAviso(WillGoService.mensajeDeError(e)); },

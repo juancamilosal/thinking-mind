@@ -296,6 +296,11 @@ export class WillGoService {
     return this.http.patch<{ data: Funcionario }>(`${this.api}/funcionarios/${id}`, cambios).pipe(this.enZona(), map((r) => r.data));
   }
 
+  /** Elimina un colaborador (solo si nunca movió nada en Will-Go; si no, hay que desactivarlo). */
+  eliminarFuncionario(id: string): Observable<{ eliminado: boolean }> {
+    return this.http.delete<{ data: { eliminado: boolean } }>(`${this.api}/funcionarios/${id}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
   restablecerClave(id: string): Observable<{ funcionario: Funcionario; clave_temporal: string }> {
     return this.http.post<{ data: { funcionario: Funcionario; clave_temporal: string } }>(`${this.api}/funcionarios/${id}/restablecer-clave`, {})
       .pipe(this.enZona(), map((r) => r.data));

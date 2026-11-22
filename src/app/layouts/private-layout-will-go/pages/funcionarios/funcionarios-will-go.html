@@ -85,7 +85,7 @@
               </div>
 
               @if (puedeManejar(f)) {
-                <div class="flex gap-2 lg:justify-end">
+                <div class="flex flex-wrap gap-2 lg:justify-end">
                   <button type="button" (click)="abrirEditar(f)" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Editar</button>
                   <button type="button" (click)="pedirConfirmacion('clave', f)" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Nueva clave</button>
                   @if (f.id !== miId) {
@@ -94,6 +94,7 @@
                             [class]="f.estado === 'active' ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-teal-200 text-teal-700 hover:bg-teal-50'">
                       {{ f.estado === 'active' ? 'Desactivar' : 'Activar' }}
                     </button>
+                    <button type="button" (click)="pedirConfirmacion('eliminar', f)" class="px-3 py-2 text-sm rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100">Eliminar</button>
                   }
                 </div>
               }
@@ -206,6 +207,10 @@
       @if (confirmar.tipo === 'clave') {
         <h2 class="text-lg font-bold text-gray-800">¿Generar una nueva clave?</h2>
         <p class="text-gray-600 mt-2">La clave actual de {{ confirmar.funcionario.nombre }} dejará de funcionar y deberá crear una nueva al ingresar.</p>
+      } @else if (confirmar.tipo === 'eliminar') {
+        <h2 class="text-lg font-bold text-gray-800">¿Eliminar a {{ confirmar.funcionario.nombre }}?</h2>
+        <p class="text-gray-600 mt-2">Se borra su usuario y sale de los equipos de las ediciones. No se puede deshacer.</p>
+        <p class="text-sm text-gray-500 mt-2">Si ya entregó billetes, vendió o calificó, no se podrá eliminar para no perder el historial: en ese caso desactívalo.</p>
       } @else if (confirmar.funcionario.estado === 'active') {
         <h2 class="text-lg font-bold text-gray-800">¿Desactivar a {{ confirmar.funcionario.nombre }}?</h2>
         <p class="text-gray-600 mt-2">No podrá ingresar hasta que lo vuelvas a activar. Sus movimientos quedan guardados.</p>
@@ -217,8 +222,8 @@
         <button type="button" (click)="confirmar = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
         <button type="button" (click)="confirmarAccion()" [disabled]="procesando"
                 class="flex-1 py-2.5 rounded-xl font-semibold text-white disabled:opacity-60"
-                [class]="confirmar.tipo === 'estado' && confirmar.funcionario.estado === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-600 hover:bg-teal-700'">
-          {{ procesando ? 'Un momento…' : 'Confirmar' }}
+                [class]="confirmar.tipo === 'eliminar' || (confirmar.tipo === 'estado' && confirmar.funcionario.estado === 'active') ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-600 hover:bg-teal-700'">
+          {{ procesando ? 'Un momento…' : (confirmar.tipo === 'eliminar' ? 'Eliminar' : 'Confirmar') }}
         </button>
       </div>
     </div>

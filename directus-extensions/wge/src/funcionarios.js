@@ -138,6 +138,38 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		return comoFuncionario(await funcionarioExistente(req.params.id));
 	}));
 
+	/**
+	 * DELETE /wge/funcionarios/:id: elimina al colaborador si nunca movió nada en Will-Go.
+	 * Si ya tiene historial (entregas, ventas, calificaciones…) no se borra para no perderlo: se desactiva.
+	 */
+	router.delete('/funcionarios/:id', ruta(async (req, rol) => {
+		exigirRol(rol, ROLES.ADMIN_WG);
+		const actual = await funcionarioExistente(req.params.id);
+		puedeManejar(rol, actual.rol_nombre);
+		const id = req.params.id;
+		if (id === req.accountability.user) throw new WgeError(409, 'VALOR_INVALIDO', 'No puedes eliminar tu propio usuario');
+		const conHistorial = [
+			['wge_movimientos', 'user_created'], ['wge_transferencias', 'user_created'], ['wge_evaluaciones', 'user_created'],
+			['wge_ventas', 'user_created'], ['wge_inversiones', 'user_created'], ['wge_inversiones', 'cobrado_por'], ['wge_arqueos', 'user_created'],
+		];
+		for (const [tabla, campo] of conHistorial) {
+			if (await db(tabla).where(campo, id).first(db.raw('1'))) {
+				throw new WgeError(409, 'TIENE_HISTORIAL', `${actual.nombre} ya tiene movimientos en Will-Go; para no perder el historial, desactívalo en lugar de eliminarlo`);
+			}
+		}
+		if (await db('wge_billeteras').where('docente_id', id).where('saldo', '>', 0).first('id')) {
+			throw new WgeError(409, 'TIENE_BILLETES', `${actual.nombre} todavía tiene billetes; desactívalo en lugar de eliminarlo`);
+		}
+		await db.transaction(async (trx) => {
+			await trx('wge_equipo').where('usuario_id', id).delete();
+			await trx('wge_paises').where('responsable_banco', id).update({ responsable_banco: null });
+			await trx('wge_ediciones').where('responsable_caja', id).update({ responsable_caja: null });
+			await trx('wge_billeteras').where('docente_id', id).delete();
+		});
+		await (await usuarios()).deleteOne(id);
+		return { eliminado: true };
+	}));
+
 	/** POST /wge/funcionarios/:id/restablecer-clave: nueva clave temporal (se muestra una sola vez). */
 	router.post('/funcionarios/:id/restablecer-clave', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.ADMIN_WG);

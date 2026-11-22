@@ -1,5 +1,5 @@
 // Arqueo del banco: conteo de billetes físicos por denominación y su cuadre contra el saldo del sistema.
-import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, ahoraColombia } from './lib.js';
 
 /** Denominaciones impresas de cada país (iguales en Wonderland, Neverland y Dreamland). */
 export const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
@@ -249,9 +249,15 @@ export function rutasArqueo(router, { ruta, db }) {
 		return { edicion, denominaciones: DENOMINACIONES, paises };
 	}));
 
-	/** GET /wge/mis-ediciones: ediciones donde el usuario está en el equipo (los administrativos ven todas). */
+	/**
+	 * GET /wge/mis-ediciones: ediciones vigentes donde el usuario está en el equipo (los administrativos ven todas).
+	 * Vigente = no está cerrada y su programa no ha terminado (fecha de fin hoy o después, hora de Colombia).
+	 */
 	router.get('/mis-ediciones', ruta(async (req, rol) => {
-		const q = db('wge_ediciones as e').whereNot('e.estado', 'cerrada').select('e.id', 'e.nombre', 'e.estado').orderBy('e.date_created', 'desc');
+		const hoy = ahoraColombia().fecha;
+		const q = db('wge_ediciones as e').whereNot('e.estado', 'cerrada')
+			.where((w) => w.whereNull('e.fecha_fin').orWhere('e.fecha_fin', '>=', hoy))
+			.select('e.id', 'e.nombre', 'e.estado').orderBy([{ column: 'e.fecha_inicio', order: 'asc' }, { column: 'e.date_created', order: 'desc' }]);
 		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) {
 			q.join('wge_equipo as q', 'q.edicion_id', 'e.id').where('q.usuario_id', req.accountability.user);
 		}
