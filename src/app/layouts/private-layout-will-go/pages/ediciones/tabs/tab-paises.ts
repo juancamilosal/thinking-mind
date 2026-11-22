@@ -28,10 +28,10 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               <span class="ml-auto text-xs text-gray-400">{{ p.codigo_moneda }}</span>
             </div>
             <p class="text-2xl font-bold text-gray-800 mt-2">{{ miles(enBanco(p)) }}</p>
-            <p class="text-xs text-gray-500">{{ edicion.estado === 'borrador' ? 'billetes que recibirá el banco' : 'billetes en el banco' }}</p>
+            <p class="text-xs text-gray-500">billetes en el banco</p>
             @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">⚠ Falta el detalle de billetes</p> }
             <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || 'Sin responsable del banco' }}</p>
-            @if (edicion.estado !== 'borrador') {
+            @if (p.provision_inicial) {
               <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">Impresos</span><br><b class="text-gray-800">{{ miles(p.provision_inicial) }}</b></div>
                 <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En circulación</span><br><b class="text-gray-800">{{ miles(p.en_circulacion) }}</b></div>
@@ -220,9 +220,9 @@ export class TabPaises implements OnInit {
     return DENOMINACIONES.reduce((t, d) => t + d * (Number(this.extra[d]) || 0), 0);
   }
 
-  /** Billetes del banco: los que tiene hoy (edición abierta) o los que recibirá al abrir (en preparación). */
+  /** Billetes que el banco tiene hoy (los recibe apenas se registran los billetes impresos). */
   enBanco(p: Pais): number {
-    return this.edicion.estado === 'borrador' ? this.totalDe(p) : (p.saldo_banco ?? 0);
+    return p.saldo_banco ?? 0;
   }
 
   /** Provisión escrita como número sin el detalle de billetes (no se puede cuadrar por denominación). */

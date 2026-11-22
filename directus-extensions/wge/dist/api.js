@@ -664,6 +664,21 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 					edicion_id: actual.edicion_id, usuario_id: fila.responsable_banco, clave_unica: `${actual.edicion_id}:${fila.responsable_banco}`,
 				})).onConflict('clave_unica').ignore();
 			}
+			if (nombre === 'paises' && 'provision_inicial' in fila && e.estado === 'borrador') {
+				// El banco recibe los billetes apenas se registran (y se ajusta si se corrigen), para poder contarlos antes de abrir
+				await db.transaction(async (trx) => {
+					await trx(s.tabla).where('id', actual.id).update(fila);
+					const banco = await billeteraBloqueada(trx, { edicionId: e.id, paisId: actual.id, tipo: 'banco' });
+					const diferencia = Number(fila.provision_inicial) - Number(banco.saldo);
+					if (diferencia !== 0) {
+						await moverSaldo(trx, banco, {
+							tipo: diferencia > 0 ? 'provision' : 'reverso', monto: diferencia, actor: req.accountability.user,
+							referenciaTipo: 'provision', referenciaId: actual.id,
+						});
+					}
+				});
+				return db(s.tabla).where('id', actual.id).first();
+			}
 			if (Object.keys(fila).length) await db(s.tabla).where('id', actual.id).update(fila);
 			return db(s.tabla).where('id', actual.id).first();
 		}));
@@ -1344,7 +1359,8 @@ const configEndpoint = {
 				for (const pais of paises) {
 					if (!pais.tasa_actual) await trx('wge_paises').where('id', pais.id).update({ tasa_actual: edicion.tasa_inicial });
 					const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'banco' });
-					const yaProvisionado = await trx('wge_movimientos').where({ billetera_id: banco.id, tipo: 'provision' }).first();
+					// Normalmente el banco ya recibió sus billetes al registrarlos; esto cubre ediciones viejas sin ese movimiento
+					const yaProvisionado = await trx('wge_movimientos').where({ billetera_id: banco.id }).whereIn('tipo', ['provision', 'reverso']).first();
 					if (!yaProvisionado && Number(pais.provision_inicial) > 0) {
 						await moverSaldo(trx, banco, { tipo: 'provision', monto: Number(pais.provision_inicial), actor, referenciaTipo: 'edicion', referenciaId: edicion.id });
 						resumen.provisiones++;

@@ -95,7 +95,7 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="revision = null">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
           <h2 class="text-lg font-bold text-gray-800">Abrir la edición</h2>
-          <p class="text-gray-600 mt-1 text-sm">Al abrir, el banco recibe su provisión en cada moneda y cada estudiante con país recibe sus billetes de bienvenida.</p>
+          <p class="text-gray-600 mt-1 text-sm">Al abrir, cada estudiante con país recibe sus billetes de bienvenida desde el banco de su país, y empieza a moverse la tasa.</p>
           <ul class="mt-4 space-y-2">
             @for (r of revision; track r.texto) {
               <li class="flex items-start gap-2 text-sm">

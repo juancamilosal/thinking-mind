@@ -272,6 +272,21 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 					edicion_id: actual.edicion_id, usuario_id: fila.responsable_banco, clave_unica: `${actual.edicion_id}:${fila.responsable_banco}`,
 				})).onConflict('clave_unica').ignore();
 			}
+			if (nombre === 'paises' && 'provision_inicial' in fila && e.estado === 'borrador') {
+				// El banco recibe los billetes apenas se registran (y se ajusta si se corrigen), para poder contarlos antes de abrir
+				await db.transaction(async (trx) => {
+					await trx(s.tabla).where('id', actual.id).update(fila);
+					const banco = await billeteraBloqueada(trx, { edicionId: e.id, paisId: actual.id, tipo: 'banco' });
+					const diferencia = Number(fila.provision_inicial) - Number(banco.saldo);
+					if (diferencia !== 0) {
+						await moverSaldo(trx, banco, {
+							tipo: diferencia > 0 ? 'provision' : 'reverso', monto: diferencia, actor: req.accountability.user,
+							referenciaTipo: 'provision', referenciaId: actual.id,
+						});
+					}
+				});
+				return db(s.tabla).where('id', actual.id).first();
+			}
 			if (Object.keys(fila).length) await db(s.tabla).where('id', actual.id).update(fila);
 			return db(s.tabla).where('id', actual.id).first();
 		}));

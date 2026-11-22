@@ -277,7 +277,8 @@ export default {
 				for (const pais of paises) {
 					if (!pais.tasa_actual) await trx('wge_paises').where('id', pais.id).update({ tasa_actual: edicion.tasa_inicial });
 					const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'banco' });
-					const yaProvisionado = await trx('wge_movimientos').where({ billetera_id: banco.id, tipo: 'provision' }).first();
+					// Normalmente el banco ya recibió sus billetes al registrarlos; esto cubre ediciones viejas sin ese movimiento
+					const yaProvisionado = await trx('wge_movimientos').where({ billetera_id: banco.id }).whereIn('tipo', ['provision', 'reverso']).first();
 					if (!yaProvisionado && Number(pais.provision_inicial) > 0) {
 						await moverSaldo(trx, banco, { tipo: 'provision', monto: Number(pais.provision_inicial), actor, referenciaTipo: 'edicion', referenciaId: edicion.id });
 						resumen.provisiones++;
