@@ -217,7 +217,7 @@ export class TabFondos implements OnInit {
       });
     } catch (e) {
       this.subiendo = false;
-      this.error = (e as Error).message;
+      this.error = this.t.instant((e as Error).message);
     }
   }
 

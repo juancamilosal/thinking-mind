@@ -35,6 +35,11 @@ export class IdiomaWillGoService {
   readonly idiomas = IDIOMAS_WILL_GO;
   actual: IdiomaWillGo = this.guardado();
 
+  constructor() {
+    // Solo en desarrollo: permite cambiar el idioma desde la consola o las pruebas (window.wgIdioma.usar('fr'))
+    if (!environment.production && this.navegador) (window as unknown as { wgIdioma: IdiomaWillGoService }).wgIdioma = this;
+  }
+
   /** Locale para fechas (en-US, fr-FR, es-CO). */
   get locale(): string { return this.idiomas.find((i) => i.id === this.actual)?.locale ?? 'en-US'; }
 
