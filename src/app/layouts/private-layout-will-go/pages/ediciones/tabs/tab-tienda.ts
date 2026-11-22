@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { DecimalPipe } from '@angular/common';
 import { Edicion, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
 import { precioEnBilletes, reducirFoto } from '../estado-edicion';
@@ -9,7 +10,7 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
 @Component({
   selector: 'app-tab-tienda',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, NumeroMilesDirective, DecimalPipe],
   template: `
     <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
       <p class="text-sm text-gray-500">El precio se pone en <b>pesos educativos</b>. En la caja se convierte a billetes con la tasa vigente del país de cada estudiante.</p>
@@ -41,11 +42,11 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
               <p class="text-sm text-gray-500 mt-1">{{ p.precio_cop | number }} pesos</p>
               <div class="mt-2 flex flex-wrap gap-1">
                 @for (pa of paises; track pa.id) {
-                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" [style.background]="pa.color">{{ billetes(p, pa) }} {{ pa.codigo_moneda }}</span>
+                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" [style.background]="pa.color">{{ billetes(p, pa) | number }} {{ pa.codigo_moneda }}</span>
                 }
               </div>
               <p class="text-xs mt-2" [class]="p.stock > 0 ? 'text-gray-500' : 'text-red-600 font-semibold'">
-                {{ p.stock > 0 ? p.stock + ' disponibles' : 'Agotado' }}{{ p.maximo_por_estudiante ? ' · máx. ' + p.maximo_por_estudiante + ' por estudiante' : '' }}
+                {{ p.stock > 0 ? (p.stock | number) + ' disponibles' : 'Agotado' }}{{ p.maximo_por_estudiante ? ' · máx. ' + p.maximo_por_estudiante + ' por estudiante' : '' }}
               </p>
               @if (!p.activo) { <p class="text-xs font-semibold text-gray-500 mt-1">Oculto en la caja</p> }
               <button type="button" (click)="editar(p)" class="mt-auto pt-3 text-sm font-semibold text-orange-700 hover:underline text-left">Editar</button>
@@ -79,20 +80,20 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label for="p-precio" class="block text-sm font-semibold text-gray-700 mb-1">Precio (pesos)</label>
-                <input id="p-precio" type="number" min="0" step="100" [(ngModel)]="borrador.precio_cop" class="campo">
+                <input id="p-precio" wgNumero [(ngModel)]="borrador.precio_cop" class="campo">
               </div>
               <div>
                 <label for="p-stock" class="block text-sm font-semibold text-gray-700 mb-1">Unidades</label>
-                <input id="p-stock" type="number" min="0" step="1" [(ngModel)]="borrador.stock" class="campo">
+                <input id="p-stock" wgNumero [(ngModel)]="borrador.stock" class="campo">
               </div>
             </div>
             <div>
               <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1">Máximo por estudiante <span class="font-normal text-gray-400">(vacío = sin límite)</span></label>
-              <input id="p-max" type="number" min="1" step="1" [(ngModel)]="borrador.maximo_por_estudiante" class="campo">
+              <input id="p-max" wgNumero [(ngModel)]="borrador.maximo_por_estudiante" class="campo">
             </div>
             @if (borrador.precio_cop) {
               <p class="text-sm text-gray-600 bg-gray-50 rounded-xl px-4 py-3">Hoy costaría:
-                @for (pa of paises; track pa.id) { <b class="ml-1">{{ billetes($any(borrador), pa) }} {{ pa.codigo_moneda }}</b> }
+                @for (pa of paises; track pa.id) { <b class="ml-1">{{ billetes($any(borrador), pa) | number }} {{ pa.codigo_moneda }}</b> }
               </p>
             }
             <label class="flex items-center gap-2 text-sm text-gray-700">

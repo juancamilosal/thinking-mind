@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { formatearNumero } from '../../../numero-miles.directive';
 import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/services/will-go.service';
 
 @Component({
@@ -80,7 +81,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
                 <option [ngValue]="null">Sin país</option>
                 @for (pa of paises; track pa.id) { <option [ngValue]="pa.id">{{ pa.nombre }}</option> }
               </select>
-              <span class="col-start-2 md:col-start-auto md:text-right text-sm font-semibold text-gray-800">{{ p.saldo }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
+              <span class="col-start-2 md:col-start-auto md:text-right text-sm font-semibold text-gray-800">{{ miles(p.saldo) }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
               <label class="col-start-2 md:col-start-auto flex md:justify-center items-center gap-2 text-sm text-gray-600">
                 <input type="checkbox" [checked]="p.presente" (change)="marcarPresente(p, $any($event.target).checked)">
                 <span class="md:hidden">Presente</span>
@@ -109,6 +110,7 @@ export class TabParticipantes implements OnInit {
   busqueda = '';
   filtro = '';
   seleccion = new Set<string>();
+  readonly miles = (v: unknown) => formatearNumero(v as number);
   aviso = '';
   avisoError = false;
 

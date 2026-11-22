@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { DecimalPipe } from '@angular/common';
 import { Edicion, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 
 @Component({
   selector: 'app-tab-paises',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, NumeroMilesDirective, DecimalPipe],
   template: `
     <p class="text-sm text-gray-500 mb-4">Cada país tiene su moneda. La <b>provisión</b> son los billetes que recibe el banco de ese país al abrir la edición; de ahí salen la bienvenida de los estudiantes y lo que el banco reparte a los docentes.</p>
     @if (cargando) {
@@ -27,7 +28,7 @@ import { Edicion, Pais, WillGoService } from '../../../../../core/services/will-
               </div>
               <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1" [attr.for]="'prov-' + p.id">Provisión del banco (billetes)</label>
-                <input [id]="'prov-' + p.id" type="number" min="0" step="1" [(ngModel)]="p.provision_inicial" class="campo" [disabled]="edicion.estado !== 'borrador'">
+                <input [id]="'prov-' + p.id" wgNumero [(ngModel)]="p.provision_inicial" class="campo" [disabled]="edicion.estado !== 'borrador'">
                 @if (necesarios(p) > (p.provision_inicial || 0)) {
                   <p class="text-xs text-red-700 mt-1">La bienvenida necesita al menos {{ necesarios(p) | number }} billetes en este país.</p>
                 }

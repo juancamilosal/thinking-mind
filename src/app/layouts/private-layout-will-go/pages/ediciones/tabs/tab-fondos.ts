@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { Edicion, Fondo, WillGoService } from '../../../../../core/services/will-go.service';
 
 type FondoEditable = Fondo & { base: number; alterno: number | null; varia: number };
@@ -7,7 +8,7 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
 @Component({
   selector: 'app-tab-fondos',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, NumeroMilesDirective],
   template: `
     <p class="text-sm text-gray-500">Al cerrar cada ronda, el rendimiento de un fondo es: <b>base</b> + bono por los votos de los acudientes (hasta ±2 %) + una <b>variación</b> al azar, con un límite de ±20 %. En riesgo alto, la mitad de las veces se usa el <b>escenario alterno</b>.</p>
     @if (cargando) {
@@ -30,15 +31,15 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
               </div>
               <div>
                 <label class="etiqueta" [attr.for]="'b-' + f.id">Base %</label>
-                <input [id]="'b-' + f.id" type="number" step="0.5" [(ngModel)]="f.base" class="campo">
+                <input [id]="'b-' + f.id" wgNumero [decimales]="2" [negativos]="true" [(ngModel)]="f.base" class="campo">
               </div>
               <div>
                 <label class="etiqueta" [attr.for]="'a-' + f.id">Alterno %</label>
-                <input [id]="'a-' + f.id" type="number" step="0.5" [(ngModel)]="f.alterno" class="campo" placeholder="—" [disabled]="f.riesgo !== 'alto'">
+                <input [id]="'a-' + f.id" wgNumero [decimales]="2" [negativos]="true" [(ngModel)]="f.alterno" class="campo" placeholder="—" [disabled]="f.riesgo !== 'alto'">
               </div>
               <div>
                 <label class="etiqueta" [attr.for]="'v-' + f.id">Variación ±%</label>
-                <input [id]="'v-' + f.id" type="number" min="0" step="0.5" [(ngModel)]="f.varia" class="campo">
+                <input [id]="'v-' + f.id" wgNumero [decimales]="2" [(ngModel)]="f.varia" class="campo">
               </div>
             </div>
             <div class="flex items-center justify-between mt-4">

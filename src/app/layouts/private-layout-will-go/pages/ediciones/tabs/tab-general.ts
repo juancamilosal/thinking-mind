@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { Edicion, Franja, WillGoService } from '../../../../../core/services/will-go.service';
 import { DIAS_SEMANA } from '../estado-edicion';
 
 @Component({
   selector: 'app-tab-general',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, NumeroMilesDirective],
   template: `
     <div class="grid gap-5 lg:grid-cols-2">
       <!-- Datos de la edición -->
@@ -54,26 +55,26 @@ import { DIAS_SEMANA } from '../estado-edicion';
           <div>
             <label for="g-tasa" class="block text-sm font-semibold text-gray-700 mb-1">Tasa inicial (R0)</label>
             <div class="flex items-center gap-2">
-              <input id="g-tasa" type="number" min="1" step="1" [(ngModel)]="datos.tasa_inicial" class="campo" [disabled]="edicion.estado !== 'borrador'">
+              <input id="g-tasa" wgNumero [(ngModel)]="datos.tasa_inicial" class="campo" [disabled]="edicion.estado !== 'borrador'">
               <span class="text-sm text-gray-500 whitespace-nowrap">pesos = 1 billete</span>
             </div>
-            <p class="text-xs text-gray-500 mt-1">Con una tasa de {{ datos.tasa_inicial || 0 }}, un producto de 5.000 pesos cuesta {{ ejemploPrecio }} billetes.</p>
+            <p class="text-xs text-gray-500 mt-1">Con una tasa de {{ miles(datos.tasa_inicial) }}, un producto de 5.000 pesos cuesta {{ miles(ejemploPrecio) }} billetes.</p>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label for="g-min" class="block text-sm font-semibold text-gray-700 mb-1">Tope mínimo</label>
-              <input id="g-min" type="number" min="0.1" step="0.05" [(ngModel)]="datos.tope_minimo" class="campo">
-              <p class="text-xs text-gray-500 mt-1">La tasa nunca baja de {{ minimo }}</p>
+              <input id="g-min" wgNumero [decimales]="2" [(ngModel)]="datos.tope_minimo" class="campo">
+              <p class="text-xs text-gray-500 mt-1">La tasa nunca baja de {{ miles(minimo) }}</p>
             </div>
             <div>
               <label for="g-max" class="block text-sm font-semibold text-gray-700 mb-1">Tope máximo</label>
-              <input id="g-max" type="number" min="1" step="0.05" [(ngModel)]="datos.tope_maximo" class="campo">
-              <p class="text-xs text-gray-500 mt-1">La tasa nunca sube de {{ maximo }}</p>
+              <input id="g-max" wgNumero [decimales]="2" [(ngModel)]="datos.tope_maximo" class="campo">
+              <p class="text-xs text-gray-500 mt-1">La tasa nunca sube de {{ miles(maximo) }}</p>
             </div>
           </div>
           <div>
             <label for="g-bill" class="block text-sm font-semibold text-gray-700 mb-1">Investment Bill (billetes de bienvenida por estudiante)</label>
-            <input id="g-bill" type="number" min="0" step="1" [(ngModel)]="datos.investment_bill" class="campo" [disabled]="edicion.estado !== 'borrador'">
+            <input id="g-bill" wgNumero [(ngModel)]="datos.investment_bill" class="campo" [disabled]="edicion.estado !== 'borrador'">
             <p class="text-xs text-gray-500 mt-1">Salen del banco de su país al abrir la edición. Déjalo en 0 si no aplica.</p>
           </div>
         </div>
@@ -136,6 +137,7 @@ export class TabGeneral implements OnInit {
   @Output() guardada = new EventEmitter<Edicion>();
   private willGo = inject(WillGoService);
   readonly dias = DIAS_SEMANA;
+  readonly miles = (v: unknown) => formatearNumero(v as number);
 
   datos: Partial<Edicion> = {};
   horario: { tipo: 'dia' | 'fecha'; dia: string; fecha: string; inicio: string; fin: string }[] = [];
