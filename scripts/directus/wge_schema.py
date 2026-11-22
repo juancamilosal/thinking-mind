@@ -203,15 +203,21 @@ coleccion('wge_rondas', 'timer', 'Rondas de inversión y votación', [
     campo('apertura', 'timestamp'), campo('cierre', 'timestamp'),
     campo('estado', 'string', default='abierta', opciones=['abierta', 'cerrada', 'liquidada']),
     campo('semilla', 'string', 'Semilla auditable de la variación'),
+    campo('resultados', 'json', 'Rendimiento de cada fondo al cerrar la ronda', interfaz='input-code'),
 ])
 rel('wge_rondas', 'edicion_id', 'wge_ediciones')
 
 coleccion('wge_inversiones', 'trending_up', 'Billetes que un estudiante pone en un fondo', [
     m2o('participante_id', requerido=True), m2o('fondo_id', requerido=True), m2o('ronda_id', requerido=True),
     campo('monto', 'integer', requerido=True), campo('rendimiento_final', 'decimal'), campo('monto_pagado', 'integer'),
-    campo('estado', 'string', default='abierta', opciones=['abierta', 'liquidada']),
+    campo('estado', 'string', 'abierta → por_cobrar (ronda cerrada) → cobrada', default='abierta', opciones=['abierta', 'por_cobrar', 'cobrada']),
     campo('clave_idempotencia', 'string', unico=True),
+    campo('billetes', 'json', 'Billetes que entregó el estudiante al invertir', interfaz='input-code'),
+    campo('billetes_pago', 'json', 'Billetes que le entregó el banco al cobrar', interfaz='input-code'),
+    campo('cobrado_en', 'timestamp', 'Cuándo cobró en el banco'),
+    m2o('cobrado_por', 'Quién del banco pagó'),
 ])
+rel('wge_inversiones', 'cobrado_por', 'directus_users', EXT)
 rel('wge_inversiones', 'participante_id', 'wge_participantes')
 rel('wge_inversiones', 'fondo_id', 'wge_fondos')
 rel('wge_inversiones', 'ronda_id', 'wge_rondas')

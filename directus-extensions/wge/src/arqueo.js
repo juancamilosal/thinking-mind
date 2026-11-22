@@ -19,8 +19,17 @@ export function totalDelConteo(conteo) {
 	return { limpio, total };
 }
 
+/** Suma (o resta) al inventario el detalle de billetes de cada fila: { "50": 2, "1000": 1 }. */
+function acumularBilletes(quedan, lista, signo) {
+	for (const b of lista) {
+		const detalle = typeof b === 'string' ? JSON.parse(b) : b;
+		for (const [d, n] of Object.entries(detalle ?? {})) if (d in quedan) quedan[d] += signo * Number(n);
+	}
+}
+
 /**
- * Billetes que quedan en el banco por denominación: los asignados menos los que ya entregó a docentes.
+ * Billetes que quedan en el banco por denominación: los asignados, menos los que entregó a docentes,
+ * más los que recibió de inversiones W-Funds, menos los que pagó al cobrar esas inversiones.
  * (La bienvenida no lleva detalle de billetes, así que es un tope: nunca bloquea de más.)
  */
 export async function inventarioBanco(db, edicionId, paisId) {
@@ -35,6 +44,11 @@ export async function inventarioBanco(db, edicionId, paisId) {
 			for (const [d, n] of Object.entries(detalle ?? {})) if (d in quedan) quedan[d] -= Number(n);
 		}
 	}
+	const inversiones = await db('wge_inversiones as i').join('wge_participantes as p', 'p.id', 'i.participante_id')
+		.join('wge_rondas as r', 'r.id', 'i.ronda_id').where({ 'r.edicion_id': edicionId, 'p.pais_id': paisId })
+		.select('i.billetes', 'i.billetes_pago');
+	acumularBilletes(quedan, inversiones.map((i) => i.billetes), 1);
+	acumularBilletes(quedan, inversiones.map((i) => i.billetes_pago), -1);
 	return quedan;
 }
 
@@ -43,12 +57,7 @@ export async function inventarioDocente(db, edicionId, paisId, docenteId) {
 	const quedan = Object.fromEntries(DENOMINACIONES.map((d) => [d, 0]));
 	const billetera = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'docente', docente_id: docenteId }).first('id');
 	if (!billetera) return quedan;
-	const sumar = (lista, signo) => {
-		for (const b of lista) {
-			const detalle = typeof b === 'string' ? JSON.parse(b) : b;
-			for (const [d, n] of Object.entries(detalle ?? {})) if (d in quedan) quedan[d] += signo * Number(n);
-		}
-	};
+	const sumar = (lista, signo) => acumularBilletes(quedan, lista, signo);
 	sumar(await db('wge_transferencias').where({ billetera_destino_id: billetera.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes'), 1);
 	sumar(await db('wge_transferencias').where({ billetera_origen_id: billetera.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes'), -1);
 	return quedan;

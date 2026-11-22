@@ -7,6 +7,7 @@ import {
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
 import { rutasArqueo, totalDelConteo, inventarioBanco, inventarioDocente } from './arqueo.js';
+import { rutasWfunds, calcularResultados, pagoDeInversion } from './wfunds.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
@@ -190,10 +191,14 @@ export default {
 			});
 		}));
 
-		/** POST /wge/inversiones  { participante_id, fondo_id, ronda_id, monto, clave_idempotencia } */
+		/**
+		 * POST /wge/inversiones  { participante_id, fondo_id, ronda_id, billetes, clave_idempotencia }
+		 * El estudiante entrega billetes al banco de su país: salen de su saldo y entran al banco.
+		 */
 		router.post('/inversiones', ruta(async (req, rol) => {
-			exigirRol(rol, ROLES.BANCO);
-			const monto = enteroPositivo(req.body?.monto, 'monto');
+			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
+			const { limpio, total: monto } = totalDelConteo(req.body?.billetes);
+			if (!monto) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que entrega el estudiante');
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const actor = req.accountability.user;
 
@@ -201,66 +206,95 @@ export default {
 				const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
 				const edicion = await edicionAbierta(trx, participante.edicion_id);
 				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
+				await exigirResponsableBanco(trx, { paisId: participante.pais_id, usuarioId: actor, rol });
 				const ronda = await trx('wge_rondas').where('id', exigirTexto(req.body.ronda_id, 'ronda_id')).forUpdate().first();
 				if (!ronda || ronda.edicion_id !== edicion.id) throw new WgeError(404, 'NO_EXISTE', 'La ronda no existe en esta edición');
 				if (ronda.estado !== 'abierta') throw new WgeError(409, 'RONDA_CERRADA', 'La ronda ya no recibe inversiones');
 				const fondo = await trx('wge_fondos').where('id', exigirTexto(req.body.fondo_id, 'fondo_id')).first();
-				if (!fondo || fondo.edicion_id !== edicion.id || !fondo.activo) throw new WgeError(404, 'NO_EXISTE', 'El fondo no está disponible');
+				if (!fondo || fondo.edicion_id !== edicion.id || !fondo.activo) throw new WgeError(404, 'NO_EXISTE', 'La empresa no está disponible');
 
-				const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
+				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
+				if (Number(estudiante.saldo) < monto) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo} billetes`);
+				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
 				const id = crypto.randomUUID();
-				await moverSaldo(trx, billetera, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });
+				await moverSaldo(trx, estudiante, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });
+				await moverSaldo(trx, banco, { tipo: 'inversion', monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				const fila = {
-					id, participante_id: participante.id, fondo_id: fondo.id, ronda_id: ronda.id, monto,
+					id, participante_id: participante.id, fondo_id: fondo.id, ronda_id: ronda.id, monto, billetes: JSON.stringify(limpio),
 					estado: 'abierta', clave_idempotencia: clave, date_created: new Date(), user_created: actor,
 				};
 				await trx('wge_inversiones').insert(fila);
-				return { ...fila, saldo: billetera.saldo };
+				return { ...fila, billetes: limpio, saldo: estudiante.saldo };
 			});
 		}));
 
 		/**
 		 * POST /wge/rondas/:id/cerrar
-		 * Rendimiento = base (o alterno, en riesgo alto) + bono por votos + variación según riesgo, limitado a ±20 %.
+		 * Calcula el rendimiento de cada empresa y deja cada inversión "por cobrar" con lo que le toca al estudiante.
+		 * Los billetes se mueven cuando el estudiante pasa a cobrar al banco (POST /inversiones/:id/cobrar).
 		 * La variación sale de una semilla guardada en la ronda, así el resultado se puede auditar y repetir.
 		 */
 		router.post('/rondas/:id/cerrar', ruta(async (req, rol) => {
-			exigirRol(rol, ROLES.ADMIN_WG);
+			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
 			const actor = req.accountability.user;
 			return db.transaction(async (trx) => {
 				const ronda = await trx('wge_rondas').where('id', req.params.id).forUpdate().first();
 				if (!ronda) throw new WgeError(404, 'NO_EXISTE', 'La ronda no existe');
-				if (ronda.estado === 'liquidada') throw new WgeError(409, 'YA_LIQUIDADA', 'La ronda ya fue liquidada');
+				await exigirEquipo(trx, { edicionId: ronda.edicion_id, usuarioId: actor, rol });
+				if (ronda.estado !== 'abierta') throw new WgeError(409, 'YA_LIQUIDADA', 'La ronda ya fue cerrada');
 
 				const fondos = await trx('wge_fondos').where({ edicion_id: ronda.edicion_id, activo: true }).orderBy('orden');
 				const votos = await trx('wge_votos').where('ronda_id', ronda.id).groupBy('fondo_id').select('fondo_id').count({ n: '*' });
-				const votosPorFondo = new Map(votos.map((v) => [v.fondo_id, Number(v.n)]));
-				const totalVotos = [...votosPorFondo.values()].reduce((a, b) => a + b, 0);
 				const semilla = ronda.semilla || `${ronda.id}:${crypto.randomUUID()}`;
-				const azar = aleatorioConSemilla(semilla);
-
-				const resultados = new Map();
-				for (const f of fondos) {
-					const base = f.riesgo === 'alto' && f.rendimiento_alterno !== null && azar() < 0.5 ? Number(f.rendimiento_alterno) : Number(f.rendimiento_base ?? 0);
-					const bono = totalVotos ? limitar(0.04 * ((votosPorFondo.get(f.id) ?? 0) / totalVotos - 1 / fondos.length), -0.02, 0.02) : 0;
-					const variacion = (azar() * 2 - 1) * Number(f.variacion ?? 0);
-					const rendimiento = Math.round(limitar(base + bono + variacion, -0.2, 0.2) * 10000) / 10000;
-					resultados.set(f.id, { fondo: f.nombre, votos: votosPorFondo.get(f.id) ?? 0, base, bono, variacion, rendimiento });
-				}
+				const resultados = calcularResultados(fondos, new Map(votos.map((v) => [v.fondo_id, Number(v.n)])), aleatorioConSemilla(semilla));
+				const porFondo = new Map(resultados.map((r) => [r.fondo_id, r.rendimiento]));
 
 				const inversiones = await trx('wge_inversiones').where({ ronda_id: ronda.id, estado: 'abierta' }).orderBy('id');
-				let pagado = 0;
+				let porCobrar = 0;
 				for (const inv of inversiones) {
-					const r = resultados.get(inv.fondo_id)?.rendimiento ?? 0;
-					const pago = Math.max(0, Math.floor(Number(inv.monto) * (1 + r)));
-					const participante = await trx('wge_participantes').where('id', inv.participante_id).first();
-					const billetera = await billeteraBloqueada(trx, { edicionId: ronda.edicion_id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
-					if (pago > 0) await moverSaldo(trx, billetera, { tipo: 'pago_fondo', monto: pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
-					await trx('wge_inversiones').where('id', inv.id).update({ rendimiento_final: r, monto_pagado: pago, estado: 'liquidada' });
-					pagado += pago;
+					const r = porFondo.get(inv.fondo_id) ?? 0;
+					const pago = pagoDeInversion(inv.monto, r);
+					// Si perdió todo no hay nada que cobrar
+					await trx('wge_inversiones').where('id', inv.id).update(pago > 0
+						? { rendimiento_final: r, monto_pagado: pago, estado: 'por_cobrar' }
+						: { rendimiento_final: r, monto_pagado: 0, estado: 'cobrada', cobrado_en: new Date(), cobrado_por: actor, billetes_pago: JSON.stringify({}) });
+					porCobrar += pago;
 				}
-				await trx('wge_rondas').where('id', ronda.id).update({ estado: 'liquidada', semilla, cierre: ronda.cierre ?? new Date() });
-				return { ronda_id: ronda.id, semilla, total_votos: totalVotos, inversiones: inversiones.length, pagado, fondos: [...resultados.values()] };
+				await trx('wge_rondas').where('id', ronda.id).update({ estado: 'liquidada', semilla, cierre: new Date(), resultados: JSON.stringify(resultados) });
+				return { ronda_id: ronda.id, semilla, inversiones: inversiones.length, por_cobrar: porCobrar, fondos: resultados };
+			});
+		}));
+
+		/**
+		 * POST /wge/inversiones/:id/cobrar  { billetes }
+		 * El banco entrega al estudiante exactamente lo que le toca, con billetes que tenga en su inventario.
+		 */
+		router.post('/inversiones/:id/cobrar', ruta(async (req, rol) => {
+			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
+			const { limpio, total } = totalDelConteo(req.body?.billetes);
+			const actor = req.accountability.user;
+			return db.transaction(async (trx) => {
+				const inv = await trx('wge_inversiones').where('id', req.params.id).forUpdate().first();
+				if (!inv) throw new WgeError(404, 'NO_EXISTE', 'La inversión no existe');
+				if (inv.estado === 'cobrada') return { ...inv, repetida: true };
+				if (inv.estado !== 'por_cobrar') throw new WgeError(409, 'RONDA_ABIERTA', 'Esta inversión se cobra cuando se cierre la ronda');
+				const participante = await trx('wge_participantes').where('id', inv.participante_id).first();
+				const edicion = await edicionAbierta(trx, participante.edicion_id);
+				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
+				await exigirResponsableBanco(trx, { paisId: participante.pais_id, usuarioId: actor, rol });
+				const pago = Number(inv.monto_pagado);
+				if (total !== pago) throw new WgeError(400, 'VALOR_INVALIDO', `Debes entregar exactamente ${pago} (elegiste ${total})`);
+				const quedan = await inventarioBanco(trx, edicion.id, participante.pais_id);
+				for (const [d, n] of Object.entries(limpio)) {
+					if (n > (quedan[d] ?? 0)) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(0, quedan[d] ?? 0)} billetes de ${d}`);
+				}
+				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
+				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
+				await moverSaldo(trx, banco, { tipo: 'pago_fondo', monto: -pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
+				await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: pago, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
+				const cambios = { estado: 'cobrada', billetes_pago: JSON.stringify(limpio), cobrado_en: new Date(), cobrado_por: actor };
+				await trx('wge_inversiones').where('id', inv.id).update(cambios);
+				return { ...inv, ...cambios, billetes_pago: limpio, saldo: estudiante.saldo };
 			});
 		}));
 
@@ -308,6 +342,7 @@ export default {
 		rutasFuncionarios(router, { ruta, db, services, getSchema });
 		rutasAdmin(router, { ruta, db, services, getSchema });
 		rutasArqueo(router, { ruta, db });
+		rutasWfunds(router, { ruta, db });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

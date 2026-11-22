@@ -430,9 +430,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			if (lista.length !== ids.length) throw new WgeError(404, 'NO_EXISTE', 'Algún estudiante no existe');
 			if (new Set(lista.map((p) => p.edicion_id)).size !== 1) throw new WgeError(400, 'VALOR_INVALIDO', 'Los estudiantes deben ser de la misma edición');
 			const conInversion = await trx('wge_inversiones as i').join('wge_participantes as p', 'p.id', 'i.participante_id')
-				.join('estudiantes as e', 'e.id', 'p.estudiante_id').whereIn('i.participante_id', ids).where('i.estado', 'abierta')
+				.join('estudiantes as e', 'e.id', 'p.estudiante_id').whereIn('i.participante_id', ids).whereIn('i.estado', ['abierta', 'por_cobrar'])
 				.first('e.nombre', 'e.apellido');
-			if (conInversion) throw new WgeError(409, 'INVERSION_ABIERTA', `${conInversion.nombre} ${conInversion.apellido} tiene billetes invertidos en una ronda abierta; retíralo cuando la ronda se cierre`);
+			if (conInversion) throw new WgeError(409, 'INVERSION_ABIERTA', `${conInversion.nombre} ${conInversion.apellido} tiene una inversión en W-Funds sin terminar; retíralo cuando la ronda se cierre y haya cobrado`);
 			let devueltos = 0;
 			for (const p of lista) {
 				if (p.retirado) continue;

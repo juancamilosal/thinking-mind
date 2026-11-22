@@ -151,6 +151,25 @@ export interface PaisDocente {
 }
 export interface DatosDocente { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisDocente[]; }
 
+export interface RondaWfunds {
+  id: string; nombre: string; estado: 'abierta' | 'liquidada'; apertura: string; cierre: string | null;
+  resultados: { fondo_id: string; fondo: string; votos: number; rendimiento: number }[];
+}
+export interface FondoWfunds { id: string; nombre: string; riesgo: 'bajo' | 'medio' | 'alto'; logo: string | null; a_que_se_dedica: string | null; por_que_invertir: string | null; activo: boolean; }
+export interface InversionWfunds {
+  id: string; participante_id?: string; fondo_id: string; monto: number; billetes?: Record<string, number> | string | null;
+  monto_pagado?: number; rendimiento_final?: number | string; ronda?: string; cobrado_en?: string; date_created?: string; nombre: string; apellido: string;
+}
+export interface PaisWfunds {
+  id: string; nombre: string; codigo_moneda: string | null; color: string | null; saldo_banco: number; inventario: Record<string, number>;
+  estudiantes: { id: string; nombre: string; apellido: string; saldo: number }[];
+  inversiones: InversionWfunds[]; por_cobrar: InversionWfunds[]; cobradas: InversionWfunds[];
+}
+export interface DatosWfunds {
+  edicion: { id: string; nombre: string; estado: string }; denominaciones: number[];
+  ronda: RondaWfunds | null; rondas: RondaWfunds[]; fondos: FondoWfunds[]; paises: PaisWfunds[];
+}
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -340,6 +359,28 @@ export class WillGoService {
     return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
       tipo: 'docente_estudiante', participante_id: participanteId, billetes, clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  wfunds(edicionId: string): Observable<DatosWfunds> {
+    return this.http.get<{ data: DatosWfunds }>(`${this.api}/ediciones/${edicionId}/wfunds`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  abrirRonda(edicionId: string): Observable<RondaWfunds> {
+    return this.http.post<{ data: RondaWfunds }>(`${this.api}/ediciones/${edicionId}/rondas`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  cerrarRonda(rondaId: string): Observable<{ inversiones: number; por_cobrar: number }> {
+    return this.http.post<{ data: { inversiones: number; por_cobrar: number } }>(`${this.api}/rondas/${rondaId}/cerrar`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  invertir(participanteId: string, fondoId: string, rondaId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number }> {
+    return this.http.post<{ data: { monto: number } }>(`${this.api}/inversiones`, {
+      participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, billetes, clave_idempotencia: clave,
+    }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  cobrarInversion(inversionId: string, billetes: Record<string, number>): Observable<{ monto_pagado: number }> {
+    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/cobrar`, { billetes }).pipe(this.enZona(), map((r) => r.data));
   }
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {

@@ -1,0 +1,470 @@
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { DatosWfunds, FondoWfunds, InversionWfunds, PaisWfunds, WillGoService } from '../../../../core/services/will-go.service';
+import { formatearNumero } from '../../numero-miles.directive';
+import { SelectorBilletesComponent } from '../../selector-billetes.component';
+import { TarjetaFondoComponent } from '../../tarjeta-fondo.component';
+
+type Estudiante = PaisWfunds['estudiantes'][number];
+type Vista = 'invertir' | 'cobrar' | 'resultados';
+
+const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const RIESGO: Record<string, { texto: string; clase: string }> = {
+  bajo: { texto: 'Riesgo bajo', clase: 'bg-emerald-100 text-emerald-800' },
+  medio: { texto: 'Riesgo medio', clase: 'bg-amber-100 text-amber-800' },
+  alto: { texto: 'Riesgo alto', clase: 'bg-red-100 text-red-800' },
+};
+
+/** W-Funds (banco): abrir y cerrar rondas, recibir inversiones y pagar a quien pasa a cobrar. */
+@Component({
+  selector: 'app-wfunds-will-go',
+  standalone: true,
+  imports: [FormsModule, DatePipe, SelectorBilletesComponent, TarjetaFondoComponent],
+  template: `
+    <div class="max-w-3xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">W-Funds</h1>
+          <p class="text-gray-500 mt-1">Inversiones de los estudiantes en las empresas.</p>
+        </div>
+        @if (ediciones.length > 1) {
+          <select [(ngModel)]="edicionId" (ngModelChange)="cargar()" aria-label="Edición" class="sm:w-72 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            @for (e of ediciones; track e.id) { <option [value]="e.id">{{ e.nombre }}</option> }
+          </select>
+        }
+      </div>
+
+      @if (cargando && !datos) {
+        <div class="mt-5 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
+      } @else if (error && !datos) {
+        <div class="mt-5 bg-white rounded-2xl border border-red-200 p-8 text-center text-red-700">{{ error }}</div>
+      } @else if (!ediciones.length) {
+        <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">No haces parte del equipo de ninguna edición abierta.</div>
+      } @else if (datos && !pais) {
+        <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">No eres responsable del banco de ningún país en esta edición.</div>
+      } @else if (datos && pais) {
+        @if (datos.paises.length > 1) {
+          <div class="mt-5 flex flex-wrap gap-2">
+            @for (p of datos.paises; track p.id) {
+              <button type="button" (click)="elegirPais(p)" class="px-4 py-2 rounded-xl text-sm font-semibold border-2"
+                      [style.background]="pais.id === p.id ? (p.color || '#1e293b') : '#fff'" [style.border-color]="p.color || '#cbd5e1'"
+                      [style.color]="pais.id === p.id ? '#fff' : '#334155'">{{ p.nombre }}</button>
+            }
+          </div>
+        }
+
+        <!-- Estado de la ronda -->
+        @if (datos.ronda; as r) {
+          <div class="mt-4 rounded-2xl p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-teal-600">
+            <div class="flex items-center gap-2 text-sm font-semibold opacity-95">
+              <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse" aria-hidden="true"></span>
+              {{ r.nombre }} abierta · desde {{ r.apertura | date:'h:mm a' }}
+            </div>
+            <p class="text-3xl font-extrabold mt-2 break-all">{{ miles(totalInvertido) }} <span class="text-base font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
+            <p class="text-sm opacity-90">invertidos en {{ pais.nombre }} · {{ pais.inversiones.length }} {{ pais.inversiones.length === 1 ? 'inversión' : 'inversiones' }}</p>
+            <button type="button" (click)="confirmarCierre = true" class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">Cerrar ronda</button>
+          </div>
+        } @else {
+          <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
+            <p class="font-bold text-gray-800">No hay ronda abierta</p>
+            <p class="text-sm text-gray-500 mt-1">
+              {{ datos.edicion.estado === 'abierta' ? 'Abre una ronda para que los estudiantes puedan invertir.' : 'Podrás abrir rondas cuando la edición esté abierta.' }}
+            </p>
+            <button type="button" (click)="abrirRonda()" [disabled]="trabajando || datos.edicion.estado !== 'abierta'"
+                    class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-40">
+              {{ trabajando ? 'Abriendo…' : 'Abrir ronda ' + (datos.rondas.length + 1) }}
+            </button>
+          </div>
+        }
+
+        @if (aviso) {
+          <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800" role="status">{{ aviso }}</p>
+        }
+        @if (error) {
+          <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-red-50 border border-red-200 text-red-700" role="alert">{{ error }}</p>
+        }
+
+        <!-- Pestañas -->
+        <div class="mt-5 inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="tablist">
+          @for (v of vistas; track v.id) {
+            <button type="button" role="tab" [attr.aria-selected]="vista === v.id" (click)="vista = v.id"
+                    class="px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-1.5" [class]="vista === v.id ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">
+              {{ v.texto }}
+              @if (v.id === 'cobrar' && pais.por_cobrar.length) {
+                <span class="min-w-5 px-1.5 rounded-full bg-orange-500 text-white text-xs leading-5">{{ pais.por_cobrar.length }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- Invertir -->
+        @if (vista === 'invertir') {
+          @if (!datos.ronda) {
+            <p class="mt-4 text-sm text-gray-500">Abre una ronda para recibir inversiones.</p>
+          } @else {
+            <input type="search" [(ngModel)]="busqueda" placeholder="Buscar estudiante…" aria-label="Buscar estudiante"
+                   class="mt-4 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+              @for (e of filtrados; track e.id) {
+                <li class="flex items-center gap-3 px-4 py-3">
+                  <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</p>
+                    <p class="text-xs text-gray-500">Tiene <b class="text-gray-700">{{ miles(e.saldo) }}</b>{{ invertidoPor(e) ? ' · invirtió ' + miles(invertidoPor(e)) : '' }}</p>
+                  </div>
+                  <button type="button" (click)="abrirInversion(e)" [disabled]="!e.saldo"
+                          class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">Invertir</button>
+                </li>
+              }
+              @if (!filtrados.length) { <li class="px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? 'Nadie coincide con «' + busqueda + '».' : 'No hay estudiantes en ' + pais.nombre + '.' }}</li> }
+            </ul>
+
+            @if (pais.inversiones.length) {
+              <h2 class="mt-6 text-sm font-bold text-gray-700">Inversiones de esta ronda</h2>
+              <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+                @for (i of pais.inversiones; track i.id) {
+                  <li class="flex items-center gap-3 px-4 py-3">
+                    @if (fondo(i.fondo_id); as f) {
+                      @if (f.logo) { <img [src]="logo(f)" alt="" class="w-10 h-10 rounded-xl object-cover shrink-0"> }
+                      @else { <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">{{ iniciales(f.nombre) }}</div> }
+                    }
+                    <div class="min-w-0 flex-1">
+                      <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
+                      <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · {{ i.date_created | date:'h:mm a' }}</p>
+                    </div>
+                    <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(i.monto) }}</p>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+
+        <!-- Por cobrar -->
+        @if (vista === 'cobrar') {
+          @if (!pais.por_cobrar.length) {
+            <p class="mt-4 text-sm text-gray-500">Nadie tiene pagos pendientes. Cuando cierres una ronda, aquí aparecen los estudiantes que deben pasar a cobrar.</p>
+          } @else {
+            <ul class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+              @for (i of pais.por_cobrar; track i.id) {
+                <li class="flex items-center gap-3 px-4 py-3">
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · {{ i.ronda }}</p>
+                    <p class="text-sm mt-0.5">
+                      <span class="text-gray-500">Invirtió {{ miles(i.monto) }} →</span>
+                      <b class="text-gray-800"> recibe {{ miles(i.monto_pagado) }}</b>
+                      <span class="ml-1 text-xs font-bold" [class]="Number(i.rendimiento_final) >= 0 ? 'text-emerald-600' : 'text-red-600'">{{ porcentaje(i.rendimiento_final) }}</span>
+                    </p>
+                  </div>
+                  <button type="button" (click)="abrirPago(i)" class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900">Pagar</button>
+                </li>
+              }
+            </ul>
+          }
+          @if (pais.cobradas.length) {
+            <h2 class="mt-6 text-sm font-bold text-gray-700">Ya cobraron</h2>
+            <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+              @for (i of pais.cobradas; track i.id) {
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ fondo(i.fondo_id)?.nombre }} · {{ i.ronda }} · {{ i.cobrado_en | date:'h:mm a' }}</p>
+                  </div>
+                  <p class="font-bold whitespace-nowrap" [class]="i.monto_pagado ? 'text-emerald-700' : 'text-red-600'">{{ i.monto_pagado ? '+' + miles(i.monto_pagado) : 'Perdió todo' }}</p>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+        <!-- Resultados -->
+        @if (vista === 'resultados') {
+          @if (!cerradas.length) {
+            <p class="mt-4 text-sm text-gray-500">Aquí verás cuánto ganó o perdió cada empresa cuando cierres una ronda.</p>
+          }
+          @for (r of cerradas; track r.id) {
+            <section class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
+              <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h2 class="font-bold text-gray-800">{{ r.nombre }}</h2>
+                <span class="text-xs text-gray-500">{{ r.apertura | date:'d MMM, h:mm a' }} – {{ r.cierre | date:'h:mm a' }}</span>
+              </div>
+              <ul class="divide-y divide-gray-100">
+                @for (x of ordenados(r.resultados); track x.fondo_id) {
+                  <li class="flex items-center gap-3 px-4 py-3">
+                    @if (fondo(x.fondo_id); as f) {
+                      @if (f.logo) { <img [src]="logo(f)" alt="" class="w-10 h-10 rounded-xl object-cover shrink-0"> }
+                      @else { <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">{{ iniciales(x.fondo) }}</div> }
+                    }
+                    <p class="flex-1 font-semibold text-gray-800 truncate">{{ x.fondo }}</p>
+                    <span class="px-2.5 py-1 rounded-full text-sm font-bold" [class]="x.rendimiento >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'">{{ porcentaje(x.rendimiento) }}</span>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        }
+      }
+    </div>
+
+    <!-- Invertir: elegir empresa y billetes -->
+    @if (estudiante && pais && datos) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarPanel()">
+        <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-inversion">
+          <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 id="titulo-inversion" class="text-lg font-bold text-gray-800">{{ empresa ? 'Billetes que entrega' : '¿En qué empresa invierte?' }}</h2>
+              <p class="text-sm text-gray-500 truncate">{{ estudiante.nombre }} {{ estudiante.apellido }} · tiene {{ miles(estudiante.saldo) }}</p>
+            </div>
+            <button type="button" (click)="cerrarPanel()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+          </div>
+          <div class="flex-1 overflow-y-auto px-5 pb-3">
+            @if (!empresa) {
+              <div class="space-y-3">
+                @for (f of activos; track f.id) {
+                  <button type="button" (click)="empresa = f" class="w-full text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    <wg-tarjeta-fondo [fondo]="f" [logoUrl]="logo(f)" />
+                  </button>
+                }
+              </div>
+            } @else {
+              <div class="flex items-center gap-3 mb-4 p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                @if (empresa.logo) { <img [src]="logo(empresa)" alt="" class="w-12 h-12 rounded-xl object-cover"> }
+                @else { <div class="w-12 h-12 rounded-xl bg-slate-200 text-slate-700 font-bold flex items-center justify-center">{{ iniciales(empresa.nombre) }}</div> }
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-gray-800 truncate">{{ empresa.nombre }}</p>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full" [class]="riesgo(empresa).clase">{{ riesgo(empresa).texto }}</span>
+                </div>
+                <button type="button" (click)="empresa = null" class="text-sm font-semibold text-orange-600 hover:underline">Cambiar</button>
+              </div>
+              <wg-selector-billetes [pais]="pais" [denominaciones]="datos.denominaciones" [elegidos]="elegidos" [topeTotal]="estudiante.saldo" />
+            }
+          </div>
+          @if (empresa) {
+            <div class="px-5 py-4 border-t border-gray-100">
+              @if (errorPanel) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm text-gray-500">Invierte en {{ empresa.nombre }}</span>
+                <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></span>
+              </div>
+              <button type="button" (click)="invertir()" [disabled]="!total || enviando || total > estudiante.saldo"
+                      class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
+                {{ enviando ? 'Guardando…' : (total ? 'Invertir ' + miles(total) : 'Elige los billetes') }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Pagar a quien pasa a cobrar -->
+    @if (pago && pais && datos) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarPanel()">
+        <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-pago">
+          <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 id="titulo-pago" class="text-lg font-bold text-gray-800">Pagar a {{ pago.nombre }} {{ pago.apellido }}</h2>
+              <p class="text-sm text-gray-500">{{ fondo(pago.fondo_id)?.nombre }} · le toca <b class="text-gray-800">{{ miles(pago.monto_pagado) }}</b></p>
+            </div>
+            <button type="button" (click)="cerrarPanel()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+          </div>
+          <div class="flex-1 overflow-y-auto px-5 pb-3">
+            <button type="button" (click)="sugerirBilletes()" class="mb-3 text-sm font-semibold text-orange-600 hover:underline">Sugerir billetes</button>
+            <wg-selector-billetes [pais]="pais" [denominaciones]="conInventario" [elegidos]="elegidos" [topes]="pais.inventario" [topeTotal]="pago.monto_pagado ?? 0" textoTope="En el banco:" />
+          </div>
+          <div class="px-5 py-4 border-t border-gray-100">
+            @if (errorPanel) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm" [class]="falta ? 'text-orange-700 font-semibold' : 'text-emerald-700 font-semibold'">{{ falta ? 'Faltan ' + miles(falta) : '✓ Completo' }}</span>
+              <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">de {{ miles(pago.monto_pagado) }}</span></span>
+            </div>
+            <button type="button" (click)="pagar()" [disabled]="falta !== 0 || enviando"
+                    class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
+              {{ enviando ? 'Guardando…' : (falta ? 'Elige los billetes' : 'Pagar ' + miles(total)) }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Confirmar cierre de ronda -->
+    @if (confirmarCierre && datos?.ronda) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="confirmarCierre = false">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre">
+          <h2 id="titulo-cierre" class="text-lg font-bold text-gray-800">¿Cerrar {{ datos!.ronda!.nombre }}?</h2>
+          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y ya no se puede invertir en esta ronda. Los estudiantes pasan al banco a cobrar.</p>
+          <p class="text-xs text-gray-500 mt-2">Se cierra para todos los países de la edición.</p>
+          <div class="mt-5 flex gap-2">
+            <button type="button" (click)="confirmarCierre = false" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
+            <button type="button" (click)="cerrarRonda()" [disabled]="trabajando" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ trabajando ? 'Cerrando…' : 'Cerrar ronda' }}</button>
+          </div>
+        </div>
+      </div>
+    }
+  `,
+})
+export class WfundsWillGo implements OnInit {
+  private willGo = inject(WillGoService);
+  readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
+  readonly Number = Number;
+  readonly vistas: { id: Vista; texto: string }[] = [
+    { id: 'invertir', texto: 'Invertir' },
+    { id: 'cobrar', texto: 'Por cobrar' },
+    { id: 'resultados', texto: 'Resultados' },
+  ];
+
+  ediciones: { id: string; nombre: string; estado: string }[] = [];
+  edicionId = '';
+  datos: DatosWfunds | null = null;
+  pais: PaisWfunds | null = null;
+  vista: Vista = 'invertir';
+  busqueda = '';
+  cargando = true;
+  trabajando = false;
+  confirmarCierre = false;
+  error = '';
+  aviso = '';
+
+  estudiante: Estudiante | null = null;
+  empresa: FondoWfunds | null = null;
+  pago: InversionWfunds | null = null;
+  elegidos: Record<number, number | null> = {};
+  clave = '';
+  enviando = false;
+  errorPanel = '';
+
+  ngOnInit(): void {
+    this.willGo.misEdiciones().subscribe({
+      next: (l) => { this.ediciones = l; this.edicionId = l[0]?.id ?? ''; if (this.edicionId) this.cargar(); else this.cargando = false; },
+      error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
+    });
+  }
+
+  cargar(): void {
+    this.cargando = true;
+    this.willGo.wfunds(this.edicionId).subscribe({
+      next: (d) => {
+        this.datos = d;
+        this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
+        this.cargando = false;
+      },
+      error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
+    });
+  }
+
+  elegirPais(p: PaisWfunds): void { this.pais = p; this.busqueda = ''; }
+
+  get filtrados(): Estudiante[] {
+    const palabras = normalizar(this.busqueda).split(/\s+/).filter(Boolean);
+    return (this.pais?.estudiantes ?? []).filter((e) => { const n = normalizar(`${e.nombre} ${e.apellido}`); return palabras.every((w) => n.includes(w)); });
+  }
+
+  get activos(): FondoWfunds[] { return (this.datos?.fondos ?? []).filter((f) => f.activo); }
+  get cerradas() { return (this.datos?.rondas ?? []).filter((r) => r.estado !== 'abierta'); }
+  get totalInvertido(): number { return (this.pais?.inversiones ?? []).reduce((t, i) => t + Number(i.monto), 0); }
+  get conInventario(): number[] { return (this.datos?.denominaciones ?? []).filter((d) => (this.pais?.inventario?.[d] ?? 0) > 0); }
+  get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.elegidos[d]) || 0), 0); }
+  get falta(): number { return Number(this.pago?.monto_pagado ?? 0) - this.total; }
+
+  invertidoPor(e: Estudiante): number {
+    return (this.pais?.inversiones ?? []).filter((i) => i.participante_id === e.id).reduce((t, i) => t + Number(i.monto), 0);
+  }
+
+  fondo(id: string): FondoWfunds | undefined { return this.datos?.fondos.find((f) => f.id === id); }
+  logo(f: FondoWfunds): string | null { return f.logo ? this.willGo.urlFoto(f.logo) : null; }
+  riesgo(f: FondoWfunds) { return RIESGO[f.riesgo] ?? RIESGO['medio']; }
+  iniciales(n: string): string { return n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase(); }
+  ordenados<T extends { rendimiento: number }>(l: T[]): T[] { return [...l].sort((a, b) => b.rendimiento - a.rendimiento); }
+
+  porcentaje(r: unknown): string {
+    const v = Number(r) * 100;
+    return `${v > 0 ? '+' : ''}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`;
+  }
+
+  private mostrarAviso(texto: string): void {
+    this.aviso = texto;
+    setTimeout(() => (this.aviso = ''), 5000);
+  }
+
+  abrirRonda(): void {
+    if (!this.datos) return;
+    this.trabajando = true;
+    this.error = '';
+    this.willGo.abrirRonda(this.datos.edicion.id).subscribe({
+      next: (r) => { this.trabajando = false; this.vista = 'invertir'; this.mostrarAviso(`${r.nombre} abierta. Ya pueden invertir.`); this.cargar(); },
+      error: (e) => { this.trabajando = false; this.error = WillGoService.mensajeDeError(e); },
+    });
+  }
+
+  cerrarRonda(): void {
+    const r = this.datos?.ronda;
+    if (!r) return;
+    this.trabajando = true;
+    this.error = '';
+    this.willGo.cerrarRonda(r.id).subscribe({
+      next: () => { this.trabajando = false; this.confirmarCierre = false; this.vista = 'resultados'; this.mostrarAviso(`${r.nombre} cerrada. Los estudiantes ya pueden pasar a cobrar.`); this.cargar(); },
+      error: (e) => { this.trabajando = false; this.confirmarCierre = false; this.error = WillGoService.mensajeDeError(e); },
+    });
+  }
+
+  abrirInversion(e: Estudiante): void {
+    this.estudiante = e;
+    this.empresa = null;
+    this.elegidos = {};
+    this.errorPanel = '';
+    this.clave = crypto.randomUUID();
+  }
+
+  abrirPago(i: InversionWfunds): void {
+    this.pago = i;
+    this.elegidos = {};
+    this.errorPanel = '';
+  }
+
+  cerrarPanel(): void {
+    if (this.enviando) return;
+    this.estudiante = null;
+    this.pago = null;
+  }
+
+  /** Llena el pago con los billetes más grandes que haya en el banco. */
+  sugerirBilletes(): void {
+    let falta = Number(this.pago?.monto_pagado ?? 0);
+    const elegidos: Record<number, number> = {};
+    for (const d of [...this.conInventario].sort((a, b) => b - a)) {
+      const n = Math.min(Math.floor(falta / d), this.pais?.inventario?.[d] ?? 0);
+      if (n > 0) { elegidos[d] = n; falta -= n * d; }
+    }
+    this.elegidos = elegidos;
+    this.errorPanel = falta ? `En el banco no hay billetes para completar ${this.miles(falta)}.` : '';
+  }
+
+  private billetesElegidos(): Record<string, number> {
+    const b: Record<string, number> = {};
+    for (const d of this.datos!.denominaciones) { const n = Number(this.elegidos[d]) || 0; if (n) b[d] = n; }
+    return b;
+  }
+
+  invertir(): void {
+    const e = this.estudiante, f = this.empresa, r = this.datos?.ronda;
+    if (!e || !f || !r || !this.total) return;
+    this.enviando = true;
+    this.errorPanel = '';
+    this.willGo.invertir(e.id, f.id, r.id, this.billetesElegidos(), this.clave).subscribe({
+      next: (x) => { this.enviando = false; this.estudiante = null; this.mostrarAviso(`${e.nombre} invirtió ${this.miles(x.monto)} en ${f.nombre}.`); this.cargar(); },
+      error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },
+    });
+  }
+
+  pagar(): void {
+    const i = this.pago;
+    if (!i || this.falta !== 0) return;
+    this.enviando = true;
+    this.errorPanel = '';
+    this.willGo.cobrarInversion(i.id, this.billetesElegidos()).subscribe({
+      next: () => { this.enviando = false; this.pago = null; this.mostrarAviso(`Pagaste ${this.miles(i.monto_pagado)} a ${i.nombre}.`); this.cargar(); },
+      error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },
+    });
+  }
+}

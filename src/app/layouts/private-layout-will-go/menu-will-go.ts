@@ -42,7 +42,7 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
     INICIO,
     { texto: 'Repartir a docentes', ruta: '/private-will-go/repartir', icono: ICONOS.billetes },
     { texto: 'Banco', ruta: '/private-will-go/banco', icono: ICONOS.caja },
-    { texto: 'W-Funds', icono: ICONOS.fondos },
+    { texto: 'W-Funds', ruta: '/private-will-go/wfunds', icono: ICONOS.fondos },
   ],
   cajero: [
     INICIO,
