@@ -2,6 +2,10 @@
 
   <!-- Panel de marca: a la izquierda en computador, como banda superior en celular -->
   <section class="wg-marca" aria-label="Will-Go Economy">
+    <!-- Selector de idioma arriba a la derecha, sobre el fondo oscuro -->
+    <div class="absolute top-4 right-4 z-10">
+      <wg-selector-idioma variante="oscuro" alinear="derecha" />
+    </div>
     <!-- Billetes flotando de fondo -->
     <div class="wg-billetes" aria-hidden="true">
       @for (b of billetesFondo; track $index) {
@@ -39,10 +43,10 @@
         </div>
       }
 
-      <h1 class="wg-saludo">¡Hola, familia!</h1>
-      <p class="wg-lema">Sigue la economía de tu hijo y vota por las empresas.</p>
+      <h1 class="wg-saludo">{{ 'wg.familias.ingreso.saludo' | translate }}</h1>
+      <p class="wg-lema">{{ 'wg.familias.ingreso.lema' | translate }}</p>
 
-      <ul class="wg-paises" aria-label="Países de la economía">
+      <ul class="wg-paises" [attr.aria-label]="'wg.familias.ingreso.paisesAria' | translate">
         <li><span class="wg-punto" style="background:#3B82F6"></span>Wonderland</li>
         <li><span class="wg-punto" style="background:#22C55E"></span>Neverland</li>
         <li><span class="wg-punto" style="background:#A855F7"></span>Dreamland</li>
@@ -55,40 +59,40 @@
   <!-- Formulario -->
   <section class="wg-formulario">
     <div class="wg-tarjeta">
-      <span class="wg-etiqueta">Acudientes</span>
-      <h2 class="wg-titulo">Ingreso</h2>
+      <span class="wg-etiqueta">{{ 'wg.familias.ingreso.etiqueta' | translate }}</span>
+      <h2 class="wg-titulo">{{ 'wg.familias.ingreso.titulo' | translate }}</h2>
       @if (paso === 'documento') {
-        <p class="wg-subtitulo">Escribe tu número de documento y te enviaremos un código a tu correo.</p>
+        <p class="wg-subtitulo">{{ 'wg.familias.ingreso.subtituloDocumento' | translate }}</p>
         <form (ngSubmit)="pedirCodigo()" novalidate>
           <div class="wg-campo">
-            <label for="wg-documento">Número de documento</label>
+            <label for="wg-documento">{{ 'wg.familias.ingreso.etiquetaDocumento' | translate }}</label>
             <div class="wg-input-icono">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
-              <input id="wg-documento" name="documento" [(ngModel)]="documento" inputmode="numeric" autocomplete="off" placeholder="Ej.: 1020304050">
+              <input id="wg-documento" name="documento" [(ngModel)]="documento" inputmode="numeric" autocomplete="off" [placeholder]="'wg.familias.ingreso.ejemploDocumento' | translate">
             </div>
           </div>
           @if (error) { <div class="wg-error" role="alert"><span>{{ error }}</span></div> }
           <button type="submit" class="wg-boton" [disabled]="cargando || !documentoValido">
-            @if (cargando) { <span class="wg-girando"></span> Enviando… } @else { Enviarme el código }
+            @if (cargando) { <span class="wg-girando"></span> {{ 'wg.familias.ingreso.enviando' | translate }} } @else { {{ 'wg.familias.ingreso.enviarCodigo' | translate }} }
           </button>
         </form>
       } @else {
         <p class="wg-subtitulo">
-          @if (correo) { Te enviamos un código de 6 dígitos a <b>{{ correo }}</b>. } @else { Si tu documento está registrado, te llegará un código de 6 dígitos al correo. }
+          @if (correo) { <span [innerHTML]="'wg.familias.ingreso.codigoEnviadoA' | translate: { correo: correo }"></span> } @else { {{ 'wg.familias.ingreso.codigoSiRegistrado' | translate }} }
         </p>
         <form (ngSubmit)="entrar()" novalidate>
           <div class="wg-campo">
-            <label for="wg-codigo">Código</label>
+            <label for="wg-codigo">{{ 'wg.familias.ingreso.etiquetaCodigo' | translate }}</label>
             <input id="wg-codigo" name="codigo" [(ngModel)]="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"
                    class="wg-codigo">
           </div>
           @if (error) { <div class="wg-error" role="alert"><span>{{ error }}</span></div> }
           <button type="submit" class="wg-boton" [disabled]="cargando || codigo.length !== 6">
-            @if (cargando) { <span class="wg-girando"></span> Entrando… } @else { Entrar }
+            @if (cargando) { <span class="wg-girando"></span> {{ 'wg.familias.ingreso.entrando' | translate }} } @else { {{ 'wg.familias.ingreso.entrar' | translate }} }
           </button>
         </form>
         <div class="wg-ayuda">
-          <button type="button" (click)="paso = 'documento'; codigo = ''; error = ''">Cambiar documento o pedir otro código</button>
+          <button type="button" (click)="paso = 'documento'; codigo = ''; error = ''">{{ 'wg.familias.ingreso.cambiarDocumento' | translate }}</button>
         </div>
       }
       <wg-instalar-app class="block mt-6" />

@@ -3,13 +3,15 @@ import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { SelectorIdiomaComponent } from '../../../private-layout-will-go/selector-idioma.component';
 import { AcudienteWillGoService } from '../../../../core/services/acudiente-will-go.service';
 
 /** Ingreso del acudiente: documento → código al correo → panel. */
 @Component({
   selector: 'app-ingreso-acudiente',
   standalone: true,
-  imports: [FormsModule, InstalarAppComponent],
+  imports: [FormsModule, InstalarAppComponent, TranslatePipe, SelectorIdiomaComponent],
   templateUrl: './ingreso-acudiente.html',
   styleUrls: ['../login-will-go/login-will-go.css', './ingreso-acudiente.css'],
 })
