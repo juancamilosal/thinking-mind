@@ -153,13 +153,10 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
   }
 
   ngOnChanges(): void {
-    // El eje se ajusta a los datos (siempre incluye el 0) con una línea cada 5 %, para usar toda la altura
-    const todos = this.rondas.flatMap((r) => r.resultados.map((x) => Number(x.rendimiento) * 100));
-    const salto = Math.max(...todos.map(Math.abs), 5) > 30 ? 10 : 5;
-    this.maximo = Math.max(salto, Math.ceil(Math.max(0, ...todos) / salto) * salto);
-    this.minimo = Math.min(-salto, Math.floor(Math.min(0, ...todos) / salto) * salto);
-    this.marcas = [];
-    for (let t = this.minimo; t <= this.maximo; t += salto) this.marcas.push(t);
+    // Eje fijo de −100 % a +100 %, con una línea cada 25 %
+    this.maximo = 100;
+    this.minimo = -100;
+    this.marcas = [-100, -75, -50, -25, 0, 25, 50, 75, 100];
     this.elegida = this.rondas.length ? this.rondas.length - 1 : null;
     this.calcular();
   }
