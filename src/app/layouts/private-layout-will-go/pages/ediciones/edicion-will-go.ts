@@ -5,18 +5,17 @@ import { Edicion, Pais, WillGoService } from '../../../../core/services/will-go.
 import { ESTADO_EDICION } from './estado-edicion';
 import { TabGeneral } from './tabs/tab-general';
 import { EliminarEdicionComponent } from './eliminar-edicion.component';
-import { TabPaises } from './tabs/tab-paises';
 import { TabParticipantes } from './tabs/tab-participantes';
 import { TabTienda } from './tabs/tab-tienda';
-import { TabFondos } from './tabs/tab-fondos';
+import { TabEconomia } from './tabs/tab-economia';
 import { TabEquipo } from './tabs/tab-equipo';
 
-type Pestana = 'general' | 'paises' | 'participantes' | 'equipo' | 'tienda' | 'fondos';
+type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
 
 @Component({
   selector: 'app-edicion-will-go',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabPaises, TabParticipantes, TabTienda, TabFondos, TabEquipo],
+  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabEconomia, TabParticipantes, TabTienda, TabEquipo],
   template: `
     <div class="max-w-6xl mx-auto">
       <a routerLink="/private-will-go/ediciones" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-orange-700">← Ediciones</a>
@@ -55,7 +54,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'equipo' | 'tienda' | 'f
 
           <!-- Resumen -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.participantes }}</p><p class="text-xs text-gray-500">Participantes{{ edicion.retirados ? ' · ' + edicion.retirados + ' retirados' : '' }}</p></div>
+            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.participantes }}</p><p class="text-xs text-gray-500">Estudiantes{{ edicion.retirados ? ' · ' + edicion.retirados + ' retirados' : '' }}</p></div>
             <div class="rounded-xl p-3" [class]="edicion.sin_pais ? 'bg-amber-50' : 'bg-gray-50'"><p class="text-xl font-bold" [class]="edicion.sin_pais ? 'text-amber-700' : 'text-gray-800'">{{ edicion.sin_pais }}</p><p class="text-xs text-gray-500">Sin país asignado</p></div>
             <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.tasa_inicial | number }}</p><p class="text-xs text-gray-500">Tasa inicial (pesos por billete)</p></div>
             <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.investment_bill }}</p><p class="text-xs text-gray-500">Billetes de bienvenida</p></div>
@@ -78,11 +77,10 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'equipo' | 'tienda' | 'f
         <div class="mt-5">
           @switch (pestana) {
             @case ('general') { <app-tab-general [edicion]="edicion" (guardada)="edicion = $event" /> }
-            @case ('paises') { <app-tab-paises [edicion]="edicion" (paisesCambiaron)="paises = $event" /> }
+            @case ('economia') { <app-tab-economia [edicion]="edicion" (guardada)="edicion = $event" /> }
             @case ('participantes') { <app-tab-participantes [edicion]="edicion" (cambio)="recargar()" /> }
             @case ('equipo') { <app-tab-equipo [edicion]="edicion" (cambio)="recargar()" /> }
             @case ('tienda') { <app-tab-tienda [edicion]="edicion" /> }
-            @case ('fondos') { <app-tab-fondos [edicion]="edicion" /> }
           }
         </div>
       }
@@ -97,7 +95,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'equipo' | 'tienda' | 'f
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="revision = null">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
           <h2 class="text-lg font-bold text-gray-800">Abrir la edición</h2>
-          <p class="text-gray-600 mt-1 text-sm">Al abrir, el banco recibe su provisión en cada moneda y cada participante con país recibe sus billetes de bienvenida.</p>
+          <p class="text-gray-600 mt-1 text-sm">Al abrir, el banco recibe su provisión en cada moneda y cada estudiante con país recibe sus billetes de bienvenida.</p>
           <ul class="mt-4 space-y-2">
             @for (r of revision; track r.texto) {
               <li class="flex items-start gap-2 text-sm">
@@ -133,10 +131,9 @@ export class EdicionWillGo implements OnInit {
   readonly estado = ESTADO_EDICION;
   readonly pestanas: { id: Pestana; texto: string }[] = [
     { id: 'general', texto: 'General' },
-    { id: 'paises', texto: 'Países y banco' },
-    { id: 'participantes', texto: 'Participantes' },
+    { id: 'economia', texto: 'Economía' },
     { id: 'tienda', texto: 'GO•STORE' },
-    { id: 'fondos', texto: 'W-Funds' },
+    { id: 'participantes', texto: 'Estudiantes' },
     { id: 'equipo', texto: 'Colaboradores' },
   ];
 
@@ -192,9 +189,9 @@ export class EdicionWillGo implements OnInit {
             texto: sinProvision.length ? `Sin provisión del banco: ${sinProvision.map((p) => p.nombre).join(', ')}` : 'Todos los países tienen provisión del banco',
             ok: !sinProvision.length, bloquea: true,
           },
-          { texto: `${e.participantes} participantes traídos del programa`, ok: e.participantes > 0, bloquea: false },
+          { texto: `${e.participantes} estudiantes inscritos`, ok: e.participantes > 0, bloquea: false },
           {
-            texto: e.sin_pais ? `${e.sin_pais} participantes sin país (no recibirán billetes de bienvenida hasta tener uno)` : 'Todos los participantes tienen país',
+            texto: e.sin_pais ? `${e.sin_pais} estudiantes sin país (no reciben bienvenida hasta tener uno)` : 'Todos los estudiantes tienen país',
             ok: !e.sin_pais, bloquea: false,
           },
           {
@@ -203,7 +200,7 @@ export class EdicionWillGo implements OnInit {
           },
           { texto: `Horario con ${e.horario?.length ?? 0} franjas (fuera de ellas la tasa no cambia)`, ok: !!e.horario?.length, bloquea: false },
           {
-            texto: `Bienvenida: ${e.investment_bill} billetes × ${conPais} participantes con país`,
+            texto: `Bienvenida: ${e.investment_bill} billetes × ${conPais} estudiantes con país`,
             ok: true, bloquea: false,
           },
         ];

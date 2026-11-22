@@ -16,7 +16,7 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-800">Ediciones</h1>
-          <p class="text-gray-500 mt-1">Cada fin de semana de Will-Go es una edición: países, participantes, tienda y fondos.</p>
+          <p class="text-gray-500 mt-1">Cada fin de semana de Will-Go es una edición.</p>
         </div>
         <button type="button" (click)="abrirFormulario()"
                 class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow hover:brightness-110">
@@ -52,7 +52,7 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
                   </div>
                   <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
                     <span>📅 {{ e.fecha_inicio ? (e.fecha_inicio | date:'d MMM y') : 'Sin fecha' }}</span>
-                    <span>👥 {{ e.participantes }} participantes</span>
+                    <span>👥 {{ e.participantes }} estudiantes</span>
                     @if (e.sin_pais) { <span class="text-amber-700">⚠ {{ e.sin_pais }} sin país</span> }
                   </div>
                 </a>

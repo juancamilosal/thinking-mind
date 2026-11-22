@@ -10,7 +10,7 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
   standalone: true,
   imports: [FormsModule, NumeroMilesDirective],
   template: `
-    <p class="text-sm text-gray-500">Al cerrar cada ronda, el rendimiento de un fondo es: <b>base</b> + bono por los votos de los acudientes (hasta ±2 %) + una <b>variación</b> al azar, con un límite de ±20 %. En riesgo alto, la mitad de las veces se usa el <b>escenario alterno</b>.</p>
+    <p class="text-sm text-gray-500">Resultado de cada ronda = base + votos de los acudientes + variación al azar (máx. ±20 %).</p>
     @if (cargando) {
       <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando fondos…</div>
     } @else {
@@ -21,7 +21,7 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
               <input [(ngModel)]="f.nombre" class="campo font-bold" aria-label="Nombre del fondo">
               <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="riesgos[f.riesgo].clase">Riesgo {{ f.riesgo }}</span>
             </div>
-            <textarea [(ngModel)]="f.historia" rows="2" class="campo mt-3 text-sm" placeholder="Historia del fondo (lo que leen los acudientes al votar)" aria-label="Historia"></textarea>
+            <textarea [(ngModel)]="f.historia" rows="2" class="campo mt-3 text-sm" placeholder="Historia del fondo (la leen los acudientes)" aria-label="Historia"></textarea>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
               <div>
                 <label class="etiqueta" [attr.for]="'r-' + f.id">Riesgo</label>

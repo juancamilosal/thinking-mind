@@ -10,7 +10,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
   template: `
     <!-- Acciones -->
     <div class="flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
-      <p class="text-sm text-gray-500">Los participantes son los estudiantes inscritos en el programa{{ edicion.colegio_nombre ? ' del colegio ' + edicion.colegio_nombre : '' }}. Quien se inscribe y paga aparece aquí solo. Asigna a cada uno su país.</p>
+      <p class="text-sm text-gray-500">Los inscritos aparecen aquí solos. Asigna a cada uno su país.</p>
       <div class="flex flex-wrap gap-2">
         <button type="button" (click)="repartir()" [disabled]="trabajando || !sinPais.length || !paises.length"
                 class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">
@@ -36,7 +36,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
       }
     </div>
 
-    <input type="search" [(ngModel)]="busqueda" placeholder="Buscar participante…" aria-label="Buscar por nombre o código"
+    <input type="search" [(ngModel)]="busqueda" placeholder="Buscar estudiante…" aria-label="Buscar por nombre o código"
            class="mt-3 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
 
     <!-- Barra de selección -->
@@ -63,7 +63,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
     <!-- Lista -->
     <div class="mt-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       @if (cargando) {
-        <p class="p-10 text-center text-gray-500">Cargando participantes…</p>
+        <p class="p-10 text-center text-gray-500">Cargando estudiantes…</p>
       } @else if (!activos.length && filtro !== 'retirados') {
         <div class="p-10 text-center">
           <p class="font-semibold text-gray-700">Todavía no hay inscritos</p>
@@ -262,7 +262,7 @@ export class TabParticipantes implements OnInit {
       const par = pendientes.shift();
       if (!par) {
         this.trabajando = false;
-        this.mostrar('Participantes repartidos entre los países.' + (bienvenidas ? ` ${bienvenidas} recibieron su bienvenida.` : ''), false);
+        this.mostrar('Estudiantes repartidos entre los países.' + (bienvenidas ? ` ${bienvenidas} recibieron su bienvenida.` : ''), false);
         this.cargar();
         this.cambio.emit();
         return;
@@ -322,7 +322,7 @@ export class TabParticipantes implements OnInit {
       next: (r) => {
         for (const p of this.lista) if (ids.includes(p.id)) p.pais_id = paisId;
         this.seleccion.clear();
-        const asignados = ids.length > 1 ? `${ids.length} participantes asignados.` : 'País asignado.';
+        const asignados = ids.length > 1 ? `${ids.length} estudiantes asignados.` : 'País asignado.';
         const bienvenida = r.bienvenidas ? ` ${r.bienvenidas === 1 ? 'Recibió' : r.bienvenidas + ' recibieron'} sus ${this.edicion.investment_bill} billetes de bienvenida.` : '';
         this.mostrar(asignados + bienvenida, false);
         if (r.bienvenidas) this.cargar(); // para ver el saldo nuevo

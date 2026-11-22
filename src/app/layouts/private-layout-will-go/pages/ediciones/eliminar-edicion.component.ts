@@ -14,7 +14,7 @@ import { Edicion, WillGoService } from '../../../../core/services/will-go.servic
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         </div>
         <h2 id="titulo-eliminar" class="text-lg font-bold text-gray-800 mt-4">¿Eliminar «{{ edicion.nombre }}»?</h2>
-        <p class="text-sm text-gray-600 mt-2">Se borran sus países, participantes, productos y fondos. Los estudiantes y los pagos de la plataforma <b>no</b> se tocan.</p>
+        <p class="text-sm text-gray-600 mt-2">Se borran sus países, productos, fondos y la lista de estudiantes de la edición. Las inscripciones y los pagos de la plataforma <b>no</b> se tocan.</p>
         <p class="text-sm text-gray-600 mt-2">Si la edición ya tiene movimientos de billetes, no se podrá eliminar.</p>
         <label for="confirmar-nombre" class="block text-sm font-semibold text-gray-700 mt-4 mb-1">Para confirmar, escribe el nombre de la edición:</label>
         <input id="confirmar-nombre" [(ngModel)]="escrito" autocomplete="off" [placeholder]="edicion.nombre"
