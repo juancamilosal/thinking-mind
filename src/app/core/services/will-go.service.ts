@@ -125,6 +125,8 @@ export interface PaisArqueo {
   saldo_sistema: number;
   /** Billetes asignados al banco (total y por denominación) y los que ya salieron. */
   provision_inicial: number; provision_billetes: Record<string, number>; en_circulacion: number;
+  /** Billetes que hay hoy en el banco por denominación (asignados − entregados + recibidos). */
+  inventario?: Record<string, number>;
   /** Lo que ha entrado y salido del banco (los últimos 100) y los totales de siempre. */
   movimientos: { id: string; tipo: string; entra: boolean; titulo: string; monto: number; saldo_despues: number; fecha: string; quien: string; billetes: Record<string, number> | null }[];
   total_entro: number; total_salio: number;

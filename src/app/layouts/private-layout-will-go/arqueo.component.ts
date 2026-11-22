@@ -66,18 +66,24 @@ export { imagenBillete };
         @if (!pais.provision_inicial) {
           <div class="mt-4 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">Todavía no se le han asignado billetes al banco de {{ pais.nombre }}.</div>
         } @else {
-          <h3 class="font-bold text-gray-800 mt-5 mb-3">Billetes asignados</h3>
+          <div class="mt-5 mb-3 flex flex-wrap items-baseline justify-between gap-x-3">
+            <h3 class="font-bold text-gray-800">{{ pais.inventario ? 'Billetes en el banco hoy' : 'Billetes asignados' }}</h3>
+            @if (pais.inventario) { <p class="text-xs text-gray-500">Debajo de cada billete: cuántos se asignaron al inicio.</p> }
+          </div>
           <div class="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             @for (d of datos.denominaciones; track d) {
-              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" [class.opacity-40]="!asignados(d)">
+              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" [class.opacity-40]="!hoy(d) && !asignados(d)">
                 @if (imagen(d); as src) {
                   <img [src]="src" [alt]="'Billete de ' + miles(d) + ' de ' + pais.nombre" class="w-full aspect-[520/281] object-cover" loading="lazy">
                 } @else {
                   <div class="w-full aspect-[520/281] flex items-center justify-center text-2xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
                 }
                 <div class="p-3 text-center">
-                  <p class="text-lg font-bold text-gray-800">× {{ miles(asignados(d)) }}</p>
-                  <p class="text-xs text-gray-500">{{ asignados(d) ? '= ' + miles(d * asignados(d)) : 'Sin billetes' }}</p>
+                  <p class="text-lg font-bold text-gray-800">× {{ miles(hoy(d)) }}</p>
+                  <p class="text-xs text-gray-500">{{ hoy(d) ? '= ' + miles(d * hoy(d)) : 'No quedan' }}</p>
+                  @if (pais.inventario) {
+                    <p class="mt-1.5 pt-1.5 border-t border-gray-100 text-[11px] text-gray-400">Asignados: {{ miles(asignados(d)) }}</p>
+                  }
                 </div>
               </div>
             }
@@ -201,6 +207,12 @@ export class ArqueoComponent implements OnChanges {
 
   poner(d: number, valor: number | null): void {
     if (this.pais) this.conteos[this.pais.id][d] = valor;
+  }
+
+  /** Billetes de esa denominación que hay hoy en el banco (con la extensión vieja, los asignados). */
+  hoy(d: number): number {
+    const inv = this.pais?.inventario;
+    return inv ? Number(inv[d] ?? 0) || 0 : this.asignados(d);
   }
 
   asignados(d: number): number {

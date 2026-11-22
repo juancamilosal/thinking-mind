@@ -281,6 +281,7 @@ export function rutasArqueo(router, { ruta, db }) {
 			p.provision_inicial = Number(p.provision_inicial ?? 0);
 			p.provision_billetes = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
 			p.en_circulacion = p.provision_inicial - p.saldo_sistema;
+			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			Object.assign(p, await movimientosBanco(db, edicion.id, p.id));
 		}
 		const historial = await db('wge_arqueos as a').leftJoin('directus_users as u', 'u.id', 'a.user_created')
