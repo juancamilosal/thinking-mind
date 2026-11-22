@@ -55,11 +55,11 @@
         }
       </div>
     } @else {
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
         <ul class="divide-y divide-gray-100">
           @for (f of paginaActual; track f.id) {
-            <li class="p-4 sm:px-6 flex flex-col xl:flex-row xl:items-center gap-3" [class.opacity-60]="f.estado !== 'active'">
-              <div class="flex items-center gap-3 min-w-0 flex-1 xl:min-w-[14rem]">
+            <li class="p-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3" [class.opacity-60]="f.estado !== 'active'">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div class="w-11 h-11 shrink-0 rounded-full flex items-center justify-center font-bold text-white"
                      [class]="f.rol === 'docente' ? 'bg-teal-600' : f.rol === 'banco' ? 'bg-blue-600' : f.rol === 'cajero' ? 'bg-amber-500' : 'bg-slate-700'">
                   {{ (f.nombre[0] || '') + (f.apellido[0] || '') }}
@@ -70,7 +70,7 @@
                 </div>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 xl:w-72 xl:shrink-0">
+              <div class="flex flex-wrap items-center gap-2 lg:w-72 lg:shrink-0">
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ nombreRol[f.rol] }}</span>
                 @if (f.estado !== 'active') {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">Inactivo</span>
@@ -79,25 +79,36 @@
                 } @else {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-800">Activo</span>
                 }
-                <span class="text-xs text-gray-400 w-full xl:w-auto">
+                <span class="text-xs text-gray-400 w-full lg:w-auto">
                   {{ f.ultimo_ingreso ? 'Último ingreso ' + (f.ultimo_ingreso | date:'d MMM, h:mm a') : 'Aún no ha ingresado' }}
                 </span>
               </div>
 
-              @if (puedeManejar(f)) {
-                <div class="flex flex-wrap gap-2 xl:justify-end xl:shrink-0 xl:max-w-[15rem]">
-                  <button type="button" (click)="abrirEditar(f)" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Editar</button>
-                  <button type="button" (click)="pedirConfirmacion('clave', f)" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Nueva clave</button>
-                  @if (f.id !== miId) {
-                    <button type="button" (click)="pedirConfirmacion('estado', f)"
-                            class="px-3 py-2 text-sm rounded-lg border"
-                            [class]="f.estado === 'active' ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-teal-200 text-teal-700 hover:bg-teal-50'">
-                      {{ f.estado === 'active' ? 'Desactivar' : 'Activar' }}
-                    </button>
-                    <button type="button" (click)="pedirConfirmacion('eliminar', f)" class="px-3 py-2 text-sm rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100">Eliminar</button>
+              <div class="relative lg:w-32 lg:shrink-0 flex lg:justify-end">
+                @if (puedeManejar(f)) {
+                  <button type="button" (click)="alternarMenu(f, $event)" [attr.aria-expanded]="menuAbierto === f.id" aria-haspopup="menu"
+                          class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">
+                    Acciones
+                    <svg class="w-4 h-4 transition-transform" [class.rotate-180]="menuAbierto === f.id" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                  </button>
+                  @if (menuAbierto === f.id) {
+                    <div role="menu" (click)="$event.stopPropagation()"
+                         class="absolute z-30 top-full mt-1 left-0 lg:left-auto lg:right-0 w-48 bg-white rounded-xl border border-gray-200 shadow-lg py-1">
+                      <button type="button" role="menuitem" (click)="menuAbierto = null; abrirEditar(f)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Editar</button>
+                      <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('clave', f)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Nueva clave</button>
+                      @if (f.id !== miId) {
+                        <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('estado', f)"
+                                class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50"
+                                [class]="f.estado === 'active' ? 'text-amber-700' : 'text-teal-700'">
+                          {{ f.estado === 'active' ? 'Desactivar' : 'Activar' }}
+                        </button>
+                        <div class="my-1 border-t border-gray-100"></div>
+                        <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('eliminar', f)" class="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50">Eliminar</button>
+                      }
+                    </div>
                   }
-                </div>
-              }
+                }
+              </div>
             </li>
           }
         </ul>

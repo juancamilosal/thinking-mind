@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
@@ -39,6 +39,12 @@ export class FuncionariosWillGo implements OnInit {
     const ini = Math.max(1, Math.min(p - 2, total - 4)), fin = Math.min(total, ini + 4);
     return Array.from({ length: fin - ini + 1 }, (_, i) => ini + i);
   }
+  /** Id del colaborador cuyo menú de acciones está abierto. */
+  menuAbierto: string | null = null;
+  alternarMenu(f: Funcionario, ev: Event): void { ev.stopPropagation(); this.menuAbierto = this.menuAbierto === f.id ? null : f.id; }
+  @HostListener('document:click') cerrarMenu(): void { this.menuAbierto = null; }
+  @HostListener('document:keydown.escape') cerrarMenuEsc(): void { this.menuAbierto = null; }
+
   irA(n: number): void { this.pagina = Math.max(1, Math.min(n, this.totalPaginas)); }
 
   // Formulario de crear / editar
