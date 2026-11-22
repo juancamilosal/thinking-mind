@@ -198,6 +198,6 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
       .sort((a, b) => b.valor - a.valor);
   }
 
-  corto(nombre: string): string { return nombre.replace(/^Ronda\s*/i, 'R'); }
+  corto(nombre: string): string { return nombre.replace(/^(Ronda|Round|Manche)\s*/i, 'R'); }
   pct(v: number): string { return `${v > 0 ? '+' : ''}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`; }
 }
