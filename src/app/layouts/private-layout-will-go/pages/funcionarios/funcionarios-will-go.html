@@ -1,13 +1,13 @@
 <div class="max-w-6xl mx-auto">
   <div class="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">Colaboradores</h1>
-      <p class="text-gray-500 mt-1">Crea los perfiles de docentes, banco y caja, y entrégales su clave de ingreso.</p>
+      <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.admin.col.titulo' | translate }}</h1>
+      <p class="text-gray-500 mt-1">{{ 'wg.admin.col.subtitulo' | translate }}</p>
     </div>
     <button type="button" (click)="abrirNuevo()"
             class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 shadow hover:brightness-110">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Nuevo colaborador
+      {{ 'wg.admin.col.nuevo' | translate }}
     </button>
   </div>
 
@@ -18,19 +18,19 @@
               class="text-left bg-white rounded-2xl border p-4 transition"
               [class]="filtroRol === r ? 'border-teal-500 ring-2 ring-teal-100' : 'border-gray-200 hover:border-gray-300'">
         <p class="text-2xl font-bold text-gray-800">{{ conteo($any(r)) }}</p>
-        <p class="text-sm text-gray-500">{{ r === 'docente' ? 'Docentes' : r === 'banco' ? 'En banco' : 'En caja' }}</p>
+        <p class="text-sm text-gray-500">{{ (r === 'docente' ? 'wg.admin.col.resumenDocentes' : r === 'banco' ? 'wg.admin.col.resumenBanco' : 'wg.admin.col.resumenCaja') | translate }}</p>
       </button>
     }
   </div>
 
   <!-- Búsqueda -->
   <div class="mt-5 flex flex-col sm:flex-row gap-3">
-    <input type="search" [value]="busqueda" (input)="busqueda = $any($event.target).value; pagina = 1" placeholder="Buscar colaborador…" aria-label="Buscar por nombre, correo o documento"
+    <input type="search" [value]="busqueda" (input)="busqueda = $any($event.target).value; pagina = 1" [placeholder]="'wg.admin.col.buscarPlaceholder' | translate" [attr.aria-label]="'wg.admin.col.buscarAria' | translate"
            class="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
     <select [value]="filtroRol" (change)="filtroRol = $any($event.target).value; pagina = 1"
             class="sm:w-48 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
-      <option value="">Todos los roles</option>
-      @for (r of rolesDisponibles; track r) { <option [value]="r">{{ nombreRol[r] }}</option> }
+      <option value="">{{ 'wg.admin.col.todosRoles' | translate }}</option>
+      @for (r of rolesDisponibles; track r) { <option [value]="r">{{ nombreRol[r] | translate }}</option> }
     </select>
   </div>
 
@@ -41,17 +41,17 @@
   <!-- Lista -->
   <div class="mt-5">
     @if (cargando) {
-      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando colaboradores…</div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.admin.col.cargando' | translate }}</div>
     } @else if (errorCarga) {
       <div class="bg-white rounded-2xl border border-red-200 p-8 text-center">
         <p class="text-red-700">{{ errorCarga }}</p>
-        <button type="button" (click)="cargar()" class="mt-3 text-teal-700 font-semibold hover:underline">Reintentar</button>
+        <button type="button" (click)="cargar()" class="mt-3 text-teal-700 font-semibold hover:underline">{{ 'wg.admin.reintentar' | translate }}</button>
       </div>
     } @else if (!filtrados.length) {
       <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center">
-        <p class="text-gray-700 font-semibold">{{ funcionarios.length ? 'Ningún colaborador coincide con la búsqueda' : 'Todavía no hay colaboradores' }}</p>
+        <p class="text-gray-700 font-semibold">{{ (funcionarios.length ? 'wg.admin.col.ningunoCoincide' : 'wg.admin.col.vacio') | translate }}</p>
         @if (!funcionarios.length) {
-          <p class="text-gray-500 text-sm mt-1">Crea el primero con el botón «Nuevo colaborador».</p>
+          <p class="text-gray-500 text-sm mt-1">{{ 'wg.admin.col.vacioAyuda' | translate }}</p>
         }
       </div>
     } @else {
@@ -71,16 +71,16 @@
               </div>
 
               <div class="flex flex-wrap items-center gap-2 lg:w-72 lg:shrink-0">
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ nombreRol[f.rol] }}</span>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ nombreRol[f.rol] | translate }}</span>
                 @if (f.estado !== 'active') {
-                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">Inactivo</span>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">{{ 'wg.admin.col.inactivo' | translate }}</span>
                 } @else if (f.debe_cambiar_clave) {
-                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">Clave temporal</span>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">{{ 'wg.admin.col.claveTemporal' | translate }}</span>
                 } @else {
-                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-800">Activo</span>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-800">{{ 'wg.admin.col.activo' | translate }}</span>
                 }
                 <span class="text-xs text-gray-400 w-full lg:w-auto">
-                  {{ f.ultimo_ingreso ? 'Último ingreso ' + (f.ultimo_ingreso | date:'d MMM, h:mm a') : 'Aún no ha ingresado' }}
+                  {{ f.ultimo_ingreso ? ('wg.admin.col.ultimoIngreso' | translate: { fecha: (f.ultimo_ingreso | wgFecha:'d MMM, h:mm a') }) : ('wg.admin.col.sinIngreso' | translate) }}
                 </span>
               </div>
 
@@ -88,22 +88,22 @@
                 @if (puedeManejar(f)) {
                   <button type="button" (click)="alternarMenu(f, $event)" [attr.aria-expanded]="menuAbierto === f.id" aria-haspopup="menu"
                           class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">
-                    Acciones
+                    {{ 'wg.admin.col.acciones' | translate }}
                     <svg class="w-4 h-4 transition-transform" [class.rotate-180]="menuAbierto === f.id" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
                   </button>
                   @if (menuAbierto === f.id) {
                     <div role="menu" (click)="$event.stopPropagation()"
                          class="absolute z-30 top-full mt-1 left-0 lg:left-auto lg:right-0 w-48 bg-white rounded-xl border border-gray-200 shadow-lg py-1">
-                      <button type="button" role="menuitem" (click)="menuAbierto = null; abrirEditar(f)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Editar</button>
-                      <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('clave', f)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Nueva clave</button>
+                      <button type="button" role="menuitem" (click)="menuAbierto = null; abrirEditar(f)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{{ 'wg.admin.editar' | translate }}</button>
+                      <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('clave', f)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{{ 'wg.admin.col.nuevaClave' | translate }}</button>
                       @if (f.id !== miId) {
                         <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('estado', f)"
                                 class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50"
                                 [class]="f.estado === 'active' ? 'text-amber-700' : 'text-teal-700'">
-                          {{ f.estado === 'active' ? 'Desactivar' : 'Activar' }}
+                          {{ (f.estado === 'active' ? 'wg.admin.col.desactivar' : 'wg.admin.col.activar') | translate }}
                         </button>
                         <div class="my-1 border-t border-gray-100"></div>
-                        <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('eliminar', f)" class="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50">Eliminar</button>
+                        <button type="button" role="menuitem" (click)="menuAbierto = null; pedirConfirmacion('eliminar', f)" class="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50">{{ 'wg.admin.eliminar' | translate }}</button>
                       }
                     </div>
                   }
@@ -114,15 +114,15 @@
         </ul>
         <!-- Paginador -->
         @if (totalPaginas > 1) {
-          <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100" aria-label="Páginas">
-            <p class="text-sm text-gray-500">{{ desde }}–{{ hasta }} de {{ filtrados.length }} colaboradores</p>
+          <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100" [attr.aria-label]="'wg.admin.col.paginas' | translate">
+            <p class="text-sm text-gray-500">{{ 'wg.admin.col.rango' | translate: { desde: desde, hasta: hasta, total: filtrados.length } }}</p>
             <div class="flex items-center gap-1">
-              <button type="button" (click)="irA(pagina - 1)" [disabled]="pagina === 1" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" aria-label="Página anterior">‹ Anterior</button>
+              <button type="button" (click)="irA(pagina - 1)" [disabled]="pagina === 1" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" [attr.aria-label]="'wg.admin.col.paginaAnterior' | translate">{{ 'wg.admin.col.anterior' | translate }}</button>
               @for (n of paginas; track n) {
                 <button type="button" (click)="irA(n)" [attr.aria-current]="n === pagina ? 'page' : null"
                         class="w-9 h-9 p-0 rounded-lg text-sm font-semibold" [class]="n === pagina ? 'bg-teal-600 text-white' : 'text-gray-700 hover:bg-gray-100'">{{ n }}</button>
               }
-              <button type="button" (click)="irA(pagina + 1)" [disabled]="pagina === totalPaginas" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" aria-label="Página siguiente">Siguiente ›</button>
+              <button type="button" (click)="irA(pagina + 1)" [disabled]="pagina === totalPaginas" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" [attr.aria-label]="'wg.admin.col.paginaSiguiente' | translate">{{ 'wg.admin.col.siguiente' | translate }}</button>
             </div>
           </nav>
         }
@@ -136,62 +136,62 @@
   <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" (click)="formularioAbierto = false">
     <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-form">
       <div class="px-6 pt-6 pb-2 flex items-start justify-between">
-        <h2 id="titulo-form" class="text-xl font-bold text-gray-800">{{ editando ? 'Editar colaborador' : 'Nuevo colaborador' }}</h2>
-        <button type="button" (click)="formularioAbierto = false" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+        <h2 id="titulo-form" class="text-xl font-bold text-gray-800">{{ (editando ? 'wg.admin.col.editarTitulo' : 'wg.admin.col.nuevo') | translate }}</h2>
+        <button type="button" (click)="formularioAbierto = false" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.admin.cerrar' | translate">✕</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="guardar()" class="px-6 pb-6 space-y-4" novalidate>
         <div>
-          <p class="block text-sm font-semibold text-gray-700 mb-2">Rol</p>
+          <p class="block text-sm font-semibold text-gray-700 mb-2">{{ 'wg.admin.col.rol' | translate }}</p>
           <div class="grid grid-cols-3 gap-2" [class.grid-cols-4]="rolesDisponibles.length === 4">
             @for (r of rolesDisponibles; track r) {
               <label class="cursor-pointer">
                 <input type="radio" formControlName="rol" [value]="r" class="peer sr-only">
-                <span class="block text-center text-sm font-semibold py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800">{{ nombreRol[r] }}</span>
+                <span class="block text-center text-sm font-semibold py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800">{{ nombreRol[r] | translate }}</span>
               </label>
             }
           </div>
         </div>
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
-            <label for="f-nombre" class="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
+            <label for="f-nombre" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.nombre' | translate }}</label>
             <input id="f-nombre" formControlName="nombre" class="w-full px-4 py-2.5 bg-gray-50 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" [class]="invalido('nombre') ? 'border-red-400' : 'border-gray-200'">
           </div>
           <div>
-            <label for="f-apellido" class="block text-sm font-semibold text-gray-700 mb-1">Apellido</label>
+            <label for="f-apellido" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.col.apellido' | translate }}</label>
             <input id="f-apellido" formControlName="apellido" class="w-full px-4 py-2.5 bg-gray-50 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" [class]="invalido('apellido') ? 'border-red-400' : 'border-gray-200'">
           </div>
         </div>
         <div>
-          <label for="f-email" class="block text-sm font-semibold text-gray-700 mb-1">Correo (será su usuario)</label>
+          <label for="f-email" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.col.correo' | translate }}</label>
           <input id="f-email" type="email" formControlName="email" inputmode="email" class="w-full px-4 py-2.5 bg-gray-50 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:text-gray-500" [class]="invalido('email') ? 'border-red-400' : 'border-gray-200'">
-          @if (invalido('email')) { <p class="text-red-500 text-sm mt-1">Escribe un correo válido.</p> }
+          @if (invalido('email')) { <p class="text-red-500 text-sm mt-1">{{ 'wg.admin.col.correoInvalido' | translate }}</p> }
         </div>
         <div class="grid grid-cols-5 gap-3">
           <div class="col-span-2">
-            <label for="f-tipo" class="block text-sm font-semibold text-gray-700 mb-1">Documento</label>
+            <label for="f-tipo" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.col.documento' | translate }}</label>
             <select id="f-tipo" formControlName="tipo_documento" class="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
               @for (t of tiposDocumento; track t.id) { <option [value]="t.id">{{ t.id }}</option> }
             </select>
           </div>
           <div class="col-span-3">
-            <label for="f-doc" class="block text-sm font-semibold text-gray-700 mb-1">Número</label>
+            <label for="f-doc" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.col.numero' | translate }}</label>
             <input id="f-doc" formControlName="numero_documento" inputmode="numeric" class="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
           </div>
         </div>
         <div>
-          <label for="f-cel" class="block text-sm font-semibold text-gray-700 mb-1">Celular <span class="font-normal text-gray-400">(opcional)</span></label>
+          <label for="f-cel" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.col.celular' | translate }} <span class="font-normal text-gray-400">{{ 'wg.admin.col.opcional' | translate }}</span></label>
           <input id="f-cel" type="tel" formControlName="celular" inputmode="tel" class="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
         </div>
         @if (!editando) {
-          <p class="text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-3">Al crear el perfil se genera una <b>clave temporal</b>. La persona la cambiará la primera vez que ingrese.</p>
+          <p class="text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-3" [innerHTML]="'wg.admin.col.notaClave' | translate"></p>
         }
         @if (errorFormulario) {
           <p class="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ errorFormulario }}</p>
         }
         <div class="flex gap-3 pt-2">
-          <button type="button" (click)="formularioAbierto = false" class="flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+          <button type="button" (click)="formularioAbierto = false" class="flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.admin.cancelar' | translate }}</button>
           <button type="submit" [disabled]="guardando" class="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:brightness-110 disabled:opacity-60">
-            {{ guardando ? 'Guardando…' : (editando ? 'Guardar cambios' : 'Crear perfil') }}
+            {{ (guardando ? 'wg.admin.guardando' : (editando ? 'wg.admin.col.guardarCambios' : 'wg.admin.col.crearPerfil')) | translate }}
           </button>
         </div>
       </form>
@@ -206,20 +206,20 @@
       <div class="w-14 h-14 mx-auto rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
       </div>
-      <h2 id="titulo-clave" class="text-xl font-bold text-gray-800 mt-4">{{ clave.nuevo ? 'Perfil creado' : 'Nueva clave temporal' }}</h2>
-      <p class="text-gray-500 mt-1">Entrégale estos datos a <b>{{ clave.funcionario.nombre }} {{ clave.funcionario.apellido }}</b>.</p>
+      <h2 id="titulo-clave" class="text-xl font-bold text-gray-800 mt-4">{{ (clave.nuevo ? 'wg.admin.col.perfilCreado' : 'wg.admin.col.nuevaClaveTemporal') | translate }}</h2>
+      <p class="text-gray-500 mt-1" [innerHTML]="'wg.admin.col.entregale' | translate: { nombre: clave.funcionario.nombre + ' ' + clave.funcionario.apellido }"></p>
       <div class="mt-5 rounded-2xl bg-slate-900 text-white p-5 text-left space-y-2">
-        <p class="text-xs text-slate-400">Usuario</p>
+        <p class="text-xs text-slate-400">{{ 'wg.admin.col.usuario' | translate }}</p>
         <p class="font-mono break-all">{{ clave.funcionario.email }}</p>
-        <p class="text-xs text-slate-400 pt-2">Clave temporal</p>
+        <p class="text-xs text-slate-400 pt-2">{{ 'wg.admin.col.claveTemporal' | translate }}</p>
         <p class="font-mono text-2xl tracking-widest text-teal-300">{{ clave.valor }}</p>
       </div>
-      <p class="text-sm text-amber-700 bg-amber-50 rounded-xl px-4 py-3 mt-4">Esta clave solo se muestra ahora. Si se pierde, genera una nueva con «Nueva clave».</p>
+      <p class="text-sm text-amber-700 bg-amber-50 rounded-xl px-4 py-3 mt-4">{{ 'wg.admin.col.soloAhora' | translate }}</p>
       <div class="flex gap-3 mt-5">
         <button type="button" (click)="copiarClave()" class="flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">
-          {{ copiada ? '✓ Copiado' : 'Copiar datos' }}
+          {{ (copiada ? 'wg.admin.col.copiado' : 'wg.admin.col.copiarDatos') | translate }}
         </button>
-        <button type="button" (click)="cerrarClave()" class="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:brightness-110">Listo</button>
+        <button type="button" (click)="cerrarClave()" class="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:brightness-110">{{ 'wg.admin.col.listo' | translate }}</button>
       </div>
     </div>
   </div>
@@ -230,25 +230,25 @@
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="confirmar = null">
     <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
       @if (confirmar.tipo === 'clave') {
-        <h2 class="text-lg font-bold text-gray-800">¿Generar una nueva clave?</h2>
-        <p class="text-gray-600 mt-2">La clave actual de {{ confirmar.funcionario.nombre }} dejará de funcionar y deberá crear una nueva al ingresar.</p>
+        <h2 class="text-lg font-bold text-gray-800">{{ 'wg.admin.col.confClaveTitulo' | translate }}</h2>
+        <p class="text-gray-600 mt-2">{{ 'wg.admin.col.confClaveTexto' | translate: { nombre: confirmar.funcionario.nombre } }}</p>
       } @else if (confirmar.tipo === 'eliminar') {
-        <h2 class="text-lg font-bold text-gray-800">¿Eliminar a {{ confirmar.funcionario.nombre }}?</h2>
-        <p class="text-gray-600 mt-2">Se borra su usuario y sale de los equipos de las ediciones. No se puede deshacer.</p>
-        <p class="text-sm text-gray-500 mt-2">Si ya entregó billetes, vendió o calificó, no se podrá eliminar para no perder el historial: en ese caso desactívalo.</p>
+        <h2 class="text-lg font-bold text-gray-800">{{ 'wg.admin.col.confEliminarTitulo' | translate: { nombre: confirmar.funcionario.nombre } }}</h2>
+        <p class="text-gray-600 mt-2">{{ 'wg.admin.col.confEliminarTexto' | translate }}</p>
+        <p class="text-sm text-gray-500 mt-2">{{ 'wg.admin.col.confEliminarNota' | translate }}</p>
       } @else if (confirmar.funcionario.estado === 'active') {
-        <h2 class="text-lg font-bold text-gray-800">¿Desactivar a {{ confirmar.funcionario.nombre }}?</h2>
-        <p class="text-gray-600 mt-2">No podrá ingresar hasta que lo vuelvas a activar. Sus movimientos quedan guardados.</p>
+        <h2 class="text-lg font-bold text-gray-800">{{ 'wg.admin.col.confDesactivarTitulo' | translate: { nombre: confirmar.funcionario.nombre } }}</h2>
+        <p class="text-gray-600 mt-2">{{ 'wg.admin.col.confDesactivarTexto' | translate }}</p>
       } @else {
-        <h2 class="text-lg font-bold text-gray-800">¿Activar a {{ confirmar.funcionario.nombre }}?</h2>
-        <p class="text-gray-600 mt-2">Podrá volver a ingresar con su clave.</p>
+        <h2 class="text-lg font-bold text-gray-800">{{ 'wg.admin.col.confActivarTitulo' | translate: { nombre: confirmar.funcionario.nombre } }}</h2>
+        <p class="text-gray-600 mt-2">{{ 'wg.admin.col.confActivarTexto' | translate }}</p>
       }
       <div class="flex gap-3 mt-6">
-        <button type="button" (click)="confirmar = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+        <button type="button" (click)="confirmar = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.admin.cancelar' | translate }}</button>
         <button type="button" (click)="confirmarAccion()" [disabled]="procesando"
                 class="flex-1 py-2.5 rounded-xl font-semibold text-white disabled:opacity-60"
                 [class]="confirmar.tipo === 'eliminar' || (confirmar.tipo === 'estado' && confirmar.funcionario.estado === 'active') ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-600 hover:bg-teal-700'">
-          {{ procesando ? 'Un momento…' : (confirmar.tipo === 'eliminar' ? 'Eliminar' : 'Confirmar') }}
+          {{ (procesando ? 'wg.admin.col.unMomento' : (confirmar.tipo === 'eliminar' ? 'wg.admin.eliminar' : 'wg.admin.col.confirmar')) | translate }}
         </button>
       </div>
     </div>

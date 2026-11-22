@@ -7,6 +7,7 @@ import { movimientosEstudiante } from './arqueo.js';
 import { estadoRondas } from './wfunds.js';
 import { CRITERIOS, resumenCalificaciones } from './rubrica.js';
 import { datosTipoCambio } from './tipocambio.js';
+import { idiomaDe, traducirMensaje } from './mensajes.js';
 
 const MINUTOS_CODIGO = 10;
 const MAX_INTENTOS = 5;
@@ -26,6 +27,41 @@ export function ocultarCorreo(correo) {
 	return `${visible}@${dominio}`;
 }
 
+const TEXTOS_CORREO_CODIGO = {
+	es: {
+		asunto: (codigo) => `Tu código de Will-Go: ${codigo}`,
+		hola: (nombre) => `Hola, ${nombre}`,
+		intro: 'Este es tu código para entrar al portal de acudientes de Will-Go Economy:',
+		vence: (minutos) => `Vence en ${minutos} minutos. Si no lo pediste, ignora este correo.`,
+	},
+	en: {
+		asunto: (codigo) => `Your Will-Go code: ${codigo}`,
+		hola: (nombre) => `Hello, ${nombre}`,
+		intro: 'This is your code to sign in to the Will-Go Economy parent portal:',
+		vence: (minutos) => `It expires in ${minutos} minutes. If you did not request it, ignore this email.`,
+	},
+	fr: {
+		asunto: (codigo) => `Votre code Will-Go : ${codigo}`,
+		hola: (nombre) => `Bonjour ${nombre},`,
+		intro: 'Voici votre code pour accéder au portail des parents de Will-Go Economy :',
+		vence: (minutos) => `Il expire dans ${minutos} minutes. Si vous ne l'avez pas demandé, ignorez cet e-mail.`,
+	},
+};
+
+/** Asunto y cuerpo (HTML) del correo con el código de entrada, en el idioma pedido (es, en o fr). */
+export function correoCodigoAcudiente({ nombre, codigo, minutos, idioma = 'es' }) {
+	const t = TEXTOS_CORREO_CODIGO[idioma] ?? TEXTOS_CORREO_CODIGO.es;
+	const limpio = String(nombre ?? '').replace(/[<>&]/g, '');
+	return {
+		subject: t.asunto(codigo),
+		html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#1f2937">
+				<h2 style="margin:0 0 8px">${t.hola(limpio)}</h2>
+				<p>${t.intro}</p>
+				<p style="font-size:36px;font-weight:800;letter-spacing:8px;margin:16px 0">${codigo}</p>
+				<p style="color:#6b7280;font-size:14px">${t.vence(minutos)}</p></div>`,
+	};
+}
+
 const deJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
 export function rutasAcudientes(router, { db, services, getSchema, logger }) {
@@ -33,9 +69,10 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		try {
 			res.json({ data: await fn(req) });
 		} catch (error) {
-			if (error instanceof WgeError) return res.status(error.status === 401 ? 403 : error.status).json({ errors: [{ message: error.message, extensions: { code: error.code } }] });
+			const idioma = idiomaDe(req);
+			if (error instanceof WgeError) return res.status(error.status === 401 ? 403 : error.status).json({ errors: [{ message: traducirMensaje(error.message, idioma), extensions: { code: error.code } }] });
 			logger.error(error, 'wge: portal acudiente');
-			res.status(500).json({ errors: [{ message: 'Error interno en Will Go Economy', extensions: { code: 'ERROR_INTERNO' } }] });
+			res.status(500).json({ errors: [{ message: traducirMensaje('Error interno en Will Go Economy', idioma), extensions: { code: 'ERROR_INTERNO' } }] });
 		}
 	};
 
@@ -96,12 +133,7 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		const correo = new services.MailService({ schema: await getSchema(), knex: db });
 		await correo.send({
 			to: acudiente.email,
-			subject: `Tu código de Will-Go: ${codigo}`,
-			html: `<div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#1f2937">
-				<h2 style="margin:0 0 8px">Hola, ${String(acudiente.nombre ?? '').replace(/[<>&]/g, '')}</h2>
-				<p>Este es tu código para entrar al portal de acudientes de Will-Go Economy:</p>
-				<p style="font-size:36px;font-weight:800;letter-spacing:8px;margin:16px 0">${codigo}</p>
-				<p style="color:#6b7280;font-size:14px">Vence en ${MINUTOS_CODIGO} minutos. Si no lo pediste, ignora este correo.</p></div>`,
+			...correoCodigoAcudiente({ nombre: acudiente.nombre, codigo, minutos: MINUTOS_CODIGO, idioma: idiomaDe(req) }),
 		});
 		return { ...respuesta, correo: ocultarCorreo(acudiente.email) };
 	}));

@@ -12,6 +12,7 @@ import { rutasAcudientes } from './acudientes.js';
 import { rutasRubrica } from './rubrica.js';
 import { rutasTipoCambio } from './tipocambio.js';
 import { rutasCierre } from './cierre.js';
+import { idiomaDe, traducirMensaje } from './mensajes.js';
 import { rutasCaja, inventarioCaja, exigirResponsableCaja, precioEnBilletesCaja } from './caja.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
@@ -26,9 +27,10 @@ export default {
 				const rol = await rolDelUsuario(db, req.accountability);
 				res.json({ data: await fn(req, rol) });
 			} catch (error) {
-				if (error instanceof WgeError) return res.status(error.status).json({ errors: [{ message: error.message, extensions: { code: error.code } }] });
+				const idioma = idiomaDe(req);
+				if (error instanceof WgeError) return res.status(error.status).json({ errors: [{ message: traducirMensaje(error.message, idioma), extensions: { code: error.code } }] });
 				logger.error(error, 'wge');
-				res.status(500).json({ errors: [{ message: 'Error interno en Will Go Economy', extensions: { code: 'ERROR_INTERNO' } }] });
+				res.status(500).json({ errors: [{ message: traducirMensaje('Error interno en Will Go Economy', idioma), extensions: { code: 'ERROR_INTERNO' } }] });
 			}
 		};
 

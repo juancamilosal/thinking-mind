@@ -266,7 +266,9 @@ export async function exigirEquipo(db, { edicionId, usuarioId, rol, paisId = nul
 	if (!fila) throw new WgeError(403, 'FUERA_DEL_EQUIPO', `${quien} no hace parte del equipo de esta edición`);
 	if (paisId && fila.pais_id && fila.pais_id !== paisId) {
 		const pais = await db('wge_paises').where('id', fila.pais_id).first('nombre');
-		throw new WgeError(409, 'OTRO_PAIS', `${quien === 'Tu usuario' ? 'Eres' : quien + ' es'} docente de ${pais?.nombre ?? 'otro país'}; no maneja billetes de este país`);
+		const nombrePais = pais?.nombre ?? 'otro país';
+		if (quien === 'Tu usuario') throw new WgeError(409, 'OTRO_PAIS', `Eres docente de ${nombrePais}; no maneja billetes de este país`);
+		throw new WgeError(409, 'OTRO_PAIS', `${quien} es docente de ${nombrePais}; no maneja billetes de este país`);
 	}
 	return fila;
 }

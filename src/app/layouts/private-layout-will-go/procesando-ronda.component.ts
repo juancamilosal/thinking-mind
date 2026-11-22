@@ -1,4 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * Tarjeta que se muestra cuando el reloj de la ronda llega a 0 y el servidor está cerrándola:
@@ -7,6 +8,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 @Component({
   selector: 'wg-procesando-ronda',
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500" role="status" aria-live="polite">
       <!-- Brillo que recorre la tarjeta -->
@@ -21,9 +23,9 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
           </div>
         </div>
         <div class="min-w-0">
-          <p class="text-xs font-semibold uppercase tracking-wide opacity-90">{{ ronda }} terminó</p>
-          <p class="text-lg font-extrabold leading-snug">Estamos procesando los votos</p>
-          <p class="text-sm opacity-95">y calculando las ganancias de las empresas…</p>
+          <p class="text-xs font-semibold uppercase tracking-wide opacity-90">{{ 'wg.nucleo.ronda.termino' | translate: { ronda: ronda || ('wg.nucleo.ronda.laRonda' | translate) } }}</p>
+          <p class="text-lg font-extrabold leading-snug">{{ 'wg.nucleo.ronda.procesando' | translate }}</p>
+          <p class="text-sm opacity-95">{{ 'wg.nucleo.ronda.calculando' | translate }}</p>
         </div>
       </div>
 
@@ -37,7 +39,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
             } @else {
               <span class="w-5 h-5 rounded-full border-2 border-white/50" aria-hidden="true"></span>
             }
-            {{ p }}
+            {{ p | translate }}
           </li>
         }
       </ol>
@@ -45,7 +47,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
       <div class="relative mt-4 h-1.5 rounded-full bg-white/25 overflow-hidden" aria-hidden="true">
         <div class="barra h-full w-1/3 rounded-full bg-white"></div>
       </div>
-      <p class="relative mt-2 text-xs opacity-90">En unos segundos verás los resultados. No cierres esta página.</p>
+      <p class="relative mt-2 text-xs opacity-90">{{ 'wg.nucleo.ronda.enUnosSegundos' | translate }}</p>
     </div>
   `,
   styles: [`
@@ -57,8 +59,10 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
   `],
 })
 export class ProcesandoRondaComponent implements OnInit, OnDestroy {
-  @Input() ronda = 'La ronda';
-  readonly pasos = ['Ronda cerrada', 'Contando los votos', 'Calculando las ganancias', 'Abonando a los estudiantes'];
+  /** Nombre de la ronda; vacío = «La ronda» traducido (wg.nucleo.ronda.laRonda). */
+  @Input() ronda = '';
+  /** Claves de traducción de los pasos. */
+  readonly pasos = ['wg.nucleo.ronda.paso1', 'wg.nucleo.ronda.paso2', 'wg.nucleo.ronda.paso3', 'wg.nucleo.ronda.paso4'];
   paso = 1;
   private reloj: ReturnType<typeof setInterval> | null = null;
 

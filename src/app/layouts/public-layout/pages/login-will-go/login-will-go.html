@@ -2,6 +2,11 @@
 
   <!-- Panel de marca: a la izquierda en computador, como banda superior en celular -->
   <section class="wg-marca" aria-label="Will-Go Economy">
+    <!-- Selector de idioma: arriba a la derecha del panel oscuro -->
+    <div class="absolute top-4 right-4 z-20">
+      <wg-selector-idioma variante="oscuro" alinear="derecha" />
+    </div>
+
     <!-- Billetes flotando de fondo -->
     <div class="wg-billetes" aria-hidden="true">
       @for (b of billetesFondo; track $index) {
@@ -39,10 +44,10 @@
         </div>
       }
 
-      <h1 class="wg-saludo">¡Bienvenido!</h1>
-      <p class="wg-lema">Aprende, gana y decide con tu propia moneda.</p>
+      <h1 class="wg-saludo">{{ 'wg.nucleo.login.bienvenido' | translate }}</h1>
+      <p class="wg-lema">{{ 'wg.nucleo.login.lema' | translate }}</p>
 
-      <ul class="wg-paises" aria-label="Países de la economía">
+      <ul class="wg-paises" [attr.aria-label]="'wg.nucleo.login.paisesAria' | translate">
         <li><span class="wg-punto" style="background:#3B82F6"></span>Wonderland</li>
         <li><span class="wg-punto" style="background:#22C55E"></span>Neverland</li>
         <li><span class="wg-punto" style="background:#A855F7"></span>Dreamland</li>
@@ -55,30 +60,30 @@
   <!-- Formulario -->
   <section class="wg-formulario">
     <div class="wg-tarjeta">
-      <span class="wg-etiqueta">Colaboradores</span>
-      <h2 class="wg-titulo">Ingreso</h2>
-      <p class="wg-subtitulo">Inicia sesión para continuar</p>
+      <span class="wg-etiqueta">{{ 'wg.nucleo.login.colaboradores' | translate }}</span>
+      <h2 class="wg-titulo">{{ 'wg.nucleo.login.ingreso' | translate }}</h2>
+      <p class="wg-subtitulo">{{ 'wg.nucleo.login.subtitulo' | translate }}</p>
 
       <form [formGroup]="form" (ngSubmit)="ingresar()" novalidate>
         <div class="wg-campo">
-          <label for="wg-email">Correo electrónico</label>
+          <label for="wg-email">{{ 'wg.nucleo.login.correo' | translate }}</label>
           <div class="wg-input-icono">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             <input id="wg-email" type="email" formControlName="email" autocomplete="username" inputmode="email"
-                   placeholder="nombre@correo.com" [class.wg-invalido]="invalido('email')">
+                   [placeholder]="'wg.nucleo.login.correoPlaceholder' | translate" [class.wg-invalido]="invalido('email')">
           </div>
           @if (invalido('email')) {
-            <p class="wg-error-campo">Escribe un correo válido.</p>
+            <p class="wg-error-campo">{{ 'wg.nucleo.login.correoInvalido' | translate }}</p>
           }
         </div>
 
         <div class="wg-campo">
-          <label for="wg-clave">Contraseña</label>
+          <label for="wg-clave">{{ 'wg.nucleo.login.clave' | translate }}</label>
           <div class="wg-input-icono">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <input id="wg-clave" [type]="verClave ? 'text' : 'password'" formControlName="password" autocomplete="current-password"
                    placeholder="••••••••" [class.wg-invalido]="invalido('password')">
-            <button type="button" class="wg-ver" (click)="verClave = !verClave" [attr.aria-label]="verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <button type="button" class="wg-ver" (click)="verClave = !verClave" [attr.aria-label]="(verClave ? 'wg.nucleo.login.ocultarClave' : 'wg.nucleo.login.mostrarClave') | translate">
               @if (verClave) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
               } @else {
@@ -87,7 +92,7 @@
             </button>
           </div>
           @if (invalido('password')) {
-            <p class="wg-error-campo">Escribe tu contraseña.</p>
+            <p class="wg-error-campo">{{ 'wg.nucleo.login.claveVacia' | translate }}</p>
           }
         </div>
 
@@ -100,18 +105,18 @@
 
         <button type="submit" class="wg-boton" [disabled]="cargando">
           @if (cargando) {
-            <span class="wg-girando"></span> Ingresando…
+            <span class="wg-girando"></span> {{ 'wg.nucleo.login.ingresando' | translate }}
           } @else {
-            Ingresar
+            {{ 'wg.nucleo.login.ingresar' | translate }}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
           }
         </button>
       </form>
 
       <div class="wg-ayuda">
-        <button type="button" (click)="mostrarAyuda = !mostrarAyuda">¿Olvidaste tu contraseña?</button>
+        <button type="button" (click)="mostrarAyuda = !mostrarAyuda">{{ 'wg.nucleo.login.olvido' | translate }}</button>
         @if (mostrarAyuda) {
-          <p>Pídele al administrativo de Will-Go que te asigne una clave temporal. Al entrar con ella, el sistema te pedirá crear una nueva.</p>
+          <p>{{ 'wg.nucleo.login.ayudaOlvido' | translate }}</p>
         }
       </div>
       <wg-instalar-app class="block mt-6" />

@@ -11,19 +11,20 @@ import { TabEconomia } from './tabs/tab-economia';
 import { TabEquipo } from './tabs/tab-equipo';
 import { TabResumen } from './tabs/tab-resumen';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 'resumen';
 
 @Component({
   selector: 'app-edicion-will-go',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabEconomia, TabParticipantes, TabTienda, TabEquipo, TabResumen, FormsModule],
+  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabEconomia, TabParticipantes, TabTienda, TabEquipo, TabResumen, FormsModule, TranslatePipe],
   template: `
     <div class="max-w-6xl mx-auto">
-      <a routerLink="/private-will-go/ediciones" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-orange-700">← Ediciones</a>
+      <a routerLink="/private-will-go/ediciones" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-orange-700">{{ 'wg.admin.edi.volver' | translate }}</a>
 
       @if (cargando) {
-        <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando edición…</div>
+        <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.admin.edi.cargando' | translate }}</div>
       } @else if (error) {
         <div class="mt-4 bg-white rounded-2xl border border-red-200 p-8 text-center text-red-700">{{ error }}</div>
       } @else if (edicion) {
@@ -33,40 +34,40 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
                 <h1 class="text-2xl font-bold text-gray-800">{{ edicion.nombre }}</h1>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[edicion.estado].clase">{{ estado[edicion.estado].texto }}</span>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[edicion.estado].clase">{{ estado[edicion.estado].texto | translate }}</span>
               </div>
-              <p class="text-gray-500 mt-1">{{ edicion.colegio_nombre || 'Sin colegio' }} · {{ edicion.programa_nombre || 'Sin programa' }}{{ edicion.edicion_programa ? ' · Edición ' + edicion.edicion_programa : '' }}</p>
+              <p class="text-gray-500 mt-1">{{ edicion.colegio_nombre || ('wg.admin.sinColegio' | translate) }} · {{ edicion.programa_nombre || ('wg.admin.sinPrograma' | translate) }}{{ edicion.edicion_programa ? ' · ' + ('wg.admin.edicionN' | translate: { n: edicion.edicion_programa }) : '' }}</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
             <button type="button" (click)="eliminando = true"
                     class="order-2 sm:order-1 px-4 py-3 rounded-xl text-sm font-semibold border border-red-200 text-red-700 hover:bg-red-50">
-              Eliminar
+              {{ 'wg.admin.eliminar' | translate }}
             </button>
             @if (edicion.estado === 'borrador') {
               <button type="button" (click)="verificarApertura()"
                       class="order-1 sm:order-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow hover:brightness-110">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Abrir edición
+                {{ 'wg.admin.edi.abrir' | translate }}
               </button>
             } @else if (edicion.estado === 'abierta') {
-              <p class="order-1 sm:order-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">La economía está en marcha: el banco ya tiene sus billetes.</p>
+              <p class="order-1 sm:order-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">{{ 'wg.admin.edi.enMarcha' | translate }}</p>
               <button type="button" (click)="abrirCierre()"
                       class="order-1 sm:order-3 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 shadow">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
-                Cerrar edición
+                {{ 'wg.admin.edi.cerrar' | translate }}
               </button>
             } @else if (edicion.estado === 'cerrada') {
-              <p class="order-1 sm:order-2 text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-xl px-4 py-2">Edición cerrada: los números quedaron fijos. Mira el <button type="button" class="font-semibold underline p-0" (click)="pestana = 'resumen'">resumen final</button>.</p>
+              <p class="order-1 sm:order-2 text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-xl px-4 py-2">{{ 'wg.admin.edi.cerradaTexto' | translate }} <button type="button" class="font-semibold underline p-0" (click)="pestana = 'resumen'">{{ 'wg.admin.edi.cerradaEnlace' | translate }}</button>{{ 'wg.admin.edi.cerradaFin' | translate }}</p>
             }
             </div>
           </div>
 
           <!-- Resumen -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.participantes }}</p><p class="text-xs text-gray-500">Estudiantes{{ edicion.retirados ? ' · ' + edicion.retirados + ' retirados' : '' }}</p></div>
-            <div class="rounded-xl p-3" [class]="edicion.sin_pais ? 'bg-amber-50' : 'bg-gray-50'"><p class="text-xl font-bold" [class]="edicion.sin_pais ? 'text-amber-700' : 'text-gray-800'">{{ edicion.sin_pais }}</p><p class="text-xs text-gray-500">Sin país asignado</p></div>
-            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.tasa_inicial | number }}</p><p class="text-xs text-gray-500">Tasa inicial (pesos por billete)</p></div>
-            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.investment_bill }}</p><p class="text-xs text-gray-500">Billetes de bienvenida</p></div>
+            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.participantes }}</p><p class="text-xs text-gray-500">{{ 'wg.admin.edi.estudiantes' | translate }}{{ edicion.retirados ? ' · ' + ('wg.admin.edi.retirados' | translate: { n: edicion.retirados }) : '' }}</p></div>
+            <div class="rounded-xl p-3" [class]="edicion.sin_pais ? 'bg-amber-50' : 'bg-gray-50'"><p class="text-xl font-bold" [class]="edicion.sin_pais ? 'text-amber-700' : 'text-gray-800'">{{ edicion.sin_pais }}</p><p class="text-xs text-gray-500">{{ 'wg.admin.edi.sinPaisAsignado' | translate }}</p></div>
+            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.tasa_inicial | number }}</p><p class="text-xs text-gray-500">{{ 'wg.admin.edi.tasaInicial' | translate }}</p></div>
+            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.investment_bill }}</p><p class="text-xs text-gray-500">{{ 'wg.admin.billetesBienvenida' | translate }}</p></div>
           </div>
         </div>
 
@@ -77,7 +78,7 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 
               <button type="button" role="tab" [attr.aria-selected]="pestana === p.id" (click)="elegirPestana(p.id, $event)"
                       class="whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition"
                       [class]="pestana === p.id ? 'bg-slate-800 text-white shadow' : 'text-gray-600 hover:bg-gray-100'">
-                {{ p.texto }}
+                {{ p.texto | translate }}
               </button>
             }
           </div>
@@ -106,23 +107,23 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 
     @if (cerrando && edicion) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrando = false">
         <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre-edicion">
-          <h2 id="titulo-cierre-edicion" class="text-lg font-bold text-gray-800">¿Cerrar {{ edicion.nombre }}?</h2>
-          <p class="text-sm text-gray-600 mt-2">Esto es para el final del programa. Al cerrar:</p>
+          <h2 id="titulo-cierre-edicion" class="text-lg font-bold text-gray-800">{{ 'wg.admin.edi.cierreTitulo' | translate: { nombre: edicion.nombre } }}</h2>
+          <p class="text-sm text-gray-600 mt-2">{{ 'wg.admin.edi.cierreIntro' | translate }}</p>
           <ul class="mt-2 space-y-1.5 text-sm text-gray-700">
-            <li class="flex gap-2"><span aria-hidden="true">🛑</span> Si hay una ronda de W-Funds abierta, se cierra con sus resultados y no se abren más.</li>
-            <li class="flex gap-2"><span aria-hidden="true">💰</span> Lo que cada estudiante tenga invertido vuelve a su saldo con lo que vale hoy.</li>
-            <li class="flex gap-2"><span aria-hidden="true">🔒</span> Ya no se vende en GO•STORE, no se invierte y la tasa deja de moverse.</li>
-            <li class="flex gap-2"><span aria-hidden="true">📊</span> Queda el resumen final con los resultados de cada estudiante y empresa.</li>
+            <li class="flex gap-2"><span aria-hidden="true">🛑</span> {{ 'wg.admin.edi.cierre1' | translate }}</li>
+            <li class="flex gap-2"><span aria-hidden="true">💰</span> {{ 'wg.admin.edi.cierre2' | translate }}</li>
+            <li class="flex gap-2"><span aria-hidden="true">🔒</span> {{ 'wg.admin.edi.cierre3' | translate }}</li>
+            <li class="flex gap-2"><span aria-hidden="true">📊</span> {{ 'wg.admin.edi.cierre4' | translate }}</li>
           </ul>
-          <p class="mt-3 text-sm font-semibold text-red-700">No se puede deshacer.</p>
-          <label for="confirmar-cierre" class="block mt-4 text-sm text-gray-700">Escribe <b>CERRAR</b> para confirmar</label>
+          <p class="mt-3 text-sm font-semibold text-red-700">{{ 'wg.admin.edi.noDeshacer' | translate }}</p>
+          <label for="confirmar-cierre" class="block mt-4 text-sm text-gray-700" [innerHTML]="'wg.admin.edi.escribePalabra' | translate: { palabra: palabraCierre }"></label>
           <input id="confirmar-cierre" [(ngModel)]="textoCierre" autocomplete="off" autocapitalize="characters"
                  class="mt-1 w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl font-semibold tracking-wider focus:outline-none focus:ring-2 focus:ring-slate-300">
           @if (errorCierre) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorCierre }}</p> }
           <div class="mt-5 flex gap-2">
-            <button type="button" (click)="cerrando = false" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
-            <button type="button" (click)="cerrar()" [disabled]="cerrandoAhora || textoCierre.trim().toUpperCase() !== 'CERRAR'"
-                    class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">{{ cerrandoAhora ? 'Cerrando…' : 'Cerrar edición' }}</button>
+            <button type="button" (click)="cerrando = false" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">{{ 'wg.admin.cancelar' | translate }}</button>
+            <button type="button" (click)="cerrar()" [disabled]="cerrandoAhora || textoCierre.trim().toUpperCase() !== palabraCierre.toUpperCase()"
+                    class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">{{ (cerrandoAhora ? 'wg.admin.edi.cerrando' : 'wg.admin.edi.cerrar') | translate }}</button>
           </div>
         </div>
       </div>
@@ -136,13 +137,13 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 
     @if (revision) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="revision = null">
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
-          <h2 class="text-lg font-bold text-gray-800">Abrir la edición</h2>
-          <p class="text-gray-600 mt-1 text-sm">Al abrir, cada estudiante con país recibe sus billetes de bienvenida desde el banco de su país, y empieza a moverse la tasa.</p>
+          <h2 class="text-lg font-bold text-gray-800">{{ 'wg.admin.edi.aperturaTitulo' | translate }}</h2>
+          <p class="text-gray-600 mt-1 text-sm">{{ 'wg.admin.edi.aperturaTexto' | translate }}</p>
           <ul class="mt-4 space-y-2">
-            @for (r of revision; track r.texto) {
+            @for (r of revision; track $index) {
               <li class="flex items-start gap-2 text-sm">
                 <span [class]="r.ok ? 'text-emerald-600' : (r.bloquea ? 'text-red-600' : 'text-amber-600')">{{ r.ok ? '✓' : (r.bloquea ? '✕' : '!') }}</span>
-                <span [class]="r.ok ? 'text-gray-700' : (r.bloquea ? 'text-red-700' : 'text-amber-800')">{{ r.texto }}</span>
+                <span [class]="r.ok ? 'text-gray-700' : (r.bloquea ? 'text-red-700' : 'text-amber-800')">{{ r.texto | translate: r.params }}</span>
               </li>
             }
           </ul>
@@ -150,10 +151,10 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 
             <p class="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ errorApertura }}</p>
           }
           <div class="flex gap-3 mt-6">
-            <button type="button" (click)="revision = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+            <button type="button" (click)="revision = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.admin.cancelar' | translate }}</button>
             <button type="button" (click)="abrir()" [disabled]="abriendo || bloqueado"
                     class="flex-1 py-2.5 rounded-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              {{ abriendo ? 'Abriendo…' : 'Abrir ahora' }}
+              {{ (abriendo ? 'wg.admin.edi.abriendo' : 'wg.admin.edi.abrirAhora') | translate }}
             </button>
           </div>
         </div>
@@ -170,20 +171,21 @@ export class EdicionWillGo implements OnInit {
   private willGo = inject(WillGoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private t = inject(TranslateService);
   readonly estado = ESTADO_EDICION;
   private readonly todas: { id: Pestana; texto: string }[] = [
-    { id: 'general', texto: 'General' },
-    { id: 'economia', texto: 'Economía' },
-    { id: 'tienda', texto: 'GO•STORE' },
-    { id: 'participantes', texto: 'Estudiantes' },
-    { id: 'equipo', texto: 'Colaboradores' },
-    { id: 'resumen', texto: 'Resumen' },
+    { id: 'general', texto: 'wg.admin.edi.pestana.general' },
+    { id: 'economia', texto: 'wg.admin.edi.pestana.economia' },
+    { id: 'tienda', texto: 'wg.admin.edi.pestana.tienda' },
+    { id: 'participantes', texto: 'wg.admin.edi.pestana.participantes' },
+    { id: 'equipo', texto: 'wg.admin.edi.pestana.equipo' },
+    { id: 'resumen', texto: 'wg.admin.edi.pestana.resumen' },
   ];
   /** El resumen aparece cuando la edición ya arrancó (abierta: vista previa; cerrada: resumen final). */
   get pestanas(): { id: Pestana; texto: string }[] {
     const e = this.edicion?.estado;
     return this.todas.filter((p) => p.id !== 'resumen' || e === 'abierta' || e === 'cerrada')
-      .map((p) => (p.id === 'resumen' && e === 'cerrada' ? { ...p, texto: 'Resumen final' } : p));
+      .map((p) => (p.id === 'resumen' && e === 'cerrada' ? { ...p, texto: 'wg.admin.edi.pestana.resumenFinal' } : p));
   }
 
   edicion: Edicion | null = null;
@@ -216,7 +218,8 @@ export class EdicionWillGo implements OnInit {
   }
   cargando = true;
   error = '';
-  revision: { texto: string; ok: boolean; bloquea: boolean }[] | null = null;
+  /** Puntos de la revisión: `texto` es la clave de traducción y `params` sus valores. */
+  revision: { texto: string; params?: Record<string, unknown>; ok: boolean; bloquea: boolean }[] | null = null;
   abriendo = false;
   errorApertura = '';
   aviso = '';
@@ -243,8 +246,8 @@ export class EdicionWillGo implements OnInit {
         if (e.estado === 'cerrada' && !this.pestanaPedida) { this.pestana = 'resumen'; this.pestanaPedida = true; }
         if (this.pestana === 'resumen' && e.estado === 'borrador') this.pestana = 'general';
         const partes = [
-          e.nuevos ? (e.nuevos === 1 ? 'Llegó 1 inscrito nuevo.' : `Llegaron ${e.nuevos} inscritos nuevos.`) : '',
-          e.quitados ? (e.quitados === 1 ? 'Salió 1 estudiante que no es del colegio de la edición.' : `Salieron ${e.quitados} estudiantes que no son del colegio de la edición.`) : '',
+          e.nuevos ? this.t.instant(e.nuevos === 1 ? 'wg.admin.edi.avisoNuevo' : 'wg.admin.edi.avisoNuevos', { n: e.nuevos }) : '',
+          e.quitados ? this.t.instant(e.quitados === 1 ? 'wg.admin.edi.avisoQuitado' : 'wg.admin.edi.avisoQuitados', { n: e.quitados }) : '',
         ].filter(Boolean);
         if (partes.length) this.mostrarAviso(partes.join(' '));
       },
@@ -262,23 +265,24 @@ export class EdicionWillGo implements OnInit {
         const sinProvision = paises.filter((p) => !p.provision_inicial);
         const conPais = e.participantes - e.sin_pais;
         this.revision = [
-          { texto: `${paises.length} países configurados`, ok: paises.length > 0, bloquea: true },
+          { texto: 'wg.admin.edi.rev.paises', params: { n: paises.length }, ok: paises.length > 0, bloquea: true },
           {
-            texto: sinProvision.length ? `Sin provisión del banco: ${sinProvision.map((p) => p.nombre).join(', ')}` : 'Todos los países tienen provisión del banco',
+            texto: sinProvision.length ? 'wg.admin.edi.rev.sinProvision' : 'wg.admin.edi.rev.todosProvision',
+            params: { paises: sinProvision.map((p) => p.nombre).join(', ') },
             ok: !sinProvision.length, bloquea: true,
           },
-          { texto: `${e.participantes} estudiantes inscritos`, ok: e.participantes > 0, bloquea: false },
+          { texto: 'wg.admin.edi.rev.inscritos', params: { n: e.participantes }, ok: e.participantes > 0, bloquea: false },
           {
-            texto: e.sin_pais ? `${e.sin_pais} estudiantes sin país (no reciben bienvenida hasta tener uno)` : 'Todos los estudiantes tienen país',
+            texto: e.sin_pais ? 'wg.admin.edi.rev.sinPais' : 'wg.admin.edi.rev.todosConPais', params: { n: e.sin_pais },
             ok: !e.sin_pais, bloquea: false,
           },
           {
-            texto: e.equipo ? `${e.equipo} colaboradores en el equipo` : 'La edición no tiene colaboradores: nadie podrá entregar billetes ni cobrar',
+            texto: e.equipo ? 'wg.admin.edi.rev.equipo' : 'wg.admin.edi.rev.sinEquipo', params: { n: e.equipo },
             ok: !!e.equipo, bloquea: false,
           },
-          { texto: `Horario con ${e.horario?.length ?? 0} franjas (fuera de ellas la tasa no cambia)`, ok: !!e.horario?.length, bloquea: false },
+          { texto: 'wg.admin.edi.rev.horario', params: { n: e.horario?.length ?? 0 }, ok: !!e.horario?.length, bloquea: false },
           {
-            texto: `Bienvenida: ${e.investment_bill} billetes × ${conPais} estudiantes con país`,
+            texto: 'wg.admin.edi.rev.bienvenida', params: { billetes: e.investment_bill, n: conPais },
             ok: true, bloquea: false,
           },
         ];
@@ -295,7 +299,7 @@ export class EdicionWillGo implements OnInit {
       next: (r) => {
         this.abriendo = false;
         this.revision = null;
-        this.mostrarAviso(`Edición abierta: ${r.provisiones} provisiones del banco y ${r.bienvenidas} bienvenidas entregadas.`);
+        this.mostrarAviso(this.t.instant('wg.admin.edi.avisoAbierta', { provisiones: r.provisiones, bienvenidas: r.bienvenidas }));
         this.recargar();
       },
       error: (err) => { this.abriendo = false; this.errorApertura = WillGoService.mensajeDeError(err); },
@@ -307,6 +311,8 @@ export class EdicionWillGo implements OnInit {
   cerrandoAhora = false;
   textoCierre = '';
   errorCierre = '';
+  /** Palabra que hay que escribir para cerrar (cambia con el idioma). */
+  get palabraCierre(): string { return this.t.instant('wg.admin.edi.palabraCierre'); }
   abrirCierre(): void { this.textoCierre = ''; this.errorCierre = ''; this.cerrando = true; }
   cerrar(): void {
     if (!this.edicion || this.cerrandoAhora) return;
@@ -316,9 +322,9 @@ export class EdicionWillGo implements OnInit {
       next: (r) => {
         this.cerrandoAhora = false;
         this.cerrando = false;
-        const partes = ['Edición cerrada.'];
-        if (r.rondas_cerradas) partes.push('Se cerró la ronda abierta.');
-        if (r.inversiones_liquidadas) partes.push(`${r.inversiones_liquidadas} ${r.inversiones_liquidadas === 1 ? 'inversión volvió' : 'inversiones volvieron'} al saldo de los estudiantes.`);
+        const partes: string[] = [this.t.instant('wg.admin.edi.avisoCerrada')];
+        if (r.rondas_cerradas) partes.push(this.t.instant('wg.admin.edi.avisoRondaCerrada'));
+        if (r.inversiones_liquidadas) partes.push(this.t.instant(r.inversiones_liquidadas === 1 ? 'wg.admin.edi.avisoInversion' : 'wg.admin.edi.avisoInversiones', { n: r.inversiones_liquidadas }));
         this.mostrarAviso(partes.join(' '));
         this.pestana = 'resumen';
         this.pestanaPedida = true;

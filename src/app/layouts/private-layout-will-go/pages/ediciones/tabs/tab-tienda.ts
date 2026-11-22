@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { DecimalPipe } from '@angular/common';
 import { Edicion, Funcionario, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
@@ -11,39 +12,39 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
 @Component({
   selector: 'app-tab-tienda',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, DecimalPipe, BuscadorPersonaComponent],
+  imports: [FormsModule, NumeroMilesDirective, DecimalPipe, BuscadorPersonaComponent, TranslatePipe],
   template: `
     <!-- Encargado de la caja -->
     <section class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-      <label for="encargado-caja" class="block text-sm font-semibold text-gray-700">Encargado de la caja</label>
-      <p class="text-xs text-gray-500 mb-2">Solo esta persona (o un administrativo) vende en la caja y entrega los billetes al banco.</p>
+      <label for="encargado-caja" class="block text-sm font-semibold text-gray-700">{{ 'wg.pestanas.tienda.encargadoCaja' | translate }}</label>
+      <p class="text-xs text-gray-500 mb-2">{{ 'wg.pestanas.tienda.soloEncargado' | translate }}</p>
       <div class="flex flex-col sm:flex-row gap-2">
         <div class="flex-1">
           <wg-buscador-persona inputId="encargado-caja" [(ngModel)]="encargado" [personas]="cajeros"
-                               placeholder="Buscar colaborador de caja…" vacio="No hay colaboradores con rol Cajero" />
+                               [placeholder]="'wg.pestanas.tienda.buscarCajero' | translate" [vacio]="'wg.pestanas.tienda.sinCajeros' | translate" />
         </div>
         <button type="button" (click)="guardarEncargado()" [disabled]="guardandoEncargado || encargado === (edicion.responsable_caja ?? null)"
                 class="shrink-0 px-5 py-3 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">
-          {{ guardandoEncargado ? 'Guardando…' : 'Guardar' }}
+          {{ (guardandoEncargado ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}
         </button>
       </div>
-      @if (!cajeros.length) { <p class="text-xs text-gray-500 mt-2">Crea primero un colaborador con rol Cajero en <b>Colaboradores</b>.</p> }
+      @if (!cajeros.length) { <p class="text-xs text-gray-500 mt-2" [innerHTML]="'wg.pestanas.tienda.crearCajero' | translate"></p> }
       @if (avisoEncargado) { <p class="text-sm text-emerald-700 mt-2" role="status">{{ avisoEncargado }}</p> }
     </section>
 
     <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-      <p class="text-sm text-gray-500">El precio se pone en <b>pesos educativos</b>. En la caja se convierte a billetes con la tasa vigente del país de cada estudiante.</p>
+      <p class="text-sm text-gray-500" [innerHTML]="'wg.pestanas.tienda.precioPesos' | translate"></p>
       <button type="button" (click)="nuevo()" class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow hover:brightness-110">
-        + Nuevo producto
+        {{ 'wg.pestanas.tienda.nuevoProducto' | translate }}
       </button>
     </div>
 
     @if (cargando) {
-      <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando productos…</div>
+      <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.pestanas.tienda.cargando' | translate }}</div>
     } @else if (!productos.length) {
       <div class="mt-4 bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
-        <p class="font-semibold text-gray-700">La tienda está vacía</p>
-        <p class="text-sm text-gray-500 mt-1">Agrega los productos con su foto, precio y unidades disponibles.</p>
+        <p class="font-semibold text-gray-700">{{ 'wg.pestanas.tienda.vacia' | translate }}</p>
+        <p class="text-sm text-gray-500 mt-1">{{ 'wg.pestanas.tienda.vaciaAyuda' | translate }}</p>
       </div>
     } @else {
       <div class="mt-4 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -59,17 +60,17 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
             </div>
             <div class="p-4 flex-1 min-w-0 flex flex-col">
               <p class="font-semibold text-gray-800 leading-tight">{{ p.nombre }}</p>
-              <p class="text-sm text-gray-500 mt-1">{{ p.precio_cop | number }} pesos</p>
+              <p class="text-sm text-gray-500 mt-1">{{ 'wg.pestanas.tienda.pesos' | translate: { n: (p.precio_cop | number) } }}</p>
               <div class="mt-2 flex flex-wrap gap-1">
                 @for (pa of paises; track pa.id) {
                   <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" [style.background]="pa.color">{{ billetes(p, pa) | number }} {{ pa.codigo_moneda }}</span>
                 }
               </div>
               <p class="text-xs mt-2" [class]="p.stock > 0 ? 'text-gray-500' : 'text-red-600 font-semibold'">
-                {{ p.stock > 0 ? (p.stock | number) + ' disponibles' : 'Agotado' }}{{ p.maximo_por_estudiante ? ' · máx. ' + p.maximo_por_estudiante + ' por estudiante' : '' }}
+                {{ p.stock > 0 ? ('wg.pestanas.tienda.disponibles' | translate: { n: (p.stock | number) }) : ('wg.pestanas.tienda.agotado' | translate) }}{{ p.maximo_por_estudiante ? ' · ' + ('wg.pestanas.tienda.maxPorEstudiante' | translate: { n: p.maximo_por_estudiante }) : '' }}
               </p>
-              @if (!p.activo) { <p class="text-xs font-semibold text-gray-500 mt-1">Oculto en la caja</p> }
-              <button type="button" (click)="editar(p)" class="mt-auto pt-3 text-sm font-semibold text-orange-700 hover:underline text-left">Editar</button>
+              @if (!p.activo) { <p class="text-xs font-semibold text-gray-500 mt-1">{{ 'wg.pestanas.tienda.ocultoCaja' | translate }}</p> }
+              <button type="button" (click)="editar(p)" class="mt-auto pt-3 text-sm font-semibold text-orange-700 hover:underline text-left">{{ 'wg.pestanas.comun.editar' | translate }}</button>
             </div>
           </article>
         }
@@ -80,8 +81,8 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="borrador = null">
         <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
           <div class="px-6 pt-6 pb-2 flex items-start justify-between">
-            <h2 class="text-xl font-bold text-gray-800">{{ borrador.id ? 'Editar producto' : 'Nuevo producto' }}</h2>
-            <button type="button" (click)="borrador = null" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+            <h2 class="text-xl font-bold text-gray-800">{{ (borrador.id ? 'wg.pestanas.tienda.tituloEditar' : 'wg.pestanas.tienda.tituloNuevo') | translate }}</h2>
+            <button type="button" (click)="borrador = null" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.pestanas.comun.cerrar' | translate">✕</button>
           </div>
           <div class="px-6 pb-6 space-y-4">
             <div class="flex items-center gap-4">
@@ -89,45 +90,45 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
                 @if (borrador.fotoVista) { <img [src]="borrador.fotoVista" alt="" class="w-full h-full object-cover"> } @else { <span class="text-4xl">🛍️</span> }
               </div>
               <label class="cursor-pointer px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                {{ subiendo ? 'Subiendo…' : (borrador.foto ? 'Cambiar foto' : 'Subir foto') }}
+                {{ (subiendo ? 'wg.pestanas.tienda.subiendo' : (borrador.foto ? 'wg.pestanas.tienda.cambiarFoto' : 'wg.pestanas.tienda.subirFoto')) | translate }}
                 <input type="file" accept="image/*" class="sr-only" (change)="elegirFoto($event)" [disabled]="subiendo">
               </label>
             </div>
             <div>
-              <label for="p-nombre" class="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
-              <input id="p-nombre" [(ngModel)]="borrador.nombre" class="campo" placeholder="Ej.: Gorra Will-Go">
+              <label for="p-nombre" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.comun.nombre' | translate }}</label>
+              <input id="p-nombre" [(ngModel)]="borrador.nombre" class="campo" [placeholder]="'wg.pestanas.tienda.ejemploNombre' | translate">
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label for="p-precio" class="block text-sm font-semibold text-gray-700 mb-1">Precio (pesos)</label>
+                <label for="p-precio" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.precio' | translate }}</label>
                 <input id="p-precio" wgNumero [(ngModel)]="borrador.precio_cop" class="campo">
               </div>
               <div>
-                <label for="p-stock" class="block text-sm font-semibold text-gray-700 mb-1">Unidades</label>
+                <label for="p-stock" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.unidades' | translate }}</label>
                 <input id="p-stock" wgNumero [(ngModel)]="borrador.stock" class="campo">
               </div>
             </div>
             <div>
-              <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1">Máximo por estudiante <span class="font-normal text-gray-400">(vacío = sin límite)</span></label>
+              <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.maximo' | translate }} <span class="font-normal text-gray-400">{{ 'wg.pestanas.tienda.sinLimite' | translate }}</span></label>
               <input id="p-max" wgNumero [(ngModel)]="borrador.maximo_por_estudiante" class="campo">
             </div>
             @if (borrador.precio_cop) {
-              <p class="text-sm text-gray-600 bg-gray-50 rounded-xl px-4 py-3">Hoy costaría:
+              <p class="text-sm text-gray-600 bg-gray-50 rounded-xl px-4 py-3">{{ 'wg.pestanas.tienda.hoyCostaria' | translate }}
                 @for (pa of paises; track pa.id) { <b class="ml-1">{{ billetes($any(borrador), pa) | number }} {{ pa.codigo_moneda }}</b> }
               </p>
             }
             <label class="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" [(ngModel)]="borrador.activo"> Visible en la caja
+              <input type="checkbox" [(ngModel)]="borrador.activo"> {{ 'wg.pestanas.tienda.visibleCaja' | translate }}
             </label>
             @if (error) { <p class="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ error }}</p> }
             <!-- Celular: un botón por línea (Guardar arriba). Computador: en fila -->
             <div class="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2">
               @if (borrador.id) {
-                <button type="button" (click)="borrar()" [disabled]="guardando" class="w-full sm:w-auto px-4 py-3 rounded-xl border border-red-200 font-semibold text-red-700 hover:bg-red-50">Eliminar</button>
+                <button type="button" (click)="borrar()" [disabled]="guardando" class="w-full sm:w-auto px-4 py-3 rounded-xl border border-red-200 font-semibold text-red-700 hover:bg-red-50">{{ 'wg.pestanas.comun.eliminar' | translate }}</button>
               }
-              <button type="button" (click)="borrador = null" class="w-full sm:w-auto sm:flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+              <button type="button" (click)="borrador = null" class="w-full sm:w-auto sm:flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.comun.cancelar' | translate }}</button>
               <button type="button" (click)="guardar()" [disabled]="guardando || subiendo" class="w-full sm:w-auto sm:flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-60">
-                {{ guardando ? 'Guardando…' : 'Guardar' }}
+                {{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}
               </button>
             </div>
           </div>
@@ -144,6 +145,7 @@ export class TabTienda implements OnInit {
   @Input({ required: true }) edicion!: Edicion;
   @Output() guardada = new EventEmitter<Edicion>();
   private willGo = inject(WillGoService);
+  private t = inject(TranslateService);
 
   cajeros: Funcionario[] = [];
   encargado: string | null = null;
@@ -177,7 +179,9 @@ export class TabTienda implements OnInit {
         this.edicion = e;
         this.guardada.emit(e);
         const c = this.cajeros.find((x) => x.id === e.responsable_caja);
-        this.avisoEncargado = c ? `${c.nombre} ${c.apellido} es el encargado de la caja (y quedó en el equipo).` : 'La caja quedó sin encargado.';
+        this.avisoEncargado = c
+          ? this.t.instant('wg.pestanas.tienda.avisoEncargado', { nombre: `${c.nombre} ${c.apellido}` })
+          : this.t.instant('wg.pestanas.tienda.sinEncargado');
         setTimeout(() => (this.avisoEncargado = ''), 5000);
       },
       error: (err) => { this.guardandoEncargado = false; this.error = WillGoService.mensajeDeError(err); },
@@ -224,7 +228,7 @@ export class TabTienda implements OnInit {
     const b = this.borrador;
     if (!b) return;
     if (!b.nombre?.trim() || b.precio_cop == null || Number(b.precio_cop) < 0) {
-      this.error = 'Escribe el nombre y el precio.';
+      this.error = this.t.instant('wg.pestanas.tienda.faltanDatos');
       return;
     }
     const datos: Partial<Producto> = {
@@ -248,7 +252,7 @@ export class TabTienda implements OnInit {
 
   borrar(): void {
     const b = this.borrador;
-    if (!b?.id || !confirm(`¿Eliminar «${b.nombre}»? Si ya tiene ventas, solo se ocultará de la caja.`)) return;
+    if (!b?.id || !confirm(this.t.instant('wg.pestanas.tienda.confirmarEliminar', { nombre: b.nombre }))) return;
     this.guardando = true;
     this.willGo.borrarProducto(b.id).subscribe({
       next: (r) => {

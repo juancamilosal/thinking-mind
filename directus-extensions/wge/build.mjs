@@ -13,6 +13,7 @@ const preparar = (codigo) => codigo
 	.replace(/^export (?=(async )?function|class|const)/gm, '');
 
 const lib = preparar(leer('lib.js'));
+const mensajes = preparar(leer('mensajes.js'));
 const funcionarios = preparar(leer('funcionarios.js'));
 const admin = preparar(leer('admin.js'));
 const arqueo = preparar(leer('arqueo.js'));
@@ -25,7 +26,7 @@ const cierre = preparar(leer('cierre.js'));
 const hook = preparar(leer('hook.js')).replace(/^export default /m, 'const configHook = ');
 const endpoint = preparar(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
 
-const cuerpo = [lib, funcionarios, admin, arqueo, wfunds, rubrica, hook, tipocambio, caja, cierre, acudientes, endpoint].join('\n');
+const cuerpo = [lib, mensajes, funcionarios, admin, arqueo, wfunds, rubrica, hook, tipocambio, caja, cierre, acudientes, endpoint].join('\n');
 if (/^\s*(import|export)\b/m.test(cuerpo)) throw new Error('Quedó un import/export sin convertir');
 
 const api = `// Generado por build.mjs: no editar a mano.

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Edicion, WillGoService } from '../../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { ESTILOS_CAMPOS } from './estilos-tabs';
@@ -8,52 +9,52 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
 @Component({
   selector: 'app-tab-reglas',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective],
+  imports: [FormsModule, NumeroMilesDirective, TranslatePipe],
   template: `
     <section class="tarjeta max-w-2xl space-y-5">
       <div>
-        <label for="r-tasa" class="etiqueta">Tasa inicial</label>
+        <label for="r-tasa" class="etiqueta">{{ 'wg.admin.reg.tasaInicial' | translate }}</label>
         <div class="flex items-center gap-2">
           <input id="r-tasa" wgNumero [(ngModel)]="datos.tasa_inicial" class="campo" [disabled]="bloqueado">
-          <span class="text-sm text-gray-500 whitespace-nowrap">pesos = 1 billete</span>
+          <span class="text-sm text-gray-500 whitespace-nowrap">{{ 'wg.admin.reg.pesosBillete' | translate }}</span>
         </div>
-        <p class="ayuda">Ej.: 5.000 pesos = {{ miles(ejemploPrecio) }} billetes</p>
+        <p class="ayuda">{{ 'wg.admin.reg.ejemplo' | translate: { n: miles(ejemploPrecio) } }}</p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label for="r-min" class="etiqueta">Tope mínimo</label>
+          <label for="r-min" class="etiqueta">{{ 'wg.admin.reg.topeMinimo' | translate }}</label>
           <input id="r-min" wgNumero [decimales]="2" [(ngModel)]="datos.tope_minimo" class="campo">
-          <p class="ayuda">Nunca baja de {{ miles(minimo) }}</p>
+          <p class="ayuda">{{ 'wg.admin.reg.nuncaBaja' | translate: { n: miles(minimo) } }}</p>
         </div>
         <div>
-          <label for="r-max" class="etiqueta">Tope máximo</label>
+          <label for="r-max" class="etiqueta">{{ 'wg.admin.reg.topeMaximo' | translate }}</label>
           <input id="r-max" wgNumero [decimales]="2" [(ngModel)]="datos.tope_maximo" class="campo">
-          <p class="ayuda">Nunca sube de {{ miles(maximo) }}</p>
+          <p class="ayuda">{{ 'wg.admin.reg.nuncaSube' | translate: { n: miles(maximo) } }}</p>
         </div>
       </div>
       <div>
-        <span class="etiqueta">El tipo de cambio cambia cada</span>
-        <div class="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Cada cuántos minutos cambia el tipo de cambio">
+        <span class="etiqueta">{{ 'wg.admin.reg.cambiaCada' | translate }}</span>
+        <div class="grid grid-cols-5 gap-2" role="radiogroup" [attr.aria-label]="'wg.admin.reg.cambiaCadaAria' | translate">
           @for (m of intervalos; track m) {
             <button type="button" role="radio" [attr.aria-checked]="intervalo === m" (click)="intervalo = m"
                     class="py-2.5 px-1 rounded-xl text-sm font-bold border-2 whitespace-nowrap"
                     [class]="intervalo === m ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">{{ m === 60 ? '1 h' : m + "'" }}</button>
           }
         </div>
-        <p class="ayuda">Minutos, dentro del horario de la economía. Con menos minutos la tasa se mueve más rápido durante el día.</p>
+        <p class="ayuda">{{ 'wg.admin.reg.ayudaIntervalo' | translate }}</p>
       </div>
       <div>
-        <label for="r-bill" class="etiqueta">Billetes de bienvenida</label>
+        <label for="r-bill" class="etiqueta">{{ 'wg.admin.billetesBienvenida' | translate }}</label>
         <input id="r-bill" wgNumero [(ngModel)]="datos.investment_bill" class="campo" [disabled]="bloqueado">
-        <p class="ayuda">Por estudiante. 0 si no aplica.</p>
+        <p class="ayuda">{{ 'wg.admin.reg.porEstudiante' | translate }}</p>
       </div>
       @if (bloqueado) {
-        <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">La tasa inicial y la bienvenida no cambian con la edición abierta.</p>
+        <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">{{ 'wg.admin.reg.bloqueado' | translate }}</p>
       }
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         @if (error) { <p class="text-sm text-red-700 sm:mr-auto" role="alert">{{ error }}</p> }
-        @if (guardado) { <p class="text-sm text-emerald-700 sm:mr-auto" role="status">Guardado.</p> }
-        <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar sm:ml-auto">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+        @if (guardado) { <p class="text-sm text-emerald-700 sm:mr-auto" role="status">{{ 'wg.admin.guardado' | translate }}</p> }
+        <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar sm:ml-auto">{{ (guardando ? 'wg.admin.guardando' : 'wg.admin.guardar') | translate }}</button>
       </div>
     </section>
   `,

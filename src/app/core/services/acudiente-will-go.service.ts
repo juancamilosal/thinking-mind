@@ -1,3 +1,4 @@
+import { IdiomaWillGoService } from './idioma-will-go.service';
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { MonoTypeOperatorFunction, Observable, map, tap } from 'rxjs';
@@ -85,9 +86,9 @@ export class AcudienteWillGoService {
 
   static mensaje(e: unknown): string {
     if (e instanceof HttpErrorResponse) {
-      if (e.status === 0) return 'No hay conexión. Revisa tu internet e intenta de nuevo.';
-      return e.error?.errors?.[0]?.message ?? 'Algo salió mal. Intenta de nuevo.';
+      if (e.status === 0) return IdiomaWillGoService.traducir('wg.errores.sinConexionFamilias', 'No hay conexión. Revisa tu internet e intenta de nuevo.');
+      return e.error?.errors?.[0]?.message ?? IdiomaWillGoService.traducir('wg.errores.algoSalioMal', 'Algo salió mal. Intenta de nuevo.');
     }
-    return 'Algo salió mal. Intenta de nuevo.';
+    return IdiomaWillGoService.traducir('wg.errores.algoSalioMal', 'Algo salió mal. Intenta de nuevo.');
   }
 }

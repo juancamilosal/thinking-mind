@@ -1,6 +1,7 @@
+import { IdiomaWillGoService } from './idioma-will-go.service';
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, MonoTypeOperatorFunction, map, tap } from 'rxjs';
+import { Observable, MonoTypeOperatorFunction, catchError, map, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { StorageServices } from './storage.services';
 
@@ -204,7 +205,7 @@ export interface DatosTipoCambio {
 }
 
 export interface PaisCaja { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; saldo_caja: number; inventario: Record<string, number>; }
-export interface ProductoCaja { id: string; nombre: string; foto: string | null; precio_cop: number; stock: number; maximo_por_estudiante: number | null; }
+export interface ProductoCaja { id: string; nombre: string; foto: string | null; precio_cop: number; stock: number; maximo_por_estudiante: number | null; vendidos?: number; }
 export interface EstudianteCaja { id: string; pais_id: string; nombre: string; apellido: string; saldo: number; }
 export interface VentaCaja {
   id: string; numero_recibo: string; total_billetes: number; tasa_aplicada: number; pais_id: string;
@@ -255,6 +256,9 @@ export interface ResumenFinal {
   rondas: number; empresas: EmpresaResumen[]; paises: PaisResumen[]; maximo_rubrica: number;
 }
 
+/** Qué secciones puede usar hoy el colaborador (GET /wge/mi-menu). */
+export interface AccesoMenu { equipo: boolean; banco: boolean; caja: boolean }
+
 @Injectable({ providedIn: 'root' })
 export class WillGoService {
   private api = environment.willGo;
@@ -283,6 +287,7 @@ export class WillGoService {
       tap((p) => {
         StorageServices.setUserData({ id: p.id, email: p.email, first_name: p.nombre, last_name: p.apellido, role: p.role });
         StorageServices.saveObjectInLocalStorage(PERFIL, p);
+        WillGoService.accesoMenu$ = null; // al entrar (o cambiar de usuario) se vuelve a preguntar qué puede usar
         if (typeof localStorage !== 'undefined') localStorage.setItem('last_user_role', p.role);
       })
     );
@@ -294,6 +299,19 @@ export class WillGoService {
 
   static olvidarPerfil(): void {
     if (typeof localStorage !== 'undefined') localStorage.removeItem(PERFIL);
+    WillGoService.accesoMenu$ = null;
+  }
+
+  /** Se pide una vez por sesión y lo comparten el menú y la página de inicio. */
+  private static accesoMenu$: Observable<AccesoMenu> | null = null;
+  miMenu(): Observable<AccesoMenu> {
+    WillGoService.accesoMenu$ ??= this.http.get<{ data: AccesoMenu }>(`${this.api}/mi-menu`).pipe(
+      this.enZona(), map((r) => r.data),
+      // Con una extensión anterior (sin /mi-menu) se muestra todo, como antes
+      catchError(() => of({ equipo: true, banco: true, caja: true })),
+      shareReplay(1),
+    );
+    return WillGoService.accesoMenu$;
   }
 
   cambiarClave(nueva: string): Observable<void> {
@@ -547,8 +565,10 @@ export class WillGoService {
   }
 
   /** Mensaje en español que devuelve la extensión, o uno genérico. */
-  static mensajeDeError(error: unknown, porDefecto = 'No se pudo completar la operación. Intenta de nuevo.'): string {
+  static mensajeDeError(error: unknown, porDefecto?: string): string {
     const e = error as HttpErrorResponse;
-    return e?.error?.errors?.[0]?.message || (e?.status === 0 ? 'Sin conexión con el servidor. Revisa el internet.' : porDefecto);
+    return e?.error?.errors?.[0]?.message || (e?.status === 0
+      ? IdiomaWillGoService.traducir('wg.errores.sinConexion', 'Sin conexión con el servidor. Revisa el internet.')
+      : porDefecto ?? IdiomaWillGoService.traducir('wg.errores.generico', 'No se pudo completar la operación. Intenta de nuevo.'));
   }
 }

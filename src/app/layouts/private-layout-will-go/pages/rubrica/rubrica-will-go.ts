@@ -1,28 +1,31 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CalificacionRubrica, CriterioRubrica, DatosRubrica, EstudianteRubrica, PaisRubrica, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
+import { FechaWillGoPipe } from '../../fecha.pipe';
 
 type Idioma = 'ingles' | 'frances';
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const CLAVE_IDIOMA = 'wg-rubrica-idioma';
 
-/** Rúbrica de la Especificación Maestra (sección 5): cada criterio de 0 a 3. */
+/** Rúbrica de la Especificación Maestra (sección 5): cada criterio de 0 a 3. Los textos son claves de traducción. */
+const C = 'wg.operacion.rubrica.criterios.';
+const niveles = (id: string) => [0, 1, 2, 3].map((n) => `${C}${id}.n${n}`);
 const CRITERIOS: { id: CriterioRubrica; titulo: string; corto: string; niveles: string[]; icono: string }[] = [
-  { id: 'uso_lengua', titulo: 'Uso de la lengua', corto: 'Lengua',
-    niveles: ['No intenta', 'Palabras aisladas con apoyo', 'Frases funcionales', 'Interacción sostenida y espontánea'],
+  { id: 'uso_lengua', titulo: `${C}uso_lengua.titulo`, corto: `${C}uso_lengua.corto`,
+    niveles: niveles('uso_lengua'),
     icono: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
-  { id: 'iniciativa', titulo: 'Iniciativa', corto: 'Iniciativa',
-    niveles: ['Ninguna', 'Responde al ser llamado', 'Inicia intercambios', 'Promueve la comunicación de otros'],
+  { id: 'iniciativa', titulo: `${C}iniciativa.titulo`, corto: `${C}iniciativa.corto`,
+    niveles: niveles('iniciativa'),
     icono: 'M13 10V3L4 14h7v7l9-11h-7z' },
-  { id: 'nivel_reto', titulo: 'Nivel del reto', corto: 'Reto',
-    niveles: ['Sin reto', 'Bajo para su edad', 'Adecuado', 'Supera un reto apropiado sin guion'],
+  { id: 'nivel_reto', titulo: `${C}nivel_reto.titulo`, corto: `${C}nivel_reto.corto`,
+    niveles: niveles('nivel_reto'),
     icono: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' },
-  { id: 'colaboracion', titulo: 'Colaboración', corto: 'Colaboración',
-    niveles: ['Interrumpe', 'Participa poco', 'Coopera hablando', 'Hace que otros también hablen'],
+  { id: 'colaboracion', titulo: `${C}colaboracion.titulo`, corto: `${C}colaboracion.corto`,
+    niveles: niveles('colaboracion'),
     icono: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
 ];
 
@@ -33,31 +36,31 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
 @Component({
   selector: 'app-rubrica-will-go',
   standalone: true,
-  imports: [FormsModule, DatePipe, SelectorEdicionComponent],
+  imports: [FormsModule, FechaWillGoPipe, SelectorEdicionComponent, TranslatePipe],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Rúbrica</h1>
-          <p class="text-gray-500 mt-1">Califica a tus estudiantes (0 a 3 por criterio). Sus puntos mueven el tipo de cambio de su país.</p>
+          <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.operacion.rubrica.titulo' | translate }}</h1>
+          <p class="text-gray-500 mt-1">{{ 'wg.operacion.rubrica.subtitulo' | translate }}</p>
         </div>
       </div>
       <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" (cambio)="cargar()" />
 
       @if (cargando && !datos) {
-        <div class="mt-5 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
+        <div class="mt-5 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.operacion.comun.cargando' | translate }}</div>
       } @else if (error && !datos) {
         <div class="mt-5 bg-white rounded-2xl border border-red-200 p-8 text-center text-red-700">{{ error }}</div>
       } @else if (!ediciones.length) {
-        <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">No haces parte del equipo de ninguna edición abierta.</div>
+        <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.operacion.comun.sinEquipo' | translate }}</div>
       } @else if (datos && pais) {
         <!-- Idioma de la clase -->
         <div class="mt-5 flex items-center gap-3">
-          <span class="text-sm font-semibold text-gray-600">Idioma:</span>
-          <div class="inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="radiogroup" aria-label="Idioma de la calificación">
+          <span class="text-sm font-semibold text-gray-600">{{ 'wg.operacion.rubrica.idioma' | translate }}</span>
+          <div class="inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="radiogroup" [attr.aria-label]="'wg.operacion.rubrica.idiomaAria' | translate">
             @for (i of idiomas; track i.id) {
               <button type="button" role="radio" [attr.aria-checked]="idioma === i.id" (click)="elegirIdioma(i.id)"
-                      class="px-4 py-1.5 rounded-lg text-sm font-semibold" [class]="idioma === i.id ? 'bg-slate-800 text-white' : 'text-gray-500 hover:bg-gray-100'">{{ i.texto }}</button>
+                      class="px-4 py-1.5 rounded-lg text-sm font-semibold" [class]="idioma === i.id ? 'bg-slate-800 text-white' : 'text-gray-500 hover:bg-gray-100'">{{ i.texto | translate }}</button>
             }
           </div>
         </div>
@@ -77,18 +80,18 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
           <p class="text-sm opacity-90">{{ pais.nombre }}</p>
           <div class="mt-2 grid grid-cols-2 gap-3">
             <div>
-              <p class="text-xs uppercase tracking-wide opacity-90">Tipo de cambio</p>
+              <p class="text-xs uppercase tracking-wide opacity-90">{{ 'wg.operacion.rubrica.tipoCambio' | translate }}</p>
               <p class="text-2xl font-extrabold">{{ miles(pais.tasa_actual) }}</p>
-              <p class="text-xs opacity-90">pesos por billete</p>
+              <p class="text-xs opacity-90">{{ 'wg.operacion.rubrica.pesosPorBillete' | translate }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide opacity-90">Presentes</p>
-              <p class="text-2xl font-extrabold">{{ presentes }} <span class="text-base font-semibold opacity-90">de {{ pais.estudiantes.length }}</span></p>
-              <p class="text-xs opacity-90">{{ calificadosHoy }} {{ calificadosHoy === 1 ? 'calificado' : 'calificados' }} hoy</p>
+              <p class="text-xs uppercase tracking-wide opacity-90">{{ 'wg.operacion.rubrica.presentes' | translate }}</p>
+              <p class="text-2xl font-extrabold">{{ presentes }} <span class="text-base font-semibold opacity-90">{{ 'wg.operacion.rubrica.deN' | translate: { n: pais.estudiantes.length } }}</span></p>
+              <p class="text-xs opacity-90">{{ (calificadosHoy === 1 ? 'wg.operacion.rubrica.calificadoHoy' : 'wg.operacion.rubrica.calificadosHoy') | translate: { n: calificadosHoy } }}</p>
             </div>
           </div>
           @if (datos.edicion.estado !== 'abierta') {
-            <p class="text-sm mt-3 bg-white/20 rounded-lg px-3 py-1.5 inline-block">Podrás calificar cuando la edición esté abierta.</p>
+            <p class="text-sm mt-3 bg-white/20 rounded-lg px-3 py-1.5 inline-block">{{ 'wg.operacion.rubrica.podrasCalificar' | translate }}</p>
           }
         </div>
 
@@ -96,15 +99,15 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
           <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800 flex flex-wrap items-center justify-between gap-3" role="status">
             <span>{{ aviso }}</span>
             <span class="flex items-center gap-3 shrink-0">
-              @if (entregarA) { <button type="button" (click)="irAEntregar()" class="px-3 py-1.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Entregar billetes</button> }
-              @if (ultimaId) { <button type="button" (click)="deshacer(ultimaId)" class="font-semibold underline">Deshacer</button> }
+              @if (entregarA) { <button type="button" (click)="irAEntregar()" class="px-3 py-1.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700">{{ 'wg.operacion.rubrica.entregarBilletes' | translate }}</button> }
+              @if (ultimaId) { <button type="button" (click)="deshacer(ultimaId)" class="font-semibold underline">{{ 'wg.operacion.comun.deshacer' | translate }}</button> }
             </span>
           </p>
         }
         @if (error) { <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-red-50 border border-red-200 text-red-700" role="alert">{{ error }}</p> }
 
         <!-- Estudiantes -->
-        <input type="search" [(ngModel)]="busqueda" placeholder="Buscar estudiante…" aria-label="Buscar estudiante"
+        <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
                class="mt-5 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
         <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
           @for (e of filtrados; track e.id) {
@@ -112,44 +115,44 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
               <button type="button" (click)="alternarAsistencia(e)" [disabled]="datos.edicion.estado !== 'abierta'"
                       class="shrink-0 w-11 h-11 p-0 rounded-full flex items-center justify-center border-2 transition disabled:opacity-50"
                       [class]="e.presente ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-gray-300 bg-white text-gray-300'"
-                      [attr.aria-label]="(e.presente ? 'Presente: marcar ausente a ' : 'Ausente: marcar presente a ') + e.nombre" [attr.aria-pressed]="e.presente">
+                      [attr.aria-label]="(e.presente ? 'wg.operacion.rubrica.ariaPresente' : 'wg.operacion.rubrica.ariaAusente') | translate: { nombre: e.nombre }" [attr.aria-pressed]="e.presente">
                 <svg class="shrink-0" width="24" height="24" style="width:24px;height:24px" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
               </button>
               <div class="min-w-0 flex-1">
                 <p class="font-semibold truncate" [class]="e.presente ? 'text-gray-800' : 'text-gray-400'">{{ e.nombre }} {{ e.apellido }}</p>
-                <p class="text-xs text-gray-500">{{ e.presente ? 'Presente' : 'Ausente' }}{{ e.hoy ? ' · calificado ' + e.hoy + (e.hoy === 1 ? ' vez hoy' : ' veces hoy') : '' }}</p>
+                <p class="text-xs text-gray-500">{{ (e.presente ? 'wg.operacion.rubrica.presente' : 'wg.operacion.rubrica.ausente') | translate }}@if (e.hoy) { · {{ (e.hoy === 1 ? 'wg.operacion.rubrica.calificadoVez' : 'wg.operacion.rubrica.calificadoVeces') | translate: { n: e.hoy } }} }</p>
               </div>
               <button type="button" (click)="abrir(e)" [disabled]="datos.edicion.estado !== 'abierta'"
-                      class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">Calificar</button>
+                      class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.operacion.rubrica.calificar' | translate }}</button>
             </li>
           }
           @if (!filtrados.length) {
-            <li class="px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? 'Nadie coincide con «' + busqueda + '».' : 'No hay estudiantes en ' + pais.nombre + '.' }}</li>
+            <li class="px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ('wg.operacion.comun.noHayEstudiantesEn' | translate: { pais: pais.nombre }) }}</li>
           }
         </ul>
 
         <!-- Mis últimas calificaciones -->
         @if (datos.recientes.length) {
-          <h2 class="mt-6 text-sm font-bold text-gray-700">Mis últimas calificaciones</h2>
+          <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.rubrica.ultimas' | translate }}</h2>
           <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
             @for (r of datos.recientes; track r.id) {
               <li class="px-4 py-3 flex items-center gap-3">
                 <div class="w-12 h-12 shrink-0 rounded-xl bg-slate-800 text-white flex flex-col items-center justify-center leading-none">
-                  <span class="text-lg font-black">{{ r.puntaje }}</span><span class="text-[10px] opacity-80">de 12</span>
+                  <span class="text-lg font-black">{{ r.puntaje }}</span><span class="text-[10px] opacity-80">{{ 'wg.operacion.rubrica.de12' | translate }}</span>
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold text-gray-800 truncate">{{ r.nombre }} {{ r.apellido }}</p>
                   <div class="mt-1 flex flex-wrap gap-1">
                     @for (c of criterios; track c.id) {
-                      <span class="text-[11px] px-1.5 py-0.5 rounded-full" [class]="r[c.id] >= 2 ? 'bg-emerald-100 text-emerald-800' : (r[c.id] === 1 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500')">{{ c.corto }} {{ r[c.id] }}</span>
+                      <span class="text-[11px] px-1.5 py-0.5 rounded-full" [class]="r[c.id] >= 2 ? 'bg-emerald-100 text-emerald-800' : (r[c.id] === 1 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500')">{{ c.corto | translate }} {{ r[c.id] }}</span>
                     }
                   </div>
                   @if (r.evidencia) { <p class="text-xs text-gray-500 mt-1 truncate">“{{ r.evidencia }}”</p> }
-                  @if (r.recompensa) { <p class="text-xs font-semibold text-amber-700 mt-0.5">Recompensa recomendada: {{ r.recompensa }} billetes</p> }
+                  @if (r.recompensa) { <p class="text-xs font-semibold text-amber-700 mt-0.5">{{ 'wg.operacion.rubrica.recompensaRecomendada' | translate: { n: r.recompensa } }}</p> }
                 </div>
                 <div class="text-right shrink-0">
-                  <p class="text-xs text-gray-500">{{ r.date_created | date:'h:mm a' }}</p>
-                  @if (r.se_puede_deshacer) { <button type="button" (click)="deshacer(r.id)" class="text-xs font-semibold text-red-600 hover:underline">Deshacer</button> }
+                  <p class="text-xs text-gray-500">{{ r.date_created | wgFecha:'h:mm a' }}</p>
+                  @if (r.se_puede_deshacer) { <button type="button" (click)="deshacer(r.id)" class="text-xs font-semibold text-red-600 hover:underline">{{ 'wg.operacion.comun.deshacer' | translate }}</button> }
                 </div>
               </li>
             }
@@ -164,10 +167,10 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
         <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-calificar">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
-              <h2 id="titulo-calificar" class="text-lg font-bold text-gray-800">Calificar a {{ estudiante.nombre }}</h2>
-              <p class="text-sm text-gray-500">Elige el nivel de cada criterio. Clase en {{ idioma === 'frances' ? 'francés' : 'inglés' }}.</p>
+              <h2 id="titulo-calificar" class="text-lg font-bold text-gray-800">{{ 'wg.operacion.rubrica.calificarA' | translate: { nombre: estudiante.nombre } }}</h2>
+              <p class="text-sm text-gray-500">{{ 'wg.operacion.rubrica.eligeNivel' | translate: { idioma: ((idioma === 'frances' ? 'wg.operacion.rubrica.claseFrances' : 'wg.operacion.rubrica.claseIngles') | translate) } }}</p>
             </div>
-            <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+            <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
           </div>
           <div class="flex-1 overflow-y-auto px-5 pb-3 space-y-4">
             @for (c of criterios; track c.id) {
@@ -176,42 +179,42 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
                   <span class="w-8 h-8 rounded-lg flex items-center justify-center" [class]="valores[c.id] !== null ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'" aria-hidden="true">
                     <svg width="18" height="18" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="c.icono"/></svg>
                   </span>
-                  <span class="font-bold text-gray-800">{{ c.titulo }}</span>
-                  @if (valores[c.id] !== null) { <span class="ml-auto text-sm font-bold text-emerald-700">{{ valores[c.id] }} de 3</span> }
+                  <span class="font-bold text-gray-800">{{ c.titulo | translate }}</span>
+                  @if (valores[c.id] !== null) { <span class="ml-auto text-sm font-bold text-emerald-700">{{ 'wg.operacion.rubrica.nDe3' | translate: { n: valores[c.id] } }}</span> }
                 </legend>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" [attr.aria-label]="c.titulo">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" [attr.aria-label]="c.titulo | translate">
                   @for (texto of c.niveles; track $index; let n = $index) {
                     <button type="button" role="radio" [attr.aria-checked]="valores[c.id] === n" (click)="valores[c.id] = n"
                             class="text-left rounded-xl border-2 px-3 py-2 transition min-h-[64px]"
                             [class]="valores[c.id] === n ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-gray-300'">
                       <span class="block text-lg font-black" [class]="valores[c.id] === n ? 'text-emerald-700' : 'text-gray-400'">{{ n }}</span>
-                      <span class="block text-xs leading-tight" [class]="valores[c.id] === n ? 'text-emerald-900' : 'text-gray-600'">{{ texto }}</span>
+                      <span class="block text-xs leading-tight" [class]="valores[c.id] === n ? 'text-emerald-900' : 'text-gray-600'">{{ texto | translate }}</span>
                     </button>
                   }
                 </div>
               </fieldset>
             }
             <div>
-              <label for="r-evidencia" class="block text-sm font-semibold text-gray-700">Actividad o evidencia <span class="font-normal text-gray-400">(opcional)</span></label>
-              <input id="r-evidencia" [(ngModel)]="evidencia" maxlength="255" placeholder="Ej.: Presentó su producto en {{ idioma === 'frances' ? 'francés' : 'inglés' }}"
+              <label for="r-evidencia" class="block text-sm font-semibold text-gray-700">{{ 'wg.operacion.rubrica.evidencia' | translate }} <span class="font-normal text-gray-400">{{ 'wg.operacion.rubrica.opcional' | translate }}</span></label>
+              <input id="r-evidencia" [(ngModel)]="evidencia" maxlength="255" [placeholder]="'wg.operacion.rubrica.placeholderEvidencia' | translate: { idioma: ((idioma === 'frances' ? 'wg.operacion.rubrica.claseFrances' : 'wg.operacion.rubrica.claseIngles') | translate) }"
                      class="mt-1 w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
             </div>
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm text-gray-500">Puntaje</span>
-              <span class="text-2xl font-extrabold text-gray-800">{{ puntaje }} <span class="text-sm font-semibold text-gray-500">de 12</span></span>
+              <span class="text-sm text-gray-500">{{ 'wg.operacion.rubrica.puntaje' | translate }}</span>
+              <span class="text-2xl font-extrabold text-gray-800">{{ puntaje }} <span class="text-sm font-semibold text-gray-500">{{ 'wg.operacion.rubrica.de12' | translate }}</span></span>
             </div>
             <div class="h-2 rounded-full bg-gray-200 overflow-hidden mb-2" aria-hidden="true">
               <div class="h-full rounded-full bg-emerald-500 transition-all" [style.width.%]="puntaje / 12 * 100"></div>
             </div>
             <p class="text-sm mb-3" [class]="recompensaActual ? 'text-amber-700 font-semibold' : 'text-gray-500'">
-              {{ faltan ? 'Falta elegir ' + faltan + (faltan === 1 ? ' criterio' : ' criterios') + '.' : (recompensaActual ? 'Recompensa recomendada: ' + recompensaActual + ' billetes.' : 'Sin recompensa (desde 5 puntos).') }}
+              {{ faltan ? ((faltan === 1 ? 'wg.operacion.rubrica.faltaCriterio' : 'wg.operacion.rubrica.faltanCriterios') | translate: { n: faltan }) : (recompensaActual ? ('wg.operacion.rubrica.recompensaRecomendadaPunto' | translate: { n: recompensaActual }) : ('wg.operacion.rubrica.sinRecompensa' | translate)) }}
             </p>
             @if (errorPanel) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
             <button type="button" (click)="guardar()" [disabled]="enviando || faltan > 0"
                     class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-              {{ enviando ? 'Guardando…' : 'Guardar calificación' }}
+              {{ (enviando ? 'wg.operacion.comun.guardando' : 'wg.operacion.rubrica.guardarCalificacion') | translate }}
             </button>
           </div>
         </div>
@@ -222,9 +225,10 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
 export class RubricaWillGo implements OnInit {
   private willGo = inject(WillGoService);
   private router = inject(Router);
+  private t = inject(TranslateService);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
   readonly criterios = CRITERIOS;
-  readonly idiomas: { id: Idioma; texto: string }[] = [{ id: 'ingles', texto: 'Inglés' }, { id: 'frances', texto: 'Francés' }];
+  readonly idiomas: { id: Idioma; texto: string }[] = [{ id: 'ingles', texto: 'wg.operacion.rubrica.ingles' }, { id: 'frances', texto: 'wg.operacion.rubrica.frances' }];
 
   ediciones: EdicionVigente[] = [];
   edicionId = '';
@@ -319,7 +323,8 @@ export class RubricaWillGo implements OnInit {
       next: (r) => {
         this.enviando = false;
         this.estudiante = null;
-        const texto = `${e.nombre}: ${r.puntaje} de 12.` + (r.recompensa ? ` Te recomendamos darle ${r.recompensa} billetes.` : '');
+        const texto = this.t.instant('wg.operacion.rubrica.avisoPuntaje', { nombre: e.nombre, puntaje: r.puntaje })
+          + (r.recompensa ? ' ' + this.t.instant('wg.operacion.rubrica.avisoRecomendacion', { n: r.recompensa }) : '');
         this.avisar(texto, r.id ?? null, r.recompensa ? { id: e.id, billetes: r.recompensa } : null);
         this.cargar();
       },
@@ -330,7 +335,7 @@ export class RubricaWillGo implements OnInit {
   deshacer(id: string): void {
     this.error = '';
     this.willGo.deshacerCalificacion(id).subscribe({
-      next: () => { this.avisar('Calificación deshecha.'); this.cargar(); },
+      next: () => { this.avisar(this.t.instant('wg.operacion.rubrica.deshecha')); this.cargar(); },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); },
     });
   }
