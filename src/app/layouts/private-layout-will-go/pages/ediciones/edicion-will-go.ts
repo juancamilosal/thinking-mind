@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { Edicion, Pais, WillGoService } from '../../../../core/services/will-go.service';
@@ -62,10 +62,10 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
         </div>
 
         <!-- Pestañas -->
-        <div class="mt-5 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+        <div #barraPestanas (scroll)="medirBarra()" class="sin-barra mt-5 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto scroll-smooth">
           <div class="inline-flex gap-1 bg-white border border-gray-200 rounded-2xl p-1 shadow-sm" role="tablist">
             @for (p of pestanas; track p.id) {
-              <button type="button" role="tab" [attr.aria-selected]="pestana === p.id" (click)="pestana = p.id"
+              <button type="button" role="tab" [attr.aria-selected]="pestana === p.id" (click)="elegirPestana(p.id, $event)"
                       class="whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition"
                       [class]="pestana === p.id ? 'bg-slate-800 text-white shadow' : 'text-gray-600 hover:bg-gray-100'">
                 {{ p.texto }}
@@ -73,6 +73,12 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
             }
           </div>
         </div>
+        <!-- Indicador de desplazamiento: se ve solo si las pestañas no caben (p. ej. en celular) -->
+        @if (barra.hay) {
+          <div class="mt-2 mx-auto w-24 h-1.5 rounded-full bg-gray-200 overflow-hidden" aria-hidden="true">
+            <div class="h-full rounded-full bg-slate-500 transition-[margin] duration-150" [style.width.%]="barra.ancho" [style.margin-left.%]="barra.inicio"></div>
+          </div>
+        }
 
         <div class="mt-5">
           @switch (pestana) {
@@ -122,7 +128,7 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
       <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-slate-900 text-white px-5 py-3 shadow-lg text-sm" role="status">{{ aviso }}</div>
     }
   `,
-  styles: [':host { display: block; }'],
+  styles: [':host { display: block; } .sin-barra { scrollbar-width: none; } .sin-barra::-webkit-scrollbar { display: none; }'],
 })
 export class EdicionWillGo implements OnInit {
   private willGo = inject(WillGoService);
@@ -140,6 +146,31 @@ export class EdicionWillGo implements OnInit {
   edicion: Edicion | null = null;
   paises: Pais[] = [];
   pestana: Pestana = 'general';
+
+  @ViewChild('barraPestanas') set refBarra(el: ElementRef<HTMLElement> | undefined) {
+    this.elBarra = el?.nativeElement;
+    setTimeout(() => this.medirBarra());
+  }
+  private elBarra?: HTMLElement;
+  /** Tamaño y posición del indicador de desplazamiento (en % de su carril). */
+  barra = { hay: false, ancho: 100, inicio: 0 };
+
+  @HostListener('window:resize') medirBarra(): void {
+    const el = this.elBarra;
+    if (!el) return;
+    const total = el.scrollWidth, visible = el.clientWidth;
+    const hay = total > visible + 2;
+    const ancho = hay ? Math.max(20, (visible / total) * 100) : 100;
+    const inicio = hay ? (el.scrollLeft / (total - visible)) * (100 - ancho) : 0;
+    this.barra = { hay, ancho, inicio: Math.min(100 - ancho, Math.max(0, inicio)) };
+  }
+
+  /** Cambia de pestaña y la deja centrada en la barra (en celular la barra se desliza). */
+  elegirPestana(id: Pestana, evento?: Event): void {
+    this.pestana = id;
+    const boton = evento?.currentTarget as HTMLElement | undefined;
+    boton?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
   cargando = true;
   error = '';
   revision: { texto: string; ok: boolean; bloquea: boolean }[] | null = null;
