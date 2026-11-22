@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { Edicion, Franja, WillGoService } from '../../../../../core/services/will-go.service';
 import { DIAS_SEMANA } from '../estado-edicion';
+import { BuscadorColegioComponent } from '../../../buscador-colegio.component';
 
 @Component({
   selector: 'app-tab-general',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective],
+  imports: [FormsModule, NumeroMilesDirective, BuscadorColegioComponent],
   template: `
     <div class="grid gap-5 lg:grid-cols-2">
       <!-- Datos de la edición -->
@@ -20,10 +21,7 @@ import { DIAS_SEMANA } from '../estado-edicion';
           </div>
           <div>
             <label for="g-colegio" class="block text-sm font-semibold text-gray-700 mb-1">Colegio</label>
-            <select id="g-colegio" [(ngModel)]="datos.colegio_id" class="campo">
-              <option [ngValue]="null">Todos los colegios inscritos</option>
-              @for (c of colegios; track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
-            </select>
+            <wg-buscador-colegio [(ngModel)]="datos.colegio_id" [colegios]="colegios" inputId="g-colegio" />
           </div>
           <div>
             <label for="g-programa" class="block text-sm font-semibold text-gray-700 mb-1">Programa</label>

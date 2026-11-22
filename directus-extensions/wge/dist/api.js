@@ -429,6 +429,40 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		return resumenEdicion(await edicionExistente(e.id));
 	}));
 
+	/**
+	 * DELETE /wge/admin/ediciones/:id
+	 * Solo si nunca se movió un billete (ni provisión, ni ventas, ni inversiones): así no se pierde dinero ni historial.
+	 * Borra todo lo que cuelga de la edición; los estudiantes y los pagos de la plataforma no se tocan.
+	 */
+	router.delete('/admin/ediciones/:id', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		return db.transaction(async (trx) => {
+			const conMovimientos = await trx('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
+				.where('b.edicion_id', e.id).first('m.id');
+			const conVentas = await trx('wge_ventas').where('edicion_id', e.id).first('id');
+			if (conMovimientos || conVentas) {
+				throw new WgeError(409, 'TIENE_MOVIMIENTOS', 'Esta edición ya tiene movimientos de billetes y no se puede eliminar, para no perder el historial');
+			}
+			const rondas = trx('wge_rondas').where('edicion_id', e.id).select('id');
+			const participantes = trx('wge_participantes').where('edicion_id', e.id).select('id');
+			const paises = trx('wge_paises').where('edicion_id', e.id).select('id');
+			await trx('wge_votos').whereIn('ronda_id', rondas).delete();
+			await trx('wge_inversiones').whereIn('ronda_id', rondas).delete();
+			await trx('wge_rondas').where('edicion_id', e.id).delete();
+			await trx('wge_evaluaciones').whereIn('participante_id', participantes).delete();
+			await trx('wge_transferencias').where('edicion_id', e.id).delete();
+			await trx('wge_billeteras').where('edicion_id', e.id).delete();
+			await trx('wge_fx').whereIn('pais_id', paises).delete();
+			await trx('wge_participantes').where('edicion_id', e.id).delete();
+			await trx('wge_productos').where('edicion_id', e.id).delete();
+			await trx('wge_fondos').where('edicion_id', e.id).delete();
+			await trx('wge_paises').where('edicion_id', e.id).delete();
+			await trx('wge_ediciones').where('id', e.id).delete();
+			return { eliminada: true, nombre: e.nombre };
+		});
+	}));
+
 	// Países, productos y fondos de una edición
 	for (const [nombre, s] of Object.entries(SECCIONES)) {
 		router.get(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {

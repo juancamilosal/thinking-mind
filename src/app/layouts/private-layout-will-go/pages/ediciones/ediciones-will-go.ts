@@ -4,11 +4,13 @@ import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Edicion, WillGoService } from '../../../../core/services/will-go.service';
 import { ESTADO_EDICION } from './estado-edicion';
+import { BuscadorColegioComponent } from '../../buscador-colegio.component';
+import { EliminarEdicionComponent } from './eliminar-edicion.component';
 
 @Component({
   selector: 'app-ediciones-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, BuscadorColegioComponent, EliminarEdicionComponent],
   template: `
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
@@ -39,27 +41,40 @@ import { ESTADO_EDICION } from './estado-edicion';
         } @else {
           <div class="grid gap-4 md:grid-cols-2">
             @for (e of ediciones; track e.id) {
-              <a [routerLink]="['/private-will-go/ediciones', e.id]"
-                 class="group bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="font-bold text-gray-800 text-lg truncate">{{ e.nombre }}</p>
-                    <p class="text-sm text-gray-500 truncate">{{ e.colegio_nombre || 'Sin colegio' }} · {{ e.programa_nombre || 'Sin programa' }}</p>
+              <article class="group bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition flex flex-col">
+                <a [routerLink]="['/private-will-go/ediciones', e.id]" class="block">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="font-bold text-gray-800 text-lg truncate">{{ e.nombre }}</p>
+                      <p class="text-sm text-gray-500 truncate">{{ e.colegio_nombre || 'Todos los colegios' }} · {{ e.programa_nombre || 'Sin programa' }}</p>
+                    </div>
+                    <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[e.estado].clase">{{ estado[e.estado].texto }}</span>
                   </div>
-                  <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[e.estado].clase">{{ estado[e.estado].texto }}</span>
+                  <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
+                    <span>📅 {{ e.fecha_inicio ? (e.fecha_inicio | date:'d MMM y') : 'Sin fecha' }}</span>
+                    <span>👥 {{ e.participantes }} participantes</span>
+                    @if (e.sin_pais) { <span class="text-amber-700">⚠ {{ e.sin_pais }} sin país</span> }
+                  </div>
+                </a>
+                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
+                  <a [routerLink]="['/private-will-go/ediciones', e.id]" class="text-sm font-semibold text-orange-700 hover:underline mr-auto">Administrar →</a>
+                  <a [routerLink]="['/private-will-go/ediciones', e.id]" [queryParams]="{ pestana: 'general' }" class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Editar</a>
+                  <button type="button" (click)="aEliminar = e" class="px-3 py-1.5 text-sm rounded-lg border border-red-200 text-red-700 hover:bg-red-50">Eliminar</button>
                 </div>
-                <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-                  <span>📅 {{ e.fecha_inicio ? (e.fecha_inicio | date:'d MMM y') : 'Sin fecha' }}</span>
-                  <span>👥 {{ e.participantes }} participantes</span>
-                  @if (e.sin_pais) { <span class="text-amber-700">⚠ {{ e.sin_pais }} sin país</span> }
-                </div>
-                <p class="mt-4 text-sm font-semibold text-orange-700">Administrar →</p>
-              </a>
+              </article>
             }
           </div>
         }
       </div>
     </div>
+
+    @if (aEliminar) {
+      <wg-eliminar-edicion [edicion]="aEliminar" (cancelar)="aEliminar = null" (eliminada)="alEliminar()" />
+    }
+
+    @if (aviso) {
+      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-xl bg-slate-900 text-white px-5 py-3 shadow-lg text-sm" role="status">{{ aviso }}</div>
+    }
 
     @if (formularioAbierto) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="formularioAbierto = false">
@@ -75,10 +90,7 @@ import { ESTADO_EDICION } from './estado-edicion';
             </div>
             <div>
               <label for="e-colegio" class="block text-sm font-semibold text-gray-700 mb-1">Colegio</label>
-              <select id="e-colegio" formControlName="colegio_id" class="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400">
-                <option value="">Todos los colegios inscritos</option>
-                @for (c of colegios; track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
-              </select>
+              <wg-buscador-colegio formControlName="colegio_id" [colegios]="colegios" inputId="e-colegio" />
             </div>
             <div>
               <label for="e-programa" class="block text-sm font-semibold text-gray-700 mb-1">Programa de donde vienen los participantes</label>
@@ -120,6 +132,8 @@ export class EdicionesWillGo implements OnInit {
   readonly estado = ESTADO_EDICION;
 
   ediciones: Edicion[] = [];
+  aEliminar: Edicion | null = null;
+  aviso = '';
   cargando = true;
   error = '';
   colegios: { id: string; nombre: string }[] = [];
@@ -129,7 +143,7 @@ export class EdicionesWillGo implements OnInit {
   errorFormulario = '';
   form = this.fb.group({
     nombre: ['', Validators.required],
-    colegio_id: [''],
+    colegio_id: [null as string | null],
     curso_id: ['', Validators.required],
     fecha_inicio: [''],
     fecha_fin: [''],
@@ -148,8 +162,16 @@ export class EdicionesWillGo implements OnInit {
     });
   }
 
+  alEliminar(): void {
+    const nombre = this.aEliminar?.nombre;
+    this.ediciones = this.ediciones.filter((x) => x.id !== this.aEliminar?.id);
+    this.aEliminar = null;
+    this.aviso = `Se eliminó «${nombre}».`;
+    setTimeout(() => (this.aviso = ''), 4000);
+  }
+
   abrirFormulario(): void {
-    this.form.reset({ nombre: '', colegio_id: '', curso_id: '', fecha_inicio: '', fecha_fin: '' });
+    this.form.reset({ nombre: '', colegio_id: null, curso_id: '', fecha_inicio: '', fecha_fin: '' });
     this.errorFormulario = '';
     this.formularioAbierto = true;
     if (!this.programas.length) {

@@ -1,9 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { Edicion, Pais, WillGoService } from '../../../../core/services/will-go.service';
 import { ESTADO_EDICION } from './estado-edicion';
 import { TabGeneral } from './tabs/tab-general';
+import { EliminarEdicionComponent } from './eliminar-edicion.component';
 import { TabPaises } from './tabs/tab-paises';
 import { TabParticipantes } from './tabs/tab-participantes';
 import { TabTienda } from './tabs/tab-tienda';
@@ -14,7 +15,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
 @Component({
   selector: 'app-edicion-will-go',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, TabGeneral, TabPaises, TabParticipantes, TabTienda, TabFondos],
+  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabPaises, TabParticipantes, TabTienda, TabFondos],
   template: `
     <div class="max-w-6xl mx-auto">
       <a routerLink="/private-will-go/ediciones" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-orange-700">← Ediciones</a>
@@ -34,15 +35,21 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
               </div>
               <p class="text-gray-500 mt-1">{{ edicion.colegio_nombre || 'Todos los colegios' }} · {{ edicion.programa_nombre || 'Sin programa' }}</p>
             </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+            <button type="button" (click)="eliminando = true"
+                    class="order-2 sm:order-1 px-4 py-3 rounded-xl text-sm font-semibold border border-red-200 text-red-700 hover:bg-red-50">
+              Eliminar
+            </button>
             @if (edicion.estado === 'borrador') {
               <button type="button" (click)="verificarApertura()"
-                      class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow hover:brightness-110">
+                      class="order-1 sm:order-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow hover:brightness-110">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Abrir edición
               </button>
             } @else if (edicion.estado === 'abierta') {
               <p class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">La economía está en marcha: el banco ya tiene sus billetes.</p>
             }
+            </div>
           </div>
 
           <!-- Resumen -->
@@ -78,6 +85,10 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
         </div>
       }
     </div>
+
+    @if (eliminando && edicion) {
+      <wg-eliminar-edicion [edicion]="edicion" (cancelar)="eliminando = false" (eliminada)="alEliminar()" />
+    }
 
     <!-- Revisión antes de abrir -->
     @if (revision) {
@@ -116,6 +127,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
 export class EdicionWillGo implements OnInit {
   private willGo = inject(WillGoService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   readonly estado = ESTADO_EDICION;
   readonly pestanas: { id: Pestana; texto: string }[] = [
     { id: 'general', texto: 'General' },
@@ -134,6 +146,7 @@ export class EdicionWillGo implements OnInit {
   abriendo = false;
   errorApertura = '';
   aviso = '';
+  eliminando = false;
 
   get bloqueado(): boolean {
     return !!this.revision?.some((r) => !r.ok && r.bloquea);
@@ -197,6 +210,11 @@ export class EdicionWillGo implements OnInit {
       },
       error: (err) => { this.abriendo = false; this.errorApertura = WillGoService.mensajeDeError(err); },
     });
+  }
+
+  alEliminar(): void {
+    this.eliminando = false;
+    this.router.navigateByUrl('/private-will-go/ediciones');
   }
 
   private mostrarAviso(texto: string): void {

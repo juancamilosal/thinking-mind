@@ -188,6 +188,10 @@ export class WillGoService {
     return this.http.patch<{ data: Edicion }>(`${this.api}/admin/ediciones/${id}`, datos).pipe(this.enZona(), map((r) => r.data));
   }
 
+  eliminarEdicion(id: string): Observable<{ eliminada: boolean; nombre: string }> {
+    return this.http.delete<{ data: any }>(`${this.api}/admin/ediciones/${id}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
   seccion<T>(edicionId: string, seccion: SeccionEdicion): Observable<T[]> {
     return this.http.get<{ data: T[] }>(`${this.api}/admin/ediciones/${edicionId}/${seccion}`).pipe(this.enZona(), map((r) => r.data));
   }
