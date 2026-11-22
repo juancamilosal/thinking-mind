@@ -122,7 +122,7 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
   readonly izq = IZQ; readonly der = DER; readonly arriba = ARRIBA; readonly abajo = ABAJO;
   /** Se dibuja al tamaño real de la pantalla (las letras y líneas no se estiran). */
   ancho = 340;
-  get alto(): number { return this.ancho < 640 ? 280 : 360; }
+  get alto(): number { return this.ancho < 640 ? 340 : 400; }
   @ViewChild('lienzo') set lienzo(el: ElementRef<HTMLElement> | undefined) { this.observar(el?.nativeElement); }
   private observador: ResizeObserver | null = null;
   private zona = inject(NgZone);
@@ -153,10 +153,10 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
   }
 
   ngOnChanges(): void {
-    // Eje fijo de −50 % a +50 %, con una línea cada 10 %
-    this.maximo = 50;
-    this.minimo = -50;
-    this.marcas = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50];
+    // Eje fijo de −25 % a +25 % (el rendimiento por ronda va de −20 % a +20 %), con una línea cada 5 %
+    this.maximo = 25;
+    this.minimo = -25;
+    this.marcas = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25];
     this.elegida = this.rondas.length ? this.rondas.length - 1 : null;
     this.calcular();
   }
