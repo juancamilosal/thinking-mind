@@ -191,8 +191,12 @@ coleccion('wge_fondos', 'savings', 'Fondos ficticios W-Funds por edición', [
     campo('rendimiento_alterno', 'decimal', 'Escenario alterno, p. ej. -0.08 en riesgo alto'),
     campo('variacion', 'decimal', 'Variación ± al cierre, p. ej. 0.02'),
     campo('activo', 'boolean', default=True), campo('orden', 'integer'),
+    {'field': 'logo', 'type': 'uuid', 'meta': {'interface': 'file-image', 'special': ['file'], 'note': 'Logo de la empresa'}, 'schema': {}},
+    campo('a_que_se_dedica', 'string', 'Una frase: a qué se dedica la empresa'),
+    campo('por_que_invertir', 'text', 'Razones para invertir, una por línea', interfaz='input-multiline'),
 ])
 rel('wge_fondos', 'edicion_id', 'wge_ediciones')
+rel('wge_fondos', 'logo', 'directus_files', EXT)
 
 coleccion('wge_rondas', 'timer', 'Rondas de inversión y votación', [
     m2o('edicion_id', requerido=True), campo('nombre', 'string'),

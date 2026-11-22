@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { limpiar, validarHorario, SECCIONES } from '../src/admin.js';
+import { limpiar, validarHorario, SECCIONES, ejemploDeFondo, FONDOS_POR_DEFECTO } from '../src/admin.js';
 
 test('solo pasan los campos permitidos (nunca saldos, tasas vigentes ni provisión suelta)', () => {
 	// La provisión del banco solo se define por billetes (provision_billetes), nunca como número suelto
@@ -22,4 +22,14 @@ test('horario: por día o por fecha, inicio antes que fin', () => {
 	assert.throws(() => validarHorario([{ dia: 'sabado', inicio: '18:00', fin: '08:00' }]));
 	assert.throws(() => validarHorario([{ dia: 'feriado', inicio: '08:00', fin: '09:00' }]));
 	assert.throws(() => validarHorario([{ dia: 'sabado', inicio: '8:00', fin: '09:00' }]));
+});
+
+test('fondos: texto de ejemplo y límites de los textos nuevos', () => {
+	assert.ok(FONDOS_POR_DEFECTO.every((f) => f.a_que_se_dedica && f.por_que_invertir.split('\n').length === 3));
+	assert.equal(ejemploDeFondo({ nombre: ' capi green ' }).a_que_se_dedica, FONDOS_POR_DEFECTO[0].a_que_se_dedica);
+	assert.equal(ejemploDeFondo({ nombre: 'Otro', orden: 5 }).a_que_se_dedica, FONDOS_POR_DEFECTO[4].a_que_se_dedica);
+	assert.equal(ejemploDeFondo({ nombre: 'Otro', orden: 9 }), null);
+	const c = SECCIONES.fondos.campos;
+	assert.deepEqual(limpiar({ logo: 'abc', a_que_se_dedica: 'x', por_que_invertir: 'a\nb', rendimiento_base: '0.03' }, c), { logo: 'abc', a_que_se_dedica: 'x', por_que_invertir: 'a\nb', rendimiento_base: 0.03 });
+	assert.throws(() => limpiar({ a_que_se_dedica: 'x'.repeat(161) }, c), /160/);
 });

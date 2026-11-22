@@ -95,6 +95,9 @@ export interface Fondo {
   id: string; nombre: string; historia: string | null; riesgo: 'bajo' | 'medio' | 'alto';
   rendimiento_base: number | string; rendimiento_alterno: number | string | null; variacion: number | string;
   activo: boolean; orden: number | null;
+  logo: string | null; a_que_se_dedica: string | null; por_que_invertir: string | null;
+  /** Texto de ejemplo que propone el sistema (solo lectura). */
+  ejemplo?: { a_que_se_dedica: string; por_que_invertir: string } | null;
 }
 
 export interface Participante {

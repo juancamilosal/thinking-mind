@@ -403,7 +403,7 @@ const CAMPOS_JSON = ['horario', 'parametros_fx'];
 const SECCIONES = {
 	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'orden', 'responsable_banco'], orden: 'orden' },
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
-	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
+	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
 const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill'];
 
@@ -414,12 +414,29 @@ const PAISES_POR_DEFECTO = [
 	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#4F7A3A', orden: 3 },
 ];
 const FONDOS_POR_DEFECTO = [
-	{ nombre: 'CAPI GREEN', riesgo: 'bajo', rendimiento_base: 0.03, rendimiento_alterno: null, variacion: 0.02 },
-	{ nombre: 'OCEAN GUARDIANS', riesgo: 'bajo', rendimiento_base: 0.02, rendimiento_alterno: null, variacion: 0.02 },
-	{ nombre: 'LEGO FUTURE', riesgo: 'medio', rendimiento_base: 0.06, rendimiento_alterno: null, variacion: 0.05 },
-	{ nombre: 'LES ARTISTES', riesgo: 'medio', rendimiento_base: 0.05, rendimiento_alterno: null, variacion: 0.05 },
-	{ nombre: 'DREAM EXPLORERS', riesgo: 'alto', rendimiento_base: 0.1, rendimiento_alterno: -0.08, variacion: 0.12 },
+	{ nombre: 'CAPI GREEN', riesgo: 'bajo', rendimiento_base: 0.03, rendimiento_alterno: null, variacion: 0.02,
+		a_que_se_dedica: 'Sembramos bosques y producimos energía con el sol y el viento.',
+		por_que_invertir: 'Todo el mundo necesita energía limpia\nCrece despacio, pero seguro\nCuidas el planeta mientras ganas' },
+	{ nombre: 'OCEAN GUARDIANS', riesgo: 'bajo', rendimiento_base: 0.02, rendimiento_alterno: null, variacion: 0.02,
+		a_que_se_dedica: 'Limpiamos los océanos y reciclamos el plástico que sacamos del mar.',
+		por_que_invertir: 'Cada vez más empresas pagan por reciclar\nEs la inversión más tranquila\nAyudas a salvar a los animales del mar' },
+	{ nombre: 'LEGO FUTURE', riesgo: 'medio', rendimiento_base: 0.06, rendimiento_alterno: null, variacion: 0.05,
+		a_que_se_dedica: 'Diseñamos juguetes y robots para aprender construyendo.',
+		por_que_invertir: 'Niños de todo el mundo quieren nuestros productos\nInventamos algo nuevo cada temporada\nPuede ganar más que un fondo tranquilo' },
+	{ nombre: 'LES ARTISTES', riesgo: 'medio', rendimiento_base: 0.05, rendimiento_alterno: null, variacion: 0.05,
+		a_que_se_dedica: 'Producimos música, películas y arte de nuevos talentos.',
+		por_que_invertir: 'Un solo éxito puede hacernos ganar mucho\nTrabajamos con artistas de todos los países\nEl público siempre busca algo nuevo' },
+	{ nombre: 'DREAM EXPLORERS', riesgo: 'alto', rendimiento_base: 0.1, rendimiento_alterno: -0.08, variacion: 0.12,
+		a_que_se_dedica: 'Construimos naves para explorar el espacio y otros planetas.',
+		por_que_invertir: 'Si la misión sale bien, es el fondo que más gana\nEs el negocio del futuro\nOjo: si la misión falla, puedes perder billetes' },
 ];
+
+/** Texto de ejemplo para un fondo (por su nombre o, si no, por su posición). */
+function ejemploDeFondo(fondo) {
+	const n = String(fondo?.nombre ?? '').trim().toUpperCase();
+	const f = FONDOS_POR_DEFECTO.find((x) => x.nombre === n) ?? FONDOS_POR_DEFECTO[(Number(fondo?.orden) || 0) - 1];
+	return f ? { a_que_se_dedica: f.a_que_se_dedica, por_que_invertir: f.por_que_invertir } : null;
+}
 
 const ENTEROS = ['provision_inicial', 'orden', 'precio_cop', 'stock', 'maximo_por_estudiante', 'tasa_inicial', 'investment_bill'];
 const DECIMALES = ['rendimiento_base', 'rendimiento_alterno', 'variacion', 'tope_minimo', 'tope_maximo'];
@@ -439,6 +456,8 @@ function limpiar(datos, permitidos) {
 			v = Number(v);
 			if (!Number.isFinite(v)) throw new WgeError(400, 'VALOR_INVALIDO', `${campo} debe ser un número`);
 		}
+		if (v !== null && campo === 'a_que_se_dedica' && String(v).length > 160) throw new WgeError(400, 'VALOR_INVALIDO', 'A qué se dedica: máximo 160 letras');
+		if (v !== null && campo === 'por_que_invertir' && String(v).length > 600) throw new WgeError(400, 'VALOR_INVALIDO', 'Por qué invertir: máximo 600 letras');
 		if (campo === 'riesgo' && v !== null && !['bajo', 'medio', 'alto'].includes(v)) throw new WgeError(400, 'VALOR_INVALIDO', 'riesgo debe ser bajo, medio o alto');
 		if (campo === 'horario' && v !== null) v = validarHorario(v);
 		if (CAMPOS_JSON.includes(campo) && v !== null) v = JSON.stringify(v);
@@ -626,6 +645,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 					p.en_circulacion = Number(provisto?.t ?? 0) - p.saldo_banco;
 				}
 			}
+			if (nombre === 'fondos') for (const f of filas) f.ejemplo = ejemploDeFondo(f);
 			return filas;
 		}));
 
@@ -893,7 +913,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		return { quitado: true };
 	}));
 
-	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto (la pantalla la reduce antes de enviarla). */
+	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto o logo de un fondo (la pantalla la reduce antes de enviarla). */
 	router.post('/admin/fotos', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const tipo = String(req.body?.tipo ?? '');
@@ -908,11 +928,12 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		return { id };
 	}));
 
-	/** GET /wge/foto/:id: muestra la foto de un producto a cualquier colaborador (sin abrir directus_files). */
+	/** GET /wge/foto/:id: muestra la foto de un producto o el logo de un fondo a cualquier colaborador (sin abrir directus_files). */
 	router.get('/foto/:id', async (req, res) => {
 		try {
 			if (!req.accountability?.user) return res.status(401).end();
-			if (!(await db('wge_productos').where('foto', req.params.id).first('id'))) return res.status(404).end();
+			const esFoto = (await db('wge_productos').where('foto', req.params.id).first('id')) || (await db('wge_fondos').where('logo', req.params.id).first('id'));
+			if (!esFoto) return res.status(404).end();
 			const activos = new services.AssetsService({ schema: await getSchema(), accountability: null });
 			const { stream, file } = await activos.getAsset(req.params.id, { transformationParams: { width: 480, height: 480, fit: 'cover', quality: 80 } });
 			res.setHeader('Content-Type', file.type ?? 'image/jpeg');
