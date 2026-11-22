@@ -1,3 +1,4 @@
+import { InstalarAppComponent } from '../../../private-layout-will-go/instalar-app.component';
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
@@ -15,7 +16,7 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
 @Component({
   selector: 'app-panel-acudiente',
   standalone: true,
-  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent, ProcesandoRondaComponent, GraficaTasaComponent],
+  imports: [DatePipe, InstalarAppComponent, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent, ProcesandoRondaComponent, GraficaTasaComponent],
   template: `
     <div class="min-h-screen bg-slate-50">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
@@ -32,6 +33,7 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
           <div class="bg-white rounded-2xl border border-red-200 p-8 text-center text-red-700">{{ error }}</div>
         } @else if (datos) {
           <h1 class="text-2xl font-bold text-gray-800">Hola, {{ datos.acudiente.nombre }}</h1>
+          <wg-instalar-app class="block mt-4" />
           @if (!datos.ediciones.length) {
             <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">Tu hijo no está en una edición activa de Will-Go.</div>
           }

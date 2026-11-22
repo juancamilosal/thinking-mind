@@ -1,3 +1,4 @@
+import { InstalarAppComponent } from '../../../private-layout-will-go/instalar-app.component';
 import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,7 +11,7 @@ import { WillGoService } from '../../../../core/services/will-go.service';
 @Component({
   selector: 'app-login-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, InstalarAppComponent],
   templateUrl: './login-will-go.html',
   styleUrls: ['./login-will-go.css'],
 })

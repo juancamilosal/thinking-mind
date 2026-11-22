@@ -1,3 +1,4 @@
+import { InstalarAppComponent } from './instalar-app.component';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
@@ -8,7 +9,7 @@ import { MENU_POR_ROL, OpcionMenu } from './menu-will-go';
 @Component({
   selector: 'app-private-layout-will-go',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, InstalarAppComponent],
   templateUrl: './private-layout-will-go.html',
 })
 export class PrivateLayoutWillGo implements OnInit {
