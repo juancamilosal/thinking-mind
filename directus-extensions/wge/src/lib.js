@@ -122,3 +122,57 @@ export function aleatorioConSemilla(semilla) {
 }
 
 export const limitar = (v, min, max) => Math.min(max, Math.max(min, v));
+
+const CLAVE_REPETIDA = '23505'; // unique_violation de PostgreSQL
+
+/**
+ * Trae a la edición a los estudiantes inscritos en su programa (y colegio, si la edición tiene uno).
+ * No cuenta las cuentas devueltas ni trasladadas. Nunca duplica: se puede llamar cuantas veces se quiera.
+ */
+export async function traerInscritos(db, edicion, actor) {
+	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0 };
+	const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
+		.leftJoin('wge_participantes as p', function () { this.on('p.estudiante_id', 'e.id').andOnVal('p.edicion_id', edicion.id); })
+		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
+		.distinct('e.id as estudiante_id', db.raw('p.id is not null as ya_esta'));
+	if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
+	const inscritos = await consulta;
+	let nuevos = 0;
+	for (const { estudiante_id, ya_esta } of inscritos) {
+		if (ya_esta) continue;
+		for (let intento = 0; intento < 5; intento++) {
+			const codigo = Array.from(crypto.getRandomValues(new Uint32Array(6)), (v) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[v % 32]).join('');
+			try {
+				const r = await db('wge_participantes').insert({
+					id: crypto.randomUUID(), edicion_id: edicion.id, estudiante_id, codigo, presente: false,
+					clave_unica: `${edicion.id}:${estudiante_id}`, date_created: new Date(), user_created: actor ?? null,
+				}).onConflict('clave_unica').ignore().returning('id');
+				if (r.length) nuevos++;
+				break;
+			} catch (error) {
+				if (error?.code !== CLAVE_REPETIDA) throw error; // código repetido: se intenta con otro
+			}
+		}
+	}
+	return { inscritos: inscritos.length, nuevos };
+}
+
+/**
+ * Entrega la bienvenida (Investment Bill) a los participantes con país que todavía no la recibieron.
+ * Sale del banco del país de cada uno. Debe llamarse dentro de una transacción.
+ */
+export async function darBienvenida(trx, edicion, participantes, actor) {
+	const monto = Number(edicion.investment_bill ?? 0);
+	let entregadas = 0;
+	if (monto <= 0) return entregadas;
+	const ordenados = [...participantes].filter((p) => p.pais_id).sort((a, b) => (a.pais_id + a.id).localeCompare(b.pais_id + b.id));
+	for (const p of ordenados) {
+		const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: p.pais_id, tipo: 'banco' });
+		const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: p.pais_id, tipo: 'estudiante', participanteId: p.id });
+		if (await trx('wge_movimientos').where({ billetera_id: billetera.id, tipo: 'bienvenida' }).first('id')) continue;
+		await moverSaldo(trx, banco, { tipo: 'transferencia_salida', monto: -monto, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
+		await moverSaldo(trx, billetera, { tipo: 'bienvenida', monto, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
+		entregadas++;
+	}
+	return entregadas;
+}

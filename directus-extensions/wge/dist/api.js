@@ -125,6 +125,60 @@ function aleatorioConSemilla(semilla) {
 
 const limitar = (v, min, max) => Math.min(max, Math.max(min, v));
 
+const CLAVE_REPETIDA = '23505'; // unique_violation de PostgreSQL
+
+/**
+ * Trae a la edición a los estudiantes inscritos en su programa (y colegio, si la edición tiene uno).
+ * No cuenta las cuentas devueltas ni trasladadas. Nunca duplica: se puede llamar cuantas veces se quiera.
+ */
+async function traerInscritos(db, edicion, actor) {
+	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0 };
+	const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
+		.leftJoin('wge_participantes as p', function () { this.on('p.estudiante_id', 'e.id').andOnVal('p.edicion_id', edicion.id); })
+		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
+		.distinct('e.id as estudiante_id', db.raw('p.id is not null as ya_esta'));
+	if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
+	const inscritos = await consulta;
+	let nuevos = 0;
+	for (const { estudiante_id, ya_esta } of inscritos) {
+		if (ya_esta) continue;
+		for (let intento = 0; intento < 5; intento++) {
+			const codigo = Array.from(crypto.getRandomValues(new Uint32Array(6)), (v) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[v % 32]).join('');
+			try {
+				const r = await db('wge_participantes').insert({
+					id: crypto.randomUUID(), edicion_id: edicion.id, estudiante_id, codigo, presente: false,
+					clave_unica: `${edicion.id}:${estudiante_id}`, date_created: new Date(), user_created: actor ?? null,
+				}).onConflict('clave_unica').ignore().returning('id');
+				if (r.length) nuevos++;
+				break;
+			} catch (error) {
+				if (error?.code !== CLAVE_REPETIDA) throw error; // código repetido: se intenta con otro
+			}
+		}
+	}
+	return { inscritos: inscritos.length, nuevos };
+}
+
+/**
+ * Entrega la bienvenida (Investment Bill) a los participantes con país que todavía no la recibieron.
+ * Sale del banco del país de cada uno. Debe llamarse dentro de una transacción.
+ */
+async function darBienvenida(trx, edicion, participantes, actor) {
+	const monto = Number(edicion.investment_bill ?? 0);
+	let entregadas = 0;
+	if (monto <= 0) return entregadas;
+	const ordenados = [...participantes].filter((p) => p.pais_id).sort((a, b) => (a.pais_id + a.id).localeCompare(b.pais_id + b.id));
+	for (const p of ordenados) {
+		const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: p.pais_id, tipo: 'banco' });
+		const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: p.pais_id, tipo: 'estudiante', participanteId: p.id });
+		if (await trx('wge_movimientos').where({ billetera_id: billetera.id, tipo: 'bienvenida' }).first('id')) continue;
+		await moverSaldo(trx, banco, { tipo: 'transferencia_salida', monto: -monto, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
+		await moverSaldo(trx, billetera, { tipo: 'bienvenida', monto, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
+		entregadas++;
+	}
+	return entregadas;
+}
+
 // Funcionarios de WILL-GO ECONOMY: quién soy, cambio de clave y perfiles que crea el Administrativo.
 // Las cuentas se crean con el servicio de usuarios de Directus (que cifra la clave), pero solo
 // con roles de Will Go: desde aquí nunca se puede crear ni tocar un usuario de otra parte de la plataforma.
@@ -385,6 +439,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	router.get('/admin/ediciones', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const ediciones = await db('wge_ediciones').orderBy('date_created', 'desc');
+		for (const e of ediciones) await traerInscritos(db, e, req.accountability.user);
 		return Promise.all(ediciones.map(resumenEdicion));
 	}));
 
@@ -410,7 +465,9 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 
 	router.get('/admin/ediciones/:id', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		return resumenEdicion(await edicionExistente(req.params.id));
+		const e = await edicionExistente(req.params.id);
+		const { nuevos } = await traerInscritos(db, e, req.accountability.user);
+		return { ...(await resumenEdicion(e)), nuevos };
 	}));
 
 	router.patch('/admin/ediciones/:id', ruta(async (req, rol) => {
@@ -512,7 +569,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	/** Participantes con su nombre, colegio, país y saldo. */
 	router.get('/admin/ediciones/:id/participantes', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		await edicionExistente(req.params.id);
+		const e = await edicionExistente(req.params.id);
+		await traerInscritos(db, e, req.accountability.user);
 		return db('wge_participantes as p')
 			.join('estudiantes as e', 'e.id', 'p.estudiante_id')
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id')
@@ -550,8 +608,16 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		}
 		if ('presente' in (req.body ?? {})) cambios.presente = !!req.body.presente;
 		if (!Object.keys(cambios).length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay cambios');
-		await db('wge_participantes').whereIn('id', ids).update(cambios);
-		return { actualizados: ids.length };
+		const edicion = await edicionExistente([...ediciones][0]);
+		// Con la edición abierta, quien recibe país recibe también su bienvenida, en la misma operación
+		return db.transaction(async (trx) => {
+			await trx('wge_participantes').whereIn('id', ids).update(cambios);
+			let bienvenidas = 0;
+			if (cambios.pais_id && edicion.estado === 'abierta') {
+				bienvenidas = await darBienvenida(trx, edicion, await trx('wge_participantes').whereIn('id', ids), req.accountability.user);
+			}
+			return { actualizados: ids.length, bienvenidas };
+		});
 	}));
 
 	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto (la pantalla la reduce antes de enviarla). */
@@ -910,33 +976,12 @@ const configEndpoint = {
 			});
 		}));
 
-		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos en el programa de la edición. */
+		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos (también se hace solo al consultar). */
 		router.post('/ediciones/:id/sincronizar-participantes', ruta(async (req, rol) => {
 			exigirRol(rol, ROLES.ADMIN_WG);
 			const edicion = await db('wge_ediciones').where('id', req.params.id).first();
 			if (!edicion?.curso_id) throw new WgeError(409, 'SIN_PROGRAMA', 'La edición no tiene programa asignado');
-			const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
-				.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
-				.distinct('e.id as estudiante_id');
-			if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
-			const inscritos = await consulta;
-			let nuevos = 0;
-			for (const { estudiante_id } of inscritos) {
-				for (let intento = 0; intento < 5; intento++) {
-					const codigo = Math.random().toString(36).slice(2, 8).toUpperCase();
-					try {
-						const r = await db('wge_participantes').insert({
-							id: crypto.randomUUID(), edicion_id: edicion.id, estudiante_id, codigo, presente: false,
-							clave_unica: `${edicion.id}:${estudiante_id}`, date_created: new Date(), user_created: req.accountability.user,
-						}).onConflict('clave_unica').ignore().returning('id');
-						if (r.length) nuevos++;
-						break;
-					} catch (error) {
-						if (error?.code !== CLAVE_DUPLICADA) throw error; // código repetido: se intenta con otro
-					}
-				}
-			}
-			return { inscritos: inscritos.length, nuevos };
+			return traerInscritos(db, edicion, req.accountability.user);
 		}));
 
 		/**
@@ -963,18 +1008,8 @@ const configEndpoint = {
 						await moverSaldo(trx, banco, { tipo: 'provision', monto: Number(pais.provision_inicial), actor, referenciaTipo: 'edicion', referenciaId: edicion.id });
 						resumen.provisiones++;
 					}
-					const bienvenida = Number(edicion.investment_bill ?? 0);
-					if (bienvenida > 0) {
-						const participantes = await trx('wge_participantes').where({ edicion_id: edicion.id, pais_id: pais.id }).orderBy('id');
-						for (const p of participantes) {
-							const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'estudiante', participanteId: p.id });
-							const yaRecibio = await trx('wge_movimientos').where({ billetera_id: billetera.id, tipo: 'bienvenida' }).first();
-							if (yaRecibio) continue;
-							await moverSaldo(trx, banco, { tipo: 'transferencia_salida', monto: -bienvenida, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
-							await moverSaldo(trx, billetera, { tipo: 'bienvenida', monto: bienvenida, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
-							resumen.bienvenidas++;
-						}
-					}
+					const participantes = await trx('wge_participantes').where({ edicion_id: edicion.id, pais_id: pais.id });
+					resumen.bienvenidas += await darBienvenida(trx, edicion, participantes, actor);
 				}
 				await trx('wge_ediciones').where('id', edicion.id).update({ estado: 'abierta' });
 				return resumen;

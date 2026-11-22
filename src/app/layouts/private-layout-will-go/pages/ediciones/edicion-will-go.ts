@@ -161,7 +161,11 @@ export class EdicionWillGo implements OnInit {
   recargar(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.willGo.edicion(id).subscribe({
-      next: (e) => { this.edicion = e; this.cargando = false; },
+      next: (e) => {
+        this.edicion = e;
+        this.cargando = false;
+        if (e.nuevos) this.mostrarAviso(e.nuevos === 1 ? 'Llegó 1 inscrito nuevo a la edición.' : `Llegaron ${e.nuevos} inscritos nuevos a la edición.`);
+      },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
     });
   }

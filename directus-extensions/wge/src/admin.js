@@ -2,7 +2,7 @@
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
-import { WgeError, ROLES, exigirRol, exigirTexto } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 
@@ -110,6 +110,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	router.get('/admin/ediciones', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const ediciones = await db('wge_ediciones').orderBy('date_created', 'desc');
+		for (const e of ediciones) await traerInscritos(db, e, req.accountability.user);
 		return Promise.all(ediciones.map(resumenEdicion));
 	}));
 
@@ -135,7 +136,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 
 	router.get('/admin/ediciones/:id', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		return resumenEdicion(await edicionExistente(req.params.id));
+		const e = await edicionExistente(req.params.id);
+		const { nuevos } = await traerInscritos(db, e, req.accountability.user);
+		return { ...(await resumenEdicion(e)), nuevos };
 	}));
 
 	router.patch('/admin/ediciones/:id', ruta(async (req, rol) => {
@@ -237,7 +240,8 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	/** Participantes con su nombre, colegio, país y saldo. */
 	router.get('/admin/ediciones/:id/participantes', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		await edicionExistente(req.params.id);
+		const e = await edicionExistente(req.params.id);
+		await traerInscritos(db, e, req.accountability.user);
 		return db('wge_participantes as p')
 			.join('estudiantes as e', 'e.id', 'p.estudiante_id')
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id')
@@ -275,8 +279,16 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		}
 		if ('presente' in (req.body ?? {})) cambios.presente = !!req.body.presente;
 		if (!Object.keys(cambios).length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay cambios');
-		await db('wge_participantes').whereIn('id', ids).update(cambios);
-		return { actualizados: ids.length };
+		const edicion = await edicionExistente([...ediciones][0]);
+		// Con la edición abierta, quien recibe país recibe también su bienvenida, en la misma operación
+		return db.transaction(async (trx) => {
+			await trx('wge_participantes').whereIn('id', ids).update(cambios);
+			let bienvenidas = 0;
+			if (cambios.pais_id && edicion.estado === 'abierta') {
+				bienvenidas = await darBienvenida(trx, edicion, await trx('wge_participantes').whereIn('id', ids), req.accountability.user);
+			}
+			return { actualizados: ids.length, bienvenidas };
+		});
 	}));
 
 	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto (la pantalla la reduce antes de enviarla). */

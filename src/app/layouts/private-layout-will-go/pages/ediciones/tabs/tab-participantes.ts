@@ -10,12 +10,8 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
   template: `
     <!-- Acciones -->
     <div class="flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
-      <p class="text-sm text-gray-500">Los participantes son los estudiantes inscritos en el programa{{ edicion.colegio_nombre ? ' del colegio ' + edicion.colegio_nombre : '' }}. Asigna a cada uno su país.</p>
+      <p class="text-sm text-gray-500">Los participantes son los estudiantes inscritos en el programa{{ edicion.colegio_nombre ? ' del colegio ' + edicion.colegio_nombre : '' }}. Quien se inscribe y paga aparece aquí solo. Asigna a cada uno su país.</p>
       <div class="flex flex-wrap gap-2">
-        <button type="button" (click)="sincronizar()" [disabled]="trabajando"
-                class="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60">
-          ⟳ Traer inscritos
-        </button>
         <button type="button" (click)="repartir()" [disabled]="trabajando || !sinPais.length || !paises.length"
                 class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">
           Repartir {{ sinPais.length }} sin país en partes iguales
@@ -59,8 +55,8 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
         <p class="p-10 text-center text-gray-500">Cargando participantes…</p>
       } @else if (!lista.length) {
         <div class="p-10 text-center">
-          <p class="font-semibold text-gray-700">Todavía no hay participantes</p>
-          <p class="text-sm text-gray-500 mt-1">Pulsa «Traer inscritos» para cargar a los estudiantes del programa.</p>
+          <p class="font-semibold text-gray-700">Todavía no hay inscritos</p>
+          <p class="text-sm text-gray-500 mt-1">Cuando un estudiante se inscriba en el programa{{ edicion.colegio_nombre ? ' desde ' + edicion.colegio_nombre : '' }}, aparecerá aquí automáticamente.</p>
         </div>
       } @else {
         <div class="hidden md:grid grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem] gap-3 px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
@@ -161,19 +157,6 @@ export class TabParticipantes implements OnInit {
     for (const p of this.filtrados) if (marcar) this.seleccion.add(p.id); else this.seleccion.delete(p.id);
   }
 
-  sincronizar(): void {
-    this.trabajando = true;
-    this.willGo.sincronizarParticipantes(this.edicion.id).subscribe({
-      next: (r) => {
-        this.trabajando = false;
-        this.mostrar(r.nuevos ? `Se agregaron ${r.nuevos} participantes nuevos (${r.inscritos} inscritos en total).` : `Ya estaban todos: ${r.inscritos} inscritos.`, false);
-        this.cargar();
-        this.cambio.emit();
-      },
-      error: (e) => { this.trabajando = false; this.mostrar(WillGoService.mensajeDeError(e), true); },
-    });
-  }
-
   /** Reparte a los que no tienen país, completando primero los países con menos gente. */
   repartir(): void {
     const conteo = new Map(this.paises.map((p) => [p.id, this.cuantos(p.id)]));
@@ -185,11 +168,13 @@ export class TabParticipantes implements OnInit {
     }
     this.trabajando = true;
     const pendientes = [...asignaciones.entries()];
-    const siguiente = () => {
+    let bienvenidas = 0;
+    const siguiente = (r?: { bienvenidas: number }) => {
+      bienvenidas += r?.bienvenidas ?? 0;
       const par = pendientes.shift();
       if (!par) {
         this.trabajando = false;
-        this.mostrar('Participantes repartidos entre los países.', false);
+        this.mostrar('Participantes repartidos entre los países.' + (bienvenidas ? ` ${bienvenidas} recibieron su bienvenida.` : ''), false);
         this.cargar();
         this.cambio.emit();
         return;
@@ -208,10 +193,13 @@ export class TabParticipantes implements OnInit {
 
   asignar(ids: string[], paisId: string | null): void {
     this.willGo.actualizarParticipantes(ids, { pais_id: paisId }).subscribe({
-      next: () => {
+      next: (r) => {
         for (const p of this.lista) if (ids.includes(p.id)) p.pais_id = paisId;
         this.seleccion.clear();
-        this.mostrar(ids.length > 1 ? `${ids.length} participantes asignados.` : '', false);
+        const asignados = ids.length > 1 ? `${ids.length} participantes asignados.` : 'País asignado.';
+        const bienvenida = r.bienvenidas ? ` ${r.bienvenidas === 1 ? 'Recibió' : r.bienvenidas + ' recibieron'} sus ${this.edicion.investment_bill} billetes de bienvenida.` : '';
+        this.mostrar(asignados + bienvenida, false);
+        if (r.bienvenidas) this.cargar(); // para ver el saldo nuevo
         this.cambio.emit();
       },
       error: (e) => { this.mostrar(WillGoService.mensajeDeError(e), true); this.cargar(); },

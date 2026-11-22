@@ -60,6 +60,8 @@ export interface Edicion {
   estado: 'borrador' | 'abierta' | 'cerrada';
   participantes: number;
   sin_pais: number;
+  /** Inscritos que llegaron en esta consulta (se traen solos). */
+  nuevos?: number;
 }
 
 export interface Pais {
@@ -212,7 +214,7 @@ export class WillGoService {
     return this.http.get<{ data: Participante[] }>(`${this.api}/admin/ediciones/${edicionId}/participantes`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  actualizarParticipantes(ids: string[], cambios: { pais_id?: string | null; presente?: boolean }): Observable<{ actualizados: number }> {
+  actualizarParticipantes(ids: string[], cambios: { pais_id?: string | null; presente?: boolean }): Observable<{ actualizados: number; bienvenidas: number }> {
     return this.http.patch<{ data: any }>(`${this.api}/admin/participantes`, { ids, ...cambios }).pipe(this.enZona(), map((r) => r.data));
   }
 

@@ -2,7 +2,7 @@
 // Cada operación con billetes corre dentro de una transacción; si algo falla, no queda nada a medias.
 import {
 	WgeError, ROLES, rolDelUsuario, exigirRol, enteroPositivo, exigirTexto,
-	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar,
+	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar, traerInscritos, darBienvenida,
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
@@ -242,33 +242,12 @@ export default {
 			});
 		}));
 
-		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos en el programa de la edición. */
+		/** POST /wge/ediciones/:id/sincronizar-participantes: trae a los inscritos (también se hace solo al consultar). */
 		router.post('/ediciones/:id/sincronizar-participantes', ruta(async (req, rol) => {
 			exigirRol(rol, ROLES.ADMIN_WG);
 			const edicion = await db('wge_ediciones').where('id', req.params.id).first();
 			if (!edicion?.curso_id) throw new WgeError(409, 'SIN_PROGRAMA', 'La edición no tiene programa asignado');
-			const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
-				.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
-				.distinct('e.id as estudiante_id');
-			if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
-			const inscritos = await consulta;
-			let nuevos = 0;
-			for (const { estudiante_id } of inscritos) {
-				for (let intento = 0; intento < 5; intento++) {
-					const codigo = Math.random().toString(36).slice(2, 8).toUpperCase();
-					try {
-						const r = await db('wge_participantes').insert({
-							id: crypto.randomUUID(), edicion_id: edicion.id, estudiante_id, codigo, presente: false,
-							clave_unica: `${edicion.id}:${estudiante_id}`, date_created: new Date(), user_created: req.accountability.user,
-						}).onConflict('clave_unica').ignore().returning('id');
-						if (r.length) nuevos++;
-						break;
-					} catch (error) {
-						if (error?.code !== CLAVE_DUPLICADA) throw error; // código repetido: se intenta con otro
-					}
-				}
-			}
-			return { inscritos: inscritos.length, nuevos };
+			return traerInscritos(db, edicion, req.accountability.user);
 		}));
 
 		/**
@@ -295,18 +274,8 @@ export default {
 						await moverSaldo(trx, banco, { tipo: 'provision', monto: Number(pais.provision_inicial), actor, referenciaTipo: 'edicion', referenciaId: edicion.id });
 						resumen.provisiones++;
 					}
-					const bienvenida = Number(edicion.investment_bill ?? 0);
-					if (bienvenida > 0) {
-						const participantes = await trx('wge_participantes').where({ edicion_id: edicion.id, pais_id: pais.id }).orderBy('id');
-						for (const p of participantes) {
-							const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'estudiante', participanteId: p.id });
-							const yaRecibio = await trx('wge_movimientos').where({ billetera_id: billetera.id, tipo: 'bienvenida' }).first();
-							if (yaRecibio) continue;
-							await moverSaldo(trx, banco, { tipo: 'transferencia_salida', monto: -bienvenida, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
-							await moverSaldo(trx, billetera, { tipo: 'bienvenida', monto: bienvenida, actor, referenciaTipo: 'bienvenida', referenciaId: p.id });
-							resumen.bienvenidas++;
-						}
-					}
+					const participantes = await trx('wge_participantes').where({ edicion_id: edicion.id, pais_id: pais.id });
+					resumen.bienvenidas += await darBienvenida(trx, edicion, participantes, actor);
 				}
 				await trx('wge_ediciones').where('id', edicion.id).update({ estado: 'abierta' });
 				return resumen;
