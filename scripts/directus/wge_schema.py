@@ -67,6 +67,7 @@ def coleccion(nombre, icono, nota, campos):
 coleccion('wge_ediciones', 'event', 'Cada fin de semana Will-Go', [
     campo('nombre', 'string', requerido=True),
     m2o('colegio_id'), m2o('curso_id', 'Programa de la plataforma (p. ej. Will Go Economy)'),
+    campo('edicion_programa', 'string', 'Número de edición del programa en ese colegio (colegios_cursos.edicion). Solo entran los inscritos de esta edición.'),
     campo('fecha_inicio', 'date'), campo('fecha_fin', 'date'),
     campo('horario', 'json', 'Horario por día, p. ej. [{"dia":"sabado","inicio":"08:00","fin":"20:00"}]', interfaz='input-code'),
     campo('zona_horaria', 'string', default='America/Bogota'),

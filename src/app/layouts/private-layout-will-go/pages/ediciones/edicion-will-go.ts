@@ -33,7 +33,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
                 <h1 class="text-2xl font-bold text-gray-800">{{ edicion.nombre }}</h1>
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[edicion.estado].clase">{{ estado[edicion.estado].texto }}</span>
               </div>
-              <p class="text-gray-500 mt-1">{{ edicion.colegio_nombre || 'Todos los colegios' }} · {{ edicion.programa_nombre || 'Sin programa' }}</p>
+              <p class="text-gray-500 mt-1">{{ edicion.colegio_nombre || 'Sin colegio' }} · {{ edicion.programa_nombre || 'Sin programa' }}{{ edicion.edicion_programa ? ' · Edición ' + edicion.edicion_programa : '' }}</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
             <button type="button" (click)="eliminando = true"

@@ -48,6 +48,7 @@ export interface Edicion {
   nombre: string;
   colegio_id: string | null;
   curso_id: string | null;
+  edicion_programa: string | null;
   colegio_nombre: string | null;
   programa_nombre: string | null;
   fecha_inicio: string | null;
@@ -65,6 +66,13 @@ export interface Edicion {
   nuevos?: number;
   /** Participantes de otro colegio que salieron solos (no tenían historial). */
   quitados?: number;
+}
+
+export interface Oferta {
+  id: string; colegio_id: string | null; colegio: string | null; curso_id: string; programa: string;
+  edicion: string; fecha_finalizacion: string | null;
+  /** Nombre de la edición de Will-Go que ya usa esta oferta, si existe. */
+  edicion_will_go: string | null;
 }
 
 export interface Pais {
@@ -86,6 +94,7 @@ export interface Fondo {
 export interface Participante {
   id: string; codigo: string; pais_id: string | null; presente: boolean;
   nombre: string; apellido: string; grado: string | null; colegio_id: string | null; colegio: string | null; saldo: number;
+  corresponde: boolean;
   retirado: boolean | null; motivo_retiro: string | null; fecha_retiro: string | null; pidio_reembolso: boolean;
 }
 
@@ -174,7 +183,7 @@ export class WillGoService {
 
   // ---------- Administración de ediciones ----------
 
-  catalogos(): Observable<{ colegios: { id: string; nombre: string }[]; programas: { id: string; nombre: string }[] }> {
+  catalogos(): Observable<{ colegios: { id: string; nombre: string }[]; programas: { id: string; nombre: string }[]; ofertas: Oferta[] }> {
     return this.http.get<{ data: any }>(`${this.api}/admin/catalogos`).pipe(this.enZona(), map((r) => r.data));
   }
 

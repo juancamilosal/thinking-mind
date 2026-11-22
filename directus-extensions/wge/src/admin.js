@@ -2,7 +2,7 @@
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
-import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 
@@ -12,7 +12,7 @@ export const SECCIONES = {
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
-const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill'];
+const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill'];
 
 /** Lo que trae toda edición nueva (se puede cambiar después). */
 export const PAISES_POR_DEFECTO = [
@@ -86,6 +86,15 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		return e;
 	};
 
+	/** Una sola edición de Will-Go por oferta (colegio + programa + número de edición). */
+	const validarOferta = async (fila, idActual = null) => {
+		if (!fila.curso_id || !fila.edicion_programa) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el programa habilitado en el colegio (con su número de edición)');
+		const repetida = await db('wge_ediciones').where({ curso_id: fila.curso_id, edicion_programa: String(fila.edicion_programa) })
+			.where((q) => (fila.colegio_id ? q.where('colegio_id', fila.colegio_id) : q.whereNull('colegio_id')))
+			.modify((q) => { if (idActual) q.whereNot('id', idActual); }).first('nombre');
+		if (repetida) throw new WgeError(409, 'OFERTA_REPETIDA', `Ya existe la edición «${repetida.nombre}» para ese colegio, programa y número de edición`);
+	};
+
 	const resumenEdicion = async (e) => {
 		const activos = () => db('wge_participantes').where('edicion_id', e.id).whereRaw('coalesce(retirado, false) = false');
 		const [{ total }] = await activos().count({ total: '*' });
@@ -102,11 +111,18 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	/** Listas para los selectores del formulario. */
 	router.get('/admin/catalogos', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		const [colegios, programas] = await Promise.all([
+		const [colegios, programas, ofertas] = await Promise.all([
 			db('colegios').select('id', 'nombre').orderBy('nombre'),
 			db('Cursos').select('id', 'nombre').orderBy('nombre'),
+			// Cada programa habilitado en un colegio con su número de edición (lo que se elige al crear la edición)
+			db('colegios_cursos as cc').join('Cursos as k', 'k.id', 'cc.curso_id').leftJoin('colegios as c', 'c.id', 'cc.colegio_id')
+				.whereNotNull('cc.edicion')
+				.select('cc.id', 'cc.colegio_id', 'c.nombre as colegio', 'cc.curso_id', 'k.nombre as programa', 'cc.edicion', 'cc.fecha_finalizacion',
+					db.raw(`(select we.nombre from wge_ediciones we where we.colegio_id is not distinct from cc.colegio_id
+						and we.curso_id = cc.curso_id and we.edicion_programa = cc.edicion::text limit 1) as edicion_will_go`))
+				.orderBy([{ column: 'k.nombre' }, { column: 'c.nombre' }]),
 		]);
-		return { colegios, programas };
+		return { colegios, programas, ofertas };
 	}));
 
 	router.get('/admin/ediciones', ruta(async (req, rol) => {
@@ -122,6 +138,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		const actor = req.accountability.user;
 		const fila = limpiar(req.body, CAMPOS_EDICION);
 		exigirTexto(fila.nombre, 'nombre');
+		await validarOferta(fila);
 		const id = await db.transaction(async (trx) => {
 			const edicion = nueva(actor, {
 				tasa_inicial: 1000, tope_minimo: 0.7, tope_maximo: 1.8, investment_bill: 0,
@@ -154,6 +171,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		if ('curso_id' in fila && fila.curso_id !== e.curso_id) {
 			const [{ n }] = await db('wge_participantes').where('edicion_id', e.id).count({ n: '*' });
 			if (Number(n) > 0) throw new WgeError(409, 'TIENE_PARTICIPANTES', 'No se puede cambiar el programa: la edición ya tiene participantes');
+		}
+		if (['colegio_id', 'curso_id', 'edicion_programa'].some((k) => k in fila)) {
+			await validarOferta({ colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa, ...fila }, e.id);
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
 		const actualizada = await edicionExistente(e.id);
@@ -254,6 +274,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
 				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
+				db.raw(`${sqlCorresponde(e).sql} as corresponde`, sqlCorresponde(e).valores),
 				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
 					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))
 			.orderBy([{ column: 'e.apellido' }, { column: 'e.nombre' }]);

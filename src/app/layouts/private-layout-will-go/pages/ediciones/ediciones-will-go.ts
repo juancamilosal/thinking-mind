@@ -2,15 +2,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Edicion, WillGoService } from '../../../../core/services/will-go.service';
+import { Edicion, Oferta, WillGoService } from '../../../../core/services/will-go.service';
 import { ESTADO_EDICION } from './estado-edicion';
-import { BuscadorColegioComponent } from '../../buscador-colegio.component';
+import { BuscadorOfertaComponent, OfertaElegida } from '../../buscador-oferta.component';
 import { EliminarEdicionComponent } from './eliminar-edicion.component';
 
 @Component({
   selector: 'app-ediciones-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, BuscadorColegioComponent, EliminarEdicionComponent],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, BuscadorOfertaComponent, EliminarEdicionComponent],
   template: `
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
@@ -46,7 +46,7 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <p class="font-bold text-gray-800 text-lg truncate">{{ e.nombre }}</p>
-                      <p class="text-sm text-gray-500 truncate">{{ e.colegio_nombre || 'Todos los colegios' }} · {{ e.programa_nombre || 'Sin programa' }}</p>
+                      <p class="text-sm text-gray-500 truncate">{{ e.colegio_nombre || 'Sin colegio' }} · {{ e.programa_nombre || 'Sin programa' }}{{ e.edicion_programa ? ' · Edición ' + e.edicion_programa : '' }}</p>
                     </div>
                     <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[e.estado].clase">{{ estado[e.estado].texto }}</span>
                   </div>
@@ -89,15 +89,9 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
               <input id="e-nombre" formControlName="nombre" placeholder="Ej.: Will-Go Economy · Noviembre 2026" class="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400">
             </div>
             <div>
-              <label for="e-colegio" class="block text-sm font-semibold text-gray-700 mb-1">Colegio</label>
-              <wg-buscador-colegio formControlName="colegio_id" [colegios]="colegios" inputId="e-colegio" />
-            </div>
-            <div>
-              <label for="e-programa" class="block text-sm font-semibold text-gray-700 mb-1">Programa de donde vienen los participantes</label>
-              <select id="e-programa" formControlName="curso_id" class="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400">
-                <option value="">Elige el programa</option>
-                @for (p of programas; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
-              </select>
+              <label for="e-oferta" class="block text-sm font-semibold text-gray-700 mb-1">Colegio, programa y edición</label>
+              <wg-buscador-oferta inputId="e-oferta" [ofertas]="ofertas" [actual]="ofertaElegida" (elegida)="alElegirOferta($event)" />
+              <p class="text-xs text-gray-500 mt-1">Solo entran los estudiantes inscritos en esa edición del programa en ese colegio.</p>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -136,8 +130,8 @@ export class EdicionesWillGo implements OnInit {
   aviso = '';
   cargando = true;
   error = '';
-  colegios: { id: string; nombre: string }[] = [];
-  programas: { id: string; nombre: string }[] = [];
+  ofertas: Oferta[] = [];
+  ofertaElegida: OfertaElegida | null = null;
   formularioAbierto = false;
   guardando = false;
   errorFormulario = '';
@@ -145,6 +139,7 @@ export class EdicionesWillGo implements OnInit {
     nombre: ['', Validators.required],
     colegio_id: [null as string | null],
     curso_id: ['', Validators.required],
+    edicion_programa: ['', Validators.required],
     fecha_inicio: [''],
     fecha_fin: [''],
   });
@@ -171,34 +166,35 @@ export class EdicionesWillGo implements OnInit {
   }
 
   abrirFormulario(): void {
-    this.form.reset({ nombre: '', colegio_id: null, curso_id: '', fecha_inicio: '', fecha_fin: '' });
+    this.form.reset({ nombre: '', colegio_id: null, curso_id: '', edicion_programa: '', fecha_inicio: '', fecha_fin: '' });
+    this.ofertaElegida = null;
     this.errorFormulario = '';
     this.formularioAbierto = true;
-    if (!this.programas.length) {
-      this.willGo.catalogos().subscribe({
-        next: (c) => {
-          this.colegios = c.colegios;
-          this.programas = c.programas;
-          // Propone el programa de Will Go Economy si existe
-          const wge = c.programas.find((p) => /will.?go economy/i.test(p.nombre) && !/prueba/i.test(p.nombre));
-          if (wge && !this.form.value.curso_id) this.form.patchValue({ curso_id: wge.id });
-        },
-        error: (e) => (this.errorFormulario = WillGoService.mensajeDeError(e)),
-      });
-    }
+    this.willGo.catalogos().subscribe({
+      next: (c) => (this.ofertas = c.ofertas),
+      error: (e) => (this.errorFormulario = WillGoService.mensajeDeError(e)),
+    });
+  }
+
+  alElegirOferta(o: Oferta): void {
+    this.ofertaElegida = { colegio_id: o.colegio_id, curso_id: o.curso_id, edicion_programa: String(o.edicion) };
+    this.form.patchValue({ colegio_id: o.colegio_id, curso_id: o.curso_id, edicion_programa: String(o.edicion) });
+    // Propone un nombre si todavía no lo escribieron
+    if (!this.form.value.nombre) this.form.patchValue({ nombre: `${o.programa} · ${o.colegio ?? 'Independiente'} · Edición ${o.edicion}` });
+    if (!this.form.value.fecha_fin && o.fecha_finalizacion) this.form.patchValue({ fecha_fin: o.fecha_finalizacion.slice(0, 10) });
   }
 
   crear(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
-      this.errorFormulario = 'Escribe el nombre y elige el programa.';
+      this.errorFormulario = 'Escribe el nombre y elige el colegio, programa y edición.';
       return;
     }
     this.guardando = true;
     this.errorFormulario = '';
     const v = this.form.value;
     this.willGo.crearEdicion({
-      nombre: v.nombre!, colegio_id: v.colegio_id || null, curso_id: v.curso_id || null,
+      nombre: v.nombre!, colegio_id: v.colegio_id || null, curso_id: v.curso_id || null, edicion_programa: v.edicion_programa || null,
       fecha_inicio: v.fecha_inicio || null, fecha_fin: v.fecha_fin || null,
     }).subscribe({
       next: (e) => { this.guardando = false; this.formularioAbierto = false; this.router.navigate(['/private-will-go/ediciones', e.id]); },

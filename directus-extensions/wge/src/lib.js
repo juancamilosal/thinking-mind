@@ -136,6 +136,8 @@ export async function traerInscritos(db, edicion, actor) {
 		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
 		.distinct('e.id as estudiante_id', db.raw('p.id is not null as ya_esta'));
 	if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
+	// Solo los inscritos en ESA edición del programa (la siguiente vez que el colegio repita el programa es otra edición)
+	if (edicion.edicion_programa) consulta.where('c.edicion_programa', String(edicion.edicion_programa));
 	const inscritos = await consulta;
 	let nuevos = 0;
 	for (const { estudiante_id, ya_esta } of inscritos) {
@@ -154,20 +156,33 @@ export async function traerInscritos(db, edicion, actor) {
 			}
 		}
 	}
-	const quitados = await quitarDeOtroColegio(db, edicion);
+	const quitados = await quitarLosQueNoCorresponden(db, edicion);
 	return { inscritos: inscritos.length, nuevos, quitados };
 }
 
 /**
- * Si la edición es de un colegio, saca a los participantes de otros colegios (p. ej. después de cambiarle
- * el colegio a la edición). Solo a quienes no tienen historial: billetes, compras, inversiones ni rúbrica.
- * Los que sí tienen historial se quedan y la pantalla los marca para retirarlos a mano.
+ * Consulta (para usar dentro de whereRaw/select) que dice si el estudiante de la fila "p"/"e" corresponde a la edición:
+ * es del colegio de la edición y tiene una inscripción de ese programa y de esa edición (aunque esté devuelta).
  */
-async function quitarDeOtroColegio(db, edicion) {
-	if (!edicion.colegio_id) return 0;
+export function sqlCorresponde(edicion) {
+	const condiciones = ['cc.estudiante_id = e.id', 'cc.curso_id = ?'];
+	const valores = [edicion.curso_id];
+	if (edicion.edicion_programa) { condiciones.push('cc.edicion_programa = ?'); valores.push(String(edicion.edicion_programa)); }
+	let sql = `exists (select 1 from cuentas_cobrar cc where ${condiciones.join(' and ')})`;
+	if (edicion.colegio_id) { sql = `(e.colegio_id = ? and ${sql})`; valores.unshift(edicion.colegio_id); }
+	return { sql, valores };
+}
+
+/**
+ * Saca a los participantes que ya no corresponden a la edición (otro colegio, otra edición del programa, o sin
+ * inscripción), por ejemplo después de cambiarle la oferta. Solo a quienes no tienen historial: billetes,
+ * compras, inversiones ni rúbrica. Los demás se quedan y la pantalla los marca para retirarlos a mano.
+ */
+async function quitarLosQueNoCorresponden(db, edicion) {
+	if (!edicion.curso_id) return 0;
 	const ajenos = await db('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
 		.where('p.edicion_id', edicion.id)
-		.where((q) => q.whereNull('e.colegio_id').orWhereNot('e.colegio_id', edicion.colegio_id))
+		.whereRaw(`not ${sqlCorresponde(edicion).sql}`, sqlCorresponde(edicion).valores)
 		.whereNotExists(db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id').whereRaw('b.participante_id = p.id'))
 		.whereNotExists(db('wge_evaluaciones as ev').whereRaw('ev.participante_id = p.id'))
 		.whereNotExists(db('wge_ventas as v').whereRaw('v.participante_id = p.id'))

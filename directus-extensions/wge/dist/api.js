@@ -138,6 +138,8 @@ async function traerInscritos(db, edicion, actor) {
 		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
 		.distinct('e.id as estudiante_id', db.raw('p.id is not null as ya_esta'));
 	if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
+	// Solo los inscritos en ESA edición del programa (la siguiente vez que el colegio repita el programa es otra edición)
+	if (edicion.edicion_programa) consulta.where('c.edicion_programa', String(edicion.edicion_programa));
 	const inscritos = await consulta;
 	let nuevos = 0;
 	for (const { estudiante_id, ya_esta } of inscritos) {
@@ -156,20 +158,33 @@ async function traerInscritos(db, edicion, actor) {
 			}
 		}
 	}
-	const quitados = await quitarDeOtroColegio(db, edicion);
+	const quitados = await quitarLosQueNoCorresponden(db, edicion);
 	return { inscritos: inscritos.length, nuevos, quitados };
 }
 
 /**
- * Si la edición es de un colegio, saca a los participantes de otros colegios (p. ej. después de cambiarle
- * el colegio a la edición). Solo a quienes no tienen historial: billetes, compras, inversiones ni rúbrica.
- * Los que sí tienen historial se quedan y la pantalla los marca para retirarlos a mano.
+ * Consulta (para usar dentro de whereRaw/select) que dice si el estudiante de la fila "p"/"e" corresponde a la edición:
+ * es del colegio de la edición y tiene una inscripción de ese programa y de esa edición (aunque esté devuelta).
  */
-async function quitarDeOtroColegio(db, edicion) {
-	if (!edicion.colegio_id) return 0;
+function sqlCorresponde(edicion) {
+	const condiciones = ['cc.estudiante_id = e.id', 'cc.curso_id = ?'];
+	const valores = [edicion.curso_id];
+	if (edicion.edicion_programa) { condiciones.push('cc.edicion_programa = ?'); valores.push(String(edicion.edicion_programa)); }
+	let sql = `exists (select 1 from cuentas_cobrar cc where ${condiciones.join(' and ')})`;
+	if (edicion.colegio_id) { sql = `(e.colegio_id = ? and ${sql})`; valores.unshift(edicion.colegio_id); }
+	return { sql, valores };
+}
+
+/**
+ * Saca a los participantes que ya no corresponden a la edición (otro colegio, otra edición del programa, o sin
+ * inscripción), por ejemplo después de cambiarle la oferta. Solo a quienes no tienen historial: billetes,
+ * compras, inversiones ni rúbrica. Los demás se quedan y la pantalla los marca para retirarlos a mano.
+ */
+async function quitarLosQueNoCorresponden(db, edicion) {
+	if (!edicion.curso_id) return 0;
 	const ajenos = await db('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
 		.where('p.edicion_id', edicion.id)
-		.where((q) => q.whereNull('e.colegio_id').orWhereNot('e.colegio_id', edicion.colegio_id))
+		.whereRaw(`not ${sqlCorresponde(edicion).sql}`, sqlCorresponde(edicion).valores)
 		.whereNotExists(db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id').whereRaw('b.participante_id = p.id'))
 		.whereNotExists(db('wge_evaluaciones as ev').whereRaw('ev.participante_id = p.id'))
 		.whereNotExists(db('wge_ventas as v').whereRaw('v.participante_id = p.id'))
@@ -365,7 +380,7 @@ const SECCIONES = {
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
-const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill'];
+const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill'];
 
 /** Lo que trae toda edición nueva (se puede cambiar después). */
 const PAISES_POR_DEFECTO = [
@@ -439,6 +454,15 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		return e;
 	};
 
+	/** Una sola edición de Will-Go por oferta (colegio + programa + número de edición). */
+	const validarOferta = async (fila, idActual = null) => {
+		if (!fila.curso_id || !fila.edicion_programa) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el programa habilitado en el colegio (con su número de edición)');
+		const repetida = await db('wge_ediciones').where({ curso_id: fila.curso_id, edicion_programa: String(fila.edicion_programa) })
+			.where((q) => (fila.colegio_id ? q.where('colegio_id', fila.colegio_id) : q.whereNull('colegio_id')))
+			.modify((q) => { if (idActual) q.whereNot('id', idActual); }).first('nombre');
+		if (repetida) throw new WgeError(409, 'OFERTA_REPETIDA', `Ya existe la edición «${repetida.nombre}» para ese colegio, programa y número de edición`);
+	};
+
 	const resumenEdicion = async (e) => {
 		const activos = () => db('wge_participantes').where('edicion_id', e.id).whereRaw('coalesce(retirado, false) = false');
 		const [{ total }] = await activos().count({ total: '*' });
@@ -455,11 +479,18 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	/** Listas para los selectores del formulario. */
 	router.get('/admin/catalogos', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		const [colegios, programas] = await Promise.all([
+		const [colegios, programas, ofertas] = await Promise.all([
 			db('colegios').select('id', 'nombre').orderBy('nombre'),
 			db('Cursos').select('id', 'nombre').orderBy('nombre'),
+			// Cada programa habilitado en un colegio con su número de edición (lo que se elige al crear la edición)
+			db('colegios_cursos as cc').join('Cursos as k', 'k.id', 'cc.curso_id').leftJoin('colegios as c', 'c.id', 'cc.colegio_id')
+				.whereNotNull('cc.edicion')
+				.select('cc.id', 'cc.colegio_id', 'c.nombre as colegio', 'cc.curso_id', 'k.nombre as programa', 'cc.edicion', 'cc.fecha_finalizacion',
+					db.raw(`(select we.nombre from wge_ediciones we where we.colegio_id is not distinct from cc.colegio_id
+						and we.curso_id = cc.curso_id and we.edicion_programa = cc.edicion::text limit 1) as edicion_will_go`))
+				.orderBy([{ column: 'k.nombre' }, { column: 'c.nombre' }]),
 		]);
-		return { colegios, programas };
+		return { colegios, programas, ofertas };
 	}));
 
 	router.get('/admin/ediciones', ruta(async (req, rol) => {
@@ -475,6 +506,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		const actor = req.accountability.user;
 		const fila = limpiar(req.body, CAMPOS_EDICION);
 		exigirTexto(fila.nombre, 'nombre');
+		await validarOferta(fila);
 		const id = await db.transaction(async (trx) => {
 			const edicion = nueva(actor, {
 				tasa_inicial: 1000, tope_minimo: 0.7, tope_maximo: 1.8, investment_bill: 0,
@@ -507,6 +539,9 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		if ('curso_id' in fila && fila.curso_id !== e.curso_id) {
 			const [{ n }] = await db('wge_participantes').where('edicion_id', e.id).count({ n: '*' });
 			if (Number(n) > 0) throw new WgeError(409, 'TIENE_PARTICIPANTES', 'No se puede cambiar el programa: la edición ya tiene participantes');
+		}
+		if (['colegio_id', 'curso_id', 'edicion_programa'].some((k) => k in fila)) {
+			await validarOferta({ colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa, ...fila }, e.id);
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
 		const actualizada = await edicionExistente(e.id);
@@ -607,6 +642,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
 				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
+				db.raw(`${sqlCorresponde(e).sql} as corresponde`, sqlCorresponde(e).valores),
 				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
 					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))
 			.orderBy([{ column: 'e.apellido' }, { column: 'e.nombre' }]);

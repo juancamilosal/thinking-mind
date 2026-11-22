@@ -1,14 +1,14 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
-import { Edicion, Franja, WillGoService } from '../../../../../core/services/will-go.service';
+import { Edicion, Franja, Oferta, WillGoService } from '../../../../../core/services/will-go.service';
 import { DIAS_SEMANA } from '../estado-edicion';
-import { BuscadorColegioComponent } from '../../../buscador-colegio.component';
+import { BuscadorOfertaComponent, OfertaElegida } from '../../../buscador-oferta.component';
 
 @Component({
   selector: 'app-tab-general',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, BuscadorColegioComponent],
+  imports: [FormsModule, NumeroMilesDirective, BuscadorOfertaComponent],
   template: `
     <div class="grid gap-5 lg:grid-cols-2">
       <!-- Datos de la edición -->
@@ -20,18 +20,13 @@ import { BuscadorColegioComponent } from '../../../buscador-colegio.component';
             <input id="g-nombre" [(ngModel)]="datos.nombre" class="campo">
           </div>
           <div>
-            <label for="g-colegio" class="block text-sm font-semibold text-gray-700 mb-1">Colegio</label>
-            <wg-buscador-colegio [(ngModel)]="datos.colegio_id" [colegios]="colegios" inputId="g-colegio" />
-          </div>
-          <div>
-            <label for="g-programa" class="block text-sm font-semibold text-gray-700 mb-1">Programa</label>
-            <select id="g-programa" [(ngModel)]="datos.curso_id" class="campo" [disabled]="edicion.participantes > 0">
-              <option [ngValue]="null">Elige el programa</option>
-              @for (p of programas; track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
-            </select>
-            @if (edicion.participantes > 0) {
-              <p class="text-xs text-gray-500 mt-1">No se puede cambiar: la edición ya tiene participantes.</p>
-            }
+            <label for="g-oferta" class="block text-sm font-semibold text-gray-700 mb-1">Colegio, programa y edición</label>
+            <wg-buscador-oferta inputId="g-oferta" [ofertas]="ofertas" [actual]="ofertaActual" [nombreEdicionActual]="edicion.nombre"
+                                [soloPrograma]="edicion.participantes > 0 ? edicion.curso_id : null" (elegida)="alElegirOferta($event)" />
+            <p class="text-xs text-gray-500 mt-1">
+              Solo entran los inscritos en esa edición del programa en ese colegio.
+              @if (edicion.participantes > 0) { Como ya hay participantes, solo se puede cambiar a otra edición o colegio del mismo programa. }
+            </p>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -139,8 +134,8 @@ export class TabGeneral implements OnInit {
 
   datos: Partial<Edicion> = {};
   horario: { tipo: 'dia' | 'fecha'; dia: string; fecha: string; inicio: string; fin: string }[] = [];
-  colegios: { id: string; nombre: string }[] = [];
-  programas: { id: string; nombre: string }[] = [];
+  ofertas: Oferta[] = [];
+  ofertaActual: OfertaElegida | null = null;
   guardando = false;
   guardado = false;
   cambioParticipantes = '';
@@ -149,7 +144,7 @@ export class TabGeneral implements OnInit {
   ngOnInit(): void {
     const e = this.edicion;
     this.datos = {
-      nombre: e.nombre, colegio_id: e.colegio_id, curso_id: e.curso_id,
+      nombre: e.nombre, colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa,
       fecha_inicio: e.fecha_inicio?.slice(0, 10) ?? null, fecha_fin: e.fecha_fin?.slice(0, 10) ?? null,
       tasa_inicial: e.tasa_inicial, tope_minimo: Number(e.tope_minimo), tope_maximo: Number(e.tope_maximo),
       investment_bill: e.investment_bill,
@@ -157,7 +152,8 @@ export class TabGeneral implements OnInit {
     this.horario = (e.horario ?? []).map((f) => ({
       tipo: f.fecha ? 'fecha' : 'dia', dia: f.dia ?? 'sabado', fecha: f.fecha ?? '', inicio: f.inicio, fin: f.fin,
     }));
-    this.willGo.catalogos().subscribe({ next: (c) => { this.colegios = c.colegios; this.programas = c.programas; } });
+    this.ofertaActual = e.curso_id && e.edicion_programa ? { colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa } : null;
+    this.willGo.catalogos().subscribe({ next: (c) => (this.ofertas = c.ofertas) });
   }
 
   get ejemploPrecio(): number {
@@ -168,6 +164,12 @@ export class TabGeneral implements OnInit {
   }
   get maximo(): number {
     return Math.round((Number(this.datos.tope_maximo) || 0) * (Number(this.datos.tasa_inicial) || 0));
+  }
+
+  alElegirOferta(o: Oferta): void {
+    this.datos.colegio_id = o.colegio_id;
+    this.datos.curso_id = o.curso_id;
+    this.datos.edicion_programa = String(o.edicion);
   }
 
   agregarFranja(): void {
@@ -185,7 +187,7 @@ export class TabGeneral implements OnInit {
     }
     const cambios: Partial<Edicion> = { ...this.datos, horario };
     if (this.edicion.estado !== 'borrador') delete cambios.tasa_inicial;
-    if (this.edicion.participantes > 0) delete cambios.curso_id;
+    if (this.edicion.participantes > 0 && cambios.curso_id === this.edicion.curso_id) delete cambios.curso_id;
     this.guardando = true;
     this.willGo.actualizarEdicion(this.edicion.id, cambios).subscribe({
       next: (e) => {
