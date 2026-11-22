@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NOMBRE_ROL, WillGoService } from '../../../../core/services/will-go.service';
-import { MENU_POR_ROL, OpcionMenu } from '../../menu-will-go';
+import { OpcionMenu, menuPara } from '../../menu-will-go';
 
 @Component({
   selector: 'app-inicio-will-go',
@@ -16,6 +16,12 @@ import { MENU_POR_ROL, OpcionMenu } from '../../menu-will-go';
       </div>
 
       <h2 class="text-lg font-semibold text-gray-800 mt-8 mb-4">Tus opciones</h2>
+      @if (cargado && (!opciones.length || faltaPrincipal)) {
+        <div class="mb-4 bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center">
+          <p class="font-semibold text-gray-800">{{ opciones.length ? 'Te falta una asignación' : 'Todavía no tienes tareas asignadas' }}</p>
+          <p class="text-sm text-gray-600 mt-1 max-w-md mx-auto">{{ ayudaSinTareas }}</p>
+        </div>
+      }
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @for (op of opciones; track op.texto) {
           @if (op.ruta) {
@@ -40,8 +46,33 @@ import { MENU_POR_ROL, OpcionMenu } from '../../menu-will-go';
     </div>
   `,
 })
-export class InicioWillGo {
+export class InicioWillGo implements OnInit {
+  private willGo = inject(WillGoService);
   perfil = WillGoService.perfilGuardado();
-  opciones: OpcionMenu[] = (this.perfil?.rol ? MENU_POR_ROL[this.perfil.rol] : []).filter((o) => o.texto !== 'Inicio');
+  opciones: OpcionMenu[] = this.sinInicio(menuPara(this.perfil?.rol, null));
   nombreRol = this.perfil?.rol ? NOMBRE_ROL[this.perfil.rol] : '';
+  cargado = false;
+  /** El banco sin país a cargo o el cajero sin caja: ven algo (p. ej. el tipo de cambio), pero no su sección principal. */
+  faltaPrincipal = false;
+
+  ngOnInit(): void {
+    if (!this.perfil?.rol) return;
+    this.willGo.miMenu().subscribe((acceso) => {
+      this.opciones = this.sinInicio(menuPara(this.perfil?.rol, acceso));
+      const rol = this.perfil?.rol;
+      this.faltaPrincipal = (rol === 'banco' && !acceso.banco) || (rol === 'cajero' && !acceso.caja);
+      this.cargado = true;
+    });
+  }
+
+  /** Qué le falta a la persona para tener opciones, según su rol. */
+  get ayudaSinTareas(): string {
+    switch (this.perfil?.rol) {
+      case 'banco': return 'Para usar el banco, el administrativo debe ponerte como responsable del banco de un país en una edición vigente.';
+      case 'cajero': return 'Para vender, el administrativo debe ponerte como encargado de la caja de una edición vigente (pestaña GO•STORE).';
+      default: return 'El administrativo debe agregarte al equipo de una edición vigente.';
+    }
+  }
+
+  private sinInicio(l: OpcionMenu[]): OpcionMenu[] { return l.filter((o) => o.texto !== 'Inicio'); }
 }

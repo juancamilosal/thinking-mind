@@ -266,6 +266,23 @@ export function rutasArqueo(router, { ruta, db }) {
 		return q;
 	}));
 
+	/**
+	 * GET /wge/mi-menu: qué secciones puede usar el usuario hoy, para mostrar en el menú solo lo que le sirve.
+	 * equipo = está en el equipo de alguna edición vigente; banco = es responsable del banco de algún país de una
+	 * edición vigente; caja = es el encargado de la caja de una edición vigente. Los administrativos lo ven todo.
+	 */
+	router.get('/mi-menu', ruta(async (req, rol) => {
+		if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return { equipo: true, banco: true, caja: true };
+		const usuario = req.accountability.user;
+		const hoy = ahoraColombia().fecha;
+		const vigentes = () => db('wge_ediciones as e').whereNot('e.estado', 'cerrada')
+			.where((w) => w.whereNull('e.fecha_fin').orWhere('e.fecha_fin', '>=', hoy));
+		const equipo = !!(await vigentes().join('wge_equipo as q', 'q.edicion_id', 'e.id').where('q.usuario_id', usuario).first('e.id'));
+		const banco = equipo && !!(await vigentes().join('wge_paises as p', 'p.edicion_id', 'e.id').where('p.responsable_banco', usuario).first('e.id'));
+		const caja = equipo && !!(await vigentes().where('e.responsable_caja', usuario).first('e.id'));
+		return { equipo, banco, caja };
+	}));
+
 	/** GET /wge/ediciones/:id/arqueo: países con el saldo del banco, último arqueo e historial. */
 	router.get('/ediciones/:id/arqueo', ruta(async (req, rol) => {
 		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id', 'nombre', 'estado');

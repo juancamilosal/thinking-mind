@@ -1357,6 +1357,23 @@ function rutasArqueo(router, { ruta, db }) {
 		return q;
 	}));
 
+	/**
+	 * GET /wge/mi-menu: qué secciones puede usar el usuario hoy, para mostrar en el menú solo lo que le sirve.
+	 * equipo = está en el equipo de alguna edición vigente; banco = es responsable del banco de algún país de una
+	 * edición vigente; caja = es el encargado de la caja de una edición vigente. Los administrativos lo ven todo.
+	 */
+	router.get('/mi-menu', ruta(async (req, rol) => {
+		if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return { equipo: true, banco: true, caja: true };
+		const usuario = req.accountability.user;
+		const hoy = ahoraColombia().fecha;
+		const vigentes = () => db('wge_ediciones as e').whereNot('e.estado', 'cerrada')
+			.where((w) => w.whereNull('e.fecha_fin').orWhere('e.fecha_fin', '>=', hoy));
+		const equipo = !!(await vigentes().join('wge_equipo as q', 'q.edicion_id', 'e.id').where('q.usuario_id', usuario).first('e.id'));
+		const banco = equipo && !!(await vigentes().join('wge_paises as p', 'p.edicion_id', 'e.id').where('p.responsable_banco', usuario).first('e.id'));
+		const caja = equipo && !!(await vigentes().where('e.responsable_caja', usuario).first('e.id'));
+		return { equipo, banco, caja };
+	}));
+
 	/** GET /wge/ediciones/:id/arqueo: países con el saldo del banco, último arqueo e historial. */
 	router.get('/ediciones/:id/arqueo', ruta(async (req, rol) => {
 		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id', 'nombre', 'estado');
@@ -2069,6 +2086,11 @@ function rutasCaja(router, { ruta, db }) {
 		}
 		const productos = await db('wge_productos').where({ edicion_id: edicion.id, activo: true }).orderBy('nombre')
 			.select('id', 'nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante');
+		// Unidades vendidas de cada producto (ventas pagadas)
+		const vendidos = await db('wge_venta_items as i').join('wge_ventas as v', 'v.id', 'i.venta_id')
+			.where({ 'v.edicion_id': edicion.id, 'v.estado': 'pagada' }).groupBy('i.producto_id').select('i.producto_id').sum({ n: 'i.cantidad' });
+		const porProducto = new Map(vendidos.map((v) => [v.producto_id, Number(v.n)]));
+		for (const p of productos) p.vendidos = porProducto.get(p.id) ?? 0;
 		const estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })
 			.where('pa.edicion_id', edicion.id).whereNotNull('pa.pais_id').whereRaw('coalesce(pa.retirado, false) = false')

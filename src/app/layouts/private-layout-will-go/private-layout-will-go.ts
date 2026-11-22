@@ -4,7 +4,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { LoginService } from '../../core/services/login.service';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
 import { NOMBRE_ROL, PerfilWillGo, WillGoService } from '../../core/services/will-go.service';
-import { MENU_POR_ROL, OpcionMenu } from './menu-will-go';
+import { OpcionMenu, menuPara } from './menu-will-go';
 
 @Component({
   selector: 'app-private-layout-will-go',
@@ -21,12 +21,15 @@ export class PrivateLayoutWillGo implements OnInit {
   constructor(
     private router: Router,
     private loginService: LoginService,
-    private tokenRefresh: TokenRefreshService
+    private tokenRefresh: TokenRefreshService,
+    private willGo: WillGoService,
   ) {}
 
   ngOnInit(): void {
     this.perfil = WillGoService.perfilGuardado();
-    this.menu = this.perfil?.rol ? MENU_POR_ROL[this.perfil.rol] : [];
+    // Primero lo que no depende de una edición; luego, solo las secciones que la persona puede usar hoy
+    this.menu = menuPara(this.perfil?.rol, null);
+    if (this.perfil?.rol) this.willGo.miMenu().subscribe((acceso) => (this.menu = menuPara(this.perfil?.rol, acceso)));
   }
 
   get nombreRol(): string {
