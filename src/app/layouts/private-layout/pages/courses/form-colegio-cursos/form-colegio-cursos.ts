@@ -71,7 +71,7 @@ export class ColegioCursosComponent implements OnInit {
   initForm(): void {
     this.fechaFinalizacionForm = this.fb.group({
       fecha_finalizacion: [null, Validators.required],
-      edicion: [null, [Validators.pattern(/^\d+$/)]], // Campo numérico opcional
+      edicion: [null, [Validators.required, Validators.pattern(/^\d+$/)]], // Edición por colegio y programa: 1, 2, 3…
       curso_id: [null, Validators.required],
       colegio_id: [null, Validators.required],
       precio_curso: [null, Validators.required],
@@ -222,8 +222,19 @@ export class ColegioCursosComponent implements OnInit {
     this.goBack.emit();
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.fechaFinalizacionForm.valid) {
+      // La edición no se puede repetir en el mismo colegio y programa
+      const errorEdicion = await this.colegioCursosService.validarEdicion({
+        colegioId: this.fechaFinalizacionForm.get('programa_independiente')?.value ? null : (this.fechaFinalizacionForm.get('colegio_id')?.value || null),
+        cursoId: this.fechaFinalizacionForm.get('curso_id')?.value,
+        edicion: this.fechaFinalizacionForm.get('edicion')?.value,
+      }).catch(() => null);
+      if (errorEdicion) {
+        this.notificationService.showError('Edición no válida', errorEdicion);
+        this.cdr.detectChanges();
+        return;
+      }
       const precioEspecialLanzamiento = !!this.fechaFinalizacionForm.get('precio_especial_lanzamiento')?.value;
       const precioEspecialValor = precioEspecialLanzamiento
         ? this.unformatPrice(this.fechaFinalizacionForm.get('precio_especial')?.value)
