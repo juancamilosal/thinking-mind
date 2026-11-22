@@ -1,11 +1,11 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, NgZone, OnChanges, OnDestroy, ViewChild, inject } from '@angular/core';
 
 export interface RondaGrafica { nombre: string; resultados: { fondo_id: string; rendimiento: number }[] }
 export interface FondoGrafica { id: string; nombre: string }
 
 /** Colores fijos por empresa (en el orden de las empresas; validados para daltonismo). */
 const COLORES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#9a6b2f'];
-const ANCHO = 360, ALTO = 210, IZQ = 40, DER = 12, ARRIBA = 12, ABAJO = 28;
+const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
 
 /**
  * Rendimiento de cada empresa en cada ronda (línea por empresa, % ganado o perdido).
@@ -36,14 +36,17 @@ const ANCHO = 360, ALTO = 210, IZQ = 40, DER = 12, ARRIBA = 12, ABAJO = 28;
         </ul>
         <p class="text-[11px] text-gray-400 mt-1">Toca una empresa para ver solo su línea.</p>
 
-        <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" class="mt-2 w-full h-auto select-none" role="img" [attr.aria-label]="'Gráfica del rendimiento de las empresas en ' + rondas.length + ' rondas'">
+        <div #lienzo class="mt-2 w-full">
+        <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" [attr.aria-label]="'Gráfica del rendimiento de las empresas en ' + rondas.length + ' rondas'">
           <!-- Rejilla y eje -->
           @for (t of marcas; track t) {
             <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(t)" [attr.y2]="y(t)" [attr.stroke]="t === 0 ? '#9ca3af' : '#eef0f2'" [attr.stroke-width]="t === 0 ? 1.5 : 1" vector-effect="non-scaling-stroke" />
-            <text [attr.x]="izq - 6" [attr.y]="y(t) + 3.5" text-anchor="end" font-size="10" fill="#6b7280">{{ t > 0 ? '+' : '' }}{{ t }}%</text>
+            <text [attr.x]="izq - 6" [attr.y]="y(t) + 3.5" text-anchor="end" font-size="11" fill="#6b7280">{{ t > 0 ? '+' : '' }}{{ t }}%</text>
           }
           @for (r of rondas; track $index; let i = $index) {
-            <text [attr.x]="x(i)" [attr.y]="alto - 8" text-anchor="middle" font-size="10" [attr.fill]="i === elegida ? '#111827' : '#6b7280'" [attr.font-weight]="i === elegida ? 700 : 400">{{ corto(r.nombre) }}</text>
+            @if (i === elegida || i % saltoEtiquetas === 0 || i === rondas.length - 1) {
+            <text [attr.x]="x(i)" [attr.y]="alto - 9" text-anchor="middle" font-size="11" [attr.fill]="i === elegida ? '#111827' : '#6b7280'" [attr.font-weight]="i === elegida ? 700 : 400">{{ corto(r.nombre) }}</text>
+            }
           }
           @if (elegida !== null) {
             <line [attr.x1]="x(elegida)" [attr.x2]="x(elegida)" [attr.y1]="arriba" [attr.y2]="alto - abajo" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" />
@@ -56,7 +59,7 @@ const ANCHO = 360, ALTO = 210, IZQ = 40, DER = 12, ARRIBA = 12, ABAJO = 28;
                           vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" />
               }
               @for (p of s.puntos; track p.i) {
-                <circle [attr.cx]="x(p.i)" [attr.cy]="y(p.v)" [attr.r]="p.i === elegida || resaltada === s.id ? 3.5 : 2.5" [attr.fill]="s.color"
+                <circle [attr.cx]="x(p.i)" [attr.cy]="y(p.v)" [attr.r]="p.i === elegida || resaltada === s.id ? 4.5 : 3.5" [attr.fill]="s.color"
                         stroke="#fff" stroke-width="1.5" vector-effect="non-scaling-stroke" />
               }
             </g>
@@ -67,6 +70,7 @@ const ANCHO = 360, ALTO = 210, IZQ = 40, DER = 12, ARRIBA = 12, ABAJO = 28;
                   (click)="elegida = i" (mouseenter)="elegida = i" />
           }
         </svg>
+        </div>
 
         <!-- Detalle de la ronda elegida -->
         @if (elegida !== null) {
@@ -110,12 +114,20 @@ const ANCHO = 360, ALTO = 210, IZQ = 40, DER = 12, ARRIBA = 12, ABAJO = 28;
     </section>
   `,
 })
-export class GraficaRendimientoComponent implements OnChanges {
+export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input({ required: true }) fondos: FondoGrafica[] = [];
   /** Rondas cerradas, de la más vieja a la más nueva. */
   @Input({ required: true }) rondas: RondaGrafica[] = [];
 
-  readonly ancho = ANCHO; readonly alto = ALTO; readonly izq = IZQ; readonly der = DER; readonly arriba = ARRIBA; readonly abajo = ABAJO;
+  readonly izq = IZQ; readonly der = DER; readonly arriba = ARRIBA; readonly abajo = ABAJO;
+  /** Se dibuja al tamaño real de la pantalla (las letras y líneas no se estiran). */
+  ancho = 340;
+  get alto(): number { return this.ancho < 640 ? 280 : 360; }
+  @ViewChild('lienzo') set lienzo(el: ElementRef<HTMLElement> | undefined) { this.observar(el?.nativeElement); }
+  private observador: ResizeObserver | null = null;
+  private zona = inject(NgZone);
+  private maximo = 5;
+  private minimo = -5;
   series: { id: string; nombre: string; color: string; puntos: { i: number; v: number }[]; trazo: string }[] = [];
   marcas: number[] = [];
   elegida: number | null = null;
@@ -125,25 +137,46 @@ export class GraficaRendimientoComponent implements OnChanges {
   /** La línea resaltada se dibuja de última para que quede encima de las demás. */
   get ordenSeries() { return this.resaltada ? [...this.series.filter((s) => s.id !== this.resaltada), ...this.series.filter((s) => s.id === this.resaltada)] : this.series; }
   verTabla = false;
-  private limite = 5;
+
+  ngAfterViewInit(): void { /* el tamaño llega por el ResizeObserver del lienzo */ }
+  ngOnDestroy(): void { this.observador?.disconnect(); }
+
+  private observar(el: HTMLElement | undefined): void {
+    this.observador?.disconnect();
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    this.observador = new ResizeObserver(([e]) => {
+      const w = Math.max(260, Math.floor(e.contentRect.width));
+      // El aviso de cambio de tamaño llega fuera de Angular: se vuelve a entrar para que se redibuje
+      if (w !== this.ancho) this.zona.run(() => { this.ancho = w; this.calcular(); });
+    });
+    this.observador.observe(el);
+  }
 
   ngOnChanges(): void {
-    const todos = this.rondas.flatMap((r) => r.resultados.map((x) => Math.abs(Number(x.rendimiento) * 100)));
-    const maximo = Math.max(5, ...todos);
-    const salto = maximo <= 10 ? 5 : maximo <= 20 ? 10 : 20;
-    this.limite = Math.ceil(maximo / salto) * salto;
+    // El eje se ajusta a los datos (siempre incluye el 0) con una línea cada 5 %, para usar toda la altura
+    const todos = this.rondas.flatMap((r) => r.resultados.map((x) => Number(x.rendimiento) * 100));
+    const salto = Math.max(...todos.map(Math.abs), 5) > 30 ? 10 : 5;
+    this.maximo = Math.max(salto, Math.ceil(Math.max(0, ...todos) / salto) * salto);
+    this.minimo = Math.min(-salto, Math.floor(Math.min(0, ...todos) / salto) * salto);
     this.marcas = [];
-    for (let t = -this.limite; t <= this.limite; t += salto) this.marcas.push(t);
+    for (let t = this.minimo; t <= this.maximo; t += salto) this.marcas.push(t);
+    this.elegida = this.rondas.length ? this.rondas.length - 1 : null;
+    this.calcular();
+  }
+
+  private calcular(): void {
     this.series = this.fondos.map((f, k) => {
       const puntos = this.rondas.map((_, i) => ({ i, v: this.valor(f.id, i) })).filter((p): p is { i: number; v: number } => p.v !== null);
       return { id: f.id, nombre: f.nombre, color: COLORES[k % COLORES.length], puntos, trazo: puntos.map((p) => `${this.x(p.i)},${this.y(p.v)}`).join(' ') };
     });
-    this.elegida = this.rondas.length ? this.rondas.length - 1 : null;
   }
 
-  get paso(): number { return (ANCHO - IZQ - DER) / Math.max(this.rondas.length, 1); }
-  x(i: number): number { return this.rondas.length <= 1 ? (IZQ + ANCHO - DER) / 2 : IZQ + this.paso / 2 + i * this.paso; }
-  y(v: number): number { return ARRIBA + ((this.limite - v) / (2 * this.limite)) * (ALTO - ARRIBA - ABAJO); }
+  /** Con muchas rondas, se muestra una etiqueta sí y otras no para que no se monten. */
+  get saltoEtiquetas(): number { return Math.max(1, Math.ceil(this.rondas.length / Math.floor((this.ancho - IZQ - DER) / 34))); }
+
+  get paso(): number { return (this.ancho - IZQ - DER) / Math.max(this.rondas.length, 1); }
+  x(i: number): number { return this.rondas.length <= 1 ? (IZQ + this.ancho - DER) / 2 : IZQ + this.paso / 2 + i * this.paso; }
+  y(v: number): number { return ARRIBA + ((this.maximo - v) / (this.maximo - this.minimo)) * (this.alto - ARRIBA - ABAJO); }
 
   /** % de la empresa en esa ronda, o null si no participó. */
   valor(fondoId: string, i: number): number | null {
