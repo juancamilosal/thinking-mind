@@ -54,7 +54,7 @@ type Pestana = 'general' | 'paises' | 'participantes' | 'tienda' | 'fondos';
 
           <!-- Resumen -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.participantes }}</p><p class="text-xs text-gray-500">Participantes</p></div>
+            <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.participantes }}</p><p class="text-xs text-gray-500">Participantes{{ edicion.retirados ? ' · ' + edicion.retirados + ' retirados' : '' }}</p></div>
             <div class="rounded-xl p-3" [class]="edicion.sin_pais ? 'bg-amber-50' : 'bg-gray-50'"><p class="text-xl font-bold" [class]="edicion.sin_pais ? 'text-amber-700' : 'text-gray-800'">{{ edicion.sin_pais }}</p><p class="text-xs text-gray-500">Sin país asignado</p></div>
             <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.tasa_inicial | number }}</p><p class="text-xs text-gray-500">Tasa inicial (pesos por billete)</p></div>
             <div class="rounded-xl bg-gray-50 p-3"><p class="text-xl font-bold text-gray-800">{{ edicion.investment_bill }}</p><p class="text-xs text-gray-500">Billetes de bienvenida</p></div>

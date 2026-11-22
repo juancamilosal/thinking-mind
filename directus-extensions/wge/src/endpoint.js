@@ -49,6 +49,7 @@ export default {
 		const participanteConPais = async (trx, participanteId) => {
 			const p = await trx('wge_participantes').where('id', participanteId).first();
 			if (!p) throw new WgeError(404, 'NO_EXISTE', 'El participante no existe');
+			if (p.retirado) throw new WgeError(409, 'RETIRADO', 'El estudiante fue retirado de la edición');
 			if (!p.pais_id) throw new WgeError(409, 'SIN_PAIS', 'El participante no tiene país asignado');
 			return p;
 		};

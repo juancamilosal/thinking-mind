@@ -165,7 +165,7 @@ export async function darBienvenida(trx, edicion, participantes, actor) {
 	const monto = Number(edicion.investment_bill ?? 0);
 	let entregadas = 0;
 	if (monto <= 0) return entregadas;
-	const ordenados = [...participantes].filter((p) => p.pais_id).sort((a, b) => (a.pais_id + a.id).localeCompare(b.pais_id + b.id));
+	const ordenados = [...participantes].filter((p) => p.pais_id && !p.retirado).sort((a, b) => (a.pais_id + a.id).localeCompare(b.pais_id + b.id));
 	for (const p of ordenados) {
 		const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: p.pais_id, tipo: 'banco' });
 		const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: p.pais_id, tipo: 'estudiante', participanteId: p.id });

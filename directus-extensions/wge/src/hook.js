@@ -65,9 +65,9 @@ export async function procesarEdicion(db, edicion, ahora) {
 			// Una sola tasa por país y ventana, aunque el proceso corra dos veces
 			if (await trx('wge_fx').where({ pais_id: pais.id, ventana: fin }).first()) return null;
 			const { suma } = await trx('wge_evaluaciones as e').join('wge_participantes as p', 'p.id', 'e.participante_id')
-				.where('p.pais_id', pais.id).where('e.date_created', '>=', inicio).where('e.date_created', '<', fin)
+				.where('p.pais_id', pais.id).whereRaw('coalesce(p.retirado, false) = false').where('e.date_created', '>=', inicio).where('e.date_created', '<', fin)
 				.sum({ suma: 'e.puntaje' }).first();
-			const { n } = await trx('wge_participantes').where({ pais_id: pais.id, presente: true }).count({ n: '*' }).first();
+			const { n } = await trx('wge_participantes').where({ pais_id: pais.id, presente: true }).whereRaw('coalesce(retirado, false) = false').count({ n: '*' }).first();
 			const tasa = Number(actual.tasa_actual || edicion.tasa_inicial);
 			const calculo = nuevaTasa({
 				tasa, puntos: Number(suma ?? 0), presentes: Number(n), tasaInicial: Number(edicion.tasa_inicial),

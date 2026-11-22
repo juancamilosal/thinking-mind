@@ -2,7 +2,7 @@
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
-import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 
@@ -87,13 +87,15 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	};
 
 	const resumenEdicion = async (e) => {
-		const [{ total }] = await db('wge_participantes').where('edicion_id', e.id).count({ total: '*' });
-		const [{ sinPais }] = await db('wge_participantes').where('edicion_id', e.id).whereNull('pais_id').count({ sinPais: '*' });
+		const activos = () => db('wge_participantes').where('edicion_id', e.id).whereRaw('coalesce(retirado, false) = false');
+		const [{ total }] = await activos().count({ total: '*' });
+		const [{ sinPais }] = await activos().whereNull('pais_id').count({ sinPais: '*' });
+		const [{ retirados }] = await db('wge_participantes').where({ edicion_id: e.id, retirado: true }).count({ retirados: '*' });
 		const colegio = e.colegio_id ? await db('colegios').where('id', e.colegio_id).first('nombre') : null;
 		const programa = e.curso_id ? await db('Cursos').where('id', e.curso_id).first('nombre') : null;
 		return {
 			...e, colegio_nombre: colegio?.nombre ?? null, programa_nombre: programa?.nombre ?? null,
-			participantes: Number(total), sin_pais: Number(sinPais),
+			participantes: Number(total), sin_pais: Number(sinPais), retirados: Number(retirados),
 		};
 	};
 
@@ -247,7 +249,11 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
 			.where('p.edicion_id', req.params.id)
-			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'e.nombre', 'e.apellido', 'e.grado', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'))
+			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
+				'e.nombre', 'e.apellido', 'e.grado', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
+				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
+				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
+					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))
 			.orderBy([{ column: 'e.apellido' }, { column: 'e.nombre' }]);
 	}));
 
@@ -262,6 +268,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		const cambios = {};
 		const lista = await db('wge_participantes').whereIn('id', ids);
 		if (lista.length !== ids.length) throw new WgeError(404, 'NO_EXISTE', 'Algún participante no existe');
+		if (lista.some((p) => p.retirado)) throw new WgeError(409, 'RETIRADO', 'Hay estudiantes retirados en la selección; reintégralos primero');
 		const ediciones = new Set(lista.map((p) => p.edicion_id));
 		if (ediciones.size !== 1) throw new WgeError(400, 'VALOR_INVALIDO', 'Los participantes deben ser de la misma edición');
 		if ('pais_id' in (req.body ?? {})) {
@@ -289,6 +296,54 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			}
 			return { actualizados: ids.length, bienvenidas };
 		});
+	}));
+
+	/**
+	 * POST /wge/admin/participantes/retirar { ids, motivo }
+	 * El estudiante queda fuera de la edición (no vuelve con la carga automática de inscritos).
+	 * Si tiene billetes, vuelven al banco de su país; si tiene una inversión abierta, no se puede retirar todavía.
+	 */
+	router.post('/admin/participantes/retirar', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const ids = Array.isArray(req.body?.ids) ? req.body.ids.filter((x) => typeof x === 'string') : [];
+		if (!ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay estudiantes seleccionados');
+		const motivo = exigirTexto(req.body?.motivo, 'motivo').slice(0, 200);
+		const actor = req.accountability.user;
+		return db.transaction(async (trx) => {
+			const lista = await trx('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
+				.whereIn('p.id', ids).orderBy('p.id').select('p.*', 'e.nombre', 'e.apellido');
+			if (lista.length !== ids.length) throw new WgeError(404, 'NO_EXISTE', 'Algún estudiante no existe');
+			if (new Set(lista.map((p) => p.edicion_id)).size !== 1) throw new WgeError(400, 'VALOR_INVALIDO', 'Los estudiantes deben ser de la misma edición');
+			const conInversion = await trx('wge_inversiones as i').join('wge_participantes as p', 'p.id', 'i.participante_id')
+				.join('estudiantes as e', 'e.id', 'p.estudiante_id').whereIn('i.participante_id', ids).where('i.estado', 'abierta')
+				.first('e.nombre', 'e.apellido');
+			if (conInversion) throw new WgeError(409, 'INVERSION_ABIERTA', `${conInversion.nombre} ${conInversion.apellido} tiene billetes invertidos en una ronda abierta; retíralo cuando la ronda se cierre`);
+			let devueltos = 0;
+			for (const p of lista) {
+				if (p.retirado) continue;
+				const billeteras = await trx('wge_billeteras').where('participante_id', p.id).where('saldo', '>', 0).orderBy('id');
+				for (const b of billeteras) {
+					const est = await billeteraBloqueada(trx, { edicionId: b.edicion_id, paisId: b.pais_id, tipo: 'estudiante', participanteId: p.id });
+					const banco = await billeteraBloqueada(trx, { edicionId: b.edicion_id, paisId: b.pais_id, tipo: 'banco' });
+					const saldo = Number(est.saldo);
+					if (saldo <= 0) continue;
+					await moverSaldo(trx, est, { tipo: 'reverso', monto: -saldo, actor, referenciaTipo: 'retiro', referenciaId: p.id });
+					await moverSaldo(trx, banco, { tipo: 'reverso', monto: saldo, actor, referenciaTipo: 'retiro', referenciaId: p.id });
+					devueltos += saldo;
+				}
+			}
+			await trx('wge_participantes').whereIn('id', ids).update({ retirado: true, motivo_retiro: motivo, fecha_retiro: new Date(), presente: false });
+			return { retirados: ids.length, billetes_devueltos: devueltos };
+		});
+	}));
+
+	/** POST /wge/admin/participantes/reintegrar { ids }: vuelve a la edición (sin billetes; la bienvenida no se repite). */
+	router.post('/admin/participantes/reintegrar', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const ids = Array.isArray(req.body?.ids) ? req.body.ids.filter((x) => typeof x === 'string') : [];
+		if (!ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay estudiantes seleccionados');
+		const n = await db('wge_participantes').whereIn('id', ids).update({ retirado: false, motivo_retiro: null, fecha_retiro: null });
+		return { reintegrados: n };
 	}));
 
 	/** POST /wge/admin/fotos { nombre, tipo, base64 }: foto de un producto (la pantalla la reduce antes de enviarla). */

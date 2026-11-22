@@ -93,6 +93,9 @@ coleccion('wge_participantes', 'badge', 'Estudiante inscrito en una edición (su
     campo('codigo', 'string', 'Código corto para el QR', unico=True),
     campo('presente', 'boolean', default=False),
     campo('clave_unica', 'string', 'edicion:estudiante (evita duplicados)', unico=True),
+    campo('retirado', 'boolean', 'Retirado de la edición (no asistirá, reembolso…)', default=False),
+    campo('motivo_retiro', 'string', 'Motivo del retiro'),
+    campo('fecha_retiro', 'timestamp'),
 ])
 rel('wge_participantes', 'edicion_id', 'wge_ediciones')
 rel('wge_participantes', 'estudiante_id', 'estudiantes', EXT)

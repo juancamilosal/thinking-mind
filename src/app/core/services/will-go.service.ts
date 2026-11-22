@@ -60,6 +60,7 @@ export interface Edicion {
   estado: 'borrador' | 'abierta' | 'cerrada';
   participantes: number;
   sin_pais: number;
+  retirados?: number;
   /** Inscritos que llegaron en esta consulta (se traen solos). */
   nuevos?: number;
 }
@@ -83,6 +84,7 @@ export interface Fondo {
 export interface Participante {
   id: string; codigo: string; pais_id: string | null; presente: boolean;
   nombre: string; apellido: string; grado: string | null; colegio: string | null; saldo: number;
+  retirado: boolean | null; motivo_retiro: string | null; fecha_retiro: string | null; pidio_reembolso: boolean;
 }
 
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
@@ -216,6 +218,14 @@ export class WillGoService {
 
   actualizarParticipantes(ids: string[], cambios: { pais_id?: string | null; presente?: boolean }): Observable<{ actualizados: number; bienvenidas: number }> {
     return this.http.patch<{ data: any }>(`${this.api}/admin/participantes`, { ids, ...cambios }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  retirarParticipantes(ids: string[], motivo: string): Observable<{ retirados: number; billetes_devueltos: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/participantes/retirar`, { ids, motivo }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  reintegrarParticipantes(ids: string[]): Observable<{ reintegrados: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/participantes/reintegrar`, { ids }).pipe(this.enZona(), map((r) => r.data));
   }
 
   sincronizarParticipantes(edicionId: string): Observable<{ inscritos: number; nuevos: number }> {
