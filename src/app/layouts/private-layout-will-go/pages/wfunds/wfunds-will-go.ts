@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { DatosWfunds, FondoWfunds, InversionWfunds, PaisWfunds, WillGoService } from '../../../../core/services/will-go.service';
@@ -59,21 +59,39 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           <div class="mt-4 rounded-2xl p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-teal-600">
             <div class="flex items-center gap-2 text-sm font-semibold opacity-95">
               <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse" aria-hidden="true"></span>
-              {{ r.nombre }} abierta · desde {{ r.apertura | date:'h:mm a' }}
+              {{ r.nombre }} abierta{{ r.duracion_minutos ? ' · rondas de ' + r.duracion_minutos + ' min' : '' }}
             </div>
-            <p class="text-3xl font-extrabold mt-2 break-all">{{ miles(totalInvertido) }} <span class="text-base font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
-            <p class="text-sm opacity-90">invertidos en {{ pais.nombre }} · {{ pais.inversiones.length }} {{ pais.inversiones.length === 1 ? 'inversión' : 'inversiones' }}</p>
-            <button type="button" (click)="confirmarCierre = true" class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">Cerrar ronda</button>
+            @if (r.cierre_programado) {
+              <p class="mt-2 text-sm opacity-90">{{ restante > 0 ? 'Cierra en' : 'Cerrando…' }}</p>
+              <p class="text-5xl font-extrabold tabular-nums leading-none" role="timer" aria-live="off">{{ reloj }}</p>
+              <p class="text-xs opacity-90 mt-1">a las {{ r.cierre_programado | date:'h:mm a' }}{{ recortada(r) ? ' (fin del horario)' : '' }}</p>
+            }
+            <div class="mt-4 rounded-xl bg-white/15 px-4 py-3 flex items-center justify-between gap-3">
+              <span class="text-sm">Invertido en {{ pais.nombre }}<br><span class="text-xs opacity-90">{{ pais.inversiones.length }} {{ pais.inversiones.length === 1 ? 'inversión' : 'inversiones' }}</span></span>
+              <span class="text-xl font-extrabold break-all">{{ miles(totalInvertido) }}</span>
+            </div>
+            <button type="button" (click)="confirmarCierre = true" class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">Cerrar ronda ahora</button>
           </div>
         } @else {
           <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
             <p class="font-bold text-gray-800">No hay ronda abierta</p>
-            <p class="text-sm text-gray-500 mt-1">
-              {{ datos.edicion.estado === 'abierta' ? 'Abre una ronda para que los estudiantes puedan invertir.' : 'Podrás abrir rondas cuando la edición esté abierta.' }}
-            </p>
-            <button type="button" (click)="abrirRonda()" [disabled]="trabajando || datos.edicion.estado !== 'abierta'"
+            @if (datos.edicion.estado !== 'abierta') {
+              <p class="text-sm text-gray-500 mt-1">Podrás abrir rondas cuando la edición esté abierta.</p>
+            } @else if (!datos.fin_horario) {
+              <p class="text-sm text-gray-500 mt-1">Estamos fuera del horario de la economía. Las rondas se abren dentro del horario.</p>
+            } @else {
+              <p class="text-sm text-gray-600 mt-3 font-semibold">¿Cuánto dura cada ronda?</p>
+              <div class="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Duración de la ronda">
+                @for (m of datos.duraciones; track m) {
+                  <button type="button" role="radio" [attr.aria-checked]="duracion === m" (click)="duracion = m"
+                          class="py-2.5 rounded-xl text-sm font-bold border-2" [class]="duracion === m ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">{{ m }} min</button>
+                }
+              </div>
+              <p class="text-xs text-gray-500 mt-3">Al terminar, se cierra sola y se abre la siguiente, hasta que acabe el horario ({{ datos.fin_horario | date:'h:mm a' }}).</p>
+            }
+            <button type="button" (click)="abrirRonda()" [disabled]="trabajando || datos.edicion.estado !== 'abierta' || !datos.fin_horario"
                     class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-40">
-              {{ trabajando ? 'Abriendo…' : 'Abrir ronda ' + (datos.rondas.length + 1) }}
+              {{ trabajando ? 'Abriendo…' : 'Abrir ronda ' + (datos.rondas.length + 1) + ' · ' + duracion + ' min' }}
             </button>
           </div>
         }
@@ -292,19 +310,21 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
     @if (confirmarCierre && datos?.ronda) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="confirmarCierre = false">
         <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre">
-          <h2 id="titulo-cierre" class="text-lg font-bold text-gray-800">¿Cerrar {{ datos!.ronda!.nombre }}?</h2>
-          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y ya no se puede invertir en esta ronda. Los estudiantes pasan al banco a cobrar.</p>
-          <p class="text-xs text-gray-500 mt-2">Se cierra para todos los países de la edición.</p>
-          <div class="mt-5 flex gap-2">
-            <button type="button" (click)="confirmarCierre = false" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
-            <button type="button" (click)="cerrarRonda()" [disabled]="trabajando" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ trabajando ? 'Cerrando…' : 'Cerrar ronda' }}</button>
+          <h2 id="titulo-cierre" class="text-lg font-bold text-gray-800">¿Cerrar {{ datos!.ronda!.nombre }} ahora?</h2>
+          <p class="text-sm text-gray-600 mt-2">Se calcula cuánto ganó o perdió cada empresa y los estudiantes pasan al banco a cobrar. Se cierra para todos los países de la edición.</p>
+          <div class="mt-5 space-y-2">
+            <button type="button" (click)="cerrarRonda(true)" [disabled]="trabajando" class="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-50">
+              {{ trabajando ? 'Cerrando…' : 'Cerrar y abrir la siguiente' }}
+            </button>
+            <button type="button" (click)="cerrarRonda(false)" [disabled]="trabajando" class="w-full py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">Cerrar y detener las rondas</button>
+            <button type="button" (click)="confirmarCierre = false" class="w-full py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
           </div>
         </div>
       </div>
     }
   `,
 })
-export class WfundsWillGo implements OnInit {
+export class WfundsWillGo implements OnInit, OnDestroy {
   private willGo = inject(WillGoService);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
   readonly Number = Number;
@@ -334,6 +354,40 @@ export class WfundsWillGo implements OnInit {
   enviando = false;
   errorPanel = '';
 
+  duracion = 30;
+  /** Milisegundos que faltan para que cierre la ronda (con la hora del servidor). */
+  restante = 0;
+  private desfase = 0;
+  private reloj$: ReturnType<typeof setInterval> | null = null;
+  private ultimaRecarga = 0;
+
+  ngOnDestroy(): void {
+    if (this.reloj$) clearInterval(this.reloj$);
+  }
+
+  /** Cada segundo actualiza la cuenta regresiva; cuando llega a 0 recarga hasta ver la ronda cerrada. */
+  private tic(): void {
+    const cierre = this.datos?.ronda?.cierre_programado;
+    this.restante = cierre ? new Date(cierre).getTime() - (Date.now() + this.desfase) : 0;
+    if (cierre && this.restante <= 0 && !this.cargando && Date.now() - this.ultimaRecarga > 15000) {
+      this.ultimaRecarga = Date.now();
+      this.cargar();
+    }
+  }
+
+  get reloj(): string {
+    const s = Math.max(0, Math.ceil(this.restante / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    const dos = (n: number) => String(n).padStart(2, '0');
+    return h ? `${h}:${dos(m)}:${dos(x)}` : `${dos(m)}:${dos(x)}`;
+  }
+
+  /** La ronda dura menos de lo elegido porque se acaba el horario. */
+  recortada(r: { apertura: string; cierre_programado: string | null; duracion_minutos: number | null }): boolean {
+    if (!r.cierre_programado || !r.duracion_minutos) return false;
+    return new Date(r.cierre_programado).getTime() - new Date(r.apertura).getTime() < r.duracion_minutos * 60000 - 1000;
+  }
+
   ngOnInit(): void {
     this.willGo.misEdiciones().subscribe({
       next: (l) => { this.ediciones = l; this.edicionId = l[0]?.id ?? ''; if (this.edicionId) this.cargar(); else this.cargando = false; },
@@ -346,7 +400,11 @@ export class WfundsWillGo implements OnInit {
     this.willGo.wfunds(this.edicionId).subscribe({
       next: (d) => {
         this.datos = d;
+        this.desfase = new Date(d.ahora).getTime() - Date.now();
+        if (d.ronda?.duracion_minutos) this.duracion = d.ronda.duracion_minutos;
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
+        if (!this.reloj$) this.reloj$ = setInterval(() => this.tic(), 1000);
+        this.tic();
         this.cargando = false;
       },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
@@ -391,19 +449,25 @@ export class WfundsWillGo implements OnInit {
     if (!this.datos) return;
     this.trabajando = true;
     this.error = '';
-    this.willGo.abrirRonda(this.datos.edicion.id).subscribe({
+    this.willGo.abrirRonda(this.datos.edicion.id, this.duracion).subscribe({
       next: (r) => { this.trabajando = false; this.vista = 'invertir'; this.mostrarAviso(`${r.nombre} abierta. Ya pueden invertir.`); this.cargar(); },
       error: (e) => { this.trabajando = false; this.error = WillGoService.mensajeDeError(e); },
     });
   }
 
-  cerrarRonda(): void {
+  cerrarRonda(continuar: boolean): void {
     const r = this.datos?.ronda;
     if (!r) return;
     this.trabajando = true;
     this.error = '';
-    this.willGo.cerrarRonda(r.id).subscribe({
-      next: () => { this.trabajando = false; this.confirmarCierre = false; this.vista = 'resultados'; this.mostrarAviso(`${r.nombre} cerrada. Los estudiantes ya pueden pasar a cobrar.`); this.cargar(); },
+    this.willGo.cerrarRonda(r.id, continuar).subscribe({
+      next: (x) => {
+        this.trabajando = false;
+        this.confirmarCierre = false;
+        this.vista = x.siguiente ? 'cobrar' : 'resultados';
+        this.mostrarAviso(`${r.nombre} cerrada.${x.siguiente ? ` Abierta ${x.siguiente.nombre}.` : ''} Los estudiantes ya pueden pasar a cobrar.`);
+        this.cargar();
+      },
       error: (e) => { this.trabajando = false; this.confirmarCierre = false; this.error = WillGoService.mensajeDeError(e); },
     });
   }

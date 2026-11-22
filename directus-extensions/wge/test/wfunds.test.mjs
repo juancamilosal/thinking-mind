@@ -37,3 +37,26 @@ test('W-Funds: el pago nunca es negativo y se redondea hacia abajo', () => {
 	assert.equal(pagoDeInversion(7, 0.1), 7);
 	assert.equal(pagoDeInversion(10, -2), 0);
 });
+
+import { cierreDeRonda } from '../src/wfunds.js';
+import { finDeFranja } from '../src/lib.js';
+
+// Sábado 28 de noviembre de 2026; Colombia = UTC-5
+const horario = [{ dia: 'sabado', inicio: '08:00', fin: '12:00' }, { fecha: '2026-11-29', inicio: '09:00', fin: '10:00' }];
+const hora = (fecha, hhmm) => new Date(`${fecha}T${hhmm}:00-05:00`);
+
+test('horario: fin de la franja según la hora de Colombia', () => {
+	assert.equal(finDeFranja(horario, hora('2026-11-28', '10:15')).toISOString(), hora('2026-11-28', '12:00').toISOString());
+	assert.equal(finDeFranja(horario, hora('2026-11-28', '12:00')), null); // el fin no está incluido
+	assert.equal(finDeFranja(horario, hora('2026-11-28', '07:59')), null);
+	assert.equal(finDeFranja(horario, hora('2026-11-29', '09:30')).toISOString(), hora('2026-11-29', '10:00').toISOString()); // por fecha
+	assert.equal(finDeFranja(horario, hora('2026-11-30', '09:30')), null); // lunes
+	assert.equal(finDeFranja(null, new Date()), null);
+});
+
+test('W-Funds: la ronda dura lo elegido, pero se recorta al final del horario', () => {
+	assert.equal(cierreDeRonda(horario, hora('2026-11-28', '10:00'), 30).toISOString(), hora('2026-11-28', '10:30').toISOString());
+	assert.equal(cierreDeRonda(horario, hora('2026-11-28', '11:45'), 30).toISOString(), hora('2026-11-28', '12:00').toISOString());
+	assert.equal(cierreDeRonda(horario, hora('2026-11-28', '11:57'), 30), null); // quedan menos de 5 min
+	assert.equal(cierreDeRonda(horario, hora('2026-11-28', '13:00'), 30), null); // fuera del horario
+});

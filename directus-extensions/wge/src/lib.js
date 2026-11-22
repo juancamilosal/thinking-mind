@@ -102,6 +102,27 @@ export async function moverSaldo(trx, billetera, { tipo, monto, actor, referenci
 	return id;
 }
 
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+
+/**
+ * Si `ahora` cae dentro de una franja del horario (hora de Colombia), devuelve cuándo termina esa franja; si no, null.
+ * El horario es [{ dia: "sabado", inicio: "08:00", fin: "18:00" }] o con { fecha: "2026-11-28" } en vez de día.
+ */
+export function finDeFranja(horario, ahora = new Date()) {
+	if (!Array.isArray(horario)) return null;
+	const { fecha, hora } = ahoraColombia(ahora);
+	const dia = DIAS_SEMANA[new Date(`${fecha}T12:00:00Z`).getUTCDay()];
+	let fin = null;
+	for (const h of horario) {
+		const aplica = h?.fecha ? h.fecha === fecha : String(h?.dia ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === dia;
+		if (aplica && h.inicio <= hora && hora < h.fin) {
+			const termina = new Date(`${fecha}T${h.fin}:00-05:00`);
+			if (!fin || termina > fin) fin = termina;
+		}
+	}
+	return fin;
+}
+
 /** Fecha y hora actuales en Colombia (UTC-5, sin horario de verano). */
 export function ahoraColombia(fecha = new Date()) {
 	const local = new Date(fecha.getTime() - 5 * 60 * 60 * 1000);

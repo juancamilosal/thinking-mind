@@ -3,6 +3,7 @@
 // Si terminó, calcula la nueva tasa de cada país con la fórmula del documento y la guarda.
 // Fuera del horario no hace nada: la tasa queda congelada y el día siguiente continúa desde el último valor.
 import { ahoraColombia, limitar } from './lib.js';
+import { cerrarRondasVencidas } from './wfunds.js';
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
@@ -36,6 +37,16 @@ export function nuevaTasa({ tasa, puntos, presentes, tasaInicial, topeMinimo, to
 }
 
 export default ({ schedule }, { database: db, logger }) => {
+	// W-Funds: cada minuto cierra las rondas que ya cumplieron su tiempo y abre la siguiente
+	schedule('* * * * *', async () => {
+		try {
+			const hechas = await cerrarRondasVencidas(db);
+			for (const h of hechas) logger.info(`wge: ronda ${h.ronda_id} cerrada sola (${h.inversiones} inversiones)${h.siguiente ? `; abierta ${h.siguiente.nombre}` : ''}`);
+		} catch (error) {
+			logger.error(error, 'wge: cierre de rondas');
+		}
+	});
+
 	schedule('*/5 * * * *', async () => {
 		try {
 			const ediciones = await db('wge_ediciones').where('estado', 'abierta');

@@ -204,6 +204,8 @@ coleccion('wge_rondas', 'timer', 'Rondas de inversión y votación', [
     campo('estado', 'string', default='abierta', opciones=['abierta', 'cerrada', 'liquidada']),
     campo('semilla', 'string', 'Semilla auditable de la variación'),
     campo('resultados', 'json', 'Rendimiento de cada fondo al cerrar la ronda', interfaz='input-code'),
+    campo('duracion_minutos', 'integer', 'Cuánto dura la ronda; la siguiente se abre sola con la misma duración'),
+    campo('cierre_programado', 'timestamp', 'Cuándo se cierra sola'),
 ])
 rel('wge_rondas', 'edicion_id', 'wge_ediciones')
 

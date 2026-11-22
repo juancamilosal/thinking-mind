@@ -1,7 +1,7 @@
 // W-Funds: rondas de inversión en las empresas (fondos) de la edición.
 // El estudiante entrega billetes al banco para invertir; al cerrar la ronda se calcula cuánto le toca
 // y pasa a cobrar al banco, que le entrega billetes. Así el inventario físico del banco siempre cuadra.
-import { WgeError, ROLES, exigirRol, exigirEquipo, limitar } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirEquipo, limitar, aleatorioConSemilla, finDeFranja } from './lib.js';
 import { DENOMINACIONES, inventarioBanco } from './arqueo.js';
 
 /**
@@ -29,6 +29,92 @@ export const pagoDeInversion = (monto, rendimiento) => Math.max(0, Math.floor(Nu
 
 const leerJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
+/** Duraciones que puede escoger el banco al abrir una ronda (minutos). */
+export const DURACIONES_RONDA = [10, 15, 20, 30, 45, 60];
+/** Si al horario le quedan menos de estos minutos, no se abre otra ronda. */
+const MINIMO_RONDA = 5;
+
+/**
+ * Cuándo se cierra una ronda que abre `ahora`: a los `duracion` minutos, o antes si se acaba el horario.
+ * Devuelve null si está fuera del horario o queda muy poco tiempo.
+ */
+export function cierreDeRonda(horario, ahora, duracion) {
+	const fin = finDeFranja(horario, ahora);
+	if (!fin) return null;
+	const cierre = new Date(Math.min(ahora.getTime() + duracion * 60000, fin.getTime()));
+	return cierre.getTime() - ahora.getTime() >= MINIMO_RONDA * 60000 ? cierre : null;
+}
+
+/** Abre una ronda nueva (la edición debe venir bloqueada con forUpdate). */
+async function crearRonda(trx, edicion, duracion, actor, ahora = new Date()) {
+	const cierre = cierreDeRonda(leerJson(edicion.horario), ahora, duracion);
+	if (!cierre) return null;
+	const n = Number((await trx('wge_rondas').where('edicion_id', edicion.id).count({ n: '*' }).first())?.n ?? 0);
+	const fila = {
+		id: crypto.randomUUID(), edicion_id: edicion.id, nombre: `Ronda ${n + 1}`, apertura: ahora, estado: 'abierta',
+		duracion_minutos: duracion, cierre_programado: cierre, date_created: ahora, user_created: actor ?? null,
+	};
+	await trx('wge_rondas').insert(fila);
+	return fila;
+}
+
+/**
+ * Cierra una ronda (bloqueada con forUpdate): calcula el rendimiento de cada empresa y deja cada inversión
+ * "por cobrar" con lo que le toca al estudiante. Los billetes se mueven cuando pasa a cobrar al banco.
+ * La variación sale de una semilla guardada en la ronda, así el resultado se puede auditar y repetir.
+ */
+export async function liquidarRonda(trx, ronda, actor) {
+	const fondos = await trx('wge_fondos').where({ edicion_id: ronda.edicion_id, activo: true }).orderBy('orden');
+	const votos = await trx('wge_votos').where('ronda_id', ronda.id).groupBy('fondo_id').select('fondo_id').count({ n: '*' });
+	const semilla = ronda.semilla || `${ronda.id}:${crypto.randomUUID()}`;
+	const resultados = calcularResultados(fondos, new Map(votos.map((v) => [v.fondo_id, Number(v.n)])), aleatorioConSemilla(semilla));
+	const porFondo = new Map(resultados.map((r) => [r.fondo_id, r.rendimiento]));
+
+	const inversiones = await trx('wge_inversiones').where({ ronda_id: ronda.id, estado: 'abierta' }).orderBy('id');
+	let porCobrar = 0;
+	for (const inv of inversiones) {
+		const r = porFondo.get(inv.fondo_id) ?? 0;
+		const pago = pagoDeInversion(inv.monto, r);
+		// Si perdió todo no hay nada que cobrar
+		await trx('wge_inversiones').where('id', inv.id).update(pago > 0
+			? { rendimiento_final: r, monto_pagado: pago, estado: 'por_cobrar' }
+			: { rendimiento_final: r, monto_pagado: 0, estado: 'cobrada', cobrado_en: new Date(), cobrado_por: actor ?? null, billetes_pago: JSON.stringify({}) });
+		porCobrar += pago;
+	}
+	await trx('wge_rondas').where('id', ronda.id).update({ estado: 'liquidada', semilla, cierre: new Date(), resultados: JSON.stringify(resultados) });
+	return { ronda_id: ronda.id, semilla, inversiones: inversiones.length, por_cobrar: porCobrar, fondos: resultados };
+}
+
+/** Cierra una ronda y, si `continuar`, abre la siguiente con la misma duración (si el horario lo permite). */
+export async function cerrarYSeguir(db, rondaId, { actor, continuar, soloVencida = false }) {
+	return db.transaction(async (trx) => {
+		const ronda = await trx('wge_rondas').where('id', rondaId).forUpdate().first();
+		if (!ronda) throw new WgeError(404, 'NO_EXISTE', 'La ronda no existe');
+		if (ronda.estado !== 'abierta') return null; // otra persona (o la tarea automática) ya la cerró
+		if (soloVencida && !(ronda.cierre_programado && new Date(ronda.cierre_programado) <= new Date())) return null;
+		const resumen = await liquidarRonda(trx, ronda, actor);
+		let siguiente = null;
+		if (continuar && ronda.duracion_minutos) {
+			const edicion = await trx('wge_ediciones').where('id', ronda.edicion_id).forUpdate().first();
+			if (edicion?.estado === 'abierta') siguiente = await crearRonda(trx, edicion, Number(ronda.duracion_minutos), actor);
+		}
+		return { ...resumen, siguiente };
+	});
+}
+
+/** Tarea de cada minuto: cierra las rondas vencidas y abre la siguiente. */
+export async function cerrarRondasVencidas(db) {
+	const vencidas = await db('wge_rondas as r').join('wge_ediciones as e', 'e.id', 'r.edicion_id')
+		.where('r.estado', 'abierta').whereNotNull('r.cierre_programado').where('r.cierre_programado', '<=', new Date())
+		.select('r.id');
+	const hechas = [];
+	for (const r of vencidas) {
+		const x = await cerrarYSeguir(db, r.id, { actor: null, continuar: true, soloVencida: true });
+		if (x) hechas.push(x);
+	}
+	return hechas;
+}
+
 export function rutasWfunds(router, { ruta, db }) {
 	const permitir = async (req, rol, edicionId) => {
 		exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
@@ -45,7 +131,7 @@ export function rutasWfunds(router, { ruta, db }) {
 		await permitir(req, rol, edicion.id);
 
 		const rondas = (await db('wge_rondas').where('edicion_id', edicion.id).orderBy('apertura', 'desc')
-			.select('id', 'nombre', 'estado', 'apertura', 'cierre', 'resultados')).map((r) => ({ ...r, resultados: leerJson(r.resultados) ?? [] }));
+			.select('id', 'nombre', 'estado', 'apertura', 'cierre', 'resultados', 'duracion_minutos', 'cierre_programado')).map((r) => ({ ...r, resultados: leerJson(r.resultados) ?? [] }));
 		const abierta = rondas.find((r) => r.estado === 'abierta') ?? null;
 		const fondos = await db('wge_fondos').where('edicion_id', edicion.id).orderBy('orden')
 			.select('id', 'nombre', 'riesgo', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'activo');
@@ -72,26 +158,29 @@ export function rutasWfunds(router, { ruta, db }) {
 			p.cobradas = await base().where('i.estado', 'cobrada').orderBy('i.cobrado_en', 'desc').limit(20)
 				.select('i.id', 'i.fondo_id', 'i.monto', 'i.monto_pagado', 'i.rendimiento_final', 'i.cobrado_en', 'r.nombre as ronda', 'e.nombre', 'e.apellido');
 		}
-		return { edicion, denominaciones: DENOMINACIONES, ronda: abierta, rondas, fondos, paises };
+		const horario = leerJson((await db('wge_ediciones').where('id', edicion.id).first('horario'))?.horario);
+		const fin = finDeFranja(horario, new Date());
+		return {
+			edicion, denominaciones: DENOMINACIONES, ronda: abierta, rondas, fondos, paises,
+			ahora: new Date(), fin_horario: fin, duraciones: DURACIONES_RONDA,
+		};
 	}));
 
-	/** POST /wge/ediciones/:id/rondas: abre una ronda nueva (solo una abierta a la vez). */
+	/** POST /wge/ediciones/:id/rondas { duracion_minutos }: abre una ronda (solo una a la vez, dentro del horario). */
 	router.post('/ediciones/:id/rondas', ruta(async (req, rol) => {
 		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id', 'estado');
 		if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
 		await permitir(req, rol, edicion.id);
 		if (edicion.estado !== 'abierta') throw new WgeError(409, 'EDICION_CERRADA', 'La edición no está abierta');
+		const duracion = Number(req.body?.duracion_minutos);
+		if (!DURACIONES_RONDA.includes(duracion)) throw new WgeError(400, 'VALOR_INVALIDO', `La ronda debe durar ${DURACIONES_RONDA.join(', ')} minutos`);
 		return db.transaction(async (trx) => {
-			await trx('wge_ediciones').where('id', edicion.id).forUpdate().first('id'); // una ronda a la vez, aunque toquen dos personas
+			const bloqueada = await trx('wge_ediciones').where('id', edicion.id).forUpdate().first(); // una ronda a la vez, aunque toquen dos personas
 			if (await trx('wge_rondas').where({ edicion_id: edicion.id, estado: 'abierta' }).first('id')) {
 				throw new WgeError(409, 'RONDA_ABIERTA', 'Ya hay una ronda abierta; ciérrala antes de abrir otra');
 			}
-			const n = Number((await trx('wge_rondas').where('edicion_id', edicion.id).count({ n: '*' }).first())?.n ?? 0);
-			const fila = {
-				id: crypto.randomUUID(), edicion_id: edicion.id, nombre: `Ronda ${n + 1}`, apertura: new Date(), estado: 'abierta',
-				date_created: new Date(), user_created: req.accountability.user,
-			};
-			await trx('wge_rondas').insert(fila);
+			const fila = await crearRonda(trx, bloqueada, duracion, req.accountability.user);
+			if (!fila) throw new WgeError(409, 'FUERA_DE_HORARIO', 'Fuera del horario de la economía (o le quedan menos de 5 minutos)');
 			return fila;
 		});
 	}));

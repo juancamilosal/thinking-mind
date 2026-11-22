@@ -158,6 +158,7 @@ export interface DatosDocente { edicion: { id: string; nombre: string; estado: s
 export interface RondaWfunds {
   id: string; nombre: string; estado: 'abierta' | 'liquidada'; apertura: string; cierre: string | null;
   resultados: { fondo_id: string; fondo: string; votos: number; rendimiento: number }[];
+  duracion_minutos: number | null; cierre_programado: string | null;
 }
 export interface FondoWfunds { id: string; nombre: string; riesgo: 'bajo' | 'medio' | 'alto'; logo: string | null; a_que_se_dedica: string | null; por_que_invertir: string | null; activo: boolean; }
 export interface InversionWfunds {
@@ -172,6 +173,8 @@ export interface PaisWfunds {
 export interface DatosWfunds {
   edicion: { id: string; nombre: string; estado: string }; denominaciones: number[];
   ronda: RondaWfunds | null; rondas: RondaWfunds[]; fondos: FondoWfunds[]; paises: PaisWfunds[];
+  /** Hora del servidor (para la cuenta regresiva) y fin de la franja del horario actual (null = fuera del horario). */
+  ahora: string; fin_horario: string | null; duraciones: number[];
 }
 
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
@@ -369,12 +372,14 @@ export class WillGoService {
     return this.http.get<{ data: DatosWfunds }>(`${this.api}/ediciones/${edicionId}/wfunds`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  abrirRonda(edicionId: string): Observable<RondaWfunds> {
-    return this.http.post<{ data: RondaWfunds }>(`${this.api}/ediciones/${edicionId}/rondas`, {}).pipe(this.enZona(), map((r) => r.data));
+  abrirRonda(edicionId: string, duracionMinutos: number): Observable<RondaWfunds> {
+    return this.http.post<{ data: RondaWfunds }>(`${this.api}/ediciones/${edicionId}/rondas`, { duracion_minutos: duracionMinutos }).pipe(this.enZona(), map((r) => r.data));
   }
 
-  cerrarRonda(rondaId: string): Observable<{ inversiones: number; por_cobrar: number }> {
-    return this.http.post<{ data: { inversiones: number; por_cobrar: number } }>(`${this.api}/rondas/${rondaId}/cerrar`, {}).pipe(this.enZona(), map((r) => r.data));
+  /** Cierra la ronda ya; con `continuar` se abre la siguiente con la misma duración. */
+  cerrarRonda(rondaId: string, continuar: boolean): Observable<{ inversiones: number; por_cobrar: number; siguiente: RondaWfunds | null }> {
+    return this.http.post<{ data: { inversiones: number; por_cobrar: number; siguiente: RondaWfunds | null } }>(`${this.api}/rondas/${rondaId}/cerrar`, { continuar })
+      .pipe(this.enZona(), map((r) => r.data));
   }
 
   invertir(participanteId: string, fondoId: string, rondaId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number }> {
