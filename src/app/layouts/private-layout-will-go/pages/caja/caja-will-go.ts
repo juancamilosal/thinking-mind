@@ -54,9 +54,51 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
 
         <!-- VENDER -->
         @if (vista === 'vender') {
+          <!-- Tasa de cada moneda: con ella se pasa el precio en pesos a billetes -->
+          <div class="mt-4 grid grid-cols-3 gap-2">
+            @for (pa of datos.paises; track pa.id) {
+              <div class="rounded-xl px-3 py-2 text-white shadow-sm" [style.background]="pa.color || '#1e293b'" [class.ring-4]="paisEst?.id === pa.id" [class.ring-orange-300]="paisEst?.id === pa.id">
+                <p class="text-[11px] font-semibold opacity-95 truncate">{{ pa.nombre }}</p>
+                <p class="text-sm sm:text-base font-extrabold leading-tight">1 {{ pa.codigo_moneda }} = {{ miles(pa.tasa_actual) }}</p>
+                <p class="text-[10px] opacity-90">{{ 'wg.operacion.caja.tasasHoy' | translate }}</p>
+              </div>
+            }
+          </div>
           @if (!estudiante) {
+            <!-- Precios de hoy: lo que vale cada producto en cada moneda -->
+            @if (datos.productos.length) {
+              <section class="mt-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div class="px-4 pt-3 pb-2">
+                  <h2 class="font-bold text-gray-800">{{ 'wg.operacion.caja.preciosHoy' | translate }}</h2>
+                  <p class="text-xs text-gray-500">{{ 'wg.operacion.caja.preciosAyuda' | translate }}</p>
+                </div>
+                <ul class="divide-y divide-gray-100">
+                  @for (p of datos.productos; track p.id) {
+                    <li class="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2" [class.opacity-50]="!p.stock">
+                      <div class="flex items-center gap-3 min-w-0 sm:flex-1">
+                        <div class="w-10 h-10 shrink-0 rounded-lg bg-orange-50 overflow-hidden flex items-center justify-center">
+                          @if (p.foto) { <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover"> } @else { <span class="text-xl" aria-hidden="true">🛍️</span> }
+                        </div>
+                        <div class="min-w-0">
+                          <p class="font-semibold text-gray-800 truncate">{{ p.nombre }}</p>
+                          <p class="text-xs text-gray-500">{{ 'wg.operacion.caja.pesos' | translate: { n: miles(p.precio_cop) } }}</p>
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-3 gap-1.5 sm:w-72 shrink-0">
+                        @for (pa of datos.paises; track pa.id) {
+                          <span class="rounded-lg px-2 py-1 text-center font-extrabold text-sm" [style.color]="pa.color || '#111827'" [style.background]="(pa.color || '#64748b') + '14'">
+                            {{ miles(precioEn(p, pa)) }} <span class="text-[10px] font-bold">{{ pa.codigo_moneda }}</span>
+                          </span>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+            <h2 class="mt-5 font-bold text-gray-800">{{ 'wg.operacion.caja.eligeEstudiante' | translate }}</h2>
             <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
-                   class="mt-4 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+                   class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
             <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
               @for (e of filtrados; track e.id) {
                 <li>
@@ -92,6 +134,11 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
                   <div class="min-w-0 flex-1">
                     <p class="font-semibold text-gray-800 truncate">{{ p.nombre }}</p>
                     <p class="text-sm font-bold" [style.color]="paisEst?.color || '#111827'">{{ miles(precio(p)) }} {{ paisEst?.codigo_moneda }}</p>
+                    <p class="text-[11px] text-gray-500 truncate">
+                      @for (pa of otrosPaises; track pa.id; let ultimo = $last) {
+                        <span [style.color]="pa.color || '#6b7280'" class="font-semibold">{{ miles(precioEn(p, pa)) }} {{ pa.codigo_moneda }}</span>@if (!ultimo) { · }
+                      }
+                    </p>
                     <p class="text-xs text-gray-500">{{ textoDisponible(p) }}</p>
                   </div>
                   <div class="flex items-center gap-1 shrink-0">
@@ -363,6 +410,10 @@ export class CajaWillGo implements OnInit {
 
   // ---- Carrito ----
   precio(p: ProductoCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(this.paisEst?.tasa_actual) || 1, 1)); }
+  /** Lo que vale un producto en la moneda de un país (precio en pesos ÷ tasa, hacia arriba, igual que al cobrar). */
+  precioEn(p: ProductoCaja, pais: PaisCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(pais.tasa_actual) || 1, 1)); }
+  /** Los países distintos al del estudiante elegido (para mostrar el precio en las otras monedas). */
+  get otrosPaises(): PaisCaja[] { return (this.datos?.paises ?? []).filter((pa) => pa.id !== this.paisEst?.id); }
   cantidad(p: ProductoCaja): number { return this.carrito[p.id] ?? 0; }
   /** Cuántas unidades más puede llevar este estudiante (stock y máximo por estudiante). */
   private maximo(p: ProductoCaja): number {

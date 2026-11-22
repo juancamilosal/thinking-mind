@@ -1184,7 +1184,13 @@
         "disponibles": "{{n}} disponibles",
         "maxPorEstudiante": "max. {{n}} par élève",
         "sinBilletesCompletar": "La caisse n'a pas les billets pour rendre {{n}} de monnaie.",
-        "avisoEntregaste": "Vous avez remis {{monto}} à la banque de {{pais}}."
+        "avisoEntregaste": "Vous avez remis {{monto}} à la banque de {{pais}}.",
+        "tasasHoy": "pesos par billet",
+        "preciosHoy": "Prix du jour dans chaque monnaie",
+        "preciosAyuda": "Prix en pesos ÷ taux de la monnaie, arrondi au supérieur.",
+        "pesos": "{{n}} pesos",
+        "eligeEstudiante": "Qui achète ?",
+        "enOtras": "Dans les autres monnaies :"
       },
       "productos": {
         "titulo": "Produits",

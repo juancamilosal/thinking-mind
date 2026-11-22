@@ -49,11 +49,10 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
     { texto: 'wg.nucleo.menu.wfunds', ruta: '/private-will-go/wfunds', icono: ICONOS.fondos, requiere: 'banco' },
     { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
   ],
+  // El cajero solo usa la tienda: cobra al estudiante y le entrega su producto
   cajero: [
     INICIO,
     { texto: 'wg.nucleo.menu.cajaGoStore', ruta: '/private-will-go/caja', icono: ICONOS.caja, requiere: 'caja' },
-    { texto: 'wg.nucleo.menu.productos', ruta: '/private-will-go/productos', icono: ICONOS.tienda, requiere: 'caja' },
-    { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
   ],
 };
 
@@ -63,5 +62,7 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
  */
 export function menuPara(rol: RolWillGo | null | undefined, acceso: AccesoMenu | null): OpcionMenu[] {
   if (!rol) return [];
-  return MENU_POR_ROL[rol].filter((o) => !o.requiere || !!acceso?.[o.requiere]);
+  const menu = MENU_POR_ROL[rol].filter((o) => !o.requiere || !!acceso?.[o.requiere]);
+  // Con la caja asignada, el cajero ve solo la tienda (sin Inicio)
+  return rol === 'cajero' && acceso?.caja ? menu.filter((o) => o !== INICIO) : menu;
 }

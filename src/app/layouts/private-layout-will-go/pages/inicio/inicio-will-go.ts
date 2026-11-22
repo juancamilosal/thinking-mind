@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { WillGoService } from '../../../../core/services/will-go.service';
 import { OpcionMenu, menuPara } from '../../menu-will-go';
@@ -49,6 +49,7 @@ import { OpcionMenu, menuPara } from '../../menu-will-go';
 })
 export class InicioWillGo implements OnInit {
   private willGo = inject(WillGoService);
+  private router = inject(Router);
   perfil = WillGoService.perfilGuardado();
   opciones: OpcionMenu[] = this.sinInicio(menuPara(this.perfil?.rol, null));
   /** Clave de traducción del nombre del rol (wg.nucleo.rol.*). */
@@ -60,6 +61,8 @@ export class InicioWillGo implements OnInit {
   ngOnInit(): void {
     if (!this.perfil?.rol) return;
     this.willGo.miMenu().subscribe((acceso) => {
+      // El cajero con caja asignada entra directo a la tienda
+      if (this.perfil?.rol === 'cajero' && acceso.caja) { this.router.navigateByUrl('/private-will-go/caja', { replaceUrl: true }); return; }
       this.opciones = this.sinInicio(menuPara(this.perfil?.rol, acceso));
       const rol = this.perfil?.rol;
       this.faltaPrincipal = (rol === 'banco' && !acceso.banco) || (rol === 'cajero' && !acceso.caja);

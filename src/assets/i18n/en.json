@@ -1184,7 +1184,13 @@
         "disponibles": "{{n}} available",
         "maxPorEstudiante": "max. {{n}} per student",
         "sinBilletesCompletar": "The checkout lacks the bills to make {{n}} in change.",
-        "avisoEntregaste": "You handed {{monto}} to the {{pais}} bank."
+        "avisoEntregaste": "You handed {{monto}} to the {{pais}} bank.",
+        "tasasHoy": "pesos per bill",
+        "preciosHoy": "Today's prices in each currency",
+        "preciosAyuda": "Price in pesos ÷ the currency rate, rounded up.",
+        "pesos": "{{n}} pesos",
+        "eligeEstudiante": "Who is buying?",
+        "enOtras": "In other currencies:"
       },
       "productos": {
         "titulo": "Products",
