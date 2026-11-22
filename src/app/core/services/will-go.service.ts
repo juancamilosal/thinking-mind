@@ -239,6 +239,22 @@ export const NOMBRE_ROL: Record<RolWillGo, string> = {
 const PERFIL = 'wge_perfil';
 
 /** Habla con la extensión /wge de Directus. Las operaciones con billetes nunca se hacen con /items. */
+/** Resumen final de una edición (o vista previa mientras sigue abierta). */
+export interface EmpresaResumen { fondo_id: string; nombre: string; logo: string | null; acumulado: number; rondas: number; mejor: number | null; peor: number | null }
+export interface EstudianteResumen {
+  id: string; nombre: string; apellido: string; saldo: number; invertido: number; total: number;
+  ganancia_fondos: number; gastado_tienda: number; rubrica: { promedio: number; n: number } | null;
+}
+export interface PaisResumen {
+  id: string; nombre: string; codigo_moneda: string | null; color: string | null; provision_inicial: number; tasa_actual: number | null;
+  saldo_banco: number; saldo_caja: number; saldo_docentes: number; ventas: number; total_ventas: number;
+  estudiantes: EstudianteResumen[]; total_estudiantes: number;
+}
+export interface ResumenFinal {
+  edicion: { id: string; nombre: string; estado: string; fecha_inicio: string | null; fecha_fin: string | null };
+  rondas: number; empresas: EmpresaResumen[]; paises: PaisResumen[]; maximo_rubrica: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WillGoService {
   private api = environment.willGo;
@@ -374,6 +390,14 @@ export class WillGoService {
 
   sincronizarParticipantes(edicionId: string): Observable<{ inscritos: number; nuevos: number }> {
     return this.http.post<{ data: any }>(`${this.api}/ediciones/${edicionId}/sincronizar-participantes`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  resumenFinal(edicionId: string): Observable<ResumenFinal> {
+    return this.http.get<{ data: ResumenFinal }>(`${this.api}/admin/ediciones/${edicionId}/resumen-final`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  cerrarEdicion(edicionId: string): Observable<{ rondas_cerradas: number; inversiones_liquidadas: number; total_liquidado: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/ediciones/${edicionId}/cerrar`, { confirmar: 'CERRAR' }).pipe(this.enZona(), map((r) => r.data));
   }
 
   abrirEdicion(edicionId: string): Observable<{ provisiones: number; bienvenidas: number }> {

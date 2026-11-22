@@ -9,13 +9,15 @@ import { TabParticipantes } from './tabs/tab-participantes';
 import { TabTienda } from './tabs/tab-tienda';
 import { TabEconomia } from './tabs/tab-economia';
 import { TabEquipo } from './tabs/tab-equipo';
+import { TabResumen } from './tabs/tab-resumen';
+import { FormsModule } from '@angular/forms';
 
-type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
+type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo' | 'resumen';
 
 @Component({
   selector: 'app-edicion-will-go',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabEconomia, TabParticipantes, TabTienda, TabEquipo],
+  imports: [RouterLink, DecimalPipe, EliminarEdicionComponent, TabGeneral, TabEconomia, TabParticipantes, TabTienda, TabEquipo, TabResumen, FormsModule],
   template: `
     <div class="max-w-6xl mx-auto">
       <a routerLink="/private-will-go/ediciones" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-orange-700">← Ediciones</a>
@@ -47,7 +49,14 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
                 Abrir edición
               </button>
             } @else if (edicion.estado === 'abierta') {
-              <p class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">La economía está en marcha: el banco ya tiene sus billetes.</p>
+              <p class="order-1 sm:order-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">La economía está en marcha: el banco ya tiene sus billetes.</p>
+              <button type="button" (click)="abrirCierre()"
+                      class="order-1 sm:order-3 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 shadow">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+                Cerrar edición
+              </button>
+            } @else if (edicion.estado === 'cerrada') {
+              <p class="order-1 sm:order-2 text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-xl px-4 py-2">Edición cerrada: los números quedaron fijos. Mira el <button type="button" class="font-semibold underline p-0" (click)="pestana = 'resumen'">resumen final</button>.</p>
             }
             </div>
           </div>
@@ -87,10 +96,37 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
             @case ('participantes') { <app-tab-participantes [edicion]="edicion" (cambio)="recargar()" /> }
             @case ('equipo') { <app-tab-equipo [edicion]="edicion" (cambio)="recargar()" /> }
             @case ('tienda') { <app-tab-tienda [edicion]="edicion" (guardada)="edicion = $event" /> }
+            @case ('resumen') { <app-tab-resumen [edicion]="edicion" /> }
           }
         </div>
       }
     </div>
+
+    <!-- Cerrar la edición -->
+    @if (cerrando && edicion) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrando = false">
+        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre-edicion">
+          <h2 id="titulo-cierre-edicion" class="text-lg font-bold text-gray-800">¿Cerrar {{ edicion.nombre }}?</h2>
+          <p class="text-sm text-gray-600 mt-2">Esto es para el final del programa. Al cerrar:</p>
+          <ul class="mt-2 space-y-1.5 text-sm text-gray-700">
+            <li class="flex gap-2"><span aria-hidden="true">🛑</span> Si hay una ronda de W-Funds abierta, se cierra con sus resultados y no se abren más.</li>
+            <li class="flex gap-2"><span aria-hidden="true">💰</span> Lo que cada estudiante tenga invertido vuelve a su saldo con lo que vale hoy.</li>
+            <li class="flex gap-2"><span aria-hidden="true">🔒</span> Ya no se vende en GO•STORE, no se invierte y la tasa deja de moverse.</li>
+            <li class="flex gap-2"><span aria-hidden="true">📊</span> Queda el resumen final con los resultados de cada estudiante y empresa.</li>
+          </ul>
+          <p class="mt-3 text-sm font-semibold text-red-700">No se puede deshacer.</p>
+          <label for="confirmar-cierre" class="block mt-4 text-sm text-gray-700">Escribe <b>CERRAR</b> para confirmar</label>
+          <input id="confirmar-cierre" [(ngModel)]="textoCierre" autocomplete="off" autocapitalize="characters"
+                 class="mt-1 w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl font-semibold tracking-wider focus:outline-none focus:ring-2 focus:ring-slate-300">
+          @if (errorCierre) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorCierre }}</p> }
+          <div class="mt-5 flex gap-2">
+            <button type="button" (click)="cerrando = false" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
+            <button type="button" (click)="cerrar()" [disabled]="cerrandoAhora || textoCierre.trim().toUpperCase() !== 'CERRAR'"
+                    class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">{{ cerrandoAhora ? 'Cerrando…' : 'Cerrar edición' }}</button>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (eliminando && edicion) {
       <wg-eliminar-edicion [edicion]="edicion" (cancelar)="eliminando = false" (eliminada)="alEliminar()" />
@@ -135,13 +171,20 @@ export class EdicionWillGo implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   readonly estado = ESTADO_EDICION;
-  readonly pestanas: { id: Pestana; texto: string }[] = [
+  private readonly todas: { id: Pestana; texto: string }[] = [
     { id: 'general', texto: 'General' },
     { id: 'economia', texto: 'Economía' },
     { id: 'tienda', texto: 'GO•STORE' },
     { id: 'participantes', texto: 'Estudiantes' },
     { id: 'equipo', texto: 'Colaboradores' },
+    { id: 'resumen', texto: 'Resumen' },
   ];
+  /** El resumen aparece cuando la edición ya arrancó (abierta: vista previa; cerrada: resumen final). */
+  get pestanas(): { id: Pestana; texto: string }[] {
+    const e = this.edicion?.estado;
+    return this.todas.filter((p) => p.id !== 'resumen' || e === 'abierta' || e === 'cerrada')
+      .map((p) => (p.id === 'resumen' && e === 'cerrada' ? { ...p, texto: 'Resumen final' } : p));
+  }
 
   edicion: Edicion | null = null;
   paises: Pais[] = [];
@@ -185,7 +228,8 @@ export class EdicionWillGo implements OnInit {
 
   ngOnInit(): void {
     const pestana = this.route.snapshot.queryParamMap.get('pestana') as Pestana | null;
-    if (pestana && this.pestanas.some((p) => p.id === pestana)) this.pestana = pestana;
+    if (pestana && this.todas.some((p) => p.id === pestana)) this.pestana = pestana;
+    this.pestanaPedida = !!pestana;
     this.recargar();
   }
 
@@ -195,6 +239,9 @@ export class EdicionWillGo implements OnInit {
       next: (e) => {
         this.edicion = e;
         this.cargando = false;
+        // Una edición cerrada abre directo en su resumen final
+        if (e.estado === 'cerrada' && !this.pestanaPedida) { this.pestana = 'resumen'; this.pestanaPedida = true; }
+        if (this.pestana === 'resumen' && e.estado === 'borrador') this.pestana = 'general';
         const partes = [
           e.nuevos ? (e.nuevos === 1 ? 'Llegó 1 inscrito nuevo.' : `Llegaron ${e.nuevos} inscritos nuevos.`) : '',
           e.quitados ? (e.quitados === 1 ? 'Salió 1 estudiante que no es del colegio de la edición.' : `Salieron ${e.quitados} estudiantes que no son del colegio de la edición.`) : '',
@@ -252,6 +299,32 @@ export class EdicionWillGo implements OnInit {
         this.recargar();
       },
       error: (err) => { this.abriendo = false; this.errorApertura = WillGoService.mensajeDeError(err); },
+    });
+  }
+
+  private pestanaPedida = false;
+  cerrando = false;
+  cerrandoAhora = false;
+  textoCierre = '';
+  errorCierre = '';
+  abrirCierre(): void { this.textoCierre = ''; this.errorCierre = ''; this.cerrando = true; }
+  cerrar(): void {
+    if (!this.edicion || this.cerrandoAhora) return;
+    this.cerrandoAhora = true;
+    this.errorCierre = '';
+    this.willGo.cerrarEdicion(this.edicion.id).subscribe({
+      next: (r) => {
+        this.cerrandoAhora = false;
+        this.cerrando = false;
+        const partes = ['Edición cerrada.'];
+        if (r.rondas_cerradas) partes.push('Se cerró la ronda abierta.');
+        if (r.inversiones_liquidadas) partes.push(`${r.inversiones_liquidadas} ${r.inversiones_liquidadas === 1 ? 'inversión volvió' : 'inversiones volvieron'} al saldo de los estudiantes.`);
+        this.mostrarAviso(partes.join(' '));
+        this.pestana = 'resumen';
+        this.pestanaPedida = true;
+        this.recargar();
+      },
+      error: (err) => { this.cerrandoAhora = false; this.errorCierre = WillGoService.mensajeDeError(err); },
     });
   }
 

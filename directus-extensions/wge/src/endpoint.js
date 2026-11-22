@@ -11,6 +11,7 @@ import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
 import { rutasAcudientes } from './acudientes.js';
 import { rutasRubrica } from './rubrica.js';
 import { rutasTipoCambio } from './tipocambio.js';
+import { rutasCierre } from './cierre.js';
 import { rutasCaja, inventarioCaja, exigirResponsableCaja, precioEnBilletesCaja } from './caja.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
@@ -318,6 +319,7 @@ export default {
 		rutasArqueo(router, { ruta, db });
 		rutasWfunds(router, { ruta, db });
 		rutasRubrica(router, { ruta, db });
+		rutasCierre(router, { ruta, db });
 		rutasTipoCambio(router, { ruta, db });
 		rutasCaja(router, { ruta, db });
 
