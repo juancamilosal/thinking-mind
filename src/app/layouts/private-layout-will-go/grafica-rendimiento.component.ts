@@ -22,19 +22,21 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
       @if (!rondas.length) {
         <p class="mt-4 text-sm text-gray-500">La gráfica aparece cuando se cierre la primera ronda.</p>
       } @else {
-        <!-- Leyenda -->
-        <ul class="mt-3 flex flex-wrap gap-x-1 gap-y-1">
+        <!-- Empresas: el check muestra u oculta su línea -->
+        <div class="mt-3 flex flex-wrap items-center gap-x-1 gap-y-1">
           @for (s of series; track s.id) {
-            <li>
-              <button type="button" (click)="resaltar(s.id)" [attr.aria-pressed]="resaltada === s.id"
-                      class="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full transition"
-                      [class]="resaltada === s.id ? 'bg-gray-800 text-white' : (resaltada ? 'text-gray-400 hover:bg-gray-100' : 'text-gray-600 hover:bg-gray-100')">
-                <span class="w-3 h-3 rounded-full shrink-0" [style.background]="s.color" aria-hidden="true"></span>{{ s.nombre }}
-              </button>
-            </li>
+            <label class="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full cursor-pointer select-none hover:bg-gray-100"
+                   [class.text-gray-700]="visible(s.id)" [class.text-gray-400]="!visible(s.id)">
+              <input type="checkbox" class="w-4 h-4 rounded" [style.accent-color]="s.color" [checked]="visible(s.id)" (change)="alternar(s.id)">
+              <span class="w-3 h-3 rounded-full shrink-0" [style.background]="s.color" [class.opacity-30]="!visible(s.id)" aria-hidden="true"></span>
+              <span [class.line-through]="!visible(s.id)">{{ s.nombre }}</span>
+            </label>
           }
-        </ul>
-        <p class="text-[11px] text-gray-400 mt-1">Toca una empresa para ver solo su línea.</p>
+        </div>
+        <div class="mt-1 flex gap-3 text-xs">
+          <button type="button" (click)="mostrarTodas()" [disabled]="!ocultas.size" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">Todas</button>
+          <button type="button" (click)="ocultarTodas()" [disabled]="ocultas.size === series.length" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">Ninguna</button>
+        </div>
 
         <div #lienzo class="mt-2 w-full">
         <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" [attr.aria-label]="'Gráfica del rendimiento de las empresas en ' + rondas.length + ' rondas'">
@@ -52,17 +54,18 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
             <line [attr.x1]="x(elegida)" [attr.x2]="x(elegida)" [attr.y1]="arriba" [attr.y2]="alto - abajo" stroke="#d1d5db" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" />
           }
           <!-- Líneas -->
-          @for (s of ordenSeries; track s.id) {
-            <g [attr.opacity]="resaltada && resaltada !== s.id ? 0.15 : 1">
-              @if (s.puntos.length > 1) {
-                <polyline [attr.points]="s.trazo" fill="none" [attr.stroke]="s.color" [attr.stroke-width]="resaltada === s.id ? 2.5 : 1.5"
-                          vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" />
-              }
-              @for (p of s.puntos; track p.i) {
-                <circle [attr.cx]="x(p.i)" [attr.cy]="y(p.v)" [attr.r]="p.i === elegida || resaltada === s.id ? 4.5 : 3.5" [attr.fill]="s.color"
-                        stroke="#fff" stroke-width="1.5" vector-effect="non-scaling-stroke" />
-              }
-            </g>
+          @for (s of seriesVisibles; track s.id) {
+            @if (s.puntos.length > 1) {
+              <polyline [attr.points]="s.trazo" fill="none" [attr.stroke]="s.color" stroke-width="1.5"
+                        vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" />
+            }
+            @for (p of s.puntos; track p.i) {
+              <circle [attr.cx]="x(p.i)" [attr.cy]="y(p.v)" [attr.r]="p.i === elegida ? 4.5 : 3.5" [attr.fill]="s.color"
+                      stroke="#fff" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+            }
+          }
+          @if (!seriesVisibles.length) {
+            <text [attr.x]="(izq + ancho - der) / 2" [attr.y]="(arriba + alto - abajo) / 2" text-anchor="middle" font-size="12" fill="#9ca3af">Marca una empresa para ver su línea</text>
           }
           <!-- Zonas para tocar cada ronda (más grandes que los puntos) -->
           @for (r of rondas; track $index; let i = $index) {
@@ -78,8 +81,7 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
             <p class="text-xs font-semibold text-gray-500 mb-2">{{ rondas[elegida].nombre }}</p>
             <ul class="space-y-1.5">
               @for (v of detalle; track v.id) {
-                <li class="flex items-center gap-2 text-sm cursor-pointer rounded-md px-1 -mx-1" (click)="resaltar(v.id)"
-                    [class.bg-white]="resaltada === v.id" [class.opacity-40]="resaltada && resaltada !== v.id">
+                <li class="flex items-center gap-2 text-sm">
                   <span class="w-2.5 h-2.5 rounded-full shrink-0" [style.background]="v.color" aria-hidden="true"></span>
                   <span class="flex-1 text-gray-700 truncate">{{ v.nombre }}</span>
                   <span class="font-bold tabular-nums" [class]="v.valor >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ pct(v.valor) }}</span>
@@ -98,7 +100,7 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
                 @for (r of rondas; track $index) { <th class="py-1.5 px-2 font-semibold text-right whitespace-nowrap">{{ corto(r.nombre) }}</th> }
               </tr></thead>
               <tbody>
-                @for (s of series; track s.id) {
+                @for (s of seriesVisibles; track s.id) {
                   <tr class="border-t border-gray-100">
                     <td class="py-1.5 pr-3 text-gray-700 whitespace-nowrap">{{ s.nombre }}</td>
                     @for (r of rondas; track $index; let i = $index) {
@@ -131,11 +133,17 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
   series: { id: string; nombre: string; color: string; puntos: { i: number; v: number }[]; trazo: string }[] = [];
   marcas: number[] = [];
   elegida: number | null = null;
-  /** Empresa resaltada (las demás líneas se desvanecen); null = todas. */
-  resaltada: string | null = null;
-  resaltar(id: string): void { this.resaltada = this.resaltada === id ? null : id; }
-  /** La línea resaltada se dibuja de última para que quede encima de las demás. */
-  get ordenSeries() { return this.resaltada ? [...this.series.filter((s) => s.id !== this.resaltada), ...this.series.filter((s) => s.id === this.resaltada)] : this.series; }
+  /** Empresas cuya línea está oculta (se desmarcó su check). */
+  ocultas = new Set<string>();
+  visible(id: string): boolean { return !this.ocultas.has(id); }
+  alternar(id: string): void {
+    const n = new Set(this.ocultas);
+    n.has(id) ? n.delete(id) : n.add(id);
+    this.ocultas = n;
+  }
+  mostrarTodas(): void { this.ocultas = new Set(); }
+  ocultarTodas(): void { this.ocultas = new Set(this.series.map((s) => s.id)); }
+  get seriesVisibles() { return this.series.filter((s) => !this.ocultas.has(s.id)); }
   verTabla = false;
 
   ngAfterViewInit(): void { /* el tamaño llega por el ResizeObserver del lienzo */ }
@@ -183,7 +191,7 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
 
   get detalle() {
     if (this.elegida === null) return [];
-    return this.series.map((s) => ({ id: s.id, nombre: s.nombre, color: s.color, valor: this.valor(s.id, this.elegida!) }))
+    return this.seriesVisibles.map((s) => ({ id: s.id, nombre: s.nombre, color: s.color, valor: this.valor(s.id, this.elegida!) }))
       .filter((v): v is { id: string; nombre: string; color: string; valor: number } => v.valor !== null)
       .sort((a, b) => b.valor - a.valor);
   }
