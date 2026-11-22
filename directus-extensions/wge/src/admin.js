@@ -351,6 +351,34 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	}));
 
 	/**
+	 * POST /wge/admin/paises/:id/provisionar { billetes: { "1": 100, ... }, nota }
+	 * Con la edición abierta, agrega billetes impresos al banco de un país (solo suma: lo que ya salió puede estar
+	 * circulando). Queda un movimiento de provisión y se actualiza el detalle de billetes del país.
+	 */
+	router.post('/admin/paises/:id/provisionar', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const actor = req.accountability.user;
+		const { limpio, total } = totalDelConteo(req.body?.billetes ?? {});
+		if (total <= 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe cuántos billetes entran al banco');
+		return db.transaction(async (trx) => {
+			const pais = await trx('wge_paises').where('id', req.params.id).forUpdate().first();
+			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
+			const e = await trx('wge_ediciones').where('id', pais.edicion_id).first();
+			if (e.estado === 'cerrada') throw new WgeError(409, 'EDICION_CERRADA', 'La edición ya fue cerrada');
+			if (e.estado === 'borrador') throw new WgeError(409, 'EDICION_EN_PREPARACION', 'Con la edición en preparación, edita los billetes impresos directamente');
+			const banco = await billeteraBloqueada(trx, { edicionId: e.id, paisId: pais.id, tipo: 'banco' });
+			await moverSaldo(trx, banco, { tipo: 'provision', monto: total, actor, referenciaTipo: 'provision_adicional', referenciaId: pais.id });
+			const previos = (typeof pais.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais.provision_billetes) ?? {};
+			const suma = { ...previos };
+			for (const [d, n] of Object.entries(limpio)) suma[d] = Number(suma[d] ?? 0) + n;
+			await trx('wge_paises').where('id', pais.id).update({
+				provision_billetes: JSON.stringify(suma), provision_inicial: Number(pais.provision_inicial ?? 0) + total,
+			});
+			return { agregado: total, saldo_banco: banco.saldo, provision_total: Number(pais.provision_inicial ?? 0) + total };
+		});
+	}));
+
+	/**
 	 * POST /wge/admin/participantes/retirar { ids, motivo }
 	 * El estudiante queda fuera de la edición (no vuelve con la carga automática de inscritos).
 	 * Si tiene billetes, vuelven al banco de su país; si tiene una inversión abierta, no se puede retirar todavía.

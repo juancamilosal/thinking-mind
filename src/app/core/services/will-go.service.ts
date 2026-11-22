@@ -291,6 +291,10 @@ export class WillGoService {
     return this.http.delete<{ data: any }>(`${this.api}/admin/equipo/${miembroId}`).pipe(this.enZona(), map((r) => r.data));
   }
 
+  provisionarPais(paisId: string, billetes: Record<string, number>): Observable<{ agregado: number; saldo_banco: number; provision_total: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/paises/${paisId}/provisionar`, { billetes }).pipe(this.enZona(), map((r) => r.data));
+  }
+
   // ---------- Arqueo del banco ----------
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {
