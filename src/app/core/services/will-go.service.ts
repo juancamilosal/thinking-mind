@@ -148,6 +148,7 @@ export interface EstudianteDocente { id: string; codigo: string; presente: boole
 export interface PaisDocente {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   saldo: number; inventario: Record<string, number>; recibidos: MovimientoDocente[]; entregas: MovimientoDocente[]; estudiantes: EstudianteDocente[];
+  total_recibido: number; total_entregado: number;
 }
 export interface DatosDocente { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisDocente[]; }
 

@@ -1071,13 +1071,16 @@ function rutasArqueo(router, { ruta, db }) {
 			const billetera = await db('wge_billeteras').where({ edicion_id: edicion.id, pais_id: p.id, tipo_dueno: 'docente', docente_id: docenteId }).first('id', 'saldo');
 			p.saldo = Number(billetera?.saldo ?? 0);
 			p.inventario = await inventarioDocente(db, edicion.id, p.id, docenteId);
+			const suma = async (campo) => (billetera ? Number((await db('wge_transferencias').where({ [campo]: billetera.id, estado: 'aplicada' }).sum({ t: 'monto' }).first())?.t ?? 0) : 0);
+			p.total_recibido = await suma('billetera_destino_id');
+			p.total_entregado = await suma('billetera_origen_id');
 			p.recibidos = billetera ? await db('wge_transferencias as t').join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
 				.leftJoin('directus_users as u', 'u.id', 't.user_created')
-				.where('t.billetera_destino_id', billetera.id).orderBy('t.date_created', 'desc').limit(20)
+				.where('t.billetera_destino_id', billetera.id).orderBy('t.date_created', 'desc').limit(50)
 				.select('t.id', 't.monto', 't.billetes', 't.date_created', db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien")) : [];
 			p.entregas = billetera ? await db('wge_transferencias as t').join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id')
 				.join('wge_participantes as pa', 'pa.id', 'bd.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-				.where('t.billetera_origen_id', billetera.id).orderBy('t.date_created', 'desc').limit(20)
+				.where('t.billetera_origen_id', billetera.id).orderBy('t.date_created', 'desc').limit(50)
 				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'e.nombre', 'e.apellido') : [];
 			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })

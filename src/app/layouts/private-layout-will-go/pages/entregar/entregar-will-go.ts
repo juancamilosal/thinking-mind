@@ -109,36 +109,45 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
           }
         }
 
-        @if (vista === 'recibido') {
-          @if (!pais.recibidos.length) {
-            <p class="mt-4 text-sm text-gray-500">Todavía no has recibido billetes del banco.</p>
+        @if (vista === 'movimientos') {
+          @if (!movimientos.length) {
+            <p class="mt-4 text-sm text-gray-500">Todavía no tienes movimientos. Cuando el banco te dé billetes o se los entregues a un estudiante, aparecen aquí.</p>
           } @else {
-            <ul class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-              @for (r of pais.recibidos; track r.id) {
-                <li class="px-4 py-3">
-                  <div class="flex items-center justify-between gap-3">
-                    <p class="font-semibold text-gray-800">Del banco{{ r.quien ? ' · ' + r.quien : '' }}</p>
-                    <p class="font-bold text-emerald-700 whitespace-nowrap">+{{ miles(r.monto) }}</p>
-                  </div>
-                  <p class="text-xs text-gray-500">{{ r.date_created | date:'d MMM, h:mm a' }}{{ detalle(r) ? ' · ' + detalle(r) : '' }}</p>
-                </li>
-              }
-            </ul>
-          }
-        }
-
-        @if (vista === 'entregado') {
-          @if (!pais.entregas.length) {
-            <p class="mt-4 text-sm text-gray-500">Todavía no has entregado billetes.</p>
-          } @else {
-            <ul class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-              @for (r of pais.entregas; track r.id) {
-                <li class="px-4 py-3">
-                  <div class="flex items-center justify-between gap-3">
-                    <p class="font-semibold text-gray-800 truncate">{{ r.nombre }} {{ r.apellido }}</p>
-                    <p class="font-bold text-gray-800 whitespace-nowrap">−{{ miles(r.monto) }}</p>
-                  </div>
-                  <p class="text-xs text-gray-500">{{ r.date_created | date:'d MMM, h:mm a' }}{{ detalle(r) ? ' · ' + detalle(r) : '' }}</p>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <div class="bg-white rounded-2xl border border-gray-200 p-3">
+                <p class="text-xs text-gray-500">Entró</p>
+                <p class="text-lg font-extrabold text-emerald-700 break-all">+{{ miles(totalEntro) }}</p>
+              </div>
+              <div class="bg-white rounded-2xl border border-gray-200 p-3">
+                <p class="text-xs text-gray-500">Salió</p>
+                <p class="text-lg font-extrabold text-gray-800 break-all">−{{ miles(totalSalio) }}</p>
+              </div>
+            </div>
+            <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+              @for (m of movimientos; track m.id) {
+                <li>
+                  <button type="button" (click)="abierto = abierto === m.id ? null : m.id" [attr.aria-expanded]="abierto === m.id"
+                          class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
+                    <span class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center" [class]="m.entra ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'" aria-hidden="true">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" [attr.d]="m.entra ? 'M19 14l-7 7m0 0l-7-7m7 7V3' : 'M5 10l7-7m0 0l7 7m-7-7v18'"/></svg>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block font-semibold text-gray-800 truncate">{{ m.titulo }}</span>
+                      <span class="block text-xs text-gray-500">{{ m.fecha | date:'d MMM, h:mm a' }}{{ m.quien ? ' · ' + m.quien : '' }}</span>
+                    </span>
+                    <span class="font-bold whitespace-nowrap" [class]="m.entra ? 'text-emerald-700' : 'text-gray-800'">{{ m.entra ? '+' : '−' }}{{ miles(m.monto) }}</span>
+                  </button>
+                  @if (abierto === m.id) {
+                    <div class="px-4 pb-4 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      @for (b of m.billetes; track b.d) {
+                        <div class="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                          @if (imagen(b.d); as src) { <img [src]="src" [alt]="'Billete de ' + miles(b.d)" class="w-full aspect-[520/281] object-cover"> }
+                          @else { <div class="w-full aspect-[520/281] flex items-center justify-center text-sm font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(b.d) }}</div> }
+                          <p class="text-center text-xs py-1 text-gray-600"><b class="text-gray-800">{{ miles(b.n) }}</b> × {{ miles(b.d) }}</p>
+                        </div>
+                      }
+                    </div>
+                  }
                 </li>
               }
             </ul>
@@ -202,17 +211,17 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 export class EntregarWillGo implements OnInit {
   private willGo = inject(WillGoService);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
-  readonly vistas: { id: 'estudiantes' | 'recibido' | 'entregado'; texto: string }[] = [
+  readonly vistas: { id: 'estudiantes' | 'movimientos'; texto: string }[] = [
     { id: 'estudiantes', texto: 'Estudiantes' },
-    { id: 'recibido', texto: 'Recibido' },
-    { id: 'entregado', texto: 'Entregado' },
+    { id: 'movimientos', texto: 'Movimientos' },
   ];
+  abierto: string | null = null;
 
   ediciones: { id: string; nombre: string; estado: string }[] = [];
   edicionId = '';
   datos: DatosDocente | null = null;
   pais: PaisDocente | null = null;
-  vista: 'estudiantes' | 'recibido' | 'entregado' = 'estudiantes';
+  vista: 'estudiantes' | 'movimientos' = 'estudiantes';
   busqueda = '';
   verBilletes = false;
   cargando = true;
@@ -266,10 +275,22 @@ export class EntregarWillGo implements OnInit {
   get excede(): boolean { return (this.datos?.denominaciones ?? []).some((d) => this.cantidad(d) > this.tengo(d)) || this.total > (this.pais?.saldo ?? 0); }
   sumar(d: number, n: number): void { this.elegidos[d] = Math.max(0, Math.min(this.cantidad(d) + n, Math.max(this.tengo(d), 0))); }
 
-  detalle(m: MovimientoDocente): string {
-    const b = (typeof m.billetes === 'string' ? JSON.parse(m.billetes) : m.billetes) ?? {};
-    return Object.entries(b).sort((x, y) => Number(y[0]) - Number(x[0])).map(([d, n]) => `${n} de ${this.miles(Number(d))}`).join(', ');
+  /** Lo que entra (del banco) y lo que sale (a estudiantes), del más reciente al más viejo. */
+  get movimientos() {
+    const p = this.pais;
+    if (!p) return [];
+    const billetes = (m: MovimientoDocente) => {
+      const b = (typeof m.billetes === 'string' ? JSON.parse(m.billetes) : m.billetes) ?? {};
+      return Object.entries(b).map(([d, n]) => ({ d: Number(d), n: Number(n) })).filter((x) => x.n > 0).sort((x, y) => y.d - x.d);
+    };
+    return [
+      ...p.recibidos.map((m) => ({ id: m.id, entra: true, titulo: 'Recibido del banco', quien: m.quien || '', monto: Number(m.monto), fecha: m.date_created, billetes: billetes(m) })),
+      ...p.entregas.map((m) => ({ id: m.id, entra: false, titulo: `Entregado a ${m.nombre ?? ''} ${m.apellido ?? ''}`.trim(), quien: '', monto: Number(m.monto), fecha: m.date_created, billetes: billetes(m) })),
+    ].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
   }
+
+  get totalEntro(): number { return Number(this.pais?.total_recibido ?? 0); }
+  get totalSalio(): number { return Number(this.pais?.total_entregado ?? 0); }
 
   abrir(e: EstudianteDocente): void {
     this.estudiante = e;
