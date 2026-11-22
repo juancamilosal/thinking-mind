@@ -177,11 +177,17 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
 
         <!-- Invertido: el dinero sigue en las empresas ronda tras ronda hasta que el estudiante lo retire -->
         @if (vista === 'invertido') {
-          @if (!pais.vigentes.length) {
+          @if (pais.vigentes.length || pais.retiradas.length) {
+            <input type="search" [(ngModel)]="busquedaInvertido" placeholder="Buscar estudiante o empresa…" aria-label="Buscar en las inversiones"
+                   class="mt-4 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+          }
+          @if (busquedaInvertido && !vigentesFiltradas.length && !retiradasFiltradas.length) {
+            <p class="mt-4 text-sm text-gray-500">Nadie coincide con «{{ busquedaInvertido }}».</p>
+          } @else if (!pais.vigentes.length) {
             <p class="mt-4 text-sm text-gray-500">Nadie tiene dinero invertido. Lo que inviertan sigue en la empresa ronda tras ronda, ganando o perdiendo, hasta que pidan retirarlo.</p>
-          } @else {
+          } @else if (vigentesFiltradas.length) {
             <ul class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-              @for (i of pais.vigentes; track i.id) {
+              @for (i of vigentesFiltradas; track i.id) {
                 <li class="px-4 py-3">
                   <div class="flex items-center gap-3">
                     <div class="min-w-0 flex-1">
@@ -205,10 +211,10 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
               }
             </ul>
           }
-          @if (pais.retiradas.length) {
+          @if (retiradasFiltradas.length) {
             <h2 class="mt-6 text-sm font-bold text-gray-700">Retiros</h2>
             <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-              @for (i of pais.retiradas; track i.id) {
+              @for (i of retiradasFiltradas; track i.id) {
                 <li class="flex items-center justify-between gap-3 px-4 py-3">
                   <div class="min-w-0">
                     <p class="font-semibold text-gray-800 truncate">{{ i.nombre }} {{ i.apellido }}</p>
@@ -428,7 +434,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
     });
   }
 
-  elegirPais(p: PaisWfunds): void { this.pais = p; this.busqueda = ''; }
+  elegirPais(p: PaisWfunds): void { this.pais = p; this.busqueda = ''; this.busquedaInvertido = ''; }
 
   get filtrados(): Estudiante[] {
     const palabras = normalizar(this.busqueda).split(/\s+/).filter(Boolean);
@@ -436,6 +442,16 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   }
 
   get activos(): FondoWfunds[] { return (this.datos?.fondos ?? []).filter((f) => f.activo); }
+  busquedaInvertido = '';
+  /** Filtra por nombre del estudiante o de la empresa (sin importar tildes ni mayúsculas). */
+  private filtrarInversiones(lista: InversionWfunds[]): InversionWfunds[] {
+    const palabras = normalizar(this.busquedaInvertido).split(/\s+/).filter(Boolean);
+    if (!palabras.length) return lista;
+    return lista.filter((i) => { const t = normalizar(`${i.nombre} ${i.apellido} ${this.fondo(i.fondo_id)?.nombre ?? ''}`); return palabras.every((w) => t.includes(w)); });
+  }
+  get vigentesFiltradas(): InversionWfunds[] { return this.filtrarInversiones(this.pais?.vigentes ?? []); }
+  get retiradasFiltradas(): InversionWfunds[] { return this.filtrarInversiones(this.pais?.retiradas ?? []); }
+
   /** Las rondas se reanudan solas al empezar la siguiente franja del horario. */
   get sigueSola(): boolean { return !!(this.datos?.edicion.estado === 'abierta' && this.datos.reanudacion?.automaticas && this.datos.reanudacion.proxima); }
 
