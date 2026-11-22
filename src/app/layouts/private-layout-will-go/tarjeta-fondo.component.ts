@@ -17,9 +17,11 @@ const RIESGOS = {
 @Component({
   selector: 'wg-tarjeta-fondo',
   standalone: true,
+  // Ocupa toda la altura de la celda: en una cuadrícula, las tarjetas de la misma fila quedan iguales
+  host: { class: 'block h-full' },
   template: `
-    <article class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      <div class="p-5">
+    <article class="h-full flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="p-5 flex-1">
         <div class="flex items-center gap-4">
           @if (logoUrl) {
             <img [src]="logoUrl" [alt]="'Logo de ' + fondo.nombre" class="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-3xl object-cover bg-gray-50 shadow-md ring-1 ring-black/5">

@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface FondoPortal { id: string; nombre: string; riesgo: 'bajo' | 'medio' | 'alto'; logo: string | null; a_que_se_dedica: string | null; por_que_invertir: string | null; }
 export interface EdicionPortal {
   id: string; nombre: string; estado: string;
-  ronda: { id: string; nombre: string; apertura: string; cierre_programado: string | null; duracion_minutos: number | null; mi_voto: string | null } | null;
+  ronda: { id: string; nombre: string; apertura: string; cierre_programado: string | null; duracion_minutos: number | null; mis_votos: string[]; votos_por_ronda: number } | null;
   fondos: FondoPortal[];
   rondas: { id: string; nombre: string; resultados: { fondo_id: string; rendimiento: number }[] }[];
 }
@@ -62,8 +62,9 @@ export class AcudienteWillGoService {
     return this.http.post<{ data: DatosPanelAcudiente }>(`${this.api}/panel`, { sesion: AcudienteWillGoService.sesion() }).pipe(this.enZona(), map((r) => r.data));
   }
 
-  votar(rondaId: string, fondoId: string): Observable<{ fondo: string }> {
-    return this.http.post<{ data: { fondo: string } }>(`${this.api}/votar`, { sesion: AcudienteWillGoService.sesion(), ronda_id: rondaId, fondo_id: fondoId })
+  /** Vota por una empresa (o retira el voto con `quitar`); devuelve los votos que le quedan puestos en la ronda. */
+  votar(rondaId: string, fondoId: string, quitar = false): Observable<{ fondo: string; mis_votos: string[] }> {
+    return this.http.post<{ data: { fondo: string; mis_votos: string[] } }>(`${this.api}/votar`, { sesion: AcudienteWillGoService.sesion(), ronda_id: rondaId, fondo_id: fondoId, quitar })
       .pipe(this.enZona(), map((r) => r.data));
   }
 

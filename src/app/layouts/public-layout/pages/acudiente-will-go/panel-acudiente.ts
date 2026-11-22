@@ -46,7 +46,13 @@ import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista
                   <p class="text-5xl font-extrabold tabular-nums leading-none" role="timer" aria-live="off">{{ reloj(r.cierre_programado) }}</p>
                   <p class="text-xs opacity-90 mt-1">a las {{ r.cierre_programado | date:'h:mm a' }}</p>
                 }
-                <p class="mt-3 text-sm">{{ r.mi_voto ? 'Ya votaste por ' + nombreFondo(ed, r.mi_voto) + '. Puedes cambiar tu voto antes del cierre.' : 'Aún no has votado en esta ronda.' }}</p>
+                <div class="mt-4 rounded-xl bg-white/15 px-4 py-3">
+                  <p class="text-sm font-semibold">Tus votos: {{ votosDe(ed).length }} de {{ maxVotos(ed) }}</p>
+                  <p class="text-xs opacity-90 mt-0.5">
+                    {{ votosDe(ed).length ? 'Votaste por ' + nombresVotos(ed) + '.' : 'Aún no has votado en esta ronda.' }}
+                    {{ quedan(ed) ? 'Te ' + (quedan(ed) === 1 ? 'queda 1 voto' : 'quedan ' + quedan(ed) + ' votos') + '.' : 'Puedes cambiarlos antes del cierre.' }}
+                  </p>
+                </div>
               </div>
             } @else {
               <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
@@ -106,17 +112,21 @@ import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista
 
             <!-- Votar -->
             <h2 class="mt-6 text-lg font-bold text-gray-800">¿Qué empresa crees que va a crecer?</h2>
-            <p class="text-sm text-gray-500">Tienes un voto por ronda. Las empresas más votadas reciben un pequeño impulso.</p>
-            <div class="mt-3 grid gap-4 md:grid-cols-2">
+            <p class="text-sm text-gray-500">Tienes {{ ed.ronda?.votos_por_ronda ?? 2 }} votos por ronda, para empresas distintas. Las más votadas reciben un pequeño impulso.</p>
+            <div class="mt-3 grid gap-4 md:grid-cols-2 md:auto-rows-fr">
               @for (f of ed.fondos; track f.id) {
                 <wg-tarjeta-fondo [fondo]="f" [logoUrl]="logo(f)">
                   <div class="px-5 py-3 border-t border-gray-100">
-                    @if (ed.ronda?.mi_voto === f.id) {
-                      <p class="w-full py-2.5 rounded-xl text-center font-bold text-emerald-700 bg-emerald-50 border-2 border-emerald-500">✓ Tu voto</p>
+                    @if (votosDe(ed).includes(f.id)) {
+                      <div class="flex items-center gap-2">
+                        <p class="flex-1 py-2.5 rounded-xl text-center font-bold text-emerald-700 bg-emerald-50 border-2 border-emerald-500">✓ Tu voto</p>
+                        <button type="button" (click)="votar(ed, f, true)" [disabled]="!puedeVotar(ed) || votando"
+                                class="px-4 py-2.5 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-40">Quitar</button>
+                      </div>
                     } @else {
-                      <button type="button" (click)="votar(ed, f)" [disabled]="!puedeVotar(ed) || votando"
+                      <button type="button" (click)="votar(ed, f)" [disabled]="!puedeVotar(ed) || votando || !quedan(ed)"
                               class="w-full py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-                        {{ ed.ronda ? (ed.ronda.mi_voto ? 'Cambiar mi voto aquí' : 'Votar por ' + f.nombre) : 'Votar (cuando abra la ronda)' }}
+                        {{ !ed.ronda ? 'Votar (cuando abra la ronda)' : quedan(ed) ? 'Votar por ' + f.nombre : 'Ya usaste tus votos' }}
                       </button>
                     }
                   </div>
@@ -202,16 +212,21 @@ export class PanelAcudiente implements OnInit, OnDestroy {
     return `${v > 0 ? '+' : ''}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`;
   }
 
-  votar(ed: EdicionPortal, f: FondoPortal): void {
+  votosDe(ed: EdicionPortal): string[] { return ed.ronda?.mis_votos ?? []; }
+  maxVotos(ed: EdicionPortal): number { return ed.ronda?.votos_por_ronda ?? 2; }
+  quedan(ed: EdicionPortal): number { return Math.max(0, this.maxVotos(ed) - this.votosDe(ed).length); }
+  nombresVotos(ed: EdicionPortal): string { return this.votosDe(ed).map((id) => this.nombreFondo(ed, id)).join(' y '); }
+
+  votar(ed: EdicionPortal, f: FondoPortal, quitar = false): void {
     if (!ed.ronda || this.votando) return;
     const ronda = ed.ronda;
     this.votando = true;
     this.error = '';
-    this.servicio.votar(ronda.id, f.id).subscribe({
-      next: () => {
+    this.servicio.votar(ronda.id, f.id, quitar).subscribe({
+      next: (r) => {
         this.votando = false;
-        ronda.mi_voto = f.id;
-        this.aviso = `¡Listo! Votaste por ${f.nombre} en la ${ronda.nombre}.`;
+        ronda.mis_votos = r.mis_votos;
+        this.aviso = quitar ? `Quitaste tu voto por ${f.nombre}.` : `¡Listo! Votaste por ${f.nombre} en la ${ronda.nombre}.`;
         setTimeout(() => (this.aviso = ''), 5000);
       },
       error: (e) => {

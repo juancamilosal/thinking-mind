@@ -16,7 +16,7 @@ type FondoEditable = Fondo & { base: number; alterno: number | null; varia: numb
     @if (cargando) {
       <div class="mt-4 bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando fondos…</div>
     } @else {
-      <div class="mt-4 grid gap-4 md:grid-cols-2">
+      <div class="mt-4 grid gap-4 md:grid-cols-2 md:auto-rows-fr">
         @for (f of fondos; track f.id) {
           <wg-tarjeta-fondo [fondo]="f" [logoUrl]="logo(f)" [class.opacity-50]="!f.activo">
             <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-gray-100">

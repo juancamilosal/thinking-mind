@@ -1269,8 +1269,8 @@ function rutasArqueo(router, { ruta, db }) {
 }
 
 // W-Funds: rondas de inversión en las empresas (fondos) de la edición.
-// El estudiante entrega billetes al banco para invertir; al cerrar la ronda se calcula cuánto le toca
-// y pasa a cobrar al banco, que le entrega billetes. Así el inventario físico del banco siempre cuadra.
+// El estudiante entrega billetes al banco para invertir; al cerrar la ronda se calcula el rendimiento de cada
+// empresa y a cada estudiante se le abona solo lo invertido más la ganancia (o menos la pérdida), redondeado hacia arriba.
 
 /**
  * Rendimiento de cada fondo en una ronda:
@@ -1496,6 +1496,8 @@ const MINUTOS_CODIGO = 10;
 const MAX_INTENTOS = 5;
 const MAX_CODIGOS_15_MIN = 3;
 const DIAS_SESION = 4;
+/** Votos que tiene cada acudiente por ronda (en empresas distintas). */
+const VOTOS_POR_RONDA = 2;
 
 const sha256 = (texto) => sha256Base('sha256').update(String(texto)).digest('hex');
 const soloDigitos = (v) => String(v ?? '').replace(/\D/g, '');
@@ -1645,17 +1647,21 @@ function rutasAcudientes(router, { db, services, getSchema, logger }) {
 			const edicion = await db('wge_ediciones').where('id', edicionId).first('id', 'nombre', 'estado');
 			const ronda = await db('wge_rondas').where({ edicion_id: edicionId, estado: 'abierta' })
 				.first('id', 'nombre', 'apertura', 'cierre_programado', 'duracion_minutos');
-			const voto = ronda ? await db('wge_votos').where({ acudiente_id: acudienteId, ronda_id: ronda.id }).first('fondo_id') : null;
+			const votos = ronda ? await db('wge_votos').where({ acudiente_id: acudienteId, ronda_id: ronda.id }).orderBy('date_created').pluck('fondo_id') : [];
 			const fondos = await db('wge_fondos').where({ edicion_id: edicionId, activo: true }).orderBy('orden')
 				.select('id', 'nombre', 'riesgo', 'logo', 'a_que_se_dedica', 'por_que_invertir');
 			const cerradas = (await db('wge_rondas').where({ edicion_id: edicionId, estado: 'liquidada' }).orderBy('apertura')
 				.select('id', 'nombre', 'resultados')).map((r) => ({ ...r, resultados: (deJson(r.resultados) ?? []).map((x) => ({ fondo_id: x.fondo_id, rendimiento: x.rendimiento })) }));
-			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mi_voto: voto?.fondo_id ?? null } : null, fondos, rondas: cerradas });
+			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, fondos, rondas: cerradas });
 		}
 		return { acudiente, ahora: new Date(), hijos, ediciones };
 	}));
 
-	/** POST /wge/acudiente/votar { sesion, ronda_id, fondo_id }: un voto por ronda; se puede cambiar mientras esté abierta. */
+	/**
+	 * POST /wge/acudiente/votar { sesion, ronda_id, fondo_id, quitar }
+	 * Cada acudiente tiene VOTOS_POR_RONDA votos por ronda, en empresas distintas. Con quitar=true retira el voto
+	 * de esa empresa (para cambiarlo). Solo mientras la ronda esté abierta.
+	 */
 	router.post('/acudiente/votar', publica(async (req) => {
 		const acudienteId = await sesion(req);
 		return db.transaction(async (trx) => {
@@ -1667,10 +1673,17 @@ function rutasAcudientes(router, { db, services, getSchema, logger }) {
 			if (!tieneHijo) throw new WgeError(403, 'SIN_PERMISO', 'No tienes estudiantes en esta edición');
 			const fondo = await trx('wge_fondos').where({ id: String(req.body?.fondo_id ?? ''), edicion_id: ronda.edicion_id, activo: true }).first('id', 'nombre');
 			if (!fondo) throw new WgeError(404, 'NO_EXISTE', 'La empresa no está disponible');
-			const clave = `${acudienteId}:${ronda.id}`;
-			await trx('wge_votos').insert({ id: crypto.randomUUID(), acudiente_id: acudienteId, fondo_id: fondo.id, ronda_id: ronda.id, clave_unica: clave, date_created: new Date() })
-				.onConflict('clave_unica').merge({ fondo_id: fondo.id });
-			return { ronda_id: ronda.id, fondo_id: fondo.id, fondo: fondo.nombre };
+			const mios = () => trx('wge_votos').where({ acudiente_id: acudienteId, ronda_id: ronda.id });
+			const clave = `${acudienteId}:${ronda.id}:${fondo.id}`;
+			if (req.body?.quitar === true) {
+				await mios().where('fondo_id', fondo.id).delete();
+			} else if (!(await mios().where('fondo_id', fondo.id).first('id'))) {
+				const usados = Number((await mios().count({ n: '*' }).first())?.n ?? 0);
+				if (usados >= VOTOS_POR_RONDA) throw new WgeError(409, 'SIN_VOTOS', `Ya usaste tus ${VOTOS_POR_RONDA} votos de esta ronda; quita uno para votar por otra empresa`);
+				await trx('wge_votos').insert({ id: crypto.randomUUID(), acudiente_id: acudienteId, fondo_id: fondo.id, ronda_id: ronda.id, clave_unica: clave, date_created: new Date() });
+			}
+			const misVotos = await mios().orderBy('date_created').pluck('fondo_id');
+			return { ronda_id: ronda.id, fondo: fondo.nombre, mis_votos: misVotos };
 		});
 	}));
 

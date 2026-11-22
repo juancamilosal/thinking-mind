@@ -64,10 +64,13 @@ export interface MovimientoLista {
   `,
 })
 export class ListaMovimientosComponent {
-  @Input({ required: true }) movimientos: MovimientoLista[] = [];
+  /** Si el servidor no los envía (p. ej. una versión anterior de la extensión) se muestra la lista vacía. */
+  @Input({ required: true }) set movimientos(v: MovimientoLista[] | null | undefined) { this.lista = v ?? []; }
+  get movimientos(): MovimientoLista[] { return this.lista; }
+  private lista: MovimientoLista[] = [];
   @Input({ required: true }) pais!: { nombre: string; color: string | null };
-  @Input() totalEntro = 0;
-  @Input() totalSalio = 0;
+  @Input() totalEntro: number | null | undefined = 0;
+  @Input() totalSalio: number | null | undefined = 0;
   @Input() vacio = 'Todavía no hay movimientos.';
 
   abierto: string | null = null;
