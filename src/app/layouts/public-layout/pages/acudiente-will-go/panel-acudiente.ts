@@ -80,8 +80,8 @@ import { ProcesandoRondaComponent } from '../../../private-layout-will-go/proces
                   <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" aria-hidden="true"></div>
                   <div class="absolute right-10 -bottom-12 w-28 h-28 rounded-full bg-white/10" aria-hidden="true"></div>
                   <div class="relative flex items-center gap-4">
-                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-white flex items-center justify-center text-xl font-black shadow" [style.color]="h.color || '#1e293b'" aria-hidden="true">
-                      {{ (h.nombre[0] || '') + (h.apellido[0] || '') }}
+                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-white flex items-center justify-center shadow p-1.5" aria-hidden="true">
+                      <img src="assets/images/will-go/estudiante.png" alt="" class="w-full h-full object-contain">
                     </div>
                     <div class="min-w-0">
                       <h2 class="text-xl sm:text-2xl font-extrabold leading-tight">{{ h.nombre }} {{ h.apellido }}</h2>
