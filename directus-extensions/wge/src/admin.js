@@ -34,9 +34,9 @@ export const FONDOS_POR_DEFECTO = [
 	{ nombre: 'LES ARTISTES', riesgo: 'medio', rendimiento_base: 0.05, rendimiento_alterno: null, variacion: 0.05,
 		a_que_se_dedica: 'Producimos música, películas y arte de nuevos talentos.',
 		por_que_invertir: 'Un solo éxito puede hacernos ganar mucho\nTrabajamos con artistas de todos los países\nEl público siempre busca algo nuevo' },
-	{ nombre: 'DREAM EXPLORERS', riesgo: 'alto', rendimiento_base: 0.1, rendimiento_alterno: -0.08, variacion: 0.12,
-		a_que_se_dedica: 'Construimos naves para explorar el espacio y otros planetas.',
-		por_que_invertir: 'Si la misión sale bien, es el fondo que más gana\nEs el negocio del futuro\nOjo: si la misión falla, puedes perder billetes' },
+	{ nombre: 'NOVA AI', riesgo: 'alto', rendimiento_base: 0.1, rendimiento_alterno: -0.08, variacion: 0.12,
+		a_que_se_dedica: 'Creamos inteligencia artificial que ayuda a las personas a resolver problemas e inventar el futuro.',
+		por_que_invertir: 'La inteligencia artificial está en todas partes\nSi nuestro invento funciona, es el fondo que más gana\nOjo: si el invento falla, puedes perder billetes' },
 ];
 
 /** Texto de ejemplo para un fondo (por su nombre o, si no, por su posición). */
