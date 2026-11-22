@@ -13,6 +13,7 @@ import { ArqueoWillGo } from './layouts/private-layout-will-go/pages/arqueo/arqu
 import { RepartirWillGo } from './layouts/private-layout-will-go/pages/repartir/repartir-will-go';
 import { EntregarWillGo } from './layouts/private-layout-will-go/pages/entregar/entregar-will-go';
 import { WfundsWillGo } from './layouts/private-layout-will-go/pages/wfunds/wfunds-will-go';
+import { RubricaWillGo } from './layouts/private-layout-will-go/pages/rubrica/rubrica-will-go';
 import { IngresoAcudiente } from './layouts/public-layout/pages/acudiente-will-go/ingreso-acudiente';
 import { PanelAcudiente } from './layouts/public-layout/pages/acudiente-will-go/panel-acudiente';
 
@@ -88,6 +89,12 @@ export const willGoRoutes: Routes = [
         title: 'Will-Go Economy | W-Funds',
         component: WfundsWillGo,
         data: { roles: ['banco', 'administrativo', 'administrador'] },
+      },
+      {
+        path: 'rubrica',
+        title: 'Will-Go Economy | Rúbrica',
+        component: RubricaWillGo,
+        data: { roles: ['docente', 'administrativo', 'administrador'] },
       },
       { path: 'arqueo', pathMatch: 'full', redirectTo: 'banco' },
       { path: '**', redirectTo: 'inicio' },

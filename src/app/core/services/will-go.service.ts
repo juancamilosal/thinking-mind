@@ -181,6 +181,15 @@ export interface DatosWfunds {
   reanudacion: { automaticas: boolean; duracion: number | null; proxima: string | null };
 }
 
+export type CriterioRubrica = 'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion';
+export interface EstudianteRubrica { id: string; nombre: string; apellido: string; presente: boolean; hoy: number; ultima: string | null; }
+export interface PaisRubrica { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; estudiantes: EstudianteRubrica[]; }
+export interface CalificacionRubrica {
+  id: string; participante_id: string; uso_lengua: number; iniciativa: number; nivel_reto: number; colaboracion: number;
+  puntaje: number; idioma: 'ingles' | 'frances' | null; date_created: string; nombre: string; apellido: string; se_puede_deshacer: boolean;
+}
+export interface DatosRubrica { edicion: { id: string; nombre: string; estado: string }; paises: PaisRubrica[]; recientes: CalificacionRubrica[]; criterios: CriterioRubrica[]; }
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -400,6 +409,23 @@ export class WillGoService {
     return this.http.post<{ data: { monto: number } }>(`${this.api}/inversiones`, {
       participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, billetes, clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  rubrica(edicionId: string): Observable<DatosRubrica> {
+    return this.http.get<{ data: DatosRubrica }>(`${this.api}/ediciones/${edicionId}/rubrica`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  calificar(participanteId: string, criterios: Record<CriterioRubrica, number>, idioma: 'ingles' | 'frances'): Observable<{ id: string; puntaje: number }> {
+    return this.http.post<{ data: { id: string; puntaje: number } }>(`${this.api}/evaluaciones`, { participante_id: participanteId, ...criterios, idioma })
+      .pipe(this.enZona(), map((r) => r.data));
+  }
+
+  deshacerCalificacion(id: string): Observable<unknown> {
+    return this.http.delete<{ data: unknown }>(`${this.api}/evaluaciones/${id}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  marcarAsistencia(participanteId: string, presente: boolean): Observable<{ presente: boolean }> {
+    return this.http.patch<{ data: { presente: boolean } }>(`${this.api}/asistencia`, { participante_id: participanteId, presente }).pipe(this.enZona(), map((r) => r.data));
   }
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {

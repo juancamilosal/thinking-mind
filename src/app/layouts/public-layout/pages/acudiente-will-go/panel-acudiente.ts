@@ -8,6 +8,8 @@ import { formatearNumero } from '../../../private-layout-will-go/numero-miles.di
 import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista-movimientos.component';
 import { ProcesandoRondaComponent } from '../../../private-layout-will-go/procesando-ronda.component';
 
+type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
+
 /** Panel del acudiente: reloj de la ronda, su hijo (saldo e inversiones), votar por una empresa y la gráfica. */
 @Component({
   selector: 'app-panel-acudiente',
@@ -115,7 +117,27 @@ import { ProcesandoRondaComponent } from '../../../private-layout-will-go/proces
                               class="px-4 py-1.5 rounded-lg text-sm font-semibold" [class]="vistaDe(h) === v.id ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'">{{ v.texto }}</button>
                     }
                   </div>
-                  @if (vistaDe(h) === 'movimientos') {
+                  @if (vistaDe(h) === 'rubrica') {
+                    @if (!h.rubrica?.total) {
+                      <p class="text-sm text-gray-500 mt-3">Todavía no lo han calificado. Sus docentes califican su participación durante la jornada.</p>
+                    } @else {
+                      <p class="text-sm text-gray-600 mt-3">Sus docentes lo han calificado <b>{{ h.rubrica.total }} {{ h.rubrica.total === 1 ? 'vez' : 'veces' }}</b>{{ h.rubrica.ultima ? ' (la última a las ' + (h.rubrica.ultima | date:'h:mm a') + ')' : '' }}. Esto es lo que más hace:</p>
+                      <ul class="mt-3 space-y-3">
+                        @for (c of criteriosRubrica; track c.id) {
+                          <li>
+                            <div class="flex items-center justify-between gap-3 text-sm">
+                              <span class="font-semibold text-gray-800">{{ c.titulo }}</span>
+                              <span class="font-bold" [class]="h.rubrica.criterios[c.id] >= 50 ? 'text-emerald-700' : 'text-amber-700'">{{ h.rubrica.criterios[c.id] }} %</span>
+                            </div>
+                            <div class="mt-1 h-2.5 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
+                              <div class="h-full rounded-full" [style.width.%]="h.rubrica.criterios[c.id]" [style.background]="h.color || '#10b981'"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ c.ayuda }}</p>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  } @else if (vistaDe(h) === 'movimientos') {
                     <wg-lista-movimientos class="block mt-3" [movimientos]="h.movimientos" [pais]="{ nombre: h.pais || '', color: h.color }"
                                           [totalEntro]="h.total_entro" [totalSalio]="h.total_salio" vacio="Todavía no tiene movimientos." />
                   } @else if (!h.inversiones.length) {
@@ -193,12 +215,19 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   datos: DatosPanelAcudiente | null = null;
-  readonly vistasHijo: { id: 'inversiones' | 'movimientos'; texto: string }[] = [
+  readonly vistasHijo: { id: VistaHijo; texto: string }[] = [
     { id: 'inversiones', texto: 'Inversiones' },
     { id: 'movimientos', texto: 'Movimientos' },
+    { id: 'rubrica', texto: 'Rúbrica' },
   ];
-  vista: Record<string, 'inversiones' | 'movimientos'> = {};
-  vistaDe(h: HijoPortal): 'inversiones' | 'movimientos' { return this.vista[h.id] ?? 'inversiones'; }
+  readonly criteriosRubrica: { id: 'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion'; titulo: string; ayuda: string }[] = [
+    { id: 'uso_lengua', titulo: 'Uso de la lengua', ayuda: 'Se comunica en el idioma de la clase' },
+    { id: 'iniciativa', titulo: 'Iniciativa', ayuda: 'Participa por su cuenta' },
+    { id: 'nivel_reto', titulo: 'Nivel del reto', ayuda: 'Asume retos difíciles' },
+    { id: 'colaboracion', titulo: 'Colaboración', ayuda: 'Ayuda y trabaja en equipo' },
+  ];
+  vista: Record<string, VistaHijo> = {};
+  vistaDe(h: HijoPortal): VistaHijo { return this.vista[h.id] ?? 'inversiones'; }
   cargando = true;
   votando = false;
   error = '';

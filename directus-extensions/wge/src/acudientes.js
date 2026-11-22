@@ -5,6 +5,7 @@ import { createHash as sha256Base, randomInt as enteroSeguro, randomBytes as byt
 import { WgeError } from './lib.js';
 import { movimientosEstudiante } from './arqueo.js';
 import { estadoRondas } from './wfunds.js';
+import { CRITERIOS, resumenCalificaciones } from './rubrica.js';
 
 const MINUTOS_CODIGO = 10;
 const MAX_INTENTOS = 5;
@@ -152,6 +153,7 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		for (const h of hijos) {
 			Object.assign(h, h.pais_id ? await movimientosEstudiante(db, h.id, h.pais_id) : { movimientos: [], total_entro: 0, total_salio: 0 });
 			delete h.pais_id;
+			h.rubrica = resumenCalificaciones(await db('wge_evaluaciones').where('participante_id', h.id).select(...CRITERIOS, 'date_created'));
 			h.inversiones = (await db('wge_inversiones as i').join('wge_fondos as f', 'f.id', 'i.fondo_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
 				.where('i.participante_id', h.id).orderBy('i.date_created', 'desc').limit(30)
 				.select('i.id', 'i.monto', 'i.estado', 'i.monto_pagado', 'i.valor_actual', 'i.historial', 'f.nombre as fondo', 'r.nombre as ronda'))
