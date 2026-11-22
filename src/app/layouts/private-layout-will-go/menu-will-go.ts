@@ -57,12 +57,14 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
 };
 
 /**
- * El menú de un rol con solo lo que la persona puede usar hoy. Mientras no se sepa (acceso null),
- * se muestran únicamente las opciones que no dependen de una edición.
+ * El menú de un rol. `acceso` (GET /wge/mi-menu) ya no oculta opciones; se usa en Inicio para avisar
+ * qué asignación le falta a la persona.
  */
 export function menuPara(rol: RolWillGo | null | undefined, acceso: AccesoMenu | null): OpcionMenu[] {
   if (!rol) return [];
-  const menu = MENU_POR_ROL[rol].filter((o) => !o.requiere || !!acceso?.[o.requiere]);
-  // Con la caja asignada, el cajero ve solo la tienda (sin Inicio)
-  return rol === 'cajero' && acceso?.caja ? menu.filter((o) => o !== INICIO) : menu;
+  // Cada rol ve siempre sus opciones, aunque todavía no lo hayan asignado a una edición:
+  // la pantalla misma explica qué le falta. El cajero solo usa la tienda (sin Inicio).
+  void acceso;
+  const menu = MENU_POR_ROL[rol];
+  return rol === 'cajero' ? menu.filter((o) => o !== INICIO) : menu;
 }
