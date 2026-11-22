@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AcudienteWillGoService } from '../../../../core/services/acudiente-will-go.service';
@@ -31,8 +32,10 @@ export class IngresoAcudiente implements OnInit {
     { top: 40, left: 86, ancho: 70, giro: 20, retraso: 4, color: '#FF6B1A' },
   ];
 
+  private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
+
   ngOnInit(): void {
-    if (AcudienteWillGoService.sesion()) this.router.navigateByUrl('/acudiente-will-go/panel');
+    if (this.enNavegador && AcudienteWillGoService.sesion()) this.router.navigateByUrl('/acudiente-will-go/panel');
   }
 
   get documentoValido(): boolean { return this.documento.replace(/\D/g, '').length >= 5; }

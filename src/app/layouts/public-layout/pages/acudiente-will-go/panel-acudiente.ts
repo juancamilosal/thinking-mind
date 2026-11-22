@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { AcudienteWillGoService, EdicionPortal, FondoPortal, HijoPortal, DatosPanelAcudiente } from '../../../../core/services/acudiente-will-go.service';
 import { TarjetaFondoComponent } from '../../../private-layout-will-go/tarjeta-fondo.component';
@@ -237,7 +237,11 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   private reloj$: ReturnType<typeof setInterval> | null = null;
   private refresco$: ReturnType<typeof setInterval> | null = null;
 
+  private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
+
   ngOnInit(): void {
+    // La sesión vive en el navegador: en el servidor no se decide nada (si no, mostraría el ingreso al recargar)
+    if (!this.enNavegador) return;
     if (!AcudienteWillGoService.sesion()) { this.router.navigateByUrl('/acudiente-will-go'); return; }
     this.cargar();
     this.reloj$ = setInterval(() => this.tic(), 1000);
