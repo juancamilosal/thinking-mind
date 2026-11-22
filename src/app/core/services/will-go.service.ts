@@ -132,6 +132,14 @@ export interface DatosArqueo {
   historial: Arqueo[];
 }
 
+export interface DocenteReparto { id: string; nombre: string; apellido: string; pais_id: string | null; saldo: number; recibido: number; }
+export interface EntregaReparto { id: string; monto: number; billetes: Record<string, number> | string | null; date_created: string; nombre: string; apellido: string; }
+export interface PaisReparto {
+  id: string; nombre: string; codigo_moneda: string | null; color: string | null;
+  saldo_banco: number; inventario: Record<string, number>; docentes: DocenteReparto[]; entregas: EntregaReparto[];
+}
+export interface DatosReparto { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisReparto[]; }
+
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
@@ -302,6 +310,16 @@ export class WillGoService {
   }
 
   // ---------- Arqueo del banco ----------
+
+  reparto(edicionId: string): Observable<DatosReparto> {
+    return this.http.get<{ data: DatosReparto }>(`${this.api}/ediciones/${edicionId}/reparto`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  entregarADocente(paisId: string, docenteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
+      tipo: 'banco_docente', pais_id: paisId, docente_id: docenteId, billetes, clave_idempotencia: clave,
+    }).pipe(this.enZona(), map((r) => r.data));
+  }
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {
     return this.http.get<{ data: any[] }>(`${this.api}/mis-ediciones`).pipe(this.enZona(), map((r) => r.data));

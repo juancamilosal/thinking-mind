@@ -123,6 +123,7 @@ coleccion('wge_transferencias', 'swap_horiz', 'Banco → docente y docente → e
     campo('monto', 'integer', requerido=True),
     campo('estado', 'string', default='aplicada', opciones=['aplicada', 'reversada']),
     campo('clave_idempotencia', 'string', unico=True),
+    campo('billetes', 'json', 'Billetes entregados por denominación', interfaz='input-code'),
 ])
 rel('wge_transferencias', 'edicion_id', 'wge_ediciones')
 rel('wge_transferencias', 'pais_id', 'wge_paises')

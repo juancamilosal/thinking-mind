@@ -944,6 +944,25 @@ function totalDelConteo(conteo) {
 	return { limpio, total };
 }
 
+/**
+ * Billetes que quedan en el banco por denominación: los asignados menos los que ya entregó a docentes.
+ * (La bienvenida no lleva detalle de billetes, así que es un tope: nunca bloquea de más.)
+ */
+async function inventarioBanco(db, edicionId, paisId) {
+	const pais = await db('wge_paises').where('id', paisId).first('provision_billetes');
+	const asignados = (typeof pais?.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais?.provision_billetes) ?? {};
+	const banco = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('id');
+	const quedan = Object.fromEntries(DENOMINACIONES.map((d) => [d, Number(asignados[d] ?? 0)]));
+	if (banco) {
+		const salidas = await db('wge_transferencias').where({ billetera_origen_id: banco.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes');
+		for (const b of salidas) {
+			const detalle = typeof b === 'string' ? JSON.parse(b) : b;
+			for (const [d, n] of Object.entries(detalle ?? {})) if (d in quedan) quedan[d] -= Number(n);
+		}
+	}
+	return quedan;
+}
+
 function rutasArqueo(router, { ruta, db }) {
 	const saldoBanco = async (edicionId, paisId) => {
 		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
@@ -954,6 +973,40 @@ function rutasArqueo(router, { ruta, db }) {
 		exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
 		await exigirEquipo(db, { edicionId, usuarioId: req.accountability.user, rol });
 	};
+
+	/**
+	 * GET /wge/ediciones/:id/reparto: por cada país que maneja el usuario, el saldo y los billetes del banco,
+	 * los docentes del equipo que pueden recibir esa moneda (con lo que tienen) y las últimas entregas.
+	 */
+	router.get('/ediciones/:id/reparto', ruta(async (req, rol) => {
+		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id', 'nombre', 'estado');
+		if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
+		await permitir(req, rol, edicion.id);
+		const consulta = db('wge_paises').where('edicion_id', edicion.id).orderBy('orden').select('id', 'nombre', 'codigo_moneda', 'color');
+		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) consulta.where('responsable_banco', req.accountability.user);
+		const paises = await consulta;
+		for (const p of paises) {
+			p.saldo_banco = await saldoBanco(edicion.id, p.id);
+			p.inventario = await inventarioBanco(db, edicion.id, p.id);
+			p.docentes = await db('wge_equipo as q').join('directus_users as u', 'u.id', 'q.usuario_id')
+				.join('directus_roles as r', 'r.id', 'u.role')
+				.leftJoin('wge_billeteras as b', function () {
+					this.on('b.docente_id', 'q.usuario_id').andOnVal('b.pais_id', p.id).andOnVal('b.tipo_dueno', 'docente');
+				})
+				.where('q.edicion_id', edicion.id).where('r.name', ROLES.DOCENTE)
+				.where((w) => w.whereNull('q.pais_id').orWhere('q.pais_id', p.id))
+				.select('u.id', 'u.first_name as nombre', 'u.last_name as apellido', 'q.pais_id', db.raw('coalesce(b.saldo, 0)::int as saldo'),
+					db.raw(`coalesce((select sum(t.monto) from wge_transferencias t join wge_billeteras bd on bd.id = t.billetera_destino_id
+						where bd.docente_id = q.usuario_id and bd.pais_id = ? and t.estado = 'aplicada'), 0)::int as recibido`, [p.id]))
+				.orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
+			p.entregas = await db('wge_transferencias as t').join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
+				.join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id').leftJoin('directus_users as u', 'u.id', 'bd.docente_id')
+				.where({ 'bo.pais_id': p.id, 'bo.tipo_dueno': 'banco', 'bd.tipo_dueno': 'docente' })
+				.orderBy('t.date_created', 'desc').limit(20)
+				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'u.first_name as nombre', 'u.last_name as apellido');
+		}
+		return { edicion, denominaciones: DENOMINACIONES, paises };
+	}));
 
 	/** GET /wge/mis-ediciones: ediciones donde el usuario está en el equipo (los administrativos ven todas). */
 	router.get('/mis-ediciones', ruta(async (req, rol) => {
@@ -1153,7 +1206,9 @@ const configEndpoint = {
 		 */
 		router.post('/transferencias', ruta(async (req, rol) => {
 			const { tipo } = req.body ?? {};
-			const monto = enteroPositivo(req.body?.monto, 'monto');
+			// Si llegan los billetes entregados, el monto es su total
+			const detalle = req.body?.billetes ? totalDelConteo(req.body.billetes) : null;
+			const monto = detalle ? enteroPositivo(detalle.total, 'monto') : enteroPositivo(req.body?.monto, 'monto');
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const actor = req.accountability.user;
 
@@ -1172,6 +1227,12 @@ const configEndpoint = {
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: docenteId, rol: ROLES.DOCENTE, paisId, quien: 'El docente' });
 					// Bloqueo en orden fijo (banco antes que docente) para evitar bloqueos cruzados
 					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'banco' });
+					if (detalle) {
+						const quedan = await inventarioBanco(trx, pais.edicion_id, paisId);
+						for (const [d, n] of Object.entries(detalle.limpio)) {
+							if (n > quedan[d]) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(quedan[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
+						}
+					}
 					destino = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'docente', docenteId });
 				} else if (tipo === 'docente_estudiante') {
 					exigirRol(rol, ROLES.DOCENTE);
@@ -1192,7 +1253,7 @@ const configEndpoint = {
 				const fila = {
 					id, edicion_id: origen.edicion_id, pais_id: paisId,
 					billetera_origen_id: origen.id, billetera_destino_id: destino.id,
-					monto, estado: 'aplicada', clave_idempotencia: clave,
+					monto, estado: 'aplicada', clave_idempotencia: clave, billetes: detalle ? JSON.stringify(detalle.limpio) : null,
 					date_created: new Date(), user_created: actor,
 				};
 				await trx('wge_transferencias').insert(fila);
