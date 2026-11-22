@@ -436,8 +436,8 @@ export class WillGoService {
   }
 
   /** El estudiante saca su dinero de una empresa: recibe lo que vale hoy su inversión. */
-  retirarInversion(inversionId: string): Observable<{ monto_pagado: number }> {
-    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/retirar`, {}).pipe(this.enZona(), map((r) => r.data));
+  retirarInversion(inversionId: string, billetes: Record<string, number>): Observable<{ monto_pagado: number }> {
+    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/retirar`, { billetes }).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** Cierra la ronda ya; con `continuar` se abre la siguiente con la misma duración. */

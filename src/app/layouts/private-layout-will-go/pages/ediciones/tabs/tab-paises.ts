@@ -25,16 +25,21 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full" [style.background]="p.color"></span>
               <span class="font-bold text-gray-800">{{ p.nombre }}</span>
-              <span class="ml-auto text-xs text-gray-400">{{ p.codigo_moneda }}</span>
+              @if (p.codigo_moneda) {
+                <span class="ml-auto inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full" [style.color]="p.color || '#475569'" [style.background]="(p.color || '#94a3b8') + '1a'">🪙 {{ p.codigo_moneda }}</span>
+              }
             </div>
-            <p class="text-2xl font-bold text-gray-800 mt-2">{{ miles(enBanco(p)) }}</p>
-            <p class="text-xs text-gray-500">billetes en el banco</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2 break-all">
+              <span class="font-extrabold" [style.color]="p.color || '#475569'">$</span> {{ miles(enBanco(p)) }}
+              @if (p.codigo_moneda) { <span class="text-sm font-semibold text-gray-500">{{ p.codigo_moneda }}</span> }
+            </p>
+            <p class="text-xs text-gray-500">dinero en el banco</p>
             @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">⚠ Falta el detalle de billetes</p> }
             <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || 'Sin responsable del banco' }}</p>
             @if (p.provision_inicial) {
               <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">Impresos</span><br><b class="text-gray-800">{{ miles(p.provision_inicial) }}</b></div>
-                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En circulación</span><br><b class="text-gray-800">{{ miles(p.en_circulacion) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">Impresos</span><br><b class="text-gray-800">$ {{ miles(p.provision_inicial) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En circulación</span><br><b class="text-gray-800">$ {{ miles(p.en_circulacion) }}</b></div>
               </div>
             }
           </button>
@@ -79,10 +84,22 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
 
         <!-- Billetes del banco -->
         <section class="tarjeta mt-4">
-          <div class="flex flex-wrap items-baseline gap-2">
-            <h3 class="font-bold text-gray-800">{{ bloqueada ? 'Agregar billetes al banco' : 'Billetes impresos para el banco' }}</h3>
-            @if (bloqueada) { <span class="text-sm text-gray-500">Hoy hay {{ miles(actual.provision_inicial) }} provistos. Escribe solo los billetes nuevos.</span> }
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-gray-800">{{ bloqueada ? 'Billetes del banco' : 'Billetes impresos para el banco' }}</h3>
+              <p class="text-sm text-gray-500">
+                Hoy hay {{ miles(actual.provision_inicial) }} provistos.
+                @if (verBilletes && bloqueada) { Escribe solo los billetes nuevos. }
+              </p>
+            </div>
+            <button type="button" (click)="verBilletes = !verBilletes" [attr.aria-expanded]="verBilletes"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border"
+                    [class]="verBilletes ? 'border-gray-200 text-gray-700 hover:bg-gray-50' : 'border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100'">
+              {{ verBilletes ? 'Ocultar' : (bloqueada ? '+ Agregar billetes' : 'Ver billetes') }}
+              <svg class="w-4 h-4 transition-transform" [class.rotate-180]="verBilletes" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+            </button>
           </div>
+          @if (verBilletes || sinDetalle(actual)) {
           @if (sinDetalle(actual)) {
             <p class="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
               La provisión de {{ actual.nombre }} ({{ miles(actual.provision_inicial) }}) no tiene el detalle por billete, así que no se puede cuadrar por denominación.
@@ -129,6 +146,7 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
             }
           </div>
+          }
         </section>
       }
     }
@@ -136,6 +154,8 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
   styles: [ESTILOS_CAMPOS],
 })
 export class TabPaises implements OnInit {
+  /** La sección de billetes del banco empieza plegada para no cargar la página. */
+  verBilletes = false;
   @Input({ required: true }) edicion!: Edicion;
   @Output() paisesCambiaron = new EventEmitter<Pais[]>();
   private willGo = inject(WillGoService);
@@ -191,7 +211,7 @@ export class TabPaises implements OnInit {
   }
 
   elegir(p: Pais): void {
-    this.actual = p;
+    this.actual = p; this.verBilletes = false;
     this.guardado = false;
     this.guardadoDatos = false;
     this.error = '';

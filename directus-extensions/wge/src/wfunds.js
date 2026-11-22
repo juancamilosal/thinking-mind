@@ -3,7 +3,7 @@
 // su valor sube o baja con el rendimiento de la empresa (interés compuesto, redondeado hacia arriba) hasta que
 // el estudiante pide retirarla; entonces recibe lo que vale en ese momento.
 import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, limitar, aleatorioConSemilla, finDeFranja, proximoInicio, billeteraBloqueada, moverSaldo } from './lib.js';
-import { DENOMINACIONES, inventarioBanco } from './arqueo.js';
+import { DENOMINACIONES, inventarioBanco, totalDelConteo } from './arqueo.js';
 
 /**
  * Rendimiento de cada fondo en una ronda:
@@ -42,9 +42,20 @@ export const valorDe = (inv) => Number(inv.valor_actual ?? inv.monto);
  * Saca el dinero de una inversión: el estudiante recibe lo que vale hoy (sale del banco de su país) y la inversión
  * queda "retirada". Se usa cuando el estudiante pide retirar y cuando lo retiran de la edición.
  */
-export async function retirarInversion(trx, inv, actor) {
+export async function retirarInversion(trx, inv, actor, billetes = null) {
 	const valor = valorDe(inv);
 	const participante = await trx('wge_participantes').where('id', inv.participante_id).first('id', 'edicion_id', 'pais_id');
+	// Billetes físicos que el banco le entrega al estudiante (deben sumar lo que vale la inversión y estar en el banco)
+	let billetesPago = null;
+	if (billetes && valor > 0 && participante?.pais_id) {
+		const { limpio, total } = totalDelConteo(billetes);
+		if (total !== valor) throw new WgeError(400, 'VALOR_INVALIDO', `Los billetes suman ${total.toLocaleString('es-CO')} y debe entregar ${valor.toLocaleString('es-CO')}`);
+		const quedan = await inventarioBanco(trx, participante.edicion_id, participante.pais_id);
+		for (const [d, n] of Object.entries(limpio)) {
+			if (n > quedan[d]) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(quedan[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
+		}
+		billetesPago = limpio;
+	}
 	if (valor > 0 && participante?.pais_id) {
 		const banco = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'banco' });
 		const estudiante = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
@@ -52,6 +63,7 @@ export async function retirarInversion(trx, inv, actor) {
 		await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: valor, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
 	}
 	const cambios = { estado: 'retirada', monto_pagado: valor, valor_actual: valor, cobrado_en: new Date(), cobrado_por: actor ?? null };
+	if (billetesPago) cambios.billetes_pago = JSON.stringify(billetesPago);
 	await trx('wge_inversiones').where('id', inv.id).update(cambios);
 	return { ...inv, ...cambios };
 }
@@ -277,7 +289,9 @@ export function rutasWfunds(router, { ruta, db }) {
 			const procesando = await trx('wge_rondas').where({ edicion_id: participante.edicion_id, estado: 'abierta' })
 				.where('cierre_programado', '<=', new Date()).first('id');
 			if (procesando) throw new WgeError(409, 'PROCESANDO', 'Estamos calculando las ganancias de la ronda; intenta en un minuto');
-			return retirarInversion(trx, inv, actor);
+			// El banco entrega billetes físicos: se exigen para que su inventario cuadre
+			if (valorDe(inv) > 0 && !req.body?.billetes) throw new WgeError(400, 'VALOR_INVALIDO', 'Indica los billetes que le entregas al estudiante');
+			return retirarInversion(trx, inv, actor, req.body?.billetes);
 		});
 	}));
 

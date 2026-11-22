@@ -307,16 +307,29 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
     <!-- Confirmar retiro de una inversión -->
     @if (aRetirar) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="aRetirar = null">
-        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-retiro">
+        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 max-h-[92vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-retiro">
           <h2 id="titulo-retiro" class="text-lg font-bold text-gray-800">¿Retirar la inversión de {{ aRetirar.nombre }}?</h2>
           <p class="text-sm text-gray-600 mt-2">
-            Sale de <b>{{ fondo(aRetirar.fondo_id)?.nombre }}</b> y recibe <b>{{ miles(aRetirar.valor_actual) }}</b> en su saldo
+            Sale de <b>{{ fondo(aRetirar.fondo_id)?.nombre }}</b> y recibe <b>{{ miles(aRetirar.valor_actual) }}</b>
             (invirtió {{ miles(aRetirar.monto) }}). Ese dinero ya no sigue ganando ni perdiendo.
           </p>
+          @if (pais && valorRetiro > 0) {
+            <div class="mt-4 flex items-center justify-between gap-2">
+              <p class="text-sm font-semibold text-gray-800">Billetes que le entregas</p>
+              <button type="button" (click)="sugerirRetiro()" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50">Sugerir billetes</button>
+            </div>
+            <wg-selector-billetes class="block mt-2" [pais]="pais" [denominaciones]="datos?.denominaciones ?? []" [elegidos]="pagoRetiro" [topes]="pais.inventario" textoTope="En banco:" />
+            <p class="mt-3 rounded-xl px-4 py-2 text-sm font-semibold"
+               [class]="totalRetiro === valorRetiro ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'">
+              Llevas {{ miles(totalRetiro) }} de {{ miles(valorRetiro) }}
+              @if (totalRetiro > valorRetiro) { · te pasaste {{ miles(totalRetiro - valorRetiro) }} }
+              @else if (totalRetiro < valorRetiro) { · faltan {{ miles(valorRetiro - totalRetiro) }} }
+            </p>
+          }
           @if (errorPanel) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
           <div class="mt-5 flex gap-2">
             <button type="button" (click)="aRetirar = null" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">Cancelar</button>
-            <button type="button" (click)="retirar()" [disabled]="enviando" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ enviando ? 'Retirando…' : 'Retirar ' + miles(aRetirar.valor_actual) }}</button>
+            <button type="button" (click)="retirar()" [disabled]="enviando || totalRetiro !== valorRetiro" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ enviando ? 'Retirando…' : 'Retirar ' + miles(aRetirar.valor_actual) }}</button>
           </div>
         </div>
       </div>
@@ -535,13 +548,31 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   /** Ganancia (o pérdida, negativa) de una inversión liquidada. */
   ganancia(i: InversionWfunds): number { return Number(i.valor_actual ?? i.monto) - Number(i.monto); }
 
-  aRetirar: InversionWfunds | null = null;
+  private _aRetirar: InversionWfunds | null = null;
+  get aRetirar(): InversionWfunds | null { return this._aRetirar; }
+  set aRetirar(i: InversionWfunds | null) { this._aRetirar = i; this.pagoRetiro = {}; this.errorPanel = ''; if (i) this.sugerirRetiro(); }
+  /** Billetes que el banco le entrega al estudiante al retirar. */
+  pagoRetiro: Record<number, number | null> = {};
+  get valorRetiro(): number { return Number(this.aRetirar?.valor_actual ?? this.aRetirar?.monto ?? 0); }
+  get totalRetiro(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.pagoRetiro[d]) || 0), 0); }
+  /** Propone los billetes más grandes que haya en el banco hasta completar el valor exacto. */
+  sugerirRetiro(): void {
+    let falta = this.valorRetiro;
+    const pago: Record<number, number | null> = {};
+    for (const d of [...(this.datos?.denominaciones ?? [])].sort((a, b) => b - a)) {
+      const n = Math.min(Math.floor(falta / d), Number(this.pais?.inventario?.[d] ?? 0));
+      if (n > 0) { pago[d] = n; falta -= n * d; }
+    }
+    this.pagoRetiro = pago;
+  }
   retirar(): void {
     const i = this.aRetirar;
     if (!i || this.enviando) return;
     this.enviando = true;
     this.errorPanel = '';
-    this.willGo.retirarInversion(i.id).subscribe({
+    const billetes: Record<string, number> = {};
+    for (const d of this.datos!.denominaciones) { const n = Number(this.pagoRetiro[d]) || 0; if (n) billetes[d] = n; }
+    this.willGo.retirarInversion(i.id, billetes).subscribe({
       next: (r) => { this.enviando = false; this.aRetirar = null; this.mostrarAviso(`${i.nombre} retiró ${this.miles(r.monto_pagado)} de ${this.fondo(i.fondo_id)?.nombre}.`); this.cargar(); },
       error: (e) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(e); },
     });
