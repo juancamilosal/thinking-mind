@@ -132,7 +132,7 @@ const CLAVE_REPETIDA = '23505'; // unique_violation de PostgreSQL
  * No cuenta las cuentas devueltas ni trasladadas. Nunca duplica: se puede llamar cuantas veces se quiera.
  */
 async function traerInscritos(db, edicion, actor) {
-	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0 };
+	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0, quitados: 0 };
 	const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
 		.leftJoin('wge_participantes as p', function () { this.on('p.estudiante_id', 'e.id').andOnVal('p.edicion_id', edicion.id); })
 		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
@@ -156,7 +156,31 @@ async function traerInscritos(db, edicion, actor) {
 			}
 		}
 	}
-	return { inscritos: inscritos.length, nuevos };
+	const quitados = await quitarDeOtroColegio(db, edicion);
+	return { inscritos: inscritos.length, nuevos, quitados };
+}
+
+/**
+ * Si la edición es de un colegio, saca a los participantes de otros colegios (p. ej. después de cambiarle
+ * el colegio a la edición). Solo a quienes no tienen historial: billetes, compras, inversiones ni rúbrica.
+ * Los que sí tienen historial se quedan y la pantalla los marca para retirarlos a mano.
+ */
+async function quitarDeOtroColegio(db, edicion) {
+	if (!edicion.colegio_id) return 0;
+	const ajenos = await db('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
+		.where('p.edicion_id', edicion.id)
+		.where((q) => q.whereNull('e.colegio_id').orWhereNot('e.colegio_id', edicion.colegio_id))
+		.whereNotExists(db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id').whereRaw('b.participante_id = p.id'))
+		.whereNotExists(db('wge_evaluaciones as ev').whereRaw('ev.participante_id = p.id'))
+		.whereNotExists(db('wge_ventas as v').whereRaw('v.participante_id = p.id'))
+		.whereNotExists(db('wge_inversiones as i').whereRaw('i.participante_id = p.id'))
+		.pluck('p.id');
+	if (!ajenos.length) return 0;
+	await db.transaction(async (trx) => {
+		await trx('wge_billeteras').whereIn('participante_id', ajenos).delete(); // vacías: no tienen movimientos
+		await trx('wge_participantes').whereIn('id', ajenos).delete();
+	});
+	return ajenos.length;
 }
 
 /**
@@ -468,8 +492,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	router.get('/admin/ediciones/:id', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const e = await edicionExistente(req.params.id);
-		const { nuevos } = await traerInscritos(db, e, req.accountability.user);
-		return { ...(await resumenEdicion(e)), nuevos };
+		const { nuevos, quitados } = await traerInscritos(db, e, req.accountability.user);
+		return { ...(await resumenEdicion(e)), nuevos, quitados };
 	}));
 
 	router.patch('/admin/ediciones/:id', ruta(async (req, rol) => {
@@ -485,7 +509,9 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			if (Number(n) > 0) throw new WgeError(409, 'TIENE_PARTICIPANTES', 'No se puede cambiar el programa: la edición ya tiene participantes');
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
-		return resumenEdicion(await edicionExistente(e.id));
+		const actualizada = await edicionExistente(e.id);
+		const { nuevos, quitados } = await traerInscritos(db, actualizada, req.accountability.user);
+		return { ...(await resumenEdicion(actualizada)), nuevos, quitados };
 	}));
 
 	/**
@@ -579,7 +605,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
 			.where('p.edicion_id', req.params.id)
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
-				'e.nombre', 'e.apellido', 'e.grado', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
+				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
 				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
 				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
 					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))

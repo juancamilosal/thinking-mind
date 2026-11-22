@@ -130,7 +130,7 @@ const CLAVE_REPETIDA = '23505'; // unique_violation de PostgreSQL
  * No cuenta las cuentas devueltas ni trasladadas. Nunca duplica: se puede llamar cuantas veces se quiera.
  */
 export async function traerInscritos(db, edicion, actor) {
-	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0 };
+	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0, quitados: 0 };
 	const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
 		.leftJoin('wge_participantes as p', function () { this.on('p.estudiante_id', 'e.id').andOnVal('p.edicion_id', edicion.id); })
 		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
@@ -154,7 +154,31 @@ export async function traerInscritos(db, edicion, actor) {
 			}
 		}
 	}
-	return { inscritos: inscritos.length, nuevos };
+	const quitados = await quitarDeOtroColegio(db, edicion);
+	return { inscritos: inscritos.length, nuevos, quitados };
+}
+
+/**
+ * Si la edición es de un colegio, saca a los participantes de otros colegios (p. ej. después de cambiarle
+ * el colegio a la edición). Solo a quienes no tienen historial: billetes, compras, inversiones ni rúbrica.
+ * Los que sí tienen historial se quedan y la pantalla los marca para retirarlos a mano.
+ */
+async function quitarDeOtroColegio(db, edicion) {
+	if (!edicion.colegio_id) return 0;
+	const ajenos = await db('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
+		.where('p.edicion_id', edicion.id)
+		.where((q) => q.whereNull('e.colegio_id').orWhereNot('e.colegio_id', edicion.colegio_id))
+		.whereNotExists(db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id').whereRaw('b.participante_id = p.id'))
+		.whereNotExists(db('wge_evaluaciones as ev').whereRaw('ev.participante_id = p.id'))
+		.whereNotExists(db('wge_ventas as v').whereRaw('v.participante_id = p.id'))
+		.whereNotExists(db('wge_inversiones as i').whereRaw('i.participante_id = p.id'))
+		.pluck('p.id');
+	if (!ajenos.length) return 0;
+	await db.transaction(async (trx) => {
+		await trx('wge_billeteras').whereIn('participante_id', ajenos).delete(); // vacías: no tienen movimientos
+		await trx('wge_participantes').whereIn('id', ajenos).delete();
+	});
+	return ajenos.length;
 }
 
 /**

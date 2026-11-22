@@ -84,6 +84,8 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
                   <p class="text-xs text-red-700 truncate">Retirado: {{ p.motivo_retiro }}</p>
                 } @else if (p.pidio_reembolso) {
                   <p class="text-xs font-semibold text-red-700">⚠ Pidió reembolso</p>
+                } @else if (deOtroColegio(p)) {
+                  <p class="text-xs font-semibold text-red-700" title="Ya tiene movimientos, por eso no salió solo. Retíralo para devolver sus billetes al banco.">⚠ De otro colegio ({{ p.colegio || 'sin colegio' }})</p>
                 }
                 <!-- El colegio solo se muestra si la edición reúne varios colegios -->
                 @if (!edicion.colegio_id || p.grado) {
@@ -190,6 +192,11 @@ export class TabParticipantes implements OnInit {
 
   get conReembolso(): Participante[] {
     return this.activos.filter((p) => p.pidio_reembolso);
+  }
+
+  /** Quedó de otro colegio porque ya tenía historial (los demás salen solos al cambiar el colegio). */
+  deOtroColegio(p: Participante): boolean {
+    return !!this.edicion.colegio_id && p.colegio_id !== this.edicion.colegio_id;
   }
 
   get seleccionLista(): Participante[] {

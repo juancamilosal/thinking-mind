@@ -164,7 +164,11 @@ export class EdicionWillGo implements OnInit {
       next: (e) => {
         this.edicion = e;
         this.cargando = false;
-        if (e.nuevos) this.mostrarAviso(e.nuevos === 1 ? 'Llegó 1 inscrito nuevo a la edición.' : `Llegaron ${e.nuevos} inscritos nuevos a la edición.`);
+        const partes = [
+          e.nuevos ? (e.nuevos === 1 ? 'Llegó 1 inscrito nuevo.' : `Llegaron ${e.nuevos} inscritos nuevos.`) : '',
+          e.quitados ? (e.quitados === 1 ? 'Salió 1 estudiante que no es del colegio de la edición.' : `Salieron ${e.quitados} estudiantes que no son del colegio de la edición.`) : '',
+        ].filter(Boolean);
+        if (partes.length) this.mostrarAviso(partes.join(' '));
       },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
     });

@@ -139,8 +139,8 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 	router.get('/admin/ediciones/:id', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const e = await edicionExistente(req.params.id);
-		const { nuevos } = await traerInscritos(db, e, req.accountability.user);
-		return { ...(await resumenEdicion(e)), nuevos };
+		const { nuevos, quitados } = await traerInscritos(db, e, req.accountability.user);
+		return { ...(await resumenEdicion(e)), nuevos, quitados };
 	}));
 
 	router.patch('/admin/ediciones/:id', ruta(async (req, rol) => {
@@ -156,7 +156,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			if (Number(n) > 0) throw new WgeError(409, 'TIENE_PARTICIPANTES', 'No se puede cambiar el programa: la edición ya tiene participantes');
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
-		return resumenEdicion(await edicionExistente(e.id));
+		const actualizada = await edicionExistente(e.id);
+		const { nuevos, quitados } = await traerInscritos(db, actualizada, req.accountability.user);
+		return { ...(await resumenEdicion(actualizada)), nuevos, quitados };
 	}));
 
 	/**
@@ -250,7 +252,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
 			.where('p.edicion_id', req.params.id)
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
-				'e.nombre', 'e.apellido', 'e.grado', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
+				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
 				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
 				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
 					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))

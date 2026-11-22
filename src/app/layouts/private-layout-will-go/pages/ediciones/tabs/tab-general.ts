@@ -117,7 +117,7 @@ import { BuscadorColegioComponent } from '../../../buscador-colegio.component';
 
     <div class="sticky bottom-0 mt-5 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 bg-gray-50/90 backdrop-blur flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-end">
       @if (error) { <p class="text-sm text-red-700 sm:mr-auto" role="alert">{{ error }}</p> }
-      @if (guardado) { <p class="text-sm text-emerald-700 sm:mr-auto" role="status">Cambios guardados.</p> }
+      @if (guardado) { <p class="text-sm text-emerald-700 sm:mr-auto" role="status">Cambios guardados{{ cambioParticipantes ? ': ' + cambioParticipantes : '' }}.</p> }
       <button type="button" (click)="guardar()" [disabled]="guardando"
               class="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-60">
         {{ guardando ? 'Guardando…' : 'Guardar cambios' }}
@@ -143,6 +143,7 @@ export class TabGeneral implements OnInit {
   programas: { id: string; nombre: string }[] = [];
   guardando = false;
   guardado = false;
+  cambioParticipantes = '';
   error = '';
 
   ngOnInit(): void {
@@ -187,7 +188,15 @@ export class TabGeneral implements OnInit {
     if (this.edicion.participantes > 0) delete cambios.curso_id;
     this.guardando = true;
     this.willGo.actualizarEdicion(this.edicion.id, cambios).subscribe({
-      next: (e) => { this.guardando = false; this.guardado = true; this.guardada.emit(e); },
+      next: (e) => {
+        this.guardando = false;
+        this.guardado = true;
+        this.cambioParticipantes = [
+          e.nuevos ? `llegaron ${e.nuevos} inscritos del colegio` : '',
+          e.quitados ? `salieron ${e.quitados} estudiantes de otro colegio` : '',
+        ].filter(Boolean).join(' y ');
+        this.guardada.emit(e);
+      },
       error: (err) => { this.guardando = false; this.error = WillGoService.mensajeDeError(err); },
     });
   }

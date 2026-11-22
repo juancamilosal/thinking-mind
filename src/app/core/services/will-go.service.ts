@@ -63,6 +63,8 @@ export interface Edicion {
   retirados?: number;
   /** Inscritos que llegaron en esta consulta (se traen solos). */
   nuevos?: number;
+  /** Participantes de otro colegio que salieron solos (no tenían historial). */
+  quitados?: number;
 }
 
 export interface Pais {
@@ -83,7 +85,7 @@ export interface Fondo {
 
 export interface Participante {
   id: string; codigo: string; pais_id: string | null; presente: boolean;
-  nombre: string; apellido: string; grado: string | null; colegio: string | null; saldo: number;
+  nombre: string; apellido: string; grado: string | null; colegio_id: string | null; colegio: string | null; saldo: number;
   retirado: boolean | null; motivo_retiro: string | null; fecha_retiro: string | null; pidio_reembolso: boolean;
 }
 
