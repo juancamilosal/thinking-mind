@@ -1,3 +1,4 @@
+import { IdiomaWillGoService } from './idioma-will-go.service';
 import { Injectable, NgZone, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, MonoTypeOperatorFunction, catchError, map, of, shareReplay, tap } from 'rxjs';
@@ -564,8 +565,10 @@ export class WillGoService {
   }
 
   /** Mensaje en español que devuelve la extensión, o uno genérico. */
-  static mensajeDeError(error: unknown, porDefecto = 'No se pudo completar la operación. Intenta de nuevo.'): string {
+  static mensajeDeError(error: unknown, porDefecto?: string): string {
     const e = error as HttpErrorResponse;
-    return e?.error?.errors?.[0]?.message || (e?.status === 0 ? 'Sin conexión con el servidor. Revisa el internet.' : porDefecto);
+    return e?.error?.errors?.[0]?.message || (e?.status === 0
+      ? IdiomaWillGoService.traducir('wg.errores.sinConexion', 'Sin conexión con el servidor. Revisa el internet.')
+      : porDefecto ?? IdiomaWillGoService.traducir('wg.errores.generico', 'No se pudo completar la operación. Intenta de nuevo.'));
   }
 }

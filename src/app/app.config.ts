@@ -3,6 +3,7 @@ import { provideRouter, withPreloading, NoPreloading } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { IdiomaWillGoInterceptor } from './core/interceptors/idioma-will-go.interceptor';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import localeEsCO from '@angular/common/locales/es-CO';
@@ -18,7 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withPreloading(NoPreloading)),
     provideHttpClient(
       withFetch(),
-      withInterceptors([AuthInterceptor])
+      withInterceptors([AuthInterceptor, IdiomaWillGoInterceptor])
     ),
     {
       provide: LOCALE_ID,
