@@ -439,6 +439,8 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
+/** Cada cuántos minutos puede recalcularse el tipo de cambio (dividen la hora exacta, así los cálculos caen en horas redondas). */
+const INTERVALOS_FX = [10, 15, 20, 30, 60];
 
 /** Qué se puede leer y escribir de cada parte de una edición. */
 const SECCIONES = {
@@ -501,6 +503,13 @@ function limpiar(datos, permitidos) {
 		if (v !== null && campo === 'por_que_invertir' && String(v).length > 600) throw new WgeError(400, 'VALOR_INVALIDO', 'Por qué invertir: máximo 600 letras');
 		if (campo === 'riesgo' && v !== null && !['bajo', 'medio', 'alto'].includes(v)) throw new WgeError(400, 'VALOR_INVALIDO', 'riesgo debe ser bajo, medio o alto');
 		if (campo === 'horario' && v !== null) v = validarHorario(v);
+		if (campo === 'parametros_fx' && v !== null) {
+			if (typeof v !== 'object' || Array.isArray(v)) throw new WgeError(400, 'VALOR_INVALIDO', 'Parámetros del tipo de cambio inválidos');
+			if ('intervalo_minutos' in v && !INTERVALOS_FX.includes(Number(v.intervalo_minutos))) {
+				throw new WgeError(400, 'VALOR_INVALIDO', `El tipo de cambio se calcula cada ${INTERVALOS_FX.join(', ')} minutos`);
+			}
+			if ('intervalo_minutos' in v) v = { ...v, intervalo_minutos: Number(v.intervalo_minutos) };
+		}
 		if (CAMPOS_JSON.includes(campo) && v !== null) v = JSON.stringify(v);
 		if (typeof v === 'string' && !CAMPOS_JSON.includes(campo)) v = v.trim();
 		fila[campo] = v;

@@ -33,3 +33,9 @@ test('fondos: texto de ejemplo y límites de los textos nuevos', () => {
 	assert.deepEqual(limpiar({ logo: 'abc', a_que_se_dedica: 'x', por_que_invertir: 'a\nb', rendimiento_base: '0.03' }, c), { logo: 'abc', a_que_se_dedica: 'x', por_que_invertir: 'a\nb', rendimiento_base: 0.03 });
 	assert.throws(() => limpiar({ a_que_se_dedica: 'x'.repeat(161) }, c), /160/);
 });
+
+test('tipo de cambio: cada cuántos minutos se calcula (configurable por edición)', () => {
+	assert.equal(JSON.parse(limpiar({ parametros_fx: { intervalo_minutos: '15', referencia: 2 } }, ['parametros_fx']).parametros_fx).intervalo_minutos, 15);
+	assert.throws(() => limpiar({ parametros_fx: { intervalo_minutos: 7 } }, ['parametros_fx']), /minutos/);
+	assert.throws(() => limpiar({ parametros_fx: { intervalo_minutos: 45 } }, ['parametros_fx']), /minutos/);
+});

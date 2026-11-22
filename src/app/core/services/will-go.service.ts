@@ -58,6 +58,8 @@ export interface Edicion {
   tope_minimo: number | string;
   tope_maximo: number | string;
   investment_bill: number;
+  /** Parámetros del tipo de cambio (p. ej. intervalo_minutos: cada cuánto se recalcula). */
+  parametros_fx?: { intervalo_minutos?: number; [clave: string]: unknown } | string | null;
   estado: 'borrador' | 'abierta' | 'cerrada';
   participantes: number;
   sin_pais: number;

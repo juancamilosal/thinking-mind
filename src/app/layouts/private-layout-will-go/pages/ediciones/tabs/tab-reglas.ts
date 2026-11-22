@@ -4,7 +4,7 @@ import { Edicion, WillGoService } from '../../../../../core/services/will-go.ser
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { ESTILOS_CAMPOS } from './estilos-tabs';
 
-/** Economía: tasa inicial, topes de la tasa y billetes de bienvenida. */
+/** Economía: tasa inicial, topes de la tasa, cada cuánto cambia y billetes de bienvenida. */
 @Component({
   selector: 'app-tab-reglas',
   standalone: true,
@@ -32,6 +32,17 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
         </div>
       </div>
       <div>
+        <span class="etiqueta">El tipo de cambio cambia cada</span>
+        <div class="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Cada cuántos minutos cambia el tipo de cambio">
+          @for (m of intervalos; track m) {
+            <button type="button" role="radio" [attr.aria-checked]="intervalo === m" (click)="intervalo = m"
+                    class="py-2.5 px-1 rounded-xl text-sm font-bold border-2 whitespace-nowrap"
+                    [class]="intervalo === m ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">{{ m === 60 ? '1 h' : m + "'" }}</button>
+          }
+        </div>
+        <p class="ayuda">Minutos, dentro del horario de la economía. Con menos minutos la tasa se mueve más rápido durante el día.</p>
+      </div>
+      <div>
         <label for="r-bill" class="etiqueta">Billetes de bienvenida</label>
         <input id="r-bill" wgNumero [(ngModel)]="datos.investment_bill" class="campo" [disabled]="bloqueado">
         <p class="ayuda">Por estudiante. 0 si no aplica.</p>
@@ -55,6 +66,8 @@ export class TabReglas implements OnInit {
   readonly miles = (v: unknown) => formatearNumero(v as number);
 
   datos: Partial<Edicion> = {};
+  readonly intervalos = [10, 15, 20, 30, 60];
+  intervalo = 30;
   guardando = false;
   guardado = false;
   error = '';
@@ -66,6 +79,13 @@ export class TabReglas implements OnInit {
   ngOnInit(): void {
     const e = this.edicion;
     this.datos = { tasa_inicial: e.tasa_inicial, tope_minimo: Number(e.tope_minimo), tope_maximo: Number(e.tope_maximo), investment_bill: e.investment_bill };
+    this.intervalo = Number(this.parametros()['intervalo_minutos']) || 30;
+  }
+
+  /** Parámetros del tipo de cambio guardados (se conservan los demás al cambiar el intervalo). */
+  private parametros(): Record<string, unknown> {
+    const p = this.edicion.parametros_fx;
+    try { return (typeof p === 'string' ? JSON.parse(p) : p) ?? {}; } catch { return {}; }
   }
 
   get ejemploPrecio(): number {
@@ -81,7 +101,10 @@ export class TabReglas implements OnInit {
   guardar(): void {
     this.error = '';
     this.guardado = false;
-    const cambios: Partial<Edicion> = { tope_minimo: this.datos.tope_minimo, tope_maximo: this.datos.tope_maximo };
+    const cambios: Partial<Edicion> = {
+      tope_minimo: this.datos.tope_minimo, tope_maximo: this.datos.tope_maximo,
+      parametros_fx: { ...this.parametros(), intervalo_minutos: this.intervalo },
+    };
     if (!this.bloqueado) {
       cambios.tasa_inicial = this.datos.tasa_inicial;
       cambios.investment_bill = this.datos.investment_bill;
