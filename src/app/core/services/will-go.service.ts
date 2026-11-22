@@ -58,6 +58,8 @@ export interface Edicion {
   tope_minimo: number | string;
   tope_maximo: number | string;
   investment_bill: number;
+  /** Encargado de la caja GO•STORE (colaborador con rol Cajero). */
+  responsable_caja?: string | null;
   /** Parámetros del tipo de cambio (p. ej. intervalo_minutos: cada cuánto se recalcula). */
   parametros_fx?: { intervalo_minutos?: number; [clave: string]: unknown } | string | null;
   estado: 'borrador' | 'abierta' | 'cerrada';
@@ -197,6 +199,23 @@ export interface PaisTasaCambio { id: string; nombre: string; codigo_moneda: str
 export interface DatosTipoCambio {
   edicion: { id: string; nombre: string; estado: string }; tasa_inicial: number; tope_minimo: number; tope_maximo: number;
   intervalo_minutos: number; referencia: number; ahora: string; proximo_calculo: string | null; paises: PaisTasaCambio[];
+}
+
+export interface PaisCaja { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; saldo_caja: number; inventario: Record<string, number>; }
+export interface ProductoCaja { id: string; nombre: string; foto: string | null; precio_cop: number; stock: number; maximo_por_estudiante: number | null; }
+export interface EstudianteCaja { id: string; pais_id: string; nombre: string; apellido: string; saldo: number; }
+export interface VentaCaja {
+  id: string; numero_recibo: string; total_billetes: number; tasa_aplicada: number; pais_id: string;
+  billetes_recibidos: Record<string, number>; billetes_vuelto: Record<string, number>; date_created: string; nombre: string; apellido: string;
+  items: { nombre: string; cantidad: number; precio_billetes: number }[];
+}
+export interface DatosCaja {
+  edicion: { id: string; nombre: string; estado: string; responsable_caja: string | null; responsable: string };
+  puede_vender: boolean; denominaciones: number[]; paises: PaisCaja[]; productos: ProductoCaja[]; estudiantes: EstudianteCaja[];
+  /** Unidades que cada estudiante ya compró de cada producto: { estudiante: { producto: n } } */
+  comprado: Record<string, Record<string, number>>;
+  ventas: VentaCaja[];
+  entregas: { id: string; pais_id: string; monto: number; billetes: Record<string, number> | string; date_created: string; quien: string }[];
 }
 
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
@@ -440,6 +459,22 @@ export class WillGoService {
 
   tipoCambio(edicionId: string): Observable<DatosTipoCambio> {
     return this.http.get<{ data: DatosTipoCambio }>(`${this.api}/ediciones/${edicionId}/tipo-cambio`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  caja(edicionId: string): Observable<DatosCaja> {
+    return this.http.get<{ data: DatosCaja }>(`${this.api}/ediciones/${edicionId}/caja`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Vende en la caja: el estudiante entrega billetes y recibe el vuelto. */
+  vender(datos: { participante_id: string; items: { producto_id: string; cantidad: number }[]; billetes_recibidos: Record<string, number>; billetes_vuelto: Record<string, number>; clave_idempotencia: string }):
+    Observable<{ numero_recibo: string; total_billetes: number; saldo: number; items: { nombre: string; cantidad: number; precio_billetes: number }[] }> {
+    return this.http.post<{ data: any }>(`${this.api}/ventas`, datos).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** La caja entrega billetes al banco de un país. */
+  entregarCajaAlBanco(edicionId: string, paisId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number }> {
+    return this.http.post<{ data: { monto: number } }>(`${this.api}/ediciones/${edicionId}/caja/entregar`, { pais_id: paisId, billetes, clave_idempotencia: clave })
+      .pipe(this.enZona(), map((r) => r.data));
   }
 
   misEdiciones(): Observable<{ id: string; nombre: string; estado: string }[]> {

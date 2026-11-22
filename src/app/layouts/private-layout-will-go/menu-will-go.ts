@@ -48,7 +48,7 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
   ],
   cajero: [
     INICIO,
-    { texto: 'Caja GO•STORE', icono: ICONOS.caja },
+    { texto: 'Caja GO•STORE', ruta: '/private-will-go/caja', icono: ICONOS.caja },
     { texto: 'Tipo de cambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
   ],
 };

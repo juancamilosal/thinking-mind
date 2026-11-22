@@ -11,6 +11,7 @@ import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
 import { rutasAcudientes } from './acudientes.js';
 import { rutasRubrica } from './rubrica.js';
 import { rutasTipoCambio } from './tipocambio.js';
+import { rutasCaja, inventarioCaja, exigirResponsableCaja, precioEnBilletesCaja } from './caja.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
@@ -133,8 +134,14 @@ export default {
 		 * { participante_id, items: [{ producto_id, cantidad }], clave_idempotencia }
 		 * Precio en billetes = techo(precio en COP educativo / tasa vigente del país del estudiante).
 		 */
+		/**
+		 * POST /wge/ventas { participante_id, items: [{ producto_id, cantidad }], billetes_recibidos, billetes_vuelto, clave_idempotencia }
+		 * El estudiante paga con billetes de su país; la caja recibe lo que entregó y da el vuelto (recibido − total).
+		 */
 		router.post('/ventas', ruta(async (req, rol) => {
-			exigirRol(rol, ROLES.CAJERO);
+			exigirRol(rol, ROLES.CAJERO, ROLES.ADMIN_WG);
+			const recibidos = totalDelConteo(req.body?.billetes_recibidos ?? {});
+			const vuelto = totalDelConteo(req.body?.billetes_vuelto ?? {});
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const items = Array.isArray(req.body?.items) ? req.body.items : [];
 			if (!items.length) throw new WgeError(400, 'VALOR_INVALIDO', 'La venta no tiene productos');
@@ -149,6 +156,7 @@ export default {
 				const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
 				const edicion = await edicionAbierta(trx, participante.edicion_id);
 				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
+				await exigirResponsableCaja(trx, { edicionId: edicion.id, usuarioId: actor, rol });
 				const pais = await trx('wge_paises').where('id', participante.pais_id).first(); // la tasa vigente al momento de la compra
 				const tasa = Number(pais.tasa_actual || edicion.tasa_inicial);
 				const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'estudiante', participanteId: participante.id });
@@ -168,13 +176,27 @@ export default {
 							.sum({ total: 'i.cantidad' }).first();
 						if (Number(ya?.total ?? 0) + cantidad > p.maximo_por_estudiante) throw new WgeError(409, 'MAXIMO_POR_ESTUDIANTE', `Máximo ${p.maximo_por_estudiante} de ${p.nombre} por estudiante`);
 					}
-					const precio = Math.ceil(Number(p.precio_cop) / tasa);
+					const precio = precioEnBilletesCaja(p.precio_cop, tasa);
 					total += precio * cantidad;
 					lineas.push({ p, cantidad, precio });
 				}
 
+				// Billetes: lo recibido debe alcanzar y el vuelto debe ser exacto, con billetes que la caja tenga (o que acaba de recibir)
+				if (recibidos.total < total) throw new WgeError(409, 'PAGO_INSUFICIENTE', `El total es ${total}; el estudiante entregó ${recibidos.total}`);
+				if (recibidos.total - vuelto.total !== total) throw new WgeError(400, 'VUELTO_INCORRECTO', `El vuelto debe ser ${recibidos.total - total} (marcaste ${vuelto.total})`);
+				if (vuelto.total) {
+					const hay = await inventarioCaja(trx, edicion.id, pais.id);
+					for (const [d, n] of Object.entries(vuelto.limpio)) {
+						const disponibles = (hay[d] ?? 0) + (recibidos.limpio[d] ?? 0);
+						if (n > disponibles) throw new WgeError(409, 'SIN_BILLETES', `En la caja solo hay ${Math.max(0, disponibles)} billetes de ${d} para el vuelto`);
+					}
+				}
+				if (Number(billetera.saldo) < total) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${billetera.saldo} billetes`);
+
 				const ventaId = crypto.randomUUID();
 				const movimientoId = await moverSaldo(trx, billetera, { tipo: 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
+				const caja = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'caja' });
+				await moverSaldo(trx, caja, { tipo: 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 
 				const recibo = `GS-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${ventaId.slice(0, 8).toUpperCase()}`;
@@ -182,6 +204,7 @@ export default {
 					id: ventaId, edicion_id: edicion.id, participante_id: participante.id,
 					tasa_aplicada: tasa, total_billetes: total, numero_recibo: recibo, movimiento_id: movimientoId,
 					estado: 'pagada', clave_idempotencia: clave, date_created: new Date(), user_created: actor,
+					pais_id: pais.id, billetes_recibidos: JSON.stringify(recibidos.limpio), billetes_vuelto: JSON.stringify(vuelto.limpio),
 				};
 				await trx('wge_ventas').insert(venta);
 				await trx('wge_venta_items').insert(lineas.map(({ p, cantidad, precio }) => ({
@@ -189,7 +212,7 @@ export default {
 					date_created: new Date(), user_created: actor,
 				})));
 				return {
-					...venta, saldo: billetera.saldo,
+					...venta, saldo: billetera.saldo, billetes_recibidos: recibidos.limpio, billetes_vuelto: vuelto.limpio,
 					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio })),
 				};
 			});
@@ -296,6 +319,7 @@ export default {
 		rutasWfunds(router, { ruta, db });
 		rutasRubrica(router, { ruta, db });
 		rutasTipoCambio(router, { ruta, db });
+		rutasCaja(router, { ruta, db });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
 		router.get('/billetera/:codigo', ruta(async (req, rol) => {

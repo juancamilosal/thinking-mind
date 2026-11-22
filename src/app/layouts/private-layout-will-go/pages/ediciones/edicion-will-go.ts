@@ -86,7 +86,7 @@ type Pestana = 'general' | 'economia' | 'participantes' | 'tienda' | 'equipo';
             @case ('economia') { <app-tab-economia [edicion]="edicion" (guardada)="edicion = $event" /> }
             @case ('participantes') { <app-tab-participantes [edicion]="edicion" (cambio)="recargar()" /> }
             @case ('equipo') { <app-tab-equipo [edicion]="edicion" (cambio)="recargar()" /> }
-            @case ('tienda') { <app-tab-tienda [edicion]="edicion" /> }
+            @case ('tienda') { <app-tab-tienda [edicion]="edicion" (guardada)="edicion = $event" /> }
           }
         </div>
       }

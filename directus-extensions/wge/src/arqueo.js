@@ -44,6 +44,10 @@ export async function inventarioBanco(db, edicionId, paisId) {
 			for (const [d, n] of Object.entries(detalle ?? {})) if (d in quedan) quedan[d] -= Number(n);
 		}
 	}
+	if (banco) {
+		// Billetes que la caja GO•STORE le entregó al banco
+		acumularBilletes(quedan, await db('wge_transferencias').where({ billetera_destino_id: banco.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes'), 1);
+	}
 	const inversiones = await db('wge_inversiones as i').join('wge_participantes as p', 'p.id', 'i.participante_id')
 		.join('wge_rondas as r', 'r.id', 'i.ronda_id').where({ 'r.edicion_id': edicionId, 'p.pais_id': paisId })
 		.select('i.billetes', 'i.billetes_pago');
@@ -99,7 +103,7 @@ export async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 		let billetes = null;
 		if (f.referencia_tipo === 'transferencia') {
 			const t = transferencias.get(f.referencia_id);
-			titulo = `Entregado a ${nombre(t) || 'un docente'}`;
+			titulo = entra ? 'Recibido de la caja GO•STORE' : `Entregado a ${nombre(t) || 'un docente'}`;
 			billetes = leerBilletes(t?.billetes);
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);

@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { DecimalPipe } from '@angular/common';
-import { Edicion, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
+import { Edicion, Funcionario, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
+import { BuscadorPersonaComponent } from '../../../buscador-persona.component';
 import { precioEnBilletes, reducirFoto } from '../estado-edicion';
 
 type Borrador = Partial<Producto> & { fotoVista?: string | null };
@@ -10,8 +11,26 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
 @Component({
   selector: 'app-tab-tienda',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, DecimalPipe],
+  imports: [FormsModule, NumeroMilesDirective, DecimalPipe, BuscadorPersonaComponent],
   template: `
+    <!-- Encargado de la caja -->
+    <section class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+      <label for="encargado-caja" class="block text-sm font-semibold text-gray-700">Encargado de la caja</label>
+      <p class="text-xs text-gray-500 mb-2">Solo esta persona (o un administrativo) vende en la caja y entrega los billetes al banco.</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <div class="flex-1">
+          <wg-buscador-persona inputId="encargado-caja" [(ngModel)]="encargado" [personas]="cajeros"
+                               placeholder="Buscar colaborador de caja…" vacio="No hay colaboradores con rol Cajero" />
+        </div>
+        <button type="button" (click)="guardarEncargado()" [disabled]="guardandoEncargado || encargado === (edicion.responsable_caja ?? null)"
+                class="shrink-0 px-5 py-3 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">
+          {{ guardandoEncargado ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+      @if (!cajeros.length) { <p class="text-xs text-gray-500 mt-2">Crea primero un colaborador con rol Cajero en <b>Colaboradores</b>.</p> }
+      @if (avisoEncargado) { <p class="text-sm text-emerald-700 mt-2" role="status">{{ avisoEncargado }}</p> }
+    </section>
+
     <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
       <p class="text-sm text-gray-500">El precio se pone en <b>pesos educativos</b>. En la caja se convierte a billetes con la tasa vigente del país de cada estudiante.</p>
       <button type="button" (click)="nuevo()" class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow hover:brightness-110">
@@ -123,7 +142,13 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
 })
 export class TabTienda implements OnInit {
   @Input({ required: true }) edicion!: Edicion;
+  @Output() guardada = new EventEmitter<Edicion>();
   private willGo = inject(WillGoService);
+
+  cajeros: Funcionario[] = [];
+  encargado: string | null = null;
+  guardandoEncargado = false;
+  avisoEncargado = '';
 
   productos: Producto[] = [];
   paises: Pais[] = [];
@@ -134,10 +159,28 @@ export class TabTienda implements OnInit {
   error = '';
 
   ngOnInit(): void {
+    this.encargado = this.edicion.responsable_caja ?? null;
+    this.willGo.funcionarios().subscribe({ next: (l) => (this.cajeros = l.filter((f) => f.rol === 'cajero' && f.estado === 'active')) });
     this.willGo.seccion<Pais>(this.edicion.id, 'paises').subscribe({ next: (p) => (this.paises = p) });
     this.willGo.seccion<Producto>(this.edicion.id, 'productos').subscribe({
       next: (l) => { this.productos = l; this.cargando = false; },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
+    });
+  }
+
+  guardarEncargado(): void {
+    this.guardandoEncargado = true;
+    this.error = '';
+    this.willGo.actualizarEdicion(this.edicion.id, { responsable_caja: this.encargado }).subscribe({
+      next: (e) => {
+        this.guardandoEncargado = false;
+        this.edicion = e;
+        this.guardada.emit(e);
+        const c = this.cajeros.find((x) => x.id === e.responsable_caja);
+        this.avisoEncargado = c ? `${c.nombre} ${c.apellido} es el encargado de la caja (y quedó en el equipo).` : 'La caja quedó sin encargado.';
+        setTimeout(() => (this.avisoEncargado = ''), 5000);
+      },
+      error: (err) => { this.guardandoEncargado = false; this.error = WillGoService.mensajeDeError(err); },
     });
   }
 

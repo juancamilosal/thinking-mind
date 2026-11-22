@@ -68,6 +68,7 @@ coleccion('wge_ediciones', 'event', 'Cada fin de semana Will-Go', [
     campo('nombre', 'string', requerido=True),
     m2o('colegio_id'), m2o('curso_id', 'Programa de la plataforma (p. ej. Will Go Economy)'),
     campo('edicion_programa', 'string', 'Número de edición del programa en ese colegio (colegios_cursos.edicion). Solo entran los inscritos de esta edición.'),
+    m2o('responsable_caja', 'Encargado de la caja GO•STORE'),
     campo('fecha_inicio', 'date'), campo('fecha_fin', 'date'),
     campo('horario', 'json', 'Horario por día, p. ej. [{"dia":"sabado","inicio":"08:00","fin":"20:00"}]', interfaz='input-code'),
     campo('zona_horaria', 'string', default='America/Bogota'),
@@ -79,6 +80,7 @@ coleccion('wge_ediciones', 'event', 'Cada fin de semana Will-Go', [
     campo('estado', 'string', default='borrador', opciones=['borrador', 'abierta', 'cerrada']),
 ])
 rel('wge_ediciones', 'colegio_id', 'colegios', EXT)
+rel('wge_ediciones', 'responsable_caja', 'directus_users', EXT)
 rel('wge_ediciones', 'curso_id', 'Cursos', EXT)
 
 coleccion('wge_paises', 'flag', 'Wonderland, Neverland y Dreamland de cada edición', [
@@ -107,7 +109,7 @@ rel('wge_participantes', 'pais_id', 'wge_paises')
 
 coleccion('wge_billeteras', 'account_balance_wallet', 'Saldo por dueño y moneda (solo lo cambian las operaciones de billetes)', [
     m2o('edicion_id', requerido=True), m2o('pais_id', 'Moneda de la billetera', requerido=True),
-    campo('tipo_dueno', 'string', requerido=True, opciones=['banco', 'docente', 'estudiante']),
+    campo('tipo_dueno', 'string', requerido=True, opciones=['banco', 'docente', 'estudiante', 'caja']),
     m2o('docente_id'), m2o('participante_id'),
     campo('saldo', 'integer', default=0), campo('consecutivo', 'integer', 'Último consecutivo de movimiento', default=0),
     campo('clave_unica', 'string', 'edicion:pais:tipo:dueño', unico=True),
@@ -174,7 +176,11 @@ coleccion('wge_ventas', 'shopping_cart', 'Cada compra en GO•STORE', [
     campo('numero_recibo', 'string', unico=True), m2o('movimiento_id'),
     campo('estado', 'string', default='pagada', opciones=['pagada', 'reversada']),
     campo('clave_idempotencia', 'string', unico=True),
+    campo('billetes_recibidos', 'json', 'Billetes que entregó el estudiante', interfaz='input-code'),
+    campo('billetes_vuelto', 'json', 'Billetes que le devolvió la caja', interfaz='input-code'),
+    m2o('pais_id', 'Moneda con la que pagó'),
 ])
+rel('wge_ventas', 'pais_id', 'wge_paises', EXT)
 rel('wge_ventas', 'edicion_id', 'wge_ediciones')
 rel('wge_ventas', 'participante_id', 'wge_participantes')
 rel('wge_ventas', 'movimiento_id', 'wge_movimientos')

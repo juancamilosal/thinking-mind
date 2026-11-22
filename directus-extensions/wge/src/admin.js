@@ -16,7 +16,7 @@ export const SECCIONES = {
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
-const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill'];
+const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill', 'responsable_caja'];
 
 /** Lo que trae toda edición nueva (se puede cambiar después). */
 export const PAISES_POR_DEFECTO = [
@@ -233,6 +233,15 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		}
 		if (['colegio_id', 'curso_id', 'edicion_programa'].some((k) => k in fila)) {
 			await validarOferta({ colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa, ...fila }, e.id);
+		}
+		if (fila.responsable_caja) {
+			const esCajero = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
+				.where({ 'u.id': fila.responsable_caja, 'r.name': ROLES.CAJERO }).first('u.id');
+			if (!esCajero) throw new WgeError(400, 'VALOR_INVALIDO', 'El encargado de la caja debe ser un colaborador con rol Cajero');
+			// Queda en el equipo de la edición
+			await db('wge_equipo').insert(nueva(req.accountability.user, {
+				edicion_id: e.id, usuario_id: fila.responsable_caja, clave_unica: `${e.id}:${fila.responsable_caja}`,
+			})).onConflict('clave_unica').ignore();
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
 		const actualizada = await edicionExistente(e.id);
