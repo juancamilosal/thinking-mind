@@ -409,9 +409,9 @@ const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 
 
 /** Lo que trae toda edición nueva (se puede cambiar después). */
 const PAISES_POR_DEFECTO = [
-	{ nombre: 'Wonderland', codigo_moneda: 'WON', color: '#3B82F6', orden: 1 },
-	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#22C55E', orden: 2 },
-	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#A855F7', orden: 3 },
+	{ nombre: 'Wonderland', codigo_moneda: 'WON', color: '#E0457B', orden: 1 },
+	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#C9A227', orden: 2 },
+	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#4F7A3A', orden: 3 },
 ];
 const FONDOS_POR_DEFECTO = [
 	{ nombre: 'CAPI GREEN', riesgo: 'bajo', rendimiento_base: 0.03, rendimiento_alterno: null, variacion: 0.02 },
