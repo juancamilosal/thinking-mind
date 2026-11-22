@@ -1009,6 +1009,62 @@ async function inventarioDocente(db, edicionId, paisId, docenteId) {
 	return quedan;
 }
 
+const leerBilletes = (b) => (typeof b === 'string' ? JSON.parse(b) : b) ?? null;
+
+/**
+ * Movimientos del banco de un país, con una descripción para la pantalla: de quién vienen o a quién van,
+ * y qué billetes (cuando se registraron). Más los totales de todo lo que ha entrado y salido.
+ */
+async function movimientosBanco(db, edicionId, paisId, limite = 100) {
+	const banco = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('id');
+	if (!banco) return { movimientos: [], total_entro: 0, total_salio: 0 };
+	const totales = await db('wge_movimientos').where('billetera_id', banco.id)
+		.select(db.raw('coalesce(sum(case when monto > 0 then monto else 0 end), 0)::bigint as entro'), db.raw('coalesce(sum(case when monto < 0 then -monto else 0 end), 0)::bigint as salio'))
+		.first();
+	const filas = await db('wge_movimientos as m').leftJoin('directus_users as u', 'u.id', 'm.user_created')
+		.where('m.billetera_id', banco.id).orderBy('m.consecutivo', 'desc').limit(limite)
+		.select('m.id', 'm.tipo', 'm.monto', 'm.saldo_despues', 'm.referencia_tipo', 'm.referencia_id', 'm.date_created',
+			db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien"));
+
+	const ids = (tipo) => [...new Set(filas.filter((f) => f.referencia_tipo === tipo && f.referencia_id).map((f) => f.referencia_id))];
+	const transferencias = new Map((ids('transferencia').length ? await db('wge_transferencias as t')
+		.leftJoin('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id').leftJoin('directus_users as u', 'u.id', 'bd.docente_id')
+		.whereIn('t.id', ids('transferencia')).select('t.id', 't.billetes', 'u.first_name', 'u.last_name') : []).map((t) => [t.id, t]));
+	const inversiones = new Map((ids('inversion').length ? await db('wge_inversiones as i')
+		.join('wge_participantes as pa', 'pa.id', 'i.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
+		.leftJoin('wge_fondos as f', 'f.id', 'i.fondo_id')
+		.whereIn('i.id', ids('inversion')).select('i.id', 'i.billetes', 'i.billetes_pago', 'e.nombre', 'e.apellido', 'f.nombre as fondo') : []).map((i) => [i.id, i]));
+	const personas = [...ids('bienvenida'), ...ids('retiro')];
+	const estudiantes = new Map((personas.length ? await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
+		.whereIn('pa.id', personas).select('pa.id', 'e.nombre', 'e.apellido') : []).map((x) => [x.id, x]));
+	const nombre = (x) => `${x?.nombre ?? x?.first_name ?? ''} ${x?.apellido ?? x?.last_name ?? ''}`.trim();
+
+	const movimientos = filas.map((f) => {
+		const entra = Number(f.monto) > 0;
+		let titulo = entra ? 'Entrada' : 'Salida';
+		let billetes = null;
+		if (f.referencia_tipo === 'transferencia') {
+			const t = transferencias.get(f.referencia_id);
+			titulo = `Entregado a ${nombre(t) || 'un docente'}`;
+			billetes = leerBilletes(t?.billetes);
+		} else if (f.referencia_tipo === 'inversion') {
+			const i = inversiones.get(f.referencia_id);
+			titulo = entra ? `Inversión de ${nombre(i)}${i?.fondo ? ' en ' + i.fondo : ''}` : `Pago a ${nombre(i)}${i?.fondo ? ' (' + i.fondo + ')' : ''}`;
+			billetes = leerBilletes(entra ? i?.billetes : i?.billetes_pago);
+		} else if (f.referencia_tipo === 'bienvenida') {
+			titulo = `Bienvenida a ${nombre(estudiantes.get(f.referencia_id)) || 'un estudiante'}`;
+		} else if (f.referencia_tipo === 'retiro') {
+			titulo = `Devolución de ${nombre(estudiantes.get(f.referencia_id)) || 'un estudiante'} (retirado)`;
+		} else if (f.referencia_tipo === 'provision_adicional') {
+			titulo = 'Billetes agregados al banco';
+		} else if (f.tipo === 'provision' || f.tipo === 'reverso') {
+			titulo = entra ? 'Billetes asignados al banco' : 'Ajuste de billetes asignados';
+		}
+		return { id: f.id, tipo: f.tipo, entra, titulo, monto: Math.abs(Number(f.monto)), saldo_despues: Number(f.saldo_despues), fecha: f.date_created, quien: f.quien || '', billetes };
+	});
+	return { movimientos, total_entro: Number(totales?.entro ?? 0), total_salio: Number(totales?.salio ?? 0) };
+}
+
 function rutasArqueo(router, { ruta, db }) {
 	const saldoBanco = async (edicionId, paisId) => {
 		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
@@ -1115,6 +1171,7 @@ function rutasArqueo(router, { ruta, db }) {
 			p.provision_inicial = Number(p.provision_inicial ?? 0);
 			p.provision_billetes = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
 			p.en_circulacion = p.provision_inicial - p.saldo_sistema;
+			Object.assign(p, await movimientosBanco(db, edicion.id, p.id));
 		}
 		const historial = await db('wge_arqueos as a').leftJoin('directus_users as u', 'u.id', 'a.user_created')
 			.where('a.edicion_id', edicion.id).orderBy('a.date_created', 'desc').limit(50)

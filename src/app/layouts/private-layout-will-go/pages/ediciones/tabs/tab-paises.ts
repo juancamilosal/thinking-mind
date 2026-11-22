@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular
 import { FormsModule } from '@angular/forms';
 import { Edicion, Funcionario, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
-import { imagenBillete } from '../../../arqueo.component';
+import { imagenBillete } from '../../../imagen-billete';
 import { BuscadorPersonaComponent } from '../../../buscador-persona.component';
 import { ESTILOS_CAMPOS } from './estilos-tabs';
 

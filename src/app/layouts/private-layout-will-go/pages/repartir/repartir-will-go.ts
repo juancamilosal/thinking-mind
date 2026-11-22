@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { DatosReparto, DocenteReparto, EntregaReparto, PaisReparto, WillGoService } from '../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
-import { imagenBillete } from '../../arqueo.component';
+import { imagenBillete } from '../../imagen-billete';
 
 /** Repartir a docentes: el banco entrega billetes de su país a los docentes del equipo. */
 @Component({

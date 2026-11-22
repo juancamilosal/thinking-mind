@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NumeroMilesDirective, formatearNumero } from './numero-miles.directive';
-import { imagenBillete } from './arqueo.component';
+import { imagenBillete } from './imagen-billete';
 
 /**
  * Cuadrícula de billetes con su imagen y botones − / +.

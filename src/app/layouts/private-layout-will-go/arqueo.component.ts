@@ -3,18 +3,17 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Arqueo, DatosArqueo, PaisArqueo, WillGoService } from '../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from './numero-miles.directive';
+import { imagenBillete } from './imagen-billete';
+import { ListaMovimientosComponent } from './lista-movimientos.component';
 
-/** Imagen del billete según el país (los diseños impresos de Wonderland, Neverland y Dreamland). */
-export function imagenBillete(pais: { nombre: string } | undefined, denominacion: number): string | null {
-  const clave = (pais?.nombre ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-  return ['wonderland', 'neverland', 'dreamland'].includes(clave) ? `assets/images/billetes/${clave}/${denominacion}.jpg` : null;
-}
+export { imagenBillete };
+
 
 /** Arqueo del banco: cuántos billetes hay de cada denominación y si cuadra con el sistema. */
 @Component({
   selector: 'wg-arqueo',
   standalone: true,
-  imports: [FormsModule, DatePipe, NumeroMilesDirective],
+  imports: [FormsModule, DatePipe, NumeroMilesDirective, ListaMovimientosComponent],
   template: `
     @if (cargando) {
       <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
@@ -43,6 +42,8 @@ export function imagenBillete(pais: { nombre: string } | undefined, denominacion
                   class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'billetes' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">Mis billetes</button>
           <button type="button" role="tab" [attr.aria-selected]="vista === 'arqueo'" (click)="vista = 'arqueo'"
                   class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'arqueo' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">Arqueo</button>
+          <button type="button" role="tab" [attr.aria-selected]="vista === 'movimientos'" (click)="vista = 'movimientos'"
+                  class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'movimientos' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">Movimientos</button>
         </div>
       }
 
@@ -82,6 +83,11 @@ export function imagenBillete(pais: { nombre: string } | undefined, denominacion
             }
           </div>
         }
+      }
+
+      @if (pais && vista === 'movimientos') {
+        <wg-lista-movimientos class="block mt-4" [movimientos]="pais.movimientos" [pais]="pais" [totalEntro]="pais.total_entro" [totalSalio]="pais.total_salio"
+                              vacio="Todavía no hay movimientos en el banco." />
       }
 
       @if (pais && vista === 'arqueo') {
@@ -162,7 +168,7 @@ export class ArqueoComponent implements OnChanges {
 
   datos: DatosArqueo | null = null;
   pais: PaisArqueo | null = null;
-  vista: 'billetes' | 'arqueo' = 'billetes';
+  vista: 'billetes' | 'arqueo' | 'movimientos' = 'billetes';
   /** Conteo en curso por país: { paisId: { denominación: cantidad } } */
   conteos: Record<string, Record<number, number | null>> = {};
   observaciones = '';
