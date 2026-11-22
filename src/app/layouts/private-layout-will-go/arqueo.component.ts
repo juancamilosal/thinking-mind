@@ -47,10 +47,20 @@ export function imagenBillete(pais: { nombre: string } | undefined, denominacion
       }
 
       @if (pais && vista === 'billetes') {
-        <div class="mt-4 grid grid-cols-3 gap-3">
-          <div class="bg-white rounded-2xl border border-gray-200 p-4"><p class="text-xs text-gray-500">Asignados al banco</p><p class="text-2xl font-bold text-gray-800">{{ miles(pais.provision_inicial) }}</p></div>
-          <div class="bg-white rounded-2xl border-2 p-4" [style.border-color]="pais.color || '#e5e7eb'"><p class="text-xs text-gray-500">En el banco hoy</p><p class="text-2xl font-bold text-gray-800">{{ miles(pais.saldo_sistema) }}</p></div>
-          <div class="bg-white rounded-2xl border border-gray-200 p-4"><p class="text-xs text-gray-500">En circulación</p><p class="text-2xl font-bold text-gray-800">{{ miles(pais.en_circulacion) }}</p></div>
+        <!-- Celular: una fila debajo de otra. Computador: tres columnas -->
+        <div class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 sm:divide-y-0 sm:grid sm:grid-cols-3 sm:gap-0 sm:divide-x">
+          <div class="flex sm:block items-center justify-between gap-3 px-4 py-3 sm:py-4">
+            <p class="text-sm sm:text-xs text-gray-500">Asignados al banco</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.provision_inicial) }}</p>
+          </div>
+          <div class="flex sm:block items-center justify-between gap-3 px-4 py-3 sm:py-4">
+            <p class="text-sm sm:text-xs font-semibold sm:font-normal" [style.color]="pais.color || '#6b7280'">En el banco hoy</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.saldo_sistema) }}</p>
+          </div>
+          <div class="flex sm:block items-center justify-between gap-3 px-4 py-3 sm:py-4">
+            <p class="text-sm sm:text-xs text-gray-500">En circulación</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.en_circulacion) }}</p>
+          </div>
         </div>
         @if (!pais.provision_inicial) {
           <div class="mt-4 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">Todavía no se le han asignado billetes al banco de {{ pais.nombre }}.</div>
@@ -100,12 +110,12 @@ export function imagenBillete(pais: { nombre: string } | undefined, denominacion
         <!-- Cuadre -->
         <div class="sticky bottom-0 mt-4 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 bg-gray-50/95 backdrop-blur">
           <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col lg:flex-row lg:items-center gap-4">
-            <div class="grid grid-cols-3 gap-3 flex-1">
-              <div><p class="text-xs text-gray-500">Contado</p><p class="text-xl font-bold text-gray-800">{{ miles(total) }}</p></div>
-              <div><p class="text-xs text-gray-500">Debe haber</p><p class="text-xl font-bold text-gray-800">{{ miles(pais.saldo_sistema) }}</p></div>
-              <div>
-                <p class="text-xs text-gray-500">Diferencia</p>
-                <p class="text-xl font-bold" [class]="diferencia === 0 ? 'text-emerald-600' : diferencia < 0 ? 'text-red-600' : 'text-amber-600'">
+            <div class="flex-1 space-y-1 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3">
+              <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">Contado</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(total) }}</p></div>
+              <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">Debe haber</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(pais.saldo_sistema) }}</p></div>
+              <div class="flex sm:block items-center justify-between gap-3">
+                <p class="text-sm sm:text-xs text-gray-500">Diferencia</p>
+                <p class="text-lg sm:text-xl font-bold break-all text-right sm:text-left" [class]="diferencia === 0 ? 'text-emerald-600' : diferencia < 0 ? 'text-red-600' : 'text-amber-600'">
                   {{ diferencia === 0 ? '✓ Cuadra' : (diferencia < 0 ? 'Faltan ' : 'Sobran ') + miles(abs(diferencia)) }}
                 </p>
               </div>
