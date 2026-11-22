@@ -2,7 +2,7 @@
 // Cada operación con billetes corre dentro de una transacción; si algo falla, no queda nada a medias.
 import {
 	WgeError, ROLES, rolDelUsuario, exigirRol, enteroPositivo, exigirTexto,
-	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar, traerInscritos, darBienvenida, exigirEquipo,
+	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar, traerInscritos, darBienvenida, exigirEquipo, exigirResponsableBanco,
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
@@ -77,6 +77,7 @@ export default {
 					if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 					await edicionAbierta(trx, pais.edicion_id);
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: actor, rol });
+					await exigirResponsableBanco(trx, { paisId, usuarioId: actor, rol });
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: docenteId, rol: ROLES.DOCENTE, paisId, quien: 'El docente' });
 					// Bloqueo en orden fijo (banco antes que docente) para evitar bloqueos cruzados
 					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'banco' });

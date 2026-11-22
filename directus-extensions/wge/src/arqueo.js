@@ -1,5 +1,5 @@
 // Arqueo del banco: conteo de billetes físicos por denominación y su cuadre contra el saldo del sistema.
-import { WgeError, ROLES, exigirRol, exigirEquipo } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco } from './lib.js';
 
 /** Denominaciones impresas de cada país (iguales en Wonderland, Neverland y Dreamland). */
 export const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
@@ -61,6 +61,7 @@ export function rutasArqueo(router, { ruta, db }) {
 		if (typeof req.body?.pais_id !== 'string') throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el país');
 		const pais = await db('wge_paises').where({ id: req.body.pais_id, edicion_id: edicion.id }).first('id');
 		if (!pais) throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
+		await exigirResponsableBanco(db, { paisId: pais.id, usuarioId: req.accountability.user, rol });
 		const { limpio, total } = totalDelConteo(req.body?.conteo);
 		const saldo = await saldoBanco(edicion.id, pais.id);
 		const fila = {

@@ -230,3 +230,13 @@ export async function exigirEquipo(db, { edicionId, usuarioId, rol, paisId = nul
 	}
 	return fila;
 }
+
+/** Si el país tiene responsable del banco, solo esa persona (o un administrativo) opera su banco. */
+export async function exigirResponsableBanco(db, { paisId, usuarioId, rol }) {
+	if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return;
+	const pais = await db('wge_paises as p').leftJoin('directus_users as u', 'u.id', 'p.responsable_banco')
+		.where('p.id', paisId).first('p.nombre', 'p.responsable_banco', 'u.first_name', 'u.last_name');
+	if (pais?.responsable_banco && pais.responsable_banco !== usuarioId) {
+		throw new WgeError(403, 'OTRO_RESPONSABLE', `El banco de ${pais.nombre} lo maneja ${`${pais.first_name ?? ''} ${pais.last_name ?? ''}`.trim()}`);
+	}
+}

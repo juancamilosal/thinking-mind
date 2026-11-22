@@ -79,6 +79,11 @@ export interface Oferta {
 export interface Pais {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   provision_inicial: number; tasa_actual: number | null; orden: number | null;
+  provision_billetes?: Record<string, number> | null;
+  /** Colaborador (rol Banco) que maneja el banco de este país. */
+  responsable_banco?: string | null;
+  /** Billetes que hoy tiene el banco y los que ya salieron (en manos de docentes y estudiantes). */
+  saldo_banco?: number; en_circulacion?: number;
 }
 
 export interface Producto {

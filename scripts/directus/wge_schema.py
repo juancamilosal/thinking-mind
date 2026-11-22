@@ -86,8 +86,11 @@ coleccion('wge_paises', 'flag', 'Wonderland, Neverland y Dreamland de cada edici
     campo('codigo_moneda', 'string'), campo('color', 'string', interfaz='select-color'),
     campo('tasa_actual', 'integer'), campo('provision_inicial', 'integer', 'Billetes del banco al abrir la edición', default=0),
     campo('orden', 'integer'),
+    campo('provision_billetes', 'json', 'Billetes impresos por denominación para el banco; la provisión inicial es su total', interfaz='input-code'),
+    m2o('responsable_banco', 'Colaborador (rol Banco) que maneja el banco de este país'),
 ])
 rel('wge_paises', 'edicion_id', 'wge_ediciones')
+rel('wge_paises', 'responsable_banco', 'directus_users', 'SET NULL')
 
 coleccion('wge_participantes', 'badge', 'Estudiante inscrito en una edición (sus datos vienen de estudiantes)', [
     m2o('edicion_id', requerido=True), m2o('estudiante_id', requerido=True), m2o('pais_id', 'Lo asigna el administrador'),

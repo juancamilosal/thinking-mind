@@ -2,13 +2,14 @@
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
+import { totalDelConteo } from './arqueo.js';
 import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 
 /** Qué se puede leer y escribir de cada parte de una edición. */
 export const SECCIONES = {
-	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'provision_inicial', 'orden'], orden: 'orden' },
+	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'provision_inicial', 'orden', 'responsable_banco'], orden: 'orden' },
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
@@ -16,9 +17,9 @@ const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 
 
 /** Lo que trae toda edición nueva (se puede cambiar después). */
 export const PAISES_POR_DEFECTO = [
-	{ nombre: 'Wonderland', codigo_moneda: 'WON', color: '#3B82F6', orden: 1 },
-	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#22C55E', orden: 2 },
-	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#A855F7', orden: 3 },
+	{ nombre: 'Wonderland', codigo_moneda: 'WON', color: '#E0457B', orden: 1 },
+	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#C9A227', orden: 2 },
+	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#4F7A3A', orden: 3 },
 ];
 export const FONDOS_POR_DEFECTO = [
 	{ nombre: 'CAPI GREEN', riesgo: 'bajo', rendimiento_base: 0.03, rendimiento_alterno: null, variacion: 0.02 },
@@ -222,7 +223,18 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		router.get(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {
 			soloAdmin(rol);
 			await edicionExistente(req.params.id);
-			return db(s.tabla).where('edicion_id', req.params.id).orderBy(s.orden);
+			const filas = await db(s.tabla).where('edicion_id', req.params.id).orderBy(s.orden);
+			if (nombre === 'paises') {
+				// Cuánto hay en el banco y cuánto circula (provisión que ya salió del banco)
+				for (const p of filas) {
+					const banco = await db('wge_billeteras').where({ edicion_id: req.params.id, pais_id: p.id, tipo_dueno: 'banco' }).first('saldo');
+					const provisto = await db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
+						.where({ 'b.edicion_id': req.params.id, 'b.pais_id': p.id, 'b.tipo_dueno': 'banco', 'm.tipo': 'provision' }).sum({ t: 'm.monto' }).first();
+					p.saldo_banco = Number(banco?.saldo ?? 0);
+					p.en_circulacion = Number(provisto?.t ?? 0) - p.saldo_banco;
+				}
+			}
+			return filas;
 		}));
 
 		router.post(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {
@@ -242,8 +254,23 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			if (!actual) throw new WgeError(404, 'NO_EXISTE', 'No existe');
 			const e = await edicionExistente(actual.edicion_id);
 			const fila = limpiar(req.body, s.campos);
+			if (nombre === 'paises' && req.body && 'provision_billetes' in req.body) {
+				// La provisión se define por billetes impresos: el total sale del conteo
+				const { limpio, total } = totalDelConteo(req.body.provision_billetes ?? {});
+				fila.provision_billetes = JSON.stringify(limpio);
+				fila.provision_inicial = total;
+			}
 			if (nombre === 'paises' && e.estado !== 'borrador' && 'provision_inicial' in fila && fila.provision_inicial !== actual.provision_inicial) {
 				throw new WgeError(409, 'EDICION_ABIERTA', 'La provisión del banco se define antes de abrir la edición');
+			}
+			if (nombre === 'paises' && fila.responsable_banco) {
+				const esBanco = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
+					.where({ 'u.id': fila.responsable_banco, 'r.name': ROLES.BANCO }).first('u.id');
+				if (!esBanco) throw new WgeError(400, 'VALOR_INVALIDO', 'El responsable del banco debe ser un colaborador con rol Banco');
+				// Queda en el equipo de la edición
+				await db('wge_equipo').insert(nueva(req.accountability.user, {
+					edicion_id: actual.edicion_id, usuario_id: fila.responsable_banco, clave_unica: `${actual.edicion_id}:${fila.responsable_banco}`,
+				})).onConflict('clave_unica').ignore();
 			}
 			if (Object.keys(fila).length) await db(s.tabla).where('id', actual.id).update(fila);
 			return db(s.tabla).where('id', actual.id).first();

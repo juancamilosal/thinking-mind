@@ -1,107 +1,220 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Edicion, Funcionario, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
-import { DecimalPipe } from '@angular/common';
-import { Edicion, Pais, WillGoService } from '../../../../../core/services/will-go.service';
+import { imagenBillete } from '../../../arqueo.component';
+import { ESTILOS_CAMPOS } from './estilos-tabs';
 
+const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
+
+/** Países y banco: datos de cada país y los billetes impresos que recibe su banco (la provisión). */
 @Component({
   selector: 'app-tab-paises',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, DecimalPipe],
+  imports: [FormsModule, NumeroMilesDirective],
   template: `
-    <p class="text-sm text-gray-500 mb-4">La provisión son los billetes que recibe el banco de cada país al abrir la edición.</p>
     @if (cargando) {
-      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando países…</div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">Cargando…</div>
     } @else {
-      <div class="grid gap-4 md:grid-cols-3">
+      <!-- Resumen de los países -->
+      <div class="grid gap-3 sm:grid-cols-3">
         @for (p of paises; track p.id) {
-          <section class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="h-2" [style.background]="p.color || '#94a3b8'"></div>
-            <div class="p-5 space-y-3">
-              <div class="flex items-center gap-3">
-                <input type="color" [(ngModel)]="p.color" class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer" [attr.aria-label]="'Color de ' + p.nombre">
-                <input [(ngModel)]="p.nombre" class="campo font-bold" [attr.aria-label]="'Nombre del país'">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1" [attr.for]="'mon-' + p.id">Código de la moneda</label>
-                <input [id]="'mon-' + p.id" [(ngModel)]="p.codigo_moneda" maxlength="5" class="campo uppercase" placeholder="WON">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1" [attr.for]="'prov-' + p.id">Provisión del banco</label>
-                <input [id]="'prov-' + p.id" wgNumero [(ngModel)]="p.provision_inicial" class="campo" [disabled]="edicion.estado !== 'borrador'">
-                @if (necesarios(p) > (p.provision_inicial || 0)) {
-                  <p class="text-xs text-red-700 mt-1">Faltan billetes: la bienvenida necesita {{ necesarios(p) | number }}.</p>
-                }
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2 text-sm">
-                <span class="text-gray-500">Tasa actual</span>
-                <span class="font-semibold text-gray-800">{{ (p.tasa_actual || edicion.tasa_inicial) | number }} pesos</span>
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2 text-sm">
-                <span class="text-gray-500">Estudiantes</span>
-                <span class="font-semibold text-gray-800">{{ conteo[p.id] || 0 }}</span>
-              </div>
-              <button type="button" (click)="guardar(p)" [disabled]="guardando === p.id"
-                      class="w-full py-2.5 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-60">
-                {{ guardando === p.id ? 'Guardando…' : (guardado === p.id ? '✓ Guardado' : 'Guardar') }}
-              </button>
+          <button type="button" (click)="elegir(p)" class="text-left bg-white rounded-2xl border-2 p-4 transition"
+                  [style.border-color]="actual?.id === p.id ? (p.color || '#94a3b8') : '#e5e7eb'">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full" [style.background]="p.color"></span>
+              <span class="font-bold text-gray-800">{{ p.nombre }}</span>
+              <span class="ml-auto text-xs text-gray-400">{{ p.codigo_moneda }}</span>
             </div>
-          </section>
+            <p class="text-2xl font-bold text-gray-800 mt-2">{{ miles(totalDe(p)) }}</p>
+            <p class="text-xs text-gray-500">billetes del banco</p>
+            <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || 'Sin responsable del banco' }}</p>
+            @if (edicion.estado !== 'borrador') {
+              <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En el banco</span><br><b class="text-gray-800">{{ miles(p.saldo_banco) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">En circulación</span><br><b class="text-gray-800">{{ miles(p.en_circulacion) }}</b></div>
+              </div>
+            }
+          </button>
         }
       </div>
-      @if (error) { <p class="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ error }}</p> }
+
+      @if (actual) {
+        <!-- Datos del país -->
+        <section class="tarjeta mt-4">
+          <div class="flex flex-wrap items-end gap-3">
+            <div>
+              <label class="etiqueta" [attr.for]="'color-' + actual.id">Color</label>
+              <input [id]="'color-' + actual.id" type="color" [(ngModel)]="actual.color" class="w-12 h-11 rounded-lg border border-gray-200 cursor-pointer">
+            </div>
+            <div class="flex-1 min-w-[10rem]">
+              <label class="etiqueta" [attr.for]="'nombre-' + actual.id">País</label>
+              <input [id]="'nombre-' + actual.id" [(ngModel)]="actual.nombre" class="campo font-semibold">
+            </div>
+            <div class="w-28">
+              <label class="etiqueta" [attr.for]="'mon-' + actual.id">Moneda</label>
+              <input [id]="'mon-' + actual.id" [(ngModel)]="actual.codigo_moneda" maxlength="5" class="campo uppercase" placeholder="WON">
+            </div>
+            <div class="flex-1 min-w-[12rem]">
+              <label class="etiqueta" [attr.for]="'banco-' + actual.id">Responsable del banco</label>
+              <select [id]="'banco-' + actual.id" [(ngModel)]="actual.responsable_banco" class="campo">
+                <option [ngValue]="null">Sin asignar</option>
+                @for (b of banqueros; track b.id) { <option [ngValue]="b.id">{{ b.nombre }} {{ b.apellido }}</option> }
+              </select>
+              @if (!banqueros.length) { <p class="ayuda">No hay colaboradores con rol Banco. Créalos en Colaboradores.</p> }
+            </div>
+            <div class="w-36">
+              <p class="etiqueta">Tasa actual</p>
+              <p class="campo !bg-gray-100 text-gray-700">{{ miles(actual.tasa_actual || edicion.tasa_inicial) }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Billetes impresos (provisión) -->
+        <section class="tarjeta mt-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <h3 class="font-bold text-gray-800">Billetes impresos para el banco</h3>
+            @if (bloqueada) { <span class="text-xs text-gray-500">(no cambian con la edición abierta)</span> }
+          </div>
+          <div class="mt-3 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            @for (d of denominaciones; track d) {
+              <div class="rounded-xl border border-gray-200 overflow-hidden">
+                @if (imagen(d); as src) {
+                  <img [src]="src" [alt]="'Billete de ' + miles(d)" class="w-full aspect-[520/281] object-cover" loading="lazy">
+                } @else {
+                  <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="actual.color || '#64748b'">{{ miles(d) }}</div>
+                }
+                <div class="p-2">
+                  <label class="sr-only" [attr.for]="'prov-' + d">Billetes de {{ miles(d) }}</label>
+                  <input [id]="'prov-' + d" wgNumero [ngModel]="billetes[actual.id][d]" (ngModelChange)="poner(d, $event)" [disabled]="bloqueada" placeholder="0"
+                         class="w-full px-2 py-1.5 bg-gray-50 border-2 border-gray-200 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:bg-gray-100 disabled:text-gray-500">
+                  <p class="text-[11px] text-gray-500 text-center mt-1">{{ cantidad(d) ? '= ' + miles(d * cantidad(d)) : '' }}&nbsp;</p>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="flex gap-6">
+              <div><p class="text-xs text-gray-500">Total del banco</p><p class="text-xl font-bold text-gray-800">{{ miles(totalActual) }}</p></div>
+              <div><p class="text-xs text-gray-500">Billetes</p><p class="text-xl font-bold text-gray-800">{{ miles(piezas) }}</p></div>
+              @if (necesarios > totalActual) {
+                <div><p class="text-xs text-red-600">Bienvenida necesita</p><p class="text-xl font-bold text-red-600">{{ miles(necesarios) }}</p></div>
+              }
+            </div>
+            @if (error) { <p class="text-sm text-red-700 sm:ml-auto" role="alert">{{ error }}</p> }
+            @if (guardado) { <p class="text-sm text-emerald-700 sm:ml-auto" role="status">Guardado.</p> }
+            <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+          </div>
+        </section>
+      }
     }
   `,
-  styles: [`
-    .campo { width: 100%; padding: 0.5rem 0.875rem; background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 0.75rem; }
-    .campo:focus { outline: none; border-color: #fb923c; box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.2); }
-    .campo:disabled { color: #6b7280; background: #f3f4f6; cursor: not-allowed; }
-  `],
+  styles: [ESTILOS_CAMPOS],
 })
 export class TabPaises implements OnInit {
   @Input({ required: true }) edicion!: Edicion;
   @Output() paisesCambiaron = new EventEmitter<Pais[]>();
   private willGo = inject(WillGoService);
+  readonly denominaciones = DENOMINACIONES;
+  readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   paises: Pais[] = [];
+  actual: Pais | null = null;
+  banqueros: Funcionario[] = [];
+  /** Billetes impresos por país: { paisId: { denominación: cantidad } } */
+  billetes: Record<string, Record<number, number | null>> = {};
   conteo: Record<string, number> = {};
   cargando = true;
-  guardando: string | null = null;
-  guardado: string | null = null;
+  guardando = false;
+  guardado = false;
   error = '';
 
+  get bloqueada(): boolean {
+    return this.edicion.estado !== 'borrador';
+  }
+
   ngOnInit(): void {
+    this.cargar();
+    this.willGo.funcionarios().subscribe({ next: (l) => (this.banqueros = l.filter((f) => f.rol === 'banco' && f.estado === 'active')) });
+    this.willGo.participantes(this.edicion.id).subscribe({
+      next: (l) => { this.conteo = {}; for (const p of l) if (p.pais_id && !p.retirado) this.conteo[p.pais_id] = (this.conteo[p.pais_id] ?? 0) + 1; },
+    });
+  }
+
+  cargar(): void {
     this.willGo.seccion<Pais>(this.edicion.id, 'paises').subscribe({
-      next: (lista) => { this.paises = lista; this.cargando = false; this.paisesCambiaron.emit(lista); },
+      next: (lista) => {
+        this.paises = lista;
+        for (const p of lista) {
+          const guardados = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
+          this.billetes[p.id] = Object.fromEntries(Object.entries(guardados).map(([d, n]) => [Number(d), Number(n)]));
+        }
+        this.actual = lista.find((p) => p.id === this.actual?.id) ?? lista[0] ?? null;
+        this.cargando = false;
+        this.paisesCambiaron.emit(lista);
+      },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
     });
-    this.willGo.participantes(this.edicion.id).subscribe({
-      next: (lista) => {
-        this.conteo = {};
-        for (const p of lista) if (p.pais_id) this.conteo[p.pais_id] = (this.conteo[p.pais_id] ?? 0) + 1;
-      },
-    });
   }
 
-  /** Billetes que el banco necesita para dar la bienvenida a los participantes de ese país. */
-  necesarios(p: Pais): number {
-    return (this.conteo[p.id] ?? 0) * (this.edicion.investment_bill || 0);
+  nombreBanquero(id: string | null | undefined): string {
+    const b = this.banqueros.find((x) => x.id === id);
+    return b ? `${b.nombre} ${b.apellido}` : '';
   }
 
-  guardar(p: Pais): void {
-    this.guardando = p.id;
-    this.guardado = null;
+  elegir(p: Pais): void {
+    this.actual = p;
+    this.guardado = false;
     this.error = '';
-    const datos: Partial<Pais> = { nombre: p.nombre, codigo_moneda: (p.codigo_moneda || '').toUpperCase() || null, color: p.color };
-    if (this.edicion.estado === 'borrador') datos.provision_inicial = Number(p.provision_inicial) || 0;
-    this.willGo.actualizarEnSeccion<Pais>('paises', p.id, datos).subscribe({
-      next: (nuevo) => {
-        this.paises = this.paises.map((x) => (x.id === nuevo.id ? nuevo : x));
-        this.guardando = null;
-        this.guardado = p.id;
-        this.paisesCambiaron.emit(this.paises);
-      },
-      error: (e) => { this.guardando = null; this.error = WillGoService.mensajeDeError(e); },
+  }
+
+  imagen(d: number): string | null {
+    return imagenBillete(this.actual ?? undefined, d);
+  }
+
+  cantidad(d: number): number {
+    return Number(this.actual ? this.billetes[this.actual.id]?.[d] ?? 0 : 0) || 0;
+  }
+
+  poner(d: number, valor: number | null): void {
+    if (this.actual) this.billetes[this.actual.id][d] = valor;
+  }
+
+  /** Total de un país: con detalle de billetes si lo tiene; si no, la provisión guardada. */
+  totalDe(p: Pais): number {
+    const b = this.billetes[p.id] ?? {};
+    const suma = DENOMINACIONES.reduce((t, d) => t + d * (Number(b[d]) || 0), 0);
+    return suma || p.provision_inicial || 0;
+  }
+
+  get totalActual(): number {
+    return DENOMINACIONES.reduce((t, d) => t + d * this.cantidad(d), 0);
+  }
+
+  get piezas(): number {
+    return DENOMINACIONES.reduce((t, d) => t + this.cantidad(d), 0);
+  }
+
+  /** Billetes que el banco necesita para la bienvenida de los estudiantes de ese país. */
+  get necesarios(): number {
+    return this.actual ? (this.conteo[this.actual.id] ?? 0) * (this.edicion.investment_bill || 0) : 0;
+  }
+
+  guardar(): void {
+    const p = this.actual;
+    if (!p) return;
+    this.guardando = true;
+    this.guardado = false;
+    this.error = '';
+    const datos: Record<string, unknown> = { nombre: p.nombre, codigo_moneda: (p.codigo_moneda || '').toUpperCase() || null, color: p.color, responsable_banco: p.responsable_banco ?? null };
+    if (!this.bloqueada) {
+      const conteo: Record<string, number> = {};
+      for (const d of DENOMINACIONES) if (this.cantidad(d)) conteo[d] = this.cantidad(d);
+      datos['provision_billetes'] = conteo;
+    }
+    this.willGo.actualizarEnSeccion<Pais>('paises', p.id, datos as Partial<Pais>).subscribe({
+      next: () => { this.guardando = false; this.guardado = true; this.cargar(); },
+      error: (e) => { this.guardando = false; this.error = WillGoService.mensajeDeError(e); },
     });
   }
 }

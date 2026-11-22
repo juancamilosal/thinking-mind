@@ -233,6 +233,16 @@ async function exigirEquipo(db, { edicionId, usuarioId, rol, paisId = null, quie
 	return fila;
 }
 
+/** Si el país tiene responsable del banco, solo esa persona (o un administrativo) opera su banco. */
+async function exigirResponsableBanco(db, { paisId, usuarioId, rol }) {
+	if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return;
+	const pais = await db('wge_paises as p').leftJoin('directus_users as u', 'u.id', 'p.responsable_banco')
+		.where('p.id', paisId).first('p.nombre', 'p.responsable_banco', 'u.first_name', 'u.last_name');
+	if (pais?.responsable_banco && pais.responsable_banco !== usuarioId) {
+		throw new WgeError(403, 'OTRO_RESPONSABLE', `El banco de ${pais.nombre} lo maneja ${`${pais.first_name ?? ''} ${pais.last_name ?? ''}`.trim()}`);
+	}
+}
+
 // Funcionarios de WILL-GO ECONOMY: quién soy, cambio de clave y perfiles que crea el Administrativo.
 // Las cuentas se crean con el servicio de usuarios de Directus (que cifra la clave), pero solo
 // con roles de Will Go: desde aquí nunca se puede crear ni tocar un usuario de otra parte de la plataforma.
@@ -391,7 +401,7 @@ const CAMPOS_JSON = ['horario', 'parametros_fx'];
 
 /** Qué se puede leer y escribir de cada parte de una edición. */
 const SECCIONES = {
-	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'provision_inicial', 'orden'], orden: 'orden' },
+	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'provision_inicial', 'orden', 'responsable_banco'], orden: 'orden' },
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
@@ -605,7 +615,18 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		router.get(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {
 			soloAdmin(rol);
 			await edicionExistente(req.params.id);
-			return db(s.tabla).where('edicion_id', req.params.id).orderBy(s.orden);
+			const filas = await db(s.tabla).where('edicion_id', req.params.id).orderBy(s.orden);
+			if (nombre === 'paises') {
+				// Cuánto hay en el banco y cuánto circula (provisión que ya salió del banco)
+				for (const p of filas) {
+					const banco = await db('wge_billeteras').where({ edicion_id: req.params.id, pais_id: p.id, tipo_dueno: 'banco' }).first('saldo');
+					const provisto = await db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
+						.where({ 'b.edicion_id': req.params.id, 'b.pais_id': p.id, 'b.tipo_dueno': 'banco', 'm.tipo': 'provision' }).sum({ t: 'm.monto' }).first();
+					p.saldo_banco = Number(banco?.saldo ?? 0);
+					p.en_circulacion = Number(provisto?.t ?? 0) - p.saldo_banco;
+				}
+			}
+			return filas;
 		}));
 
 		router.post(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {
@@ -625,8 +646,23 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			if (!actual) throw new WgeError(404, 'NO_EXISTE', 'No existe');
 			const e = await edicionExistente(actual.edicion_id);
 			const fila = limpiar(req.body, s.campos);
+			if (nombre === 'paises' && req.body && 'provision_billetes' in req.body) {
+				// La provisión se define por billetes impresos: el total sale del conteo
+				const { limpio, total } = totalDelConteo(req.body.provision_billetes ?? {});
+				fila.provision_billetes = JSON.stringify(limpio);
+				fila.provision_inicial = total;
+			}
 			if (nombre === 'paises' && e.estado !== 'borrador' && 'provision_inicial' in fila && fila.provision_inicial !== actual.provision_inicial) {
 				throw new WgeError(409, 'EDICION_ABIERTA', 'La provisión del banco se define antes de abrir la edición');
+			}
+			if (nombre === 'paises' && fila.responsable_banco) {
+				const esBanco = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
+					.where({ 'u.id': fila.responsable_banco, 'r.name': ROLES.BANCO }).first('u.id');
+				if (!esBanco) throw new WgeError(400, 'VALOR_INVALIDO', 'El responsable del banco debe ser un colaborador con rol Banco');
+				// Queda en el equipo de la edición
+				await db('wge_equipo').insert(nueva(req.accountability.user, {
+					edicion_id: actual.edicion_id, usuario_id: fila.responsable_banco, clave_unica: `${actual.edicion_id}:${fila.responsable_banco}`,
+				})).onConflict('clave_unica').ignore();
 			}
 			if (Object.keys(fila).length) await db(s.tabla).where('id', actual.id).update(fila);
 			return db(s.tabla).where('id', actual.id).first();
@@ -907,6 +943,7 @@ function rutasArqueo(router, { ruta, db }) {
 		if (typeof req.body?.pais_id !== 'string') throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el país');
 		const pais = await db('wge_paises').where({ id: req.body.pais_id, edicion_id: edicion.id }).first('id');
 		if (!pais) throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
+		await exigirResponsableBanco(db, { paisId: pais.id, usuarioId: req.accountability.user, rol });
 		const { limpio, total } = totalDelConteo(req.body?.conteo);
 		const saldo = await saldoBanco(edicion.id, pais.id);
 		const fila = {
@@ -1079,6 +1116,7 @@ const configEndpoint = {
 					if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 					await edicionAbierta(trx, pais.edicion_id);
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: actor, rol });
+					await exigirResponsableBanco(trx, { paisId, usuarioId: actor, rol });
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: docenteId, rol: ROLES.DOCENTE, paisId, quien: 'El docente' });
 					// Bloqueo en orden fijo (banco antes que docente) para evitar bloqueos cruzados
 					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'banco' });
