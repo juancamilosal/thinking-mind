@@ -62,7 +62,13 @@ import { ProcesandoRondaComponent } from '../../../private-layout-will-go/proces
             } @else {
               <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
                 <p class="font-bold text-gray-800">No hay ronda abierta</p>
-                <p class="text-sm text-gray-500 mt-1">Cuando empiece la siguiente ronda podrás votar. Esta página se actualiza sola.</p>
+                @if (ed.proxima_ronda && restante(ed.proxima_ronda) > 60000) {
+                  <p class="text-sm text-gray-600 mt-1">La próxima ronda empieza el <b>{{ ed.proxima_ronda | date:"EEEE d 'de' MMMM, h:mm a" }}</b>; ahí podrás votar de nuevo.</p>
+                } @else if (ed.proxima_ronda) {
+                  <p class="text-sm text-gray-600 mt-1">La próxima ronda empieza en un momento.</p>
+                } @else {
+                  <p class="text-sm text-gray-500 mt-1">Cuando empiece la siguiente ronda podrás votar. Esta página se actualiza sola.</p>
+                }
               </div>
             }
 

@@ -126,6 +126,25 @@ function finDeFranja(horario, ahora = new Date()) {
 	return fin;
 }
 
+/** Cuándo empieza la próxima franja del horario después de `ahora` (busca hasta 8 días); null si no hay. */
+function proximoInicio(horario, ahora = new Date()) {
+	if (!Array.isArray(horario)) return null;
+	const hoy = ahoraColombia(ahora).fecha;
+	let mejor = null;
+	for (let d = 0; d <= 8; d++) {
+		const fecha = new Date(Date.parse(`${hoy}T12:00:00Z`) + d * 86400000).toISOString().slice(0, 10);
+		const dia = DIAS_SEMANA[new Date(`${fecha}T12:00:00Z`).getUTCDay()];
+		for (const h of horario) {
+			const aplica = h?.fecha ? h.fecha === fecha : String(h?.dia ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === dia;
+			if (!aplica || !h.inicio) continue;
+			const inicio = new Date(`${fecha}T${h.inicio}:00-05:00`);
+			if (inicio > ahora && (!mejor || inicio < mejor)) mejor = inicio;
+		}
+		if (mejor) return mejor;
+	}
+	return null;
+}
+
 /** Fecha y hora actuales en Colombia (UTC-5, sin horario de verano). */
 function ahoraColombia(fecha = new Date()) {
 	const local = new Date(fecha.getTime() - 5 * 60 * 60 * 1000);
@@ -1393,6 +1412,8 @@ async function cerrarYSeguir(db, rondaId, { actor, continuar, soloVencida = fals
 		if (ronda.estado !== 'abierta') return null; // otra persona (o la tarea automática) ya la cerró
 		if (soloVencida && !(ronda.cierre_programado && new Date(ronda.cierre_programado) <= new Date())) return null;
 		const resumen = await liquidarRonda(trx, ronda, actor);
+		// «Cerrar y detener»: las rondas tampoco se reanudan solas en la siguiente franja del horario
+		if (!continuar) await trx('wge_rondas').where('id', ronda.id).update({ detenida: true });
 		let siguiente = null;
 		if (continuar && ronda.duracion_minutos) {
 			const edicion = await trx('wge_ediciones').where('id', ronda.edicion_id).forUpdate().first();
@@ -1413,6 +1434,42 @@ async function abonarPendientes(db) {
 			.update({ estado: 'abierta', valor_actual: pagoDeInversion(inv.monto, Number(inv.rendimiento_final ?? 0)) });
 	}
 	return pendientes.length;
+}
+
+/**
+ * ¿Las rondas de la edición siguen solas? Sí, si ya hubo una ronda con duración y el banco no la detuvo.
+ * Devuelve la duración y, si no hay ronda abierta, cuándo arranca la próxima.
+ */
+async function estadoRondas(db, edicionId) {
+	const ultima = await db('wge_rondas').where('edicion_id', edicionId).orderBy('apertura', 'desc').first('estado', 'duracion_minutos', 'detenida');
+	const automaticas = !!(ultima?.duracion_minutos && !ultima.detenida);
+	if (!automaticas || ultima.estado === 'abierta') return { automaticas, duracion: ultima?.duracion_minutos ?? null, proxima: null };
+	const horario = leerJson((await db('wge_ediciones').where('id', edicionId).first('horario'))?.horario);
+	const ahora = new Date();
+	// Dentro del horario arranca en el próximo minuto; fuera, al empezar la siguiente franja
+	const proxima = finDeFranja(horario, ahora) ? ahora : proximoInicio(horario, ahora);
+	return { automaticas, duracion: Number(ultima.duracion_minutos), proxima };
+}
+
+/**
+ * Tarea de cada minuto: si una edición tiene las rondas andando (no detenidas) y no hay ronda abierta
+ * —p. ej. se acabó la franja del horario y empezó la siguiente—, abre la ronda con la misma duración.
+ */
+async function reanudarRondas(db) {
+	const ediciones = await db('wge_ediciones').where('estado', 'abierta').pluck('id');
+	const abiertas = [];
+	for (const edicionId of ediciones) {
+		const { automaticas, duracion } = await estadoRondas(db, edicionId);
+		if (!automaticas || !duracion) continue;
+		const fila = await db.transaction(async (trx) => {
+			const edicion = await trx('wge_ediciones').where('id', edicionId).forUpdate().first();
+			if (edicion?.estado !== 'abierta') return null;
+			if (await trx('wge_rondas').where({ edicion_id: edicionId, estado: 'abierta' }).first('id')) return null;
+			return crearRonda(trx, edicion, duracion, null); // null si estamos fuera del horario
+		});
+		if (fila) abiertas.push(fila);
+	}
+	return abiertas;
 }
 
 /** Tarea de cada minuto: cierra las rondas vencidas y abre la siguiente. */
@@ -1476,8 +1533,19 @@ function rutasWfunds(router, { ruta, db }) {
 		const fin = finDeFranja(horario, new Date());
 		return {
 			edicion, denominaciones: DENOMINACIONES, ronda: abierta, rondas, fondos, paises,
-			ahora: new Date(), fin_horario: fin, duraciones: DURACIONES_RONDA,
+			ahora: new Date(), fin_horario: fin, duraciones: DURACIONES_RONDA, reanudacion: await estadoRondas(db, edicion.id),
 		};
+	}));
+
+	/** POST /wge/ediciones/:id/rondas/detener: las rondas dejan de reanudarse solas (hasta que el banco abra otra). */
+	router.post('/ediciones/:id/rondas/detener', ruta(async (req, rol) => {
+		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id');
+		if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
+		await permitir(req, rol, edicion.id);
+		const ultima = await db('wge_rondas').where('edicion_id', edicion.id).orderBy('apertura', 'desc').first('id', 'estado');
+		if (ultima?.estado === 'abierta') throw new WgeError(409, 'RONDA_ABIERTA', 'Hay una ronda abierta: ciérrala con «Cerrar y detener las rondas»');
+		if (ultima) await db('wge_rondas').where('id', ultima.id).update({ detenida: true });
+		return { detenidas: true };
 	}));
 
 	/** POST /wge/inversiones/:id/retirar: el estudiante saca su dinero; recibe lo que vale hoy la inversión. */
@@ -1684,7 +1752,8 @@ function rutasAcudientes(router, { db, services, getSchema, logger }) {
 				.select('id', 'nombre', 'riesgo', 'logo', 'a_que_se_dedica', 'por_que_invertir');
 			const cerradas = (await db('wge_rondas').where({ edicion_id: edicionId, estado: 'liquidada' }).orderBy('apertura')
 				.select('id', 'nombre', 'resultados')).map((r) => ({ ...r, resultados: (deJson(r.resultados) ?? []).map((x) => ({ fondo_id: x.fondo_id, rendimiento: x.rendimiento })) }));
-			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, fondos, rondas: cerradas });
+			const { proxima } = ronda ? { proxima: null } : await estadoRondas(db, edicionId);
+			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, proxima_ronda: proxima, fondos, rondas: cerradas });
 		}
 		return { acudiente, ahora: new Date(), hijos, ediciones };
 	}));
@@ -1778,6 +1847,8 @@ const configHook = ({ schedule }, { database: db, logger }) => {
 			if (abonadas) logger.info(`wge: ${abonadas} inversiones pendientes abonadas`);
 			const hechas = await cerrarRondasVencidas(db);
 			for (const h of hechas) logger.info(`wge: ronda ${h.ronda_id} cerrada sola (${h.inversiones} inversiones)${h.siguiente ? `; abierta ${h.siguiente.nombre}` : ''}`);
+			// Al empezar una nueva franja del horario, las rondas arrancan solas con la misma duración
+			for (const r of await reanudarRondas(db)) logger.info(`wge: ${r.nombre} abierta sola al empezar el horario`);
 		} catch (error) {
 			logger.error(error, 'wge: cierre de rondas');
 		}

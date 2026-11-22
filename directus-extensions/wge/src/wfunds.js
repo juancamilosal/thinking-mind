@@ -2,7 +2,7 @@
 // El estudiante entrega billetes al banco para invertir. Su inversión sigue invertida ronda tras ronda: en cada cierre
 // su valor sube o baja con el rendimiento de la empresa (interés compuesto, redondeado hacia arriba) hasta que
 // el estudiante pide retirarla; entonces recibe lo que vale en ese momento.
-import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, limitar, aleatorioConSemilla, finDeFranja, billeteraBloqueada, moverSaldo } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, limitar, aleatorioConSemilla, finDeFranja, proximoInicio, billeteraBloqueada, moverSaldo } from './lib.js';
 import { DENOMINACIONES, inventarioBanco } from './arqueo.js';
 
 /**
@@ -126,6 +126,8 @@ export async function cerrarYSeguir(db, rondaId, { actor, continuar, soloVencida
 		if (ronda.estado !== 'abierta') return null; // otra persona (o la tarea automática) ya la cerró
 		if (soloVencida && !(ronda.cierre_programado && new Date(ronda.cierre_programado) <= new Date())) return null;
 		const resumen = await liquidarRonda(trx, ronda, actor);
+		// «Cerrar y detener»: las rondas tampoco se reanudan solas en la siguiente franja del horario
+		if (!continuar) await trx('wge_rondas').where('id', ronda.id).update({ detenida: true });
 		let siguiente = null;
 		if (continuar && ronda.duracion_minutos) {
 			const edicion = await trx('wge_ediciones').where('id', ronda.edicion_id).forUpdate().first();
@@ -146,6 +148,42 @@ export async function abonarPendientes(db) {
 			.update({ estado: 'abierta', valor_actual: pagoDeInversion(inv.monto, Number(inv.rendimiento_final ?? 0)) });
 	}
 	return pendientes.length;
+}
+
+/**
+ * ¿Las rondas de la edición siguen solas? Sí, si ya hubo una ronda con duración y el banco no la detuvo.
+ * Devuelve la duración y, si no hay ronda abierta, cuándo arranca la próxima.
+ */
+export async function estadoRondas(db, edicionId) {
+	const ultima = await db('wge_rondas').where('edicion_id', edicionId).orderBy('apertura', 'desc').first('estado', 'duracion_minutos', 'detenida');
+	const automaticas = !!(ultima?.duracion_minutos && !ultima.detenida);
+	if (!automaticas || ultima.estado === 'abierta') return { automaticas, duracion: ultima?.duracion_minutos ?? null, proxima: null };
+	const horario = leerJson((await db('wge_ediciones').where('id', edicionId).first('horario'))?.horario);
+	const ahora = new Date();
+	// Dentro del horario arranca en el próximo minuto; fuera, al empezar la siguiente franja
+	const proxima = finDeFranja(horario, ahora) ? ahora : proximoInicio(horario, ahora);
+	return { automaticas, duracion: Number(ultima.duracion_minutos), proxima };
+}
+
+/**
+ * Tarea de cada minuto: si una edición tiene las rondas andando (no detenidas) y no hay ronda abierta
+ * —p. ej. se acabó la franja del horario y empezó la siguiente—, abre la ronda con la misma duración.
+ */
+export async function reanudarRondas(db) {
+	const ediciones = await db('wge_ediciones').where('estado', 'abierta').pluck('id');
+	const abiertas = [];
+	for (const edicionId of ediciones) {
+		const { automaticas, duracion } = await estadoRondas(db, edicionId);
+		if (!automaticas || !duracion) continue;
+		const fila = await db.transaction(async (trx) => {
+			const edicion = await trx('wge_ediciones').where('id', edicionId).forUpdate().first();
+			if (edicion?.estado !== 'abierta') return null;
+			if (await trx('wge_rondas').where({ edicion_id: edicionId, estado: 'abierta' }).first('id')) return null;
+			return crearRonda(trx, edicion, duracion, null); // null si estamos fuera del horario
+		});
+		if (fila) abiertas.push(fila);
+	}
+	return abiertas;
 }
 
 /** Tarea de cada minuto: cierra las rondas vencidas y abre la siguiente. */
@@ -209,8 +247,19 @@ export function rutasWfunds(router, { ruta, db }) {
 		const fin = finDeFranja(horario, new Date());
 		return {
 			edicion, denominaciones: DENOMINACIONES, ronda: abierta, rondas, fondos, paises,
-			ahora: new Date(), fin_horario: fin, duraciones: DURACIONES_RONDA,
+			ahora: new Date(), fin_horario: fin, duraciones: DURACIONES_RONDA, reanudacion: await estadoRondas(db, edicion.id),
 		};
+	}));
+
+	/** POST /wge/ediciones/:id/rondas/detener: las rondas dejan de reanudarse solas (hasta que el banco abra otra). */
+	router.post('/ediciones/:id/rondas/detener', ruta(async (req, rol) => {
+		const edicion = await db('wge_ediciones').where('id', req.params.id).first('id');
+		if (!edicion) throw new WgeError(404, 'NO_EXISTE', 'La edición no existe');
+		await permitir(req, rol, edicion.id);
+		const ultima = await db('wge_rondas').where('edicion_id', edicion.id).orderBy('apertura', 'desc').first('id', 'estado');
+		if (ultima?.estado === 'abierta') throw new WgeError(409, 'RONDA_ABIERTA', 'Hay una ronda abierta: ciérrala con «Cerrar y detener las rondas»');
+		if (ultima) await db('wge_rondas').where('id', ultima.id).update({ detenida: true });
+		return { detenidas: true };
 	}));
 
 	/** POST /wge/inversiones/:id/retirar: el estudiante saca su dinero; recibe lo que vale hoy la inversión. */

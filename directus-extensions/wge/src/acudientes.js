@@ -4,6 +4,7 @@
 import { createHash as sha256Base, randomInt as enteroSeguro, randomBytes as bytesSeguros } from 'node:crypto';
 import { WgeError } from './lib.js';
 import { movimientosEstudiante } from './arqueo.js';
+import { estadoRondas } from './wfunds.js';
 
 const MINUTOS_CODIGO = 10;
 const MAX_INTENTOS = 5;
@@ -166,7 +167,8 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 				.select('id', 'nombre', 'riesgo', 'logo', 'a_que_se_dedica', 'por_que_invertir');
 			const cerradas = (await db('wge_rondas').where({ edicion_id: edicionId, estado: 'liquidada' }).orderBy('apertura')
 				.select('id', 'nombre', 'resultados')).map((r) => ({ ...r, resultados: (deJson(r.resultados) ?? []).map((x) => ({ fondo_id: x.fondo_id, rendimiento: x.rendimiento })) }));
-			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, fondos, rondas: cerradas });
+			const { proxima } = ronda ? { proxima: null } : await estadoRondas(db, edicionId);
+			ediciones.push({ ...edicion, ronda: ronda ? { ...ronda, mis_votos: votos, votos_por_ronda: VOTOS_POR_RONDA } : null, proxima_ronda: proxima, fondos, rondas: cerradas });
 		}
 		return { acudiente, ahora: new Date(), hijos, ediciones };
 	}));

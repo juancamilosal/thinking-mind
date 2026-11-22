@@ -43,7 +43,7 @@ test('W-Funds: el pago se redondea siempre hacia arriba y nunca es negativo', ()
 });
 
 import { cierreDeRonda } from '../src/wfunds.js';
-import { finDeFranja } from '../src/lib.js';
+import { finDeFranja, proximoInicio } from '../src/lib.js';
 
 // Sábado 28 de noviembre de 2026; Colombia = UTC-5
 const horario = [{ dia: 'sabado', inicio: '08:00', fin: '12:00' }, { fecha: '2026-11-29', inicio: '09:00', fin: '10:00' }];
@@ -70,4 +70,17 @@ test('W-Funds: la inversión sigue invertida y crece ronda tras ronda (interés 
 	for (const r of [0.0578, 0.0417, -0.1047, 0.0384]) valor = pagoDeInversion(valor, r);
 	// 100 → 106 (105,78) → 111 (110,42) → 100 (99,38) → 104 (103,84)
 	assert.equal(valor, 104);
+});
+
+test('horario: cuándo empieza la siguiente franja (para reanudar las rondas solas)', () => {
+	const fin = [{ dia: 'sabado', inicio: '08:00', fin: '18:00' }, { dia: 'domingo', inicio: '08:00', fin: '18:00' }];
+	// Sábado 6:00 p. m. (se acabó la franja) → domingo 8:00 a. m.
+	assert.equal(proximoInicio(fin, hora('2026-11-28', '18:00')).toISOString(), hora('2026-11-29', '08:00').toISOString());
+	// Sábado 7:00 a. m. → ese mismo sábado 8:00 a. m.
+	assert.equal(proximoInicio(fin, hora('2026-11-28', '07:00')).toISOString(), hora('2026-11-28', '08:00').toISOString());
+	// Domingo 7:00 p. m. → el sábado siguiente 8:00 a. m.
+	assert.equal(proximoInicio(fin, hora('2026-11-29', '19:00')).toISOString(), hora('2026-12-05', '08:00').toISOString());
+	// Franjas por fecha: después de la última no hay más
+	assert.equal(proximoInicio([{ fecha: '2026-11-28', inicio: '08:00', fin: '12:00' }], hora('2026-11-28', '13:00')), null);
+	assert.equal(proximoInicio(null), null);
 });

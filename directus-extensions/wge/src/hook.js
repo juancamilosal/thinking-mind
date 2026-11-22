@@ -3,7 +3,7 @@
 // Si terminó, calcula la nueva tasa de cada país con la fórmula del documento y la guarda.
 // Fuera del horario no hace nada: la tasa queda congelada y el día siguiente continúa desde el último valor.
 import { ahoraColombia, limitar } from './lib.js';
-import { cerrarRondasVencidas, abonarPendientes } from './wfunds.js';
+import { cerrarRondasVencidas, abonarPendientes, reanudarRondas } from './wfunds.js';
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
@@ -44,6 +44,8 @@ export default ({ schedule }, { database: db, logger }) => {
 			if (abonadas) logger.info(`wge: ${abonadas} inversiones pendientes abonadas`);
 			const hechas = await cerrarRondasVencidas(db);
 			for (const h of hechas) logger.info(`wge: ronda ${h.ronda_id} cerrada sola (${h.inversiones} inversiones)${h.siguiente ? `; abierta ${h.siguiente.nombre}` : ''}`);
+			// Al empezar una nueva franja del horario, las rondas arrancan solas con la misma duración
+			for (const r of await reanudarRondas(db)) logger.info(`wge: ${r.nombre} abierta sola al empezar el horario`);
 		} catch (error) {
 			logger.error(error, 'wge: cierre de rondas');
 		}

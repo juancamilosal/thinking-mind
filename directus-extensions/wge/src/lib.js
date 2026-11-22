@@ -123,6 +123,25 @@ export function finDeFranja(horario, ahora = new Date()) {
 	return fin;
 }
 
+/** Cuándo empieza la próxima franja del horario después de `ahora` (busca hasta 8 días); null si no hay. */
+export function proximoInicio(horario, ahora = new Date()) {
+	if (!Array.isArray(horario)) return null;
+	const hoy = ahoraColombia(ahora).fecha;
+	let mejor = null;
+	for (let d = 0; d <= 8; d++) {
+		const fecha = new Date(Date.parse(`${hoy}T12:00:00Z`) + d * 86400000).toISOString().slice(0, 10);
+		const dia = DIAS_SEMANA[new Date(`${fecha}T12:00:00Z`).getUTCDay()];
+		for (const h of horario) {
+			const aplica = h?.fecha ? h.fecha === fecha : String(h?.dia ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === dia;
+			if (!aplica || !h.inicio) continue;
+			const inicio = new Date(`${fecha}T${h.inicio}:00-05:00`);
+			if (inicio > ahora && (!mejor || inicio < mejor)) mejor = inicio;
+		}
+		if (mejor) return mejor;
+	}
+	return null;
+}
+
 /** Fecha y hora actuales en Colombia (UTC-5, sin horario de verano). */
 export function ahoraColombia(fecha = new Date()) {
 	const local = new Date(fecha.getTime() - 5 * 60 * 60 * 1000);

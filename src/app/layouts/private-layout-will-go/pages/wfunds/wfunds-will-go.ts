@@ -81,8 +81,19 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
         } @else {
           <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
             <p class="font-bold text-gray-800">No hay ronda abierta</p>
+            @if (datos.edicion.estado === 'abierta' && datos.reanudacion?.automaticas && datos.reanudacion.proxima) {
+              <div class="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
+                <p class="text-sm font-semibold text-emerald-800">Las rondas siguen solas ({{ datos.reanudacion.duracion }} min)</p>
+                <p class="text-sm text-emerald-800">
+                  {{ datos.fin_horario ? 'La siguiente se abre en un momento.' : 'La próxima se abre el ' + (datos.reanudacion.proxima | date:"EEEE d 'de' MMMM, h:mm a") + ', al empezar el horario.' }}
+                </p>
+                <button type="button" (click)="detenerRondas()" [disabled]="trabajando" class="mt-2 text-sm font-semibold text-red-700 hover:underline disabled:opacity-50">Detener las rondas</button>
+              </div>
+            }
             @if (datos.edicion.estado !== 'abierta') {
               <p class="text-sm text-gray-500 mt-1">Podrás abrir rondas cuando la edición esté abierta.</p>
+            } @else if (!datos.fin_horario && sigueSola) {
+              <!-- Fuera del horario y las rondas siguen solas: el aviso verde de arriba lo dice todo -->
             } @else if (!datos.fin_horario) {
               <p class="text-sm text-gray-500 mt-1">Estamos fuera del horario de la economía. Las rondas se abren dentro del horario.</p>
             } @else {
@@ -95,10 +106,12 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
               </div>
               <p class="text-xs text-gray-500 mt-3">Al terminar, se cierra sola y se abre la siguiente, hasta que acabe el horario ({{ datos.fin_horario | date:'h:mm a' }}).</p>
             }
-            <button type="button" (click)="abrirRonda()" [disabled]="trabajando || datos.edicion.estado !== 'abierta' || !datos.fin_horario"
+@if (!(sigueSola && !datos.fin_horario)) {
+                        <button type="button" (click)="abrirRonda()" [disabled]="trabajando || datos.edicion.estado !== 'abierta' || !datos.fin_horario"
                     class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-40">
               {{ trabajando ? 'Abriendo…' : 'Abrir ronda ' + (datos.rondas.length + 1) + ' · ' + duracion + ' min' }}
             </button>
+            }
           </div>
         }
 
@@ -404,6 +417,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
         this.cronologicas = d.rondas.filter((r) => r.estado !== 'abierta').reverse();
         this.desfase = new Date(d.ahora).getTime() - Date.now();
         if (d.ronda?.duracion_minutos) this.duracion = d.ronda.duracion_minutos;
+        else if (d.reanudacion?.duracion) this.duracion = d.reanudacion.duracion;
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
         if (!this.reloj$) this.reloj$ = setInterval(() => this.tic(), 1000);
         if (!this.refresco$) this.refresco$ = setInterval(() => { if (!this.estudiante && !this.aRetirar && !this.confirmarCierre && !this.enviando && !this.trabajando) this.cargar(); }, 20000);
@@ -422,6 +436,9 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   }
 
   get activos(): FondoWfunds[] { return (this.datos?.fondos ?? []).filter((f) => f.activo); }
+  /** Las rondas se reanudan solas al empezar la siguiente franja del horario. */
+  get sigueSola(): boolean { return !!(this.datos?.edicion.estado === 'abierta' && this.datos.reanudacion?.automaticas && this.datos.reanudacion.proxima); }
+
   get cerradas() { return (this.datos?.rondas ?? []).filter((r) => r.estado !== 'abierta'); }
   /** Rondas cerradas de la más vieja a la más nueva (para la gráfica); se recalcula solo cuando cambian los datos. */
   cronologicas: DatosWfunds['rondas'] = [];
@@ -450,6 +467,16 @@ export class WfundsWillGo implements OnInit, OnDestroy {
     this.aviso = texto;
     if (this.temporizadorAviso) clearTimeout(this.temporizadorAviso);
     this.temporizadorAviso = setTimeout(() => (this.aviso = ''), 5000);
+  }
+
+  detenerRondas(): void {
+    if (!this.datos) return;
+    this.trabajando = true;
+    this.error = '';
+    this.willGo.detenerRondas(this.datos.edicion.id).subscribe({
+      next: () => { this.trabajando = false; this.mostrarAviso('Rondas detenidas. No se abrirán solas hasta que abras una.'); this.cargar(); },
+      error: (e) => { this.trabajando = false; this.error = WillGoService.mensajeDeError(e); },
+    });
   }
 
   abrirRonda(): void {

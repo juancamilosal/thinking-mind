@@ -177,6 +177,8 @@ export interface DatosWfunds {
   ronda: RondaWfunds | null; rondas: RondaWfunds[]; fondos: FondoWfunds[]; paises: PaisWfunds[];
   /** Hora del servidor (para la cuenta regresiva) y fin de la franja del horario actual (null = fuera del horario). */
   ahora: string; fin_horario: string | null; duraciones: number[];
+  /** Si las rondas siguen solas (al empezar cada franja del horario) y cuándo arranca la próxima. */
+  reanudacion: { automaticas: boolean; duracion: number | null; proxima: string | null };
 }
 
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
@@ -376,6 +378,11 @@ export class WillGoService {
 
   abrirRonda(edicionId: string, duracionMinutos: number): Observable<RondaWfunds> {
     return this.http.post<{ data: RondaWfunds }>(`${this.api}/ediciones/${edicionId}/rondas`, { duracion_minutos: duracionMinutos }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Las rondas dejan de reanudarse solas en la siguiente franja del horario. */
+  detenerRondas(edicionId: string): Observable<unknown> {
+    return this.http.post<{ data: unknown }>(`${this.api}/ediciones/${edicionId}/rondas/detener`, {}).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** El estudiante saca su dinero de una empresa: recibe lo que vale hoy su inversión. */

@@ -7,6 +7,8 @@ export interface FondoPortal { id: string; nombre: string; riesgo: 'bajo' | 'med
 export interface EdicionPortal {
   id: string; nombre: string; estado: string;
   ronda: { id: string; nombre: string; apertura: string; cierre_programado: string | null; duracion_minutos: number | null; mis_votos: string[]; votos_por_ronda: number } | null;
+  /** Cuándo arranca la próxima ronda (si no hay una abierta y las rondas siguen solas). */
+  proxima_ronda: string | null;
   fondos: FondoPortal[];
   rondas: { id: string; nombre: string; resultados: { fondo_id: string; rendimiento: number }[] }[];
 }

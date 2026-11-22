@@ -206,6 +206,7 @@ coleccion('wge_rondas', 'timer', 'Rondas de inversión y votación', [
     campo('resultados', 'json', 'Rendimiento de cada fondo al cerrar la ronda', interfaz='input-code'),
     campo('duracion_minutos', 'integer', 'Cuánto dura la ronda; la siguiente se abre sola con la misma duración'),
     campo('cierre_programado', 'timestamp', 'Cuándo se cierra sola'),
+    campo('detenida', 'boolean', 'El banco cerró esta ronda con «Cerrar y detener»: las rondas no se reanudan solas', default=False),
 ])
 rel('wge_rondas', 'edicion_id', 'wge_ediciones')
 
