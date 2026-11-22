@@ -33,14 +33,34 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		}
 	};
 
-	/** Acudientes con ese documento que tienen un hijo en una edición de Will-Go que no ha terminado. */
-	const acudientesActivos = (documento) => db('clientes as c')
-		.join('estudiantes as e', 'e.acudiente', 'c.id')
-		.join('wge_participantes as p', 'p.estudiante_id', 'e.id')
+	const documentoNormal = "regexp_replace(coalesce(numero_documento, ''), '[^0-9]', '', 'g')";
+
+	/**
+	 * Hijos (participantes activos) de un grupo de acudientes. Un estudiante es hijo si el acudiente aparece
+	 * en su ficha (estudiantes.acudiente) o si fue quien lo inscribió y pagó (cuentas_cobrar.cliente_id).
+	 */
+	const participantesDe = (ids) => db('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
 		.join('wge_ediciones as ed', 'ed.id', 'p.edicion_id')
-		.whereRaw("regexp_replace(coalesce(c.numero_documento, ''), '[^0-9]', '', 'g') = ?", [documento])
 		.whereNot('ed.estado', 'cerrada').whereRaw('coalesce(p.retirado, false) = false')
-		.distinct('c.id', 'c.nombre', 'c.apellido', 'c.email');
+		.where((w) => w.whereIn('e.acudiente', ids)
+			.orWhereExists(db('cuentas_cobrar as cc').whereRaw('cc.estudiante_id = e.id').whereIn('cc.cliente_id', ids).select(db.raw('1'))));
+
+	/** Todos los registros de clientes con el mismo documento (la plataforma a veces tiene al acudiente repetido). */
+	const mismaPersona = async (acudienteId) => {
+		const doc = await db('clientes').where('id', acudienteId).first(db.raw(`${documentoNormal} as doc`));
+		if (!doc?.doc) return [acudienteId];
+		const ids = await db('clientes').whereRaw(`${documentoNormal} = ?`, [doc.doc]).pluck('id');
+		return ids.length ? ids : [acudienteId];
+	};
+
+	/** El acudiente con ese documento que tiene hijos en una edición activa (prefiere el registro que tiene correo). */
+	const acudienteActivo = async (documento) => {
+		const candidatos = await db('clientes').whereRaw(`${documentoNormal} = ?`, [documento])
+			.orderByRaw('(email is null or email = \'\') asc').select('id', 'nombre', 'apellido', 'email');
+		if (!candidatos.length) return null;
+		const tieneHijos = await participantesDe(candidatos.map((c) => c.id)).first('p.id');
+		return tieneHijos ? candidatos[0] : null;
+	};
 
 	const sesion = async (req) => {
 		const token = String(req.body?.sesion ?? '');
@@ -54,7 +74,7 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 	router.post('/acudiente/codigo', publica(async (req) => {
 		const documento = soloDigitos(req.body?.documento);
 		if (documento.length < 5) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe tu número de documento');
-		const [acudiente] = await acudientesActivos(documento);
+		const acudiente = await acudienteActivo(documento);
 		const respuesta = { enviado: true, correo: null };
 		if (!acudiente?.email) return respuesta;
 
@@ -86,7 +106,7 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		const codigo = soloDigitos(req.body?.codigo);
 		const invalido = new WgeError(400, 'CODIGO_INVALIDO', 'El código no es correcto o ya venció');
 		if (codigo.length !== 6) throw invalido;
-		const [acudiente] = await acudientesActivos(documento);
+		const acudiente = await acudienteActivo(documento);
 		if (!acudiente) throw invalido;
 		return db.transaction(async (trx) => {
 			const fila = await trx('wge_codigos_acudiente').where({ acudiente_id: acudiente.id, usado: false })
@@ -120,10 +140,10 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 	router.post('/acudiente/panel', publica(async (req) => {
 		const acudienteId = await sesion(req);
 		const acudiente = await db('clientes').where('id', acudienteId).first('nombre', 'apellido');
-		const hijos = await db('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
-			.join('wge_ediciones as ed', 'ed.id', 'p.edicion_id').leftJoin('wge_paises as pa', 'pa.id', 'p.pais_id')
+		const familia = await mismaPersona(acudienteId);
+		const hijos = await participantesDe(familia).leftJoin('wge_paises as pa', 'pa.id', 'p.pais_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
-			.where('e.acudiente', acudienteId).whereNot('ed.estado', 'cerrada').whereRaw('coalesce(p.retirado, false) = false')
+			.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }])
 			.select('p.id', 'p.edicion_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda', db.raw('coalesce(b.saldo, 0)::int as saldo'));
 		for (const h of hijos) {
 			h.inversiones = await db('wge_inversiones as i').join('wge_fondos as f', 'f.id', 'i.fondo_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
@@ -153,8 +173,7 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 			if (!ronda || ronda.estado !== 'abierta' || (ronda.cierre_programado && new Date(ronda.cierre_programado) <= new Date())) {
 				throw new WgeError(409, 'RONDA_CERRADA', 'Esta ronda ya cerró; podrás votar en la siguiente');
 			}
-			const tieneHijo = await trx('wge_participantes as p').join('estudiantes as e', 'e.id', 'p.estudiante_id')
-				.where({ 'e.acudiente': acudienteId, 'p.edicion_id': ronda.edicion_id }).whereRaw('coalesce(p.retirado, false) = false').first('p.id');
+			const tieneHijo = await participantesDe(await mismaPersona(acudienteId)).where('p.edicion_id', ronda.edicion_id).first('p.id');
 			if (!tieneHijo) throw new WgeError(403, 'SIN_PERMISO', 'No tienes estudiantes en esta edición');
 			const fondo = await trx('wge_fondos').where({ id: String(req.body?.fondo_id ?? ''), edicion_id: ronda.edicion_id, activo: true }).first('id', 'nombre');
 			if (!fondo) throw new WgeError(404, 'NO_EXISTE', 'La empresa no está disponible');
