@@ -6,12 +6,13 @@ import { TarjetaFondoComponent } from '../../../private-layout-will-go/tarjeta-f
 import { GraficaRendimientoComponent } from '../../../private-layout-will-go/grafica-rendimiento.component';
 import { formatearNumero } from '../../../private-layout-will-go/numero-miles.directive';
 import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista-movimientos.component';
+import { ProcesandoRondaComponent } from '../../../private-layout-will-go/procesando-ronda.component';
 
 /** Panel del acudiente: reloj de la ronda, su hijo (saldo e inversiones), votar por una empresa y la gráfica. */
 @Component({
   selector: 'app-panel-acudiente',
   standalone: true,
-  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent],
+  imports: [DatePipe, TarjetaFondoComponent, GraficaRendimientoComponent, ListaMovimientosComponent, ProcesandoRondaComponent],
   template: `
     <div class="min-h-screen bg-slate-50">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
@@ -37,6 +38,9 @@ import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista
           @for (ed of datos.ediciones; track ed.id) {
             <!-- Reloj de la ronda -->
             @if (ed.ronda; as r) {
+              @if (r.cierre_programado && restante(r.cierre_programado) <= 0) {
+                <wg-procesando-ronda class="block mt-4" [ronda]="r.nombre" />
+              } @else {
               <div class="mt-4 rounded-2xl p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-teal-600">
                 <div class="flex items-center gap-2 text-sm font-semibold opacity-95">
                   <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse" aria-hidden="true"></span>{{ r.nombre }} en curso
@@ -54,6 +58,7 @@ import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista
                   </p>
                 </div>
               </div>
+              }
             } @else {
               <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
                 <p class="font-bold text-gray-800">No hay ronda abierta</p>
@@ -178,7 +183,7 @@ export class PanelAcudiente implements OnInit, OnDestroy {
     this.ahoraLocal = Date.now();
     // Cuando el reloj llega a 0, recarga para ver la ronda siguiente
     const vencida = this.datos?.ediciones.some((e) => e.ronda?.cierre_programado && this.restante(e.ronda.cierre_programado) < -3000);
-    if (vencida && !this.cargando && this.ahoraLocal % 10000 < 1000) this.cargar();
+    if (vencida && !this.cargando && this.ahoraLocal % 5000 < 1000) this.cargar();
   }
 
   cargar(): void {

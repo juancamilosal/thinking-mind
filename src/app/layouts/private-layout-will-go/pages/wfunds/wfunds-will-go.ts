@@ -6,6 +6,7 @@ import { formatearNumero } from '../../numero-miles.directive';
 import { SelectorBilletesComponent } from '../../selector-billetes.component';
 import { TarjetaFondoComponent } from '../../tarjeta-fondo.component';
 import { GraficaRendimientoComponent } from '../../grafica-rendimiento.component';
+import { ProcesandoRondaComponent } from '../../procesando-ronda.component';
 
 type Estudiante = PaisWfunds['estudiantes'][number];
 type Vista = 'invertir' | 'liquidadas' | 'resultados';
@@ -21,7 +22,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
 @Component({
   selector: 'app-wfunds-will-go',
   standalone: true,
-  imports: [FormsModule, DatePipe, SelectorBilletesComponent, TarjetaFondoComponent, GraficaRendimientoComponent],
+  imports: [FormsModule, DatePipe, SelectorBilletesComponent, TarjetaFondoComponent, GraficaRendimientoComponent, ProcesandoRondaComponent],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -57,6 +58,9 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
 
         <!-- Estado de la ronda -->
         @if (datos.ronda; as r) {
+          @if (r.cierre_programado && restante <= 0) {
+            <wg-procesando-ronda class="block mt-4" [ronda]="r.nombre" />
+          } @else {
           <div class="mt-4 rounded-2xl p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-teal-600">
             <div class="flex items-center gap-2 text-sm font-semibold opacity-95">
               <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse" aria-hidden="true"></span>
@@ -73,6 +77,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
             </div>
             <button type="button" (click)="confirmarCierre = true" class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">Cerrar ronda ahora</button>
           </div>
+          }
         } @else {
           <div class="mt-4 rounded-2xl p-5 bg-white border border-gray-200 shadow-sm">
             <p class="font-bold text-gray-800">No hay ronda abierta</p>
@@ -324,7 +329,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   private tic(): void {
     const cierre = this.datos?.ronda?.cierre_programado;
     this.restante = cierre ? new Date(cierre).getTime() - (Date.now() + this.desfase) : 0;
-    if (cierre && this.restante <= 0 && !this.cargando && Date.now() - this.ultimaRecarga > 15000) {
+    if (cierre && this.restante <= 0 && !this.cargando && Date.now() - this.ultimaRecarga > 5000) {
       this.ultimaRecarga = Date.now();
       this.cargar();
     }
