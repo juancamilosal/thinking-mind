@@ -1,20 +1,26 @@
 import { ChangeDetectorRef, Component, HostListener, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { FechaWillGoPipe } from '../../fecha.pipe';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
-import { Funcionario, NOMBRE_ROL, NuevoFuncionario, WillGoService } from '../../../../core/services/will-go.service';
+import { Funcionario, NuevoFuncionario, WillGoService } from '../../../../core/services/will-go.service';
 
 type RolFuncionario = Funcionario['rol'];
 
 @Component({
   selector: 'app-funcionarios-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, FechaWillGoPipe],
   templateUrl: './funcionarios-will-go.html',
 })
 export class FuncionariosWillGo implements OnInit {
   readonly tiposDocumento = DOCUMENT_TYPE.filter((t) => ['CC', 'CE', 'PP'].includes(t.id));
-  readonly nombreRol = NOMBRE_ROL;
+  /** Claves de traducción del nombre de cada rol. */
+  readonly nombreRol: Record<string, string> = {
+    administrativo: 'wg.admin.rol.administrativo', docente: 'wg.admin.rol.docente', banco: 'wg.admin.rol.banco',
+    cajero: 'wg.admin.rol.cajero', administrador: 'wg.admin.rol.administrador',
+  };
+  private t = inject(TranslateService);
   readonly esAdministradorGeneral = WillGoService.perfilGuardado()?.rol === 'administrador';
   readonly miId = WillGoService.perfilGuardado()?.id;
 
@@ -149,7 +155,7 @@ export class FuncionariosWillGo implements OnInit {
           this.reemplazar(f);
           this.formularioAbierto = false;
           this.guardando = false;
-          this.mostrarAviso(`Se actualizaron los datos de ${f.nombre}.`);
+          this.mostrarAviso(this.t.instant('wg.admin.col.avisoActualizado', { nombre: f.nombre }));
         },
         error: (e) => this.falloFormulario(e),
       });
@@ -181,7 +187,7 @@ export class FuncionariosWillGo implements OnInit {
         next: () => {
           this.funcionarios = this.funcionarios.filter((x) => x.id !== funcionario.id);
           terminar();
-          this.mostrarAviso(`${funcionario.nombre} ${funcionario.apellido} fue eliminado.`);
+          this.mostrarAviso(this.t.instant('wg.admin.col.avisoEliminado', { nombre: `${funcionario.nombre} ${funcionario.apellido}` }));
         },
         error: (e) => { terminar(); this.mostrarAviso(WillGoService.mensajeDeError(e)); },
       });
@@ -196,7 +202,7 @@ export class FuncionariosWillGo implements OnInit {
         next: (f) => {
           this.reemplazar(f);
           terminar();
-          this.mostrarAviso(estado === 'active' ? `${f.nombre} puede volver a ingresar.` : `${f.nombre} ya no puede ingresar.`);
+          this.mostrarAviso(this.t.instant(estado === 'active' ? 'wg.admin.col.avisoPuedeIngresar' : 'wg.admin.col.avisoNoPuedeIngresar', { nombre: f.nombre }));
         },
         error: (e) => { terminar(); this.mostrarAviso(WillGoService.mensajeDeError(e)); },
       });
@@ -205,7 +211,7 @@ export class FuncionariosWillGo implements OnInit {
 
   copiarClave(): void {
     if (!this.clave) return;
-    const texto = `Will-Go Economy\nUsuario: ${this.clave.funcionario.email}\nClave temporal: ${this.clave.valor}\nIngresa en: ${location.origin}/login-will-go`;
+    const texto = this.t.instant('wg.admin.col.textoCopiar', { usuario: this.clave.funcionario.email, clave: this.clave.valor, url: `${location.origin}/login-will-go` });
     navigator.clipboard?.writeText(texto).then(() => { this.copiada = true; this.cdr.detectChanges(); });
   }
 
