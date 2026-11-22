@@ -13,11 +13,11 @@ type Seccion = 'paises' | 'reglas' | 'horario' | 'fondos';
   standalone: true,
   imports: [TabPaises, TabReglas, TabHorario, TabFondos],
   template: `
-    <div class="flex gap-1 border-b border-gray-200 overflow-x-auto" role="tablist">
+    <div class="flex flex-wrap gap-1" role="tablist">
       @for (s of secciones; track s.id) {
         <button type="button" role="tab" [attr.aria-selected]="seccion === s.id" (click)="seccion = s.id"
-                class="whitespace-nowrap px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition"
-                [class]="seccion === s.id ? 'border-orange-500 text-orange-700' : 'border-transparent text-gray-500 hover:text-gray-800'">
+                class="whitespace-nowrap px-4 py-2 text-sm font-semibold rounded-lg transition"
+                [class]="seccion === s.id ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'">
           {{ s.texto }}
         </button>
       }
