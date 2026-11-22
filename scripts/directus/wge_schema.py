@@ -144,8 +144,10 @@ rel('wge_movimientos', 'billetera_id', 'wge_billeteras')
 
 coleccion('wge_evaluaciones', 'grading', 'Rúbrica del docente, aparte del dinero', [
     m2o('participante_id', requerido=True),
-    campo('uso_lengua', 'integer'), campo('iniciativa', 'integer'), campo('nivel_reto', 'integer'), campo('colaboracion', 'integer'),
-    campo('puntaje', 'integer'), campo('idioma', 'string', opciones=['ingles', 'frances']),
+    campo('uso_lengua', 'integer', 'Nivel de 0 a 3 (rúbrica de la Especificación Maestra)'), campo('iniciativa', 'integer', 'Nivel de 0 a 3'),
+    campo('nivel_reto', 'integer', 'Nivel de 0 a 3'), campo('colaboracion', 'integer', 'Nivel de 0 a 3'),
+    campo('puntaje', 'integer', 'Suma de los 4 criterios, de 0 a 12. Para la tasa cuenta puntaje ÷ 3'), campo('idioma', 'string', opciones=['ingles', 'frances']),
+    campo('evidencia', 'string', 'Actividad o evidencia breve (opcional)'),
 ])
 rel('wge_evaluaciones', 'participante_id', 'wge_participantes')
 

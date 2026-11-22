@@ -186,9 +186,9 @@ export interface EstudianteRubrica { id: string; nombre: string; apellido: strin
 export interface PaisRubrica { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; estudiantes: EstudianteRubrica[]; }
 export interface CalificacionRubrica {
   id: string; participante_id: string; uso_lengua: number; iniciativa: number; nivel_reto: number; colaboracion: number;
-  puntaje: number; idioma: 'ingles' | 'frances' | null; date_created: string; nombre: string; apellido: string; se_puede_deshacer: boolean;
+  puntaje: number; idioma: 'ingles' | 'frances' | null; evidencia: string | null; recompensa: number; date_created: string; nombre: string; apellido: string; se_puede_deshacer: boolean;
 }
-export interface DatosRubrica { edicion: { id: string; nombre: string; estado: string }; paises: PaisRubrica[]; recientes: CalificacionRubrica[]; criterios: CriterioRubrica[]; }
+export interface DatosRubrica { edicion: { id: string; nombre: string; estado: string }; paises: PaisRubrica[]; recientes: CalificacionRubrica[]; criterios: CriterioRubrica[]; nivel_maximo: number; puntaje_maximo: number; }
 
 export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
 
@@ -415,8 +415,9 @@ export class WillGoService {
     return this.http.get<{ data: DatosRubrica }>(`${this.api}/ediciones/${edicionId}/rubrica`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  calificar(participanteId: string, criterios: Record<CriterioRubrica, number>, idioma: 'ingles' | 'frances'): Observable<{ id: string; puntaje: number }> {
-    return this.http.post<{ data: { id: string; puntaje: number } }>(`${this.api}/evaluaciones`, { participante_id: participanteId, ...criterios, idioma })
+  /** Califica (cada criterio de 0 a 3) y devuelve el puntaje (0 a 12) y la recompensa recomendada en billetes. */
+  calificar(participanteId: string, criterios: Record<CriterioRubrica, number>, idioma: 'ingles' | 'frances', evidencia: string): Observable<{ id: string; puntaje: number; recompensa: number }> {
+    return this.http.post<{ data: { id: string; puntaje: number; recompensa: number } }>(`${this.api}/evaluaciones`, { participante_id: participanteId, ...criterios, idioma, evidencia })
       .pipe(this.enZona(), map((r) => r.data));
   }
 

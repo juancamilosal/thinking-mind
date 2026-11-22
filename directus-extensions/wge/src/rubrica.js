@@ -1,5 +1,6 @@
-// Rúbrica del docente: califica a cada estudiante con 4 criterios Sí/No (puntaje de 0 a 4) y marca la asistencia.
-// No da billetes: los puntos alimentan el tipo de cambio de cada país (ver hook.js, referencia B = 2).
+// Rúbrica del docente (Especificación Maestra, sección 5): cada criterio de 0 a 3, puntaje de 0 a 12.
+// El puntaje ÷ 3 son los "puntos de inmersión" que mueven el tipo de cambio de cada país (ver hook.js, referencia B = 2).
+// Desde 5 puntos se recomienda una recompensa en billetes, que el docente entrega con sus propios billetes.
 import { WgeError, ROLES, exigirRol, exigirEquipo } from './lib.js';
 
 /** Los 4 criterios de la rúbrica (en el orden en que se muestran). */
@@ -8,26 +9,45 @@ export const IDIOMAS = ['ingles', 'frances'];
 /** Minutos en los que el docente puede deshacer una calificación que puso por error. */
 const MINUTOS_DESHACER = 10;
 
-/** Valida los criterios (Sí = 1, No = 0) y devuelve la fila con su puntaje. */
+/** Nivel máximo de cada criterio y puntaje máximo de una calificación. */
+export const NIVEL_MAXIMO = 3;
+export const PUNTAJE_MAXIMO = NIVEL_MAXIMO * 4;
+
+/** Recompensa recomendada por la Especificación Maestra: 5–6 = 2 billetes; 7–8 = 5; 9–10 = 10; 11–12 = 20. */
+export function recompensaSugerida(puntaje) {
+	const p = Number(puntaje);
+	if (p >= 11) return 20;
+	if (p >= 9) return 10;
+	if (p >= 7) return 5;
+	if (p >= 5) return 2;
+	return 0;
+}
+
+/** Puntos de inmersión para el tipo de cambio: puntaje ÷ 3 (de 0 a 4; un estudiante en nivel 2 aporta 2,67). */
+export const puntosDeInmersion = (puntaje) => Number(puntaje) / NIVEL_MAXIMO;
+
+/** Valida los 4 niveles (0 a 3, todos obligatorios) y devuelve la fila con su puntaje. */
 export function armarCalificacion(datos) {
 	const fila = {};
 	for (const c of CRITERIOS) {
 		const v = datos?.[c];
-		if (v !== 0 && v !== 1 && v !== true && v !== false) throw new WgeError(400, 'VALOR_INVALIDO', 'Cada criterio debe ser Sí o No');
-		fila[c] = v === true || v === 1 ? 1 : 0;
+		if (!Number.isInteger(v) || v < 0 || v > NIVEL_MAXIMO) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el nivel (0 a 3) de los 4 criterios');
+		fila[c] = v;
 	}
 	fila.puntaje = CRITERIOS.reduce((t, c) => t + fila[c], 0);
 	if (datos?.idioma !== undefined && datos.idioma !== null && !IDIOMAS.includes(datos.idioma)) throw new WgeError(400, 'VALOR_INVALIDO', 'El idioma debe ser inglés o francés');
 	fila.idioma = datos?.idioma ?? null;
+	const evidencia = typeof datos?.evidencia === 'string' ? datos.evidencia.trim().slice(0, 255) : '';
+	fila.evidencia = evidencia || null;
 	return fila;
 }
 
-/** Resumen de las calificaciones de un estudiante: cuántas y qué porcentaje de "Sí" en cada criterio. */
+/** Resumen de las calificaciones de un estudiante: cuántas y el nivel promedio (0 a 3) de cada criterio. */
 export function resumenCalificaciones(filas) {
 	const total = filas.length;
-	const criterios = Object.fromEntries(CRITERIOS.map((c) => [c, total ? Math.round((filas.reduce((t, f) => t + Number(f[c] ?? 0), 0) / total) * 100) : 0]));
+	const criterios = Object.fromEntries(CRITERIOS.map((c) => [c, total ? Math.round((filas.reduce((t, f) => t + Number(f[c] ?? 0), 0) / total) * 10) / 10 : 0]));
 	const ultima = filas.reduce((u, f) => (!u || new Date(f.date_created) > new Date(u) ? f.date_created : u), null);
-	return { total, criterios, ultima };
+	return { total, criterios, ultima, maximo: NIVEL_MAXIMO };
 }
 
 export function rutasRubrica(router, { ruta, db }) {
@@ -65,12 +85,18 @@ export function rutasRubrica(router, { ruta, db }) {
 			.join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 			.where({ 'pa.edicion_id': edicion.id, 'ev.user_created': req.accountability.user })
 			.orderBy('ev.date_created', 'desc').limit(30)
-			.select('ev.id', 'ev.participante_id', ...CRITERIOS.map((c) => `ev.${c}`), 'ev.puntaje', 'ev.idioma', 'ev.date_created', 'e.nombre', 'e.apellido');
-		for (const r of recientes) r.se_puede_deshacer = Date.now() - new Date(r.date_created).getTime() < MINUTOS_DESHACER * 60000;
-		return { edicion, paises, recientes, criterios: CRITERIOS };
+			.select('ev.id', 'ev.participante_id', ...CRITERIOS.map((c) => `ev.${c}`), 'ev.puntaje', 'ev.idioma', 'ev.evidencia', 'ev.date_created', 'e.nombre', 'e.apellido');
+		for (const r of recientes) {
+			r.se_puede_deshacer = Date.now() - new Date(r.date_created).getTime() < MINUTOS_DESHACER * 60000;
+			r.recompensa = recompensaSugerida(r.puntaje);
+		}
+		return { edicion, paises, recientes, criterios: CRITERIOS, nivel_maximo: NIVEL_MAXIMO, puntaje_maximo: PUNTAJE_MAXIMO };
 	}));
 
-	/** POST /wge/evaluaciones { participante_id, uso_lengua, iniciativa, nivel_reto, colaboracion, idioma }: califica y lo marca presente. */
+	/**
+	 * POST /wge/evaluaciones { participante_id, uso_lengua, iniciativa, nivel_reto, colaboracion (0 a 3), idioma, evidencia }
+	 * Califica, lo marca presente y devuelve la recompensa recomendada en billetes.
+	 */
 	router.post('/evaluaciones', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.DOCENTE, ROLES.ADMIN_WG);
 		const fila = armarCalificacion(req.body);
@@ -86,11 +112,11 @@ export function rutasRubrica(router, { ruta, db }) {
 			// Doble toque: si este docente ya calificó al estudiante hace menos de 5 segundos, no se repite
 			const reciente = await trx('wge_evaluaciones').where({ participante_id: p.id, user_created: actor })
 				.where('date_created', '>', new Date(Date.now() - 5000)).first();
-			if (reciente) return { ...reciente, repetida: true };
+			if (reciente) return { ...reciente, repetida: true, recompensa: recompensaSugerida(reciente.puntaje) };
 			const nueva = { id: crypto.randomUUID(), participante_id: p.id, ...fila, date_created: new Date(), user_created: actor };
 			await trx('wge_evaluaciones').insert(nueva);
 			if (!p.presente) await trx('wge_participantes').where('id', p.id).update({ presente: true });
-			return nueva;
+			return { ...nueva, recompensa: recompensaSugerida(nueva.puntaje) };
 		});
 	}));
 

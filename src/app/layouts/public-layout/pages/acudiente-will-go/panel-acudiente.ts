@@ -126,16 +126,16 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
                     @if (!h.rubrica?.total) {
                       <p class="text-sm text-gray-500 mt-3">Todavía no lo han calificado. Sus docentes califican su participación durante la jornada.</p>
                     } @else {
-                      <p class="text-sm text-gray-600 mt-3">Sus docentes lo han calificado <b>{{ h.rubrica.total }} {{ h.rubrica.total === 1 ? 'vez' : 'veces' }}</b>{{ h.rubrica.ultima ? ' (la última a las ' + (h.rubrica.ultima | date:'h:mm a') + ')' : '' }}. Esto es lo que más hace:</p>
+                      <p class="text-sm text-gray-600 mt-3">Sus docentes lo han calificado <b>{{ h.rubrica.total }} {{ h.rubrica.total === 1 ? 'vez' : 'veces' }}</b>{{ h.rubrica.ultima ? ' (la última a las ' + (h.rubrica.ultima | date:'h:mm a') + ')' : '' }}. Su nivel promedio en cada criterio (de 0 a 3):</p>
                       <ul class="mt-3 space-y-3">
                         @for (c of criteriosRubrica; track c.id) {
                           <li>
                             <div class="flex items-center justify-between gap-3 text-sm">
                               <span class="font-semibold text-gray-800">{{ c.titulo }}</span>
-                              <span class="font-bold" [class]="h.rubrica.criterios[c.id] >= 50 ? 'text-emerald-700' : 'text-amber-700'">{{ h.rubrica.criterios[c.id] }} %</span>
+                              <span class="font-bold" [class]="h.rubrica.criterios[c.id] >= 2 ? 'text-emerald-700' : 'text-amber-700'">{{ nivel(h.rubrica.criterios[c.id]) }} <span class="font-semibold text-gray-400">de 3</span></span>
                             </div>
                             <div class="mt-1 h-2.5 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
-                              <div class="h-full rounded-full" [style.width.%]="h.rubrica.criterios[c.id]" [style.background]="h.color || '#10b981'"></div>
+                              <div class="h-full rounded-full" [style.width.%]="h.rubrica.criterios[c.id] / 3 * 100" [style.background]="h.color || '#10b981'"></div>
                             </div>
                             <p class="text-xs text-gray-500 mt-0.5">{{ c.ayuda }}</p>
                           </li>
@@ -217,6 +217,7 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   private router = inject(Router);
   readonly Number = Number;
   abs(v: number): number { return Math.abs(v); }
+  nivel(v: number): string { return Number(v).toLocaleString('es-CO', { maximumFractionDigits: 1 }); }
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   datos: DatosPanelAcudiente | null = null;
@@ -226,10 +227,10 @@ export class PanelAcudiente implements OnInit, OnDestroy {
     { id: 'rubrica', texto: 'Rúbrica' },
   ];
   readonly criteriosRubrica: { id: 'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion'; titulo: string; ayuda: string }[] = [
-    { id: 'uso_lengua', titulo: 'Uso de la lengua', ayuda: 'Se comunica en el idioma de la clase' },
-    { id: 'iniciativa', titulo: 'Iniciativa', ayuda: 'Participa por su cuenta' },
-    { id: 'nivel_reto', titulo: 'Nivel del reto', ayuda: 'Asume retos difíciles' },
-    { id: 'colaboracion', titulo: 'Colaboración', ayuda: 'Ayuda y trabaja en equipo' },
+    { id: 'uso_lengua', titulo: 'Uso de la lengua', ayuda: '3 = conversa de forma espontánea en el idioma de la clase' },
+    { id: 'iniciativa', titulo: 'Iniciativa', ayuda: '3 = promueve que otros se comuniquen' },
+    { id: 'nivel_reto', titulo: 'Nivel del reto', ayuda: '3 = supera retos apropiados sin guion' },
+    { id: 'colaboracion', titulo: 'Colaboración', ayuda: '3 = hace que otros también hablen' },
   ];
   vista: Record<string, VistaHijo> = {};
   vistaDe(h: HijoPortal): VistaHijo { return this.vista[h.id] ?? 'inversiones'; }

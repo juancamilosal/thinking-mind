@@ -18,8 +18,8 @@ export interface HijoPortal {
   inversiones: { id: string; monto: number; estado: string; valor: number; historial: { ronda: string; rendimiento: number }[]; fondo: string; ronda: string }[];
   movimientos: { id: string; entra: boolean; titulo: string; monto: number; fecha: string; billetes: Record<string, number> | null }[];
   total_entro: number; total_salio: number;
-  /** Resumen de la rúbrica: cuántas calificaciones y % de «Sí» en cada criterio. */
-  rubrica: { total: number; criterios: Record<'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion', number>; ultima: string | null };
+  /** Resumen de la rúbrica: cuántas calificaciones y el nivel promedio (0 a 3) de cada criterio. */
+  rubrica: { total: number; criterios: Record<'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion', number>; ultima: string | null; maximo: number };
 }
 export interface DatosPanelAcudiente { acudiente: { nombre: string; apellido: string }; ahora: string; hijos: HijoPortal[]; ediciones: EdicionPortal[]; }
 

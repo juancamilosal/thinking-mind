@@ -85,12 +85,13 @@ export async function procesarEdicion(db, edicion, ahora) {
 			const { n } = await trx('wge_participantes').where({ pais_id: pais.id, presente: true }).whereRaw('coalesce(retirado, false) = false').count({ n: '*' }).first();
 			const tasa = Number(actual.tasa_actual || edicion.tasa_inicial);
 			const calculo = nuevaTasa({
-				tasa, puntos: Number(suma ?? 0), presentes: Number(n), tasaInicial: Number(edicion.tasa_inicial),
+				// Puntos de inmersión = puntaje de la rúbrica (0 a 12) ÷ 3
+				tasa, puntos: Number(suma ?? 0) / 3, presentes: Number(n), tasaInicial: Number(edicion.tasa_inicial),
 				topeMinimo: Number(edicion.tope_minimo), topeMaximo: Number(edicion.tope_maximo), parametros,
 			});
 			await trx('wge_fx').insert({
 				id: crypto.randomUUID(), pais_id: pais.id, ventana: fin, participantes_presentes: Number(n),
-				puntos: Number(suma ?? 0), indice: calculo.indice, tasa_anterior: tasa, tasa_nueva: calculo.nueva,
+				puntos: Number(suma ?? 0) / 3, indice: calculo.indice, tasa_anterior: tasa, tasa_nueva: calculo.nueva,
 				date_created: new Date(),
 			});
 			await trx('wge_paises').where('id', pais.id).update({ tasa_actual: calculo.nueva });

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { CalificacionRubrica, CriterioRubrica, DatosRubrica, EstudianteRubrica, PaisRubrica, WillGoService } from '../../../../core/services/will-go.service';
@@ -8,17 +9,24 @@ type Idioma = 'ingles' | 'frances';
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const CLAVE_IDIOMA = 'wg-rubrica-idioma';
 
-/** Los 4 criterios: Sí suma 1 punto. */
-const CRITERIOS: { id: CriterioRubrica; titulo: string; ayuda: (idioma: Idioma) => string; icono: string }[] = [
-  { id: 'uso_lengua', titulo: 'Uso de la lengua', ayuda: (i) => `Se comunicó en ${i === 'frances' ? 'francés' : 'inglés'}`,
+/** Rúbrica de la Especificación Maestra (sección 5): cada criterio de 0 a 3. */
+const CRITERIOS: { id: CriterioRubrica; titulo: string; corto: string; niveles: string[]; icono: string }[] = [
+  { id: 'uso_lengua', titulo: 'Uso de la lengua', corto: 'Lengua',
+    niveles: ['No intenta', 'Palabras aisladas con apoyo', 'Frases funcionales', 'Interacción sostenida y espontánea'],
     icono: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
-  { id: 'iniciativa', titulo: 'Iniciativa', ayuda: () => 'Participó por su cuenta, sin que se lo pidieran',
+  { id: 'iniciativa', titulo: 'Iniciativa', corto: 'Iniciativa',
+    niveles: ['Ninguna', 'Responde al ser llamado', 'Inicia intercambios', 'Promueve la comunicación de otros'],
     icono: 'M13 10V3L4 14h7v7l9-11h-7z' },
-  { id: 'nivel_reto', titulo: 'Nivel del reto', ayuda: () => 'Asumió un reto difícil para su nivel',
+  { id: 'nivel_reto', titulo: 'Nivel del reto', corto: 'Reto',
+    niveles: ['Sin reto', 'Bajo para su edad', 'Adecuado', 'Supera un reto apropiado sin guion'],
     icono: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' },
-  { id: 'colaboracion', titulo: 'Colaboración', ayuda: () => 'Ayudó y trabajó en equipo',
+  { id: 'colaboracion', titulo: 'Colaboración', corto: 'Colaboración',
+    niveles: ['Interrumpe', 'Participa poco', 'Coopera hablando', 'Hace que otros también hablen'],
     icono: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
 ];
+
+/** Recompensa recomendada por la Especificación Maestra (el servidor usa la misma tabla). */
+const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >= 5 ? 2 : 0);
 
 /** Rúbrica del docente: marca asistencia y califica (4 criterios Sí/No). Los puntos mueven el tipo de cambio. */
 @Component({
@@ -30,7 +38,7 @@ const CRITERIOS: { id: CriterioRubrica; titulo: string; ayuda: (idioma: Idioma) 
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-800">Rúbrica</h1>
-          <p class="text-gray-500 mt-1">Califica a tus estudiantes. Sus puntos mueven el tipo de cambio de su país.</p>
+          <p class="text-gray-500 mt-1">Califica a tus estudiantes (0 a 3 por criterio). Sus puntos mueven el tipo de cambio de su país.</p>
         </div>
         @if (ediciones.length > 1) {
           <select [(ngModel)]="edicionId" (ngModelChange)="cargar()" aria-label="Edición" class="sm:w-72 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
@@ -88,9 +96,12 @@ const CRITERIOS: { id: CriterioRubrica; titulo: string; ayuda: (idioma: Idioma) 
         </div>
 
         @if (aviso) {
-          <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between gap-3" role="status">
+          <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800 flex flex-wrap items-center justify-between gap-3" role="status">
             <span>{{ aviso }}</span>
-            @if (ultimaId) { <button type="button" (click)="deshacer(ultimaId)" class="font-semibold underline shrink-0">Deshacer</button> }
+            <span class="flex items-center gap-3 shrink-0">
+              @if (entregarA) { <button type="button" (click)="irAEntregar()" class="px-3 py-1.5 rounded-lg font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Entregar billetes</button> }
+              @if (ultimaId) { <button type="button" (click)="deshacer(ultimaId)" class="font-semibold underline">Deshacer</button> }
+            </span>
           </p>
         }
         @if (error) { <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-red-50 border border-red-200 text-red-700" role="alert">{{ error }}</p> }
@@ -126,16 +137,18 @@ const CRITERIOS: { id: CriterioRubrica; titulo: string; ayuda: (idioma: Idioma) 
           <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
             @for (r of datos.recientes; track r.id) {
               <li class="px-4 py-3 flex items-center gap-3">
-                <div class="w-11 h-11 shrink-0 rounded-xl bg-slate-800 text-white flex flex-col items-center justify-center leading-none">
-                  <span class="text-lg font-black">{{ r.puntaje }}</span><span class="text-[10px] opacity-80">de 4</span>
+                <div class="w-12 h-12 shrink-0 rounded-xl bg-slate-800 text-white flex flex-col items-center justify-center leading-none">
+                  <span class="text-lg font-black">{{ r.puntaje }}</span><span class="text-[10px] opacity-80">de 12</span>
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold text-gray-800 truncate">{{ r.nombre }} {{ r.apellido }}</p>
                   <div class="mt-1 flex flex-wrap gap-1">
                     @for (c of criterios; track c.id) {
-                      <span class="text-[11px] px-1.5 py-0.5 rounded-full" [class]="r[c.id] ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-400 line-through'">{{ c.titulo }}</span>
+                      <span class="text-[11px] px-1.5 py-0.5 rounded-full" [class]="r[c.id] >= 2 ? 'bg-emerald-100 text-emerald-800' : (r[c.id] === 1 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500')">{{ c.corto }} {{ r[c.id] }}</span>
                     }
                   </div>
+                  @if (r.evidencia) { <p class="text-xs text-gray-500 mt-1 truncate">“{{ r.evidencia }}”</p> }
+                  @if (r.recompensa) { <p class="text-xs font-semibold text-amber-700 mt-0.5">Recompensa recomendada: {{ r.recompensa }} billetes</p> }
                 </div>
                 <div class="text-right shrink-0">
                   <p class="text-xs text-gray-500">{{ r.date_created | date:'h:mm a' }}</p>
@@ -148,43 +161,58 @@ const CRITERIOS: { id: CriterioRubrica; titulo: string; ayuda: (idioma: Idioma) 
       }
     </div>
 
-    <!-- Calificar -->
+    <!-- Calificar: cada criterio de 0 a 3 -->
     @if (estudiante) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrar()">
-        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-calificar">
+        <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-calificar">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
               <h2 id="titulo-calificar" class="text-lg font-bold text-gray-800">Calificar a {{ estudiante.nombre }}</h2>
-              <p class="text-sm text-gray-500">Toca lo que sí hizo. Clase en {{ idioma === 'frances' ? 'francés' : 'inglés' }}.</p>
+              <p class="text-sm text-gray-500">Elige el nivel de cada criterio. Clase en {{ idioma === 'frances' ? 'francés' : 'inglés' }}.</p>
             </div>
             <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
           </div>
-          <div class="flex-1 overflow-y-auto px-5 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex-1 overflow-y-auto px-5 pb-3 space-y-4">
             @for (c of criterios; track c.id) {
-              <button type="button" (click)="valores[c.id] = valores[c.id] ? 0 : 1" [attr.aria-pressed]="!!valores[c.id]"
-                      class="text-left rounded-2xl border-2 p-4 transition"
-                      [class]="valores[c.id] ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-gray-300'">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="w-10 h-10 rounded-xl flex items-center justify-center" [class]="valores[c.id] ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'" aria-hidden="true">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="c.icono"/></svg>
+              <fieldset>
+                <legend class="flex items-center gap-2 mb-2">
+                  <span class="w-8 h-8 rounded-lg flex items-center justify-center" [class]="valores[c.id] !== null ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'" aria-hidden="true">
+                    <svg width="18" height="18" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="c.icono"/></svg>
                   </span>
-                  <span class="text-xs font-bold px-2.5 py-1 rounded-full" [class]="valores[c.id] ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'">{{ valores[c.id] ? 'Sí' : 'No' }}</span>
+                  <span class="font-bold text-gray-800">{{ c.titulo }}</span>
+                  @if (valores[c.id] !== null) { <span class="ml-auto text-sm font-bold text-emerald-700">{{ valores[c.id] }} de 3</span> }
+                </legend>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" [attr.aria-label]="c.titulo">
+                  @for (texto of c.niveles; track $index; let n = $index) {
+                    <button type="button" role="radio" [attr.aria-checked]="valores[c.id] === n" (click)="valores[c.id] = n"
+                            class="text-left rounded-xl border-2 px-3 py-2 transition min-h-[64px]"
+                            [class]="valores[c.id] === n ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-gray-300'">
+                      <span class="block text-lg font-black" [class]="valores[c.id] === n ? 'text-emerald-700' : 'text-gray-400'">{{ n }}</span>
+                      <span class="block text-xs leading-tight" [class]="valores[c.id] === n ? 'text-emerald-900' : 'text-gray-600'">{{ texto }}</span>
+                    </button>
+                  }
                 </div>
-                <p class="mt-3 font-bold text-gray-800">{{ c.titulo }}</p>
-                <p class="text-sm text-gray-500">{{ c.ayuda(idioma) }}</p>
-              </button>
+              </fieldset>
             }
+            <div>
+              <label for="r-evidencia" class="block text-sm font-semibold text-gray-700">Actividad o evidencia <span class="font-normal text-gray-400">(opcional)</span></label>
+              <input id="r-evidencia" [(ngModel)]="evidencia" maxlength="255" placeholder="Ej.: Presentó su producto en {{ idioma === 'frances' ? 'francés' : 'inglés' }}"
+                     class="mt-1 w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            </div>
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm text-gray-500">Puntaje</span>
-              <span class="text-2xl font-extrabold text-gray-800">{{ puntaje }} <span class="text-sm font-semibold text-gray-500">de 4</span></span>
+              <span class="text-2xl font-extrabold text-gray-800">{{ puntaje }} <span class="text-sm font-semibold text-gray-500">de 12</span></span>
             </div>
-            <div class="flex gap-1 mb-4" aria-hidden="true">
-              @for (n of [1, 2, 3, 4]; track n) { <div class="h-2 flex-1 rounded-full" [class]="n <= puntaje ? 'bg-emerald-500' : 'bg-gray-200'"></div> }
+            <div class="h-2 rounded-full bg-gray-200 overflow-hidden mb-2" aria-hidden="true">
+              <div class="h-full rounded-full bg-emerald-500 transition-all" [style.width.%]="puntaje / 12 * 100"></div>
             </div>
+            <p class="text-sm mb-3" [class]="recompensaActual ? 'text-amber-700 font-semibold' : 'text-gray-500'">
+              {{ faltan ? 'Falta elegir ' + faltan + (faltan === 1 ? ' criterio' : ' criterios') + '.' : (recompensaActual ? 'Recompensa recomendada: ' + recompensaActual + ' billetes.' : 'Sin recompensa (desde 5 puntos).') }}
+            </p>
             @if (errorPanel) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
-            <button type="button" (click)="guardar()" [disabled]="enviando"
+            <button type="button" (click)="guardar()" [disabled]="enviando || faltan > 0"
                     class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
               {{ enviando ? 'Guardando…' : 'Guardar calificación' }}
             </button>
@@ -196,6 +224,7 @@ const CRITERIOS: { id: CriterioRubrica; titulo: string; ayuda: (idioma: Idioma) 
 })
 export class RubricaWillGo implements OnInit {
   private willGo = inject(WillGoService);
+  private router = inject(Router);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
   readonly criterios = CRITERIOS;
   readonly idiomas: { id: Idioma; texto: string }[] = [{ id: 'ingles', texto: 'Inglés' }, { id: 'frances', texto: 'Francés' }];
@@ -213,7 +242,11 @@ export class RubricaWillGo implements OnInit {
   private temporizador: ReturnType<typeof setTimeout> | null = null;
 
   estudiante: EstudianteRubrica | null = null;
-  valores: Record<CriterioRubrica, number> = { uso_lengua: 0, iniciativa: 0, nivel_reto: 0, colaboracion: 0 };
+  /** Nivel elegido en cada criterio (null = todavía no lo eligió: los 4 son obligatorios). */
+  valores: Record<CriterioRubrica, number | null> = { uso_lengua: null, iniciativa: null, nivel_reto: null, colaboracion: null };
+  evidencia = '';
+  /** Estudiante y billetes recomendados tras la última calificación (para ir a entregarlos). */
+  entregarA: { id: string; billetes: number } | null = null;
   enviando = false;
   errorPanel = '';
 
@@ -244,13 +277,22 @@ export class RubricaWillGo implements OnInit {
   }
   get presentes(): number { return (this.pais?.estudiantes ?? []).filter((e) => e.presente).length; }
   get calificadosHoy(): number { return (this.pais?.estudiantes ?? []).filter((e) => e.hoy > 0).length; }
-  get puntaje(): number { return CRITERIOS.reduce((t, c) => t + (this.valores[c.id] ? 1 : 0), 0); }
+  get puntaje(): number { return CRITERIOS.reduce((t, c) => t + (this.valores[c.id] ?? 0), 0); }
+  get faltan(): number { return CRITERIOS.filter((c) => this.valores[c.id] === null).length; }
+  get recompensaActual(): number { return this.faltan ? 0 : recompensa(this.puntaje); }
 
-  private avisar(texto: string, id: string | null = null): void {
+  private avisar(texto: string, id: string | null = null, entregarA: { id: string; billetes: number } | null = null): void {
     this.aviso = texto;
     this.ultimaId = id;
+    this.entregarA = entregarA;
     if (this.temporizador) clearTimeout(this.temporizador);
-    this.temporizador = setTimeout(() => { this.aviso = ''; this.ultimaId = null; }, 6000);
+    // Si hay recompensa, el aviso se queda más tiempo para que alcance a ir a entregarla
+    this.temporizador = setTimeout(() => { this.aviso = ''; this.ultimaId = null; this.entregarA = null; }, entregarA ? 20000 : 6000);
+  }
+
+  irAEntregar(): void {
+    if (!this.entregarA) return;
+    this.router.navigate(['/private-will-go/entregar'], { queryParams: { estudiante: this.entregarA.id, billetes: this.entregarA.billetes } });
   }
 
   alternarAsistencia(e: EstudianteRubrica): void {
@@ -264,7 +306,8 @@ export class RubricaWillGo implements OnInit {
 
   abrir(e: EstudianteRubrica): void {
     this.estudiante = e;
-    this.valores = { uso_lengua: 0, iniciativa: 0, nivel_reto: 0, colaboracion: 0 };
+    this.valores = { uso_lengua: null, iniciativa: null, nivel_reto: null, colaboracion: null };
+    this.evidencia = '';
     this.errorPanel = '';
   }
 
@@ -272,14 +315,15 @@ export class RubricaWillGo implements OnInit {
 
   guardar(): void {
     const e = this.estudiante;
-    if (!e || this.enviando) return;
+    if (!e || this.enviando || this.faltan) return;
     this.enviando = true;
     this.errorPanel = '';
-    this.willGo.calificar(e.id, { ...this.valores }, this.idioma).subscribe({
+    this.willGo.calificar(e.id, { ...this.valores } as Record<CriterioRubrica, number>, this.idioma, this.evidencia).subscribe({
       next: (r) => {
         this.enviando = false;
         this.estudiante = null;
-        this.avisar(`${e.nombre}: ${r.puntaje} de 4.`, r.id ?? null);
+        const texto = `${e.nombre}: ${r.puntaje} de 12.` + (r.recompensa ? ` Te recomendamos darle ${r.recompensa} billetes.` : '');
+        this.avisar(texto, r.id ?? null, r.recompensa ? { id: e.id, billetes: r.recompensa } : null);
         this.cargar();
       },
       error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },

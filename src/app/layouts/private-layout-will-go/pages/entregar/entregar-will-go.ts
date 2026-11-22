@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatosDocente, EstudianteDocente, PaisDocente, WillGoService } from '../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
@@ -124,6 +125,9 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
             <div>
               <h2 id="titulo-entrega" class="text-lg font-bold text-gray-800">Entregar a {{ estudiante.nombre }} {{ estudiante.apellido }}</h2>
               <p class="text-sm text-gray-500">Toca los billetes que le das.</p>
+              @if (recomendado && recomendado.estudiante === estudiante.id) {
+                <p class="mt-1 inline-block text-sm font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1">Recompensa recomendada por la rúbrica: {{ recomendado.billetes }} billetes</p>
+              }
             </div>
             <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
           </div>
@@ -208,6 +212,7 @@ export class EntregarWillGo implements OnInit {
         // Por defecto, el país donde tiene billetes
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises.find((p) => p.saldo > 0) ?? d.paises[0] ?? null;
         this.cargando = false;
+        this.abrirRecomendado();
       },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
     });
@@ -250,6 +255,28 @@ export class EntregarWillGo implements OnInit {
 
   get totalEntro(): number { return Number(this.pais?.total_recibido ?? 0); }
   get totalSalio(): number { return Number(this.pais?.total_entregado ?? 0); }
+
+  /** Viene de la rúbrica (?estudiante=…&billetes=…): abre de una vez el panel para entregarle la recompensa. */
+  private route = inject(ActivatedRoute);
+  recomendado: { estudiante: string; billetes: number } | null = null;
+  private yaAbierto = false;
+
+  private abrirRecomendado(): void {
+    if (this.yaAbierto || !this.datos) return;
+    const q = this.route.snapshot.queryParamMap;
+    const id = q.get('estudiante');
+    if (!id) return;
+    this.yaAbierto = true;
+    for (const p of this.datos.paises) {
+      const e = p.estudiantes.find((x) => x.id === id);
+      if (e) {
+        this.pais = p;
+        this.recomendado = { estudiante: id, billetes: Number(q.get('billetes')) || 0 };
+        this.abrir(e);
+        return;
+      }
+    }
+  }
 
   abrir(e: EstudianteDocente): void {
     this.estudiante = e;
