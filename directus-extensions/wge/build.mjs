@@ -17,10 +17,11 @@ const funcionarios = preparar(leer('funcionarios.js'));
 const admin = preparar(leer('admin.js'));
 const arqueo = preparar(leer('arqueo.js'));
 const wfunds = preparar(leer('wfunds.js'));
+const acudientes = preparar(leer('acudientes.js'));
 const hook = preparar(leer('hook.js')).replace(/^export default /m, 'const configHook = ');
 const endpoint = preparar(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
 
-const cuerpo = [lib, funcionarios, admin, arqueo, wfunds, hook, endpoint].join('\n');
+const cuerpo = [lib, funcionarios, admin, arqueo, wfunds, acudientes, hook, endpoint].join('\n');
 if (/^\s*(import|export)\b/m.test(cuerpo)) throw new Error('Quedó un import/export sin convertir');
 
 const api = `// Generado por build.mjs: no editar a mano.

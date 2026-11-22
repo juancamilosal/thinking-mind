@@ -226,9 +226,20 @@ rel('wge_inversiones', 'ronda_id', 'wge_rondas')
 
 coleccion('wge_votos', 'how_to_vote', 'Voto del acudiente por fondo y ronda', [
     m2o('acudiente_id', requerido=True), m2o('fondo_id', requerido=True), m2o('ronda_id', requerido=True),
-    campo('clave_unica', 'string', 'acudiente:fondo:ronda (un voto por fondo)', unico=True),
+    campo('clave_unica', 'string', 'acudiente:ronda (un voto por ronda; se puede cambiar mientras está abierta)', unico=True),
 ])
 rel('wge_votos', 'acudiente_id', 'clientes', EXT)
+
+coleccion('wge_codigos_acudiente', 'pin', 'Códigos de ingreso del acudiente al portal Will-Go (se guardan cifrados)', [
+    m2o('acudiente_id', requerido=True), campo('codigo_hash', 'string', 'SHA-256 del código'),
+    campo('expira', 'timestamp'), campo('intentos', 'integer', default=0), campo('usado', 'boolean', default=False),
+])
+rel('wge_codigos_acudiente', 'acudiente_id', 'clientes', 'CASCADE')
+
+coleccion('wge_sesiones_acudiente', 'key', 'Sesiones abiertas del portal del acudiente (el token se guarda cifrado)', [
+    m2o('acudiente_id', requerido=True), campo('token_hash', 'string', 'SHA-256 del token', unico=True), campo('expira', 'timestamp'),
+])
+rel('wge_sesiones_acudiente', 'acudiente_id', 'clientes', 'CASCADE')
 rel('wge_votos', 'fondo_id', 'wge_fondos')
 rel('wge_votos', 'ronda_id', 'wge_rondas')
 

@@ -8,12 +8,14 @@ import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
 import { rutasArqueo, totalDelConteo, inventarioBanco, inventarioDocente } from './arqueo.js';
 import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
+import { rutasAcudientes } from './acudientes.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
 export default {
 	id: 'wge',
 	handler: (router, { database: db, logger, services, getSchema }) => {
+		rutasAcudientes(router, { db, services, getSchema, logger });
 		const ruta = (fn) => async (req, res) => {
 			try {
 				if (!req.accountability?.user) throw new WgeError(401, 'SIN_SESION', 'Debes iniciar sesión');

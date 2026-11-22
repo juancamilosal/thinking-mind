@@ -1,0 +1,96 @@
+<div class="wg-pantalla">
+
+  <!-- Panel de marca: a la izquierda en computador, como banda superior en celular -->
+  <section class="wg-marca" aria-label="Will-Go Economy">
+    <!-- Billetes flotando de fondo -->
+    <div class="wg-billetes" aria-hidden="true">
+      @for (b of billetesFondo; track $index) {
+        <svg class="wg-billete-fondo" [style.top.%]="b.top" [style.left.%]="b.left" [style.width.px]="b.ancho"
+             [style.animation-delay.s]="b.retraso" [style.--giro]="b.giro + 'deg'" viewBox="0 0 120 64">
+          <rect x="1" y="1" width="118" height="62" rx="10" [attr.fill]="b.color" />
+          <rect x="7" y="7" width="106" height="50" rx="6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" />
+          <ellipse cx="60" cy="32" rx="17" ry="17" fill="rgba(255,255,255,.85)" />
+          <text x="60" y="39" text-anchor="middle" font-size="20" font-weight="900" fill="#1B2A4A">W</text>
+        </svg>
+      }
+    </div>
+
+    <div class="wg-marca-contenido">
+      <!-- Logo: si existe el archivo oficial se usa; si no, el logo dibujado -->
+      @if (!logoFallo) {
+        <img src="assets/images/will-go-economy-logo.png" alt="Will-Go Economy" class="wg-logo-imagen" (error)="logoFallo = true">
+      } @else {
+        <div class="wg-logo">
+          <svg class="wg-logo-billete" viewBox="0 0 150 96" aria-hidden="true">
+            <rect x="20" y="10" width="122" height="72" rx="12" fill="#FFE3C7" transform="rotate(-6 81 46)" />
+            <g transform="rotate(-12 75 50)">
+              <rect x="6" y="14" width="126" height="74" rx="12" fill="#FF6B1A" />
+              <rect x="13" y="21" width="112" height="60" rx="8" fill="none" stroke="#FFE3C7" stroke-width="2" />
+              <ellipse cx="69" cy="51" rx="23" ry="23" fill="#FFF7EE" />
+              <text x="69" y="62" text-anchor="middle" font-size="30" font-weight="900" fill="#1B2A4A">W</text>
+              <text x="22" y="38" font-size="11" font-weight="800" fill="#FFE3C7">1</text>
+              <text x="110" y="76" font-size="11" font-weight="800" fill="#FFE3C7">1</text>
+            </g>
+          </svg>
+          <div class="wg-logo-texto">
+            <span class="wg-logo-will">WILL-GO</span>
+            <span class="wg-logo-economy">ECONOMY</span>
+          </div>
+        </div>
+      }
+
+      <h1 class="wg-saludo">¡Hola, familia!</h1>
+      <p class="wg-lema">Sigue la economía de tu hijo y vota por las empresas.</p>
+
+      <ul class="wg-paises" aria-label="Países de la economía">
+        <li><span class="wg-punto" style="background:#3B82F6"></span>Wonderland</li>
+        <li><span class="wg-punto" style="background:#22C55E"></span>Neverland</li>
+        <li><span class="wg-punto" style="background:#A855F7"></span>Dreamland</li>
+      </ul>
+    </div>
+
+    <p class="wg-pie">© 2026 Thinking Mind · Will Go Discovery</p>
+  </section>
+
+  <!-- Formulario -->
+  <section class="wg-formulario">
+    <div class="wg-tarjeta">
+      <span class="wg-etiqueta">Acudientes</span>
+      <h2 class="wg-titulo">Ingreso</h2>
+      @if (paso === 'documento') {
+        <p class="wg-subtitulo">Escribe tu número de documento y te enviaremos un código a tu correo.</p>
+        <form (ngSubmit)="pedirCodigo()" novalidate>
+          <div class="wg-campo">
+            <label for="wg-documento">Número de documento</label>
+            <div class="wg-input-icono">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+              <input id="wg-documento" name="documento" [(ngModel)]="documento" inputmode="numeric" autocomplete="off" placeholder="Ej.: 1020304050">
+            </div>
+          </div>
+          @if (error) { <div class="wg-error" role="alert"><span>{{ error }}</span></div> }
+          <button type="submit" class="wg-boton" [disabled]="cargando || !documentoValido">
+            @if (cargando) { <span class="wg-girando"></span> Enviando… } @else { Enviarme el código }
+          </button>
+        </form>
+      } @else {
+        <p class="wg-subtitulo">
+          @if (correo) { Te enviamos un código de 6 dígitos a <b>{{ correo }}</b>. } @else { Si tu documento está registrado, te llegará un código de 6 dígitos al correo. }
+        </p>
+        <form (ngSubmit)="entrar()" novalidate>
+          <div class="wg-campo">
+            <label for="wg-codigo">Código</label>
+            <input id="wg-codigo" name="codigo" [(ngModel)]="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"
+                   class="wg-codigo">
+          </div>
+          @if (error) { <div class="wg-error" role="alert"><span>{{ error }}</span></div> }
+          <button type="submit" class="wg-boton" [disabled]="cargando || codigo.length !== 6">
+            @if (cargando) { <span class="wg-girando"></span> Entrando… } @else { Entrar }
+          </button>
+        </form>
+        <div class="wg-ayuda">
+          <button type="button" (click)="paso = 'documento'; codigo = ''; error = ''">Cambiar documento o pedir otro código</button>
+        </div>
+      }
+    </div>
+  </section>
+</div>

@@ -5,6 +5,7 @@ import { DatosWfunds, FondoWfunds, InversionWfunds, PaisWfunds, WillGoService } 
 import { formatearNumero } from '../../numero-miles.directive';
 import { SelectorBilletesComponent } from '../../selector-billetes.component';
 import { TarjetaFondoComponent } from '../../tarjeta-fondo.component';
+import { GraficaRendimientoComponent } from '../../grafica-rendimiento.component';
 
 type Estudiante = PaisWfunds['estudiantes'][number];
 type Vista = 'invertir' | 'cobrar' | 'resultados';
@@ -20,7 +21,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
 @Component({
   selector: 'app-wfunds-will-go',
   standalone: true,
-  imports: [FormsModule, DatePipe, SelectorBilletesComponent, TarjetaFondoComponent],
+  imports: [FormsModule, DatePipe, SelectorBilletesComponent, TarjetaFondoComponent, GraficaRendimientoComponent],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -199,6 +200,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
 
         <!-- Resultados -->
         @if (vista === 'resultados') {
+          <wg-grafica-rendimiento class="block mt-4" [fondos]="datos.fondos" [rondas]="cronologicas" />
           @if (!cerradas.length) {
             <p class="mt-4 text-sm text-gray-500">Aquí verás cuánto ganó o perdió cada empresa cuando cierres una ronda.</p>
           }
@@ -359,10 +361,12 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   restante = 0;
   private desfase = 0;
   private reloj$: ReturnType<typeof setInterval> | null = null;
+  private refresco$: ReturnType<typeof setInterval> | null = null;
   private ultimaRecarga = 0;
 
   ngOnDestroy(): void {
     if (this.reloj$) clearInterval(this.reloj$);
+    if (this.refresco$) clearInterval(this.refresco$);
   }
 
   /** Cada segundo actualiza la cuenta regresiva; cuando llega a 0 recarga hasta ver la ronda cerrada. */
@@ -400,10 +404,12 @@ export class WfundsWillGo implements OnInit, OnDestroy {
     this.willGo.wfunds(this.edicionId).subscribe({
       next: (d) => {
         this.datos = d;
+        this.cronologicas = d.rondas.filter((r) => r.estado !== 'abierta').reverse();
         this.desfase = new Date(d.ahora).getTime() - Date.now();
         if (d.ronda?.duracion_minutos) this.duracion = d.ronda.duracion_minutos;
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
         if (!this.reloj$) this.reloj$ = setInterval(() => this.tic(), 1000);
+        if (!this.refresco$) this.refresco$ = setInterval(() => { if (!this.estudiante && !this.pago && !this.confirmarCierre && !this.enviando && !this.trabajando) this.cargar(); }, 20000);
         this.tic();
         this.cargando = false;
       },
@@ -420,6 +426,8 @@ export class WfundsWillGo implements OnInit, OnDestroy {
 
   get activos(): FondoWfunds[] { return (this.datos?.fondos ?? []).filter((f) => f.activo); }
   get cerradas() { return (this.datos?.rondas ?? []).filter((r) => r.estado !== 'abierta'); }
+  /** Rondas cerradas de la más vieja a la más nueva (para la gráfica); se recalcula solo cuando cambian los datos. */
+  cronologicas: DatosWfunds['rondas'] = [];
   get totalInvertido(): number { return (this.pais?.inversiones ?? []).reduce((t, i) => t + Number(i.monto), 0); }
   get conInventario(): number[] { return (this.datos?.denominaciones ?? []).filter((d) => (this.pais?.inventario?.[d] ?? 0) > 0); }
   get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.elegidos[d]) || 0), 0); }

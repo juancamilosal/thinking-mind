@@ -13,6 +13,8 @@ import { ArqueoWillGo } from './layouts/private-layout-will-go/pages/arqueo/arqu
 import { RepartirWillGo } from './layouts/private-layout-will-go/pages/repartir/repartir-will-go';
 import { EntregarWillGo } from './layouts/private-layout-will-go/pages/entregar/entregar-will-go';
 import { WfundsWillGo } from './layouts/private-layout-will-go/pages/wfunds/wfunds-will-go';
+import { IngresoAcudiente } from './layouts/public-layout/pages/acudiente-will-go/ingreso-acudiente';
+import { PanelAcudiente } from './layouts/public-layout/pages/acudiente-will-go/panel-acudiente';
 
 /** Solo entran colaboradores de Will Go, y quien tiene clave temporal solo puede ir a cambiarla. */
 export const willGoGuard: CanActivateFn = (route, state) => {
@@ -33,6 +35,9 @@ export const willGoRoutes: Routes = [
     title: 'Will-Go Economy | Ingreso',
     component: LoginWillGo,
   },
+  // Portal de acudientes (sin usuario de Directus: entran con documento + código al correo)
+  { path: 'acudiente-will-go', title: 'Will-Go Economy | Acudientes', component: IngresoAcudiente },
+  { path: 'acudiente-will-go/panel', title: 'Will-Go Economy | Mi familia', component: PanelAcudiente },
   {
     path: 'private-will-go',
     component: PrivateLayoutWillGo,
