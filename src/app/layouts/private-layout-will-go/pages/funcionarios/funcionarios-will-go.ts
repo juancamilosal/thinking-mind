@@ -23,6 +23,23 @@ export class FuncionariosWillGo implements OnInit {
   errorCarga = '';
   busqueda = '';
   filtroRol: RolFuncionario | '' = '';
+  /** Paginador: 10 colaboradores por página. */
+  readonly porPagina = 10;
+  pagina = 1;
+  get totalPaginas(): number { return Math.max(1, Math.ceil(this.filtrados.length / this.porPagina)); }
+  get paginaActual(): Funcionario[] {
+    const p = Math.min(this.pagina, this.totalPaginas);
+    return this.filtrados.slice((p - 1) * this.porPagina, p * this.porPagina);
+  }
+  get desde(): number { return this.filtrados.length ? (Math.min(this.pagina, this.totalPaginas) - 1) * this.porPagina + 1 : 0; }
+  get hasta(): number { return Math.min(Math.min(this.pagina, this.totalPaginas) * this.porPagina, this.filtrados.length); }
+  /** Números de página a mostrar (máximo 5 alrededor de la actual). */
+  get paginas(): number[] {
+    const total = this.totalPaginas, p = Math.min(this.pagina, total);
+    const ini = Math.max(1, Math.min(p - 2, total - 4)), fin = Math.min(total, ini + 4);
+    return Array.from({ length: fin - ini + 1 }, (_, i) => ini + i);
+  }
+  irA(n: number): void { this.pagina = Math.max(1, Math.min(n, this.totalPaginas)); }
 
   // Formulario de crear / editar
   formularioAbierto = false;

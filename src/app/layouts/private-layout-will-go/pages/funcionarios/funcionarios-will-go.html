@@ -25,9 +25,9 @@
 
   <!-- Búsqueda -->
   <div class="mt-5 flex flex-col sm:flex-row gap-3">
-    <input type="search" [value]="busqueda" (input)="busqueda = $any($event.target).value" placeholder="Buscar colaborador…" aria-label="Buscar por nombre, correo o documento"
+    <input type="search" [value]="busqueda" (input)="busqueda = $any($event.target).value; pagina = 1" placeholder="Buscar colaborador…" aria-label="Buscar por nombre, correo o documento"
            class="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-    <select [value]="filtroRol" (change)="filtroRol = $any($event.target).value"
+    <select [value]="filtroRol" (change)="filtroRol = $any($event.target).value; pagina = 1"
             class="sm:w-48 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
       <option value="">Todos los roles</option>
       @for (r of rolesDisponibles; track r) { <option [value]="r">{{ nombreRol[r] }}</option> }
@@ -57,9 +57,9 @@
     } @else {
       <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <ul class="divide-y divide-gray-100">
-          @for (f of filtrados; track f.id) {
-            <li class="p-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3" [class.opacity-60]="f.estado !== 'active'">
-              <div class="flex items-center gap-3 min-w-0 flex-1">
+          @for (f of paginaActual; track f.id) {
+            <li class="p-4 sm:px-6 flex flex-col xl:flex-row xl:items-center gap-3" [class.opacity-60]="f.estado !== 'active'">
+              <div class="flex items-center gap-3 min-w-0 flex-1 xl:min-w-[14rem]">
                 <div class="w-11 h-11 shrink-0 rounded-full flex items-center justify-center font-bold text-white"
                      [class]="f.rol === 'docente' ? 'bg-teal-600' : f.rol === 'banco' ? 'bg-blue-600' : f.rol === 'cajero' ? 'bg-amber-500' : 'bg-slate-700'">
                   {{ (f.nombre[0] || '') + (f.apellido[0] || '') }}
@@ -70,7 +70,7 @@
                 </div>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 lg:w-72">
+              <div class="flex flex-wrap items-center gap-2 xl:w-72 xl:shrink-0">
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ nombreRol[f.rol] }}</span>
                 @if (f.estado !== 'active') {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">Inactivo</span>
@@ -79,13 +79,13 @@
                 } @else {
                   <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-800">Activo</span>
                 }
-                <span class="text-xs text-gray-400 w-full lg:w-auto">
+                <span class="text-xs text-gray-400 w-full xl:w-auto">
                   {{ f.ultimo_ingreso ? 'Último ingreso ' + (f.ultimo_ingreso | date:'d MMM, h:mm a') : 'Aún no ha ingresado' }}
                 </span>
               </div>
 
               @if (puedeManejar(f)) {
-                <div class="flex flex-wrap gap-2 lg:justify-end">
+                <div class="flex flex-wrap gap-2 xl:justify-end xl:shrink-0 xl:max-w-[15rem]">
                   <button type="button" (click)="abrirEditar(f)" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Editar</button>
                   <button type="button" (click)="pedirConfirmacion('clave', f)" class="px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Nueva clave</button>
                   @if (f.id !== miId) {
@@ -101,6 +101,20 @@
             </li>
           }
         </ul>
+        <!-- Paginador -->
+        @if (totalPaginas > 1) {
+          <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100" aria-label="Páginas">
+            <p class="text-sm text-gray-500">{{ desde }}–{{ hasta }} de {{ filtrados.length }} colaboradores</p>
+            <div class="flex items-center gap-1">
+              <button type="button" (click)="irA(pagina - 1)" [disabled]="pagina === 1" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" aria-label="Página anterior">‹ Anterior</button>
+              @for (n of paginas; track n) {
+                <button type="button" (click)="irA(n)" [attr.aria-current]="n === pagina ? 'page' : null"
+                        class="w-9 h-9 p-0 rounded-lg text-sm font-semibold" [class]="n === pagina ? 'bg-teal-600 text-white' : 'text-gray-700 hover:bg-gray-100'">{{ n }}</button>
+              }
+              <button type="button" (click)="irA(pagina + 1)" [disabled]="pagina === totalPaginas" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" aria-label="Página siguiente">Siguiente ›</button>
+            </div>
+          </nav>
+        }
       </div>
     }
   </div>
