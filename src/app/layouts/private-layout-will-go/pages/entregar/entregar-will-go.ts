@@ -47,11 +47,32 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
         <div class="mt-4 rounded-2xl p-5 text-white shadow" [style.background]="pais.color || '#1e293b'">
           <p class="text-sm opacity-90">Tus billetes de {{ pais.nombre }}</p>
           <p class="text-3xl font-extrabold mt-1 break-all">{{ miles(pais.saldo) }} <span class="text-base font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
-          @if (resumenBilletes) { <p class="text-sm mt-2 opacity-90">{{ resumenBilletes }}</p> }
+          @if (conBilletes.length) {
+            <button type="button" (click)="verBilletes = !verBilletes" [attr.aria-expanded]="verBilletes"
+                    class="mt-3 inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-1.5 text-sm font-semibold">
+              {{ verBilletes ? 'Ocultar billetes' : 'Ver mis billetes' }}
+              <svg class="w-4 h-4 transition-transform" [class.rotate-180]="verBilletes" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          }
           @if (datos.edicion.estado !== 'abierta') {
             <p class="text-sm mt-2 bg-white/20 rounded-lg px-3 py-1.5 inline-block">Podrás entregar cuando la edición esté abierta.</p>
           }
         </div>
+
+        @if (verBilletes && conBilletes.length) {
+          <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            @for (d of conBilletes; track d) {
+              <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                @if (imagen(d); as src) {
+                  <img [src]="src" [alt]="'Billete de ' + miles(d)" class="w-full aspect-[520/281] object-cover">
+                } @else {
+                  <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
+                }
+                <p class="py-1.5 text-center text-sm text-gray-600"><b class="text-gray-800 text-base">{{ miles(tengo(d)) }}</b> {{ tengo(d) === 1 ? 'billete' : 'billetes' }}</p>
+              </div>
+            }
+          </div>
+        }
 
         @if (aviso) {
           <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800" role="status">{{ aviso }}</p>
@@ -66,7 +87,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
         </div>
 
         @if (vista === 'estudiantes') {
-          <input type="search" [(ngModel)]="busqueda" placeholder="Buscar por nombre o código…" aria-label="Buscar estudiante"
+          <input type="search" [(ngModel)]="busqueda" placeholder="Buscar estudiante…" aria-label="Buscar estudiante"
                  class="mt-4 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
           @if (!pais.estudiantes.length) {
             <div class="mt-3 bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center text-gray-600">No hay estudiantes en {{ pais.nombre }}.</div>
@@ -77,7 +98,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
                   <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">
                     <p class="font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</p>
-                    <p class="text-xs text-gray-500"><span class="font-mono">{{ e.codigo }}</span> · tiene <b class="text-gray-700">{{ miles(e.saldo) }}</b></p>
+                    <p class="text-xs text-gray-500">Tiene <b class="text-gray-700">{{ miles(e.saldo) }}</b></p>
                   </div>
                   <button type="button" (click)="abrir(e)" [disabled]="datos.edicion.estado !== 'abierta' || !pais.saldo"
                           class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">Entregar</button>
@@ -193,6 +214,7 @@ export class EntregarWillGo implements OnInit {
   pais: PaisDocente | null = null;
   vista: 'estudiantes' | 'recibido' | 'entregado' = 'estudiantes';
   busqueda = '';
+  verBilletes = false;
   cargando = true;
   error = '';
   aviso = '';
@@ -231,13 +253,6 @@ export class EntregarWillGo implements OnInit {
   get filtrados(): EstudianteDocente[] {
     const palabras = normalizar(this.busqueda).split(/\s+/).filter(Boolean);
     return (this.pais?.estudiantes ?? []).filter((e) => { const n = normalizar(`${e.nombre} ${e.apellido} ${e.codigo}`); return palabras.every((w) => n.includes(w)); });
-  }
-
-  /** "3 de 1.000 · 10 de 50": qué billetes tiene en mano. */
-  get resumenBilletes(): string {
-    const inv = this.pais?.inventario ?? {};
-    return Object.entries(inv).filter(([, n]) => n > 0).sort((a, b) => Number(b[0]) - Number(a[0]))
-      .map(([d, n]) => `${this.miles(n)} de ${this.miles(Number(d))}`).join(' · ');
   }
 
   get conBilletes(): number[] {
