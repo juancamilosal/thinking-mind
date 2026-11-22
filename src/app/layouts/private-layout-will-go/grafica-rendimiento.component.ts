@@ -153,10 +153,10 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
   }
 
   ngOnChanges(): void {
-    // Eje fijo de −100 % a +100 %, con una línea cada 25 %
-    this.maximo = 100;
-    this.minimo = -100;
-    this.marcas = [-100, -75, -50, -25, 0, 25, 50, 75, 100];
+    // Eje fijo de −50 % a +50 %, con una línea cada 10 %
+    this.maximo = 50;
+    this.minimo = -50;
+    this.marcas = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50];
     this.elegida = this.rondas.length ? this.rondas.length - 1 : null;
     this.calcular();
   }
