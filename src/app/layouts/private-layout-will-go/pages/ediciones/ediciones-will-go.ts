@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { Edicion, Oferta, WillGoService } from '../../../../core/services/will-go.service';
 import { ESTADO_EDICION } from './estado-edicion';
 import { BuscadorOfertaComponent, OfertaElegida } from '../../buscador-oferta.component';
@@ -10,7 +9,7 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
 @Component({
   selector: 'app-ediciones-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, BuscadorOfertaComponent, EliminarEdicionComponent],
+  imports: [ReactiveFormsModule, RouterLink, BuscadorOfertaComponent, EliminarEdicionComponent],
   template: `
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
@@ -39,19 +38,37 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
             <p class="text-gray-500 text-sm mt-1">Crea la primera con «Nueva edición». Viene lista con los 3 países y los 5 fondos.</p>
           </div>
         } @else {
+          <!-- Vigentes / Terminadas (terminada = ya pasó su fecha de fin o está cerrada) -->
+          <div class="mb-4 inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="tablist">
+            @for (v of vistas; track v.id) {
+              <button type="button" role="tab" [attr.aria-selected]="vista === v.id" (click)="vista = v.id"
+                      class="px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-1.5" [class]="vista === v.id ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">
+                {{ v.texto }} <span class="text-xs font-bold px-1.5 rounded-full" [class]="vista === v.id ? 'bg-orange-200' : 'bg-gray-100'">{{ v.id === 'vigentes' ? vigentes.length : terminadas.length }}</span>
+              </button>
+            }
+          </div>
+          @if (!visibles.length) {
+            <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">
+              {{ vista === 'vigentes' ? 'No hay ediciones vigentes. Crea una con «Nueva edición».' : 'Todavía no hay ediciones terminadas.' }}
+            </div>
+          }
           <div class="grid gap-4 md:grid-cols-2">
-            @for (e of ediciones; track e.id) {
-              <article class="group bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition flex flex-col">
+            @for (e of visibles; track e.id) {
+              <article class="group bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition flex flex-col" [class.opacity-75]="terminada(e)">
                 <a [routerLink]="['/private-will-go/ediciones', e.id]" class="block">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <p class="font-bold text-gray-800 text-lg truncate">{{ e.nombre }}</p>
                       <p class="text-sm text-gray-500 truncate">{{ e.colegio_nombre || 'Sin colegio' }} · {{ e.programa_nombre || 'Sin programa' }}{{ e.edicion_programa ? ' · Edición ' + e.edicion_programa : '' }}</p>
                     </div>
-                    <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[e.estado].clase">{{ estado[e.estado].texto }}</span>
+                    @if (terminada(e)) {
+                      <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-200 text-gray-700">Terminada</span>
+                    } @else {
+                      <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full" [class]="estado[e.estado].clase">{{ estado[e.estado].texto }}</span>
+                    }
                   </div>
                   <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-                    <span>📅 {{ e.fecha_inicio ? (e.fecha_inicio | date:'d MMM y') : 'Sin fecha' }}</span>
+                    <span>📅 {{ fechas(e) }}</span>
                     <span>👥 {{ e.participantes }} estudiantes</span>
                     @if (e.sin_pais) { <span class="text-amber-700">⚠ {{ e.sin_pais }} sin país</span> }
                   </div>
@@ -126,6 +143,33 @@ export class EdicionesWillGo implements OnInit {
   readonly estado = ESTADO_EDICION;
 
   ediciones: Edicion[] = [];
+  readonly vistas: { id: 'vigentes' | 'terminadas'; texto: string }[] = [{ id: 'vigentes', texto: 'Vigentes' }, { id: 'terminadas', texto: 'Terminadas' }];
+  vista: 'vigentes' | 'terminadas' = 'vigentes';
+
+  /** Hoy en Colombia (AAAA-MM-DD), para comparar con las fechas del programa. */
+  private get hoy(): string { return new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10); }
+  /** Terminada = ya pasó su fecha de fin (o está cerrada). */
+  terminada(e: Edicion): boolean { return e.estado === 'cerrada' || (!!e.fecha_fin && String(e.fecha_fin).slice(0, 10) < this.hoy); }
+  get vigentes(): Edicion[] { return this.ediciones.filter((e) => !this.terminada(e)); }
+  get terminadas(): Edicion[] { return this.ediciones.filter((e) => this.terminada(e)); }
+  get visibles(): Edicion[] { return this.vista === 'vigentes' ? this.vigentes : this.terminadas; }
+
+  /** «19 – 20 dic 2026»: las fechas se guardan sin hora y se leen tal cual (sin correrse por la zona horaria). */
+  fechas(e: Edicion): string {
+    const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const partes = (v: string | null | undefined) => {
+      if (!v) return null;
+      const [a, m, d] = String(v).slice(0, 10).split('-').map(Number);
+      return { a, m: MESES[m - 1], d };
+    };
+    const i = partes(e.fecha_inicio), f = partes(e.fecha_fin);
+    if (!i && !f) return 'Sin fecha';
+    if (!i || !f) { const x = (i ?? f)!; return `${x.d} ${x.m} ${x.a}`; }
+    if (i.a === f.a && i.m === f.m) return i.d === f.d ? `${i.d} ${i.m} ${i.a}` : `${i.d} – ${f.d} ${f.m} ${f.a}`;
+    if (i.a === f.a) return `${i.d} ${i.m} – ${f.d} ${f.m} ${f.a}`;
+    return `${i.d} ${i.m} ${i.a} – ${f.d} ${f.m} ${f.a}`;
+  }
+
   aEliminar: Edicion | null = null;
   aviso = '';
   cargando = true;
