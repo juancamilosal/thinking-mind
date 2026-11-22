@@ -80,7 +80,7 @@ import { ProcesandoRondaComponent } from '../../../private-layout-will-go/proces
                   <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" aria-hidden="true"></div>
                   <div class="absolute right-10 -bottom-12 w-28 h-28 rounded-full bg-white/10" aria-hidden="true"></div>
                   <div class="relative flex items-center gap-4">
-                    <div class="w-14 h-14 shrink-0 flex items-center justify-center" aria-hidden="true">
+                    <div class="wg-avatar w-14 h-14 shrink-0 flex items-center justify-center" aria-hidden="true">
                       <img src="assets/images/will-go/estudiante.png" alt="" class="w-full h-full object-contain">
                     </div>
                     <div class="min-w-0">
