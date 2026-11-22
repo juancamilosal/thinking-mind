@@ -4,15 +4,14 @@ import { TabPaises } from './tab-paises';
 import { TabReglas } from './tab-reglas';
 import { TabHorario } from './tab-horario';
 import { TabFondos } from './tab-fondos';
-import { ArqueoComponent } from '../../../arqueo.component';
 
-type Seccion = 'paises' | 'reglas' | 'horario' | 'fondos' | 'arqueo';
+type Seccion = 'paises' | 'reglas' | 'horario' | 'fondos';
 
 /** Pestaña Economía: agrupa países y banco, reglas de la tasa, horario y fondos. */
 @Component({
   selector: 'app-tab-economia',
   standalone: true,
-  imports: [TabPaises, TabReglas, TabHorario, TabFondos, ArqueoComponent],
+  imports: [TabPaises, TabReglas, TabHorario, TabFondos],
   template: `
     <div class="flex flex-wrap gap-1" role="tablist">
       @for (s of secciones; track s.id) {
@@ -29,7 +28,6 @@ type Seccion = 'paises' | 'reglas' | 'horario' | 'fondos' | 'arqueo';
         @case ('reglas') { <app-tab-reglas [edicion]="edicion" (guardada)="guardada.emit($event)" /> }
         @case ('horario') { <app-tab-horario [edicion]="edicion" (guardada)="guardada.emit($event)" /> }
         @case ('fondos') { <app-tab-fondos [edicion]="edicion" /> }
-        @case ('arqueo') { <wg-arqueo [edicionId]="edicion.id" /> }
       }
     </div>
   `,
@@ -42,7 +40,6 @@ export class TabEconomia {
     { id: 'reglas', texto: 'Economía' },
     { id: 'horario', texto: 'Horario' },
     { id: 'fondos', texto: 'Fondos' },
-    { id: 'arqueo', texto: 'Banco' },
   ];
   seccion: Seccion = 'paises';
 }
