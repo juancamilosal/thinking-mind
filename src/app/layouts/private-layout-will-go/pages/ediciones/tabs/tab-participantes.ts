@@ -61,7 +61,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
       } @else {
         <div class="hidden md:grid grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem] gap-3 px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
           <label class="flex items-center"><input type="checkbox" [checked]="todosSeleccionados" (change)="seleccionarTodos($any($event.target).checked)" aria-label="Seleccionar todos"></label>
-          <span>Estudiante</span><span>Código</span><span>País</span><span class="text-right">Saldo</span><span class="text-center">Presente</span>
+          <span>Estudiante</span><span title="Código corto del estudiante para buscarlo o escanearlo (QR) en la caja y al entregar billetes">Código ⓘ</span><span>País</span><span class="text-right">Saldo</span><span class="text-center">Presente</span>
         </div>
         <ul class="divide-y divide-gray-100">
           @for (p of filtrados; track p.id) {
@@ -69,7 +69,10 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
               <label class="flex items-center"><input type="checkbox" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'Seleccionar a ' + p.nombre"></label>
               <div class="min-w-0">
                 <p class="font-semibold text-gray-800 truncate">{{ p.nombre }} {{ p.apellido }}</p>
-                <p class="text-xs text-gray-500 truncate">{{ p.colegio || 'Sin colegio' }}{{ p.grado ? ' · Grado ' + p.grado : '' }}</p>
+                <!-- El colegio solo se muestra si la edición reúne varios colegios -->
+                @if (!edicion.colegio_id || p.grado) {
+                  <p class="text-xs text-gray-500 truncate">{{ edicion.colegio_id ? '' : (p.colegio || 'Sin colegio') }}{{ !edicion.colegio_id && p.grado ? ' · ' : '' }}{{ p.grado ? 'Grado ' + p.grado : '' }}</p>
+                }
               </div>
               <span class="col-start-2 md:col-start-auto font-mono text-sm text-gray-700">{{ p.codigo }}</span>
               <select class="col-start-2 md:col-start-auto px-3 py-2 rounded-lg border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
