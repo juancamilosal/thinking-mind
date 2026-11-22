@@ -21,12 +21,8 @@ import { BuscadorOfertaComponent, OfertaElegida } from '../../../buscador-oferta
           </div>
           <div>
             <label for="g-oferta" class="block text-sm font-semibold text-gray-700 mb-1">Colegio, programa y edición</label>
-            <wg-buscador-oferta inputId="g-oferta" [ofertas]="ofertas" [actual]="ofertaActual" [nombreEdicionActual]="edicion.nombre"
+            <wg-buscador-oferta inputId="g-oferta" [compacto]="true" [ofertas]="ofertas" [actual]="ofertaActual" [nombreEdicionActual]="edicion.nombre"
                                 [soloPrograma]="edicion.participantes > 0 ? edicion.curso_id : null" (elegida)="alElegirOferta($event)" />
-            <p class="text-xs text-gray-500 mt-1">
-              Solo entran los inscritos en esa edición del programa en ese colegio.
-              @if (edicion.participantes > 0) { Como ya hay participantes, solo se puede cambiar a otra edición o colegio del mismo programa. }
-            </p>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
