@@ -643,7 +643,9 @@
         "guardadoCuadra": "{{pais}} cash count saved: balanced.",
         "guardadoFaltan": "{{pais}} cash count saved: {{n}} short.",
         "guardadoSobran": "{{pais}} cash count saved: {{n}} over.",
-        "virtualAyuda": "No bills: it is for transfers to teachers. It matches the printed bills (total loaded: {{n}}). Not part of the bill count."
+        "virtualAyuda": "No bills: it is for transfers to teachers. It matches the printed bills (total loaded: {{n}}). Not part of the bill count.",
+        "medioMovimientos": "Cash or virtual transactions",
+        "sinMovimientosVirtual": "No virtual balance transactions yet."
       },
       "wfunds": {
         "subtitulo": "Student investments in the companies.",

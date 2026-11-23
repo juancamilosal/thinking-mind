@@ -643,7 +643,9 @@
         "guardadoCuadra": "Arqueo de {{pais}} guardado: cuadra.",
         "guardadoFaltan": "Arqueo de {{pais}} guardado: faltan {{n}} billetes.",
         "guardadoSobran": "Arqueo de {{pais}} guardado: sobran {{n}} billetes.",
-        "virtualAyuda": "Sin billetes: es para transferir a los docentes. Se carga igual a los billetes impresos (total cargado: {{n}}). No entra en el conteo de billetes."
+        "virtualAyuda": "Sin billetes: es para transferir a los docentes. Se carga igual a los billetes impresos (total cargado: {{n}}). No entra en el conteo de billetes.",
+        "medioMovimientos": "Movimientos en efectivo o virtuales",
+        "sinMovimientosVirtual": "Todavía no hay movimientos en el saldo virtual."
       },
       "wfunds": {
         "subtitulo": "Inversiones de los estudiantes en las empresas.",

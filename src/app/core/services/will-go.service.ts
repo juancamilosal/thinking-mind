@@ -133,8 +133,10 @@ export interface PaisArqueo {
   /** Billetes que hay hoy en el banco por denominación (asignados − entregados + recibidos). */
   inventario?: Record<string, number>;
   /** Lo que ha entrado y salido del banco (los últimos 100) y los totales de siempre. */
-  movimientos: { id: string; tipo: string; entra: boolean; titulo: string; monto: number; saldo_despues: number; fecha: string; quien: string; billetes: Record<string, number> | null }[];
+  movimientos: { id: string; tipo: string; medio?: 'efectivo' | 'virtual'; entra: boolean; titulo: string; monto: number; saldo_despues: number; fecha: string; quien: string; billetes: Record<string, number> | null }[];
+  /** Totales del efectivo (billetes) y, aparte, de la cuenta virtual del banco. */
   total_entro: number; total_salio: number;
+  virtual_entro?: number; virtual_salio?: number;
 }
 
 export interface Arqueo {

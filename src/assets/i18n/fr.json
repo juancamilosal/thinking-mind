@@ -643,7 +643,9 @@
         "guardadoCuadra": "Comptage de {{pais}} enregistré : équilibré.",
         "guardadoFaltan": "Comptage de {{pais}} enregistré : il manque {{n}}.",
         "guardadoSobran": "Comptage de {{pais}} enregistré : {{n}} en trop.",
-        "virtualAyuda": "Sans billets : il sert aux virements aux enseignants. Il égale les billets imprimés (total chargé : {{n}}). N'entre pas dans le comptage des billets."
+        "virtualAyuda": "Sans billets : il sert aux virements aux enseignants. Il égale les billets imprimés (total chargé : {{n}}). N'entre pas dans le comptage des billets.",
+        "medioMovimientos": "Mouvements en espèces ou virtuels",
+        "sinMovimientosVirtual": "Aucun mouvement sur le solde virtuel pour le moment."
       },
       "wfunds": {
         "subtitulo": "Investissements des élèves dans les entreprises.",

@@ -1650,16 +1650,19 @@ const leerBilletes = (b) => (typeof b === 'string' ? JSON.parse(b) : b) ?? null;
  */
 async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 	const billeteras = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId }).whereIn('tipo_dueno', ['banco', 'banco_virtual']).select('id', 'tipo_dueno');
-	if (!billeteras.length) return { movimientos: [], total_entro: 0, total_salio: 0 };
+	if (!billeteras.length) return { movimientos: [], total_entro: 0, total_salio: 0, virtual_entro: 0, virtual_salio: 0 };
 	const virtual = new Set(billeteras.filter((b) => b.tipo_dueno === 'banco_virtual').map((b) => b.id));
 	const idsBanco = billeteras.map((b) => b.id);
-	const totales = await db('wge_movimientos').whereIn('billetera_id', idsBanco)
-		.select(db.raw('coalesce(sum(case when monto > 0 then monto else 0 end), 0)::bigint as entro'), db.raw('coalesce(sum(case when monto < 0 then -monto else 0 end), 0)::bigint as salio'))
-		.first();
-	const filas = await db('wge_movimientos as m').leftJoin('directus_users as u', 'u.id', 'm.user_created')
-		.whereIn('m.billetera_id', idsBanco).orderBy('m.date_created', 'desc').orderBy('m.consecutivo', 'desc').limit(limite)
+	// Totales por billetera: el efectivo (billetes) y la cuenta virtual se llevan por separado
+	const totalesPorBilletera = await db('wge_movimientos').whereIn('billetera_id', idsBanco).groupBy('billetera_id')
+		.select('billetera_id', db.raw('coalesce(sum(case when monto > 0 then monto else 0 end), 0)::bigint as entro'), db.raw('coalesce(sum(case when monto < 0 then -monto else 0 end), 0)::bigint as salio'));
+	const suma = (esVirtual, campo) => totalesPorBilletera.filter((t) => virtual.has(t.billetera_id) === esVirtual).reduce((a, t) => a + Number(t[campo]), 0);
+	// Los últimos `limite` de cada una, para que muchos movimientos de una no escondan los de la otra
+	const filas = (await Promise.all(idsBanco.map((id) => db('wge_movimientos as m').leftJoin('directus_users as u', 'u.id', 'm.user_created')
+		.where('m.billetera_id', id).orderBy('m.consecutivo', 'desc').limit(limite)
 		.select('m.id', 'm.billetera_id', 'm.tipo', 'm.monto', 'm.saldo_despues', 'm.referencia_tipo', 'm.referencia_id', 'm.date_created',
-			db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien"));
+			db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien")))))
+		.flat().sort((a, b) => new Date(b.date_created) - new Date(a.date_created));
 
 	const ids = (tipo) => [...new Set(filas.filter((f) => f.referencia_tipo === tipo && f.referencia_id).map((f) => f.referencia_id))];
 	const transferencias = new Map((ids('transferencia').length ? await db('wge_transferencias as t')
@@ -1705,7 +1708,11 @@ async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 		}
 		return { id: f.id, tipo: f.tipo, medio: virtual.has(f.billetera_id) ? 'virtual' : 'efectivo', entra, titulo, monto: Math.abs(Number(f.monto)), saldo_despues: Number(f.saldo_despues), fecha: f.date_created, quien: f.quien || '', billetes };
 	});
-	return { movimientos, total_entro: Number(totales?.entro ?? 0), total_salio: Number(totales?.salio ?? 0) };
+	return {
+		movimientos,
+		total_entro: suma(false, 'entro'), total_salio: suma(false, 'salio'),
+		virtual_entro: suma(true, 'entro'), virtual_salio: suma(true, 'salio'),
+	};
 }
 
 /**

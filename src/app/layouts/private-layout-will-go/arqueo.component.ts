@@ -100,8 +100,16 @@ export { imagenBillete };
       }
 
       @if (pais && vista === 'movimientos') {
-        <wg-lista-movimientos class="block mt-4" [movimientos]="pais.movimientos" [pais]="pais" [totalEntro]="pais.total_entro" [totalSalio]="pais.total_salio"
-                              [vacio]="'wg.banco.arqueo.sinMovimientos' | translate" />
+        <div class="mt-4 grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 max-w-sm" role="tablist" [attr.aria-label]="'wg.banco.arqueo.medioMovimientos' | translate">
+          <button type="button" role="tab" [attr.aria-selected]="medioMov === 'efectivo'" (click)="medioMov = 'efectivo'"
+                  class="py-2 rounded-lg text-sm font-semibold" [class]="medioMov === 'efectivo' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">💵 {{ 'wg.banco.repartir.efectivo' | translate }}</button>
+          <button type="button" role="tab" [attr.aria-selected]="medioMov === 'virtual'" (click)="medioMov = 'virtual'"
+                  class="py-2 rounded-lg text-sm font-semibold" [class]="medioMov === 'virtual' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">💳 {{ 'wg.banco.repartir.virtual' | translate }}</button>
+        </div>
+        <wg-lista-movimientos class="block mt-3" [movimientos]="movimientosDe(pais)" [pais]="pais"
+                              [totalEntro]="medioMov === 'virtual' ? (pais.virtual_entro ?? 0) : pais.total_entro"
+                              [totalSalio]="medioMov === 'virtual' ? (pais.virtual_salio ?? 0) : pais.total_salio"
+                              [vacio]="(medioMov === 'virtual' ? 'wg.banco.arqueo.sinMovimientosVirtual' : 'wg.banco.arqueo.sinMovimientos') | translate" />
       }
 
       @if (pais && vista === 'arqueo') {
@@ -265,5 +273,11 @@ export class ArqueoComponent implements OnChanges {
       },
       error: (e) => { this.guardando = false; this.avisoError = true; this.aviso = WillGoService.mensajeDeError(e); },
     });
+  }
+
+  /** En Movimientos se ven por separado los del efectivo (billetes) y los de la cuenta virtual del banco. */
+  medioMov: 'efectivo' | 'virtual' = 'efectivo';
+  movimientosDe(p: PaisArqueo): PaisArqueo['movimientos'] {
+    return (p.movimientos ?? []).filter((m) => (m.medio ?? 'efectivo') === this.medioMov);
   }
 }
