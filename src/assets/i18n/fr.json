@@ -605,7 +605,9 @@
         "totalEntregar": "Total à remettre",
         "entregando": "Remise en cours…",
         "entregarMonto": "Remettre {{monto}}",
-        "entregaste": "Vous avez remis {{monto}} à {{nombre}}."
+        "entregaste": "Vous avez remis {{monto}} à {{nombre}}.",
+        "efectivo": "Espèces",
+        "virtual": "Solde virtuel"
       },
       "arqueo": {
         "tabBilletes": "Mes billets",
@@ -640,7 +642,8 @@
         "sobraron": "Excédent {{n}}",
         "guardadoCuadra": "Comptage de {{pais}} enregistré : équilibré.",
         "guardadoFaltan": "Comptage de {{pais}} enregistré : il manque {{n}}.",
-        "guardadoSobran": "Comptage de {{pais}} enregistré : {{n}} en trop."
+        "guardadoSobran": "Comptage de {{pais}} enregistré : {{n}} en trop.",
+        "virtualAyuda": "Sans billets : il sert aux virements aux enseignants. Chargé au total : {{n}}. N'entre pas dans le comptage des billets."
       },
       "wfunds": {
         "subtitulo": "Investissements des élèves dans les entreprises.",
@@ -1363,7 +1366,15 @@
         "bienvenidaNecesita": "Bienvenue nécessite",
         "agregados": "Billets ajoutés à la banque.",
         "agregarAlBanco": "Ajouter à la banque",
-        "confirmarAgregar": "Ajouter {{n}} billets à la banque de {{pais}} ?"
+        "confirmarAgregar": "Ajouter {{n}} billets à la banque de {{pais}} ?",
+        "virtual": "Virtuel",
+        "virtualTitulo": "Solde virtuel de la banque",
+        "virtualAyuda": "De l'argent sans billets. La banque l'utilise pour virer aux comptes des enseignants, et les enseignants à ceux des élèves.",
+        "virtualHoy": "Solde virtuel aujourd'hui",
+        "virtualMonto": "Montant à charger",
+        "virtualCargar": "Charger le solde virtuel",
+        "virtualListo": "Solde virtuel chargé.",
+        "virtualConfirmar": "Charger {{n}} de solde virtuel à la banque de {{pais}} ?"
       },
       "fondos": {
         "intro": "Voici comment les élèves et les parents voient les entreprises.",
@@ -1611,7 +1622,8 @@
       "cerrar": "Fermer",
       "llave": "Clé :",
       "recibidaBanco": "Virement de la banque",
-      "transferidoA": "Virement à {{nombre}}"
+      "transferidoA": "Virement à {{nombre}}",
+      "disponibleVirtual": "Le compte virtuel de la banque contient {{n}}"
     },
     "vistacuenta": {
       "enSuCuenta": "Sur son compte",

@@ -4,7 +4,7 @@ import { idiomaDe } from './mensajes.js';
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
-import { totalDelConteo } from './arqueo.js';
+import { totalDelConteo, virtualDelBanco } from './arqueo.js';
 import { retirarInversion } from './wfunds.js';
 import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
 
@@ -331,6 +331,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 					const provisto = await db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
 						.where({ 'b.edicion_id': req.params.id, 'b.pais_id': p.id, 'b.tipo_dueno': 'banco', 'm.tipo': 'provision' }).sum({ t: 'm.monto' }).first();
 					p.saldo_banco = Number(banco?.saldo ?? 0);
+					p.saldo_virtual = (await virtualDelBanco(db, req.params.id, p.id)).saldo;
 					p.en_circulacion = Number(provisto?.t ?? 0) - p.saldo_banco;
 				}
 			}
@@ -468,6 +469,27 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				bienvenidas = await darBienvenida(trx, edicion, await trx('wge_participantes').whereIn('id', ids), req.accountability.user);
 			}
 			return { actualizados: ids.length, bienvenidas };
+		});
+	}));
+
+	/**
+	 * POST /wge/admin/paises/:id/cargar-virtual { monto }
+	 * Carga saldo a la cuenta virtual del banco de un país (dinero sin billetes). Con él el banco transfiere a las
+	 * cuentas de los docentes. Solo suma; se puede cargar en preparación o con la edición abierta.
+	 */
+	router.post('/admin/paises/:id/cargar-virtual', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const monto = Number(req.body?.monto);
+		if (!Number.isInteger(monto) || monto <= 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto a cargar');
+		if (monto > 1_000_000_000) throw new WgeError(400, 'VALOR_INVALIDO', 'El monto es demasiado grande');
+		return db.transaction(async (trx) => {
+			const pais = await trx('wge_paises').where('id', req.params.id).forUpdate().first();
+			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
+			const e = await trx('wge_ediciones').where('id', pais.edicion_id).first();
+			if (e.estado === 'cerrada') throw new WgeError(409, 'EDICION_CERRADA', 'La edición ya fue cerrada');
+			const virtual = await billeteraBloqueada(trx, { edicionId: e.id, paisId: pais.id, tipo: 'banco_virtual' });
+			await moverSaldo(trx, virtual, { tipo: 'carga_virtual', monto, actor: req.accountability.user, referenciaTipo: 'carga_virtual', referenciaId: pais.id });
+			return { cargado: monto, saldo_virtual: Number(virtual.saldo) };
 		});
 	}));
 

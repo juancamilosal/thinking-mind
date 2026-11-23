@@ -89,6 +89,8 @@ export interface Pais {
   responsable_banco?: string | null;
   /** Billetes que hoy tiene el banco y los que ya salieron (en manos de docentes y estudiantes). */
   saldo_banco?: number; en_circulacion?: number;
+  /** Saldo de la cuenta virtual del banco (sin billetes), para transferir a las cuentas de los docentes. */
+  saldo_virtual?: number;
 }
 
 export interface Producto {
@@ -124,6 +126,8 @@ export interface PaisArqueo {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   /** Billetes que hoy tiene el banco según el sistema. */
   saldo_sistema: number;
+  /** Cuenta virtual del banco: su saldo y todo lo que se ha cargado. */
+  virtual_saldo?: number; virtual_cargado?: number;
   /** Billetes asignados al banco (total y por denominación) y los que ya salieron. */
   provision_inicial: number; provision_billetes: Record<string, number>; en_circulacion: number;
   /** Billetes que hay hoy en el banco por denominación (asignados − entregados + recibidos). */
@@ -151,6 +155,8 @@ export interface EntregaReparto { id: string; monto: number; billetes: Record<st
 export interface PaisReparto {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   saldo_banco: number; inventario: Record<string, number>; docentes: DocenteReparto[]; entregas: EntregaReparto[];
+  /** Saldo de la cuenta virtual del banco: de ahí salen las transferencias a los docentes. */
+  saldo_virtual?: number;
 }
 export interface DatosReparto { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisReparto[]; }
 
@@ -252,7 +258,7 @@ export interface EstudianteResumen {
 }
 export interface PaisResumen {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null; provision_inicial: number; tasa_actual: number | null;
-  saldo_banco: number; saldo_caja: number; saldo_docentes: number; saldo_cuentas?: number; ventas: number; total_ventas: number;
+  saldo_banco: number; saldo_caja: number; saldo_docentes: number; saldo_cuentas?: number; saldo_virtual?: number; ventas: number; total_ventas: number;
   estudiantes: EstudianteResumen[]; total_estudiantes: number;
 }
 export interface ResumenFinal {
@@ -452,6 +458,11 @@ export class WillGoService {
 
   quitarDelEquipo(miembroId: string): Observable<{ quitado: boolean }> {
     return this.http.delete<{ data: any }>(`${this.api}/admin/equipo/${miembroId}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Carga saldo a la cuenta virtual del banco de un país (dinero sin billetes). */
+  cargarSaldoVirtual(paisId: string, monto: number): Observable<{ cargado: number; saldo_virtual: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/paises/${paisId}/cargar-virtual`, { monto }).pipe(this.enZona(), map((r) => r.data));
   }
 
   provisionarPais(paisId: string, billetes: Record<string, number>): Observable<{ agregado: number; saldo_banco: number; provision_total: number }> {

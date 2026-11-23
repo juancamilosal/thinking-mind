@@ -42,7 +42,16 @@ import { imagenBillete } from '../../imagen-billete';
         <!-- Banco -->
         <div class="mt-4 rounded-2xl p-5 text-white shadow" [style.background]="pais.color || '#1e293b'">
           <p class="text-sm opacity-90">{{ 'wg.banco.repartir.bancoDe' | translate: { pais: pais.nombre } }}</p>
-          <p class="text-3xl font-extrabold mt-1 break-all">{{ miles(pais.saldo_banco) }} <span class="text-base font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
+          <div class="mt-2 grid grid-cols-2 gap-3">
+            <div>
+              <p class="text-xs opacity-90">💵 {{ 'wg.banco.repartir.efectivo' | translate }}</p>
+              <p class="text-2xl sm:text-3xl font-extrabold break-all">{{ miles(pais.saldo_banco) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
+            </div>
+            <div class="border-l border-white/30 pl-3">
+              <p class="text-xs opacity-90">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
+              <p class="text-2xl sm:text-3xl font-extrabold break-all">{{ miles(pais.saldo_virtual ?? 0) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
+            </div>
+          </div>
           @if (datos.edicion.estado !== 'abierta') {
             <p class="text-sm mt-2 bg-white/20 rounded-lg px-3 py-1.5 inline-block">{{ 'wg.banco.repartir.soloAbierta' | translate }}</p>
           }
@@ -127,7 +136,7 @@ import { imagenBillete } from '../../imagen-billete';
                 <label for="monto-transferir" class="block text-sm font-semibold text-gray-700">{{ 'wg.transferir.monto' | translate }}</label>
                 <input id="monto-transferir" wgNumero [(ngModel)]="monto" placeholder="0"
                        class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-                <p class="mt-1.5 text-xs" [class]="excedeMonto ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.transferir.disponibleBanco' | translate: { n: miles(pais.saldo_banco) } }}</p>
+                <p class="mt-1.5 text-xs" [class]="excedeMonto ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.transferir.disponibleVirtual' | translate: { n: miles(pais.saldo_virtual ?? 0) } }}</p>
                 <p class="mt-3 text-xs text-gray-500">{{ 'wg.transferir.cuentaActual' | translate: { n: miles(docente.cuenta) } }}</p>
               </div>
             } @else {
@@ -233,7 +242,7 @@ export class RepartirWillGo implements OnInit {
   }
 
   get montoNum(): number { return Number(this.monto) || 0; }
-  get excedeMonto(): boolean { return this.montoNum > Number(this.pais?.saldo_banco ?? 0); }
+  get excedeMonto(): boolean { return this.montoNum > Number(this.pais?.saldo_virtual ?? 0); }
   get montoValido(): boolean { return this.montoNum > 0 && !this.excedeMonto; }
 
   cambiarMedio(m: 'billetes' | 'transferencia'): void {

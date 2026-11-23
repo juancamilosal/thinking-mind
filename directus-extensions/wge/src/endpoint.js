@@ -96,7 +96,11 @@ export default {
 					await exigirResponsableBanco(trx, { paisId, usuarioId: actor, rol });
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: docenteId, rol: ROLES.DOCENTE, paisId, quien: 'El docente' });
 					// Bloqueo en orden fijo (banco antes que docente) para evitar bloqueos cruzados
-					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'banco' });
+					// En billetes sale del efectivo del banco; electrónica, de su cuenta virtual
+					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: electronica ? 'banco_virtual' : 'banco' });
+					if (electronica && Number(origen.saldo) < monto) {
+						throw new WgeError(409, 'SALDO_INSUFICIENTE', `En la cuenta virtual del banco solo hay ${Number(origen.saldo)}`);
+					}
 					if (detalle) {
 						const quedan = await inventarioBanco(trx, pais.edicion_id, paisId);
 						for (const [d, n] of Object.entries(detalle.limpio)) {
@@ -214,8 +218,8 @@ export default {
 
 				const ventaId = crypto.randomUUID();
 				const movimientoId = await moverSaldo(trx, billetera, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
-				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta al banco (sus billetes ya están allá)
-				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco' : 'caja' });
+				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta a la cuenta virtual del banco
+				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco_virtual' : 'caja' });
 				await moverSaldo(trx, recibe, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 

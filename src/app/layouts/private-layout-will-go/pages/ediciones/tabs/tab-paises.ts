@@ -35,6 +35,7 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               @if (p.codigo_moneda) { <span class="text-sm font-semibold text-gray-500">{{ p.codigo_moneda }}</span> }
             </p>
             <p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.dineroBanco' | translate }}</p>
+            <p class="text-xs text-gray-700 mt-1">💳 {{ 'wg.pestanas.paises.virtual' | translate }}: <b>$ {{ miles(p.saldo_virtual ?? 0) }}</b></p>
             @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">{{ 'wg.pestanas.paises.faltaDetalle' | translate }}</p> }
             <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || ('wg.pestanas.paises.sinResponsable' | translate) }}</p>
             @if (p.provision_inicial) {
@@ -147,6 +148,33 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}</button>
             }
           </div>
+          }
+        </section>
+
+        <!-- Saldo virtual del banco -->
+        <section class="tarjeta mt-4">
+          <div class="flex flex-wrap items-start gap-x-3 gap-y-2">
+            <div class="flex-1 min-w-[12rem]">
+              <h3 class="font-bold text-gray-800">💳 {{ 'wg.pestanas.paises.virtualTitulo' | translate }}</h3>
+              <p class="text-sm text-gray-500">{{ 'wg.pestanas.paises.virtualAyuda' | translate }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.virtualHoy' | translate }}</p>
+              <p class="text-2xl font-extrabold break-all" [style.color]="actual.color || '#334155'">$ {{ miles(actual.saldo_virtual ?? 0) }}</p>
+            </div>
+          </div>
+          @if (edicion.estado !== 'cerrada') {
+            <form class="mt-4 flex flex-col sm:flex-row sm:items-end gap-3" (submit)="$event.preventDefault(); cargarVirtual()">
+              <div class="flex-1">
+                <label class="etiqueta" [attr.for]="'virtual-' + actual.id">{{ 'wg.pestanas.paises.virtualMonto' | translate }}</label>
+                <input [id]="'virtual-' + actual.id" wgNumero name="montoVirtual" [(ngModel)]="montoVirtual" placeholder="0" class="campo">
+              </div>
+              <button type="submit" [disabled]="cargandoVirtual || !(montoVirtual > 0)" class="boton-guardar">
+                {{ (cargandoVirtual ? 'wg.pestanas.comun.agregando' : 'wg.pestanas.paises.virtualCargar') | translate }}
+              </button>
+            </form>
+            @if (errorVirtual) { <p class="mt-2 text-sm text-red-700" role="alert">{{ errorVirtual }}</p> }
+            @if (cargadoVirtual) { <p class="mt-2 text-sm text-emerald-700" role="status">{{ 'wg.pestanas.paises.virtualListo' | translate }}</p> }
           }
         </section>
       }
@@ -285,6 +313,26 @@ export class TabPaises implements OnInit {
     } as Partial<Pais>).subscribe({
       next: () => { this.guardando = false; this.guardadoDatos = true; this.cargar(); },
       error: (e) => { this.guardando = false; this.errorDatos = WillGoService.mensajeDeError(e); },
+    });
+  }
+
+  montoVirtual: number | null = null;
+  cargandoVirtual = false;
+  cargadoVirtual = false;
+  errorVirtual = '';
+
+  /** Carga saldo a la cuenta virtual del banco del país elegido (dinero sin billetes). */
+  cargarVirtual(): void {
+    const p = this.actual;
+    const monto = Number(this.montoVirtual);
+    if (!p || !(monto > 0)) return;
+    if (!confirm(this.t.instant('wg.pestanas.paises.virtualConfirmar', { n: this.miles(monto), pais: p.nombre }))) return;
+    this.cargandoVirtual = true;
+    this.cargadoVirtual = false;
+    this.errorVirtual = '';
+    this.willGo.cargarSaldoVirtual(p.id, monto).subscribe({
+      next: () => { this.cargandoVirtual = false; this.cargadoVirtual = true; this.montoVirtual = null; this.cargar(); },
+      error: (e) => { this.cargandoVirtual = false; this.errorVirtual = WillGoService.mensajeDeError(e); },
     });
   }
 

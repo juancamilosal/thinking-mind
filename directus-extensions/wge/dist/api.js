@@ -51,7 +51,8 @@ function exigirTexto(valor, campo) {
 /** Billetera de un dueño en una moneda; la crea si no existe. Siempre la devuelve bloqueada. */
 async function billeteraBloqueada(trx, { edicionId, paisId, tipo, docenteId = null, participanteId = null }) {
 	// 'cuenta' es la cuenta electrónica (tarjeta débito) de un estudiante o de un docente; sus billetes quedan en el banco
-	const dueno = tipo === 'banco' || tipo === 'caja' ? tipo : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
+	// 'banco_virtual' es la cuenta virtual del banco: dinero sin billetes, para transferir a las cuentas de los docentes
+	const dueno = tipo === 'banco' || tipo === 'caja' || tipo === 'banco_virtual' ? tipo : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
 	if (!dueno) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el dueño de la billetera');
 	const clave = `${edicionId}:${paisId}:${tipo}:${dueno}`;
 	await trx('wge_billeteras')
@@ -322,6 +323,9 @@ const TRADUCCIONES = [
 	['En su cuenta solo hay $1', 'Their account only has $1', "Son compte ne contient que $1"],
 	['Una transferencia electrónica no lleva billetes', 'An electronic transfer has no bills', "Un virement électronique n'a pas de billets"],
 	['Esa tarjeta es de $1 $2', 'That card belongs to $1 $2', 'Cette carte appartient à $1 $2'],
+	['En la cuenta virtual del banco solo hay $1', "The bank's virtual account only has $1", 'Le compte virtuel de la banque ne contient que $1'],
+	['Escribe el monto a cargar', 'Enter the amount to load', 'Saisissez le montant à charger'],
+	['El monto es demasiado grande', 'The amount is too large', 'Le montant est trop élevé'],
 	['Tu rol no puede hacer esta operación', 'Your role cannot perform this operation', 'Votre rôle ne permet pas cette opération'],
 	['$1 debe ser un entero mayor que 0', '$1 must be a whole number greater than 0', '$1 doit être un entier supérieur à 0'],
 	['Falta $1', 'Missing $1', 'Il manque $1'],
@@ -1147,6 +1151,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 					const provisto = await db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
 						.where({ 'b.edicion_id': req.params.id, 'b.pais_id': p.id, 'b.tipo_dueno': 'banco', 'm.tipo': 'provision' }).sum({ t: 'm.monto' }).first();
 					p.saldo_banco = Number(banco?.saldo ?? 0);
+					p.saldo_virtual = (await virtualDelBanco(db, req.params.id, p.id)).saldo;
 					p.en_circulacion = Number(provisto?.t ?? 0) - p.saldo_banco;
 				}
 			}
@@ -1284,6 +1289,27 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				bienvenidas = await darBienvenida(trx, edicion, await trx('wge_participantes').whereIn('id', ids), req.accountability.user);
 			}
 			return { actualizados: ids.length, bienvenidas };
+		});
+	}));
+
+	/**
+	 * POST /wge/admin/paises/:id/cargar-virtual { monto }
+	 * Carga saldo a la cuenta virtual del banco de un país (dinero sin billetes). Con él el banco transfiere a las
+	 * cuentas de los docentes. Solo suma; se puede cargar en preparación o con la edición abierta.
+	 */
+	router.post('/admin/paises/:id/cargar-virtual', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const monto = Number(req.body?.monto);
+		if (!Number.isInteger(monto) || monto <= 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto a cargar');
+		if (monto > 1_000_000_000) throw new WgeError(400, 'VALOR_INVALIDO', 'El monto es demasiado grande');
+		return db.transaction(async (trx) => {
+			const pais = await trx('wge_paises').where('id', req.params.id).forUpdate().first();
+			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
+			const e = await trx('wge_ediciones').where('id', pais.edicion_id).first();
+			if (e.estado === 'cerrada') throw new WgeError(409, 'EDICION_CERRADA', 'La edición ya fue cerrada');
+			const virtual = await billeteraBloqueada(trx, { edicionId: e.id, paisId: pais.id, tipo: 'banco_virtual' });
+			await moverSaldo(trx, virtual, { tipo: 'carga_virtual', monto, actor: req.accountability.user, referenciaTipo: 'carga_virtual', referenciaId: pais.id });
+			return { cargado: monto, saldo_virtual: Number(virtual.saldo) };
 		});
 	}));
 
@@ -1536,6 +1562,28 @@ async function saldoCuentas(db, edicionId, paisId) {
 	return Number(r?.s ?? 0);
 }
 
+/**
+ * Cuenta virtual del banco de un país: su saldo y todo lo que el administrador ha cargado (dinero que no tiene
+ * billetes impresos detrás).
+ */
+async function virtualDelBanco(db, edicionId, paisId) {
+	const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco_virtual' }).first('id', 'saldo');
+	if (!b) return { saldo: 0, cargado: 0 };
+	const r = await db('wge_movimientos').where({ billetera_id: b.id, tipo: 'carga_virtual' }).sum({ t: 'monto' }).first();
+	return { saldo: Number(b.saldo ?? 0), cargado: Number(r?.t ?? 0) };
+}
+
+/**
+ * Billetes que deben estar físicamente en el banco: su saldo en efectivo, más el dinero de las cuentas
+ * (docentes y estudiantes) y de la cuenta virtual del banco, menos lo que se cargó como saldo virtual
+ * (ese dinero nunca tuvo billetes).
+ */
+async function saldoFisicoBanco(db, edicionId, paisId) {
+	const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
+	const v = await virtualDelBanco(db, edicionId, paisId);
+	return Number(b?.saldo ?? 0) + await saldoCuentas(db, edicionId, paisId) + v.saldo - v.cargado;
+}
+
 async function inventarioBanco(db, edicionId, paisId) {
 	const pais = await db('wge_paises').where('id', paisId).first('provision_billetes');
 	const asignados = (typeof pais?.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais?.provision_billetes) ?? {};
@@ -1583,14 +1631,16 @@ const leerBilletes = (b) => (typeof b === 'string' ? JSON.parse(b) : b) ?? null;
  * y qué billetes (cuando se registraron). Más los totales de todo lo que ha entrado y salido.
  */
 async function movimientosBanco(db, edicionId, paisId, limite = 100) {
-	const banco = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('id');
-	if (!banco) return { movimientos: [], total_entro: 0, total_salio: 0 };
-	const totales = await db('wge_movimientos').where('billetera_id', banco.id)
+	const billeteras = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId }).whereIn('tipo_dueno', ['banco', 'banco_virtual']).select('id', 'tipo_dueno');
+	if (!billeteras.length) return { movimientos: [], total_entro: 0, total_salio: 0 };
+	const virtual = new Set(billeteras.filter((b) => b.tipo_dueno === 'banco_virtual').map((b) => b.id));
+	const idsBanco = billeteras.map((b) => b.id);
+	const totales = await db('wge_movimientos').whereIn('billetera_id', idsBanco)
 		.select(db.raw('coalesce(sum(case when monto > 0 then monto else 0 end), 0)::bigint as entro'), db.raw('coalesce(sum(case when monto < 0 then -monto else 0 end), 0)::bigint as salio'))
 		.first();
 	const filas = await db('wge_movimientos as m').leftJoin('directus_users as u', 'u.id', 'm.user_created')
-		.where('m.billetera_id', banco.id).orderBy('m.consecutivo', 'desc').limit(limite)
-		.select('m.id', 'm.tipo', 'm.monto', 'm.saldo_despues', 'm.referencia_tipo', 'm.referencia_id', 'm.date_created',
+		.whereIn('m.billetera_id', idsBanco).orderBy('m.date_created', 'desc').orderBy('m.consecutivo', 'desc').limit(limite)
+		.select('m.id', 'm.billetera_id', 'm.tipo', 'm.monto', 'm.saldo_despues', 'm.referencia_tipo', 'm.referencia_id', 'm.date_created',
 			db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien"));
 
 	const ids = (tipo) => [...new Set(filas.filter((f) => f.referencia_tipo === tipo && f.referencia_id).map((f) => f.referencia_id))];
@@ -1628,12 +1678,14 @@ async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 			titulo = `Bienvenida a ${nombre(estudiantes.get(f.referencia_id)) || 'un estudiante'}`;
 		} else if (f.referencia_tipo === 'retiro') {
 			titulo = `Devolución de ${nombre(estudiantes.get(f.referencia_id)) || 'un estudiante'} (retirado)`;
+		} else if (f.tipo === 'carga_virtual') {
+			titulo = 'Saldo virtual cargado al banco';
 		} else if (f.referencia_tipo === 'provision_adicional') {
 			titulo = 'Billetes agregados al banco';
 		} else if (f.tipo === 'provision' || f.tipo === 'reverso') {
 			titulo = entra ? 'Billetes asignados al banco' : 'Ajuste de billetes asignados';
 		}
-		return { id: f.id, tipo: f.tipo, entra, titulo, monto: Math.abs(Number(f.monto)), saldo_despues: Number(f.saldo_despues), fecha: f.date_created, quien: f.quien || '', billetes };
+		return { id: f.id, tipo: f.tipo, medio: virtual.has(f.billetera_id) ? 'virtual' : 'efectivo', entra, titulo, monto: Math.abs(Number(f.monto)), saldo_despues: Number(f.saldo_despues), fecha: f.date_created, quien: f.quien || '', billetes };
 	});
 	return { movimientos, total_entro: Number(totales?.entro ?? 0), total_salio: Number(totales?.salio ?? 0) };
 }
@@ -1700,10 +1752,7 @@ function rutasArqueo(router, { ruta, db }) {
 		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
 		return Number(b?.saldo ?? 0);
 	};
-	const saldoBanco = async (edicionId, paisId) => {
-		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
-		return Number(b?.saldo ?? 0) + await saldoCuentas(db, edicionId, paisId);
-	};
+	const saldoBanco = (edicionId, paisId) => saldoFisicoBanco(db, edicionId, paisId);
 
 	const permitir = async (req, rol, edicionId) => {
 		exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
@@ -1722,7 +1771,8 @@ function rutasArqueo(router, { ruta, db }) {
 		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) consulta.where('responsable_banco', req.accountability.user);
 		const paises = await consulta;
 		for (const p of paises) {
-			p.saldo_banco = await saldoPropioBanco(edicion.id, p.id); // lo que el banco puede repartir (sin el dinero de las cuentas)
+			p.saldo_banco = await saldoPropioBanco(edicion.id, p.id); // lo que el banco puede repartir en billetes (sin el dinero de las cuentas)
+			p.saldo_virtual = (await virtualDelBanco(db, edicion.id, p.id)).saldo; // lo que puede transferir a las cuentas de los docentes
 			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			p.docentes = await db('wge_equipo as q').join('directus_users as u', 'u.id', 'q.usuario_id')
 				.join('directus_roles as r', 'r.id', 'u.role')
@@ -1838,6 +1888,7 @@ function rutasArqueo(router, { ruta, db }) {
 			p.provision_billetes = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
 			p.en_circulacion = p.provision_inicial - p.saldo_sistema;
 			p.en_cuentas = await saldoCuentas(db, edicion.id, p.id);
+			Object.assign(p, Object.fromEntries(Object.entries(await virtualDelBanco(db, edicion.id, p.id)).map(([k, v]) => [`virtual_${k}`, v])));
 			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			Object.assign(p, await movimientosBanco(db, edicion.id, p.id));
 		}
@@ -2835,6 +2886,7 @@ async function resumenDelCierre(db, edicionId) {
 		p.saldo_caja = await saldo('caja');
 		p.saldo_docentes = await saldo('docente');
 		p.saldo_cuentas = await saldo('cuenta');
+		p.saldo_virtual = await saldo('banco_virtual');
 		const ventas = await db('wge_ventas').where({ edicion_id: edicionId, pais_id: p.id, estado: 'pagada' })
 			.count({ n: '*' }).sum({ total: 'total_billetes' }).first();
 		p.ventas = Number(ventas?.n ?? 0);
@@ -3262,7 +3314,11 @@ const configEndpoint = {
 					await exigirResponsableBanco(trx, { paisId, usuarioId: actor, rol });
 					await exigirEquipo(trx, { edicionId: pais.edicion_id, usuarioId: docenteId, rol: ROLES.DOCENTE, paisId, quien: 'El docente' });
 					// Bloqueo en orden fijo (banco antes que docente) para evitar bloqueos cruzados
-					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'banco' });
+					// En billetes sale del efectivo del banco; electrónica, de su cuenta virtual
+					origen = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: electronica ? 'banco_virtual' : 'banco' });
+					if (electronica && Number(origen.saldo) < monto) {
+						throw new WgeError(409, 'SALDO_INSUFICIENTE', `En la cuenta virtual del banco solo hay ${Number(origen.saldo)}`);
+					}
 					if (detalle) {
 						const quedan = await inventarioBanco(trx, pais.edicion_id, paisId);
 						for (const [d, n] of Object.entries(detalle.limpio)) {
@@ -3380,8 +3436,8 @@ const configEndpoint = {
 
 				const ventaId = crypto.randomUUID();
 				const movimientoId = await moverSaldo(trx, billetera, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
-				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta al banco (sus billetes ya están allá)
-				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco' : 'caja' });
+				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta a la cuenta virtual del banco
+				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco_virtual' : 'caja' });
 				await moverSaldo(trx, recibe, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 

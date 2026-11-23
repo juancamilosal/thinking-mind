@@ -605,7 +605,9 @@
         "totalEntregar": "Total a entregar",
         "entregando": "Entregando…",
         "entregarMonto": "Entregar {{monto}}",
-        "entregaste": "Entregaste {{monto}} a {{nombre}}."
+        "entregaste": "Entregaste {{monto}} a {{nombre}}.",
+        "efectivo": "Efectivo",
+        "virtual": "Saldo virtual"
       },
       "arqueo": {
         "tabBilletes": "Mis billetes",
@@ -640,7 +642,8 @@
         "sobraron": "Sobraron {{n}}",
         "guardadoCuadra": "Arqueo de {{pais}} guardado: cuadra.",
         "guardadoFaltan": "Arqueo de {{pais}} guardado: faltan {{n}} billetes.",
-        "guardadoSobran": "Arqueo de {{pais}} guardado: sobran {{n}} billetes."
+        "guardadoSobran": "Arqueo de {{pais}} guardado: sobran {{n}} billetes.",
+        "virtualAyuda": "Sin billetes: es para transferir a los docentes. Cargado en total: {{n}}. No entra en el conteo de billetes."
       },
       "wfunds": {
         "subtitulo": "Inversiones de los estudiantes en las empresas.",
@@ -1363,7 +1366,15 @@
         "bienvenidaNecesita": "Bienvenida necesita",
         "agregados": "Billetes agregados al banco.",
         "agregarAlBanco": "Agregar al banco",
-        "confirmarAgregar": "¿Agregar {{n}} billetes al banco de {{pais}}?"
+        "confirmarAgregar": "¿Agregar {{n}} billetes al banco de {{pais}}?",
+        "virtual": "Virtual",
+        "virtualTitulo": "Saldo virtual del banco",
+        "virtualAyuda": "Dinero sin billetes. Con él el banco transfiere a las cuentas de los docentes, y los docentes a las de los estudiantes.",
+        "virtualHoy": "Saldo virtual hoy",
+        "virtualMonto": "Monto a cargar",
+        "virtualCargar": "Cargar saldo virtual",
+        "virtualListo": "Saldo virtual cargado.",
+        "virtualConfirmar": "¿Cargar {{n}} de saldo virtual al banco de {{pais}}?"
       },
       "fondos": {
         "intro": "Así ven las empresas los estudiantes y acudientes.",
@@ -1611,7 +1622,8 @@
       "cerrar": "Cerrar",
       "llave": "Llave:",
       "recibidaBanco": "Transferencia del banco",
-      "transferidoA": "Transferencia a {{nombre}}"
+      "transferidoA": "Transferencia a {{nombre}}",
+      "disponibleVirtual": "En la cuenta virtual del banco hay {{n}}"
     },
     "vistacuenta": {
       "enSuCuenta": "En su cuenta",

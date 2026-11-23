@@ -109,7 +109,7 @@ rel('wge_participantes', 'pais_id', 'wge_paises')
 
 coleccion('wge_billeteras', 'account_balance_wallet', 'Saldo por dueño y moneda (solo lo cambian las operaciones de billetes)', [
     m2o('edicion_id', requerido=True), m2o('pais_id', 'Moneda de la billetera', requerido=True),
-    campo('tipo_dueno', 'string', requerido=True, opciones=['banco', 'docente', 'estudiante', 'caja', 'cuenta']),
+    campo('tipo_dueno', 'string', requerido=True, opciones=['banco', 'docente', 'estudiante', 'caja', 'cuenta', 'banco_virtual']),
     m2o('docente_id'), m2o('participante_id'),
     campo('saldo', 'integer', default=0), campo('consecutivo', 'integer', 'Último consecutivo de movimiento', default=0),
     campo('clave_unica', 'string', 'edicion:pais:tipo:dueño', unico=True),
@@ -134,7 +134,7 @@ rel('wge_transferencias', 'billetera_destino_id', 'wge_billeteras')
 
 coleccion('wge_movimientos', 'receipt_long', 'Libro de movimientos: nunca se edita ni se borra', [
     m2o('billetera_id', requerido=True),
-    campo('tipo', 'string', requerido=True, opciones=['provision', 'transferencia_salida', 'transferencia_entrada', 'bienvenida', 'compra', 'inversion', 'pago_fondo', 'reverso', 'consignacion', 'retiro_cuenta', 'pago_tarjeta']),
+    campo('tipo', 'string', requerido=True, opciones=['provision', 'transferencia_salida', 'transferencia_entrada', 'bienvenida', 'compra', 'inversion', 'pago_fondo', 'reverso', 'consignacion', 'retiro_cuenta', 'pago_tarjeta', 'carga_virtual']),
     campo('monto', 'integer', 'Con signo: positivo entra, negativo sale', requerido=True),
     campo('saldo_despues', 'integer', requerido=True),
     campo('consecutivo', 'integer', requerido=True),

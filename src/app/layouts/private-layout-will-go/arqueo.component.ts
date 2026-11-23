@@ -64,6 +64,13 @@ export { imagenBillete };
             <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.en_circulacion) }}</p>
           </div>
         </div>
+        <div class="mt-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-gray-700">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
+            <p class="text-xs text-gray-500">{{ 'wg.banco.arqueo.virtualAyuda' | translate: { n: miles(pais.virtual_cargado ?? 0) } }}</p>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.virtual_saldo ?? 0) }}</p>
+        </div>
         @if (!pais.provision_inicial) {
           <div class="mt-4 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.banco.arqueo.sinAsignar' | translate: { pais: pais.nombre } }}</div>
         } @else {

@@ -605,7 +605,9 @@
         "totalEntregar": "Total to give",
         "entregando": "Giving…",
         "entregarMonto": "Give {{monto}}",
-        "entregaste": "You gave {{monto}} to {{nombre}}."
+        "entregaste": "You gave {{monto}} to {{nombre}}.",
+        "efectivo": "Cash",
+        "virtual": "Virtual balance"
       },
       "arqueo": {
         "tabBilletes": "My bills",
@@ -640,7 +642,8 @@
         "sobraron": "Was over {{n}}",
         "guardadoCuadra": "{{pais}} cash count saved: balanced.",
         "guardadoFaltan": "{{pais}} cash count saved: {{n}} short.",
-        "guardadoSobran": "{{pais}} cash count saved: {{n}} over."
+        "guardadoSobran": "{{pais}} cash count saved: {{n}} over.",
+        "virtualAyuda": "No bills: it is for transfers to teachers. Loaded in total: {{n}}. Not part of the bill count."
       },
       "wfunds": {
         "subtitulo": "Student investments in the companies.",
@@ -1363,7 +1366,15 @@
         "bienvenidaNecesita": "Welcome needs",
         "agregados": "Bills added to the bank.",
         "agregarAlBanco": "Add to bank",
-        "confirmarAgregar": "Add {{n}} bills to the {{pais}} bank?"
+        "confirmarAgregar": "Add {{n}} bills to the {{pais}} bank?",
+        "virtual": "Virtual",
+        "virtualTitulo": "Bank's virtual balance",
+        "virtualAyuda": "Money without bills. The bank uses it to transfer to teachers' accounts, and teachers to students' accounts.",
+        "virtualHoy": "Virtual balance today",
+        "virtualMonto": "Amount to load",
+        "virtualCargar": "Load virtual balance",
+        "virtualListo": "Virtual balance loaded.",
+        "virtualConfirmar": "Load {{n}} of virtual balance to the {{pais}} bank?"
       },
       "fondos": {
         "intro": "This is how students and parents see the companies.",
@@ -1611,7 +1622,8 @@
       "cerrar": "Close",
       "llave": "Key:",
       "recibidaBanco": "Transfer from the bank",
-      "transferidoA": "Transfer to {{nombre}}"
+      "transferidoA": "Transfer to {{nombre}}",
+      "disponibleVirtual": "The bank's virtual account has {{n}}"
     },
     "vistacuenta": {
       "enSuCuenta": "In their account",

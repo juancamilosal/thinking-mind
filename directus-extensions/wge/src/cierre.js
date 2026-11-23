@@ -46,6 +46,7 @@ export async function resumenDelCierre(db, edicionId) {
 		p.saldo_caja = await saldo('caja');
 		p.saldo_docentes = await saldo('docente');
 		p.saldo_cuentas = await saldo('cuenta');
+		p.saldo_virtual = await saldo('banco_virtual');
 		const ventas = await db('wge_ventas').where({ edicion_id: edicionId, pais_id: p.id, estado: 'pagada' })
 			.count({ n: '*' }).sum({ total: 'total_billetes' }).first();
 		p.ventas = Number(ventas?.n ?? 0);
