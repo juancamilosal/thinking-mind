@@ -873,7 +873,11 @@
       "disponible": "They have {{n}} in cash",
       "excede": "They can't invest more than they have ({{n}}).",
       "recibe": "Receives",
-      "entregaEfectivo": "Hand this amount to the student in cash."
+      "entregaEfectivo": "Hand this amount to the student in cash.",
+      "desdeDonde": "Where does the money come from?",
+      "efectivo": "Cash",
+      "cuenta": "Account",
+      "vuelveCuenta": "Invested from their account: the money goes back to their account."
     },
     "montotienda": {
       "entregarTitulo": "Hand out money",

@@ -272,9 +272,14 @@ export default {
 				const fondo = await trx('wge_fondos').where('id', exigirTexto(req.body.fondo_id, 'fondo_id')).first();
 				if (!fondo || fondo.edicion_id !== edicion.id || !fondo.activo) throw new WgeError(404, 'NO_EXISTE', 'La empresa no está disponible');
 
-				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
-				if (Number(estudiante.saldo) < monto) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo}`);
-				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
+				// Puede invertir en efectivo o desde su cuenta ({ medio: "cuenta" }); desde la cuenta el dinero va a la cuenta virtual del banco
+				const desdeCuenta = req.body?.medio === 'cuenta';
+				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: desdeCuenta ? 'cuenta' : 'estudiante', participanteId: participante.id });
+				if (Number(estudiante.saldo) < monto) {
+					throw desdeCuenta ? new WgeError(409, 'SALDO_INSUFICIENTE', `En su cuenta solo hay ${estudiante.saldo}`)
+						: new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo}`);
+				}
+				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: desdeCuenta ? 'banco_virtual' : 'banco' });
 				const id = crypto.randomUUID();
 				await moverSaldo(trx, estudiante, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				await moverSaldo(trx, banco, { tipo: 'inversion', monto, actor, referenciaTipo: 'inversion', referenciaId: id });

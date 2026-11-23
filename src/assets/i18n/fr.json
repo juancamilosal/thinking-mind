@@ -873,7 +873,11 @@
       "disponible": "Il a {{n}} en espèces",
       "excede": "Il ne peut pas investir plus que ce qu'il a ({{n}}).",
       "recibe": "Reçoit",
-      "entregaEfectivo": "Remets ce montant en espèces à l'élève."
+      "entregaEfectivo": "Remets ce montant en espèces à l'élève.",
+      "desdeDonde": "D'où vient l'argent ?",
+      "efectivo": "Espèces",
+      "cuenta": "Compte",
+      "vuelveCuenta": "A investi depuis son compte : l’argent retourne sur son compte."
     },
     "montotienda": {
       "entregarTitulo": "Remettre de l'argent",

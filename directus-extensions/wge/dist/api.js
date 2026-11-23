@@ -2035,8 +2035,10 @@ async function retirarInversion(trx, inv, actor, billetes = null) {
 		billetesPago = limpio;
 	}
 	if (valor > 0 && participante?.pais_id) {
-		const banco = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'banco' });
-		const estudiante = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
+		// Si invirtió desde su cuenta, el dinero vuelve a su cuenta (desde la cuenta virtual del banco); si no, en efectivo
+		const desdeCuenta = await medioDeInversion(trx, inv.id) === 'cuenta';
+		const banco = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: desdeCuenta ? 'banco_virtual' : 'banco' });
+		const estudiante = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId: participante.pais_id, tipo: desdeCuenta ? 'cuenta' : 'estudiante', participanteId: participante.id });
 		await moverSaldo(trx, banco, { tipo: 'pago_fondo', monto: -valor, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
 		await moverSaldo(trx, estudiante, { tipo: 'pago_fondo', monto: valor, actor, referenciaTipo: 'inversion', referenciaId: inv.id });
 	}
@@ -2047,6 +2049,14 @@ async function retirarInversion(trx, inv, actor, billetes = null) {
 }
 
 const leerJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+
+/** De dónde salió el dinero de una inversión: 'cuenta' (tarjeta) o 'efectivo'. */
+async function medioDeInversion(db, inversionId) {
+	const m = await db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
+		.where({ 'm.referencia_tipo': 'inversion', 'm.referencia_id': inversionId }).where('m.monto', '<', 0).whereIn('b.tipo_dueno', ['estudiante', 'cuenta'])
+		.first('b.tipo_dueno');
+	return m?.tipo_dueno === 'cuenta' ? 'cuenta' : 'efectivo';
+}
 
 /** Duraciones que puede escoger el banco al abrir una ronda (minutos). */
 const DURACIONES_RONDA = [10, 15, 20, 30, 45, 60];
@@ -2219,8 +2229,9 @@ function rutasWfunds(router, { ruta, db }) {
 			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
+				.leftJoin('wge_billeteras as c', function () { this.on('c.participante_id', 'pa.id').andOn('c.pais_id', 'pa.pais_id').andOnVal('c.tipo_dueno', 'cuenta'); })
 				.where({ 'pa.edicion_id': edicion.id, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
-				.select('pa.id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'))
+				.select('pa.id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'), db.raw('coalesce(c.saldo, 0)::int as cuenta'))
 				.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);
 			const base = () => db('wge_inversiones as i').join('wge_participantes as pa', 'pa.id', 'i.participante_id')
 				.join('estudiantes as e', 'e.id', 'pa.estudiante_id').join('wge_rondas as r', 'r.id', 'i.ronda_id')
@@ -2230,6 +2241,7 @@ function rutasWfunds(router, { ruta, db }) {
 			p.vigentes = (await base().where('i.estado', 'abierta').orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }, { column: 'i.date_created' }])
 				.select('i.id', 'i.participante_id', 'i.fondo_id', 'i.monto', 'i.valor_actual', 'i.historial', 'r.nombre as ronda', 'e.nombre', 'e.apellido'))
 				.map((i) => ({ ...i, valor_actual: valorDe(i), historial: leerJson(i.historial) ?? [] }));
+			for (const i of p.vigentes) i.medio = await medioDeInversion(db, i.id);
 			p.retiradas = await base().whereIn('i.estado', ['retirada', 'cobrada']).orderBy('i.cobrado_en', 'desc').limit(50)
 				.select('i.id', 'i.fondo_id', 'i.monto', 'i.monto_pagado', 'i.cobrado_en', 'r.nombre as ronda', 'e.nombre', 'e.apellido');
 		}
@@ -3556,9 +3568,14 @@ const configEndpoint = {
 				const fondo = await trx('wge_fondos').where('id', exigirTexto(req.body.fondo_id, 'fondo_id')).first();
 				if (!fondo || fondo.edicion_id !== edicion.id || !fondo.activo) throw new WgeError(404, 'NO_EXISTE', 'La empresa no está disponible');
 
-				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
-				if (Number(estudiante.saldo) < monto) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo}`);
-				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
+				// Puede invertir en efectivo o desde su cuenta ({ medio: "cuenta" }); desde la cuenta el dinero va a la cuenta virtual del banco
+				const desdeCuenta = req.body?.medio === 'cuenta';
+				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: desdeCuenta ? 'cuenta' : 'estudiante', participanteId: participante.id });
+				if (Number(estudiante.saldo) < monto) {
+					throw desdeCuenta ? new WgeError(409, 'SALDO_INSUFICIENTE', `En su cuenta solo hay ${estudiante.saldo}`)
+						: new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo}`);
+				}
+				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: desdeCuenta ? 'banco_virtual' : 'banco' });
 				const id = crypto.randomUUID();
 				await moverSaldo(trx, estudiante, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				await moverSaldo(trx, banco, { tipo: 'inversion', monto, actor, referenciaTipo: 'inversion', referenciaId: id });

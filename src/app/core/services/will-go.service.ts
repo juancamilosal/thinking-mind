@@ -186,10 +186,12 @@ export interface InversionWfunds {
   monto_pagado?: number; rendimiento_final?: number | string; ronda?: string; cobrado_en?: string; date_created?: string; nombre: string; apellido: string;
   /** Lo que vale hoy (sigue invertida) y cómo cambió en cada ronda. */
   valor_actual?: number; historial?: { ronda: string; rendimiento: number; antes: number; despues: number }[];
+  /** De dónde salió el dinero: efectivo o la cuenta del estudiante (ahí vuelve al retirar). */
+  medio?: 'efectivo' | 'cuenta';
 }
 export interface PaisWfunds {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null; saldo_banco: number; inventario: Record<string, number>;
-  estudiantes: { id: string; nombre: string; apellido: string; saldo: number }[];
+  estudiantes: { id: string; nombre: string; apellido: string; saldo: number; cuenta?: number }[];
   inversiones: InversionWfunds[]; vigentes: InversionWfunds[]; retiradas: InversionWfunds[];
 }
 export interface DatosWfunds {
@@ -556,9 +558,9 @@ export class WillGoService {
       .pipe(this.enZona(), map((r) => r.data));
   }
 
-  invertir(participanteId: string, fondoId: string, rondaId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number }> {
+  invertir(participanteId: string, fondoId: string, rondaId: string, billetes: Record<string, number> | number, clave: string, medio: 'efectivo' | 'cuenta' = 'efectivo'): Observable<{ monto: number }> {
     return this.http.post<{ data: { monto: number } }>(`${this.api}/inversiones`, {
-      participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, ...WillGoService.dinero(billetes), clave_idempotencia: clave,
+      participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, ...WillGoService.dinero(billetes), medio, clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
   }
 

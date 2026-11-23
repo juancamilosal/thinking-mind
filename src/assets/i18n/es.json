@@ -873,7 +873,11 @@
       "disponible": "Tiene {{n}} en efectivo",
       "excede": "No puede invertir más de lo que tiene ({{n}}).",
       "recibe": "Recibe",
-      "entregaEfectivo": "Entrégale este valor en efectivo al estudiante."
+      "entregaEfectivo": "Entrégale este valor en efectivo al estudiante.",
+      "desdeDonde": "¿De dónde sale el dinero?",
+      "efectivo": "Efectivo",
+      "cuenta": "Cuenta",
+      "vuelveCuenta": "Invirtió desde su cuenta: el dinero vuelve a su cuenta."
     },
     "montotienda": {
       "entregarTitulo": "Entregar dinero",
