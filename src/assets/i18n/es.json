@@ -590,7 +590,7 @@
       },
       "repartir": {
         "titulo": "Repartir a docentes",
-        "subtitulo": "Entrega billetes del banco a cada docente.",
+        "subtitulo": "Entrega dinero del banco a cada docente.",
         "bancoDe": "Banco de {{pais}}",
         "soloAbierta": "Se puede repartir cuando la edición esté abierta.",
         "docentes": "Docentes",
@@ -876,6 +876,32 @@
         "avisoVotaste": "¡Listo! Votaste por {{fondo}} en la {{ronda}}."
       }
     },
+    "montobanco": {
+      "efectivo": "Efectivo",
+      "ayudaEfectivo": "Escribe cuánto dinero en efectivo le entregas. Solo se registra el valor.",
+      "montoEntregar": "Monto a entregar",
+      "disponibleEfectivo": "En efectivo el banco tiene {{n}}",
+      "tieneEfectivo": "Tiene {{n}} en efectivo",
+      "tieneCuenta": "Tiene {{n}} en su cuenta",
+      "consignarAyuda": "Escribe cuánto efectivo entrega el estudiante para su cuenta.",
+      "retirarAyuda": "Escribe cuánto retira de su cuenta; el banco le entrega ese valor en efectivo.",
+      "montoConsignar": "Monto a consignar",
+      "retirarExcede": "No puede retirar más de lo que tiene en su cuenta ({{n}}).",
+      "arqueoTitulo": "Contar el dinero del banco",
+      "arqueoAyuda": "Cuenta todo el efectivo que hay en el banco y escribe el total.",
+      "totalContado": "Total contado",
+      "virtualAyuda": "Sin efectivo: es para transferir a los docentes. Se carga igual al dinero del banco (total cargado: {{n}}). No entra en el arqueo.",
+      "dineroBanco": "Dinero del banco",
+      "provisto": "Provisto",
+      "ayudaBorrador": "Escribe el total de dinero en efectivo con el que empieza el banco.",
+      "ayudaAbierta": "Con la edición abierta solo se puede agregar dinero al banco.",
+      "totalBanco": "Dinero del banco (total)",
+      "bienvenidaNecesita": "La bienvenida de los estudiantes necesita {{n}}.",
+      "agregarDinero": "Agregar dinero",
+      "agregado": "Dinero agregado al banco.",
+      "confirmarTitulo": "¿Agregar dinero al banco?",
+      "quedaBanco": "El dinero del banco quedará en $ {{n}}. El saldo virtual sube lo mismo."
+    },
     "montofondos": {
       "cuantoInvierte": "¿Cuánto invierte?",
       "montoInvertir": "Monto a invertir",
@@ -884,6 +910,28 @@
       "excede": "No puede invertir más de lo que tiene ({{n}}).",
       "recibe": "Recibe",
       "entregaEfectivo": "Entrégale este valor en efectivo al estudiante."
+    },
+    "montotienda": {
+      "entregarTitulo": "Entregar dinero",
+      "entregarSubtitulo": "Tu dinero y las entregas a estudiantes.",
+      "entregarVacioMovimientos": "Todavía no tienes movimientos. Cuando el banco te dé dinero o se lo entregues a un estudiante, aparecen aquí.",
+      "tuEfectivoDe": "Tu efectivo de {{pais}}",
+      "ayudaEfectivo": "Escribe cuánto le das en efectivo.",
+      "recompensaRecomendada": "Recompensa recomendada por la rúbrica: {{n}}",
+      "montoAEntregar": "Monto a entregar",
+      "disponibleEfectivo": "Tienes {{n}} en efectivo",
+      "sinEfectivo": "No tienes efectivo para entregar.",
+      "cobroEfectivo": "Cobro en efectivo",
+      "conCuantoPaga": "¿Con cuánto paga?",
+      "exacto": "Exacto",
+      "recibido": "Recibido",
+      "masQueEfectivo": "Es más de lo que tiene en efectivo ({{n}}).",
+      "devuelve": "Devuélvele {{n}}.",
+      "sinVuelto": "Pago exacto: no hay vuelto.",
+      "escribeConCuanto": "Escribe con cuánto paga",
+      "dineroEnCaja": "Dinero en la caja",
+      "ayudaEntregaBanco": "Escribe cuánto dinero de la caja le entregas al banco.",
+      "enCajaHay": "En la caja hay {{n}}"
     },
     "nucleo": {
       "menu": {

@@ -590,7 +590,7 @@
       },
       "repartir": {
         "titulo": "Distribute to teachers",
-        "subtitulo": "Give bank bills to each teacher.",
+        "subtitulo": "Give bank money to each teacher.",
         "bancoDe": "Bank of {{pais}}",
         "soloAbierta": "You can distribute once the edition is open.",
         "docentes": "Teachers",
@@ -876,6 +876,32 @@
         "avisoVotaste": "Done! You voted for {{fondo}} in {{ronda}}."
       }
     },
+    "montobanco": {
+      "efectivo": "Cash",
+      "ayudaEfectivo": "Enter how much cash you are handing over. Only the amount is recorded.",
+      "montoEntregar": "Amount to hand over",
+      "disponibleEfectivo": "The bank has {{n}} in cash",
+      "tieneEfectivo": "Has {{n}} in cash",
+      "tieneCuenta": "Has {{n}} in the account",
+      "consignarAyuda": "Enter how much cash the student hands in for their account.",
+      "retirarAyuda": "Enter how much they withdraw from their account; the bank hands that amount over in cash.",
+      "montoConsignar": "Amount to deposit",
+      "retirarExcede": "They cannot withdraw more than what is in their account ({{n}}).",
+      "arqueoTitulo": "Count the bank’s money",
+      "arqueoAyuda": "Count all the cash in the bank and enter the total.",
+      "totalContado": "Total counted",
+      "virtualAyuda": "No cash: it is for transfers to teachers. It is loaded with the same amount as the bank’s money (total loaded: {{n}}). It is not part of the cash count.",
+      "dineroBanco": "Bank’s money",
+      "provisto": "Provided",
+      "ayudaBorrador": "Enter the total cash the bank starts with.",
+      "ayudaAbierta": "While the edition is open, you can only add money to the bank.",
+      "totalBanco": "Bank’s money (total)",
+      "bienvenidaNecesita": "The students’ welcome money needs {{n}}.",
+      "agregarDinero": "Add money",
+      "agregado": "Money added to the bank.",
+      "confirmarTitulo": "Add money to the bank?",
+      "quedaBanco": "The bank’s money will be $ {{n}}. The virtual balance goes up by the same amount."
+    },
     "montofondos": {
       "cuantoInvierte": "How much do they invest?",
       "montoInvertir": "Amount to invest",
@@ -884,6 +910,28 @@
       "excede": "They can't invest more than they have ({{n}}).",
       "recibe": "Receives",
       "entregaEfectivo": "Hand this amount to the student in cash."
+    },
+    "montotienda": {
+      "entregarTitulo": "Hand out money",
+      "entregarSubtitulo": "Your money and what you hand to students.",
+      "entregarVacioMovimientos": "No transactions yet. When the bank gives you money or you hand some to a student, it shows up here.",
+      "tuEfectivoDe": "Your {{pais}} cash",
+      "ayudaEfectivo": "Enter how much cash you give.",
+      "recompensaRecomendada": "Reward recommended by the rubric: {{n}}",
+      "montoAEntregar": "Amount to hand over",
+      "disponibleEfectivo": "You have {{n}} in cash",
+      "sinEfectivo": "You have no cash to hand out.",
+      "cobroEfectivo": "Cash payment",
+      "conCuantoPaga": "How much do they pay with?",
+      "exacto": "Exact",
+      "recibido": "Received",
+      "masQueEfectivo": "That's more than the cash they have ({{n}}).",
+      "devuelve": "Give back {{n}}.",
+      "sinVuelto": "Exact payment: no change.",
+      "escribeConCuanto": "Enter the amount paid",
+      "dineroEnCaja": "Money in the cashbox",
+      "ayudaEntregaBanco": "Enter how much cashbox money you hand to the bank.",
+      "enCajaHay": "The cashbox has {{n}}"
     },
     "nucleo": {
       "menu": {

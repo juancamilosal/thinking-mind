@@ -3,11 +3,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FechaWillGoPipe } from '../../fecha.pipe';
-import { DatosReparto, DocenteReparto, EntregaReparto, PaisReparto, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
+import { DatosReparto, DocenteReparto, PaisReparto, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
-import { imagenBillete } from '../../imagen-billete';
 
-/** Repartir a docentes: el banco entrega billetes de su país a los docentes del equipo. */
+/** Repartir a docentes: el banco entrega dinero de su país (en efectivo o por transferencia) a los docentes del equipo. */
 @Component({
   selector: 'app-repartir-will-go',
   standalone: true,
@@ -102,7 +101,7 @@ import { imagenBillete } from '../../imagen-billete';
                     <span>{{ e.date_created | wgFecha:'d MMM, h:mm a' }}</span>
                   </p>
                 } @else {
-                  <p class="text-xs text-gray-500">{{ e.date_created | wgFecha:'d MMM, h:mm a' }}{{ detalle(e) ? ' · ' + detalle(e) : '' }}</p>
+                  <p class="text-xs text-gray-500">{{ e.date_created | wgFecha:'d MMM, h:mm a' }}</p>
                 }
               </li>
             }
@@ -114,71 +113,47 @@ import { imagenBillete } from '../../imagen-billete';
     <!-- Panel para entregar -->
     @if (docente && pais && datos) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrar()">
-        <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-entrega">
+        <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-entrega">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
               <h2 id="titulo-entrega" class="text-lg font-bold text-gray-800">{{ 'wg.banco.repartir.entregarA' | translate: { nombre: docente.nombre + ' ' + docente.apellido } }}</h2>
-              <p class="text-sm text-gray-500">{{ (medio === 'billetes' ? 'wg.banco.repartir.tocaBilletes' : 'wg.transferir.ayudaDocente') | translate }}</p>
+              <p class="text-sm text-gray-500">{{ (medio === 'efectivo' ? 'wg.montobanco.ayudaEfectivo' : 'wg.transferir.ayudaDocente') | translate }}</p>
             </div>
             <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.banco.cerrar' | translate">✕</button>
           </div>
           <div class="px-5 pb-3">
             <div class="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1" role="tablist">
-              <button type="button" role="tab" [attr.aria-selected]="medio === 'billetes'" (click)="cambiarMedio('billetes')" [disabled]="enviando"
-                      class="py-2 rounded-lg text-sm font-semibold" [class]="medio === 'billetes' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.transferir.enBilletes' | translate }}</button>
+              <button type="button" role="tab" [attr.aria-selected]="medio === 'efectivo'" (click)="cambiarMedio('efectivo')" [disabled]="enviando"
+                      class="py-2 rounded-lg text-sm font-semibold" [class]="medio === 'efectivo' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">💵 {{ 'wg.montobanco.efectivo' | translate }}</button>
               <button type="button" role="tab" [attr.aria-selected]="medio === 'transferencia'" (click)="cambiarMedio('transferencia')" [disabled]="enviando"
                       class="py-2 rounded-lg text-sm font-semibold" [class]="medio === 'transferencia' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.transferir.transferencia' | translate }}</button>
             </div>
           </div>
           <div class="flex-1 overflow-y-auto px-5">
-            @if (medio === 'transferencia') {
-              <div class="pb-4">
-                <label for="monto-transferir" class="block text-sm font-semibold text-gray-700">{{ 'wg.transferir.monto' | translate }}</label>
-                <input id="monto-transferir" wgNumero [(ngModel)]="monto" placeholder="0"
-                       class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-                <p class="mt-1.5 text-xs" [class]="excedeMonto ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.transferir.disponibleVirtual' | translate: { n: miles(pais.saldo_virtual ?? 0) } }}</p>
+            <div class="pb-4">
+              <label for="monto-transferir" class="block text-sm font-semibold text-gray-700">{{ (medio === 'efectivo' ? 'wg.montobanco.montoEntregar' : 'wg.transferir.monto') | translate }}</label>
+              <input id="monto-transferir" wgNumero [(ngModel)]="monto" placeholder="0"
+                     class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+              <p class="mt-1.5 text-xs" [class]="excedeMonto ? 'text-red-600 font-semibold' : 'text-gray-500'">
+                {{ (medio === 'efectivo' ? 'wg.montobanco.disponibleEfectivo' : 'wg.transferir.disponibleVirtual') | translate: { n: miles(disponible) } }}
+              </p>
+              @if (medio === 'efectivo') {
+                <p class="mt-3 text-xs text-gray-500">{{ 'wg.montobanco.tieneEfectivo' | translate: { n: miles(docente.saldo) } }}</p>
+              } @else {
                 <p class="mt-3 text-xs text-gray-500">{{ 'wg.transferir.cuentaActual' | translate: { n: miles(docente.cuenta) } }}</p>
-              </div>
-            } @else {
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-3">
-              @for (d of datos.denominaciones; track d) {
-                <div class="rounded-xl border-2 overflow-hidden" [style.border-color]="cantidad(d) ? (pais.color || '#f97316') : '#e5e7eb'" [class.opacity-40]="quedan(d) <= 0">
-                  <button type="button" class="block w-full" (click)="sumar(d, 1)" [disabled]="quedan(d) - cantidad(d) <= 0" [attr.aria-label]="'wg.banco.agregarBillete' | translate: { valor: miles(d) }">
-                    @if (imagen(d); as src) {
-                      <img [src]="src" [alt]="'wg.banco.billeteDe' | translate: { valor: miles(d) }" class="w-full aspect-[520/281] object-cover">
-                    } @else {
-                      <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
-                    }
-                  </button>
-                  <div class="flex items-center gap-1 p-1.5">
-                    <button type="button" (click)="sumar(d, -1)" [disabled]="!cantidad(d)" class="w-9 h-9 shrink-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.banco.quitarBillete' | translate: { valor: miles(d) }">−</button>
-                    <input wgNumero [ngModel]="elegidos[d]" (ngModelChange)="poner(d, $event)" placeholder="0" [attr.aria-label]="'wg.banco.billetesDe' | translate: { valor: miles(d) }"
-                           class="w-full min-w-0 h-9 bg-gray-50 border border-gray-200 rounded-lg text-center font-bold focus:outline-none focus:ring-2 focus:ring-orange-300">
-                    <button type="button" (click)="sumar(d, 1)" [disabled]="quedan(d) - cantidad(d) <= 0" class="w-9 h-9 shrink-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.banco.agregarBillete' | translate: { valor: miles(d) }">+</button>
-                  </div>
-                  <p class="text-[11px] text-center pb-1.5" [class]="cantidad(d) > quedan(d) ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.banco.quedan' | translate: { n: miles(quedan(d)) } }}</p>
-                </div>
               }
             </div>
-            }
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
             @if (errorEntrega) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorEntrega }}</p> }
-            @if (medio === 'transferencia') {
-              <button type="button" (click)="transferir()" [disabled]="!montoValido || enviando"
-                      class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-                {{ enviando ? ('wg.transferir.transfiriendo' | translate) : (montoNum ? ('wg.transferir.transferirMonto' | translate: { n: miles(montoNum) }) : ('wg.transferir.escribeMonto' | translate)) }}
-              </button>
-            } @else {
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm text-gray-500">{{ 'wg.banco.repartir.totalEntregar' | translate }}</span>
-              <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></span>
-            </div>
-            <button type="button" (click)="entregar()" [disabled]="!total || enviando || excede"
+            <button type="button" (click)="enviar()" [disabled]="!montoValido || enviando"
                     class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-              {{ enviando ? ('wg.banco.repartir.entregando' | translate) : (total ? ('wg.banco.repartir.entregarMonto' | translate: { monto: miles(total) }) : ('wg.banco.eligeBilletes' | translate)) }}
+              @if (medio === 'efectivo') {
+                {{ enviando ? ('wg.banco.repartir.entregando' | translate) : (montoNum ? ('wg.banco.repartir.entregarMonto' | translate: { monto: miles(montoNum) }) : ('wg.transferir.escribeMonto' | translate)) }}
+              } @else {
+                {{ enviando ? ('wg.transferir.transfiriendo' | translate) : (montoNum ? ('wg.transferir.transferirMonto' | translate: { n: miles(montoNum) }) : ('wg.transferir.escribeMonto' | translate)) }}
+              }
             </button>
-            }
           </div>
         </div>
       </div>
@@ -200,12 +175,11 @@ export class RepartirWillGo implements OnInit {
   avisoError = false;
 
   docente: DocenteReparto | null = null;
-  elegidos: Record<number, number | null> = {};
   clave = '';
   enviando = false;
   errorEntrega = '';
-  /** Cómo se le da el dinero al docente: billetes en la mano o transferencia a su cuenta. */
-  medio: 'billetes' | 'transferencia' = 'billetes';
+  /** Cómo se le da el dinero al docente: efectivo en la mano o transferencia a su cuenta. */
+  medio: 'efectivo' | 'transferencia' = 'efectivo';
   monto: number | null = null;
 
   ngOnInit(): void {
@@ -227,25 +201,13 @@ export class RepartirWillGo implements OnInit {
     });
   }
 
-  imagen(d: number): string | null { return imagenBillete(this.pais ?? undefined, d); }
-  quedan(d: number): number { return Number(this.pais?.inventario?.[d] ?? 0); }
-  cantidad(d: number): number { return Number(this.elegidos[d]) || 0; }
-  get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * this.cantidad(d), 0); }
-  get excede(): boolean { return (this.datos?.denominaciones ?? []).some((d) => this.cantidad(d) > this.quedan(d)) || this.total > (this.pais?.saldo_banco ?? 0); }
-
-  sumar(d: number, n: number): void { this.elegidos[d] = Math.max(0, Math.min(this.cantidad(d) + n, Math.max(this.quedan(d), 0))); }
-  poner(d: number, v: number | null): void { this.elegidos[d] = v; }
-
-  detalle(e: EntregaReparto): string {
-    const b = (typeof e.billetes === 'string' ? JSON.parse(e.billetes) : e.billetes) ?? {};
-    return Object.entries(b).sort((x, y) => Number(y[0]) - Number(x[0])).map(([d, n]) => this.t.instant('wg.banco.repartir.detalleBilletes', { n, valor: this.miles(Number(d)) })).join(', ');
-  }
-
   get montoNum(): number { return Number(this.monto) || 0; }
-  get excedeMonto(): boolean { return this.montoNum > Number(this.pais?.saldo_virtual ?? 0); }
+  /** Lo que el banco puede dar: el efectivo del banco o el saldo de su cuenta virtual. */
+  get disponible(): number { return Number((this.medio === 'efectivo' ? this.pais?.saldo_banco : this.pais?.saldo_virtual) ?? 0); }
+  get excedeMonto(): boolean { return this.montoNum > this.disponible; }
   get montoValido(): boolean { return this.montoNum > 0 && !this.excedeMonto; }
 
-  cambiarMedio(m: 'billetes' | 'transferencia'): void {
+  cambiarMedio(m: 'efectivo' | 'transferencia'): void {
     if (this.medio === m) return;
     this.medio = m;
     this.errorEntrega = '';
@@ -254,9 +216,8 @@ export class RepartirWillGo implements OnInit {
 
   abrir(d: DocenteReparto): void {
     this.docente = d;
-    this.elegidos = {};
     this.monto = null;
-    this.medio = 'billetes';
+    this.medio = 'efectivo';
     this.errorEntrega = '';
     this.clave = crypto.randomUUID(); // la misma entrega no se registra dos veces aunque se toque dos veces
   }
@@ -265,14 +226,17 @@ export class RepartirWillGo implements OnInit {
     if (!this.enviando) this.docente = null;
   }
 
+  enviar(): void {
+    if (this.medio === 'efectivo') this.entregar(); else this.transferir();
+  }
+
+  /** Entrega en efectivo: el banco solo registra el valor (los billetes físicos no se detallan). */
   entregar(): void {
-    if (!this.docente || !this.pais || !this.total || this.excede) return;
-    const billetes: Record<string, number> = {};
-    for (const d of this.datos!.denominaciones) if (this.cantidad(d)) billetes[d] = this.cantidad(d);
+    if (!this.docente || !this.pais || !this.montoValido) return;
     const docente = this.docente;
     this.enviando = true;
     this.errorEntrega = '';
-    this.willGo.entregarADocente(this.pais.id, docente.id, billetes, this.clave).subscribe({
+    this.willGo.entregarADocente(this.pais.id, docente.id, this.montoNum, this.clave).subscribe({
       next: (r) => {
         this.enviando = false;
         this.docente = null;

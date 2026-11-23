@@ -3,10 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatosCaja, EstudianteCaja, PaisCaja, ProductoCaja, VentaCaja, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { EscanerQrComponent } from '../../escaner-qr.component';
-import { formatearNumero } from '../../numero-miles.directive';
+import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
-import { SelectorBilletesComponent } from '../../selector-billetes.component';
-import { imagenBillete } from '../../imagen-billete';
 import { FechaWillGoPipe } from '../../fecha.pipe';
 
 type Vista = 'vender' | 'caja' | 'ventas';
@@ -14,13 +12,14 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 const sumaBilletes = (b: Record<number, number | null>) => Object.entries(b).reduce((t, [d, n]) => t + Number(d) * (Number(n) || 0), 0);
 /** Llave de tarjeta como la guarda el servidor: minúsculas y con @ adelante. */
 const normalizarLlave = (t: string) => { const l = t.trim().toLowerCase(); return l.startsWith('@') ? l : '@' + l; };
-const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries(Object.entries(b).filter(([, n]) => Number(n) > 0).map(([d, n]) => [d, Number(n)]));
+/** Pasos para redondear hacia arriba lo que entrega el estudiante (sugerencias de «¿Con cuánto paga?»). */
+const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
 
-/** Caja GO•STORE: el encargado vende los productos y cobra en efectivo (billetes y vuelto) o con la tarjeta débito del estudiante. */
+/** Caja GO•STORE: el encargado vende los productos y cobra en efectivo (con cuánto paga y el vuelto, como montos) o con la tarjeta débito del estudiante. */
 @Component({
   selector: 'app-caja-will-go',
   standalone: true,
-  imports: [FormsModule, FechaWillGoPipe, SelectorBilletesComponent, SelectorEdicionComponent, EscanerQrComponent, TranslatePipe],
+  imports: [FormsModule, NumeroMilesDirective, FechaWillGoPipe, SelectorEdicionComponent, EscanerQrComponent, TranslatePipe],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -125,7 +124,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           <!-- Estudiante elegido: revisar y cobrar -->
           <button type="button" (click)="cambiarEstudiante()" class="block mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.cambiarEstudiante' | translate }}</button>
           <div class="mt-2 rounded-2xl p-4 text-white shadow" [style.background]="paisEst?.color || '#1e293b'">
-            <p class="text-xs opacity-90">{{ paisEst?.nombre }} · {{ 'wg.operacion.caja.unBillete' | translate: { n: miles(paisEst?.tasa_actual) } }}</p>
+            <p class="text-xs opacity-90">{{ paisEst?.nombre }} · 1 {{ paisEst?.codigo_moneda }} = {{ miles(paisEst?.tasa_actual) }} pesos</p>
             <p class="text-lg font-extrabold truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
             <p class="text-sm opacity-95">{{ 'wg.tarjeta.efectivo' | translate }} <b>{{ miles(estudiante.saldo) }} {{ paisEst?.codigo_moneda }}</b> · {{ 'wg.tarjeta.cuenta' | translate }} <b>{{ miles(estudiante.cuenta) }} {{ paisEst?.codigo_moneda }}</b></p>
             @if (llaveLeida) { <p class="mt-1 inline-block rounded-md bg-white/20 px-2 py-0.5 text-xs font-semibold">💳 {{ 'wg.tarjeta.identificadoTarjeta' | translate: { llave: llaveLeida } }}</p> }
@@ -147,34 +146,21 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
 
         <!-- MOVIMIENTOS: ventas y entregas al banco -->
         @if (vista === 'ventas') {
-          <!-- Billetes que hay en la caja de cada país -->
-          <h2 class="mt-5 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.billetesEnCaja' | translate }}</h2>
-          @for (p of datos.paises; track p.id) {
-            <section class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div class="p-4 text-white flex items-center gap-3" [style.background]="p.color || '#1e293b'">
-                <div class="flex-1">
+          <!-- Dinero que hay en la caja de cada país (solo el monto) -->
+          <h2 class="mt-5 text-sm font-bold text-gray-700">{{ 'wg.montotienda.dineroEnCaja' | translate }}</h2>
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (p of datos.paises; track p.id) {
+              <section class="rounded-2xl p-4 text-white shadow-sm flex items-center gap-3" [style.background]="p.color || '#1e293b'">
+                <div class="flex-1 min-w-0">
                   <p class="text-sm opacity-90">{{ 'wg.operacion.caja.cajaDe' | translate: { pais: p.nombre } }}</p>
-                  <p class="text-2xl font-extrabold">{{ miles(p.saldo_caja) }} <span class="text-sm font-semibold opacity-90">{{ p.codigo_moneda }}</span></p>
+                  <p class="text-2xl font-extrabold break-all">{{ miles(p.saldo_caja) }} <span class="text-sm font-semibold opacity-90">{{ p.codigo_moneda }}</span></p>
                 </div>
                 @if (datos.puede_vender && p.saldo_caja > 0) {
                   <button type="button" (click)="abrirEntrega(p)" class="shrink-0 px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold">{{ 'wg.operacion.caja.entregarAlBanco' | translate }}</button>
                 }
-              </div>
-              @if (conBilletes(p).length) {
-                <div class="p-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
-                  @for (d of conBilletes(p); track d) {
-                    <div class="rounded-lg border border-gray-200 overflow-hidden">
-                      @if (imagen(p, d); as src) { <img [src]="src" [alt]="'wg.operacion.comun.billeteDe' | translate: { n: miles(d) }" class="w-full aspect-[520/281] object-cover"> }
-                      @else { <div class="w-full aspect-[520/281] flex items-center justify-center text-sm font-black text-white" [style.background]="p.color || '#64748b'">{{ miles(d) }}</div> }
-                      <p class="text-center text-xs py-1 text-gray-600"><b class="text-gray-800">{{ miles(p.inventario[d]) }}</b> × {{ miles(d) }}</p>
-                    </div>
-                  }
-                </div>
-              } @else {
-                <p class="p-4 text-sm text-gray-500">{{ 'wg.operacion.caja.cajaSinBilletes' | translate: { pais: p.nombre } }}</p>
-              }
-            </section>
-          }
+              </section>
+            }
+          </div>
           <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.ventasTitulo' | translate }}</h2>
           @if (!datos.ventas.length) {
             <p class="mt-4 text-sm text-gray-500">{{ 'wg.operacion.caja.sinVentas' | translate }}</p>
@@ -193,7 +179,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
                   @if (v.metodo_pago === 'tarjeta') {
                     <p class="text-xs mt-0.5"><span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-700">💳 {{ 'wg.tarjeta.pagadoTarjeta' | translate }}</span></p>
                   } @else {
-                    <p class="text-xs text-gray-500 mt-0.5"><span class="rounded-md bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">{{ 'wg.tarjeta.efectivo' | translate }}</span> · {{ 'wg.operacion.caja.entrego' | translate: { n: miles(suma(v.billetes_recibidos)) } }}{{ suma(v.billetes_vuelto) ? ' · ' + ('wg.operacion.caja.vueltoN' | translate: { n: miles(suma(v.billetes_vuelto)) }) : '' }}</p>
+                    <p class="text-xs text-gray-500 mt-0.5"><span class="rounded-md bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">{{ 'wg.tarjeta.efectivo' | translate }}</span>@if (suma(v.billetes_recibidos)) { · {{ 'wg.operacion.caja.entrego' | translate: { n: miles(suma(v.billetes_recibidos)) } }}{{ suma(v.billetes_vuelto) ? ' · ' + ('wg.operacion.caja.vueltoN' | translate: { n: miles(suma(v.billetes_vuelto)) }) : '' }} }</p>
                   }
                 </li>
               }
@@ -247,50 +233,53 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
       }
     </div>
 
-    <!-- Cobro: billetes recibidos y vuelto -->
+    <!-- Cobro en efectivo: con cuánto paga y el vuelto (solo montos) -->
     @if (cobrando && estudiante && paisEst && datos) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarCobro()">
-        <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cobro">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-cobro">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
-              <h2 id="titulo-cobro" class="text-lg font-bold text-gray-800">{{ (paso === 'recibido' ? 'wg.operacion.caja.billetesQueEntrega' : 'wg.operacion.caja.vueltoQueDas') | translate }}</h2>
+              <h2 id="titulo-cobro" class="text-lg font-bold text-gray-800">{{ 'wg.montotienda.cobroEfectivo' | translate }}</h2>
               <p class="text-sm text-gray-500">{{ estudiante.nombre }} · {{ 'wg.operacion.caja.totalMin' | translate }} <b>{{ miles(total) }} {{ paisEst.codigo_moneda }}</b></p>
             </div>
             <button type="button" (click)="cerrarCobro()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
           </div>
           <div class="flex-1 overflow-y-auto px-5 pb-3">
-            @if (paso === 'recibido') {
-              <wg-selector-billetes [pais]="paisEst" [denominaciones]="datos.denominaciones" [elegidos]="recibidos" />
-            } @else {
-              <div class="mb-3 flex items-center justify-between gap-3">
-                <p class="text-sm text-gray-600" [innerHTML]="'wg.operacion.caja.entregoDebes' | translate: { n: miles(recibido), v: miles(vueltoDebido) }"></p>
-                <button type="button" (click)="sugerirVuelto()" class="text-sm font-semibold text-orange-600 hover:underline shrink-0">{{ 'wg.operacion.caja.sugerirVuelto' | translate }}</button>
-              </div>
-              <wg-selector-billetes [pais]="paisEst" [denominaciones]="conVuelto" [elegidos]="vuelto" [topes]="topesVuelto" [topeTotal]="vueltoDebido" [textoTope]="'wg.operacion.caja.enCaja' | translate" />
-              @if (!conVuelto.length) { <p class="text-sm text-red-600">{{ 'wg.operacion.caja.sinVuelto' | translate }}</p> }
+            <label for="monto-recibido" class="block text-sm font-semibold text-gray-700">{{ 'wg.montotienda.conCuantoPaga' | translate }}</label>
+            <input id="monto-recibido" wgNumero [(ngModel)]="recibidoMonto" placeholder="0"
+                   class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <!-- Atajos: exacto y redondeos hacia arriba -->
+            <div class="mt-2 flex flex-wrap gap-2">
+              <button type="button" (click)="recibidoMonto = total" class="px-3 py-1.5 rounded-lg text-sm font-semibold border-2"
+                      [class]="recibido === total ? 'border-orange-400 bg-orange-50 text-orange-800' : 'border-gray-200 bg-white text-gray-700'">{{ 'wg.montotienda.exacto' | translate }}</button>
+              @for (n of sugerenciasPago; track n) {
+                <button type="button" (click)="recibidoMonto = n" class="px-3 py-1.5 rounded-lg text-sm font-semibold border-2"
+                        [class]="recibido === n ? 'border-orange-400 bg-orange-50 text-orange-800' : 'border-gray-200 bg-white text-gray-700'">{{ miles(n) }}</button>
+              }
+            </div>
+            @if (recibido && recibido < total) {
+              <p class="mt-2 text-sm font-semibold text-red-600">{{ 'wg.operacion.caja.faltan' | translate: { n: miles(total - recibido) } }}</p>
+            } @else if (recibido > (estudiante.saldo || 0)) {
+              <p class="mt-2 text-xs font-semibold text-amber-700">{{ 'wg.montotienda.masQueEfectivo' | translate: { n: miles(estudiante.saldo) } }}</p>
             }
+            <!-- Vuelto en grande -->
+            <div class="mt-4 rounded-2xl p-4 text-center" [class]="recibido >= total ? 'bg-emerald-50 border border-emerald-200' : 'bg-gray-50 border border-gray-200'">
+              <p class="text-sm font-semibold" [class]="recibido >= total ? 'text-emerald-800' : 'text-gray-500'">{{ 'wg.operacion.caja.vuelto' | translate }}</p>
+              <p class="text-4xl font-extrabold break-all" [class]="recibido >= total ? 'text-emerald-700' : 'text-gray-400'">{{ miles(vueltoDebido) }} <span class="text-base font-semibold">{{ paisEst.codigo_moneda }}</span></p>
+              @if (recibido >= total) { <p class="mt-1 text-xs text-emerald-800">{{ (vueltoDebido ? 'wg.montotienda.devuelve' : 'wg.montotienda.sinVuelto') | translate: { n: miles(vueltoDebido) } }}</p> }
+            </div>
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
             @if (errorCobro) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorCobro }}</p> }
             <div class="grid grid-cols-3 gap-2 mb-3 text-center">
-              <div class="rounded-xl bg-gray-50 py-2"><p class="text-[11px] text-gray-500">{{ 'wg.operacion.caja.total' | translate }}</p><p class="font-extrabold text-gray-800">{{ miles(total) }}</p></div>
-              <div class="rounded-xl bg-gray-50 py-2"><p class="text-[11px] text-gray-500">{{ 'wg.operacion.caja.entregoLabel' | translate }}</p><p class="font-extrabold" [class]="recibido < total ? 'text-red-600' : 'text-gray-800'">{{ miles(recibido) }}</p></div>
-              <div class="rounded-xl bg-gray-50 py-2"><p class="text-[11px] text-gray-500">{{ 'wg.operacion.caja.vuelto' | translate }}</p><p class="font-extrabold text-gray-800">{{ miles(vueltoDebido) }}</p></div>
+              <div class="rounded-xl bg-gray-50 py-2"><p class="text-[11px] text-gray-500">{{ 'wg.operacion.caja.total' | translate }}</p><p class="font-extrabold text-gray-800 break-all">{{ miles(total) }}</p></div>
+              <div class="rounded-xl bg-gray-50 py-2"><p class="text-[11px] text-gray-500">{{ 'wg.montotienda.recibido' | translate }}</p><p class="font-extrabold break-all" [class]="recibido < total ? 'text-red-600' : 'text-gray-800'">{{ miles(recibido) }}</p></div>
+              <div class="rounded-xl bg-gray-50 py-2"><p class="text-[11px] text-gray-500">{{ 'wg.operacion.caja.vuelto' | translate }}</p><p class="font-extrabold text-gray-800 break-all">{{ miles(vueltoDebido) }}</p></div>
             </div>
-            @if (paso === 'recibido') {
-              <button type="button" (click)="siguientePaso()" [disabled]="recibido < total"
-                      class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-                {{ recibido < total ? ('wg.operacion.caja.faltan' | translate: { n: miles(total - recibido) }) : ((vueltoDebido ? 'wg.operacion.caja.siguienteVuelto' : 'wg.operacion.caja.confirmarVenta') | translate) }}
-              </button>
-            } @else {
-              <div class="flex flex-col-reverse sm:flex-row gap-2">
-                <button type="button" (click)="paso = 'recibido'" class="w-full sm:w-auto px-5 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100">{{ 'wg.operacion.caja.atras' | translate }}</button>
-                <button type="button" (click)="confirmar()" [disabled]="enviando || vueltoMarcado !== vueltoDebido"
-                        class="w-full sm:flex-1 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-                  {{ enviando ? ('wg.operacion.comun.guardando' | translate) : (vueltoMarcado !== vueltoDebido ? ('wg.operacion.caja.faltanVuelto' | translate: { n: miles(vueltoDebido - vueltoMarcado) }) : ('wg.operacion.caja.confirmarVenta' | translate)) }}
-                </button>
-              </div>
-            }
+            <button type="button" (click)="confirmar()" [disabled]="enviando || recibido < total"
+                    class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
+              {{ enviando ? ('wg.operacion.comun.guardando' | translate) : (!recibido ? ('wg.montotienda.escribeConCuanto' | translate) : (recibido < total ? ('wg.operacion.caja.faltan' | translate: { n: miles(total - recibido) }) : ('wg.operacion.caja.confirmarVenta' | translate))) }}
+            </button>
           </div>
         </div>
       </div>
@@ -316,8 +305,8 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
               <p class="flex justify-between"><span>💳 {{ 'wg.tarjeta.pagadoTarjeta' | translate }}</span><span class="font-semibold">{{ recibo.llave }}</span></p>
               <p class="flex justify-between text-gray-500"><span>{{ 'wg.tarjeta.leQuedanCuenta' | translate }}</span><span>{{ miles(recibo.saldo) }}</span></p>
             } @else {
-              <p class="flex justify-between"><span>{{ 'wg.operacion.caja.entregoLabel' | translate }}</span><span>{{ miles(recibo.recibido) }}</span></p>
-              <p class="flex justify-between"><span>{{ 'wg.operacion.caja.vuelto' | translate }}</span><span>{{ miles(recibo.vuelto) }}</span></p>
+              <p class="flex justify-between"><span>{{ 'wg.montotienda.recibido' | translate }}</span><span>{{ miles(recibo.recibido) }}</span></p>
+              <p class="flex justify-between text-base"><span class="font-semibold">{{ 'wg.operacion.caja.vuelto' | translate }}</span><b class="text-emerald-700">{{ miles(recibo.vuelto) }} {{ recibo.moneda }}</b></p>
               <p class="flex justify-between text-gray-500"><span>{{ 'wg.operacion.caja.leQuedan' | translate }}</span><span>{{ miles(recibo.saldo) }}</span></p>
             }
           </div>
@@ -369,26 +358,31 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
       </div>
     }
 
-    <!-- Entregar al banco -->
+    <!-- Entregar al banco: un monto (hasta lo que hay en la caja) -->
     @if (entregaPais && datos) {
-      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="entregaPais = null">
-        <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-entrega-banco">
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarEntrega()">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-entrega-banco">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
               <h2 id="titulo-entrega-banco" class="text-lg font-bold text-gray-800">{{ 'wg.operacion.caja.entregarAlBancoDe' | translate: { pais: entregaPais.nombre } }}</h2>
-              <p class="text-sm text-gray-500">{{ 'wg.operacion.caja.marcaBilletes' | translate }}</p>
+              <p class="text-sm text-gray-500">{{ 'wg.montotienda.ayudaEntregaBanco' | translate }}</p>
             </div>
-            <button type="button" (click)="entregaPais = null" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
+            <button type="button" (click)="cerrarEntrega()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
           </div>
           <div class="flex-1 overflow-y-auto px-5 pb-3">
-            <button type="button" (click)="todoAlBanco()" class="mb-3 text-sm font-semibold text-orange-600 hover:underline">{{ 'wg.operacion.caja.entregarTodo' | translate }}</button>
-            <wg-selector-billetes [pais]="entregaPais" [denominaciones]="conBilletes(entregaPais)" [elegidos]="aEntregar" [topes]="entregaPais.inventario" [textoTope]="'wg.operacion.caja.enCaja' | translate" />
+            <label for="monto-banco" class="block text-sm font-semibold text-gray-700">{{ 'wg.montotienda.montoAEntregar' | translate }}</label>
+            <input id="monto-banco" wgNumero [(ngModel)]="montoBanco" placeholder="0"
+                   class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <div class="mt-1.5 flex items-center justify-between gap-3">
+              <p class="text-xs" [class]="montoBancoNum > entregaPais.saldo_caja ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.montotienda.enCajaHay' | translate: { n: miles(entregaPais.saldo_caja) } }} {{ entregaPais.codigo_moneda || '' }}</p>
+              <button type="button" (click)="todoAlBanco()" class="shrink-0 text-sm font-semibold text-orange-600 hover:underline">{{ 'wg.operacion.caja.entregarTodo' | translate }}</button>
+            </div>
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
             @if (errorCobro) { <p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorCobro }}</p> }
-            <button type="button" (click)="entregar()" [disabled]="enviando || !suma(aEntregar)"
+            <button type="button" (click)="entregar()" [disabled]="enviando || !montoBancoValido"
                     class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-              {{ enviando ? ('wg.operacion.comun.entregando' | translate) : (suma(aEntregar) ? ('wg.operacion.comun.entregarMonto' | translate: { n: miles(suma(aEntregar)) }) : ('wg.operacion.comun.eligeBilletes' | translate)) }}
+              {{ enviando ? ('wg.operacion.comun.entregando' | translate) : (montoBancoNum ? ('wg.operacion.comun.entregarMonto' | translate: { n: miles(montoBancoNum) }) : ('wg.transferir.escribeMonto' | translate)) }}
             </button>
           </div>
         </div>
@@ -414,9 +408,8 @@ export class CajaWillGo implements OnInit {
   estudiante: EstudianteCaja | null = null;
   carrito: Record<string, number> = {};
   cobrando = false;
-  paso: 'recibido' | 'vuelto' = 'recibido';
-  recibidos: Record<number, number | null> = {};
-  vuelto: Record<number, number | null> = {};
+  /** Con cuánto paga el estudiante en efectivo (un monto; el vuelto lo calcula el servidor). */
+  recibidoMonto: number | null = null;
   clave = '';
   enviando = false;
   errorCobro = '';
@@ -434,7 +427,8 @@ export class CajaWillGo implements OnInit {
   private ultimaLectura = { texto: '', hora: 0 };
 
   entregaPais: PaisCaja | null = null;
-  aEntregar: Record<number, number | null> = {};
+  /** Monto que la caja le entrega al banco. */
+  montoBanco: number | null = null;
 
   ngOnInit(): void {
     this.willGo.misEdiciones().subscribe({
@@ -461,12 +455,11 @@ export class CajaWillGo implements OnInit {
   pais(id: string | null | undefined): PaisCaja | undefined { return this.datos?.paises.find((p) => p.id === id); }
   get paisEst(): PaisCaja | undefined { return this.pais(this.estudiante?.pais_id); }
   urlFoto(id: string): string { return this.willGo.urlFoto(id); }
-  imagen(p: PaisCaja, d: number): string | null { return imagenBillete(p, d); }
+  /** Ventas viejas: suma del detalle de billetes que se guardó (las nuevas solo guardan el monto). */
   suma(b: Record<string | number, number | null> | string | null | undefined): number {
     const x = typeof b === 'string' ? JSON.parse(b) : b;
     return x ? sumaBilletes(x) : 0;
   }
-  conBilletes(p: PaisCaja): number[] { return (this.datos?.denominaciones ?? []).filter((d) => Number(p.inventario?.[d] ?? 0) > 0); }
   textoItems(v: VentaCaja): string { return v.items.map((i) => `${i.cantidad} × ${i.nombre}`).join(', '); }
 
   get filtrados(): EstudianteCaja[] {
@@ -549,15 +542,17 @@ export class CajaWillGo implements OnInit {
   get total(): number { return (this.datos?.productos ?? []).reduce((t, p) => t + this.precio(p) * this.cantidad(p), 0); }
 
   // ---- Cobro ----
-  get recibido(): number { return sumaBilletes(this.recibidos); }
+  get recibido(): number { return Number(this.recibidoMonto) || 0; }
   get vueltoDebido(): number { return Math.max(0, this.recibido - this.total); }
-  get vueltoMarcado(): number { return sumaBilletes(this.vuelto); }
-  /** El vuelto puede salir de lo que hay en caja más lo que el estudiante acaba de entregar. */
-  get topesVuelto(): Record<string, number> {
-    const p = this.paisEst;
-    return Object.fromEntries((this.datos?.denominaciones ?? []).map((d) => [d, Number(p?.inventario?.[d] ?? 0) + (Number(this.recibidos[d]) || 0)]));
+  /** Montos redondos por encima del total (p. ej. total 37 → 40, 50, 100), sin pasar de lo que tiene en efectivo si le alcanza. */
+  get sugerenciasPago(): number[] {
+    const total = this.total;
+    if (!total) return [];
+    const saldo = Number(this.estudiante?.saldo) || 0;
+    const tope = saldo >= total ? saldo : Infinity;
+    const lista = PASOS_REDONDEO.map((p) => Math.ceil(total / p) * p).filter((n) => n > total && n <= tope);
+    return [...new Set(lista)].sort((a, b) => a - b).slice(0, 4);
   }
-  get conVuelto(): number[] { return (this.datos?.denominaciones ?? []).filter((d) => d <= this.vueltoDebido && this.topesVuelto[d] > 0); }
 
   abrirCobro(): void {
     if (this.metodo === 'tarjeta') {
@@ -566,47 +561,26 @@ export class CajaWillGo implements OnInit {
       return;
     }
     this.cobrando = true;
-    this.paso = 'recibido';
-    this.recibidos = {};
-    this.vuelto = {};
+    this.recibidoMonto = null;
     this.errorCobro = '';
     this.clave = crypto.randomUUID();
   }
   cerrarCobro(): void { if (!this.enviando) this.cobrando = false; }
 
-  siguientePaso(): void {
-    if (this.recibido < this.total) return;
-    if (!this.vueltoDebido) { this.confirmar(); return; }
-    this.vuelto = {};
-    this.sugerirVuelto();
-    this.paso = 'vuelto';
-  }
-
-  /** Arma el vuelto con los billetes más grandes disponibles. */
-  sugerirVuelto(): void {
-    let falta = this.vueltoDebido;
-    const topes = this.topesVuelto;
-    const v: Record<number, number> = {};
-    for (const d of [...(this.datos?.denominaciones ?? [])].sort((a, b) => b - a)) {
-      const n = Math.min(Math.floor(falta / d), topes[d] ?? 0);
-      if (n > 0) { v[d] = n; falta -= n * d; }
-    }
-    this.vuelto = v;
-    this.errorCobro = falta ? this.t.instant('wg.operacion.caja.sinBilletesCompletar', { n: this.miles(falta) }) : '';
-  }
-
   confirmar(): void {
     const e = this.estudiante, p = this.paisEst;
-    if (!e || !p || !this.datos || this.enviando) return;
+    if (!e || !p || !this.datos || this.enviando || this.recibido < this.total) return;
     const items = Object.entries(this.carrito).filter(([, n]) => n > 0).map(([producto_id, cantidad]) => ({ producto_id, cantidad }));
-    const total = this.total, recibido = this.recibido, vuelto = this.vueltoMarcado;
+    const total = this.total, recibido = this.recibido;
     this.enviando = true;
     this.errorCobro = '';
-    this.willGo.vender({ participante_id: e.id, items, billetes_recibidos: limpiarBilletes(this.recibidos), billetes_vuelto: limpiarBilletes(this.vuelto), clave_idempotencia: this.clave }).subscribe({
+    // Efectivo: solo con cuánto paga; el servidor calcula el vuelto (recibido − total)
+    this.willGo.vender({ participante_id: e.id, items, recibido, clave_idempotencia: this.clave }).subscribe({
       next: (r) => {
         this.enviando = false;
         this.cobrando = false;
-        this.recibo = { numero: r.numero_recibo, items: r.items, total, recibido, vuelto, saldo: r.saldo, moneda: p.codigo_moneda ?? '', metodo: 'efectivo' };
+        const rec = Number(r.recibido ?? recibido);
+        this.recibo = { numero: r.numero_recibo, items: r.items, total: Number(r.total_billetes ?? total), recibido: rec, vuelto: Number(r.vuelto ?? rec - total), saldo: r.saldo, moneda: p.codigo_moneda ?? '', metodo: 'efectivo' };
         this.carrito = {};
         this.estudiante = null;
         this.llaveLeida = null;
@@ -701,14 +675,17 @@ export class CajaWillGo implements OnInit {
   }
 
   // ---- Entregar al banco ----
-  abrirEntrega(p: PaisCaja): void { this.entregaPais = p; this.aEntregar = {}; this.errorCobro = ''; this.clave = crypto.randomUUID(); }
-  todoAlBanco(): void { if (this.entregaPais) this.aEntregar = { ...this.entregaPais.inventario }; }
+  abrirEntrega(p: PaisCaja): void { this.entregaPais = p; this.montoBanco = null; this.errorCobro = ''; this.clave = crypto.randomUUID(); }
+  cerrarEntrega(): void { if (!this.enviando) this.entregaPais = null; }
+  todoAlBanco(): void { if (this.entregaPais) this.montoBanco = Number(this.entregaPais.saldo_caja) || 0; }
+  get montoBancoNum(): number { return Number(this.montoBanco) || 0; }
+  get montoBancoValido(): boolean { return this.montoBancoNum > 0 && this.montoBancoNum <= (Number(this.entregaPais?.saldo_caja) || 0); }
   entregar(): void {
     const p = this.entregaPais;
-    if (!p || !this.datos || this.enviando) return;
+    if (!p || !this.datos || this.enviando || !this.montoBancoValido) return;
     this.enviando = true;
     this.errorCobro = '';
-    this.willGo.entregarCajaAlBanco(this.datos.edicion.id, p.id, limpiarBilletes(this.aEntregar), this.clave).subscribe({
+    this.willGo.entregarCajaAlBanco(this.datos.edicion.id, p.id, this.montoBancoNum, this.clave).subscribe({
       next: (r) => { this.enviando = false; this.entregaPais = null; this.avisar(this.t.instant('wg.operacion.caja.avisoEntregaste', { monto: this.miles(r.monto), pais: p.nombre })); this.cargar(); },
       error: (err) => { this.enviando = false; this.errorCobro = WillGoService.mensajeDeError(err); },
     });

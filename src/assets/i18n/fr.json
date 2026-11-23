@@ -590,7 +590,7 @@
       },
       "repartir": {
         "titulo": "Distribuer aux enseignants",
-        "subtitulo": "Remettez des billets de la banque à chaque enseignant.",
+        "subtitulo": "Remettez l'argent de la banque à chaque enseignant.",
         "bancoDe": "Banque de {{pais}}",
         "soloAbierta": "Vous pourrez distribuer lorsque l'édition sera ouverte.",
         "docentes": "Enseignants",
@@ -876,6 +876,32 @@
         "avisoVotaste": "C'est fait ! Vous avez voté pour {{fondo}} dans la {{ronda}}."
       }
     },
+    "montobanco": {
+      "efectivo": "Espèces",
+      "ayudaEfectivo": "Indique combien d’espèces vous remettez. Seul le montant est enregistré.",
+      "montoEntregar": "Montant à remettre",
+      "disponibleEfectivo": "La banque a {{n}} en espèces",
+      "tieneEfectivo": "A {{n}} en espèces",
+      "tieneCuenta": "A {{n}} sur son compte",
+      "consignarAyuda": "Indique combien d’espèces l’élève remet pour son compte.",
+      "retirarAyuda": "Indique combien il retire de son compte ; la banque lui remet ce montant en espèces.",
+      "montoConsignar": "Montant à déposer",
+      "retirarExcede": "Il ne peut pas retirer plus que ce qu’il a sur son compte ({{n}}).",
+      "arqueoTitulo": "Compter l’argent de la banque",
+      "arqueoAyuda": "Comptez toutes les espèces de la banque et indiquez le total.",
+      "totalContado": "Total compté",
+      "virtualAyuda": "Sans espèces : il sert aux virements vers les enseignants. Il est chargé du même montant que l’argent de la banque (total chargé : {{n}}). Il n’entre pas dans le comptage.",
+      "dineroBanco": "Argent de la banque",
+      "provisto": "Fourni",
+      "ayudaBorrador": "Indiquez le total d’espèces avec lequel la banque commence.",
+      "ayudaAbierta": "Pendant que l’édition est ouverte, on peut seulement ajouter de l’argent à la banque.",
+      "totalBanco": "Argent de la banque (total)",
+      "bienvenidaNecesita": "L’accueil des élèves nécessite {{n}}.",
+      "agregarDinero": "Ajouter de l’argent",
+      "agregado": "Argent ajouté à la banque.",
+      "confirmarTitulo": "Ajouter de l’argent à la banque ?",
+      "quedaBanco": "L’argent de la banque passera à $ {{n}}. Le solde virtuel augmente d’autant."
+    },
     "montofondos": {
       "cuantoInvierte": "Combien investit-il ?",
       "montoInvertir": "Montant à investir",
@@ -884,6 +910,28 @@
       "excede": "Il ne peut pas investir plus que ce qu'il a ({{n}}).",
       "recibe": "Reçoit",
       "entregaEfectivo": "Remets ce montant en espèces à l'élève."
+    },
+    "montotienda": {
+      "entregarTitulo": "Remettre de l'argent",
+      "entregarSubtitulo": "Votre argent et les remises aux élèves.",
+      "entregarVacioMovimientos": "Aucun mouvement pour l'instant. Quand la banque vous donne de l'argent ou que vous en remettez à un élève, il apparaît ici.",
+      "tuEfectivoDe": "Vos espèces de {{pais}}",
+      "ayudaEfectivo": "Saisissez combien vous lui donnez en espèces.",
+      "recompensaRecomendada": "Récompense recommandée par la grille d'évaluation : {{n}}",
+      "montoAEntregar": "Montant à remettre",
+      "disponibleEfectivo": "Vous avez {{n}} en espèces",
+      "sinEfectivo": "Vous n'avez pas d'espèces à remettre.",
+      "cobroEfectivo": "Paiement en espèces",
+      "conCuantoPaga": "Avec combien paie-t-il ?",
+      "exacto": "Exact",
+      "recibido": "Reçu",
+      "masQueEfectivo": "C'est plus que ses espèces ({{n}}).",
+      "devuelve": "Rendez-lui {{n}}.",
+      "sinVuelto": "Paiement exact : pas de monnaie à rendre.",
+      "escribeConCuanto": "Saisissez le montant payé",
+      "dineroEnCaja": "Argent dans la caisse",
+      "ayudaEntregaBanco": "Saisissez combien d'argent de la caisse vous remettez à la banque.",
+      "enCajaHay": "La caisse contient {{n}}"
     },
     "nucleo": {
       "menu": {

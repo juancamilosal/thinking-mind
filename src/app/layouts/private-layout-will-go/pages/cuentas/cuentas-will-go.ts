@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatosCuentas, EdicionVigente, EstudianteCuenta, PaisCuentas, WillGoService } from '../../../../core/services/will-go.service';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
-import { SelectorBilletesComponent } from '../../selector-billetes.component';
 import { QrLlaveComponent } from '../../qr-llave.component';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
 
@@ -13,11 +12,11 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 
 type Operacion = 'consignar' | 'retirar';
 
-/** Cuentas y tarjetas: el banco consigna (billetes → cuenta) y retira (cuenta → billetes) para los estudiantes. */
+/** Cuentas y tarjetas: el banco consigna (efectivo → cuenta) y retira (cuenta → efectivo) para los estudiantes. Solo se registra el monto. */
 @Component({
   selector: 'app-cuentas-will-go',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, SelectorEdicionComponent, SelectorBilletesComponent, QrLlaveComponent, NumeroMilesDirective],
+  imports: [FormsModule, TranslatePipe, SelectorEdicionComponent, QrLlaveComponent, NumeroMilesDirective],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -108,8 +107,8 @@ type Operacion = 'consignar' | 'retirar';
             <div class="min-w-0">
               <h2 id="titulo-cuenta" class="text-lg font-bold text-gray-800 break-words">{{ estudiante.nombre }} {{ estudiante.apellido }}</h2>
               <p class="text-sm text-gray-500">
-                @if (operacion === 'consignar') { {{ 'wg.cuentas.consignar.ayuda' | translate }} }
-                @else if (operacion === 'retirar') { {{ 'wg.cuentas.retirar.ayuda' | translate }} }
+                @if (operacion === 'consignar') { {{ 'wg.montobanco.consignarAyuda' | translate }} }
+                @else if (operacion === 'retirar') { {{ 'wg.montobanco.retirarAyuda' | translate }} }
                 @else { {{ pais.nombre }} }
               </p>
             </div>
@@ -152,23 +151,14 @@ type Operacion = 'consignar' | 'retirar';
               @if (datos.edicion.estado !== 'abierta') {
                 <p class="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-800">{{ 'wg.cuentas.soloAbierta' | translate }}</p>
               }
-            } @else if (operacion === 'consignar') {
-              <wg-selector-billetes [pais]="pais" [denominaciones]="datos.denominaciones" [elegidos]="elegidos" [topeTotal]="estudiante.efectivo" (cambio)="refrescar()" />
             } @else {
-              <div class="flex flex-wrap items-end gap-2 mb-3">
-                <div class="flex-1 min-w-[10rem]">
-                  <label for="wg-monto-retiro" class="block text-xs font-semibold text-gray-500 mb-1">{{ 'wg.cuentas.retirar.monto' | translate }}</label>
-                  <input id="wg-monto-retiro" wgNumero [(ngModel)]="montoRetiro" placeholder="0"
-                         class="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-orange-300">
-                </div>
-                <button type="button" (click)="sugerir()" [disabled]="!montoRetiroValido"
-                        class="h-10 px-3 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40">{{ 'wg.cuentas.retirar.sugerir' | translate }}</button>
-              </div>
-              @if (sugerenciaIncompleta) {
-                <p class="mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-800">{{ 'wg.cuentas.retirar.noAlcanza' | translate }}</p>
-              }
-              <wg-selector-billetes [pais]="pais" [denominaciones]="datos.denominaciones" [elegidos]="elegidos" [topes]="pais.inventario" [topeTotal]="estudiante.cuenta"
-                                    [textoTope]="'wg.cuentas.retirar.enBanco' | translate" (cambio)="refrescar()" />
+              <!-- Un solo monto: el estudiante entrega o recibe los billetes físicos, la app registra el valor -->
+              <label for="wg-monto-operacion" class="block text-sm font-semibold text-gray-700">{{ (operacion === 'consignar' ? 'wg.montobanco.montoConsignar' : 'wg.cuentas.retirar.monto') | translate }}</label>
+              <input id="wg-monto-operacion" wgNumero [(ngModel)]="monto" placeholder="0"
+                     class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+              <p class="mt-1.5 text-xs" [class]="excede ? 'text-red-600 font-semibold' : 'text-gray-500'">
+                {{ (operacion === 'consignar' ? 'wg.montobanco.tieneEfectivo' : 'wg.montobanco.tieneCuenta') | translate: { n: miles(tope) } }}
+              </p>
             }
           </div>
 
@@ -187,7 +177,7 @@ type Operacion = 'consignar' | 'retirar';
                 <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></span>
               </div>
               @if (excede) {
-                <p class="mb-3 text-sm text-red-600 font-semibold">{{ (operacion === 'consignar' ? 'wg.cuentas.consignar.excede' : 'wg.cuentas.retirar.excede') | translate: { n: miles(operacion === 'consignar' ? estudiante.efectivo : estudiante.cuenta) } }}</p>
+                <p class="mb-3 text-sm text-red-600 font-semibold">{{ (operacion === 'consignar' ? 'wg.cuentas.consignar.excede' : 'wg.montobanco.retirarExcede') | translate: { n: miles(tope) } }}</p>
               }
               <div class="flex gap-2">
                 <button type="button" (click)="volver()" [disabled]="enviando" class="px-5 py-3.5 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">{{ 'wg.cuentas.volver' | translate }}</button>
@@ -195,7 +185,7 @@ type Operacion = 'consignar' | 'retirar';
                         class="flex-1 py-3.5 rounded-xl font-bold text-white disabled:opacity-40"
                         [class]="operacion === 'consignar' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' : 'bg-gradient-to-r from-orange-500 to-orange-600'">
                   @if (enviando) { {{ (operacion === 'consignar' ? 'wg.cuentas.consignar.enviando' : 'wg.cuentas.retirar.enviando') | translate }} }
-                  @else if (!total) { {{ 'wg.cuentas.eligeBilletes' | translate }} }
+                  @else if (!total) { {{ 'wg.transferir.escribeMonto' | translate }} }
                   @else { {{ (operacion === 'consignar' ? 'wg.cuentas.consignar.monto' : 'wg.cuentas.retirar.botonMonto') | translate: { monto: miles(total) } }} }
                 </button>
               </div>
@@ -225,9 +215,8 @@ export class CuentasWillGo implements OnInit {
 
   estudiante: EstudianteCuenta | null = null;
   operacion: Operacion | null = null;
-  elegidos: Record<number, number | null> = {};
-  montoRetiro: number | null = null;
-  sugerenciaIncompleta = false;
+  /** Monto de la consignación o del retiro. */
+  monto: number | null = null;
   clave = '';
   enviando = false;
   errorPanel = '';
@@ -271,21 +260,14 @@ export class CuentasWillGo implements OnInit {
     window.open(this.location.prepareExternalUrl(url), '_blank');
   }
 
-  cantidad(d: number): number { return Number(this.elegidos[d]) || 0; }
-  get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * this.cantidad(d), 0); }
-  get excede(): boolean {
+  get total(): number { return Number(this.monto) || 0; }
+  /** Lo máximo de la operación: su efectivo al consignar, su cuenta al retirar. */
+  get tope(): number {
     const e = this.estudiante;
-    if (!e) return false;
-    if (this.operacion === 'consignar') return this.total > e.efectivo;
-    if (this.operacion === 'retirar') {
-      return this.total > e.cuenta || (this.datos?.denominaciones ?? []).some((d) => this.cantidad(d) > Number(this.pais?.inventario?.[d] ?? 0));
-    }
-    return false;
+    if (!e) return 0;
+    return this.operacion === 'consignar' ? e.efectivo : e.cuenta;
   }
-  get montoRetiroValido(): boolean { const m = Number(this.montoRetiro) || 0; return m > 0 && m <= (this.estudiante?.cuenta ?? 0); }
-
-  /** El selector cambia `elegidos` por dentro; se reasigna para que los getters y la vista se actualicen. */
-  refrescar(): void { this.elegidos = { ...this.elegidos }; this.sugerenciaIncompleta = false; }
+  get excede(): boolean { return !!this.estudiante && !!this.operacion && this.total > this.tope; }
 
   abrir(e: EstudianteCuenta): void {
     this.estudiante = e;
@@ -295,17 +277,15 @@ export class CuentasWillGo implements OnInit {
 
   empezar(op: Operacion): void {
     this.operacion = op;
-    this.elegidos = {};
+    this.monto = null;
     this.errorPanel = '';
-    this.sugerenciaIncompleta = false;
-    this.montoRetiro = op === 'retirar' ? (this.estudiante?.cuenta ?? null) : null;
     this.clave = crypto.randomUUID(); // la misma operación no se registra dos veces aunque se toque dos veces
   }
 
   volver(): void {
     if (this.enviando) return;
     this.operacion = null;
-    this.elegidos = {};
+    this.monto = null;
     this.errorPanel = '';
   }
 
@@ -315,27 +295,14 @@ export class CuentasWillGo implements OnInit {
     this.operacion = null;
   }
 
-  /** Propone los billetes más grandes que haya en el banco hasta completar el monto. */
-  sugerir(): void {
-    let falta = Math.min(Number(this.montoRetiro) || 0, this.estudiante?.cuenta ?? 0);
-    const pago: Record<number, number | null> = {};
-    for (const d of [...(this.datos?.denominaciones ?? [])].sort((a, b) => b - a)) {
-      const n = Math.min(Math.floor(falta / d), Number(this.pais?.inventario?.[d] ?? 0));
-      if (n > 0) { pago[d] = n; falta -= n * d; }
-    }
-    this.elegidos = pago;
-    this.sugerenciaIncompleta = falta > 0;
-  }
-
   confirmar(): void {
     const e = this.estudiante;
     const op = this.operacion;
     if (!e || !op || !this.total || this.excede || this.enviando) return;
-    const billetes: Record<string, number> = {};
-    for (const d of this.datos!.denominaciones) if (this.cantidad(d)) billetes[d] = this.cantidad(d);
+    const monto = this.total;
     this.enviando = true;
     this.errorPanel = '';
-    const peticion = op === 'consignar' ? this.willGo.consignar(e.id, billetes, this.clave) : this.willGo.retirarDeCuenta(e.id, billetes, this.clave);
+    const peticion = op === 'consignar' ? this.willGo.consignar(e.id, monto, this.clave) : this.willGo.retirarDeCuenta(e.id, monto, this.clave);
     peticion.subscribe({
       next: (r) => {
         this.enviando = false;

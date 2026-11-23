@@ -3,13 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Edicion, Funcionario, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
-import { imagenBillete } from '../../../imagen-billete';
 import { BuscadorPersonaComponent } from '../../../buscador-persona.component';
 import { ESTILOS_CAMPOS } from './estilos-tabs';
 
-const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
-
-/** Países y banco: datos de cada país y los billetes impresos que recibe su banco (la provisión). */
+/** Países y banco: datos de cada país y el dinero que recibe su banco (la provisión), escrito como un total. */
 @Component({
   selector: 'app-tab-paises',
   standalone: true,
@@ -40,11 +37,10 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               @if (p.codigo_moneda) { <span class="text-sm font-semibold text-gray-500">{{ p.codigo_moneda }}</span> }
             </p>
             <p class="text-xs text-gray-500">💳 {{ 'wg.pestanas.paises.virtualBanco' | translate }}</p>
-            @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">{{ 'wg.pestanas.paises.faltaDetalle' | translate }}</p> }
             <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || ('wg.pestanas.paises.sinResponsable' | translate) }}</p>
             @if (p.provision_inicial) {
               <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">{{ 'wg.pestanas.paises.impresos' | translate }}</span><br><b class="text-gray-800">$ {{ miles(p.provision_inicial) }}</b></div>
+                <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">{{ 'wg.montobanco.provisto' | translate }}</span><br><b class="text-gray-800">$ {{ miles(p.provision_inicial) }}</b></div>
                 <div class="rounded-lg bg-gray-50 px-2 py-1.5"><span class="text-gray-500">{{ 'wg.pestanas.paises.enCirculacion' | translate }}</span><br><b class="text-gray-800">$ {{ miles(p.en_circulacion) }}</b></div>
               </div>
             }
@@ -88,71 +84,40 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
           </div>
         </section>
 
-        <!-- Billetes del banco -->
+        <!-- Dinero del banco (un solo total) -->
         <section class="tarjeta mt-4">
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <div class="flex-1 min-w-0">
-              <h3 class="font-bold text-gray-800">{{ (bloqueada ? 'wg.pestanas.paises.billetesBanco' : 'wg.pestanas.paises.billetesImpresos') | translate }}</h3>
-              <p class="text-sm text-gray-500">
-                {{ 'wg.pestanas.paises.hoyProvistos' | translate: { n: miles(actual.provision_inicial) } }}
-                @if (verBilletes && bloqueada) { {{ 'wg.pestanas.paises.soloNuevos' | translate }} }
-              </p>
+          <div class="flex flex-wrap items-start gap-x-3 gap-y-2">
+            <div class="flex-1 min-w-[12rem]">
+              <h3 class="font-bold text-gray-800">💵 {{ 'wg.montobanco.dineroBanco' | translate }}</h3>
+              <p class="text-sm text-gray-500">{{ (bloqueada ? 'wg.montobanco.ayudaAbierta' : 'wg.montobanco.ayudaBorrador') | translate }}</p>
             </div>
-            <button type="button" (click)="verBilletes = !verBilletes" [attr.aria-expanded]="verBilletes"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border"
-                    [class]="verBilletes ? 'border-gray-200 text-gray-700 hover:bg-gray-50' : 'border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100'">
-              {{ (verBilletes ? 'wg.pestanas.paises.ocultar' : (bloqueada ? 'wg.pestanas.paises.agregarBilletes' : 'wg.pestanas.paises.verBilletes')) | translate }}
-              <svg class="w-4 h-4 transition-transform" [class.rotate-180]="verBilletes" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
-            </button>
+            <div class="text-right">
+              <p class="text-xs text-gray-500">{{ 'wg.montobanco.provisto' | translate }}</p>
+              <p class="text-2xl font-extrabold break-all" [style.color]="actual.color || '#334155'">$ {{ miles(actual.provision_inicial) }}</p>
+            </div>
           </div>
-          @if (verBilletes || sinDetalle(actual)) {
-          @if (sinDetalle(actual)) {
-            <p class="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
-              {{ 'wg.pestanas.paises.sinDetalle' | translate: { pais: actual.nombre, n: miles(actual.provision_inicial) } }}
-              {{ (bloqueada ? 'wg.pestanas.paises.sinDetalleBloqueada' : 'wg.pestanas.paises.sinDetalleBorrador') | translate }}
-            </p>
-          }
-          <div class="mt-3 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-            @for (d of denominaciones; track d) {
-              <div class="rounded-xl border border-gray-200 overflow-hidden">
-                @if (imagen(d); as src) {
-                  <img [src]="src" [alt]="'wg.pestanas.paises.billeteDe' | translate: { n: miles(d) }" class="w-full aspect-[520/281] object-cover" loading="lazy">
-                } @else {
-                  <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="actual.color || '#64748b'">{{ miles(d) }}</div>
-                }
-                <div class="p-2">
-                  <label class="sr-only" [attr.for]="'prov-' + d">{{ 'wg.pestanas.paises.billetesDe' | translate: { n: miles(d) } }}</label>
-                  <input [id]="'prov-' + d" wgNumero [ngModel]="bloqueada ? extra[d] : billetes[actual.id][d]" (ngModelChange)="poner(d, $event)" [placeholder]="bloqueada ? '+0' : '0'"
-                         class="w-full px-2 py-1.5 bg-gray-50 border-2 border-gray-200 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300">
-                  <p class="text-[11px] text-gray-500 text-center mt-1">
-                    @if (bloqueada) { {{ impresos(d) ? ('wg.pestanas.paises.impresosN' | translate: { n: miles(impresos(d)) }) : '' }} } @else { {{ cantidad(d) ? '= ' + miles(d * cantidad(d)) : '' }} }&nbsp;
-                  </p>
-                </div>
-              </div>
-            }
-          </div>
-          <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div class="flex gap-6">
-              @if (bloqueada) {
-                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.entranBanco' | translate }}</p><p class="text-xl font-bold text-emerald-700">+{{ miles(totalExtra) }}</p></div>
-                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.provisionTotal' | translate }}</p><p class="text-xl font-bold text-gray-800">{{ miles((actual.provision_inicial || 0) + totalExtra) }}</p></div>
-              } @else {
-                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.totalBanco' | translate }}</p><p class="text-xl font-bold text-gray-800">{{ miles(totalActual) }}</p></div>
-                <div><p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.billetes' | translate }}</p><p class="text-xl font-bold text-gray-800">{{ miles(piezas) }}</p></div>
+          @if (!bloqueada) {
+            <form class="mt-4 flex flex-col sm:flex-row sm:items-end gap-3" (submit)="$event.preventDefault(); guardar()">
+              <div class="flex-1">
+                <label class="etiqueta" [attr.for]="'prov-' + actual.id">{{ 'wg.montobanco.totalBanco' | translate }}</label>
+                <input [id]="'prov-' + actual.id" wgNumero name="provisionTotal" [ngModel]="totales[actual.id]" (ngModelChange)="totales[actual.id] = $event" placeholder="0" class="campo">
                 @if (necesarios > totalActual) {
-                  <div><p class="text-xs text-red-600">{{ 'wg.pestanas.paises.bienvenidaNecesita' | translate }}</p><p class="text-xl font-bold text-red-600">{{ miles(necesarios) }}</p></div>
+                  <p class="ayuda !text-red-600 font-semibold">{{ 'wg.montobanco.bienvenidaNecesita' | translate: { n: miles(necesarios) } }}</p>
                 }
-              }
-            </div>
-            @if (error) { <p class="text-sm text-red-700 sm:ml-auto" role="alert">{{ error }}</p> }
-            @if (guardado) { <p class="text-sm text-emerald-700 sm:ml-auto" role="status">{{ (bloqueada ? 'wg.pestanas.paises.agregados' : 'wg.pestanas.comun.guardado') | translate }}</p> }
-            @if (bloqueada) {
-              <button type="button" (click)="agregarAlBanco()" [disabled]="guardando || !totalExtra" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ (guardando ? 'wg.pestanas.comun.agregando' : 'wg.pestanas.paises.agregarAlBanco') | translate }}</button>
-            } @else {
-              <button type="button" (click)="guardar()" [disabled]="guardando" class="boton-guardar" [class.sm:ml-auto]="!error && !guardado">{{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}</button>
-            }
-          </div>
+              </div>
+              <button type="submit" [disabled]="guardando" class="boton-guardar">{{ (guardando ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}</button>
+            </form>
+          } @else if (edicion.estado !== 'cerrada') {
+            <form class="mt-4 flex flex-col sm:flex-row sm:items-end gap-3" (submit)="$event.preventDefault(); agregarAlBanco()">
+              <div class="flex-1">
+                <label class="etiqueta" [attr.for]="'extra-' + actual.id">{{ 'wg.montobanco.agregarDinero' | translate }}</label>
+                <input [id]="'extra-' + actual.id" wgNumero name="montoExtra" [(ngModel)]="extra" placeholder="0" class="campo">
+              </div>
+              <button type="submit" [disabled]="guardando || !totalExtra" class="boton-guardar">{{ (guardando ? 'wg.pestanas.comun.agregando' : 'wg.pestanas.paises.agregarAlBanco') | translate }}</button>
+            </form>
           }
+          @if (error) { <p class="mt-2 text-sm text-red-700" role="alert">{{ error }}</p> }
+          @if (guardado) { <p class="mt-2 text-sm text-emerald-700" role="status">{{ (bloqueada ? 'wg.montobanco.agregado' : 'wg.pestanas.comun.guardado') | translate }}</p> }
         </section>
 
         <!-- Saldo virtual del banco -->
@@ -188,7 +153,7 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" (click)="confirmacion = null">
         <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmar-banco">
           <h2 id="titulo-confirmar-banco" class="text-lg font-bold text-gray-800">
-            {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.virtualConfirmarTitulo' : 'wg.pestanas.paises.billetesConfirmarTitulo') | translate }}
+            {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.virtualConfirmarTitulo' : 'wg.montobanco.confirmarTitulo') | translate }}
           </h2>
           <p class="text-sm text-gray-600 mt-1">{{ 'wg.pestanas.paises.bancoDe' | translate: { pais: c.pais } }}</p>
           <div class="mt-4 rounded-2xl p-5 text-white" [style.background]="c.color">
@@ -196,7 +161,7 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
             <p class="text-3xl font-extrabold break-all">+ $ {{ miles(c.monto) }}</p>
           </div>
           <p class="mt-3 text-sm text-gray-700">
-            {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.quedaVirtual' : 'wg.pestanas.paises.quedanImpresos') | translate: { n: miles(c.despues) } }}
+            {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.quedaVirtual' : 'wg.montobanco.quedaBanco') | translate: { n: miles(c.despues) } }}
           </p>
           <div class="flex gap-3 mt-6">
             <button type="button" (click)="confirmacion = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.comun.cancelar' | translate }}</button>
@@ -211,23 +176,20 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
   styles: [ESTILOS_CAMPOS],
 })
 export class TabPaises implements OnInit {
-  /** La sección de billetes del banco empieza plegada para no cargar la página. */
-  verBilletes = false;
   @Input({ required: true }) edicion!: Edicion;
   @Output() paisesCambiaron = new EventEmitter<Pais[]>();
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
-  readonly denominaciones = DENOMINACIONES;
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   paises: Pais[] = [];
   actual: Pais | null = null;
   banqueros: Funcionario[] = [];
-  /** Billetes impresos por país: { paisId: { denominación: cantidad } } */
-  billetes: Record<string, Record<number, number | null>> = {};
+  /** Dinero del banco por país mientras la edición está en preparación: { paisId: total } */
+  totales: Record<string, number | null> = {};
   conteo: Record<string, number> = {};
-  /** Billetes nuevos que entran al banco con la edición abierta. */
-  extra: Record<number, number | null> = {};
+  /** Dinero nuevo que entra al banco con la edición abierta. */
+  extra: number | null = null;
   guardadoDatos = false;
   errorDatos = '';
   cargando = true;
@@ -251,10 +213,7 @@ export class TabPaises implements OnInit {
     this.willGo.seccion<Pais>(this.edicion.id, 'paises').subscribe({
       next: (lista) => {
         this.paises = lista;
-        for (const p of lista) {
-          const guardados = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
-          this.billetes[p.id] = Object.fromEntries(Object.entries(guardados).map(([d, n]) => [Number(d), Number(n)]));
-        }
+        for (const p of lista) this.totales[p.id] = Number(p.provision_inicial) || 0;
         this.actual = lista.find((p) => p.id === this.actual?.id) ?? lista[0] ?? null;
         this.cargando = false;
         this.paisesCambiaron.emit(lista);
@@ -269,63 +228,28 @@ export class TabPaises implements OnInit {
   }
 
   elegir(p: Pais): void {
-    this.actual = p; this.verBilletes = false;
+    this.actual = p;
     this.guardado = false;
     this.guardadoDatos = false;
     this.error = '';
     this.errorDatos = '';
-    this.extra = {};
-  }
-
-  imagen(d: number): string | null {
-    return imagenBillete(this.actual ?? undefined, d);
-  }
-
-  cantidad(d: number): number {
-    return Number(this.actual ? this.billetes[this.actual.id]?.[d] ?? 0 : 0) || 0;
-  }
-
-  poner(d: number, valor: number | null): void {
-    if (this.bloqueada) this.extra[d] = valor;
-    else if (this.actual) this.billetes[this.actual.id][d] = valor;
-  }
-
-  impresos(d: number): number {
-    return Number(this.actual ? this.billetes[this.actual.id]?.[d] ?? 0 : 0) || 0;
+    this.extra = null;
   }
 
   get totalExtra(): number {
-    return DENOMINACIONES.reduce((t, d) => t + d * (Number(this.extra[d]) || 0), 0);
+    return Number(this.extra) || 0;
   }
 
-  /** Billetes que el banco tiene hoy (los recibe apenas se registran los billetes impresos). */
+  /** Dinero en efectivo que el banco tiene hoy (lo recibe apenas se registra la provisión). */
   enBanco(p: Pais): number {
     return p.saldo_banco ?? 0;
   }
 
-  /** Provisión escrita como número sin el detalle de billetes (no se puede cuadrar por denominación). */
-  sinDetalle(p: Pais): boolean {
-    const b = this.billetes[p.id] ?? {};
-    const suma = DENOMINACIONES.reduce((t, d) => t + d * (Number(b[d]) || 0), 0);
-    return (p.provision_inicial || 0) > 0 && suma !== (p.provision_inicial || 0);
-  }
-
-  /** Total de un país: con detalle de billetes si lo tiene; si no, la provisión guardada. */
-  totalDe(p: Pais): number {
-    const b = this.billetes[p.id] ?? {};
-    const suma = DENOMINACIONES.reduce((t, d) => t + d * (Number(b[d]) || 0), 0);
-    return suma || p.provision_inicial || 0;
-  }
-
   get totalActual(): number {
-    return DENOMINACIONES.reduce((t, d) => t + d * this.cantidad(d), 0);
+    return Number(this.actual ? this.totales[this.actual.id] : 0) || 0;
   }
 
-  get piezas(): number {
-    return DENOMINACIONES.reduce((t, d) => t + this.cantidad(d), 0);
-  }
-
-  /** Billetes que el banco necesita para la bienvenida de los estudiantes de ese país. */
+  /** Dinero que el banco necesita para la bienvenida de los estudiantes de ese país. */
   get necesarios(): number {
     return this.actual ? (this.conteo[this.actual.id] ?? 0) * (this.edicion.investment_bill || 0) : 0;
   }
@@ -344,14 +268,14 @@ export class TabPaises implements OnInit {
     });
   }
 
-  /** Confirmación (en un modal) antes de cargar saldo virtual o agregar billetes al banco. */
-  confirmacion: { tipo: 'virtual' | 'billetes'; monto: number; pais: string; color: string; despues: number } | null = null;
+  /** Confirmación (en un modal) antes de cargar saldo virtual o agregar dinero al banco. */
+  confirmacion: { tipo: 'virtual' | 'dinero'; monto: number; pais: string; color: string; despues: number } | null = null;
 
   confirmar(): void {
     const c = this.confirmacion;
     this.confirmacion = null;
     if (!c) return;
-    if (c.tipo === 'virtual') this.ejecutarCargaVirtual(c.monto); else this.ejecutarAgregarBilletes();
+    if (c.tipo === 'virtual') this.ejecutarCargaVirtual(c.monto); else this.ejecutarAgregarDinero();
   }
 
   montoVirtual: number | null = null;
@@ -382,19 +306,17 @@ export class TabPaises implements OnInit {
   agregarAlBanco(): void {
     const p = this.actual;
     if (!p || !this.totalExtra) return;
-    this.confirmacion = { tipo: 'billetes', monto: this.totalExtra, pais: p.nombre, color: p.color || '#334155', despues: Number(p.provision_inicial ?? 0) + this.totalExtra };
+    this.confirmacion = { tipo: 'dinero', monto: this.totalExtra, pais: p.nombre, color: p.color || '#334155', despues: Number(p.provision_inicial ?? 0) + this.totalExtra };
   }
 
-  private ejecutarAgregarBilletes(): void {
+  private ejecutarAgregarDinero(): void {
     const p = this.actual;
     if (!p || !this.totalExtra) return;
-    const billetes: Record<string, number> = {};
-    for (const d of DENOMINACIONES) if (Number(this.extra[d])) billetes[d] = Number(this.extra[d]);
     this.guardando = true;
     this.guardado = false;
     this.error = '';
-    this.willGo.provisionarPais(p.id, billetes).subscribe({
-      next: () => { this.guardando = false; this.guardado = true; this.extra = {}; this.cargar(); },
+    this.willGo.provisionarPais(p.id, this.totalExtra).subscribe({
+      next: () => { this.guardando = false; this.guardado = true; this.extra = null; this.cargar(); },
       error: (e) => { this.guardando = false; this.error = WillGoService.mensajeDeError(e); },
     });
   }
@@ -406,11 +328,8 @@ export class TabPaises implements OnInit {
     this.guardado = false;
     this.error = '';
     const datos: Record<string, unknown> = { nombre: p.nombre, codigo_moneda: (p.codigo_moneda || '').toUpperCase() || null, color: p.color, responsable_banco: p.responsable_banco ?? null };
-    if (!this.bloqueada) {
-      const conteo: Record<string, number> = {};
-      for (const d of DENOMINACIONES) if (this.cantidad(d)) conteo[d] = this.cantidad(d);
-      datos['provision_billetes'] = conteo;
-    }
+    // En preparación el dinero del banco se guarda como un total (sin detalle de billetes)
+    if (!this.bloqueada) datos['provision_total'] = this.totalActual;
     this.willGo.actualizarEnSeccion<Pais>('paises', p.id, datos as Partial<Pais>).subscribe({
       next: () => { this.guardando = false; this.guardado = true; this.cargar(); },
       error: (e) => { this.guardando = false; this.error = WillGoService.mensajeDeError(e); },

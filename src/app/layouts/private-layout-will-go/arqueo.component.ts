@@ -4,13 +4,11 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FechaWillGoPipe } from './fecha.pipe';
 import { Arqueo, DatosArqueo, PaisArqueo, WillGoService } from '../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from './numero-miles.directive';
-import { imagenBillete } from './imagen-billete';
 import { ListaMovimientosComponent } from './lista-movimientos.component';
 
-export { imagenBillete };
 
 
-/** Arqueo del banco: cuántos billetes hay de cada denominación y si cuadra con el sistema. */
+/** Arqueo del banco: el total de dinero contado en el banco y si cuadra con el sistema. */
 @Component({
   selector: 'wg-arqueo',
   standalone: true,
@@ -39,64 +37,11 @@ export { imagenBillete };
 
       @if (pais) {
         <div class="mt-4 inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="tablist">
-          <button type="button" role="tab" [attr.aria-selected]="vista === 'billetes'" (click)="vista = 'billetes'"
-                  class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'billetes' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">{{ 'wg.banco.arqueo.tabBilletes' | translate }}</button>
           <button type="button" role="tab" [attr.aria-selected]="vista === 'arqueo'" (click)="vista = 'arqueo'"
                   class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'arqueo' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">{{ 'wg.banco.arqueo.tabArqueo' | translate }}</button>
           <button type="button" role="tab" [attr.aria-selected]="vista === 'movimientos'" (click)="vista = 'movimientos'"
                   class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === 'movimientos' ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">{{ 'wg.banco.arqueo.tabMovimientos' | translate }}</button>
         </div>
-      }
-
-      @if (pais && vista === 'billetes') {
-        <!-- Celular: una fila debajo de otra. Computador: tres columnas -->
-        <div class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 sm:divide-y-0 sm:grid sm:grid-cols-3 sm:gap-0 sm:divide-x">
-          <div class="flex sm:block items-center justify-between gap-3 px-4 py-3 sm:py-4">
-            <p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.asignadosBanco' | translate }}</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.provision_inicial) }}</p>
-          </div>
-          <div class="flex sm:block items-center justify-between gap-3 px-4 py-3 sm:py-4">
-            <p class="text-sm sm:text-xs font-semibold sm:font-normal" [style.color]="pais.color || '#6b7280'">{{ 'wg.banco.arqueo.enBancoHoy' | translate }}</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.saldo_sistema) }}</p>
-          </div>
-          <div class="flex sm:block items-center justify-between gap-3 px-4 py-3 sm:py-4">
-            <p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.enCirculacion' | translate }}</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-800 text-right sm:text-left break-all">{{ miles(pais.en_circulacion) }}</p>
-          </div>
-        </div>
-        <div class="mt-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-gray-700">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
-            <p class="text-xs text-gray-500">{{ 'wg.banco.arqueo.virtualAyuda' | translate: { n: miles(pais.virtual_cargado ?? 0) } }}</p>
-          </div>
-          <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.virtual_saldo ?? 0) }}</p>
-        </div>
-        @if (!pais.provision_inicial) {
-          <div class="mt-4 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.banco.arqueo.sinAsignar' | translate: { pais: pais.nombre } }}</div>
-        } @else {
-          <div class="mt-5 mb-3 flex flex-wrap items-baseline justify-between gap-x-3">
-            <h3 class="font-bold text-gray-800">{{ (pais.inventario ? 'wg.banco.arqueo.billetesHoy' : 'wg.banco.arqueo.billetesAsignados') | translate }}</h3>
-            @if (pais.inventario) { <p class="text-xs text-gray-500">{{ 'wg.banco.arqueo.debajo' | translate }}</p> }
-          </div>
-          <div class="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-            @for (d of datos.denominaciones; track d) {
-              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" [class.opacity-40]="!hoy(d) && !asignados(d)">
-                @if (imagen(d); as src) {
-                  <img [src]="src" [alt]="'wg.banco.arqueo.billeteDePais' | translate: { valor: miles(d), pais: pais.nombre }" class="w-full aspect-[520/281] object-cover" loading="lazy">
-                } @else {
-                  <div class="w-full aspect-[520/281] flex items-center justify-center text-2xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
-                }
-                <div class="p-3 text-center">
-                  <p class="text-lg font-bold text-gray-800">× {{ miles(hoy(d)) }}</p>
-                  <p class="text-xs text-gray-500">{{ hoy(d) ? '= ' + miles(d * hoy(d)) : ('wg.banco.arqueo.noQuedan' | translate) }}</p>
-                  @if (pais.inventario) {
-                    <p class="mt-1.5 pt-1.5 border-t border-gray-100 text-[11px] text-gray-400">{{ 'wg.banco.arqueo.asignados' | translate: { n: miles(asignados(d)) } }}</p>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        }
       }
 
       @if (pais && vista === 'movimientos') {
@@ -113,44 +58,51 @@ export { imagenBillete };
       }
 
       @if (pais && vista === 'arqueo') {
-        <!-- Billetes -->
-        <div class="mt-4 grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-          @for (d of datos.denominaciones; track d) {
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" [class.ring-2]="cantidad(d) > 0" [style.--tw-ring-color]="pais.color || '#f97316'">
-              @if (imagen(d); as src) {
-                <img [src]="src" [alt]="'wg.banco.arqueo.billeteDePais' | translate: { valor: miles(d), pais: pais.nombre }" class="w-full aspect-[520/281] object-cover" loading="lazy">
-              } @else {
-                <div class="w-full aspect-[520/281] flex items-center justify-center text-2xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
-              }
-              <div class="p-3">
-                <label class="sr-only" [attr.for]="'den-' + d">{{ 'wg.banco.arqueo.cantidadBilletes' | translate: { valor: miles(d) } }}</label>
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-bold text-gray-500">×</span>
-                  <input [id]="'den-' + d" wgNumero [ngModel]="conteos[pais.id][d]" (ngModelChange)="poner(d, $event)" placeholder="0"
-                         class="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300">
-                </div>
-                <p class="text-xs text-gray-500 text-center mt-1.5">{{ cantidad(d) ? '= ' + miles(d * cantidad(d)) : '' }}&nbsp;</p>
-              </div>
-            </div>
-          }
+        <!-- Resumen del banco -->
+        <div class="mt-4 grid grid-cols-2 bg-white rounded-2xl border border-gray-200 divide-x divide-gray-100">
+          <div class="px-4 py-3 sm:py-4 min-w-0">
+            <p class="text-xs font-semibold" [style.color]="pais.color || '#6b7280'">{{ 'wg.banco.arqueo.enBancoHoy' | translate }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.saldo_sistema) }}</p>
+          </div>
+          <div class="px-4 py-3 sm:py-4 min-w-0">
+            <p class="text-xs text-gray-500">{{ 'wg.banco.arqueo.enCirculacion' | translate }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.en_circulacion) }}</p>
+          </div>
+        </div>
+        <div class="mt-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-gray-700">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
+            <p class="text-xs text-gray-500">{{ 'wg.montobanco.virtualAyuda' | translate: { n: miles(pais.virtual_cargado ?? 0) } }}</p>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.virtual_saldo ?? 0) }}</p>
         </div>
 
-        <!-- Cuadre -->
-        <div class="sticky bottom-0 mt-4 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 bg-gray-50/95 backdrop-blur">
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col lg:flex-row lg:items-center gap-4">
-            <div class="flex-1 space-y-1 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3">
-              <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.contado' | translate }}</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(total) }}</p></div>
-              <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.debeHaber' | translate }}</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(pais.saldo_sistema) }}</p></div>
-              <div class="flex sm:block items-center justify-between gap-3">
-                <p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.diferencia' | translate }}</p>
+        <!-- Conteo: un solo total -->
+        <div class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5">
+          <h3 class="font-bold text-gray-800">{{ 'wg.montobanco.arqueoTitulo' | translate }}</h3>
+          <p class="text-sm text-gray-500">{{ 'wg.montobanco.arqueoAyuda' | translate }}</p>
+          <label for="arqueo-total" class="block text-sm font-semibold text-gray-700 mt-4">{{ 'wg.montobanco.totalContado' | translate }}</label>
+          <input id="arqueo-total" wgNumero [ngModel]="contados[pais.id]" (ngModelChange)="contados[pais.id] = $event" placeholder="0"
+                 class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+
+          <div class="mt-4 space-y-1 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3">
+            <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.contado' | translate }}</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(total) }}</p></div>
+            <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.debeHaber' | translate }}</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(pais.saldo_sistema) }}</p></div>
+            <div class="flex sm:block items-center justify-between gap-3">
+              <p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.diferencia' | translate }}</p>
+              @if (hayConteo) {
                 <p class="text-lg sm:text-xl font-bold break-all text-right sm:text-left" [class]="diferencia === 0 ? 'text-emerald-600' : diferencia < 0 ? 'text-red-600' : 'text-amber-600'">
                   {{ (diferencia === 0 ? 'wg.banco.arqueo.cuadra' : diferencia < 0 ? 'wg.banco.arqueo.faltan' : 'wg.banco.arqueo.sobran') | translate: { n: miles(abs(diferencia)) } }}
                 </p>
-              </div>
+              } @else {
+                <p class="text-lg sm:text-xl font-bold text-gray-400 text-right sm:text-left">—</p>
+              }
             </div>
+          </div>
+          <div class="mt-4 flex flex-col sm:flex-row gap-3">
             <input [(ngModel)]="observaciones" [placeholder]="'wg.banco.arqueo.observacionOpcional' | translate" [attr.aria-label]="'wg.banco.arqueo.observacion' | translate"
-                   class="lg:w-64 px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-            <button type="button" (click)="guardar()" [disabled]="guardando || !total"
+                   class="flex-1 px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <button type="button" (click)="guardar()" [disabled]="guardando || !hayConteo"
                     class="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-50">
               {{ (guardando ? 'wg.banco.guardando' : 'wg.banco.arqueo.guardar') | translate }}
             </button>
@@ -191,9 +143,9 @@ export class ArqueoComponent implements OnChanges {
 
   datos: DatosArqueo | null = null;
   pais: PaisArqueo | null = null;
-  vista: 'billetes' | 'arqueo' | 'movimientos' = 'billetes';
-  /** Conteo en curso por país: { paisId: { denominación: cantidad } } */
-  conteos: Record<string, Record<number, number | null>> = {};
+  vista: 'arqueo' | 'movimientos' = 'arqueo';
+  /** Total contado en curso por país: { paisId: monto } */
+  contados: Record<string, number | null> = {};
   observaciones = '';
   cargando = true;
   guardando = false;
@@ -206,8 +158,12 @@ export class ArqueoComponent implements OnChanges {
   }
 
   get total(): number {
-    if (!this.pais || !this.datos) return 0;
-    return this.datos.denominaciones.reduce((t, d) => t + d * this.cantidad(d), 0);
+    return Number(this.pais ? this.contados[this.pais.id] ?? 0 : 0) || 0;
+  }
+
+  /** Ya se escribió el total contado (un banco vacío también se puede contar: 0). */
+  get hayConteo(): boolean {
+    return this.pais ? this.contados[this.pais.id] != null : false;
   }
 
   get diferencia(): number {
@@ -218,34 +174,11 @@ export class ArqueoComponent implements OnChanges {
     return (this.datos?.historial ?? []).filter((a) => a.pais_id === this.pais?.id);
   }
 
-  cantidad(d: number): number {
-    return Number(this.pais ? this.conteos[this.pais.id]?.[d] ?? 0 : 0) || 0;
-  }
-
-  poner(d: number, valor: number | null): void {
-    if (this.pais) this.conteos[this.pais.id][d] = valor;
-  }
-
-  /** Billetes de esa denominación que hay hoy en el banco (con la extensión vieja, los asignados). */
-  hoy(d: number): number {
-    const inv = this.pais?.inventario;
-    return inv ? Number(inv[d] ?? 0) || 0 : this.asignados(d);
-  }
-
-  asignados(d: number): number {
-    return Number(this.pais?.provision_billetes?.[d] ?? 0) || 0;
-  }
-
-  imagen(d: number): string | null {
-    return imagenBillete(this.pais ?? undefined, d);
-  }
-
   cargar(): void {
     this.cargando = true;
     this.willGo.arqueo(this.edicionId).subscribe({
       next: (datos) => {
         this.datos = datos;
-        for (const p of datos.paises) this.conteos[p.id] ??= {};
         this.pais = datos.paises.find((p) => p.id === this.pais?.id) ?? datos.paises[0] ?? null;
         this.cargando = false;
       },
@@ -254,20 +187,18 @@ export class ArqueoComponent implements OnChanges {
   }
 
   guardar(): void {
-    if (!this.pais || !this.datos) return;
-    const conteo: Record<string, number> = {};
-    for (const d of this.datos.denominaciones) if (this.cantidad(d)) conteo[d] = this.cantidad(d);
+    if (!this.pais || !this.datos || !this.hayConteo) return;
     this.guardando = true;
     this.aviso = '';
     const pais = this.pais;
-    this.willGo.guardarArqueo(this.edicionId, pais.id, conteo, this.observaciones).subscribe({
+    this.willGo.guardarArqueo(this.edicionId, pais.id, this.total, this.observaciones).subscribe({
       next: (a) => {
         this.guardando = false;
         this.avisoError = a.diferencia !== 0;
         this.aviso = this.t.instant(
           a.diferencia === 0 ? 'wg.banco.arqueo.guardadoCuadra' : a.diferencia < 0 ? 'wg.banco.arqueo.guardadoFaltan' : 'wg.banco.arqueo.guardadoSobran',
           { pais: pais.nombre, n: this.miles(Math.abs(a.diferencia)) });
-        this.conteos[pais.id] = {};
+        this.contados[pais.id] = null;
         this.observaciones = '';
         this.cargar();
       },
@@ -275,7 +206,7 @@ export class ArqueoComponent implements OnChanges {
     });
   }
 
-  /** En Movimientos se ven por separado los del efectivo (billetes) y los de la cuenta virtual del banco. */
+  /** En Movimientos se ven por separado los del efectivo y los de la cuenta virtual del banco. */
   medioMov: 'efectivo' | 'virtual' = 'efectivo';
   movimientosDe(p: PaisArqueo): PaisArqueo['movimientos'] {
     return (p.movimientos ?? []).filter((m) => (m.medio ?? 'efectivo') === this.medioMov);

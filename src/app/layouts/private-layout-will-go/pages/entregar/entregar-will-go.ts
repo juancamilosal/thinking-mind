@@ -5,13 +5,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { DatosDocente, DuenoLlave, EstudianteDocente, PaisDocente, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
-import { imagenBillete } from '../../imagen-billete';
 import { ListaMovimientosComponent, MovimientoLista } from '../../lista-movimientos.component';
 import { EscanerQrComponent } from '../../escaner-qr.component';
 
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-/** Pantalla del docente: sus billetes (los que le dio el banco) y entregarlos a los estudiantes. */
+/** Pantalla del docente: su efectivo (el que le dio el banco) y su cuenta, y entregarlos a los estudiantes como un monto. */
 @Component({
   selector: 'app-entregar-will-go',
   standalone: true,
@@ -20,8 +19,8 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.operacion.entregar.titulo' | translate }}</h1>
-          <p class="text-gray-500 mt-1">{{ 'wg.operacion.entregar.subtitulo' | translate }}</p>
+          <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.montotienda.entregarTitulo' | translate }}</h1>
+          <p class="text-gray-500 mt-1">{{ 'wg.montotienda.entregarSubtitulo' | translate }}</p>
         </div>
       </div>
       <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" (cambio)="cargar()" />
@@ -43,40 +42,18 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
           </div>
         }
 
-        <!-- Mis billetes -->
+        <!-- Mi efectivo y mi cuenta -->
         <div class="mt-4 rounded-2xl p-5 text-white shadow" [style.background]="pais.color || '#1e293b'">
-          <p class="text-sm opacity-90">{{ 'wg.operacion.entregar.tusBilletesDe' | translate: { pais: pais.nombre } }}</p>
+          <p class="text-sm opacity-90">{{ 'wg.montotienda.tuEfectivoDe' | translate: { pais: pais.nombre } }}</p>
           <p class="text-3xl font-extrabold mt-1 break-all">{{ miles(pais.saldo) }} <span class="text-base font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
           <div class="mt-3 pt-3 border-t border-white/25">
             <p class="text-sm opacity-90">{{ 'wg.transferir.tuCuenta' | translate }}</p>
             <p class="text-xl font-bold break-all">{{ miles(pais.cuenta) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
           </div>
-          @if (conBilletes.length) {
-            <button type="button" (click)="verBilletes = !verBilletes" [attr.aria-expanded]="verBilletes"
-                    class="mt-3 inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-1.5 text-sm font-semibold">
-              {{ (verBilletes ? 'wg.operacion.entregar.ocultarBilletes' : 'wg.operacion.entregar.verBilletes') | translate }}
-              <svg class="w-4 h-4 transition-transform" [class.rotate-180]="verBilletes" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-          }
           @if (datos.edicion.estado !== 'abierta') {
             <p class="text-sm mt-2 bg-white/20 rounded-lg px-3 py-1.5 inline-block">{{ 'wg.operacion.entregar.podrasEntregar' | translate }}</p>
           }
         </div>
-
-        @if (verBilletes && conBilletes.length) {
-          <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            @for (d of conBilletes; track d) {
-              <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                @if (imagen(d); as src) {
-                  <img [src]="src" [alt]="'wg.operacion.comun.billeteDe' | translate: { n: miles(d) }" class="w-full aspect-[520/281] object-cover">
-                } @else {
-                  <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
-                }
-                <p class="py-1.5 text-center text-sm text-gray-600"><b class="text-gray-800 text-base">{{ miles(tengo(d)) }}</b> {{ (tengo(d) === 1 ? 'wg.operacion.comun.billete' : 'wg.operacion.comun.billetes') | translate }}</p>
-              </div>
-            }
-          </div>
-        }
 
         @if (aviso) {
           <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800" role="status">{{ aviso }}</p>
@@ -106,7 +83,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
                 <li class="flex items-center gap-3 px-4 py-3">
                   <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">
-                    <p class="font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</p>
+                    <p class="font-semibold text-gray-800 leading-snug">{{ e.nombre }} {{ e.apellido }}</p>
                     @if (e.llave) { <p class="text-[11px] text-gray-400 font-mono break-all">{{ e.llave }}</p> }
                     <p class="text-xs text-gray-500">{{ 'wg.operacion.entregar.tiene' | translate }} <b class="text-gray-700">{{ miles(e.saldo) }}</b> · {{ 'wg.transferir.cuenta' | translate }} <b class="text-gray-700">{{ miles(e.cuenta) }}</b></p>
                   </div>
@@ -121,7 +98,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 
         @if (vista === 'movimientos') {
           <wg-lista-movimientos class="block mt-4" [movimientos]="movimientos" [pais]="pais" [totalEntro]="totalEntro" [totalSalio]="totalSalio"
-                                [vacio]="'wg.operacion.entregar.vacioMovimientos' | translate" />
+                                [vacio]="'wg.montotienda.entregarVacioMovimientos' | translate" />
         }
       }
     </div>
@@ -133,17 +110,17 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
               <h2 id="titulo-entrega" class="text-lg font-bold text-gray-800">{{ 'wg.operacion.entregar.entregarA' | translate: { nombre: estudiante.nombre + ' ' + estudiante.apellido } }}</h2>
-              <p class="text-sm text-gray-500">{{ (medio === 'billetes' ? 'wg.operacion.entregar.tocaBilletes' : 'wg.transferir.ayudaEstudiante') | translate }}</p>
+              <p class="text-sm text-gray-500">{{ (medio === 'efectivo' ? 'wg.montotienda.ayudaEfectivo' : 'wg.transferir.ayudaEstudiante') | translate }}</p>
               @if (recomendado && recomendado.estudiante === estudiante.id) {
-                <p class="mt-1 inline-block text-sm font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1">{{ 'wg.operacion.entregar.recompensaRecomendada' | translate: { n: recomendado.billetes } }}</p>
+                <p class="mt-1 inline-block text-sm font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1">{{ 'wg.montotienda.recompensaRecomendada' | translate: { n: miles(recomendado.monto) } }}</p>
               }
             </div>
             <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
           </div>
           <div class="px-5 pb-3">
             <div class="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1" role="tablist">
-              <button type="button" role="tab" [attr.aria-selected]="medio === 'billetes'" (click)="cambiarMedio('billetes')" [disabled]="enviando"
-                      class="py-2 rounded-lg text-sm font-semibold" [class]="medio === 'billetes' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.transferir.enBilletes' | translate }}</button>
+              <button type="button" role="tab" [attr.aria-selected]="medio === 'efectivo'" (click)="cambiarMedio('efectivo')" [disabled]="enviando"
+                      class="py-2 rounded-lg text-sm font-semibold" [class]="medio === 'efectivo' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.tarjeta.efectivo' | translate }}</button>
               <button type="button" role="tab" [attr.aria-selected]="medio === 'transferencia'" (click)="cambiarMedio('transferencia')" [disabled]="enviando"
                       class="py-2 rounded-lg text-sm font-semibold" [class]="medio === 'transferencia' ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.transferir.aSuCuenta' | translate }}</button>
             </div>
@@ -158,29 +135,14 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
                 <p class="mt-1.5 text-xs" [class]="montoNum > (pais.cuenta ?? 0) ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.transferir.disponibleCuenta' | translate: { n: miles(pais.cuenta) } }}</p>
               </div>
             } @else {
-            @if (!conBilletes.length) {
-              <p class="py-6 text-center text-sm text-gray-500">{{ 'wg.operacion.entregar.sinBilletes' | translate }}</p>
-            }
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-3">
-              @for (d of conBilletes; track d) {
-                <div class="rounded-xl border-2 overflow-hidden" [style.border-color]="cantidad(d) ? (pais.color || '#f97316') : '#e5e7eb'">
-                  <button type="button" class="block w-full" (click)="sumar(d, 1)" [disabled]="tengo(d) - cantidad(d) <= 0" [attr.aria-label]="'wg.operacion.entregar.agregarBillete' | translate: { n: miles(d) }">
-                    @if (imagen(d); as src) {
-                      <img [src]="src" [alt]="'wg.operacion.comun.billeteDe' | translate: { n: miles(d) }" class="w-full aspect-[520/281] object-cover">
-                    } @else {
-                      <div class="w-full aspect-[520/281] flex items-center justify-center text-xl font-black text-white" [style.background]="pais.color || '#64748b'">{{ miles(d) }}</div>
-                    }
-                  </button>
-                  <div class="flex items-center gap-1 p-1.5">
-                    <button type="button" (click)="sumar(d, -1)" [disabled]="!cantidad(d)" class="w-9 h-9 shrink-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.operacion.entregar.quitarBillete' | translate: { n: miles(d) }">−</button>
-                    <input wgNumero [ngModel]="elegidos[d]" (ngModelChange)="elegidos[d] = $event" placeholder="0" [attr.aria-label]="'wg.operacion.entregar.billetesDe' | translate: { n: miles(d) }"
-                           class="w-full min-w-0 h-9 bg-gray-50 border border-gray-200 rounded-lg text-center font-bold focus:outline-none focus:ring-2 focus:ring-orange-300">
-                    <button type="button" (click)="sumar(d, 1)" [disabled]="tengo(d) - cantidad(d) <= 0" class="w-9 h-9 shrink-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.operacion.entregar.agregarBillete' | translate: { n: miles(d) }">+</button>
-                  </div>
-                  <p class="text-[11px] text-center pb-1.5" [class]="cantidad(d) > tengo(d) ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.operacion.entregar.tienes' | translate: { n: miles(tengo(d)) } }}</p>
-                </div>
-              }
-            </div>
+              <!-- Efectivo: un solo monto (los billetes físicos se entregan en la mano) -->
+              <div class="pb-4">
+                <label for="monto-efectivo" class="block text-sm font-semibold text-gray-700">{{ 'wg.montotienda.montoAEntregar' | translate }}</label>
+                <input id="monto-efectivo" wgNumero [(ngModel)]="monto" placeholder="0"
+                       class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+                <p class="mt-1.5 text-xs" [class]="montoNum > (pais.saldo ?? 0) ? 'text-red-600 font-semibold' : 'text-gray-500'">{{ 'wg.montotienda.disponibleEfectivo' | translate: { n: miles(pais.saldo) } }} {{ pais.codigo_moneda || '' }}</p>
+                @if (!pais.saldo) { <p class="mt-3 text-sm text-gray-500">{{ 'wg.montotienda.sinEfectivo' | translate }}</p> }
+              </div>
             }
           </div>
           <div class="px-5 py-4 border-t border-gray-100">
@@ -191,14 +153,10 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
                 {{ enviando ? ('wg.transferir.transfiriendo' | translate) : (montoNum ? ('wg.transferir.transferirMonto' | translate: { n: miles(montoNum) }) : ('wg.transferir.escribeMonto' | translate)) }}
               </button>
             } @else {
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm text-gray-500">{{ 'wg.operacion.entregar.totalAEntregar' | translate }}</span>
-              <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></span>
-            </div>
-            <button type="button" (click)="entregar()" [disabled]="!total || enviando || excede"
-                    class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-              {{ enviando ? ('wg.operacion.comun.entregando' | translate) : (total ? ('wg.operacion.comun.entregarMonto' | translate: { n: miles(total) }) : ('wg.operacion.comun.eligeBilletes' | translate)) }}
-            </button>
+              <button type="button" (click)="entregar()" [disabled]="!montoValido(pais.saldo) || enviando"
+                      class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
+                {{ enviando ? ('wg.operacion.comun.entregando' | translate) : (montoNum ? ('wg.operacion.comun.entregarMonto' | translate: { n: miles(montoNum) }) : ('wg.transferir.escribeMonto' | translate)) }}
+              </button>
             }
           </div>
         </div>
@@ -225,7 +183,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
               <div class="flex items-center gap-3 rounded-2xl border border-gray-200 p-3">
                 <div class="w-12 h-12 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="paisDueno?.color || '#0d9488'">{{ (dueno.nombre[0] || '') + (dueno.apellido[0] || '') }}</div>
                 <div class="min-w-0 flex-1">
-                  <p class="font-semibold text-gray-800 truncate">{{ dueno.nombre }} {{ dueno.apellido }}</p>
+                  <p class="font-semibold text-gray-800 leading-snug">{{ dueno.nombre }} {{ dueno.apellido }}</p>
                   <p class="text-xs text-gray-500">{{ dueno.pais }}</p><p class="text-xs text-gray-500 font-mono break-all">{{ dueno.llave }}</p>
                 </div>
                 <button type="button" (click)="otraLlave()" [disabled]="enviando" class="shrink-0 text-sm font-semibold text-orange-700 hover:underline disabled:opacity-40">{{ 'wg.transferir.cambiar' | translate }}</button>
@@ -267,18 +225,16 @@ export class EntregarWillGo implements OnInit {
   pais: PaisDocente | null = null;
   vista: 'estudiantes' | 'movimientos' = 'estudiantes';
   busqueda = '';
-  verBilletes = false;
   cargando = true;
   error = '';
   aviso = '';
 
   estudiante: EstudianteDocente | null = null;
-  elegidos: Record<number, number | null> = {};
   clave = '';
   enviando = false;
   errorEntrega = '';
-  /** Cómo se le da el dinero: billetes en la mano o transferencia a su cuenta. */
-  medio: 'billetes' | 'transferencia' = 'billetes';
+  /** Cómo se le da el dinero: efectivo en la mano (se registra solo el monto) o transferencia a su cuenta. */
+  medio: 'efectivo' | 'transferencia' = 'efectivo';
   monto: number | null = null;
 
   /** Transferir por llave: escanear la tarjeta (o escribir la llave) y ver de quién es. */
@@ -301,7 +257,7 @@ export class EntregarWillGo implements OnInit {
     this.willGo.panelDocente(this.edicionId).subscribe({
       next: (d) => {
         this.datos = d;
-        // Por defecto, el país donde tiene billetes
+        // Por defecto, el país donde tiene efectivo
         this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises.find((p) => p.saldo > 0) ?? d.paises[0] ?? null;
         this.cargando = false;
         this.abrirRecomendado();
@@ -319,17 +275,6 @@ export class EntregarWillGo implements OnInit {
     const palabras = normalizar(this.busqueda).split(/\s+/).filter(Boolean);
     return (this.pais?.estudiantes ?? []).filter((e) => { const n = normalizar(`${e.nombre} ${e.apellido} ${e.codigo}`); return palabras.every((w) => n.includes(w)); });
   }
-
-  get conBilletes(): number[] {
-    return (this.datos?.denominaciones ?? []).filter((d) => this.tengo(d) > 0);
-  }
-
-  imagen(d: number): string | null { return imagenBillete(this.pais ?? undefined, d); }
-  tengo(d: number): number { return Number(this.pais?.inventario?.[d] ?? 0); }
-  cantidad(d: number): number { return Number(this.elegidos[d]) || 0; }
-  get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * this.cantidad(d), 0); }
-  get excede(): boolean { return (this.datos?.denominaciones ?? []).some((d) => this.cantidad(d) > this.tengo(d)) || this.total > (this.pais?.saldo ?? 0); }
-  sumar(d: number, n: number): void { this.elegidos[d] = Math.max(0, Math.min(this.cantidad(d) + n, Math.max(this.tengo(d), 0))); }
 
   /** Lo que entra (del banco) y lo que sale (a estudiantes), del más reciente al más viejo. */
   get movimientos(): MovimientoLista[] {
@@ -349,9 +294,9 @@ export class EntregarWillGo implements OnInit {
   get totalEntro(): number { return Number(this.pais?.total_recibido ?? 0); }
   get totalSalio(): number { return Number(this.pais?.total_entregado ?? 0); }
 
-  /** Viene de la rúbrica (?estudiante=…&billetes=…): abre de una vez el panel para entregarle la recompensa. */
+  /** Viene de la rúbrica (?estudiante=…&monto=… o &billetes=…): abre de una vez el panel para entregarle la recompensa. */
   private route = inject(ActivatedRoute);
-  recomendado: { estudiante: string; billetes: number } | null = null;
+  recomendado: { estudiante: string; monto: number } | null = null;
   private yaAbierto = false;
 
   private abrirRecomendado(): void {
@@ -364,20 +309,23 @@ export class EntregarWillGo implements OnInit {
       const e = p.estudiantes.find((x) => x.id === id);
       if (e) {
         this.pais = p;
-        this.recomendado = { estudiante: id, billetes: Number(q.get('billetes')) || 0 };
+        const monto = Number(q.get('monto') ?? q.get('billetes')) || 0;
+        this.recomendado = { estudiante: id, monto };
         this.abrir(e);
+        // Deja escrito el monto recomendado si le alcanza con lo que tiene en ese medio
+        if (monto > 0 && monto <= Number((this.medio === 'efectivo' ? p.saldo : p.cuenta) ?? 0)) this.monto = monto;
         return;
       }
     }
   }
 
   get montoNum(): number { return Number(this.monto) || 0; }
-  /** tope = saldo de la cuenta del docente en ese país (null si no se conoce: decide el servidor). */
+  /** tope = efectivo o saldo de la cuenta del docente en ese país (null si no se conoce: decide el servidor). */
   montoValido(tope: number | null | undefined): boolean {
     return this.montoNum > 0 && (tope === null || this.montoNum <= Number(tope ?? 0));
   }
 
-  cambiarMedio(m: 'billetes' | 'transferencia'): void {
+  cambiarMedio(m: 'efectivo' | 'transferencia'): void {
     if (this.medio === m) return;
     this.medio = m;
     this.errorEntrega = '';
@@ -386,10 +334,9 @@ export class EntregarWillGo implements OnInit {
 
   abrir(e: EstudianteDocente): void {
     this.estudiante = e;
-    this.elegidos = {};
     this.monto = null;
-    // Sin billetes pero con saldo en la cuenta: abre de una vez en transferencia
-    this.medio = !this.pais?.saldo && this.pais?.cuenta ? 'transferencia' : 'billetes';
+    // Sin efectivo pero con saldo en la cuenta: abre de una vez en transferencia
+    this.medio = !this.pais?.saldo && this.pais?.cuenta ? 'transferencia' : 'efectivo';
     this.errorEntrega = '';
     this.clave = crypto.randomUUID();
   }
@@ -399,13 +346,12 @@ export class EntregarWillGo implements OnInit {
   }
 
   entregar(): void {
-    if (!this.estudiante || !this.pais || !this.total || this.excede) return;
-    const billetes: Record<string, number> = {};
-    for (const d of this.datos!.denominaciones) if (this.cantidad(d)) billetes[d] = this.cantidad(d);
+    // Efectivo: se manda solo el monto (no se tiene en cuenta qué billetes son)
+    if (!this.estudiante || !this.pais || !this.montoValido(this.pais.saldo)) return;
     const est = this.estudiante;
     this.enviando = true;
     this.errorEntrega = '';
-    this.willGo.entregarAEstudiante(est.id, billetes, this.clave).subscribe({
+    this.willGo.entregarAEstudiante(est.id, this.montoNum, this.clave).subscribe({
       next: (r) => {
         this.enviando = false;
         this.estudiante = null;
