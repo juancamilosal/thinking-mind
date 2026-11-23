@@ -875,7 +875,27 @@ async function fondosCargados(db) {
 			por_que_invertir: previo.por_que_invertir ?? f.por_que_invertir ?? null,
 		});
 	}
+	// Si ninguna edición conserva el logo (p. ej. se borraron todas), se busca en los archivos subidos:
+	// los logos se guardan con el título «Will-Go · logo-<NOMBRE>.<ext>»
+	for (const archivo of await logosGuardados(db)) {
+		const previo = porNombre.get(archivo.nombre) ?? {};
+		if (!previo.logo) porNombre.set(archivo.nombre, { ...previo, logo: archivo.id });
+	}
 	return porNombre;
+}
+
+/** Logos de fondos subidos alguna vez (directus_files con título «Will-Go · logo-…»), el más reciente por nombre. */
+async function logosGuardados(db) {
+	let filas = [];
+	try {
+		filas = await db('directus_files').where('title', 'like', 'Will-Go · logo-%').orderBy('uploaded_on', 'desc').select('id', 'title');
+	} catch { return []; }
+	const vistos = new Map();
+	for (const f of filas) {
+		const nombre = String(f.title).replace(/^Will-Go · logo-/, '').replace(/\.[a-z0-9]+$/i, '').trim().toUpperCase();
+		if (nombre && !vistos.has(nombre)) vistos.set(nombre, { id: f.id, nombre });
+	}
+	return [...vistos.values()];
 }
 
 /** Texto de ejemplo para un fondo (por su nombre o, si no, por su posición). */
@@ -1413,6 +1433,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		const filas = await db('wge_fondos').whereNotNull('logo').orderBy('date_created', 'desc').select('logo', 'nombre');
 		const vistos = new Map();
 		for (const f of filas) if (!vistos.has(f.logo)) vistos.set(f.logo, { id: f.logo, nombre: f.nombre });
+		// También los logos subidos que ya no están en ninguna edición
+		for (const a of await logosGuardados(db)) if (!vistos.has(a.id)) vistos.set(a.id, { id: a.id, nombre: a.nombre });
 		return [...vistos.values()];
 	}));
 
