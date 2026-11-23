@@ -1190,7 +1190,18 @@
         "preciosAyuda": "Price in pesos ÷ the currency rate, rounded up.",
         "pesos": "{{n}} pesos",
         "eligeEstudiante": "Who is buying?",
-        "enOtras": "In other currencies:"
+        "enOtras": "In other currencies:",
+        "paso1": "Choose the products",
+        "siguienteEstudiante": "Choose student",
+        "volverProductos": "Back to products",
+        "cambiarEstudiante": "Change student",
+        "leCuesta": "costs",
+        "noLeAlcanza": "not enough",
+        "vistaTienda": "Store",
+        "vistaMovimientos": "Transactions",
+        "ventasTitulo": "Sales",
+        "billetesEnCaja": "Bills in the checkout",
+        "excedeMaximo": "Already bought {{ya}} · max {{max}} per student (can take {{puede}})"
       },
       "productos": {
         "titulo": "Products",

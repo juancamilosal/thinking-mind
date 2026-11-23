@@ -48,113 +48,97 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
         <div class="mt-5 inline-flex gap-1 bg-white border border-gray-200 rounded-xl p-1" role="tablist">
           @for (v of vistas; track v.id) {
             <button type="button" role="tab" [attr.aria-selected]="vista === v.id" (click)="vista = v.id"
-                    class="px-4 py-2 rounded-lg text-sm font-semibold" [class]="vista === v.id ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">{{ v.texto | translate }}</button>
+                    class="px-5 py-2 rounded-lg text-sm font-semibold" [class]="vista === v.id ? 'bg-orange-100 text-orange-800' : 'text-gray-500 hover:bg-gray-100'">{{ v.texto | translate }}</button>
           }
         </div>
 
-        <!-- VENDER -->
         @if (vista === 'vender') {
-          <!-- Tasa de cada moneda: con ella se pasa el precio en pesos a billetes -->
-          <div class="mt-4 grid grid-cols-3 gap-2">
-            @for (pa of datos.paises; track pa.id) {
-              <div class="rounded-xl px-3 py-2 text-white shadow-sm" [style.background]="pa.color || '#1e293b'" [class.ring-4]="paisEst?.id === pa.id" [class.ring-orange-300]="paisEst?.id === pa.id">
-                <p class="text-[11px] font-semibold opacity-95 truncate">{{ pa.nombre }}</p>
-                <p class="text-sm sm:text-base font-extrabold leading-tight">1 {{ pa.codigo_moneda }} = {{ miles(pa.tasa_actual) }}</p>
-                <p class="text-[10px] opacity-90">{{ 'wg.operacion.caja.tasasHoy' | translate }}</p>
-              </div>
-            }
+        @if (!estudiante && etapa === 'productos') {
+          <!-- PASO 1: productos -->
+          <div class="mt-5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 class="text-lg font-bold text-gray-800">{{ 'wg.operacion.caja.paso1' | translate }}</h2>
+            <p class="text-xs text-gray-500">
+              @for (pa of datos.paises; track pa.id; let ultimo = $last) {
+                <span class="font-semibold" [style.color]="pa.color || '#374151'">1 {{ pa.codigo_moneda }} = {{ miles(pa.tasa_actual) }}</span>@if (!ultimo) { · }
+              } pesos
+            </p>
           </div>
-          @if (!estudiante) {
-            <!-- Precios de hoy: lo que vale cada producto en cada moneda -->
-            @if (datos.productos.length) {
-              <section class="mt-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div class="px-4 pt-3 pb-2">
-                  <h2 class="font-bold text-gray-800">{{ 'wg.operacion.caja.preciosHoy' | translate }}</h2>
-                  <p class="text-xs text-gray-500">{{ 'wg.operacion.caja.preciosAyuda' | translate }}</p>
+          <ul class="mt-3 space-y-3">
+            @for (p of datos.productos; track p.id) {
+              <li class="bg-white rounded-2xl border p-3 flex items-center gap-3 transition" [class]="cantidad(p) ? 'border-orange-300 ring-2 ring-orange-100' : 'border-gray-200'" [class.opacity-50]="!disponible(p)">
+                <div class="w-16 h-16 shrink-0 rounded-xl bg-orange-50 overflow-hidden flex items-center justify-center">
+                  @if (p.foto) { <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover"> } @else { <span class="text-3xl" aria-hidden="true">🛍️</span> }
                 </div>
-                <ul class="divide-y divide-gray-100">
-                  @for (p of datos.productos; track p.id) {
-                    <li class="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2" [class.opacity-50]="!p.stock">
-                      <div class="flex items-center gap-3 min-w-0 sm:flex-1">
-                        <div class="w-10 h-10 shrink-0 rounded-lg bg-orange-50 overflow-hidden flex items-center justify-center">
-                          @if (p.foto) { <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover"> } @else { <span class="text-xl" aria-hidden="true">🛍️</span> }
-                        </div>
-                        <div class="min-w-0">
-                          <p class="font-semibold text-gray-800 truncate">{{ p.nombre }}</p>
-                          <p class="text-xs text-gray-500">{{ 'wg.operacion.caja.pesos' | translate: { n: miles(p.precio_cop) } }}</p>
-                        </div>
-                      </div>
-                      <div class="grid grid-cols-3 gap-1.5 sm:w-72 shrink-0">
-                        @for (pa of datos.paises; track pa.id) {
-                          <span class="rounded-lg px-2 py-1 text-center font-extrabold text-sm" [style.color]="pa.color || '#111827'" [style.background]="(pa.color || '#64748b') + '14'">
-                            {{ miles(precioEn(p, pa)) }} <span class="text-[10px] font-bold">{{ pa.codigo_moneda }}</span>
-                          </span>
-                        }
-                      </div>
-                    </li>
-                  }
-                </ul>
-              </section>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-gray-800 truncate">{{ p.nombre }}</p>
+                  <div class="mt-1 flex flex-wrap gap-1.5">
+                    @for (pa of datos.paises; track pa.id) {
+                      <span class="rounded-md px-2 py-0.5 text-xs font-extrabold" [style.color]="pa.color || '#111827'" [style.background]="(pa.color || '#64748b') + '14'">{{ miles(precioEn(p, pa)) }} {{ pa.codigo_moneda }}</span>
+                    }
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">{{ textoDisponible(p) }}</p>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button type="button" (click)="sumar(p, -1)" [disabled]="!cantidad(p)" class="w-9 h-9 p-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.operacion.caja.quitar' | translate: { nombre: p.nombre }">−</button>
+                  <span class="w-7 text-center font-bold">{{ cantidad(p) }}</span>
+                  <button type="button" (click)="sumar(p, 1)" [disabled]="!puedeSumar(p)" class="w-9 h-9 p-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.operacion.caja.agregar' | translate: { nombre: p.nombre }">+</button>
+                </div>
+              </li>
             }
-            <h2 class="mt-5 font-bold text-gray-800">{{ 'wg.operacion.caja.eligeEstudiante' | translate }}</h2>
-            <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
-                   class="mt-2 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-            <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-              @for (e of filtrados; track e.id) {
-                <li>
-                  <button type="button" (click)="elegir(e)" class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
-                    <span class="w-3 h-10 rounded-full shrink-0" [style.background]="pais(e.pais_id)?.color || '#94a3b8'" aria-hidden="true"></span>
-                    <span class="min-w-0 flex-1">
-                      <span class="block font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</span>
-                      <span class="block text-xs text-gray-500">{{ pais(e.pais_id)?.nombre }} · {{ 'wg.operacion.caja.tieneMin' | translate }} <b class="text-gray-700">{{ miles(e.saldo) }}</b></span>
-                    </span>
-                    <span class="text-orange-600 font-semibold text-sm">{{ 'wg.operacion.caja.elegir' | translate }}</span>
-                  </button>
-                </li>
-              }
-              @if (!filtrados.length) { <li class="px-4 py-6 text-center text-sm text-gray-500">{{ datos.estudiantes.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ('wg.operacion.caja.sinEstudiantesPais' | translate) }}</li> }
-            </ul>
-          } @else {
-            <!-- Estudiante elegido -->
-            <div class="mt-4 rounded-2xl p-4 text-white shadow flex items-center gap-3" [style.background]="paisEst?.color || '#1e293b'">
-              <div class="min-w-0 flex-1">
-                <p class="text-xs opacity-90">{{ paisEst?.nombre }} · {{ 'wg.operacion.caja.unBillete' | translate: { n: miles(paisEst?.tasa_actual) } }}</p>
-                <p class="text-lg font-extrabold truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
-                <p class="text-sm opacity-95">{{ 'wg.operacion.caja.tiene' | translate }} <b>{{ miles(estudiante.saldo) }} {{ paisEst?.codigo_moneda }}</b></p>
-              </div>
-              <button type="button" (click)="cambiarEstudiante()" class="shrink-0 px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold">{{ 'wg.operacion.caja.cambiar' | translate }}</button>
-            </div>
-
-            <ul class="mt-4 space-y-3">
-              @for (p of datos.productos; track p.id) {
-                <li class="bg-white rounded-2xl border border-gray-200 p-3 flex items-center gap-3" [class.opacity-50]="!disponible(p)">
-                  <div class="w-16 h-16 shrink-0 rounded-xl bg-orange-50 overflow-hidden flex items-center justify-center">
-                    @if (p.foto) { <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover"> } @else { <span class="text-3xl" aria-hidden="true">🛍️</span> }
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="font-semibold text-gray-800 truncate">{{ p.nombre }}</p>
-                    <p class="text-sm font-bold" [style.color]="paisEst?.color || '#111827'">{{ miles(precio(p)) }} {{ paisEst?.codigo_moneda }}</p>
-                    <p class="text-[11px] text-gray-500 truncate">
-                      @for (pa of otrosPaises; track pa.id; let ultimo = $last) {
-                        <span [style.color]="pa.color || '#6b7280'" class="font-semibold">{{ miles(precioEn(p, pa)) }} {{ pa.codigo_moneda }}</span>@if (!ultimo) { · }
-                      }
-                    </p>
-                    <p class="text-xs text-gray-500">{{ textoDisponible(p) }}</p>
-                  </div>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <button type="button" (click)="sumar(p, -1)" [disabled]="!cantidad(p)" class="w-9 h-9 p-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.operacion.caja.quitar' | translate: { nombre: p.nombre }">−</button>
-                    <span class="w-7 text-center font-bold">{{ cantidad(p) }}</span>
-                    <button type="button" (click)="sumar(p, 1)" [disabled]="!puedeSumar(p)" class="w-9 h-9 p-0 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 disabled:opacity-30" [attr.aria-label]="'wg.operacion.caja.agregar' | translate: { nombre: p.nombre }">+</button>
-                  </div>
-                </li>
-              }
-              @if (!datos.productos.length) { <li class="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">{{ 'wg.operacion.caja.sinProductos' | translate }}</li> }
-            </ul>
-          }
+            @if (!datos.productos.length) { <li class="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">{{ 'wg.operacion.caja.sinProductos' | translate }}</li> }
+          </ul>
+        } @else if (!estudiante) {
+          <!-- PASO 2: quién compra -->
+          <button type="button" (click)="etapa = 'productos'" class="mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.volverProductos' | translate }}</button>
+          <h2 class="mt-2 text-lg font-bold text-gray-800">{{ 'wg.operacion.caja.eligeEstudiante' | translate }}</h2>
+          <p class="text-sm text-gray-500">{{ resumenCarrito }}</p>
+          <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
+                 class="mt-3 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+          <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+            @for (e of filtrados; track e.id) {
+              <li>
+                <button type="button" (click)="elegir(e)" class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
+                  <span class="w-3 h-10 rounded-full shrink-0" [style.background]="pais(e.pais_id)?.color || '#94a3b8'" aria-hidden="true"></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</span>
+                    <span class="block text-xs text-gray-500">{{ pais(e.pais_id)?.nombre }} · {{ 'wg.operacion.caja.tieneMin' | translate }} <b class="text-gray-700">{{ miles(e.saldo) }} {{ pais(e.pais_id)?.codigo_moneda }}</b></span>
+                  </span>
+                  <span class="text-right shrink-0">
+                    <span class="block font-extrabold" [style.color]="totalPara(e) > e.saldo ? '#dc2626' : (pais(e.pais_id)?.color || '#111827')">{{ miles(totalPara(e)) }} {{ pais(e.pais_id)?.codigo_moneda }}</span>
+                    <span class="block text-[11px]" [class]="totalPara(e) > e.saldo ? 'text-red-600 font-semibold' : 'text-gray-400'">{{ (totalPara(e) > e.saldo ? 'wg.operacion.caja.noLeAlcanza' : 'wg.operacion.caja.leCuesta') | translate }}</span>
+                  </span>
+                </button>
+              </li>
+            }
+            @if (!filtrados.length) { <li class="px-4 py-6 text-center text-sm text-gray-500">{{ datos.estudiantes.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ('wg.operacion.caja.sinEstudiantesPais' | translate) }}</li> }
+          </ul>
+        } @else {
+          <!-- Estudiante elegido: revisar y cobrar -->
+          <button type="button" (click)="cambiarEstudiante()" class="mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.cambiarEstudiante' | translate }}</button>
+          <div class="mt-2 rounded-2xl p-4 text-white shadow" [style.background]="paisEst?.color || '#1e293b'">
+            <p class="text-xs opacity-90">{{ paisEst?.nombre }} · {{ 'wg.operacion.caja.unBillete' | translate: { n: miles(paisEst?.tasa_actual) } }}</p>
+            <p class="text-lg font-extrabold truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
+            <p class="text-sm opacity-95">{{ 'wg.operacion.caja.tiene' | translate }} <b>{{ miles(estudiante.saldo) }} {{ paisEst?.codigo_moneda }}</b></p>
+          </div>
+          <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+            @for (p of enCarrito; track p.id) {
+              <li class="px-4 py-3 flex items-center gap-3">
+                <span class="font-bold text-gray-800 w-8">{{ cantidad(p) }} ×</span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-gray-800 truncate">{{ p.nombre }}</span>
+                  @if (cantidad(p) > maximoDe(p)) { <span class="block text-xs font-semibold text-red-600">{{ avisoMaximo(p) }}</span> }
+                </span>
+                <span class="font-extrabold" [style.color]="paisEst?.color || '#111827'">{{ miles(precio(p) * cantidad(p)) }} {{ paisEst?.codigo_moneda }}</span>
+              </li>
+            }
+          </ul>
+        }
         }
 
-        <!-- CAJA: billetes por país y entregar al banco -->
-        @if (vista === 'caja') {
+        <!-- MOVIMIENTOS: ventas y entregas al banco -->
+        @if (vista === 'ventas') {
+          <!-- Billetes que hay en la caja de cada país -->
+          <h2 class="mt-5 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.billetesEnCaja' | translate }}</h2>
           @for (p of datos.paises; track p.id) {
             <section class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div class="p-4 text-white flex items-center gap-3" [style.background]="p.color || '#1e293b'">
@@ -181,24 +165,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
               }
             </section>
           }
-          @if (datos.entregas.length) {
-            <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.entregasAlBanco' | translate }}</h2>
-            <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
-              @for (t of datos.entregas; track t.id) {
-                <li class="px-4 py-3 flex items-center justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="font-semibold text-gray-800">{{ 'wg.operacion.caja.alBancoDe' | translate: { pais: pais(t.pais_id)?.nombre } }}</p>
-                    <p class="text-xs text-gray-500">{{ t.date_created | wgFecha:'d MMM, h:mm a' }}{{ t.quien ? ' · ' + t.quien : '' }}</p>
-                  </div>
-                  <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(t.monto) }}</p>
-                </li>
-              }
-            </ul>
-          }
-        }
-
-        <!-- VENTAS -->
-        @if (vista === 'ventas') {
+          <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.ventasTitulo' | translate }}</h2>
           @if (!datos.ventas.length) {
             <p class="mt-4 text-sm text-gray-500">{{ 'wg.operacion.caja.sinVentas' | translate }}</p>
           } @else {
@@ -218,11 +185,34 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
               }
             </ul>
           }
+          @if (datos.entregas.length) {
+            <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.entregasAlBanco' | translate }}</h2>
+            <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+              @for (t of datos.entregas; track t.id) {
+                <li class="px-4 py-3 flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="font-semibold text-gray-800">{{ 'wg.operacion.caja.alBancoDe' | translate: { pais: pais(t.pais_id)?.nombre } }}</p>
+                    <p class="text-xs text-gray-500">{{ t.date_created | wgFecha:'d MMM, h:mm a' }}{{ t.quien ? ' · ' + t.quien : '' }}</p>
+                  </div>
+                  <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(t.monto) }}</p>
+                </li>
+              }
+            </ul>
+          }
         }
       }
     </div>
 
     <!-- Carrito fijo abajo -->
+    @if (vista === 'vender' && datos && unidades && !estudiante && etapa === 'productos') {
+      <div class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-6px_20px_rgba(0,0,0,.08)] px-4 py-3">
+        <div class="max-w-3xl mx-auto flex items-center gap-3">
+          <p class="flex-1 min-w-0 font-bold text-gray-800">{{ unidades }} {{ (unidades === 1 ? 'wg.operacion.comun.producto' : 'wg.operacion.comun.productos') | translate }}</p>
+          <button type="button" (click)="etapa = 'estudiante'; busqueda = ''"
+                  class="shrink-0 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600">{{ 'wg.operacion.caja.siguienteEstudiante' | translate }} →</button>
+        </div>
+      </div>
+    }
     @if (vista === 'vender' && estudiante && datos && unidades) {
       <div class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-6px_20px_rgba(0,0,0,.08)] px-4 py-3">
         <div class="max-w-3xl mx-auto flex items-center gap-3">
@@ -231,7 +221,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
             <p class="text-xl font-extrabold" [class]="total > estudiante.saldo ? 'text-red-600' : 'text-gray-800'">{{ miles(total) }} {{ paisEst?.codigo_moneda }}</p>
             @if (total > estudiante.saldo) { <p class="text-xs font-semibold text-red-600">{{ 'wg.operacion.caja.noAlcanza' | translate: { n: miles(estudiante.saldo) } }}</p> }
           </div>
-          <button type="button" (click)="abrirCobro()" [disabled]="!datos.puede_vender || datos.edicion.estado !== 'abierta' || total > estudiante.saldo"
+          <button type="button" (click)="abrirCobro()" [disabled]="!datos.puede_vender || datos.edicion.estado !== 'abierta' || total > estudiante.saldo || excede"
                   class="shrink-0 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.operacion.caja.cobrar' | translate }}</button>
         </div>
       </div>
@@ -342,7 +332,7 @@ export class CajaWillGo implements OnInit {
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
-  readonly vistas: { id: Vista; texto: string }[] = [{ id: 'vender', texto: 'wg.operacion.caja.vistaVender' }, { id: 'caja', texto: 'wg.operacion.caja.vistaCaja' }, { id: 'ventas', texto: 'wg.operacion.caja.vistaVentas' }];
+  readonly vistas: { id: Vista; texto: string }[] = [{ id: 'vender', texto: 'wg.operacion.caja.vistaTienda' }, { id: 'ventas', texto: 'wg.operacion.caja.vistaMovimientos' }];
 
   ediciones: EdicionVigente[] = [];
   edicionId = '';
@@ -405,15 +395,37 @@ export class CajaWillGo implements OnInit {
     return (this.datos?.estudiantes ?? []).filter((e) => { const n = normalizar(`${e.nombre} ${e.apellido}`); return palabras.every((w) => n.includes(w)); });
   }
 
-  elegir(e: EstudianteCaja): void { this.estudiante = e; this.carrito = {}; }
-  cambiarEstudiante(): void { this.estudiante = null; this.carrito = {}; this.busqueda = ''; }
+  /** Paso de la venta: primero los productos, luego quién compra. */
+  etapa: 'productos' | 'estudiante' = 'productos';
+  elegir(e: EstudianteCaja): void { this.estudiante = e; }
+  cambiarEstudiante(): void { this.estudiante = null; this.etapa = 'estudiante'; }
+  /** Productos elegidos. */
+  get enCarrito(): ProductoCaja[] { return (this.datos?.productos ?? []).filter((p) => this.cantidad(p) > 0); }
+  /** «2 × Gorra, 1 × Snack» */
+  get resumenCarrito(): string { return this.enCarrito.map((p) => `${this.cantidad(p)} × ${p.nombre}`).join(', '); }
+  /** Lo que le cuesta lo elegido a un estudiante, en la moneda de su país. */
+  totalPara(e: EstudianteCaja): number {
+    const pa = this.pais(e.pais_id);
+    return pa ? this.enCarrito.reduce((t, p) => t + this.precioEn(p, pa) * this.cantidad(p), 0) : 0;
+  }
+  /** Lo máximo que puede llevar el estudiante elegido de un producto. */
+  maximoDe(p: ProductoCaja): number { return this.maximo(p); }
+  /** Por qué no puede llevar tantas unidades: ya compró antes, llegó al máximo o no hay stock. */
+  avisoMaximo(p: ProductoCaja): string {
+    const ya = this.datos?.comprado?.[this.estudiante?.id ?? '']?.[p.id] ?? 0;
+    if (p.maximo_por_estudiante && this.cantidad(p) + ya > p.maximo_por_estudiante) {
+      return this.t.instant('wg.operacion.caja.excedeMaximo', { ya, max: p.maximo_por_estudiante, puede: Math.max(0, p.maximo_por_estudiante - ya) });
+    }
+    return this.t.instant('wg.operacion.caja.disponibles', { n: this.miles(p.stock) });
+  }
+  /** ¿Lleva más de lo que le permite el máximo por estudiante o el stock? */
+  get excede(): boolean { return this.enCarrito.some((p) => this.cantidad(p) > this.maximo(p)); }
 
   // ---- Carrito ----
   precio(p: ProductoCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(this.paisEst?.tasa_actual) || 1, 1)); }
   /** Lo que vale un producto en la moneda de un país (precio en pesos ÷ tasa, hacia arriba, igual que al cobrar). */
   precioEn(p: ProductoCaja, pais: PaisCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(pais.tasa_actual) || 1, 1)); }
   /** Los países distintos al del estudiante elegido (para mostrar el precio en las otras monedas). */
-  get otrosPaises(): PaisCaja[] { return (this.datos?.paises ?? []).filter((pa) => pa.id !== this.paisEst?.id); }
   cantidad(p: ProductoCaja): number { return this.carrito[p.id] ?? 0; }
   /** Cuántas unidades más puede llevar este estudiante (stock y máximo por estudiante). */
   private maximo(p: ProductoCaja): number {
@@ -493,6 +505,7 @@ export class CajaWillGo implements OnInit {
         this.recibo = { numero: r.numero_recibo, items: r.items, total, recibido, vuelto, saldo: r.saldo, moneda: p.codigo_moneda ?? '' };
         this.carrito = {};
         this.estudiante = null;
+        this.etapa = 'productos';
         this.busqueda = '';
         this.cargar();
       },

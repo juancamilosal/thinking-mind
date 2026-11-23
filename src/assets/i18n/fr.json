@@ -1190,7 +1190,18 @@
         "preciosAyuda": "Prix en pesos ÷ taux de la monnaie, arrondi au supérieur.",
         "pesos": "{{n}} pesos",
         "eligeEstudiante": "Qui achète ?",
-        "enOtras": "Dans les autres monnaies :"
+        "enOtras": "Dans les autres monnaies :",
+        "paso1": "Choisissez les produits",
+        "siguienteEstudiante": "Choisir l'élève",
+        "volverProductos": "Retour aux produits",
+        "cambiarEstudiante": "Changer d'élève",
+        "leCuesta": "coûte",
+        "noLeAlcanza": "pas assez",
+        "vistaTienda": "Boutique",
+        "vistaMovimientos": "Mouvements",
+        "ventasTitulo": "Ventes",
+        "billetesEnCaja": "Billets dans la caisse",
+        "excedeMaximo": "A déjà acheté {{ya}} · max {{max}} par élève (peut prendre {{puede}})"
       },
       "productos": {
         "titulo": "Produits",

@@ -1189,8 +1189,19 @@
         "preciosHoy": "Precios de hoy en cada moneda",
         "preciosAyuda": "Precio en pesos ÷ tasa de la moneda, redondeado hacia arriba.",
         "pesos": "{{n}} pesos",
-        "eligeEstudiante": "¿Quién va a comprar?",
-        "enOtras": "En otras monedas:"
+        "eligeEstudiante": "¿Quién compra?",
+        "enOtras": "En otras monedas:",
+        "paso1": "Elige los productos",
+        "siguienteEstudiante": "Elegir estudiante",
+        "volverProductos": "Volver a los productos",
+        "cambiarEstudiante": "Cambiar estudiante",
+        "leCuesta": "le cuesta",
+        "noLeAlcanza": "no le alcanza",
+        "vistaTienda": "Tienda",
+        "vistaMovimientos": "Movimientos",
+        "ventasTitulo": "Ventas",
+        "billetesEnCaja": "Billetes en la caja",
+        "excedeMaximo": "Ya compró {{ya}} · máximo {{max}} por estudiante (puede llevar {{puede}})"
       },
       "productos": {
         "titulo": "Productos",
