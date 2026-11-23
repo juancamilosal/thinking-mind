@@ -77,7 +77,45 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
         </div>
         <ul class="divide-y divide-gray-100">
           @for (p of filtrados; track p.id) {
-            <li class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] gap-x-3 gap-y-2 items-center px-4 py-3" [class.bg-gray-50]="p.retirado">
+            <li class="px-4 py-4 md:py-3 md:grid md:grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] md:gap-x-3 md:items-center" [class.bg-gray-50]="p.retirado">
+              <!-- Celular: nombre y código arriba, país a lo ancho, y abajo saldo, presente y retirar -->
+              <div class="md:hidden space-y-3">
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-1 w-4 h-4 shrink-0" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarA' | translate: { nombre: p.nombre }">
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold leading-snug" [class]="p.retirado ? 'text-gray-500 line-through' : 'text-gray-800'">{{ p.nombre }} {{ p.apellido }}</p>
+                    <p class="text-xs text-gray-500">
+                      @if (p.grado) { {{ 'wg.pestanas.participantes.grado' | translate: { n: p.grado } }} · }<span class="font-mono">{{ p.codigo }}</span>
+                    </p>
+                    @if (p.retirado) {
+                      <p class="text-xs text-red-700">{{ 'wg.pestanas.participantes.retiradoMotivo' | translate: { motivo: p.motivo_retiro } }}</p>
+                    } @else if (p.pidio_reembolso) {
+                      <p class="text-xs font-semibold text-red-700">{{ 'wg.pestanas.participantes.pidioReembolso' | translate }}</p>
+                    } @else if (!p.corresponde) {
+                      <p class="text-xs font-semibold text-red-700">{{ 'wg.pestanas.participantes.noCorresponde' | translate }}</p>
+                    }
+                  </div>
+                  <span class="shrink-0 text-sm font-bold text-gray-800 whitespace-nowrap">{{ miles(p.saldo) }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
+                </div>
+                <select class="w-full px-3 py-2.5 rounded-xl border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+                        [style.border-color]="colorDe(p.pais_id) || '#fcd34d'" [disabled]="!!p.retirado" [ngModel]="p.pais_id" (ngModelChange)="asignar([p.id], $event)" [attr.aria-label]="'wg.pestanas.participantes.paisDe' | translate: { nombre: p.nombre }">
+                  <option [ngValue]="null">{{ 'wg.pestanas.participantes.sinPais' | translate }}</option>
+                  @for (pa of paises; track pa.id) { <option [ngValue]="pa.id">{{ pa.nombre }}</option> }
+                </select>
+                <div class="flex items-center justify-between gap-3">
+                  <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" class="w-4 h-4" [checked]="p.presente" [disabled]="!!p.retirado" (change)="marcarPresente(p, $any($event.target).checked)">
+                    {{ 'wg.pestanas.participantes.presente' | translate }}
+                  </label>
+                  @if (p.retirado) {
+                    <button type="button" (click)="reintegrar([p])" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-50">{{ 'wg.pestanas.participantes.reintegrar' | translate }}</button>
+                  } @else {
+                    <button type="button" (click)="pedirRetiro([p])" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-red-700 border border-red-200 hover:bg-red-50">{{ 'wg.pestanas.participantes.retirar' | translate }}</button>
+                  }
+                </div>
+              </div>
+              <!-- Computador: una fila de tabla -->
+              <div class="hidden md:contents">
               <label class="flex items-center"><input type="checkbox" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarA' | translate: { nombre: p.nombre }"></label>
               <div class="min-w-0">
                 <p class="font-semibold truncate" [class]="p.retirado ? 'text-gray-500 line-through' : 'text-gray-800'">{{ p.nombre }} {{ p.apellido }}</p>
@@ -110,6 +148,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
                 } @else {
                   <button type="button" (click)="pedirRetiro([p])" class="text-sm font-semibold text-red-700 hover:underline">{{ 'wg.pestanas.participantes.retirar' | translate }}</button>
                 }
+              </div>
               </div>
             </li>
           }
