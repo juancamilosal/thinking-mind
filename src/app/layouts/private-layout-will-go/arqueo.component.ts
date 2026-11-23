@@ -58,40 +58,35 @@ import { ListaMovimientosComponent } from './lista-movimientos.component';
       }
 
       @if (pais && vista === 'arqueo') {
-        <!-- Resumen del banco -->
-        <div class="mt-4 grid grid-cols-2 bg-white rounded-2xl border border-gray-200 divide-x divide-gray-100">
-          <div class="px-4 py-3 sm:py-4 min-w-0">
-            <p class="text-xs font-semibold" [style.color]="pais.color || '#6b7280'">{{ 'wg.banco.arqueo.enBancoHoy' | translate }}</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.saldo_sistema) }}</p>
+        <!-- Resumen del banco: en celular una fila por dato (etiqueta a la izquierda, número a la derecha) -->
+        <div class="mt-4 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 sm:divide-y-0 sm:grid sm:grid-cols-3 sm:divide-x">
+          <div class="px-4 py-3 sm:py-4 flex sm:block items-center justify-between gap-3">
+            <p class="text-sm sm:text-xs font-semibold" [style.color]="pais.color || '#6b7280'">💵 {{ 'wg.banco.arqueo.enBancoHoy' | translate }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap">{{ miles(pais.saldo_sistema) }}</p>
           </div>
-          <div class="px-4 py-3 sm:py-4 min-w-0">
-            <p class="text-xs text-gray-500">{{ 'wg.banco.arqueo.enCirculacion' | translate }}</p>
-            <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.en_circulacion) }}</p>
+          <div class="px-4 py-3 sm:py-4 flex sm:block items-center justify-between gap-3">
+            <p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.enCirculacion' | translate }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap">{{ miles(pais.en_circulacion) }}</p>
           </div>
-        </div>
-        <div class="mt-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-gray-700">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
-            <p class="text-xs text-gray-500">{{ 'wg.montobanco.virtualAyuda' | translate: { n: miles(pais.virtual_cargado ?? 0) } }}</p>
+          <div class="px-4 py-3 sm:py-4 flex sm:block items-center justify-between gap-3">
+            <p class="text-sm sm:text-xs text-gray-500">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap">{{ miles(pais.virtual_saldo ?? 0) }}</p>
           </div>
-          <p class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ miles(pais.virtual_saldo ?? 0) }}</p>
         </div>
 
         <!-- Conteo: un solo total -->
         <div class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5">
           <h3 class="font-bold text-gray-800">{{ 'wg.montobanco.arqueoTitulo' | translate }}</h3>
-          <p class="text-sm text-gray-500">{{ 'wg.montobanco.arqueoAyuda' | translate }}</p>
-          <label for="arqueo-total" class="block text-sm font-semibold text-gray-700 mt-4">{{ 'wg.montobanco.totalContado' | translate }}</label>
-          <input id="arqueo-total" wgNumero [ngModel]="contados[pais.id]" (ngModelChange)="contados[pais.id] = $event" placeholder="0"
-                 class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+          <label for="arqueo-total" class="sr-only">{{ 'wg.montobanco.totalContado' | translate }}</label>
+          <input id="arqueo-total" wgNumero [ngModel]="contados[pais.id]" (ngModelChange)="contados[pais.id] = $event" [placeholder]="'wg.montobanco.totalContado' | translate"
+                 class="mt-3 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
 
-          <div class="mt-4 space-y-1 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3">
-            <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.contado' | translate }}</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(total) }}</p></div>
+          <div class="mt-4 space-y-1 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
             <div class="flex sm:block items-center justify-between gap-3"><p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.debeHaber' | translate }}</p><p class="text-lg sm:text-xl font-bold text-gray-800 break-all text-right sm:text-left">{{ miles(pais.saldo_sistema) }}</p></div>
             <div class="flex sm:block items-center justify-between gap-3">
               <p class="text-sm sm:text-xs text-gray-500">{{ 'wg.banco.arqueo.diferencia' | translate }}</p>
               @if (hayConteo) {
-                <p class="text-lg sm:text-xl font-bold break-all text-right sm:text-left" [class]="diferencia === 0 ? 'text-emerald-600' : diferencia < 0 ? 'text-red-600' : 'text-amber-600'">
+                <p class="text-lg sm:text-xl font-bold whitespace-nowrap text-right sm:text-left" [class]="diferencia === 0 ? 'text-emerald-600' : diferencia < 0 ? 'text-red-600' : 'text-amber-600'">
                   {{ (diferencia === 0 ? 'wg.banco.arqueo.cuadra' : diferencia < 0 ? 'wg.banco.arqueo.faltan' : 'wg.banco.arqueo.sobran') | translate: { n: miles(abs(diferencia)) } }}
                 </p>
               } @else {
