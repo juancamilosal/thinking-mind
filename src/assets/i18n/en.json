@@ -1201,7 +1201,9 @@
         "vistaMovimientos": "Transactions",
         "ventasTitulo": "Sales",
         "billetesEnCaja": "Bills in the checkout",
-        "excedeMaximo": "Already bought {{ya}} · max {{max}} per student (can take {{puede}})"
+        "excedeMaximo": "Already bought {{ya}} · max {{max}} per student (can take {{puede}})",
+        "motivoEdicionCerrada": "The edition is not open: sales are not possible.",
+        "motivoExcede": "One product is over the allowed amount."
       },
       "productos": {
         "titulo": "Products",

@@ -1201,7 +1201,9 @@
         "vistaMovimientos": "Movimientos",
         "ventasTitulo": "Ventas",
         "billetesEnCaja": "Billetes en la caja",
-        "excedeMaximo": "Ya compró {{ya}} · máximo {{max}} por estudiante (puede llevar {{puede}})"
+        "excedeMaximo": "Ya compró {{ya}} · máximo {{max}} por estudiante (puede llevar {{puede}})",
+        "motivoEdicionCerrada": "La edición no está abierta: no se puede vender.",
+        "motivoExcede": "Lleva más de lo permitido de un producto."
       },
       "productos": {
         "titulo": "Productos",

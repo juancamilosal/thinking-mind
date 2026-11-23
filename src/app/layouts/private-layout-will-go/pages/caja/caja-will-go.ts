@@ -19,7 +19,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
   standalone: true,
   imports: [FormsModule, FechaWillGoPipe, SelectorBilletesComponent, SelectorEdicionComponent, TranslatePipe],
   template: `
-    <div class="max-w-3xl mx-auto pb-28">
+    <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.operacion.caja.titulo' | translate }}</h1>
@@ -89,7 +89,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           </ul>
         } @else if (!estudiante) {
           <!-- PASO 2: quién compra -->
-          <button type="button" (click)="etapa = 'productos'" class="mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.volverProductos' | translate }}</button>
+          <button type="button" (click)="etapa = 'productos'" class="block mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.volverProductos' | translate }}</button>
           <h2 class="mt-2 text-lg font-bold text-gray-800">{{ 'wg.operacion.caja.eligeEstudiante' | translate }}</h2>
           <p class="text-sm text-gray-500">{{ resumenCarrito }}</p>
           <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
@@ -114,7 +114,7 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           </ul>
         } @else {
           <!-- Estudiante elegido: revisar y cobrar -->
-          <button type="button" (click)="cambiarEstudiante()" class="mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.cambiarEstudiante' | translate }}</button>
+          <button type="button" (click)="cambiarEstudiante()" class="block mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.cambiarEstudiante' | translate }}</button>
           <div class="mt-2 rounded-2xl p-4 text-white shadow" [style.background]="paisEst?.color || '#1e293b'">
             <p class="text-xs opacity-90">{{ paisEst?.nombre }} · {{ 'wg.operacion.caja.unBillete' | translate: { n: miles(paisEst?.tasa_actual) } }}</p>
             <p class="text-lg font-extrabold truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
@@ -201,31 +201,31 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           }
         }
       }
-    </div>
 
-    <!-- Carrito fijo abajo -->
-    @if (vista === 'vender' && datos && unidades && !estudiante && etapa === 'productos') {
-      <div class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-6px_20px_rgba(0,0,0,.08)] px-4 py-3">
-        <div class="max-w-3xl mx-auto flex items-center gap-3">
-          <p class="flex-1 min-w-0 font-bold text-gray-800">{{ unidades }} {{ (unidades === 1 ? 'wg.operacion.comun.producto' : 'wg.operacion.comun.productos') | translate }}</p>
-          <button type="button" (click)="etapa = 'estudiante'; busqueda = ''"
-                  class="shrink-0 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600">{{ 'wg.operacion.caja.siguienteEstudiante' | translate }} →</button>
-        </div>
-      </div>
-    }
-    @if (vista === 'vender' && estudiante && datos && unidades) {
-      <div class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-6px_20px_rgba(0,0,0,.08)] px-4 py-3">
-        <div class="max-w-3xl mx-auto flex items-center gap-3">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs text-gray-500">{{ unidades }} {{ (unidades === 1 ? 'wg.operacion.comun.producto' : 'wg.operacion.comun.productos') | translate }}</p>
-            <p class="text-xl font-extrabold" [class]="total > estudiante.saldo ? 'text-red-600' : 'text-gray-800'">{{ miles(total) }} {{ paisEst?.codigo_moneda }}</p>
-            @if (total > estudiante.saldo) { <p class="text-xs font-semibold text-red-600">{{ 'wg.operacion.caja.noAlcanza' | translate: { n: miles(estudiante.saldo) } }}</p> }
+      <!-- Carrito fijo abajo -->
+      @if (vista === 'vender' && datos && unidades && !estudiante && etapa === 'productos') {
+        <div class="sticky bottom-0 sm:bottom-4 z-30 mt-6 -mx-4 sm:mx-0 bg-white border-t sm:border border-gray-200 sm:rounded-2xl shadow-[0_-6px_20px_rgba(0,0,0,.08)] sm:shadow-lg px-4 py-3">
+          <div class="flex items-center gap-3">
+            <p class="flex-1 min-w-0 font-bold text-gray-800">{{ unidades }} {{ (unidades === 1 ? 'wg.operacion.comun.producto' : 'wg.operacion.comun.productos') | translate }}</p>
+            <button type="button" (click)="etapa = 'estudiante'; busqueda = ''"
+                    class="shrink-0 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600">{{ 'wg.operacion.caja.siguienteEstudiante' | translate }} →</button>
           </div>
-          <button type="button" (click)="abrirCobro()" [disabled]="!datos.puede_vender || datos.edicion.estado !== 'abierta' || total > estudiante.saldo || excede"
-                  class="shrink-0 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.operacion.caja.cobrar' | translate }}</button>
         </div>
-      </div>
-    }
+      }
+      @if (vista === 'vender' && estudiante && datos && unidades) {
+        <div class="sticky bottom-0 sm:bottom-4 z-30 mt-6 -mx-4 sm:mx-0 bg-white border-t sm:border border-gray-200 sm:rounded-2xl shadow-[0_-6px_20px_rgba(0,0,0,.08)] sm:shadow-lg px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-500">{{ unidades }} {{ (unidades === 1 ? 'wg.operacion.comun.producto' : 'wg.operacion.comun.productos') | translate }}</p>
+              <p class="text-xl font-extrabold" [class]="total > estudiante.saldo ? 'text-red-600' : 'text-gray-800'">{{ miles(total) }} {{ paisEst?.codigo_moneda }}</p>
+              @if (motivoNoCobrar) { <p class="text-xs font-semibold text-red-600">{{ motivoNoCobrar }}</p> }
+            </div>
+            <button type="button" (click)="abrirCobro()" [disabled]="!!motivoNoCobrar"
+                    class="shrink-0 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.operacion.caja.cobrar' | translate }}</button>
+          </div>
+        </div>
+      }
+    </div>
 
     <!-- Cobro: billetes recibidos y vuelto -->
     @if (cobrando && estudiante && paisEst && datos) {
@@ -420,6 +420,18 @@ export class CajaWillGo implements OnInit {
   }
   /** ¿Lleva más de lo que le permite el máximo por estudiante o el stock? */
   get excede(): boolean { return this.enCarrito.some((p) => this.cantidad(p) > this.maximo(p)); }
+  /** Por qué no se puede cobrar todavía (vacío = se puede). */
+  get motivoNoCobrar(): string {
+    const d = this.datos, e = this.estudiante;
+    if (!d || !e) return '';
+    if (d.edicion.estado !== 'abierta') return this.t.instant('wg.operacion.caja.motivoEdicionCerrada');
+    if (!d.puede_vender) return d.edicion.responsable_caja
+      ? this.t.instant('wg.operacion.caja.manejaOtro', { nombre: d.edicion.responsable })
+      : this.t.instant('wg.operacion.caja.sinEncargado');
+    if (this.total > e.saldo) return this.t.instant('wg.operacion.caja.noAlcanza', { n: this.miles(e.saldo) });
+    if (this.excede) return this.t.instant('wg.operacion.caja.motivoExcede');
+    return '';
+  }
 
   // ---- Carrito ----
   precio(p: ProductoCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(this.paisEst?.tasa_actual) || 1, 1)); }

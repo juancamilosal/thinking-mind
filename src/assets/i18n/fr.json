@@ -1201,7 +1201,9 @@
         "vistaMovimientos": "Mouvements",
         "ventasTitulo": "Ventes",
         "billetesEnCaja": "Billets dans la caisse",
-        "excedeMaximo": "A déjà acheté {{ya}} · max {{max}} par élève (peut prendre {{puede}})"
+        "excedeMaximo": "A déjà acheté {{ya}} · max {{max}} par élève (peut prendre {{puede}})",
+        "motivoEdicionCerrada": "L'édition n'est pas ouverte : impossible de vendre.",
+        "motivoExcede": "Un produit dépasse la quantité autorisée."
       },
       "productos": {
         "titulo": "Produits",

@@ -2266,7 +2266,8 @@ async function exigirResponsableCaja(db, { edicionId, usuarioId, rol }) {
 	if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return;
 	const e = await db('wge_ediciones as e').leftJoin('directus_users as u', 'u.id', 'e.responsable_caja')
 		.where('e.id', edicionId).first('e.responsable_caja', 'u.first_name', 'u.last_name');
-	if (!e?.responsable_caja) throw new WgeError(409, 'SIN_CAJERO', 'La edición todavía no tiene encargado de la caja');
+	// Sin encargado asignado, cualquier cajero del equipo de la edición puede vender (el equipo se revisa antes)
+	if (!e?.responsable_caja) return;
 	if (e.responsable_caja !== usuarioId) throw new WgeError(403, 'OTRO_RESPONSABLE', `La caja la maneja ${`${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()}`);
 }
 
@@ -2326,7 +2327,7 @@ function rutasCaja(router, { ruta, db }) {
 			.where({ 'bo.edicion_id': edicion.id, 'bo.tipo_dueno': 'caja' }).orderBy('t.date_created', 'desc').limit(30)
 			.select('t.id', 't.pais_id', 't.monto', 't.billetes', 't.date_created', db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien"));
 		return {
-			edicion, puede_vender: esAdmin || edicion.responsable_caja === req.accountability.user,
+			edicion, puede_vender: esAdmin || edicion.responsable_caja === req.accountability.user || (!edicion.responsable_caja && rol === ROLES.CAJERO),
 			denominaciones: DENOMINACIONES, paises, productos, estudiantes, comprado, ventas, entregas,
 		};
 	}));
