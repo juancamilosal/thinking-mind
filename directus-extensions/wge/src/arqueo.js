@@ -19,6 +19,21 @@ export function totalDelConteo(conteo) {
 	return { limpio, total };
 }
 
+/**
+ * Monto de una operación: si llega { monto } se usa tal cual (sin detalle de billetes); si no, el detalle
+ * { billetes: { "1000": 2 } } por compatibilidad con pantallas viejas. Devuelve { limpio (o null), total }, o null si no hay un monto válido.
+ */
+export function montoOConteo(body, campo = 'billetes') {
+	const m = body?.monto;
+	if (m !== undefined && m !== null && m !== '') {
+		const total = Number(m);
+		return Number.isInteger(total) && total > 0 ? { limpio: null, total } : null;
+	}
+	if (!body?.[campo]) return null;
+	const r = totalDelConteo(body[campo]);
+	return r.total ? r : null;
+}
+
 /** Suma (o resta) al inventario el detalle de billetes de cada fila: { "50": 2, "1000": 1 }. */
 function acumularBilletes(quedan, lista, signo) {
 	for (const b of lista) {
@@ -407,7 +422,10 @@ export function rutasArqueo(router, { ruta, db }) {
 		const pais = await db('wge_paises').where({ id: req.body.pais_id, edicion_id: edicion.id }).first('id');
 		if (!pais) throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
 		await exigirResponsableBanco(db, { paisId: pais.id, usuarioId: req.accountability.user, rol });
-		const { limpio, total } = totalDelConteo(req.body?.conteo);
+		// El total contado puede llegar como número ({ total_contado }) o, en pantallas viejas, por billetes ({ conteo })
+		const porTotal = req.body?.total_contado !== undefined && req.body?.total_contado !== null && req.body?.total_contado !== '';
+		if (porTotal && (!Number.isInteger(Number(req.body.total_contado)) || Number(req.body.total_contado) < 0)) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe cuánto dinero contaste');
+		const { limpio, total } = porTotal ? { limpio: {}, total: Number(req.body.total_contado) } : totalDelConteo(req.body?.conteo);
 		const saldo = await saldoBanco(edicion.id, pais.id);
 		const fila = {
 			id: crypto.randomUUID(), edicion_id: edicion.id, pais_id: pais.id, conteo: JSON.stringify(limpio),

@@ -6,7 +6,7 @@ import {
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
-import { rutasArqueo, totalDelConteo, inventarioBanco, inventarioDocente, igualarVirtual } from './arqueo.js';
+import { rutasArqueo, totalDelConteo, montoOConteo, inventarioBanco, inventarioDocente, igualarVirtual } from './arqueo.js';
 import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
 import { rutasAcudientes } from './acudientes.js';
 import { rutasRubrica } from './rubrica.js';
@@ -155,8 +155,12 @@ export default {
 			exigirRol(rol, ROLES.CAJERO, ROLES.ADMIN_WG);
 			// Con tarjeta débito ({ metodo: "tarjeta", llave }) se descuenta de la cuenta del estudiante: sin billetes ni vuelto
 			const conTarjeta = req.body?.metodo === 'tarjeta';
-			const recibidos = totalDelConteo(conTarjeta ? {} : req.body?.billetes_recibidos ?? {});
-			const vuelto = totalDelConteo(conTarjeta ? {} : req.body?.billetes_vuelto ?? {});
+			// En efectivo basta con { recibido }: cuánto entregó el estudiante; el vuelto lo calcula el servidor.
+			// (Las pantallas viejas mandan el detalle billetes_recibidos / billetes_vuelto.)
+			const porMonto = !conTarjeta && req.body?.recibido !== undefined && req.body?.recibido !== null;
+			if (porMonto && (!Number.isInteger(Number(req.body.recibido)) || Number(req.body.recibido) < 0)) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe con cuánto paga el estudiante');
+			const recibidos = porMonto ? { limpio: {}, total: Number(req.body.recibido) } : totalDelConteo(conTarjeta ? {} : req.body?.billetes_recibidos ?? {});
+			let vuelto = totalDelConteo(conTarjeta || porMonto ? {} : req.body?.billetes_vuelto ?? {});
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const items = Array.isArray(req.body?.items) ? req.body.items : [];
 			if (!items.length) throw new WgeError(400, 'VALOR_INVALIDO', 'La venta no tiene productos');
@@ -203,8 +207,9 @@ export default {
 
 				// Billetes: lo recibido debe alcanzar y el vuelto debe ser exacto, con billetes que la caja tenga (o que acaba de recibir)
 				if (!conTarjeta && recibidos.total < total) throw new WgeError(409, 'PAGO_INSUFICIENTE', `El total es ${total}; el estudiante entregó ${recibidos.total}`);
+				if (porMonto) vuelto = { limpio: {}, total: recibidos.total - total };
 				if (!conTarjeta && recibidos.total - vuelto.total !== total) throw new WgeError(400, 'VUELTO_INCORRECTO', `El vuelto debe ser ${recibidos.total - total} (marcaste ${vuelto.total})`);
-				if (vuelto.total) {
+				if (vuelto.total && !porMonto) {
 					const hay = await inventarioCaja(trx, edicion.id, pais.id);
 					for (const [d, n] of Object.entries(vuelto.limpio)) {
 						const disponibles = (hay[d] ?? 0) + (recibidos.limpio[d] ?? 0);
@@ -238,6 +243,7 @@ export default {
 				})));
 				return {
 					...venta, saldo: billetera.saldo, billetes_recibidos: recibidos.limpio, billetes_vuelto: vuelto.limpio,
+					recibido: conTarjeta ? total : recibidos.total, vuelto: conTarjeta ? 0 : vuelto.total,
 					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio })),
 				};
 			});
@@ -249,8 +255,7 @@ export default {
 		 */
 		router.post('/inversiones', ruta(async (req, rol) => {
 			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
-			const { limpio, total: monto } = totalDelConteo(req.body?.billetes);
-			if (!monto) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que entrega el estudiante');
+			const { limpio, total: monto } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que invierte el estudiante'); })();
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const actor = req.accountability.user;
 
@@ -274,7 +279,7 @@ export default {
 				await moverSaldo(trx, estudiante, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				await moverSaldo(trx, banco, { tipo: 'inversion', monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				const fila = {
-					id, participante_id: participante.id, fondo_id: fondo.id, ronda_id: ronda.id, monto, billetes: JSON.stringify(limpio),
+					id, participante_id: participante.id, fondo_id: fondo.id, ronda_id: ronda.id, monto, billetes: limpio ? JSON.stringify(limpio) : null,
 					estado: 'abierta', clave_idempotencia: clave, date_created: new Date(), user_created: actor,
 				};
 				await trx('wge_inversiones').insert(fila);

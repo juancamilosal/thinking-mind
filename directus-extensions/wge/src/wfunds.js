@@ -289,8 +289,7 @@ export function rutasWfunds(router, { ruta, db }) {
 			const procesando = await trx('wge_rondas').where({ edicion_id: participante.edicion_id, estado: 'abierta' })
 				.where('cierre_programado', '<=', new Date()).first('id');
 			if (procesando) throw new WgeError(409, 'PROCESANDO', 'Estamos calculando las ganancias de la ronda; intenta en un minuto');
-			// El banco entrega billetes físicos: se exigen para que su inventario cuadre
-			if (valorDe(inv) > 0 && !req.body?.billetes) throw new WgeError(400, 'VALOR_INVALIDO', 'Indica los billetes que le entregas al estudiante');
+			// El banco le entrega al estudiante lo que vale hoy la inversión (el detalle de billetes ya no se pide)
 			return retirarInversion(trx, inv, actor, req.body?.billetes);
 		});
 	}));

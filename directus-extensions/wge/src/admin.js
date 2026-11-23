@@ -4,7 +4,7 @@ import { idiomaDe } from './mensajes.js';
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
-import { totalDelConteo, virtualDelBanco, igualarVirtual } from './arqueo.js';
+import { totalDelConteo, montoOConteo, virtualDelBanco, igualarVirtual } from './arqueo.js';
 import { retirarInversion } from './wfunds.js';
 import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
 
@@ -361,6 +361,12 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				const { limpio, total } = totalDelConteo(req.body.provision_billetes ?? {});
 				fila.provision_billetes = JSON.stringify(limpio);
 				fila.provision_inicial = total;
+			} else if (nombre === 'paises' && req.body && 'provision_total' in req.body) {
+				// El dinero del banco escrito como un total (sin detalle de billetes)
+				const total = Number(req.body.provision_total);
+				if (!Number.isInteger(total) || total < 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el dinero que tiene el banco');
+				fila.provision_billetes = null;
+				fila.provision_inicial = total;
 			}
 			if (nombre === 'paises' && e.estado !== 'borrador' && 'provision_inicial' in fila && fila.provision_inicial !== actual.provision_inicial) {
 				throw new WgeError(409, 'EDICION_ABIERTA', 'La provisión del banco se define antes de abrir la edición');
@@ -502,8 +508,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 	router.post('/admin/paises/:id/provisionar', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const actor = req.accountability.user;
-		const { limpio, total } = totalDelConteo(req.body?.billetes ?? {});
-		if (total <= 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe cuántos billetes entran al banco');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que entra al banco'); })();
 		return db.transaction(async (trx) => {
 			const pais = await trx('wge_paises').where('id', req.params.id).forUpdate().first();
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
@@ -514,7 +519,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			await moverSaldo(trx, banco, { tipo: 'provision', monto: total, actor, referenciaTipo: 'provision_adicional', referenciaId: pais.id });
 			const previos = (typeof pais.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais.provision_billetes) ?? {};
 			const suma = { ...previos };
-			for (const [d, n] of Object.entries(limpio)) suma[d] = Number(suma[d] ?? 0) + n;
+			for (const [d, n] of Object.entries(limpio ?? {})) suma[d] = Number(suma[d] ?? 0) + n;
 			await trx('wge_paises').where('id', pais.id).update({
 				provision_billetes: JSON.stringify(suma), provision_inicial: Number(pais.provision_inicial ?? 0) + total,
 			});

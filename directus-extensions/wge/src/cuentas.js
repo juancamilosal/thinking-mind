@@ -1,7 +1,7 @@
 // Cuentas electrónicas de los estudiantes: llave (como la llave Bre-B) y tarjeta débito con QR (sin clave).
 // Los billetes que se consignan quedan guardados en el banco; la cuenta es lo que el estudiante tiene «en el banco».
 import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, exigirTexto, billeteraBloqueada, moverSaldo } from './lib.js';
-import { DENOMINACIONES, inventarioBanco, totalDelConteo } from './arqueo.js';
+import { DENOMINACIONES, inventarioBanco, totalDelConteo, montoOConteo } from './arqueo.js';
 
 /** «Sofía Gómez» → «sofia.gomez» (solo letras a-z y un punto). */
 export function baseDeLlave(nombre, apellido) {
@@ -128,8 +128,7 @@ export function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 
 	/** POST /wge/cuentas/consignar { participante_id, billetes, clave_idempotencia }: billetes del estudiante → su cuenta. */
 	router.post('/cuentas/consignar', ruta(async (req, rol) => {
-		const { limpio, total } = totalDelConteo(req.body?.billetes);
-		if (!total) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que consigna el estudiante');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que consigna el estudiante'); })();
 		const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 		const actor = req.accountability.user;
 		return unaSolaVez('wge_transferencias', clave, async (trx) => {
@@ -143,7 +142,7 @@ export function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 			await moverSaldo(trx, cuenta, { tipo: 'consignacion', monto: total, actor, referenciaTipo: 'transferencia', referenciaId: id });
 			const fila = {
 				id, edicion_id: p.edicion_id, pais_id: p.pais_id, billetera_origen_id: efectivo.id, billetera_destino_id: cuenta.id,
-				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: JSON.stringify(limpio), date_created: new Date(), user_created: actor,
+				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: limpio ? JSON.stringify(limpio) : null, date_created: new Date(), user_created: actor,
 			};
 			await trx('wge_transferencias').insert(fila);
 			return { ...fila, efectivo: efectivo.saldo, cuenta: cuenta.saldo };
@@ -152,8 +151,7 @@ export function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 
 	/** POST /wge/cuentas/retirar { participante_id, billetes, clave_idempotencia }: de la cuenta → billetes en mano. */
 	router.post('/cuentas/retirar', ruta(async (req, rol) => {
-		const { limpio, total } = totalDelConteo(req.body?.billetes);
-		if (!total) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que le entregas al estudiante');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que retira el estudiante'); })();
 		const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 		const actor = req.accountability.user;
 		const previo = await participanteActivo(db, exigirTexto(req.body?.participante_id, 'participante_id'));
@@ -164,7 +162,7 @@ export function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 			const cuenta = await billeteraBloqueada(trx, { edicionId: p.edicion_id, paisId: p.pais_id, tipo: 'cuenta', participanteId: p.id });
 			if (Number(cuenta.saldo) < total) throw new WgeError(409, 'SALDO_INSUFICIENTE', `En su cuenta solo hay ${cuenta.saldo}`);
 			const quedan = await inventarioBanco(trx, p.edicion_id, p.pais_id);
-			for (const [d, n] of Object.entries(limpio)) {
+			for (const [d, n] of Object.entries(limpio ?? {})) {
 				if (n > quedan[d]) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(quedan[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
 			}
 			const efectivo = await billeteraBloqueada(trx, { edicionId: p.edicion_id, paisId: p.pais_id, tipo: 'estudiante', participanteId: p.id });
@@ -173,7 +171,7 @@ export function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 			await moverSaldo(trx, efectivo, { tipo: 'retiro_cuenta', monto: total, actor, referenciaTipo: 'transferencia', referenciaId: id });
 			const fila = {
 				id, edicion_id: p.edicion_id, pais_id: p.pais_id, billetera_origen_id: cuenta.id, billetera_destino_id: efectivo.id,
-				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: JSON.stringify(limpio), date_created: new Date(), user_created: actor,
+				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: limpio ? JSON.stringify(limpio) : null, date_created: new Date(), user_created: actor,
 			};
 			await trx('wge_transferencias').insert(fila);
 			return { ...fila, efectivo: efectivo.saldo, cuenta: cuenta.saldo };

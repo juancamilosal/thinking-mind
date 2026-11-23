@@ -2,7 +2,7 @@
 // El estudiante paga con billetes físicos de su país; la caja da el vuelto con los billetes que tiene.
 // Los billetes se quedan en la caja (una billetera por país) hasta que el encargado los entrega al banco.
 import { WgeError, ROLES, exigirRol, exigirEquipo, exigirTexto, billeteraBloqueada, moverSaldo } from './lib.js';
-import { DENOMINACIONES, totalDelConteo } from './arqueo.js';
+import { DENOMINACIONES, totalDelConteo, montoOConteo } from './arqueo.js';
 
 const leerBilletesCaja = (b) => (typeof b === 'string' ? JSON.parse(b) : b) ?? {};
 
@@ -97,8 +97,7 @@ export function rutasCaja(router, { ruta, db }) {
 		const edicionId = req.params.id;
 		await permitir(req, rol, edicionId);
 		await exigirResponsableCaja(db, { edicionId, usuarioId: req.accountability.user, rol });
-		const { limpio, total } = totalDelConteo(req.body?.billetes);
-		if (!total) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que entregas al banco');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que entregas al banco'); })();
 		const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 		const actor = req.accountability.user;
 		const previa = await db('wge_transferencias').where('clave_idempotencia', clave).first();
@@ -108,7 +107,7 @@ export function rutasCaja(router, { ruta, db }) {
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no es de esta edición');
 			const caja = await billeteraBloqueada(trx, { edicionId, paisId: pais.id, tipo: 'caja' });
 			const quedan = await inventarioCaja(trx, edicionId, pais.id);
-			for (const [d, n] of Object.entries(limpio)) {
+			for (const [d, n] of Object.entries(limpio ?? {})) {
 				if (n > (quedan[d] ?? 0)) throw new WgeError(409, 'SIN_BILLETES', `En la caja solo hay ${Math.max(0, quedan[d] ?? 0)} billetes de ${d}`);
 			}
 			const banco = await billeteraBloqueada(trx, { edicionId, paisId: pais.id, tipo: 'banco' });
@@ -117,7 +116,7 @@ export function rutasCaja(router, { ruta, db }) {
 			await moverSaldo(trx, banco, { tipo: 'transferencia_entrada', monto: total, actor, referenciaTipo: 'transferencia', referenciaId: id });
 			const fila = {
 				id, edicion_id: edicionId, pais_id: pais.id, billetera_origen_id: caja.id, billetera_destino_id: banco.id, monto: total,
-				estado: 'aplicada', clave_idempotencia: clave, billetes: JSON.stringify(limpio), date_created: new Date(), user_created: actor,
+				estado: 'aplicada', clave_idempotencia: clave, billetes: limpio ? JSON.stringify(limpio) : null, date_created: new Date(), user_created: actor,
 			};
 			await trx('wge_transferencias').insert(fila);
 			return { ...fila, billetes: limpio };

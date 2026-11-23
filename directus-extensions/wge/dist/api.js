@@ -325,6 +325,15 @@ const TRADUCCIONES = [
 	['Esa tarjeta es de $1 $2', 'That card belongs to $1 $2', 'Cette carte appartient à $1 $2'],
 	['En la cuenta virtual del banco solo hay $1', "The bank's virtual account only has $1", 'Le compte virtuel de la banque ne contient que $1'],
 	['Escribe el monto a cargar', 'Enter the amount to load', 'Saisissez le montant à charger'],
+	['Escribe el monto', 'Enter the amount', 'Saisissez le montant'],
+	['Escribe el dinero que tiene el banco', 'Enter the money the bank has', "Saisissez l'argent dont dispose la banque"],
+	['Escribe el monto que consigna el estudiante', 'Enter the amount the student deposits', "Saisissez le montant que l'élève dépose"],
+	['Escribe el monto que retira el estudiante', 'Enter the amount the student withdraws', "Saisissez le montant que l'élève retire"],
+	['Escribe el monto que entregas al banco', 'Enter the amount you hand over to the bank', 'Saisissez le montant que vous remettez à la banque'],
+	['Escribe el monto que invierte el estudiante', 'Enter the amount the student invests', "Saisissez le montant que l'élève investit"],
+	['Escribe el monto que entra al banco', 'Enter the amount going into the bank', 'Saisissez le montant qui entre à la banque'],
+	['Escribe con cuánto paga el estudiante', 'Enter how much the student pays with', "Saisissez avec combien l'élève paie"],
+	['Escribe cuánto dinero contaste', 'Enter how much money you counted', "Saisissez combien d'argent vous avez compté"],
 	['El monto es demasiado grande', 'The amount is too large', 'Le montant est trop élevé'],
 	['Tu rol no puede hacer esta operación', 'Your role cannot perform this operation', 'Votre rôle ne permet pas cette opération'],
 	['$1 debe ser un entero mayor que 0', '$1 must be a whole number greater than 0', '$1 doit être un entier supérieur à 0'],
@@ -1181,6 +1190,12 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				const { limpio, total } = totalDelConteo(req.body.provision_billetes ?? {});
 				fila.provision_billetes = JSON.stringify(limpio);
 				fila.provision_inicial = total;
+			} else if (nombre === 'paises' && req.body && 'provision_total' in req.body) {
+				// El dinero del banco escrito como un total (sin detalle de billetes)
+				const total = Number(req.body.provision_total);
+				if (!Number.isInteger(total) || total < 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el dinero que tiene el banco');
+				fila.provision_billetes = null;
+				fila.provision_inicial = total;
 			}
 			if (nombre === 'paises' && e.estado !== 'borrador' && 'provision_inicial' in fila && fila.provision_inicial !== actual.provision_inicial) {
 				throw new WgeError(409, 'EDICION_ABIERTA', 'La provisión del banco se define antes de abrir la edición');
@@ -1322,8 +1337,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 	router.post('/admin/paises/:id/provisionar', ruta(async (req, rol) => {
 		soloAdmin(rol);
 		const actor = req.accountability.user;
-		const { limpio, total } = totalDelConteo(req.body?.billetes ?? {});
-		if (total <= 0) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe cuántos billetes entran al banco');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que entra al banco'); })();
 		return db.transaction(async (trx) => {
 			const pais = await trx('wge_paises').where('id', req.params.id).forUpdate().first();
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
@@ -1334,7 +1348,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			await moverSaldo(trx, banco, { tipo: 'provision', monto: total, actor, referenciaTipo: 'provision_adicional', referenciaId: pais.id });
 			const previos = (typeof pais.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais.provision_billetes) ?? {};
 			const suma = { ...previos };
-			for (const [d, n] of Object.entries(limpio)) suma[d] = Number(suma[d] ?? 0) + n;
+			for (const [d, n] of Object.entries(limpio ?? {})) suma[d] = Number(suma[d] ?? 0) + n;
 			await trx('wge_paises').where('id', pais.id).update({
 				provision_billetes: JSON.stringify(suma), provision_inicial: Number(pais.provision_inicial ?? 0) + total,
 			});
@@ -1543,6 +1557,21 @@ function totalDelConteo(conteo) {
 		if (n > 0) { limpio[d] = n; total += d * n; }
 	}
 	return { limpio, total };
+}
+
+/**
+ * Monto de una operación: si llega { monto } se usa tal cual (sin detalle de billetes); si no, el detalle
+ * { billetes: { "1000": 2 } } por compatibilidad con pantallas viejas. Devuelve { limpio (o null), total }, o null si no hay un monto válido.
+ */
+function montoOConteo(body, campo = 'billetes') {
+	const m = body?.monto;
+	if (m !== undefined && m !== null && m !== '') {
+		const total = Number(m);
+		return Number.isInteger(total) && total > 0 ? { limpio: null, total } : null;
+	}
+	if (!body?.[campo]) return null;
+	const r = totalDelConteo(body[campo]);
+	return r.total ? r : null;
 }
 
 /** Suma (o resta) al inventario el detalle de billetes de cada fila: { "50": 2, "1000": 1 }. */
@@ -1933,7 +1962,10 @@ function rutasArqueo(router, { ruta, db }) {
 		const pais = await db('wge_paises').where({ id: req.body.pais_id, edicion_id: edicion.id }).first('id');
 		if (!pais) throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
 		await exigirResponsableBanco(db, { paisId: pais.id, usuarioId: req.accountability.user, rol });
-		const { limpio, total } = totalDelConteo(req.body?.conteo);
+		// El total contado puede llegar como número ({ total_contado }) o, en pantallas viejas, por billetes ({ conteo })
+		const porTotal = req.body?.total_contado !== undefined && req.body?.total_contado !== null && req.body?.total_contado !== '';
+		if (porTotal && (!Number.isInteger(Number(req.body.total_contado)) || Number(req.body.total_contado) < 0)) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe cuánto dinero contaste');
+		const { limpio, total } = porTotal ? { limpio: {}, total: Number(req.body.total_contado) } : totalDelConteo(req.body?.conteo);
 		const saldo = await saldoBanco(edicion.id, pais.id);
 		const fila = {
 			id: crypto.randomUUID(), edicion_id: edicion.id, pais_id: pais.id, conteo: JSON.stringify(limpio),
@@ -2235,8 +2267,7 @@ function rutasWfunds(router, { ruta, db }) {
 			const procesando = await trx('wge_rondas').where({ edicion_id: participante.edicion_id, estado: 'abierta' })
 				.where('cierre_programado', '<=', new Date()).first('id');
 			if (procesando) throw new WgeError(409, 'PROCESANDO', 'Estamos calculando las ganancias de la ronda; intenta en un minuto');
-			// El banco entrega billetes físicos: se exigen para que su inventario cuadre
-			if (valorDe(inv) > 0 && !req.body?.billetes) throw new WgeError(400, 'VALOR_INVALIDO', 'Indica los billetes que le entregas al estudiante');
+			// El banco le entrega al estudiante lo que vale hoy la inversión (el detalle de billetes ya no se pide)
 			return retirarInversion(trx, inv, actor, req.body?.billetes);
 		});
 	}));
@@ -2698,8 +2729,7 @@ function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 
 	/** POST /wge/cuentas/consignar { participante_id, billetes, clave_idempotencia }: billetes del estudiante → su cuenta. */
 	router.post('/cuentas/consignar', ruta(async (req, rol) => {
-		const { limpio, total } = totalDelConteo(req.body?.billetes);
-		if (!total) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que consigna el estudiante');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que consigna el estudiante'); })();
 		const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 		const actor = req.accountability.user;
 		return unaSolaVez('wge_transferencias', clave, async (trx) => {
@@ -2713,7 +2743,7 @@ function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 			await moverSaldo(trx, cuenta, { tipo: 'consignacion', monto: total, actor, referenciaTipo: 'transferencia', referenciaId: id });
 			const fila = {
 				id, edicion_id: p.edicion_id, pais_id: p.pais_id, billetera_origen_id: efectivo.id, billetera_destino_id: cuenta.id,
-				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: JSON.stringify(limpio), date_created: new Date(), user_created: actor,
+				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: limpio ? JSON.stringify(limpio) : null, date_created: new Date(), user_created: actor,
 			};
 			await trx('wge_transferencias').insert(fila);
 			return { ...fila, efectivo: efectivo.saldo, cuenta: cuenta.saldo };
@@ -2722,8 +2752,7 @@ function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 
 	/** POST /wge/cuentas/retirar { participante_id, billetes, clave_idempotencia }: de la cuenta → billetes en mano. */
 	router.post('/cuentas/retirar', ruta(async (req, rol) => {
-		const { limpio, total } = totalDelConteo(req.body?.billetes);
-		if (!total) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que le entregas al estudiante');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que retira el estudiante'); })();
 		const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 		const actor = req.accountability.user;
 		const previo = await participanteActivo(db, exigirTexto(req.body?.participante_id, 'participante_id'));
@@ -2734,7 +2763,7 @@ function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 			const cuenta = await billeteraBloqueada(trx, { edicionId: p.edicion_id, paisId: p.pais_id, tipo: 'cuenta', participanteId: p.id });
 			if (Number(cuenta.saldo) < total) throw new WgeError(409, 'SALDO_INSUFICIENTE', `En su cuenta solo hay ${cuenta.saldo}`);
 			const quedan = await inventarioBanco(trx, p.edicion_id, p.pais_id);
-			for (const [d, n] of Object.entries(limpio)) {
+			for (const [d, n] of Object.entries(limpio ?? {})) {
 				if (n > quedan[d]) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(quedan[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
 			}
 			const efectivo = await billeteraBloqueada(trx, { edicionId: p.edicion_id, paisId: p.pais_id, tipo: 'estudiante', participanteId: p.id });
@@ -2743,7 +2772,7 @@ function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 			await moverSaldo(trx, efectivo, { tipo: 'retiro_cuenta', monto: total, actor, referenciaTipo: 'transferencia', referenciaId: id });
 			const fila = {
 				id, edicion_id: p.edicion_id, pais_id: p.pais_id, billetera_origen_id: cuenta.id, billetera_destino_id: efectivo.id,
-				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: JSON.stringify(limpio), date_created: new Date(), user_created: actor,
+				monto: total, estado: 'aplicada', clave_idempotencia: clave, billetes: limpio ? JSON.stringify(limpio) : null, date_created: new Date(), user_created: actor,
 			};
 			await trx('wge_transferencias').insert(fila);
 			return { ...fila, efectivo: efectivo.saldo, cuenta: cuenta.saldo };
@@ -2850,8 +2879,7 @@ function rutasCaja(router, { ruta, db }) {
 		const edicionId = req.params.id;
 		await permitir(req, rol, edicionId);
 		await exigirResponsableCaja(db, { edicionId, usuarioId: req.accountability.user, rol });
-		const { limpio, total } = totalDelConteo(req.body?.billetes);
-		if (!total) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que entregas al banco');
+		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que entregas al banco'); })();
 		const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 		const actor = req.accountability.user;
 		const previa = await db('wge_transferencias').where('clave_idempotencia', clave).first();
@@ -2861,7 +2889,7 @@ function rutasCaja(router, { ruta, db }) {
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no es de esta edición');
 			const caja = await billeteraBloqueada(trx, { edicionId, paisId: pais.id, tipo: 'caja' });
 			const quedan = await inventarioCaja(trx, edicionId, pais.id);
-			for (const [d, n] of Object.entries(limpio)) {
+			for (const [d, n] of Object.entries(limpio ?? {})) {
 				if (n > (quedan[d] ?? 0)) throw new WgeError(409, 'SIN_BILLETES', `En la caja solo hay ${Math.max(0, quedan[d] ?? 0)} billetes de ${d}`);
 			}
 			const banco = await billeteraBloqueada(trx, { edicionId, paisId: pais.id, tipo: 'banco' });
@@ -2870,7 +2898,7 @@ function rutasCaja(router, { ruta, db }) {
 			await moverSaldo(trx, banco, { tipo: 'transferencia_entrada', monto: total, actor, referenciaTipo: 'transferencia', referenciaId: id });
 			const fila = {
 				id, edicion_id: edicionId, pais_id: pais.id, billetera_origen_id: caja.id, billetera_destino_id: banco.id, monto: total,
-				estado: 'aplicada', clave_idempotencia: clave, billetes: JSON.stringify(limpio), date_created: new Date(), user_created: actor,
+				estado: 'aplicada', clave_idempotencia: clave, billetes: limpio ? JSON.stringify(limpio) : null, date_created: new Date(), user_created: actor,
 			};
 			await trx('wge_transferencias').insert(fila);
 			return { ...fila, billetes: limpio };
@@ -3411,8 +3439,12 @@ const configEndpoint = {
 			exigirRol(rol, ROLES.CAJERO, ROLES.ADMIN_WG);
 			// Con tarjeta débito ({ metodo: "tarjeta", llave }) se descuenta de la cuenta del estudiante: sin billetes ni vuelto
 			const conTarjeta = req.body?.metodo === 'tarjeta';
-			const recibidos = totalDelConteo(conTarjeta ? {} : req.body?.billetes_recibidos ?? {});
-			const vuelto = totalDelConteo(conTarjeta ? {} : req.body?.billetes_vuelto ?? {});
+			// En efectivo basta con { recibido }: cuánto entregó el estudiante; el vuelto lo calcula el servidor.
+			// (Las pantallas viejas mandan el detalle billetes_recibidos / billetes_vuelto.)
+			const porMonto = !conTarjeta && req.body?.recibido !== undefined && req.body?.recibido !== null;
+			if (porMonto && (!Number.isInteger(Number(req.body.recibido)) || Number(req.body.recibido) < 0)) throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe con cuánto paga el estudiante');
+			const recibidos = porMonto ? { limpio: {}, total: Number(req.body.recibido) } : totalDelConteo(conTarjeta ? {} : req.body?.billetes_recibidos ?? {});
+			let vuelto = totalDelConteo(conTarjeta || porMonto ? {} : req.body?.billetes_vuelto ?? {});
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const items = Array.isArray(req.body?.items) ? req.body.items : [];
 			if (!items.length) throw new WgeError(400, 'VALOR_INVALIDO', 'La venta no tiene productos');
@@ -3459,8 +3491,9 @@ const configEndpoint = {
 
 				// Billetes: lo recibido debe alcanzar y el vuelto debe ser exacto, con billetes que la caja tenga (o que acaba de recibir)
 				if (!conTarjeta && recibidos.total < total) throw new WgeError(409, 'PAGO_INSUFICIENTE', `El total es ${total}; el estudiante entregó ${recibidos.total}`);
+				if (porMonto) vuelto = { limpio: {}, total: recibidos.total - total };
 				if (!conTarjeta && recibidos.total - vuelto.total !== total) throw new WgeError(400, 'VUELTO_INCORRECTO', `El vuelto debe ser ${recibidos.total - total} (marcaste ${vuelto.total})`);
-				if (vuelto.total) {
+				if (vuelto.total && !porMonto) {
 					const hay = await inventarioCaja(trx, edicion.id, pais.id);
 					for (const [d, n] of Object.entries(vuelto.limpio)) {
 						const disponibles = (hay[d] ?? 0) + (recibidos.limpio[d] ?? 0);
@@ -3494,6 +3527,7 @@ const configEndpoint = {
 				})));
 				return {
 					...venta, saldo: billetera.saldo, billetes_recibidos: recibidos.limpio, billetes_vuelto: vuelto.limpio,
+					recibido: conTarjeta ? total : recibidos.total, vuelto: conTarjeta ? 0 : vuelto.total,
 					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio })),
 				};
 			});
@@ -3505,8 +3539,7 @@ const configEndpoint = {
 		 */
 		router.post('/inversiones', ruta(async (req, rol) => {
 			exigirRol(rol, ROLES.BANCO, ROLES.ADMIN_WG);
-			const { limpio, total: monto } = totalDelConteo(req.body?.billetes);
-			if (!monto) throw new WgeError(400, 'VALOR_INVALIDO', 'Elige los billetes que entrega el estudiante');
+			const { limpio, total: monto } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que invierte el estudiante'); })();
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const actor = req.accountability.user;
 
@@ -3530,7 +3563,7 @@ const configEndpoint = {
 				await moverSaldo(trx, estudiante, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				await moverSaldo(trx, banco, { tipo: 'inversion', monto, actor, referenciaTipo: 'inversion', referenciaId: id });
 				const fila = {
-					id, participante_id: participante.id, fondo_id: fondo.id, ronda_id: ronda.id, monto, billetes: JSON.stringify(limpio),
+					id, participante_id: participante.id, fondo_id: fondo.id, ronda_id: ronda.id, monto, billetes: limpio ? JSON.stringify(limpio) : null,
 					estado: 'abierta', clave_idempotencia: clave, date_created: new Date(), user_created: actor,
 				};
 				await trx('wge_inversiones').insert(fila);

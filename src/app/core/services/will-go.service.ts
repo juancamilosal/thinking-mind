@@ -91,6 +91,8 @@ export interface Pais {
   saldo_banco?: number; en_circulacion?: number;
   /** Saldo de la cuenta virtual del banco (sin billetes), para transferir a las cuentas de los docentes. */
   saldo_virtual?: number;
+  /** Al guardar: el dinero del banco escrito como un total (sin detalle de billetes). */
+  provision_total?: number;
 }
 
 export interface Producto {
@@ -467,8 +469,8 @@ export class WillGoService {
     return this.http.post<{ data: any }>(`${this.api}/admin/paises/${paisId}/cargar-virtual`, { monto }).pipe(this.enZona(), map((r) => r.data));
   }
 
-  provisionarPais(paisId: string, billetes: Record<string, number>): Observable<{ agregado: number; saldo_banco: number; provision_total: number }> {
-    return this.http.post<{ data: any }>(`${this.api}/admin/paises/${paisId}/provisionar`, { billetes }).pipe(this.enZona(), map((r) => r.data));
+  provisionarPais(paisId: string, billetes: Record<string, number> | number): Observable<{ agregado: number; saldo_banco: number; provision_total: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/admin/paises/${paisId}/provisionar`, WillGoService.dinero(billetes)).pipe(this.enZona(), map((r) => r.data));
   }
 
   // ---------- Arqueo del banco ----------
@@ -477,9 +479,9 @@ export class WillGoService {
     return this.http.get<{ data: DatosReparto }>(`${this.api}/ediciones/${edicionId}/reparto`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  entregarADocente(paisId: string, docenteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
+  entregarADocente(paisId: string, docenteId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
     return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
-      tipo: 'banco_docente', pais_id: paisId, docente_id: docenteId, billetes, clave_idempotencia: clave,
+      tipo: 'banco_docente', pais_id: paisId, docente_id: docenteId, ...WillGoService.dinero(billetes), clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -511,22 +513,22 @@ export class WillGoService {
   }
 
   /** El estudiante entrega billetes al banco y le suben a su cuenta. */
-  consignar(participanteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; efectivo: number; cuenta: number }> {
-    return this.http.post<{ data: any }>(`${this.api}/cuentas/consignar`, { participante_id: participanteId, billetes, clave_idempotencia: clave }).pipe(this.enZona(), map((r) => r.data));
+  consignar(participanteId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number; efectivo: number; cuenta: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/cuentas/consignar`, { participante_id: participanteId, ...WillGoService.dinero(billetes), clave_idempotencia: clave }).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** El estudiante saca dinero de su cuenta y recibe billetes del banco. */
-  retirarDeCuenta(participanteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; efectivo: number; cuenta: number }> {
-    return this.http.post<{ data: any }>(`${this.api}/cuentas/retirar`, { participante_id: participanteId, billetes, clave_idempotencia: clave }).pipe(this.enZona(), map((r) => r.data));
+  retirarDeCuenta(participanteId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number; efectivo: number; cuenta: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/cuentas/retirar`, { participante_id: participanteId, ...WillGoService.dinero(billetes), clave_idempotencia: clave }).pipe(this.enZona(), map((r) => r.data));
   }
 
   panelDocente(edicionId: string): Observable<DatosDocente> {
     return this.http.get<{ data: DatosDocente }>(`${this.api}/ediciones/${edicionId}/docente`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  entregarAEstudiante(participanteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
+  entregarAEstudiante(participanteId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
     return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
-      tipo: 'docente_estudiante', participante_id: participanteId, billetes, clave_idempotencia: clave,
+      tipo: 'docente_estudiante', participante_id: participanteId, ...WillGoService.dinero(billetes), clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -544,8 +546,8 @@ export class WillGoService {
   }
 
   /** El estudiante saca su dinero de una empresa: recibe lo que vale hoy su inversión. */
-  retirarInversion(inversionId: string, billetes: Record<string, number>): Observable<{ monto_pagado: number }> {
-    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/retirar`, { billetes }).pipe(this.enZona(), map((r) => r.data));
+  retirarInversion(inversionId: string, billetes?: Record<string, number>): Observable<{ monto_pagado: number }> {
+    return this.http.post<{ data: { monto_pagado: number } }>(`${this.api}/inversiones/${inversionId}/retirar`, billetes ? { billetes } : {}).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** Cierra la ronda ya; con `continuar` se abre la siguiente con la misma duración. */
@@ -554,9 +556,9 @@ export class WillGoService {
       .pipe(this.enZona(), map((r) => r.data));
   }
 
-  invertir(participanteId: string, fondoId: string, rondaId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number }> {
+  invertir(participanteId: string, fondoId: string, rondaId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number }> {
     return this.http.post<{ data: { monto: number } }>(`${this.api}/inversiones`, {
-      participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, billetes, clave_idempotencia: clave,
+      participante_id: participanteId, fondo_id: fondoId, ronda_id: rondaId, ...WillGoService.dinero(billetes), clave_idempotencia: clave,
     }).pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -587,14 +589,14 @@ export class WillGoService {
   }
 
   /** Vende en la caja: en efectivo (billetes y vuelto) o con tarjeta débito ({ metodo: 'tarjeta', llave }). */
-  vender(datos: { participante_id: string; items: { producto_id: string; cantidad: number }[]; billetes_recibidos?: Record<string, number>; billetes_vuelto?: Record<string, number>; clave_idempotencia: string; metodo?: 'efectivo' | 'tarjeta'; llave?: string }):
-    Observable<{ numero_recibo: string; total_billetes: number; saldo: number; items: { nombre: string; cantidad: number; precio_billetes: number }[] }> {
+  vender(datos: { participante_id: string; items: { producto_id: string; cantidad: number }[]; billetes_recibidos?: Record<string, number>; billetes_vuelto?: Record<string, number>; recibido?: number; clave_idempotencia: string; metodo?: 'efectivo' | 'tarjeta'; llave?: string }):
+    Observable<{ numero_recibo: string; total_billetes: number; saldo: number; recibido?: number; vuelto?: number; items: { nombre: string; cantidad: number; precio_billetes: number }[] }> {
     return this.http.post<{ data: any }>(`${this.api}/ventas`, datos).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** La caja entrega billetes al banco de un país. */
-  entregarCajaAlBanco(edicionId: string, paisId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number }> {
-    return this.http.post<{ data: { monto: number } }>(`${this.api}/ediciones/${edicionId}/caja/entregar`, { pais_id: paisId, billetes, clave_idempotencia: clave })
+  entregarCajaAlBanco(edicionId: string, paisId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number }> {
+    return this.http.post<{ data: { monto: number } }>(`${this.api}/ediciones/${edicionId}/caja/entregar`, { pais_id: paisId, ...WillGoService.dinero(billetes), clave_idempotencia: clave })
       .pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -606,8 +608,8 @@ export class WillGoService {
     return this.http.get<{ data: DatosArqueo }>(`${this.api}/ediciones/${edicionId}/arqueo`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  guardarArqueo(edicionId: string, paisId: string, conteo: Record<string, number>, observaciones: string): Observable<Arqueo> {
-    return this.http.post<{ data: Arqueo }>(`${this.api}/ediciones/${edicionId}/arqueos`, { pais_id: paisId, conteo, observaciones })
+  guardarArqueo(edicionId: string, paisId: string, conteo: Record<string, number> | number, observaciones: string): Observable<Arqueo> {
+    return this.http.post<{ data: Arqueo }>(`${this.api}/ediciones/${edicionId}/arqueos`, { pais_id: paisId, ...(typeof conteo === 'number' ? { total_contado: conteo } : { conteo }), observaciones })
       .pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -631,6 +633,11 @@ export class WillGoService {
   }
 
   /** Mensaje en español que devuelve la extensión, o uno genérico. */
+  /** Dinero de una operación: un número va como { monto }; un detalle de billetes como { billetes } (compatibilidad). */
+  static dinero(v: Record<string, number> | number): { monto: number } | { billetes: Record<string, number> } {
+    return typeof v === 'number' ? { monto: v } : { billetes: v };
+  }
+
   static mensajeDeError(error: unknown, porDefecto?: string): string {
     const e = error as HttpErrorResponse;
     return e?.error?.errors?.[0]?.message || (e?.status === 0
