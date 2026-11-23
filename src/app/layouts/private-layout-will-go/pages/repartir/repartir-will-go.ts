@@ -71,10 +71,10 @@ import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.direct
           @if (!docentesFiltrados(pais).length) {
             <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-600">{{ 'wg.montobanco.sinResultados' | translate }}</div>
           }
-          <ul class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden" [class.hidden]="!docentesFiltrados(pais).length">
+          <ul class="space-y-3" [class.hidden]="!docentesFiltrados(pais).length">
             @for (d of docentesFiltrados(pais); track d.id) {
               <!-- Celular: nombre y saldos a todo lo ancho, y el botón debajo. Desde tableta: el botón a la derecha -->
-              <li class="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <li class="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
                 <div class="flex items-start gap-3 min-w-0 flex-1">
                   <div class="w-11 h-11 shrink-0 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center">{{ (d.nombre[0] || '') + (d.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">

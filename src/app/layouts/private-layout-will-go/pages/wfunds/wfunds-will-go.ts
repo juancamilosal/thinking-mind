@@ -136,10 +136,10 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           } @else {
             <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.banco.wfunds.buscarEstudiantePh' | translate" [attr.aria-label]="'wg.banco.wfunds.buscarEstudiante' | translate"
                    class="mt-4 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-            <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+            <ul class="mt-3 space-y-3">
               @for (e of filtrados; track e.id) {
                 <!-- Celular: nombre y saldos a todo lo ancho y el botón debajo. Desde tableta: el botón a la derecha -->
-                <li class="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <li class="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
                   <div class="flex items-start gap-3 min-w-0 flex-1">
                   <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">
@@ -155,7 +155,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
                           class="w-full sm:w-auto shrink-0 px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.banco.wfunds.invertir' | translate }}</button>
                 </li>
               }
-              @if (!filtrados.length) { <li class="px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.banco.wfunds.nadieCoincide' | translate: { q: busqueda }) : ('wg.banco.wfunds.sinEstudiantes' | translate: { pais: pais.nombre }) }}</li> }
+              @if (!filtrados.length) { <li class="bg-white rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.banco.wfunds.nadieCoincide' | translate: { q: busqueda }) : ('wg.banco.wfunds.sinEstudiantes' | translate: { pais: pais.nombre }) }}</li> }
             </ul>
 
             @if (pais.inversiones.length) {
