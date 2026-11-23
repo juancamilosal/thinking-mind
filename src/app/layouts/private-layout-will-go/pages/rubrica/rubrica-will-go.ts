@@ -175,17 +175,18 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
             </div>
             <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
           </div>
-          <div class="flex-1 overflow-y-auto px-5 pb-3 space-y-4">
-            @for (c of criterios; track c.id) {
-              <fieldset>
-                <legend class="flex items-center gap-2 mb-2">
+          <div class="flex-1 overflow-y-auto px-5 pb-3">
+            @for (c of criterios; track c.id; let primero = $first) {
+              <!-- Cada criterio separado del anterior por una línea y más espacio -->
+              <fieldset class="pb-5" [class]="primero ? '' : 'pt-5 border-t border-gray-200'">
+                <legend class="flex items-center gap-2 mb-3 float-left w-full">
                   <span class="w-8 h-8 rounded-lg flex items-center justify-center" [class]="valores[c.id] !== null ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'" aria-hidden="true">
                     <svg width="18" height="18" style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="c.icono"/></svg>
                   </span>
                   <span class="font-bold text-gray-800">{{ c.titulo | translate }}</span>
                   @if (valores[c.id] !== null) { <span class="ml-auto text-sm font-bold text-emerald-700">{{ 'wg.operacion.rubrica.nDe3' | translate: { n: valores[c.id] } }}</span> }
                 </legend>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" [attr.aria-label]="c.titulo | translate">
+                <div class="clear-both grid grid-cols-2 sm:grid-cols-4 gap-2.5" role="radiogroup" [attr.aria-label]="c.titulo | translate">
                   @for (texto of c.niveles; track $index; let n = $index) {
                     <button type="button" role="radio" [attr.aria-checked]="valores[c.id] === n" (click)="valores[c.id] = n"
                             class="text-left rounded-xl border-2 px-3 py-2 transition min-h-[64px]"
@@ -197,7 +198,7 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
                 </div>
               </fieldset>
             }
-            <div>
+            <div class="pt-5 border-t border-gray-200">
               <label for="r-evidencia" class="block text-sm font-semibold text-gray-700">{{ 'wg.operacion.rubrica.evidencia' | translate }} <span class="font-normal text-gray-400">{{ 'wg.operacion.rubrica.opcional' | translate }}</span></label>
               <input id="r-evidencia" [(ngModel)]="evidencia" maxlength="255" [placeholder]="'wg.operacion.rubrica.placeholderEvidencia' | translate: { idioma: ((idioma === 'frances' ? 'wg.operacion.rubrica.claseFrances' : 'wg.operacion.rubrica.claseIngles') | translate) }"
                      class="mt-1 w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
