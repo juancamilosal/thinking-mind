@@ -876,6 +876,15 @@
         "avisoVotaste": "C'est fait ! Vous avez voté pour {{fondo}} dans la {{ronda}}."
       }
     },
+    "montofondos": {
+      "cuantoInvierte": "Combien investit-il ?",
+      "montoInvertir": "Montant à investir",
+      "escribeMonto": "Saisis le montant",
+      "disponible": "Il a {{n}} en espèces",
+      "excede": "Il ne peut pas investir plus que ce qu'il a ({{n}}).",
+      "recibe": "Reçoit",
+      "entregaEfectivo": "Remets ce montant en espèces à l'élève."
+    },
     "nucleo": {
       "menu": {
         "inicio": "Accueil",

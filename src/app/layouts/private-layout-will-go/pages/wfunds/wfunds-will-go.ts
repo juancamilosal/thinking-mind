@@ -3,9 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FechaWillGoPipe } from '../../fecha.pipe';
 import { DatosWfunds, FondoWfunds, InversionWfunds, PaisWfunds, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
-import { formatearNumero } from '../../numero-miles.directive';
+import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
-import { SelectorBilletesComponent } from '../../selector-billetes.component';
 import { TarjetaFondoComponent } from '../../tarjeta-fondo.component';
 import { GraficaRendimientoComponent } from '../../grafica-rendimiento.component';
 import { ProcesandoRondaComponent } from '../../procesando-ronda.component';
@@ -24,7 +23,7 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
 @Component({
   selector: 'app-wfunds-will-go',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, FechaWillGoPipe, SelectorBilletesComponent, TarjetaFondoComponent, GraficaRendimientoComponent, ProcesandoRondaComponent, SelectorEdicionComponent],
+  imports: [FormsModule, TranslatePipe, FechaWillGoPipe, NumeroMilesDirective, TarjetaFondoComponent, GraficaRendimientoComponent, ProcesandoRondaComponent, SelectorEdicionComponent],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -255,13 +254,13 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
       }
     </div>
 
-    <!-- Invertir: elegir empresa y billetes -->
+    <!-- Invertir: elegir empresa y escribir el monto (los billetes físicos existen, pero solo se registra el valor) -->
     @if (estudiante && pais && datos) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarPanel()">
         <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-inversion">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h2 id="titulo-inversion" class="text-lg font-bold text-gray-800">{{ (empresa ? 'wg.banco.wfunds.billetesQueEntrega' : 'wg.banco.wfunds.enQueEmpresa') | translate }}</h2>
+              <h2 id="titulo-inversion" class="text-lg font-bold text-gray-800">{{ (empresa ? 'wg.montofondos.cuantoInvierte' : 'wg.banco.wfunds.enQueEmpresa') | translate }}</h2>
               <p class="text-sm text-gray-500 truncate">{{ estudiante.nombre }} {{ estudiante.apellido }} · {{ 'wg.banco.wfunds.tieneMonto' | translate: { n: miles(estudiante.saldo) } }}</p>
             </div>
             <button type="button" (click)="cerrarPanel()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.banco.cerrar' | translate">✕</button>
@@ -285,7 +284,12 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
                 </div>
                 <button type="button" (click)="empresa = null" class="text-sm font-semibold text-orange-600 hover:underline">{{ 'wg.banco.wfunds.cambiar' | translate }}</button>
               </div>
-              <wg-selector-billetes [pais]="pais" [denominaciones]="datos.denominaciones" [elegidos]="elegidos" [topeTotal]="estudiante.saldo" />
+              <label for="monto-invertir" class="block text-sm font-semibold text-gray-700">{{ 'wg.montofondos.montoInvertir' | translate }}</label>
+              <input id="monto-invertir" wgNumero [(ngModel)]="monto" placeholder="0" inputmode="numeric"
+                     class="mt-1.5 w-full px-4 py-3 text-2xl font-extrabold bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+              <p class="mt-1.5 text-xs" [class]="excede ? 'text-red-600 font-semibold' : 'text-gray-500'">
+                {{ excede ? ('wg.montofondos.excede' | translate: { n: miles(estudiante.saldo) }) : ('wg.montofondos.disponible' | translate: { n: miles(estudiante.saldo) }) }}
+              </p>
             }
           </div>
           @if (empresa) {
@@ -295,9 +299,9 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
                 <span class="text-sm text-gray-500">{{ 'wg.banco.wfunds.invierteEn' | translate: { empresa: empresa.nombre } }}</span>
                 <span class="text-2xl font-extrabold text-gray-800 break-all">{{ miles(total) }} <span class="text-sm font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></span>
               </div>
-              <button type="button" (click)="invertir()" [disabled]="!total || enviando || total > estudiante.saldo"
+              <button type="button" (click)="invertir()" [disabled]="!total || enviando || excede"
                       class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">
-                {{ enviando ? ('wg.banco.guardando' | translate) : (total ? ('wg.banco.wfunds.invertirMonto' | translate: { monto: miles(total) }) : ('wg.banco.eligeBilletes' | translate)) }}
+                {{ enviando ? ('wg.banco.guardando' | translate) : (total ? ('wg.banco.wfunds.invertirMonto' | translate: { monto: miles(total) }) : ('wg.montofondos.escribeMonto' | translate)) }}
               </button>
             </div>
           }
@@ -312,23 +316,16 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           <h2 id="titulo-retiro" class="text-lg font-bold text-gray-800">{{ 'wg.banco.wfunds.retirarTitulo' | translate: { nombre: aRetirar.nombre } }}</h2>
           <p class="text-sm text-gray-600 mt-2"
              [innerHTML]="'wg.banco.wfunds.retirarTexto' | translate: { empresa: fondo(aRetirar.fondo_id)?.nombre ?? '', valor: miles(aRetirar.valor_actual), monto: miles(aRetirar.monto) }"></p>
-          @if (pais && valorRetiro > 0) {
-            <div class="mt-4 flex items-center justify-between gap-2">
-              <p class="text-sm font-semibold text-gray-800">{{ 'wg.banco.wfunds.billetesQueEntregas' | translate }}</p>
-              <button type="button" (click)="sugerirRetiro()" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50">{{ 'wg.banco.wfunds.sugerir' | translate }}</button>
-            </div>
-            <wg-selector-billetes class="block mt-2" [pais]="pais" [denominaciones]="datos?.denominaciones ?? []" [elegidos]="pagoRetiro" [topes]="pais.inventario" [textoTope]="'wg.banco.wfunds.enBanco' | translate" />
-            <p class="mt-3 rounded-xl px-4 py-2 text-sm font-semibold"
-               [class]="totalRetiro === valorRetiro ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'">
-              {{ 'wg.banco.wfunds.llevas' | translate: { n: miles(totalRetiro), total: miles(valorRetiro) } }}
-              @if (totalRetiro > valorRetiro) { · {{ 'wg.banco.wfunds.tePasaste' | translate: { n: miles(totalRetiro - valorRetiro) } }} }
-              @else if (totalRetiro < valorRetiro) { · {{ 'wg.banco.wfunds.faltan' | translate: { n: miles(valorRetiro - totalRetiro) } }} }
-            </p>
-          }
+          <!-- Sin elegir billetes: el estudiante recibe lo que vale hoy la inversión -->
+          <div class="mt-4 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center justify-between gap-3">
+            <span class="text-sm font-semibold text-emerald-800">{{ 'wg.montofondos.recibe' | translate }}</span>
+            <span class="text-2xl font-extrabold text-emerald-800 break-all">{{ miles(valorRetiro) }} @if (pais?.codigo_moneda) { <span class="text-sm font-semibold">{{ pais?.codigo_moneda }}</span> }</span>
+          </div>
+          <p class="mt-2 text-xs text-gray-500">{{ 'wg.montofondos.entregaEfectivo' | translate }}</p>
           @if (errorPanel) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorPanel }}</p> }
           <div class="mt-5 flex gap-2">
             <button type="button" (click)="aRetirar = null" class="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">{{ 'wg.banco.cancelar' | translate }}</button>
-            <button type="button" (click)="retirar()" [disabled]="enviando || totalRetiro !== valorRetiro" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ enviando ? ('wg.banco.wfunds.retirando' | translate) : ('wg.banco.wfunds.retirarMonto' | translate: { monto: miles(aRetirar.valor_actual) }) }}</button>
+            <button type="button" (click)="retirar()" [disabled]="enviando" class="flex-1 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">{{ enviando ? ('wg.banco.wfunds.retirando' | translate) : ('wg.banco.wfunds.retirarMonto' | translate: { monto: miles(aRetirar.valor_actual) }) }}</button>
           </div>
         </div>
       </div>
@@ -377,7 +374,8 @@ export class WfundsWillGo implements OnInit, OnDestroy {
 
   estudiante: Estudiante | null = null;
   empresa: FondoWfunds | null = null;
-  elegidos: Record<number, number | null> = {};
+  /** Monto que invierte el estudiante (un solo valor, sin billetes). */
+  monto: number | null = null;
   clave = '';
   enviando = false;
   errorPanel = '';
@@ -470,7 +468,9 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   cronologicas: DatosWfunds['rondas'] = [];
   /** Lo que valen hoy todas las inversiones vigentes del país. */
   get totalInvertido(): number { return (this.pais?.vigentes ?? []).reduce((t, i) => t + Number(i.valor_actual ?? i.monto), 0); }
-  get total(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.elegidos[d]) || 0), 0); }
+  get total(): number { return Math.max(0, Number(this.monto) || 0); }
+  /** El monto supera el efectivo que tiene el estudiante. */
+  get excede(): boolean { return !!this.estudiante && this.total > Number(this.estudiante.saldo); }
 
   invertidoPor(e: Estudiante): number {
     return (this.pais?.inversiones ?? []).filter((i) => i.participante_id === e.id).reduce((t, i) => t + Number(i.monto), 0);
@@ -536,7 +536,7 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   abrirInversion(e: Estudiante): void {
     this.estudiante = e;
     this.empresa = null;
-    this.elegidos = {};
+    this.monto = null;
     this.errorPanel = '';
     this.clave = crypto.randomUUID();
   }
@@ -551,47 +551,27 @@ export class WfundsWillGo implements OnInit, OnDestroy {
 
   private _aRetirar: InversionWfunds | null = null;
   get aRetirar(): InversionWfunds | null { return this._aRetirar; }
-  set aRetirar(i: InversionWfunds | null) { this._aRetirar = i; this.pagoRetiro = {}; this.errorPanel = ''; if (i) this.sugerirRetiro(); }
-  /** Billetes que el banco le entrega al estudiante al retirar. */
-  pagoRetiro: Record<number, number | null> = {};
+  set aRetirar(i: InversionWfunds | null) { this._aRetirar = i; this.errorPanel = ''; }
+  /** Lo que recibe el estudiante: lo que vale hoy la inversión. */
   get valorRetiro(): number { return Number(this.aRetirar?.valor_actual ?? this.aRetirar?.monto ?? 0); }
-  get totalRetiro(): number { return (this.datos?.denominaciones ?? []).reduce((t, d) => t + d * (Number(this.pagoRetiro[d]) || 0), 0); }
-  /** Propone los billetes más grandes que haya en el banco hasta completar el valor exacto. */
-  sugerirRetiro(): void {
-    let falta = this.valorRetiro;
-    const pago: Record<number, number | null> = {};
-    for (const d of [...(this.datos?.denominaciones ?? [])].sort((a, b) => b - a)) {
-      const n = Math.min(Math.floor(falta / d), Number(this.pais?.inventario?.[d] ?? 0));
-      if (n > 0) { pago[d] = n; falta -= n * d; }
-    }
-    this.pagoRetiro = pago;
-  }
   retirar(): void {
     const i = this.aRetirar;
     if (!i || this.enviando) return;
     this.enviando = true;
     this.errorPanel = '';
-    const billetes: Record<string, number> = {};
-    for (const d of this.datos!.denominaciones) { const n = Number(this.pagoRetiro[d]) || 0; if (n) billetes[d] = n; }
-    this.willGo.retirarInversion(i.id, billetes).subscribe({
+    this.willGo.retirarInversion(i.id).subscribe({
       next: (r) => { this.enviando = false; this.aRetirar = null; this.mostrarAviso(this.t.instant('wg.banco.wfunds.avisoRetiro', { nombre: i.nombre, monto: this.miles(r.monto_pagado), empresa: this.fondo(i.fondo_id)?.nombre })); this.cargar(); },
       error: (e) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(e); },
     });
   }
   abs(v: number): number { return Math.abs(v); }
 
-  private billetesElegidos(): Record<string, number> {
-    const b: Record<string, number> = {};
-    for (const d of this.datos!.denominaciones) { const n = Number(this.elegidos[d]) || 0; if (n) b[d] = n; }
-    return b;
-  }
-
   invertir(): void {
     const e = this.estudiante, f = this.empresa, r = this.datos?.ronda;
-    if (!e || !f || !r || !this.total) return;
+    if (!e || !f || !r || !this.total || this.excede) return;
     this.enviando = true;
     this.errorPanel = '';
-    this.willGo.invertir(e.id, f.id, r.id, this.billetesElegidos(), this.clave).subscribe({
+    this.willGo.invertir(e.id, f.id, r.id, this.total, this.clave).subscribe({
       next: (x) => { this.enviando = false; this.estudiante = null; this.mostrarAviso(this.t.instant('wg.banco.wfunds.avisoInversion', { nombre: e.nombre, monto: this.miles(x.monto), empresa: f.nombre })); this.cargar(); },
       error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },
     });

@@ -876,6 +876,15 @@
         "avisoVotaste": "¡Listo! Votaste por {{fondo}} en la {{ronda}}."
       }
     },
+    "montofondos": {
+      "cuantoInvierte": "¿Cuánto invierte?",
+      "montoInvertir": "Monto a invertir",
+      "escribeMonto": "Escribe el monto",
+      "disponible": "Tiene {{n}} en efectivo",
+      "excede": "No puede invertir más de lo que tiene ({{n}}).",
+      "recibe": "Recibe",
+      "entregaEfectivo": "Entrégale este valor en efectivo al estudiante."
+    },
     "nucleo": {
       "menu": {
         "inicio": "Inicio",

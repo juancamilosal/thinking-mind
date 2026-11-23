@@ -876,6 +876,15 @@
         "avisoVotaste": "Done! You voted for {{fondo}} in {{ronda}}."
       }
     },
+    "montofondos": {
+      "cuantoInvierte": "How much do they invest?",
+      "montoInvertir": "Amount to invest",
+      "escribeMonto": "Enter the amount",
+      "disponible": "They have {{n}} in cash",
+      "excede": "They can't invest more than they have ({{n}}).",
+      "recibe": "Receives",
+      "entregaEfectivo": "Hand this amount to the student in cash."
+    },
     "nucleo": {
       "menu": {
         "inicio": "Home",
