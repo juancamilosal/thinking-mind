@@ -191,9 +191,9 @@ export async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 		} else if (f.tipo === 'carga_virtual') {
 			titulo = 'Saldo virtual cargado al banco';
 		} else if (f.referencia_tipo === 'provision_adicional') {
-			titulo = 'Billetes agregados al banco';
+			titulo = 'Dinero agregado al banco';
 		} else if (f.tipo === 'provision' || f.tipo === 'reverso') {
-			titulo = entra ? 'Billetes asignados al banco' : 'Ajuste de billetes asignados';
+			titulo = entra ? 'Dinero asignado al banco' : 'Ajuste del dinero del banco';
 		}
 		return { id: f.id, tipo: f.tipo, medio: virtual.has(f.billetera_id) ? 'virtual' : 'efectivo', entra, titulo, monto: Math.abs(Number(f.monto)), saldo_despues: Number(f.saldo_despues), fecha: f.date_created, quien: f.quien || '', billetes };
 	});
@@ -245,11 +245,11 @@ export async function movimientosEstudiante(db, participanteId, paisId, limite =
 			titulo = entra ? `Retiró su inversión de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
 			billetes = leerBilletes(entra ? i?.billetes_pago : i?.billetes);
 		} else if (f.referencia_tipo === 'bienvenida' || f.tipo === 'bienvenida') {
-			titulo = 'Billetes de bienvenida';
+			titulo = 'Dinero de bienvenida';
 		} else if (f.referencia_tipo === 'venta' || f.tipo === 'compra') {
 			titulo = 'Compra en GO•STORE';
 		} else if (f.referencia_tipo === 'retiro') {
-			titulo = m === 'cuenta' ? 'Su cuenta volvió al banco' : 'Devolvió sus billetes al banco';
+			titulo = m === 'cuenta' ? 'Su cuenta volvió al banco' : 'Devolvió su dinero al banco';
 		}
 		if (f.referencia_tipo === 'transferencia' && !billetes) billetes = leerBilletes(transferencias.get(f.referencia_id)?.billetes);
 		return { id: f.id, entra, titulo, monto: Math.abs(Number(f.monto)), fecha: f.date_created, billetes, medio: m };

@@ -90,8 +90,8 @@ test('mensajes: casos con valores en inglés y francés', () => {
 	assert.equal(traducirMensaje('El vuelto debe ser 1.500 (marcaste 2.000)', 'fr'), 'La monnaie rendue doit être de 1.500 (vous avez indiqué 2.000)');
 	assert.equal(traducirMensaje('Máximo 2 de Gorra W-Funds por estudiante', 'en'), 'Maximum 2 of Gorra W-Funds per student');
 	assert.equal(traducirMensaje('El banco de Japón lo maneja Ana Pérez', 'en'), "Japón's bank is managed by Ana Pérez");
-	assert.equal(traducirMensaje('Eres docente de Francia; no maneja billetes de este país', 'fr'), 'Vous êtes enseignant pour Francia ; vous ne pouvez pas gérer les billets de ce pays');
-	assert.equal(traducirMensaje('El docente es docente de Francia; no maneja billetes de este país', 'en'), 'The teacher is assigned to Francia; they cannot handle bills from this country');
+	assert.equal(traducirMensaje('Eres docente de Francia; no maneja dinero de este país', 'fr'), "Vous êtes enseignant pour Francia ; vous ne pouvez pas gérer l'argent de ce pays");
+	assert.equal(traducirMensaje('El docente es docente de Francia; no maneja dinero de este país', 'en'), 'The teacher is assigned to Francia; they cannot handle money from this country');
 	assert.equal(traducirMensaje('Tu usuario no hace parte del equipo de esta edición', 'en'), "You are not part of this edition's team");
 	assert.equal(traducirMensaje('La ronda debe durar 10, 15, 20 minutos', 'en'), 'The round must last 10, 15, 20 minutes');
 	assert.equal(traducirMensaje('Falta clave_idempotencia', 'fr'), 'Il manque clave_idempotencia');

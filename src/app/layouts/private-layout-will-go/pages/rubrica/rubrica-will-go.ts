@@ -293,7 +293,7 @@ export class RubricaWillGo implements OnInit {
 
   irAEntregar(): void {
     if (!this.entregarA) return;
-    this.router.navigate(['/private-will-go/entregar'], { queryParams: { estudiante: this.entregarA.id, billetes: this.entregarA.billetes } });
+    this.router.navigate(['/private-will-go/entregar'], { queryParams: { estudiante: this.entregarA.id, monto: this.entregarA.billetes } });
   }
 
   alternarAsistencia(e: EstudianteRubrica): void {

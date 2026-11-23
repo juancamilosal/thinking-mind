@@ -84,7 +84,7 @@ async function billeteraPorIdBloqueada(trx, id) {
  */
 async function moverSaldo(trx, billetera, { tipo, monto, actor, referenciaTipo, referenciaId, clave }) {
 	const saldo = Number(billetera.saldo) + monto;
-	if (saldo < 0) throw new WgeError(409, 'SALDO_INSUFICIENTE', `Saldo insuficiente: hay ${billetera.saldo} billetes`);
+	if (saldo < 0) throw new WgeError(409, 'SALDO_INSUFICIENTE', `Saldo insuficiente: hay ${billetera.saldo}`);
 	const consecutivo = Number(billetera.consecutivo) + 1;
 	const id = crypto.randomUUID();
 	await trx('wge_movimientos').insert({
@@ -272,8 +272,8 @@ async function exigirEquipo(db, { edicionId, usuarioId, rol, paisId = null, quie
 	if (paisId && fila.pais_id && fila.pais_id !== paisId) {
 		const pais = await db('wge_paises').where('id', fila.pais_id).first('nombre');
 		const nombrePais = pais?.nombre ?? 'otro país';
-		if (quien === 'Tu usuario') throw new WgeError(409, 'OTRO_PAIS', `Eres docente de ${nombrePais}; no maneja billetes de este país`);
-		throw new WgeError(409, 'OTRO_PAIS', `${quien} es docente de ${nombrePais}; no maneja billetes de este país`);
+		if (quien === 'Tu usuario') throw new WgeError(409, 'OTRO_PAIS', `Eres docente de ${nombrePais}; no maneja dinero de este país`);
+		throw new WgeError(409, 'OTRO_PAIS', `${quien} es docente de ${nombrePais}; no maneja dinero de este país`);
 	}
 	return fila;
 }
@@ -340,14 +340,14 @@ const TRADUCCIONES = [
 	['Falta $1', 'Missing $1', 'Il manque $1'],
 	['Falta el dueño de la billetera', 'The wallet owner is missing', 'Le propriétaire du portefeuille est manquant'],
 	['La billetera no existe', 'The wallet does not exist', "Le portefeuille n'existe pas"],
-	['Saldo insuficiente: hay $1 billetes', 'Insufficient balance: there are $1 bills', 'Solde insuffisant : il y a $1 billets'],
+	['Saldo insuficiente: hay $1', 'Insufficient balance: there is $1', 'Solde insuffisant : il y a $1'],
 	['$1 no hace parte del equipo de esta edición', "$1 is not part of this edition's team", "$1 ne fait pas partie de l'équipe de cette édition"],
 	['Tu usuario no hace parte del equipo de esta edición', "You are not part of this edition's team", "Vous ne faites pas partie de l'équipe de cette édition"],
 	['El docente no hace parte del equipo de esta edición', "The teacher is not part of this edition's team", "L'enseignant ne fait pas partie de l'équipe de cette édition"],
-	['Eres docente de $1; no maneja billetes de este país', 'You are a teacher for $1; you cannot handle bills from this country', 'Vous êtes enseignant pour $1 ; vous ne pouvez pas gérer les billets de ce pays'],
-	['Eres docente de otro país; no maneja billetes de este país', 'You are a teacher for another country; you cannot handle bills from this country', 'Vous êtes enseignant pour un autre pays ; vous ne pouvez pas gérer les billets de ce pays'],
-	['$1 es docente de $2; no maneja billetes de este país', '$1 is a teacher for $2; they cannot handle bills from this country', '$1 est enseignant pour $2 ; il ne peut pas gérer les billets de ce pays'],
-	['El docente es docente de $1; no maneja billetes de este país', 'The teacher is assigned to $1; they cannot handle bills from this country', "L'enseignant est affecté à $1 ; il ne peut pas gérer les billets de ce pays"],
+	['Eres docente de $1; no maneja dinero de este país', 'You are a teacher for $1; you cannot handle money from this country', "Vous êtes enseignant pour $1 ; vous ne pouvez pas gérer l'argent de ce pays"],
+	['Eres docente de otro país; no maneja dinero de este país', 'You are a teacher for another country; you cannot handle money from this country', "Vous êtes enseignant pour un autre pays ; vous ne pouvez pas gérer l'argent de ce pays"],
+	['$1 es docente de $2; no maneja dinero de este país', '$1 is a teacher for $2; they cannot handle money from this country', "$1 est enseignant pour $2 ; il ne peut pas gérer l'argent de ce pays"],
+	['El docente es docente de $1; no maneja dinero de este país', 'The teacher is assigned to $1; they cannot handle money from this country', "L'enseignant est affecté à $1 ; il ne peut pas gérer l'argent de ce pays"],
 	['El banco de $1 lo maneja $2', "$1's bank is managed by $2", 'La banque de $1 est gérée par $2'],
 
 	// Portal de acudientes
@@ -381,7 +381,7 @@ const TRADUCCIONES = [
 	['La tasa inicial no se puede cambiar con la edición abierta', 'The initial exchange rate cannot be changed while the edition is open', "Le taux initial ne peut pas être modifié pendant que l'édition est ouverte"],
 	['No se puede cambiar el programa: la edición ya tiene participantes', 'The program cannot be changed: the edition already has participants', "Impossible de changer le programme : l'édition a déjà des participants"],
 	['El encargado de la caja debe ser un colaborador con rol Cajero', 'The checkout manager must be a staff member with the Cashier role', 'Le responsable de la caisse doit être un collaborateur avec le rôle Caissier'],
-	['Esta edición ya tiene movimientos de billetes y no se puede eliminar, para no perder el historial', 'This edition already has bill transactions and cannot be deleted, so the history is kept', "Cette édition a déjà des mouvements de billets et ne peut pas être supprimée, afin de conserver l'historique"],
+	['Esta edición ya tiene movimientos de dinero y no se puede eliminar, para no perder el historial', 'This edition already has money movements and cannot be deleted, so the history is kept', "Cette édition a déjà des mouvements d'argent et ne peut pas être supprimée, afin de garder l'historique"],
 	['Los países se agregan antes de abrir la edición', 'Countries are added before opening the edition', "Les pays s'ajoutent avant d'ouvrir l'édition"],
 	['Falta el precio', 'The price is missing', 'Le prix est manquant'],
 	['No existe', 'Does not exist', "N'existe pas"],
@@ -392,19 +392,19 @@ const TRADUCCIONES = [
 	['Hay estudiantes retirados en la selección; reintégralos primero', 'The selection includes withdrawn students; reinstate them first', "La sélection contient des élèves retirés ; réintégrez-les d'abord"],
 	['Los participantes deben ser de la misma edición', 'Participants must be from the same edition', 'Les participants doivent appartenir à la même édition'],
 	['El país no es de esta edición', 'The country is not part of this edition', 'Le pays ne fait pas partie de cette édition'],
-	['$1 $2 ya tiene billetes en su moneda actual; no se puede cambiar de país', '$1 $2 already has bills in their current currency; the country cannot be changed', '$1 $2 a déjà des billets dans sa monnaie actuelle ; impossible de changer de pays'],
+	['$1 $2 ya tiene dinero en su moneda actual; no se puede cambiar de país', '$1 $2 already has money in their current currency; the country cannot be changed', "$1 $2 a déjà de l'argent dans sa monnaie actuelle ; impossible de changer de pays"],
 	['No hay cambios', 'No changes', 'Aucune modification'],
 	['Escribe cuántos billetes entran al banco', 'Enter how many bills go into the bank', 'Indiquez combien de billets entrent à la banque'],
 	['El país no existe', 'The country does not exist', "Le pays n'existe pas"],
-	['Con la edición en preparación, edita los billetes impresos directamente', 'While the edition is being prepared, edit the printed bills directly', "Tant que l'édition est en préparation, modifiez directement les billets imprimés"],
+	['Con la edición en preparación, edita el dinero del banco directamente', "While the edition is being prepared, edit the bank's money directly", "Tant que l'édition est en préparation, modifiez directement l'argent de la banque"],
 	['No hay estudiantes seleccionados', 'No students selected', 'Aucun élève sélectionné'],
 	['Algún estudiante no existe', 'A student does not exist', "Un des élèves n'existe pas"],
 	['Los estudiantes deben ser de la misma edición', 'Students must be from the same edition', 'Les élèves doivent appartenir à la même édition'],
 	['No hay colaboradores seleccionados', 'No staff members selected', 'Aucun collaborateur sélectionné'],
 	['Algún usuario no es colaborador de Will Go', 'A user is not a Will Go staff member', "Un des utilisateurs n'est pas collaborateur de Will Go"],
 	['No hace parte del equipo', 'Not part of the team', "Ne fait pas partie de l'équipe"],
-	['El docente tiene billetes de otro país; primero debe entregarlos o devolverlos', 'The teacher has bills from another country; they must hand them out or return them first', "L'enseignant a des billets d'un autre pays ; il doit d'abord les distribuer ou les rendre"],
-	['Tiene $1 billetes sin entregar en esta edición; primero debe entregarlos', 'They have $1 bills not yet handed out in this edition; they must hand them out first', "Il reste $1 billets non distribués dans cette édition ; ils doivent d'abord être distribués"],
+	['El docente tiene dinero de otro país; primero debe entregarlo o devolverlo', 'The teacher has money from another country; they must hand it out or return it first', "L'enseignant a de l'argent d'un autre pays ; il doit d'abord le distribuer ou le rendre"],
+	['Tiene $1 sin entregar en esta edición; primero debe entregarlo', 'They have $1 not yet handed out in this edition; they must hand it out first', "Il reste $1 non distribués dans cette édition ; il faut d'abord les distribuer"],
 	['La foto debe ser JPG, PNG o WEBP', 'The photo must be JPG, PNG or WEBP', 'La photo doit être au format JPG, PNG ou WEBP'],
 	['La foto debe pesar menos de 2 MB', 'The photo must be smaller than 2 MB', 'La photo doit peser moins de 2 Mo'],
 
@@ -437,7 +437,7 @@ const TRADUCCIONES = [
 	['Máximo $1 de $2 por estudiante', 'Maximum $1 of $2 per student', 'Maximum $1 de $2 par élève'],
 	['El total es $1; el estudiante entregó $2', 'The total is $1; the student paid $2', "Le total est de $1 ; l'élève a remis $2"],
 	['El vuelto debe ser $1 (marcaste $2)', 'The change must be $1 (you entered $2)', 'La monnaie rendue doit être de $1 (vous avez indiqué $2)'],
-	['El estudiante solo tiene $1 billetes', 'The student only has $1 bills', "L'élève n'a que $1 billets"],
+	['El estudiante solo tiene $1', 'The student only has $1', "L'élève n'a que $1"],
 	['Elige los billetes que entrega el estudiante', 'Choose the bills the student is handing over', "Choisissez les billets que l'élève remet"],
 	['La ronda no existe en esta edición', 'The round does not exist in this edition', "La manche n'existe pas dans cette édition"],
 	['La ronda ya cerró; espera la siguiente', 'The round has closed; wait for the next one', 'La manche est terminée ; attendez la suivante'],
@@ -459,7 +459,7 @@ const TRADUCCIONES = [
 	['estado debe ser active o suspended', 'estado must be active or suspended', 'estado doit être active ou suspended'],
 	['No puedes eliminar tu propio usuario', 'You cannot delete your own user', 'Vous ne pouvez pas supprimer votre propre utilisateur'],
 	['$1 ya tiene movimientos en Will-Go; para no perder el historial, desactívalo en lugar de eliminarlo', '$1 already has activity in Will-Go; to keep the history, deactivate them instead of deleting them', "$1 a déjà des mouvements dans Will-Go ; pour conserver l'historique, désactivez-le au lieu de le supprimer"],
-	['$1 todavía tiene billetes; desactívalo en lugar de eliminarlo', '$1 still has bills; deactivate them instead of deleting them', '$1 a encore des billets ; désactivez-le au lieu de le supprimer'],
+	['$1 todavía tiene dinero; desactívalo en lugar de eliminarlo', '$1 still has money; deactivate them instead of deleting them', "$1 a encore de l'argent ; désactivez-le au lieu de le supprimer"],
 
 	// Rúbrica
 	['Elige el nivel (0 a 3) de los 4 criterios', 'Choose the level (0 to 3) for all 4 criteria', 'Choisissez le niveau (0 à 3) des 4 critères'],
@@ -674,7 +674,7 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			}
 		}
 		if (await db('wge_billeteras').where('docente_id', id).where('saldo', '>', 0).first('id')) {
-			throw new WgeError(409, 'TIENE_BILLETES', `${actual.nombre} todavía tiene billetes; desactívalo en lugar de eliminarlo`);
+			throw new WgeError(409, 'TIENE_BILLETES', `${actual.nombre} todavía tiene dinero; desactívalo en lugar de eliminarlo`);
 		}
 		await db.transaction(async (trx) => {
 			await trx('wge_equipo').where('usuario_id', id).delete();
@@ -877,7 +877,7 @@ const FONDOS_POR_DEFECTO = [
 		por_que_invertir: 'Un solo éxito puede hacernos ganar mucho\nTrabajamos con artistas de todos los países\nEl público siempre busca algo nuevo' },
 	{ nombre: 'NOVA AI', riesgo: 'alto', rendimiento_base: 0.1, rendimiento_alterno: -0.08, variacion: 0.12,
 		a_que_se_dedica: 'Creamos inteligencia artificial que ayuda a las personas a resolver problemas e inventar el futuro.',
-		por_que_invertir: 'La inteligencia artificial está en todas partes\nSi nuestro invento funciona, es el fondo que más gana\nOjo: si el invento falla, puedes perder billetes' },
+		por_que_invertir: 'La inteligencia artificial está en todas partes\nSi nuestro invento funciona, es el fondo que más gana\nOjo: si el invento falla, puedes perder dinero' },
 ];
 
 /**
@@ -1125,7 +1125,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				.where('b.edicion_id', e.id).first('m.id');
 			const conVentas = await trx('wge_ventas').where('edicion_id', e.id).first('id');
 			if (conMovimientos || conVentas) {
-				throw new WgeError(409, 'TIENE_MOVIMIENTOS', 'Esta edición ya tiene movimientos de billetes y no se puede eliminar, para no perder el historial');
+				throw new WgeError(409, 'TIENE_MOVIMIENTOS', 'Esta edición ya tiene movimientos de dinero y no se puede eliminar, para no perder el historial');
 			}
 			const rondas = trx('wge_rondas').where('edicion_id', e.id).select('id');
 			const participantes = trx('wge_participantes').where('edicion_id', e.id).select('id');
@@ -1291,7 +1291,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				.whereIn('b.participante_id', ids).where('b.saldo', '<>', 0)
 				.modify((q) => { if (paisId) q.whereNot('b.pais_id', paisId); })
 				.first('e.nombre', 'e.apellido');
-			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene billetes en su moneda actual; no se puede cambiar de país`);
+			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en su moneda actual; no se puede cambiar de país`);
 			cambios.pais_id = paisId;
 		}
 		if ('presente' in (req.body ?? {})) cambios.presente = !!req.body.presente;
@@ -1343,7 +1343,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 			const e = await trx('wge_ediciones').where('id', pais.edicion_id).first();
 			if (e.estado === 'cerrada') throw new WgeError(409, 'EDICION_CERRADA', 'La edición ya fue cerrada');
-			if (e.estado === 'borrador') throw new WgeError(409, 'EDICION_EN_PREPARACION', 'Con la edición en preparación, edita los billetes impresos directamente');
+			if (e.estado === 'borrador') throw new WgeError(409, 'EDICION_EN_PREPARACION', 'Con la edición en preparación, edita el dinero del banco directamente');
 			const banco = await billeteraBloqueada(trx, { edicionId: e.id, paisId: pais.id, tipo: 'banco' });
 			await moverSaldo(trx, banco, { tipo: 'provision', monto: total, actor, referenciaTipo: 'provision_adicional', referenciaId: pais.id });
 			const previos = (typeof pais.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais.provision_billetes) ?? {};
@@ -1462,7 +1462,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		}
 		const conBilletes = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, docente_id: fila.usuario_id }).whereIn('tipo_dueno', ['docente', 'cuenta'])
 			.where('saldo', '>', 0).modify((q) => { if (paisId) q.whereNot('pais_id', paisId); }).first('id');
-		if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', 'El docente tiene billetes de otro país; primero debe entregarlos o devolverlos');
+		if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', 'El docente tiene dinero de otro país; primero debe entregarlo o devolverlo');
 		await db('wge_equipo').where('id', fila.id).update({ pais_id: paisId });
 		return { ok: true };
 	}));
@@ -1473,7 +1473,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		const fila = await db('wge_equipo').where('id', req.params.id).first();
 		if (!fila) throw new WgeError(404, 'NO_EXISTE', 'No hace parte del equipo');
 		const [{ suma }] = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, docente_id: fila.usuario_id }).whereIn('tipo_dueno', ['docente', 'cuenta']).sum({ suma: 'saldo' });
-		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} billetes sin entregar en esta edición; primero debe entregarlos`);
+		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} sin entregar en esta edición; primero debe entregarlo`);
 		await db('wge_equipo').where('id', fila.id).delete();
 		return { quitado: true };
 	}));
@@ -1731,9 +1731,9 @@ async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 		} else if (f.tipo === 'carga_virtual') {
 			titulo = 'Saldo virtual cargado al banco';
 		} else if (f.referencia_tipo === 'provision_adicional') {
-			titulo = 'Billetes agregados al banco';
+			titulo = 'Dinero agregado al banco';
 		} else if (f.tipo === 'provision' || f.tipo === 'reverso') {
-			titulo = entra ? 'Billetes asignados al banco' : 'Ajuste de billetes asignados';
+			titulo = entra ? 'Dinero asignado al banco' : 'Ajuste del dinero del banco';
 		}
 		return { id: f.id, tipo: f.tipo, medio: virtual.has(f.billetera_id) ? 'virtual' : 'efectivo', entra, titulo, monto: Math.abs(Number(f.monto)), saldo_despues: Number(f.saldo_despues), fecha: f.date_created, quien: f.quien || '', billetes };
 	});
@@ -1785,11 +1785,11 @@ async function movimientosEstudiante(db, participanteId, paisId, limite = 50) {
 			titulo = entra ? `Retiró su inversión de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
 			billetes = leerBilletes(entra ? i?.billetes_pago : i?.billetes);
 		} else if (f.referencia_tipo === 'bienvenida' || f.tipo === 'bienvenida') {
-			titulo = 'Billetes de bienvenida';
+			titulo = 'Dinero de bienvenida';
 		} else if (f.referencia_tipo === 'venta' || f.tipo === 'compra') {
 			titulo = 'Compra en GO•STORE';
 		} else if (f.referencia_tipo === 'retiro') {
-			titulo = m === 'cuenta' ? 'Su cuenta volvió al banco' : 'Devolvió sus billetes al banco';
+			titulo = m === 'cuenta' ? 'Su cuenta volvió al banco' : 'Devolvió su dinero al banco';
 		}
 		if (f.referencia_tipo === 'transferencia' && !billetes) billetes = leerBilletes(transferencias.get(f.referencia_id)?.billetes);
 		return { id: f.id, entra, titulo, monto: Math.abs(Number(f.monto)), fecha: f.date_created, billetes, medio: m };
@@ -3502,7 +3502,7 @@ const configEndpoint = {
 				}
 				if (Number(billetera.saldo) < total) {
 					throw conTarjeta ? new WgeError(409, 'SALDO_INSUFICIENTE', `En su cuenta solo hay ${billetera.saldo}`)
-						: new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${billetera.saldo} billetes`);
+						: new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${billetera.saldo}`);
 				}
 
 				const ventaId = crypto.randomUUID();
@@ -3557,7 +3557,7 @@ const configEndpoint = {
 				if (!fondo || fondo.edicion_id !== edicion.id || !fondo.activo) throw new WgeError(404, 'NO_EXISTE', 'La empresa no está disponible');
 
 				const estudiante = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'estudiante', participanteId: participante.id });
-				if (Number(estudiante.saldo) < monto) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo} billetes`);
+				if (Number(estudiante.saldo) < monto) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${estudiante.saldo}`);
 				const banco = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: participante.pais_id, tipo: 'banco' });
 				const id = crypto.randomUUID();
 				await moverSaldo(trx, estudiante, { tipo: 'inversion', monto: -monto, actor, referenciaTipo: 'inversion', referenciaId: id });

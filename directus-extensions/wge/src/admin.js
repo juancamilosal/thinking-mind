@@ -48,7 +48,7 @@ export const FONDOS_POR_DEFECTO = [
 		por_que_invertir: 'Un solo éxito puede hacernos ganar mucho\nTrabajamos con artistas de todos los países\nEl público siempre busca algo nuevo' },
 	{ nombre: 'NOVA AI', riesgo: 'alto', rendimiento_base: 0.1, rendimiento_alterno: -0.08, variacion: 0.12,
 		a_que_se_dedica: 'Creamos inteligencia artificial que ayuda a las personas a resolver problemas e inventar el futuro.',
-		por_que_invertir: 'La inteligencia artificial está en todas partes\nSi nuestro invento funciona, es el fondo que más gana\nOjo: si el invento falla, puedes perder billetes' },
+		por_que_invertir: 'La inteligencia artificial está en todas partes\nSi nuestro invento funciona, es el fondo que más gana\nOjo: si el invento falla, puedes perder dinero' },
 ];
 
 /**
@@ -296,7 +296,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				.where('b.edicion_id', e.id).first('m.id');
 			const conVentas = await trx('wge_ventas').where('edicion_id', e.id).first('id');
 			if (conMovimientos || conVentas) {
-				throw new WgeError(409, 'TIENE_MOVIMIENTOS', 'Esta edición ya tiene movimientos de billetes y no se puede eliminar, para no perder el historial');
+				throw new WgeError(409, 'TIENE_MOVIMIENTOS', 'Esta edición ya tiene movimientos de dinero y no se puede eliminar, para no perder el historial');
 			}
 			const rondas = trx('wge_rondas').where('edicion_id', e.id).select('id');
 			const participantes = trx('wge_participantes').where('edicion_id', e.id).select('id');
@@ -462,7 +462,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				.whereIn('b.participante_id', ids).where('b.saldo', '<>', 0)
 				.modify((q) => { if (paisId) q.whereNot('b.pais_id', paisId); })
 				.first('e.nombre', 'e.apellido');
-			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene billetes en su moneda actual; no se puede cambiar de país`);
+			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en su moneda actual; no se puede cambiar de país`);
 			cambios.pais_id = paisId;
 		}
 		if ('presente' in (req.body ?? {})) cambios.presente = !!req.body.presente;
@@ -514,7 +514,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 			const e = await trx('wge_ediciones').where('id', pais.edicion_id).first();
 			if (e.estado === 'cerrada') throw new WgeError(409, 'EDICION_CERRADA', 'La edición ya fue cerrada');
-			if (e.estado === 'borrador') throw new WgeError(409, 'EDICION_EN_PREPARACION', 'Con la edición en preparación, edita los billetes impresos directamente');
+			if (e.estado === 'borrador') throw new WgeError(409, 'EDICION_EN_PREPARACION', 'Con la edición en preparación, edita el dinero del banco directamente');
 			const banco = await billeteraBloqueada(trx, { edicionId: e.id, paisId: pais.id, tipo: 'banco' });
 			await moverSaldo(trx, banco, { tipo: 'provision', monto: total, actor, referenciaTipo: 'provision_adicional', referenciaId: pais.id });
 			const previos = (typeof pais.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais.provision_billetes) ?? {};
@@ -633,7 +633,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		}
 		const conBilletes = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, docente_id: fila.usuario_id }).whereIn('tipo_dueno', ['docente', 'cuenta'])
 			.where('saldo', '>', 0).modify((q) => { if (paisId) q.whereNot('pais_id', paisId); }).first('id');
-		if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', 'El docente tiene billetes de otro país; primero debe entregarlos o devolverlos');
+		if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', 'El docente tiene dinero de otro país; primero debe entregarlo o devolverlo');
 		await db('wge_equipo').where('id', fila.id).update({ pais_id: paisId });
 		return { ok: true };
 	}));
@@ -644,7 +644,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		const fila = await db('wge_equipo').where('id', req.params.id).first();
 		if (!fila) throw new WgeError(404, 'NO_EXISTE', 'No hace parte del equipo');
 		const [{ suma }] = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, docente_id: fila.usuario_id }).whereIn('tipo_dueno', ['docente', 'cuenta']).sum({ suma: 'saldo' });
-		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} billetes sin entregar en esta edición; primero debe entregarlos`);
+		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} sin entregar en esta edición; primero debe entregarlo`);
 		await db('wge_equipo').where('id', fila.id).delete();
 		return { quitado: true };
 	}));

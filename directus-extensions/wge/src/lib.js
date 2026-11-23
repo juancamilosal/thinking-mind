@@ -81,7 +81,7 @@ export async function billeteraPorIdBloqueada(trx, id) {
  */
 export async function moverSaldo(trx, billetera, { tipo, monto, actor, referenciaTipo, referenciaId, clave }) {
 	const saldo = Number(billetera.saldo) + monto;
-	if (saldo < 0) throw new WgeError(409, 'SALDO_INSUFICIENTE', `Saldo insuficiente: hay ${billetera.saldo} billetes`);
+	if (saldo < 0) throw new WgeError(409, 'SALDO_INSUFICIENTE', `Saldo insuficiente: hay ${billetera.saldo}`);
 	const consecutivo = Number(billetera.consecutivo) + 1;
 	const id = crypto.randomUUID();
 	await trx('wge_movimientos').insert({
@@ -269,8 +269,8 @@ export async function exigirEquipo(db, { edicionId, usuarioId, rol, paisId = nul
 	if (paisId && fila.pais_id && fila.pais_id !== paisId) {
 		const pais = await db('wge_paises').where('id', fila.pais_id).first('nombre');
 		const nombrePais = pais?.nombre ?? 'otro país';
-		if (quien === 'Tu usuario') throw new WgeError(409, 'OTRO_PAIS', `Eres docente de ${nombrePais}; no maneja billetes de este país`);
-		throw new WgeError(409, 'OTRO_PAIS', `${quien} es docente de ${nombrePais}; no maneja billetes de este país`);
+		if (quien === 'Tu usuario') throw new WgeError(409, 'OTRO_PAIS', `Eres docente de ${nombrePais}; no maneja dinero de este país`);
+		throw new WgeError(409, 'OTRO_PAIS', `${quien} es docente de ${nombrePais}; no maneja dinero de este país`);
 	}
 	return fila;
 }

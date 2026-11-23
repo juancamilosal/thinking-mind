@@ -158,7 +158,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			}
 		}
 		if (await db('wge_billeteras').where('docente_id', id).where('saldo', '>', 0).first('id')) {
-			throw new WgeError(409, 'TIENE_BILLETES', `${actual.nombre} todavía tiene billetes; desactívalo en lugar de eliminarlo`);
+			throw new WgeError(409, 'TIENE_BILLETES', `${actual.nombre} todavía tiene dinero; desactívalo en lugar de eliminarlo`);
 		}
 		await db.transaction(async (trx) => {
 			await trx('wge_equipo').where('usuario_id', id).delete();
