@@ -829,7 +829,8 @@
         "banco": "Banque",
         "wfunds": "W-Funds",
         "cajaGoStore": "Caisse GO•STORE",
-        "productos": "Produits"
+        "productos": "Produits",
+        "cuentas": "Comptes et cartes"
       },
       "rol": {
         "administrativo": "Personnel administratif",
@@ -1006,6 +1007,14 @@
         "alInicio": "Au début",
         "formatoFecha": "d MMM, HH:mm",
         "formatoHora": "HH:mm"
+      },
+      "qr": {
+        "iniciando": "Ouverture de la caméra…",
+        "sinCamara": "Impossible d'utiliser la caméra. Saisissez la clé ci-dessous.",
+        "ayuda": "Placez le QR de la carte dans le cadre.",
+        "escribirLlave": "Saisir la clé",
+        "placeholder": "@prenom.nom",
+        "usar": "Utiliser"
       }
     },
     "operacion": {

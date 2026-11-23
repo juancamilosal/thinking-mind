@@ -829,7 +829,8 @@
         "banco": "Banco",
         "wfunds": "W-Funds",
         "cajaGoStore": "Caja GO•STORE",
-        "productos": "Productos"
+        "productos": "Productos",
+        "cuentas": "Cuentas y tarjetas"
       },
       "rol": {
         "administrativo": "Administrativo",
@@ -1006,6 +1007,14 @@
         "alInicio": "Al inicio",
         "formatoFecha": "d MMM, h:mm a",
         "formatoHora": "h:mm"
+      },
+      "qr": {
+        "iniciando": "Abriendo la cámara…",
+        "sinCamara": "No se pudo usar la cámara. Escribe la llave abajo.",
+        "ayuda": "Pon el QR de la tarjeta dentro del recuadro.",
+        "escribirLlave": "Escribir la llave",
+        "placeholder": "@nombre.apellido",
+        "usar": "Usar"
       }
     },
     "operacion": {

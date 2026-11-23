@@ -829,7 +829,8 @@
         "banco": "Bank",
         "wfunds": "W-Funds",
         "cajaGoStore": "GO•STORE checkout",
-        "productos": "Products"
+        "productos": "Products",
+        "cuentas": "Accounts and cards"
       },
       "rol": {
         "administrativo": "Administrative staff",
@@ -1006,6 +1007,14 @@
         "alInicio": "At the start",
         "formatoFecha": "MMM d, h:mm a",
         "formatoHora": "h:mm"
+      },
+      "qr": {
+        "iniciando": "Opening the camera…",
+        "sinCamara": "The camera couldn't be used. Type the key below.",
+        "ayuda": "Place the card's QR inside the frame.",
+        "escribirLlave": "Type the key",
+        "placeholder": "@name.surname",
+        "usar": "Use"
       }
     },
     "operacion": {

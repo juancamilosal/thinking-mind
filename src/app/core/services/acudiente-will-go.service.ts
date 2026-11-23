@@ -18,9 +18,11 @@ export interface EdicionPortal {
 }
 export interface HijoPortal {
   id: string; edicion_id: string; nombre: string; apellido: string; pais: string | null; color: string | null; codigo_moneda: string | null; saldo: number;
+  /** Cuenta de la tarjeta débito y su llave (tipo Bre-B). */
+  cuenta?: number; llave?: string | null;
   /** valor = lo que vale hoy (si sigue invertida) o lo que recibió al retirarla. */
   inversiones: { id: string; monto: number; estado: string; valor: number; historial: { ronda: string; rendimiento: number }[]; fondo: string; ronda: string }[];
-  movimientos: { id: string; entra: boolean; titulo: string; monto: number; fecha: string; billetes: Record<string, number> | null }[];
+  movimientos: { id: string; entra: boolean; titulo: string; monto: number; fecha: string; billetes: Record<string, number> | null; medio?: 'efectivo' | 'cuenta' }[];
   total_entro: number; total_salio: number;
   /** Resumen de la rúbrica: cuántas calificaciones y el nivel promedio (0 a 3) de cada criterio. */
   rubrica: { total: number; criterios: Record<'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion', number>; ultima: string | null; maximo: number };

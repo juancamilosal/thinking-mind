@@ -145,20 +145,23 @@ export interface DatosArqueo {
   historial: Arqueo[];
 }
 
-export interface DocenteReparto { id: string; nombre: string; apellido: string; pais_id: string | null; saldo: number; recibido: number; }
-export interface EntregaReparto { id: string; monto: number; billetes: Record<string, number> | string | null; date_created: string; nombre: string; apellido: string; }
+/** saldo = billetes en mano; cuenta = su cuenta electrónica. */
+export interface DocenteReparto { id: string; nombre: string; apellido: string; pais_id: string | null; saldo: number; cuenta?: number; recibido: number; }
+export interface EntregaReparto { id: string; monto: number; billetes: Record<string, number> | string | null; date_created: string; nombre: string; apellido: string; medio?: 'billetes' | 'transferencia'; }
 export interface PaisReparto {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   saldo_banco: number; inventario: Record<string, number>; docentes: DocenteReparto[]; entregas: EntregaReparto[];
 }
 export interface DatosReparto { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisReparto[]; }
 
-export interface MovimientoDocente { id: string; monto: number; billetes: Record<string, number> | string | null; date_created: string; quien?: string; nombre?: string; apellido?: string; }
-export interface EstudianteDocente { id: string; codigo: string; presente: boolean; nombre: string; apellido: string; grado: string | null; saldo: number; }
+export interface MovimientoDocente { id: string; monto: number; billetes: Record<string, number> | string | null; date_created: string; quien?: string; nombre?: string; apellido?: string; medio?: 'billetes' | 'transferencia'; }
+export interface EstudianteDocente { id: string; codigo: string; llave?: string | null; presente: boolean; nombre: string; apellido: string; grado: string | null; saldo: number; cuenta?: number; }
 export interface PaisDocente {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   saldo: number; inventario: Record<string, number>; recibidos: MovimientoDocente[]; entregas: MovimientoDocente[]; estudiantes: EstudianteDocente[];
   total_recibido: number; total_entregado: number;
+  /** Saldo de la cuenta electrónica del docente (lo que puede transferir). */
+  cuenta?: number;
 }
 export interface DatosDocente { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisDocente[]; }
 
@@ -206,9 +209,10 @@ export interface DatosTipoCambio {
 
 export interface PaisCaja { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; saldo_caja: number; inventario: Record<string, number>; }
 export interface ProductoCaja { id: string; nombre: string; foto: string | null; precio_cop: number; stock: number; maximo_por_estudiante: number | null; vendidos?: number; }
-export interface EstudianteCaja { id: string; pais_id: string; nombre: string; apellido: string; saldo: number; }
+/** saldo = efectivo (billetes en el bolsillo); cuenta = cuenta de la tarjeta débito. */
+export interface EstudianteCaja { id: string; pais_id: string; llave?: string | null; nombre: string; apellido: string; saldo: number; cuenta?: number; }
 export interface VentaCaja {
-  id: string; numero_recibo: string; total_billetes: number; tasa_aplicada: number; pais_id: string;
+  id: string; numero_recibo: string; total_billetes: number; tasa_aplicada: number; pais_id: string; metodo_pago?: 'efectivo' | 'tarjeta';
   billetes_recibidos: Record<string, number>; billetes_vuelto: Record<string, number>; date_created: string; nombre: string; apellido: string;
   items: { nombre: string; cantidad: number; precio_billetes: number }[];
 }
@@ -243,12 +247,12 @@ const PERFIL = 'wge_perfil';
 /** Resumen final de una edición (o vista previa mientras sigue abierta). */
 export interface EmpresaResumen { fondo_id: string; nombre: string; logo: string | null; acumulado: number; rondas: number; mejor: number | null; peor: number | null }
 export interface EstudianteResumen {
-  id: string; nombre: string; apellido: string; saldo: number; invertido: number; total: number;
+  id: string; nombre: string; apellido: string; saldo: number; cuenta?: number; invertido: number; total: number;
   ganancia_fondos: number; gastado_tienda: number; rubrica: { promedio: number; n: number } | null;
 }
 export interface PaisResumen {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null; provision_inicial: number; tasa_actual: number | null;
-  saldo_banco: number; saldo_caja: number; saldo_docentes: number; ventas: number; total_ventas: number;
+  saldo_banco: number; saldo_caja: number; saldo_docentes: number; saldo_cuentas?: number; ventas: number; total_ventas: number;
   estudiantes: EstudianteResumen[]; total_estudiantes: number;
 }
 export interface ResumenFinal {
@@ -258,6 +262,13 @@ export interface ResumenFinal {
 
 /** Qué secciones puede usar hoy el colaborador (GET /wge/mi-menu). */
 export interface AccesoMenu { equipo: boolean; banco: boolean; caja: boolean }
+
+/** Cuentas electrónicas (tarjeta débito con llave tipo Bre-B). */
+export interface EstudianteCuenta { id: string; nombre: string; apellido: string; llave: string | null; efectivo: number; cuenta: number; }
+export interface PaisCuentas { id: string; nombre: string; codigo_moneda: string | null; color: string | null; inventario: Record<string, number>; estudiantes: EstudianteCuenta[]; en_cuentas: number; }
+export interface DatosCuentas { edicion: { id: string; nombre: string; estado: string }; denominaciones: number[]; paises: PaisCuentas[]; }
+export interface TarjetaImprimir { id: string; nombre: string; apellido: string; llave: string; pais_id: string; pais: string; color: string | null; codigo_moneda: string | null; }
+export interface DuenoLlave { participante_id: string; llave: string; nombre: string; apellido: string; pais_id: string; pais: string; codigo_moneda: string | null; edicion_id: string; }
 
 @Injectable({ providedIn: 'root' })
 export class WillGoService {
@@ -459,6 +470,43 @@ export class WillGoService {
     }).pipe(this.enZona(), map((r) => r.data));
   }
 
+  /** Banco → cuenta del docente, sin billetes. */
+  transferirADocente(paisId: string, docenteId: string, monto: number, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
+      tipo: 'banco_docente', electronica: true, pais_id: paisId, docente_id: docenteId, monto, clave_idempotencia: clave,
+    }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Cuenta del docente → cuenta del estudiante (por su id o por su llave), sin billetes. */
+  transferirAEstudiante(destino: { participante_id?: string; llave?: string }, monto: number, clave: string): Observable<{ monto: number; saldo_origen: number; saldo_destino: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/transferencias`, {
+      tipo: 'docente_estudiante', electronica: true, ...destino, monto, clave_idempotencia: clave,
+    }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** A quién pertenece una llave (o el texto de un QR de tarjeta). */
+  duenoDeLlave(llave: string): Observable<DuenoLlave> {
+    return this.http.get<{ data: DuenoLlave }>(`${this.api}/cuentas/llave/${encodeURIComponent(llave.trim())}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  cuentas(edicionId: string): Observable<DatosCuentas> {
+    return this.http.get<{ data: DatosCuentas }>(`${this.api}/ediciones/${edicionId}/cuentas`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  tarjetasParaImprimir(edicionId: string): Observable<{ edicion: { id: string; nombre: string }; tarjetas: TarjetaImprimir[] }> {
+    return this.http.get<{ data: any }>(`${this.api}/ediciones/${edicionId}/tarjetas`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** El estudiante entrega billetes al banco y le suben a su cuenta. */
+  consignar(participanteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; efectivo: number; cuenta: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/cuentas/consignar`, { participante_id: participanteId, billetes, clave_idempotencia: clave }).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** El estudiante saca dinero de su cuenta y recibe billetes del banco. */
+  retirarDeCuenta(participanteId: string, billetes: Record<string, number>, clave: string): Observable<{ monto: number; efectivo: number; cuenta: number }> {
+    return this.http.post<{ data: any }>(`${this.api}/cuentas/retirar`, { participante_id: participanteId, billetes, clave_idempotencia: clave }).pipe(this.enZona(), map((r) => r.data));
+  }
+
   panelDocente(edicionId: string): Observable<DatosDocente> {
     return this.http.get<{ data: DatosDocente }>(`${this.api}/ediciones/${edicionId}/docente`).pipe(this.enZona(), map((r) => r.data));
   }
@@ -525,8 +573,8 @@ export class WillGoService {
     return this.http.get<{ data: DatosCaja }>(`${this.api}/ediciones/${edicionId}/caja`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  /** Vende en la caja: el estudiante entrega billetes y recibe el vuelto. */
-  vender(datos: { participante_id: string; items: { producto_id: string; cantidad: number }[]; billetes_recibidos: Record<string, number>; billetes_vuelto: Record<string, number>; clave_idempotencia: string }):
+  /** Vende en la caja: en efectivo (billetes y vuelto) o con tarjeta débito ({ metodo: 'tarjeta', llave }). */
+  vender(datos: { participante_id: string; items: { producto_id: string; cantidad: number }[]; billetes_recibidos?: Record<string, number>; billetes_vuelto?: Record<string, number>; clave_idempotencia: string; metodo?: 'efectivo' | 'tarjeta'; llave?: string }):
     Observable<{ numero_recibo: string; total_billetes: number; saldo: number; items: { nombre: string; cantidad: number; precio_billetes: number }[] }> {
     return this.http.post<{ data: any }>(`${this.api}/ventas`, datos).pipe(this.enZona(), map((r) => r.data));
   }
