@@ -83,6 +83,14 @@ rel('wge_ediciones', 'colegio_id', 'colegios', EXT)
 rel('wge_ediciones', 'responsable_caja', 'directus_users', EXT)
 rel('wge_ediciones', 'curso_id', 'Cursos', EXT)
 
+coleccion('wge_paises_base', 'public', 'Países de Will-Go por defecto: cada edición nueva crea sus países copiando estos', [
+    campo('nombre', 'string', 'Nombre del país (las imágenes de billetes se buscan por este nombre)', unico=True, requerido=True),
+    campo('codigo_moneda', 'string', 'Código corto de la moneda, p. ej. WON'),
+    campo('color', 'string', 'Color con el que se ve el país en toda la app', interfaz='select-color'),
+    campo('orden', 'integer'),
+    campo('activo', 'boolean', 'Si se apaga, las ediciones nuevas no crean este país', default=True),
+])
+
 coleccion('wge_paises', 'flag', 'Wonderland, Neverland y Dreamland de cada edición', [
     m2o('edicion_id', requerido=True), campo('nombre', 'string', requerido=True),
     campo('codigo_moneda', 'string'), campo('color', 'string', interfaz='select-color'),

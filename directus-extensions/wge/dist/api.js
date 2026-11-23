@@ -697,11 +697,16 @@ const PAISES_POR_DEFECTO = [
 	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#22C55E', orden: 2 },
 	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#A855F7', orden: 3 },
 ];
-/** Países para una edición nueva: los de la última edición creada, o PAISES_POR_DEFECTO si no hay ninguna. */
+/**
+ * Países para una edición nueva: los de la colección wge_paises_base (editable en Directus), en su orden.
+ * Si está vacía o no existe todavía, PAISES_POR_DEFECTO.
+ */
 async function paisesDeReferencia(db) {
-	const ultima = await db('wge_ediciones').orderBy('date_created', 'desc').first('id');
-	const previos = ultima ? await db('wge_paises').where('edicion_id', ultima.id).orderBy('orden').select('nombre', 'codigo_moneda', 'color', 'orden') : [];
-	return previos.length ? previos.map((p, i) => ({ nombre: p.nombre, codigo_moneda: p.codigo_moneda, color: p.color, orden: p.orden ?? i + 1 })) : PAISES_POR_DEFECTO;
+	let base = [];
+	try {
+		base = await db('wge_paises_base').whereRaw('coalesce(activo, true) = true').orderBy('orden').select('nombre', 'codigo_moneda', 'color', 'orden');
+	} catch { /* la colección aún no existe en esta base */ }
+	return base.length ? base.map((p, i) => ({ nombre: p.nombre, codigo_moneda: p.codigo_moneda, color: p.color, orden: p.orden ?? i + 1 })) : PAISES_POR_DEFECTO;
 }
 
 const FONDOS_POR_DEFECTO = [
@@ -877,7 +882,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 				parametros_fx: JSON.stringify({}), zona_horaria: 'America/Bogota', ...fila, estado: 'borrador',
 			});
 			await trx('wge_ediciones').insert(edicion);
-			// Los países salen como en la última edición creada (nombre, moneda y color); si no hay, los de siempre
+			// Los países salen de la colección «Países de Will-Go» (wge_paises_base)
 			await trx('wge_paises').insert((await paisesDeReferencia(trx)).map((p) => nueva(actor, { ...p, edicion_id: edicion.id, provision_inicial: 0 })));
 			// Cada fondo trae el logo y los textos que ya se cargaron en otras ediciones (si no, los de ejemplo)
 			const cargados = await fondosCargados(trx);
