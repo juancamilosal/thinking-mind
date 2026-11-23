@@ -1,3 +1,4 @@
+import { AjustarTextoDirective } from '../../../private-layout-will-go/ajustar-texto.directive';
 import { InstalarAppComponent } from '../../../private-layout-will-go/instalar-app.component';
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -11,7 +12,7 @@ import { AcudienteWillGoService } from '../../../../core/services/acudiente-will
 @Component({
   selector: 'app-ingreso-acudiente',
   standalone: true,
-  imports: [FormsModule, InstalarAppComponent, TranslatePipe, SelectorIdiomaComponent],
+  imports: [AjustarTextoDirective, FormsModule, InstalarAppComponent, TranslatePipe, SelectorIdiomaComponent],
   templateUrl: './ingreso-acudiente.html',
   styleUrls: ['../login-will-go/login-will-go.css', './ingreso-acudiente.css'],
 })

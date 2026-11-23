@@ -50,6 +50,14 @@
   50% { transform: translateY(-18px) rotate(calc(var(--giro, 0deg) + 4deg)); }
 }
 
+/* Selector de idioma: en computador, en la esquina; en celular, en su propia fila sobre el logo */
+.wg-idioma-arriba {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+}
+
 .wg-marca-contenido {
   position: relative;
   z-index: 1;
@@ -233,6 +241,16 @@
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
+/* El correo no tiene botón a la derecha (el ojo es solo de la contraseña): más espacio para que se vea completo */
+.wg-input-icono input[type="email"] {
+  padding-right: 14px;
+}
+
+@media (max-width: 400px) {
+  .wg-input-icono > svg { left: 12px; width: 18px; height: 18px; }
+  .wg-input-icono input { padding-left: 38px; }
+}
+
 .wg-input-icono input::placeholder {
   color: #a0aec0;
 }
@@ -382,7 +400,15 @@
 
   .wg-marca {
     width: 100%;
-    padding: 2.25rem 1.25rem 4.5rem;
+    padding: 1rem 1.25rem 4.5rem;
+  }
+
+  .wg-idioma-arriba {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-self: flex-end;
+    margin-bottom: 1rem;
   }
 
   .wg-logo {

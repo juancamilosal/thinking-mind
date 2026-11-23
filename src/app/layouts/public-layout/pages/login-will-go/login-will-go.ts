@@ -1,3 +1,4 @@
+import { AjustarTextoDirective } from '../../../private-layout-will-go/ajustar-texto.directive';
 import { Roles } from '../../../../core/const/Roles';
 import { InstalarAppComponent } from '../../../private-layout-will-go/instalar-app.component';
 import { SelectorIdiomaComponent } from '../../../private-layout-will-go/selector-idioma.component';
@@ -14,7 +15,7 @@ import { WillGoService } from '../../../../core/services/will-go.service';
 @Component({
   selector: 'app-login-will-go',
   standalone: true,
-  imports: [ReactiveFormsModule, InstalarAppComponent, SelectorIdiomaComponent, TranslatePipe],
+  imports: [AjustarTextoDirective, ReactiveFormsModule, InstalarAppComponent, SelectorIdiomaComponent, TranslatePipe],
   templateUrl: './login-will-go.html',
   styleUrls: ['./login-will-go.css'],
 })
