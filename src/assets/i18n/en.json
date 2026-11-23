@@ -643,7 +643,7 @@
         "guardadoCuadra": "{{pais}} cash count saved: balanced.",
         "guardadoFaltan": "{{pais}} cash count saved: {{n}} short.",
         "guardadoSobran": "{{pais}} cash count saved: {{n}} over.",
-        "virtualAyuda": "No bills: it is for transfers to teachers. Loaded in total: {{n}}. Not part of the bill count."
+        "virtualAyuda": "No bills: it is for transfers to teachers. It matches the printed bills (total loaded: {{n}}). Not part of the bill count."
       },
       "wfunds": {
         "subtitulo": "Student investments in the companies.",
@@ -1369,10 +1369,10 @@
         "confirmarAgregar": "Add {{n}} bills to the {{pais}} bank?",
         "virtual": "Virtual",
         "virtualTitulo": "Bank's virtual balance",
-        "virtualAyuda": "Money without bills. The bank uses it to transfer to teachers' accounts, and teachers to students' accounts.",
+        "virtualAyuda": "Money without bills for transfers to teachers' accounts. It is loaded automatically for the same amount as the printed bills; you can load more here if needed.",
         "virtualHoy": "Virtual balance today",
         "virtualMonto": "Amount to load",
-        "virtualCargar": "Load virtual balance",
+        "virtualCargar": "Load more",
         "virtualListo": "Virtual balance loaded.",
         "virtualConfirmar": "Load {{n}} of virtual balance to the {{pais}} bank?"
       },

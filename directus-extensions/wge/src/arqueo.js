@@ -1,5 +1,5 @@
 // Arqueo del banco: conteo de billetes físicos por denominación y su cuadre contra el saldo del sistema.
-import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, ahoraColombia } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirEquipo, exigirResponsableBanco, ahoraColombia, billeteraBloqueada, moverSaldo } from './lib.js';
 
 /** Denominaciones impresas de cada país (iguales en Wonderland, Neverland y Dreamland). */
 export const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
@@ -47,6 +47,22 @@ export async function virtualDelBanco(db, edicionId, paisId) {
 	if (!b) return { saldo: 0, cargado: 0 };
 	const r = await db('wge_movimientos').where({ billetera_id: b.id, tipo: 'carga_virtual' }).sum({ t: 'monto' }).first();
 	return { saldo: Number(b.saldo ?? 0), cargado: Number(r?.t ?? 0) };
+}
+
+/**
+ * El saldo virtual del banco va a la par de los billetes impresos: cada vez que cambian (al registrarlos, al
+ * agregar más o al corregirlos en preparación) se carga la diferencia. Lo que se cargue a mano va aparte.
+ * Si se imprimieron menos, solo se descuenta lo que el banco todavía tenga en su cuenta virtual.
+ */
+export async function igualarVirtual(trx, edicionId, paisId, actor = null) {
+	const pais = await trx('wge_paises').where('id', paisId).first('provision_inicial');
+	const virtual = await billeteraBloqueada(trx, { edicionId, paisId, tipo: 'banco_virtual' });
+	const r = await trx('wge_movimientos').where({ billetera_id: virtual.id, tipo: 'carga_virtual', referencia_tipo: 'igual_billetes' }).sum({ t: 'monto' }).first();
+	let diferencia = Number(pais?.provision_inicial ?? 0) - Number(r?.t ?? 0);
+	if (diferencia < 0) diferencia = Math.max(diferencia, -Number(virtual.saldo));
+	if (!diferencia) return 0;
+	await moverSaldo(trx, virtual, { tipo: 'carga_virtual', monto: diferencia, actor, referenciaTipo: 'igual_billetes', referenciaId: paisId });
+	return diferencia;
 }
 
 /**

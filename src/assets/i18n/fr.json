@@ -643,7 +643,7 @@
         "guardadoCuadra": "Comptage de {{pais}} enregistré : équilibré.",
         "guardadoFaltan": "Comptage de {{pais}} enregistré : il manque {{n}}.",
         "guardadoSobran": "Comptage de {{pais}} enregistré : {{n}} en trop.",
-        "virtualAyuda": "Sans billets : il sert aux virements aux enseignants. Chargé au total : {{n}}. N'entre pas dans le comptage des billets."
+        "virtualAyuda": "Sans billets : il sert aux virements aux enseignants. Il égale les billets imprimés (total chargé : {{n}}). N'entre pas dans le comptage des billets."
       },
       "wfunds": {
         "subtitulo": "Investissements des élèves dans les entreprises.",
@@ -1369,10 +1369,10 @@
         "confirmarAgregar": "Ajouter {{n}} billets à la banque de {{pais}} ?",
         "virtual": "Virtuel",
         "virtualTitulo": "Solde virtuel de la banque",
-        "virtualAyuda": "De l'argent sans billets. La banque l'utilise pour virer aux comptes des enseignants, et les enseignants à ceux des élèves.",
+        "virtualAyuda": "De l'argent sans billets pour les virements aux comptes des enseignants. Il est chargé automatiquement du même montant que les billets imprimés ; vous pouvez en charger plus ici si besoin.",
         "virtualHoy": "Solde virtuel aujourd'hui",
         "virtualMonto": "Montant à charger",
-        "virtualCargar": "Charger le solde virtuel",
+        "virtualCargar": "Charger plus",
         "virtualListo": "Solde virtuel chargé.",
         "virtualConfirmar": "Charger {{n}} de solde virtuel à la banque de {{pais}} ?"
       },
