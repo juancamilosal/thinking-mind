@@ -49,28 +49,35 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
     } @else {
       <div class="mt-4 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         @for (p of productos; track p.id) {
-          <article class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-row sm:flex-col" [class.opacity-60]="!p.activo">
-            <!-- Celular: foto a la izquierda (una tarjeta por línea). Computador: foto arriba -->
-            <div class="w-28 sm:w-auto shrink-0 sm:aspect-[4/3] bg-orange-50 flex items-center justify-center">
-              @if (p.foto) {
-                <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover" loading="lazy">
-              } @else {
-                <span class="text-5xl" aria-hidden="true">🛍️</span>
-              }
+          <article class="min-w-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col" [class.opacity-60]="!p.activo">
+            <!-- Computador: foto grande arriba -->
+            <div class="hidden sm:flex aspect-[4/3] bg-orange-50 items-center justify-center">
+              @if (p.foto) { <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover" loading="lazy"> }
+              @else { <span class="text-5xl" aria-hidden="true">🛍️</span> }
             </div>
             <div class="p-4 flex-1 min-w-0 flex flex-col">
-              <p class="font-semibold text-gray-800 leading-tight">{{ p.nombre }}</p>
-              <p class="text-sm text-gray-500 mt-1">{{ 'wg.pestanas.tienda.pesos' | translate: { n: (p.precio_cop | number) } }}</p>
-              <div class="mt-2 flex flex-wrap gap-1">
+              <!-- Celular: foto pequeña al lado del nombre -->
+              <div class="flex items-start gap-3">
+                <div class="sm:hidden w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-orange-50 flex items-center justify-center">
+                  @if (p.foto) { <img [src]="urlFoto(p.foto)" [alt]="p.nombre" class="w-full h-full object-cover" loading="lazy"> }
+                  @else { <span class="text-3xl" aria-hidden="true">🛍️</span> }
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-gray-800 leading-tight">{{ p.nombre }}</p>
+                  <p class="text-sm text-gray-500 mt-0.5">{{ 'wg.pestanas.tienda.pesos' | translate: { n: (p.precio_cop | number) } }}</p>
+                  <p class="text-xs mt-1" [class]="p.stock > 0 ? 'text-gray-500' : 'text-red-600 font-semibold'">
+                    {{ p.stock > 0 ? ('wg.pestanas.tienda.disponibles' | translate: { n: (p.stock | number) }) : ('wg.pestanas.tienda.agotado' | translate) }}{{ p.maximo_por_estudiante ? ' · ' + ('wg.pestanas.tienda.maxPorEstudiante' | translate: { n: p.maximo_por_estudiante }) : '' }}
+                  </p>
+                  @if (!p.activo) { <p class="text-xs font-semibold text-gray-500 mt-1">{{ 'wg.pestanas.tienda.ocultoCaja' | translate }}</p> }
+                </div>
+              </div>
+              <!-- Precio en la moneda de cada país -->
+              <div class="mt-3 grid grid-cols-3 gap-1.5">
                 @for (pa of paises; track pa.id) {
-                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" [style.background]="pa.color">{{ billetes(p, pa) | number }} {{ pa.codigo_moneda }}</span>
+                  <span class="text-xs font-bold px-2 py-1 rounded-lg text-white text-center whitespace-nowrap" [style.background]="pa.color">{{ billetes(p, pa) | number }} {{ pa.codigo_moneda }}</span>
                 }
               </div>
-              <p class="text-xs mt-2" [class]="p.stock > 0 ? 'text-gray-500' : 'text-red-600 font-semibold'">
-                {{ p.stock > 0 ? ('wg.pestanas.tienda.disponibles' | translate: { n: (p.stock | number) }) : ('wg.pestanas.tienda.agotado' | translate) }}{{ p.maximo_por_estudiante ? ' · ' + ('wg.pestanas.tienda.maxPorEstudiante' | translate: { n: p.maximo_por_estudiante }) : '' }}
-              </p>
-              @if (!p.activo) { <p class="text-xs font-semibold text-gray-500 mt-1">{{ 'wg.pestanas.tienda.ocultoCaja' | translate }}</p> }
-              <button type="button" (click)="editar(p)" class="mt-auto pt-3 text-sm font-semibold text-orange-700 hover:underline text-left">{{ 'wg.pestanas.comun.editar' | translate }}</button>
+              <button type="button" (click)="editar(p)" class="mt-3 sm:mt-auto sm:pt-3 w-full sm:w-auto py-2 sm:py-0 rounded-xl sm:rounded-none border border-orange-200 sm:border-0 text-sm font-semibold text-orange-700 hover:bg-orange-50 sm:hover:bg-transparent sm:hover:underline sm:text-left">{{ 'wg.pestanas.comun.editar' | translate }}</button>
             </div>
           </article>
         }
