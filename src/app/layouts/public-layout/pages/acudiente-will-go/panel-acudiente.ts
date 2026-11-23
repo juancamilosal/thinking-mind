@@ -7,7 +7,7 @@ import { AcudienteWillGoService, EdicionPortal, FondoPortal, HijoPortal, DatosPa
 import { TarjetaFondoComponent } from '../../../private-layout-will-go/tarjeta-fondo.component';
 import { GraficaRendimientoComponent } from '../../../private-layout-will-go/grafica-rendimiento.component';
 import { formatearNumero } from '../../../private-layout-will-go/numero-miles.directive';
-import { ListaMovimientosComponent } from '../../../private-layout-will-go/lista-movimientos.component';
+import { ListaMovimientosComponent, MovimientoLista } from '../../../private-layout-will-go/lista-movimientos.component';
 import { ProcesandoRondaComponent } from '../../../private-layout-will-go/procesando-ronda.component';
 import { GraficaTasaComponent } from '../../../private-layout-will-go/grafica-tasa.component';
 import { SelectorIdiomaComponent } from '../../../private-layout-will-go/selector-idioma.component';
@@ -104,10 +104,26 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
                       }
                     </div>
                   </div>
-                  <div class="relative mt-5">
-                    <p class="text-xs uppercase tracking-wide font-semibold opacity-90">{{ 'wg.familias.panel.enSuBolsillo' | translate }}</p>
-                    <p class="text-4xl font-extrabold leading-none mt-1 break-all">{{ miles(h.saldo) }} <span class="text-lg font-bold opacity-90">{{ h.codigo_moneda }}</span></p>
+                  <!-- Efectivo (billetes) y cuenta (tarjeta débito), lado a lado -->
+                  <div class="relative mt-5 grid grid-cols-2 gap-3">
+                    <div class="min-w-0">
+                      <p class="text-xs uppercase tracking-wide font-semibold opacity-90">{{ 'wg.familias.panel.enSuBolsillo' | translate }}</p>
+                      <p class="text-2xl sm:text-4xl font-extrabold leading-none mt-1 break-all">{{ miles(h.saldo) }} <span class="text-sm sm:text-lg font-bold opacity-90">{{ h.codigo_moneda }}</span></p>
+                    </div>
+                    <div class="min-w-0 border-l border-white/25 pl-3">
+                      <p class="text-xs uppercase tracking-wide font-semibold opacity-90">{{ 'wg.vistacuenta.enSuCuenta' | translate }}</p>
+                      <p class="text-2xl sm:text-4xl font-extrabold leading-none mt-1 break-all">{{ miles(h.cuenta ?? 0) }} <span class="text-sm sm:text-lg font-bold opacity-90">{{ h.codigo_moneda }}</span></p>
+                    </div>
                   </div>
+                  @if (h.llave) {
+                    <div class="relative mt-3 flex items-center gap-2 rounded-xl bg-black/15 px-3 py-2">
+                      <svg class="w-4 h-4 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                      <div class="min-w-0">
+                        <p class="font-bold font-mono text-sm break-all leading-tight">{{ h.llave }}</p>
+                        <p class="text-[11px] opacity-90 leading-tight">{{ 'wg.vistacuenta.llaveAyuda' | translate }}</p>
+                      </div>
+                    </div>
+                  }
                   <div class="relative mt-4 grid grid-cols-2 gap-2">
                     <div class="rounded-xl bg-white/15 px-3 py-2">
                       <p class="text-[11px] uppercase tracking-wide opacity-90">{{ 'wg.familias.panel.invertidoHoy' | translate }}</p>
@@ -152,7 +168,7 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
                       </ul>
                     }
                   } @else if (vistaDe(h) === 'movimientos') {
-                    <wg-lista-movimientos class="block mt-3" [movimientos]="h.movimientos" [pais]="{ nombre: h.pais || '', color: h.color }"
+                    <wg-lista-movimientos class="block mt-3" [movimientos]="movimientosDe(h)" [pais]="{ nombre: h.pais || '', color: h.color }"
                                           [totalEntro]="h.total_entro" [totalSalio]="h.total_salio" [vacio]="'wg.familias.panel.sinMovimientos' | translate" />
                   } @else if (!h.inversiones.length) {
                     <p class="text-sm text-gray-500 mt-3">{{ 'wg.familias.panel.sinInversiones' | translate }}</p>
@@ -334,6 +350,19 @@ export class PanelAcudiente implements OnInit, OnDestroy {
   fondoHijo(h: HijoPortal): string {
     const c = h.color || '#1e293b';
     return `linear-gradient(135deg, ${c} 0%, ${c} 55%, color-mix(in srgb, ${c} 70%, #000) 100%)`;
+  }
+  /** Movimientos con el medio (efectivo o cuenta) como etiqueta junto a la fecha; se guardan para no rehacer la lista en cada ciclo. */
+  private movimientosCache = new WeakMap<object, { textos: string; lista: MovimientoLista[] }>();
+  movimientosDe(h: HijoPortal): MovimientoLista[] {
+    const lista = h.movimientos ?? [];
+    const efectivo = this.t.instant('wg.vistacuenta.medioEfectivo');
+    const cuenta = this.t.instant('wg.vistacuenta.medioCuenta');
+    const textos = `${efectivo}|${cuenta}`;
+    const previa = this.movimientosCache.get(lista);
+    if (previa && previa.textos === textos) return previa.lista;
+    const nueva = lista.map((m) => ({ ...m, quien: m.medio === 'cuenta' ? cuenta : m.medio === 'efectivo' ? efectivo : undefined }));
+    this.movimientosCache.set(lista, { textos, lista: nueva });
+    return nueva;
   }
   /** Lo que valen hoy sus inversiones que siguen en las empresas. */
   invertidoHoy(h: HijoPortal): number { return h.inversiones.filter((i) => i.estado === 'abierta').reduce((t, i) => t + Number(i.valor), 0); }

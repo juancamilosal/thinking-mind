@@ -63,7 +63,7 @@ import { formatearNumero } from '../../../numero-miles.directive';
       }
 
       @if (pais) {
-        <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <div class="rounded-2xl p-4 text-white shadow" [style.background]="pais.color || '#1e293b'">
             <p class="text-xs opacity-90">{{ 'wg.pestanas.resumen.banco' | translate }}</p>
             <p class="text-xl font-extrabold break-all">$ {{ miles(pais.saldo_banco) }}</p>
@@ -83,6 +83,11 @@ import { formatearNumero } from '../../../numero-miles.directive';
             <p class="text-xs text-gray-500">{{ 'wg.pestanas.resumen.conDocentes' | translate }}</p>
             <p class="text-xl font-extrabold text-gray-800 break-all">$ {{ miles(pais.saldo_docentes) }}</p>
             <p class="text-[11px] text-gray-500">{{ 'wg.pestanas.resumen.tasaFinal' | translate: { n: miles(pais.tasa_actual ?? 0) } }}</p>
+          </div>
+          <div class="col-span-2 sm:col-span-1 rounded-2xl bg-white border border-gray-200 p-4">
+            <p class="text-xs text-gray-500">{{ 'wg.vistacuenta.enCuentas' | translate }}</p>
+            <p class="text-xl font-extrabold text-gray-800 break-all">$ {{ miles(pais.saldo_cuentas ?? 0) }}</p>
+            <p class="text-[11px] text-gray-500">{{ 'wg.vistacuenta.enCuentasAyuda' | translate }}</p>
           </div>
         </div>
 
@@ -109,6 +114,7 @@ import { formatearNumero } from '../../../numero-miles.directive';
                   @if (e.invertido) {
                     <div class="text-right"><p class="text-[11px] text-gray-500">{{ 'wg.pestanas.resumen.invertido' | translate }}</p><p class="text-sm font-semibold text-gray-700">{{ miles(e.invertido) }}</p></div>
                   }
+                  <div class="text-right"><p class="text-[11px] text-gray-500">{{ 'wg.vistacuenta.cuenta' | translate }}</p><p class="text-sm font-semibold text-gray-700">{{ miles(e.cuenta ?? 0) }}</p></div>
                   <div class="text-right"><p class="text-[11px] text-gray-500">{{ 'wg.pestanas.resumen.total' | translate }}</p><p class="text-lg font-extrabold" [style.color]="pais.color || '#1e293b'">$ {{ miles(e.total) }}</p></div>
                 </div>
               </li>
