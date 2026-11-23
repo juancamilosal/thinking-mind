@@ -53,14 +53,14 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
               {{ (vista === 'vigentes' ? 'wg.admin.ed.sinVigentes' : 'wg.admin.ed.sinTerminadas') | translate }}
             </div>
           }
-          <div class="grid gap-4 md:grid-cols-2">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             @for (e of visibles; track e.id) {
-              <article class="group bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition flex flex-col" [class.opacity-75]="terminada(e)">
+              <article class="group min-w-0 bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-orange-300 transition flex flex-col" [class.opacity-75]="terminada(e)">
                 <a [routerLink]="['/private-will-go/ediciones', e.id]" class="block">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                      <p class="font-bold text-gray-800 text-lg truncate">{{ e.nombre }}</p>
-                      <p class="text-sm text-gray-500 truncate">{{ e.colegio_nombre || ('wg.admin.sinColegio' | translate) }} · {{ e.programa_nombre || ('wg.admin.sinPrograma' | translate) }}{{ e.edicion_programa ? ' · ' + ('wg.admin.edicionN' | translate: { n: e.edicion_programa }) : '' }}</p>
+                      <p class="font-bold text-gray-800 text-lg leading-snug break-words">{{ e.nombre }}</p>
+                      <p class="text-sm text-gray-500 break-words">{{ e.colegio_nombre || ('wg.admin.sinColegio' | translate) }} · {{ e.programa_nombre || ('wg.admin.sinPrograma' | translate) }}{{ e.edicion_programa ? ' · ' + ('wg.admin.edicionN' | translate: { n: e.edicion_programa }) : '' }}</p>
                     </div>
                     @if (terminada(e)) {
                       <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-200 text-gray-700">{{ 'wg.admin.ed.terminada' | translate }}</span>
@@ -74,8 +74,8 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
                     @if (e.sin_pais) { <span class="text-amber-700">⚠ {{ 'wg.admin.ed.sinPais' | translate: { n: e.sin_pais } }}</span> }
                   </div>
                 </a>
-                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                  <a [routerLink]="['/private-will-go/ediciones', e.id]" class="text-sm font-semibold text-orange-700 hover:underline mr-auto">{{ 'wg.admin.ed.administrar' | translate }}</a>
+                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                  <a [routerLink]="['/private-will-go/ediciones', e.id]" class="w-full sm:w-auto text-sm font-semibold text-orange-700 hover:underline sm:mr-auto">{{ 'wg.admin.ed.administrar' | translate }}</a>
                   <a [routerLink]="['/private-will-go/ediciones', e.id]" [queryParams]="{ pestana: 'general' }" class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">{{ 'wg.admin.editar' | translate }}</a>
                   <button type="button" (click)="aEliminar = e" class="px-3 py-1.5 text-sm rounded-lg border border-red-200 text-red-700 hover:bg-red-50">{{ 'wg.admin.eliminar' | translate }}</button>
                 </div>

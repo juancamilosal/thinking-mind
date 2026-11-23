@@ -16,7 +16,7 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
       <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.pestanas.comun.cargando' | translate }}</div>
     } @else {
       <!-- Resumen de los países -->
-      <div class="grid gap-3 sm:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         @for (p of paises; track p.id) {
           <button type="button" (click)="elegir(p)" class="text-left bg-white rounded-2xl border-2 p-4 transition"
                   [style.border-color]="actual?.id === p.id ? (p.color || '#94a3b8') : '#e5e7eb'">
@@ -51,7 +51,7 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
       @if (actual) {
         <!-- Datos del país -->
         <section class="tarjeta mt-4">
-          <div class="grid gap-4 sm:grid-cols-[auto_1fr_7rem]">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr_7rem]">
             <div>
               <label class="etiqueta" [attr.for]="'color-' + actual.id">{{ 'wg.pestanas.paises.color' | translate }}</label>
               <input [id]="'color-' + actual.id" type="color" [(ngModel)]="actual.color" class="block w-14 h-[46px] rounded-xl border-2 border-gray-200 cursor-pointer p-1 bg-gray-50">
@@ -65,7 +65,7 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
               <input [id]="'mon-' + actual.id" [(ngModel)]="actual.codigo_moneda" maxlength="5" class="campo uppercase" placeholder="WON">
             </div>
           </div>
-          <div class="grid gap-4 sm:grid-cols-[1fr_10rem] mt-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_10rem] mt-4">
             <div>
               <label class="etiqueta" [attr.for]="'banco-' + actual.id">{{ 'wg.pestanas.paises.responsableBanco' | translate }}</label>
               <wg-buscador-persona [inputId]="'banco-' + actual.id" [(ngModel)]="actual.responsable_banco" [personas]="banqueros"

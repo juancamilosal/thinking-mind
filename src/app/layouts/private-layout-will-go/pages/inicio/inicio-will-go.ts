@@ -23,7 +23,7 @@ import { OpcionMenu, menuPara } from '../../menu-will-go';
           <p class="text-sm text-gray-600 mt-1 max-w-md mx-auto">{{ ayudaSinTareas | translate }}</p>
         </div>
       }
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @for (op of opciones; track op.texto) {
           @if (op.ruta) {
             <a [routerLink]="op.ruta" class="group bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-teal-300 transition">
