@@ -1334,7 +1334,7 @@
         "todos": "Todos"
       },
       "paises": {
-        "dineroBanco": "dinero en el banco",
+        "dineroBanco": "dinero en efectivo en el banco",
         "faltaDetalle": "⚠ Falta el detalle de billetes",
         "sinResponsable": "Sin responsable del banco",
         "impresos": "Impresos",
@@ -1374,8 +1374,13 @@
         "virtualMonto": "Monto a cargar",
         "virtualCargar": "Cargar más",
         "virtualListo": "Saldo virtual cargado.",
-        "virtualConfirmar": "¿Cargar {{n}} de saldo virtual al banco de {{pais}}?",
-        "virtualBanco": "saldo virtual del banco"
+        "virtualBanco": "saldo virtual del banco",
+        "virtualConfirmarTitulo": "¿Cargar saldo virtual?",
+        "billetesConfirmarTitulo": "¿Agregar billetes al banco?",
+        "bancoDe": "Banco de {{pais}}",
+        "quedaVirtual": "El saldo virtual quedará en $ {{n}}.",
+        "quedanImpresos": "Los billetes impresos quedarán en $ {{n}}. El saldo virtual sube lo mismo.",
+        "virtualCargarSi": "Sí, cargar"
       },
       "fondos": {
         "intro": "Así ven las empresas los estudiantes y acudientes.",

@@ -1334,7 +1334,7 @@
         "todos": "All"
       },
       "paises": {
-        "dineroBanco": "money in the bank",
+        "dineroBanco": "cash in the bank",
         "faltaDetalle": "⚠ Bill breakdown missing",
         "sinResponsable": "No bank manager",
         "impresos": "Printed",
@@ -1374,8 +1374,13 @@
         "virtualMonto": "Amount to load",
         "virtualCargar": "Load more",
         "virtualListo": "Virtual balance loaded.",
-        "virtualConfirmar": "Load {{n}} of virtual balance to the {{pais}} bank?",
-        "virtualBanco": "bank's virtual balance"
+        "virtualBanco": "bank's virtual balance",
+        "virtualConfirmarTitulo": "Load virtual balance?",
+        "billetesConfirmarTitulo": "Add bills to the bank?",
+        "bancoDe": "{{pais}} bank",
+        "quedaVirtual": "The virtual balance will be $ {{n}}.",
+        "quedanImpresos": "Printed bills will total $ {{n}}. The virtual balance goes up by the same amount.",
+        "virtualCargarSi": "Yes, load"
       },
       "fondos": {
         "intro": "This is how students and parents see the companies.",

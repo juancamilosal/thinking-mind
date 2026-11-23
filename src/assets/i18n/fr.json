@@ -1334,7 +1334,7 @@
         "todos": "Tous"
       },
       "paises": {
-        "dineroBanco": "argent à la banque",
+        "dineroBanco": "espèces à la banque",
         "faltaDetalle": "⚠ Détail des billets manquant",
         "sinResponsable": "Aucun responsable de banque",
         "impresos": "Imprimés",
@@ -1374,8 +1374,13 @@
         "virtualMonto": "Montant à charger",
         "virtualCargar": "Charger plus",
         "virtualListo": "Solde virtuel chargé.",
-        "virtualConfirmar": "Charger {{n}} de solde virtuel à la banque de {{pais}} ?",
-        "virtualBanco": "solde virtuel de la banque"
+        "virtualBanco": "solde virtuel de la banque",
+        "virtualConfirmarTitulo": "Charger le solde virtuel ?",
+        "billetesConfirmarTitulo": "Ajouter des billets à la banque ?",
+        "bancoDe": "Banque de {{pais}}",
+        "quedaVirtual": "Le solde virtuel sera de $ {{n}}.",
+        "quedanImpresos": "Les billets imprimés totaliseront $ {{n}}. Le solde virtuel augmente du même montant.",
+        "virtualCargarSi": "Oui, charger"
       },
       "fondos": {
         "intro": "Voici comment les élèves et les parents voient les entreprises.",

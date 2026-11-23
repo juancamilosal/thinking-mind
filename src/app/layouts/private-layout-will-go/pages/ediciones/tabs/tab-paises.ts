@@ -183,6 +183,30 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
         </section>
       }
     }
+
+    @if (confirmacion; as c) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" (click)="confirmacion = null">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmar-banco">
+          <h2 id="titulo-confirmar-banco" class="text-lg font-bold text-gray-800">
+            {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.virtualConfirmarTitulo' : 'wg.pestanas.paises.billetesConfirmarTitulo') | translate }}
+          </h2>
+          <p class="text-sm text-gray-600 mt-1">{{ 'wg.pestanas.paises.bancoDe' | translate: { pais: c.pais } }}</p>
+          <div class="mt-4 rounded-2xl p-5 text-white" [style.background]="c.color">
+            <p class="text-xs opacity-90">{{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.virtualMonto' : 'wg.pestanas.paises.entranBanco') | translate }}</p>
+            <p class="text-3xl font-extrabold break-all">+ $ {{ miles(c.monto) }}</p>
+          </div>
+          <p class="mt-3 text-sm text-gray-700">
+            {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.quedaVirtual' : 'wg.pestanas.paises.quedanImpresos') | translate: { n: miles(c.despues) } }}
+          </p>
+          <div class="flex gap-3 mt-6">
+            <button type="button" (click)="confirmacion = null" class="flex-1 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.comun.cancelar' | translate }}</button>
+            <button type="button" (click)="confirmar()" class="flex-1 py-2.5 rounded-xl font-semibold text-white bg-orange-600 hover:bg-orange-700">
+              {{ (c.tipo === 'virtual' ? 'wg.pestanas.paises.virtualCargarSi' : 'wg.pestanas.paises.agregarAlBanco') | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [ESTILOS_CAMPOS],
 })
@@ -320,6 +344,16 @@ export class TabPaises implements OnInit {
     });
   }
 
+  /** Confirmación (en un modal) antes de cargar saldo virtual o agregar billetes al banco. */
+  confirmacion: { tipo: 'virtual' | 'billetes'; monto: number; pais: string; color: string; despues: number } | null = null;
+
+  confirmar(): void {
+    const c = this.confirmacion;
+    this.confirmacion = null;
+    if (!c) return;
+    if (c.tipo === 'virtual') this.ejecutarCargaVirtual(c.monto); else this.ejecutarAgregarBilletes();
+  }
+
   montoVirtual: number | null = null;
   cargandoVirtual = false;
   cargadoVirtual = false;
@@ -330,7 +364,12 @@ export class TabPaises implements OnInit {
     const p = this.actual;
     const monto = Number(this.montoVirtual);
     if (!p || !(monto > 0)) return;
-    if (!confirm(this.t.instant('wg.pestanas.paises.virtualConfirmar', { n: this.miles(monto), pais: p.nombre }))) return;
+    this.confirmacion = { tipo: 'virtual', monto, pais: p.nombre, color: p.color || '#334155', despues: Number(p.saldo_virtual ?? 0) + monto };
+  }
+
+  private ejecutarCargaVirtual(monto: number): void {
+    const p = this.actual;
+    if (!p) return;
     this.cargandoVirtual = true;
     this.cargadoVirtual = false;
     this.errorVirtual = '';
@@ -343,7 +382,12 @@ export class TabPaises implements OnInit {
   agregarAlBanco(): void {
     const p = this.actual;
     if (!p || !this.totalExtra) return;
-    if (!confirm(this.t.instant('wg.pestanas.paises.confirmarAgregar', { n: this.miles(this.totalExtra), pais: p.nombre }))) return;
+    this.confirmacion = { tipo: 'billetes', monto: this.totalExtra, pais: p.nombre, color: p.color || '#334155', despues: Number(p.provision_inicial ?? 0) + this.totalExtra };
+  }
+
+  private ejecutarAgregarBilletes(): void {
+    const p = this.actual;
+    if (!p || !this.totalExtra) return;
     const billetes: Record<string, number> = {};
     for (const d of DENOMINACIONES) if (Number(this.extra[d])) billetes[d] = Number(this.extra[d]);
     this.guardando = true;
