@@ -691,7 +691,9 @@
         "avisoRondaCerrada": "{{ronda}} fermée : le montant investi est passé de {{antes}} à {{despues}}.",
         "avisoAbiertaSiguiente": " {{ronda}} ouverte.",
         "avisoRetiro": "{{nombre}} a retiré {{monto}} de {{empresa}}.",
-        "avisoInversion": "{{nombre}} a investi {{monto}} dans {{empresa}}."
+        "avisoInversion": "{{nombre}} a investi {{monto}} dans {{empresa}}.",
+        "verMasRondas": "Voir plus de manches ({{n}})",
+        "verMenosRondas": "Voir moins de manches"
       }
     },
     "cuentas": {
@@ -1074,7 +1076,9 @@
         "marcaEmpresa": "Cochez une entreprise pour voir sa courbe",
         "ocultarTabla": "Masquer le tableau",
         "verTabla": "Voir le tableau",
-        "empresa": "Entreprise"
+        "empresa": "Entreprise",
+        "ultimas": "{{n}} dernières",
+        "todasRondas": "Toutes ({{n}})"
       },
       "tasa": {
         "titulo": "Taux de change dans le temps",

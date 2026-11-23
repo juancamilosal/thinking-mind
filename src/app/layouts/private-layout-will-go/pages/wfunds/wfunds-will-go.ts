@@ -239,9 +239,10 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           @if (!cerradas.length) {
             <p class="mt-4 text-sm text-gray-500">{{ 'wg.banco.wfunds.sinResultados' | translate }}</p>
           }
-          @for (r of cerradas; track r.id) {
+          <!-- Solo la última ronda; las demás aparecen con «Ver más rondas» -->
+          @for (r of (verMasRondas ? cerradas : cerradas.slice(0, 1)); track r.id) {
             <section class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
-              <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div class="px-4 py-3 border-b border-gray-100 flex flex-wrap items-baseline justify-between gap-x-3">
                 <h2 class="font-bold text-gray-800">{{ r.nombre }}</h2>
                 <span class="text-xs text-gray-500">{{ r.apertura | wgFecha:'d MMM, h:mm a' }} – {{ r.cierre | wgFecha:'h:mm a' }}</span>
               </div>
@@ -252,12 +253,18 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
                       @if (f.logo) { <img [src]="logo(f)" alt="" class="w-10 h-10 rounded-xl object-cover shrink-0"> }
                       @else { <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">{{ iniciales(x.fondo) }}</div> }
                     }
-                    <p class="flex-1 font-semibold text-gray-800 truncate">{{ x.fondo }}</p>
+                    <p class="flex-1 min-w-0 font-semibold text-gray-800 leading-snug">{{ x.fondo }}</p>
                     <span class="px-2.5 py-1 rounded-full text-sm font-bold" [class]="x.rendimiento >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'">{{ porcentaje(x.rendimiento) }}</span>
                   </li>
                 }
               </ul>
             </section>
+          }
+          @if (cerradas.length > 1) {
+            <button type="button" (click)="verMasRondas = !verMasRondas"
+                    class="mt-4 w-full py-3 rounded-xl border-2 border-gray-200 bg-white font-semibold text-gray-700 hover:bg-gray-50">
+              {{ verMasRondas ? ('wg.banco.wfunds.verMenosRondas' | translate) : ('wg.banco.wfunds.verMasRondas' | translate: { n: cerradas.length - 1 }) }}
+            </button>
           }
         }
       }
@@ -482,6 +489,8 @@ export class WfundsWillGo implements OnInit, OnDestroy {
   /** Las rondas se reanudan solas al empezar la siguiente franja del horario. */
   get sigueSola(): boolean { return !!(this.datos?.edicion.estado === 'abierta' && this.datos.reanudacion?.automaticas && this.datos.reanudacion.proxima); }
 
+  /** En Resultados se ve solo la última ronda hasta que se pidan las demás. */
+  verMasRondas = false;
   get cerradas() { return (this.datos?.rondas ?? []).filter((r) => r.estado !== 'abierta'); }
   /** Rondas cerradas de la más vieja a la más nueva (para la gráfica); se recalcula solo cuando cambian los datos. */
   cronologicas: DatosWfunds['rondas'] = [];

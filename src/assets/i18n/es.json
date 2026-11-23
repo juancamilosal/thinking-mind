@@ -691,7 +691,9 @@
         "avisoRondaCerrada": "{{ronda}} cerrada: lo invertido pasó de {{antes}} a {{despues}}.",
         "avisoAbiertaSiguiente": " Abierta {{ronda}}.",
         "avisoRetiro": "{{nombre}} retiró {{monto}} de {{empresa}}.",
-        "avisoInversion": "{{nombre}} invirtió {{monto}} en {{empresa}}."
+        "avisoInversion": "{{nombre}} invirtió {{monto}} en {{empresa}}.",
+        "verMasRondas": "Ver más rondas ({{n}})",
+        "verMenosRondas": "Ver menos rondas"
       }
     },
     "cuentas": {
@@ -1074,7 +1076,9 @@
         "marcaEmpresa": "Marca una empresa para ver su línea",
         "ocultarTabla": "Ocultar tabla",
         "verTabla": "Ver tabla",
-        "empresa": "Empresa"
+        "empresa": "Empresa",
+        "ultimas": "Últimas {{n}}",
+        "todasRondas": "Todas ({{n}})"
       },
       "tasa": {
         "titulo": "Tipo de cambio en el tiempo",

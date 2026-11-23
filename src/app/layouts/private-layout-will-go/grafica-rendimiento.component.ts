@@ -40,6 +40,15 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
           <button type="button" (click)="ocultarTodas()" [disabled]="ocultas.size === series.length" class="font-semibold text-orange-600 hover:underline disabled:text-gray-300 disabled:no-underline">{{ 'wg.nucleo.rendimiento.ninguna' | translate }}</button>
         </div>
 
+        <!-- Con muchas rondas en pantalla angosta: ver solo las últimas o todas -->
+        @if (recortada) {
+          <div class="mt-3 inline-grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 text-xs font-semibold" role="tablist">
+            <button type="button" role="tab" [attr.aria-selected]="!verTodas" (click)="alternarTodas(false)"
+                    class="px-3 py-1.5 rounded-lg" [class]="!verTodas ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.nucleo.rendimiento.ultimas' | translate: { n: caben } }}</button>
+            <button type="button" role="tab" [attr.aria-selected]="verTodas" (click)="alternarTodas(true)"
+                    class="px-3 py-1.5 rounded-lg" [class]="verTodas ? 'bg-white shadow text-gray-800' : 'text-gray-500'">{{ 'wg.nucleo.rendimiento.todasRondas' | translate: { n: todas.length } }}</button>
+          </div>
+        }
         <div #lienzo class="mt-2 w-full">
         <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" [attr.width]="ancho" [attr.height]="alto" class="block select-none" role="img" [attr.aria-label]="'wg.nucleo.rendimiento.aria' | translate: { n: rondas.length }">
           <!-- Rejilla y eje -->
@@ -99,14 +108,14 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
             <table class="w-full text-sm">
               <thead><tr class="text-left text-xs text-gray-500">
                 <th class="py-1.5 pr-3 font-semibold">{{ 'wg.nucleo.rendimiento.empresa' | translate }}</th>
-                @for (r of rondas; track $index) { <th class="py-1.5 px-2 font-semibold text-right whitespace-nowrap">{{ corto(r.nombre) }}</th> }
+                @for (r of todas; track $index) { <th class="py-1.5 px-2 font-semibold text-right whitespace-nowrap">{{ corto(r.nombre) }}</th> }
               </tr></thead>
               <tbody>
                 @for (s of seriesVisibles; track s.id) {
                   <tr class="border-t border-gray-100">
                     <td class="py-1.5 pr-3 text-gray-700 whitespace-nowrap">{{ s.nombre }}</td>
-                    @for (r of rondas; track $index; let i = $index) {
-                      <td class="py-1.5 px-2 text-right tabular-nums" [class]="(valor(s.id, i) ?? 0) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ valor(s.id, i) === null ? '—' : pct(valor(s.id, i)!) }}</td>
+                    @for (r of todas; track $index) {
+                      <td class="py-1.5 px-2 text-right tabular-nums" [class]="(valorDe(s.id, r) ?? 0) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ valorDe(s.id, r) === null ? '—' : pct(valorDe(s.id, r)!) }}</td>
                     }
                   </tr>
                 }
@@ -121,7 +130,15 @@ const IZQ = 44, DER = 14, ARRIBA = 14, ABAJO = 30;
 export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input({ required: true }) fondos: FondoGrafica[] = [];
   /** Rondas cerradas, de la más vieja a la más nueva. */
-  @Input({ required: true }) rondas: RondaGrafica[] = [];
+  @Input({ required: true }) set rondas(v: RondaGrafica[]) { this.todas = v ?? []; }
+  /** Las rondas que se dibujan: en pantallas angostas, solo las últimas (salvo que se pidan todas). */
+  get rondas(): RondaGrafica[] { return this.verTodas || this.todas.length <= this.caben ? this.todas : this.todas.slice(-this.caben); }
+  todas: RondaGrafica[] = [];
+  /** Cuántas rondas caben sin amontonarse (unos 30 px por ronda). */
+  get caben(): number { return Math.max(4, Math.floor((this.ancho - IZQ - DER) / 30)); }
+  verTodas = false;
+  get recortada(): boolean { return this.todas.length > this.caben; }
+  alternarTodas(v: boolean): void { this.verTodas = v; this.elegida = this.rondas.length ? this.rondas.length - 1 : null; this.calcular(); }
 
   readonly izq = IZQ; readonly der = DER; readonly arriba = ARRIBA; readonly abajo = ABAJO;
   /** Se dibuja al tamaño real de la pantalla (las letras y líneas no se estiran). */
@@ -157,7 +174,7 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
     this.observador = new ResizeObserver(([e]) => {
       const w = Math.max(260, Math.floor(e.contentRect.width));
       // El aviso de cambio de tamaño llega fuera de Angular: se vuelve a entrar para que se redibuje
-      if (w !== this.ancho) this.zona.run(() => { this.ancho = w; this.calcular(); });
+      if (w !== this.ancho) this.zona.run(() => { this.ancho = w; this.elegida = this.rondas.length ? this.rondas.length - 1 : null; this.calcular(); });
     });
     this.observador.observe(el);
   }
@@ -186,8 +203,9 @@ export class GraficaRendimientoComponent implements OnChanges, AfterViewInit, On
   y(v: number): number { return ARRIBA + ((this.maximo - v) / (this.maximo - this.minimo)) * (this.alto - ARRIBA - ABAJO); }
 
   /** % de la empresa en esa ronda, o null si no participó. */
-  valor(fondoId: string, i: number): number | null {
-    const x = this.rondas[i]?.resultados.find((r) => r.fondo_id === fondoId);
+  valor(fondoId: string, i: number): number | null { return this.valorDe(fondoId, this.rondas[i]); }
+  valorDe(fondoId: string, ronda: RondaGrafica | undefined): number | null {
+    const x = ronda?.resultados.find((r) => r.fondo_id === fondoId);
     return x ? Math.round(Number(x.rendimiento) * 1000) / 10 : null;
   }
 

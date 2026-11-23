@@ -691,7 +691,9 @@
         "avisoRondaCerrada": "{{ronda}} closed: invested money went from {{antes}} to {{despues}}.",
         "avisoAbiertaSiguiente": " {{ronda}} open.",
         "avisoRetiro": "{{nombre}} withdrew {{monto}} from {{empresa}}.",
-        "avisoInversion": "{{nombre}} invested {{monto}} in {{empresa}}."
+        "avisoInversion": "{{nombre}} invested {{monto}} in {{empresa}}.",
+        "verMasRondas": "See more rounds ({{n}})",
+        "verMenosRondas": "See fewer rounds"
       }
     },
     "cuentas": {
@@ -1074,7 +1076,9 @@
         "marcaEmpresa": "Check a company to see its line",
         "ocultarTabla": "Hide table",
         "verTabla": "Show table",
-        "empresa": "Company"
+        "empresa": "Company",
+        "ultimas": "Last {{n}}",
+        "todasRondas": "All ({{n}})"
       },
       "tasa": {
         "titulo": "Exchange rate over time",
