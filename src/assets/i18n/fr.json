@@ -862,7 +862,9 @@
       "agregarDinero": "Ajouter de l’argent",
       "agregado": "Argent ajouté à la banque.",
       "confirmarTitulo": "Ajouter de l’argent à la banque ?",
-      "quedaBanco": "L’argent de la banque passera à $ {{n}}. Le solde virtuel augmente d’autant."
+      "quedaBanco": "L’argent de la banque passera à $ {{n}}. Le solde virtuel augmente d’autant.",
+      "buscarDocente": "Rechercher un enseignant…",
+      "sinResultados": "Aucun enseignant avec ce nom."
     },
     "montofondos": {
       "cuantoInvierte": "Combien investit-il ?",

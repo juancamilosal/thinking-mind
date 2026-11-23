@@ -66,8 +66,13 @@ import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.direct
         @if (!pais.docentes.length) {
           <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center text-gray-600">{{ 'wg.banco.repartir.sinDocentes' | translate: { pais: pais.nombre } }}</div>
         } @else {
-          <ul class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-            @for (d of pais.docentes; track d.id) {
+          <input type="search" [(ngModel)]="buscarDocente" [placeholder]="'wg.montobanco.buscarDocente' | translate" [attr.aria-label]="'wg.montobanco.buscarDocente' | translate"
+                 class="w-full mb-3 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+          @if (!docentesFiltrados(pais).length) {
+            <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-600">{{ 'wg.montobanco.sinResultados' | translate }}</div>
+          }
+          <ul class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden" [class.hidden]="!docentesFiltrados(pais).length">
+            @for (d of docentesFiltrados(pais); track d.id) {
               <!-- Celular: nombre y saldos a todo lo ancho, y el botón debajo. Desde tableta: el botón a la derecha -->
               <li class="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
                 <div class="flex items-start gap-3 min-w-0 flex-1">
@@ -274,4 +279,13 @@ export class RepartirWillGo implements OnInit {
       error: (e) => { this.enviando = false; this.errorEntrega = WillGoService.mensajeDeError(e); },
     });
   }
+
+  /** Buscador de la lista de docentes (por nombre, sin importar tildes ni mayúsculas). */
+  buscarDocente = '';
+  docentesFiltrados(p: PaisReparto): PaisReparto['docentes'] {
+    const q = this.sinTildes(this.buscarDocente.trim());
+    if (!q) return p.docentes;
+    return p.docentes.filter((d) => this.sinTildes(`${d.nombre} ${d.apellido}`).includes(q));
+  }
+  private sinTildes(t: string): string { return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
 }

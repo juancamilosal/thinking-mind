@@ -862,7 +862,9 @@
       "agregarDinero": "Agregar dinero",
       "agregado": "Dinero agregado al banco.",
       "confirmarTitulo": "¿Agregar dinero al banco?",
-      "quedaBanco": "El dinero del banco quedará en $ {{n}}. El saldo virtual sube lo mismo."
+      "quedaBanco": "El dinero del banco quedará en $ {{n}}. El saldo virtual sube lo mismo.",
+      "buscarDocente": "Buscar docente…",
+      "sinResultados": "No hay docentes con ese nombre."
     },
     "montofondos": {
       "cuantoInvierte": "¿Cuánto invierte?",
