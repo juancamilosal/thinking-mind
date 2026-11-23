@@ -15,6 +15,8 @@ import { EntregarWillGo } from './layouts/private-layout-will-go/pages/entregar/
 import { WfundsWillGo } from './layouts/private-layout-will-go/pages/wfunds/wfunds-will-go';
 import { RubricaWillGo } from './layouts/private-layout-will-go/pages/rubrica/rubrica-will-go';
 import { TipoCambioWillGo } from './layouts/private-layout-will-go/pages/tipo-cambio/tipo-cambio-will-go';
+import { CuentasWillGo } from './layouts/private-layout-will-go/pages/cuentas/cuentas-will-go';
+import { TarjetasWillGo } from './layouts/private-layout-will-go/pages/tarjetas/tarjetas-will-go';
 import { ProductosWillGo } from './layouts/private-layout-will-go/pages/productos/productos-will-go';
 import { CajaWillGo } from './layouts/private-layout-will-go/pages/caja/caja-will-go';
 import { IngresoAcudiente } from './layouts/public-layout/pages/acudiente-will-go/ingreso-acudiente';
@@ -110,6 +112,18 @@ export const willGoRoutes: Routes = [
         title: 'Will-Go Economy | Caja GO•STORE',
         component: CajaWillGo,
         data: { roles: ['cajero', 'administrativo', 'administrador'] },
+      },
+      {
+        path: 'cuentas',
+        title: 'Will-Go Economy | Cuentas y tarjetas',
+        component: CuentasWillGo,
+        data: { roles: ['banco', 'administrativo', 'administrador'] },
+      },
+      {
+        path: 'tarjetas',
+        title: 'Will-Go Economy | Tarjetas',
+        component: TarjetasWillGo,
+        data: { roles: ['banco', 'administrativo', 'administrador'] },
       },
       {
         path: 'productos',
