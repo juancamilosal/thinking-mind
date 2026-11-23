@@ -34,8 +34,12 @@ const DENOMINACIONES = [1, 2, 5, 10, 50, 100, 200, 1000, 5000, 50000];
               <span class="font-extrabold" [style.color]="p.color || '#475569'">$</span> {{ miles(enBanco(p)) }}
               @if (p.codigo_moneda) { <span class="text-sm font-semibold text-gray-500">{{ p.codigo_moneda }}</span> }
             </p>
-            <p class="text-xs text-gray-500">{{ 'wg.pestanas.paises.dineroBanco' | translate }}</p>
-            <p class="text-xs text-gray-700 mt-1">💳 {{ 'wg.pestanas.paises.virtual' | translate }}: <b>$ {{ miles(p.saldo_virtual ?? 0) }}</b></p>
+            <p class="text-xs text-gray-500">💵 {{ 'wg.pestanas.paises.dineroBanco' | translate }}</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2 break-all">
+              <span class="font-extrabold" [style.color]="p.color || '#475569'">$</span> {{ miles(p.saldo_virtual ?? 0) }}
+              @if (p.codigo_moneda) { <span class="text-sm font-semibold text-gray-500">{{ p.codigo_moneda }}</span> }
+            </p>
+            <p class="text-xs text-gray-500">💳 {{ 'wg.pestanas.paises.virtualBanco' | translate }}</p>
             @if (sinDetalle(p)) { <p class="text-xs font-semibold text-red-600 mt-1">{{ 'wg.pestanas.paises.faltaDetalle' | translate }}</p> }
             <p class="text-xs mt-2" [class]="p.responsable_banco ? 'text-gray-700' : 'text-amber-700'">🏦 {{ nombreBanquero(p.responsable_banco) || ('wg.pestanas.paises.sinResponsable' | translate) }}</p>
             @if (p.provision_inicial) {

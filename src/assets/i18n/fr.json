@@ -1374,7 +1374,8 @@
         "virtualMonto": "Montant à charger",
         "virtualCargar": "Charger plus",
         "virtualListo": "Solde virtuel chargé.",
-        "virtualConfirmar": "Charger {{n}} de solde virtuel à la banque de {{pais}} ?"
+        "virtualConfirmar": "Charger {{n}} de solde virtuel à la banque de {{pais}} ?",
+        "virtualBanco": "solde virtuel de la banque"
       },
       "fondos": {
         "intro": "Voici comment les élèves et les parents voient les entreprises.",

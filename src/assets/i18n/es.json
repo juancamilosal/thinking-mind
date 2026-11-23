@@ -1374,7 +1374,8 @@
         "virtualMonto": "Monto a cargar",
         "virtualCargar": "Cargar más",
         "virtualListo": "Saldo virtual cargado.",
-        "virtualConfirmar": "¿Cargar {{n}} de saldo virtual al banco de {{pais}}?"
+        "virtualConfirmar": "¿Cargar {{n}} de saldo virtual al banco de {{pais}}?",
+        "virtualBanco": "saldo virtual del banco"
       },
       "fondos": {
         "intro": "Así ven las empresas los estudiantes y acudientes.",
