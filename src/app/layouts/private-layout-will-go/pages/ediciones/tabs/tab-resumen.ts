@@ -29,22 +29,23 @@ import { formatearNumero } from '../../../numero-miles.directive';
         @if (!datos.empresas.length) {
           <p class="mt-3 text-sm text-gray-500">{{ 'wg.pestanas.resumen.sinEmpresas' | translate }}</p>
         } @else {
-          <ol class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <ol class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             @for (f of datos.empresas; track f.fondo_id; let i = $index) {
-              <li class="flex items-center gap-3 rounded-xl border p-3" [class]="i === 0 && f.rondas ? 'border-amber-300 bg-amber-50' : 'border-gray-200'">
-                <span class="w-6 text-center text-sm font-bold" [class]="i === 0 && f.rondas ? 'text-amber-700' : 'text-gray-400'">{{ i === 0 && f.rondas ? '🏆' : i + 1 }}</span>
-                @if (f.logo) {
-                  <img [src]="urlFoto(f.logo)" [alt]="'wg.pestanas.comun.logoDe' | translate: { nombre: f.nombre }" class="w-11 h-11 rounded-xl object-cover bg-gray-50 ring-1 ring-black/5">
-                } @else {
-                  <div class="w-11 h-11 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm font-bold">{{ iniciales(f.nombre) }}</div>
-                }
-                <div class="min-w-0 flex-1">
-                  <p class="font-semibold text-gray-800 truncate">{{ f.nombre }}</p>
-                  <p class="text-xs text-gray-500">
-                    @if (f.rondas) { {{ 'wg.pestanas.resumen.mejorPeor' | translate: { mejor: pct(f.mejor), peor: pct(f.peor) } }} } @else { {{ 'wg.pestanas.resumen.sinRondas' | translate }} }
-                  </p>
+              <li class="min-w-0 rounded-xl border p-3" [class]="i === 0 && f.rondas ? 'border-amber-300 bg-amber-50' : 'border-gray-200'">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-5 shrink-0 text-center text-sm font-bold" [class]="i === 0 && f.rondas ? 'text-amber-700' : 'text-gray-400'">{{ i === 0 && f.rondas ? '🏆' : i + 1 }}</span>
+                  @if (f.logo) {
+                    <img [src]="urlFoto(f.logo)" [alt]="'wg.pestanas.comun.logoDe' | translate: { nombre: f.nombre }" class="w-10 h-10 shrink-0 rounded-xl object-cover bg-gray-50 ring-1 ring-black/5">
+                  } @else {
+                    <div class="w-10 h-10 shrink-0 rounded-xl bg-slate-700 text-white flex items-center justify-center text-sm font-bold">{{ iniciales(f.nombre) }}</div>
+                  }
+                  <p class="min-w-0 flex-1 font-semibold text-gray-800 leading-snug">{{ f.nombre }}</p>
+                  <p class="shrink-0 text-base sm:text-lg font-extrabold whitespace-nowrap" [class]="f.acumulado > 0 ? 'text-emerald-700' : f.acumulado < 0 ? 'text-red-600' : 'text-gray-500'">{{ pct(f.acumulado) }}</p>
                 </div>
-                <p class="text-lg font-extrabold" [class]="f.acumulado > 0 ? 'text-emerald-700' : f.acumulado < 0 ? 'text-red-600' : 'text-gray-500'">{{ pct(f.acumulado) }}</p>
+                <!-- Mejor y peor ronda, debajo, a todo lo ancho -->
+                <p class="mt-1.5 pl-[4.4rem] text-xs text-gray-500">
+                  @if (f.rondas) { {{ 'wg.pestanas.resumen.mejorPeor' | translate: { mejor: pct(f.mejor), peor: pct(f.peor) } }} } @else { {{ 'wg.pestanas.resumen.sinRondas' | translate }} }
+                </p>
               </li>
             }
           </ol>
@@ -53,9 +54,9 @@ import { formatearNumero } from '../../../numero-miles.directive';
 
       <!-- País -->
       @if (datos.paises.length > 1) {
-        <div class="mt-5 flex flex-wrap gap-2">
+        <div class="mt-5 grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
           @for (p of datos.paises; track p.id) {
-            <button type="button" (click)="pais = p" class="px-4 py-2 rounded-xl text-sm font-semibold border-2"
+            <button type="button" (click)="pais = p" class="min-w-0 px-1 sm:px-4 py-2 rounded-xl text-xs min-[380px]:text-sm leading-tight font-semibold border-2 whitespace-nowrap"
                     [style.background]="pais?.id === p.id ? (p.color || '#1e293b') : '#fff'" [style.border-color]="p.color || '#cbd5e1'"
                     [style.color]="pais?.id === p.id ? '#fff' : '#334155'">{{ p.nombre }}</button>
           }
@@ -148,7 +149,7 @@ export class TabResumen implements OnChanges {
   abs(v: number): number { return Math.abs(v); }
   pct(v: number | null): string {
     const n = Number(v ?? 0) * 100;
-    return `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`;
+    return `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toLocaleString('es-CO', { maximumFractionDigits: 1 })}\u00a0%`; // espacio que no se parte: el % no queda solo en otra línea
   }
   urlFoto(id: string): string { return this.willGo.urlFoto(id); }
   iniciales(n: string): string { return n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase(); }
