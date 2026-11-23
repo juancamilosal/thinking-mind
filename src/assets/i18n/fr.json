@@ -597,7 +597,9 @@
         "entregarMonto": "Remettre {{monto}}",
         "entregaste": "Vous avez remis {{monto}} à {{nombre}}.",
         "efectivo": "Espèces",
-        "virtual": "Solde virtuel"
+        "virtual": "Solde virtuel",
+        "detalleBilletes": "{{n}} × {{valor}}",
+        "totalEntregar": "Total à remettre"
       },
       "arqueo": {
         "tabArqueo": "Comptage",
@@ -623,7 +625,11 @@
         "guardadoFaltan": "Comptage de {{pais}} enregistré : il manque {{n}}.",
         "guardadoSobran": "Comptage de {{pais}} enregistré : {{n}} en trop.",
         "medioMovimientos": "Mouvements en espèces ou virtuels",
-        "sinMovimientosVirtual": "Aucun mouvement sur le solde virtuel pour le moment."
+        "sinMovimientosVirtual": "Aucun mouvement sur le solde virtuel pour le moment.",
+        "asignadosBanco": "Attribués à la banque",
+        "noQuedan": "Plus aucun",
+        "asignados": "Attribués : {{n}}",
+        "contado": "Compté"
       },
       "wfunds": {
         "subtitulo": "Investissements des élèves dans les entreprises.",
@@ -693,8 +699,13 @@
         "avisoRetiro": "{{nombre}} a retiré {{monto}} de {{empresa}}.",
         "avisoInversion": "{{nombre}} a investi {{monto}} dans {{empresa}}.",
         "verMasRondas": "Voir plus de manches ({{n}})",
-        "verMenosRondas": "Voir moins de manches"
-      }
+        "verMenosRondas": "Voir moins de manches",
+        "enBanco": "En banque :",
+        "llevas": "Vous avez {{n}} sur {{total}}",
+        "tePasaste": "{{n}} de trop",
+        "faltan": "il manque {{n}}"
+      },
+      "quedan": "Reste {{n}}"
     },
     "cuentas": {
       "titulo": "Comptes et cartes",
@@ -730,7 +741,8 @@
         "total": "Total à retirer",
         "botonMonto": "Retirer {{monto}}",
         "enviando": "Retrait en cours…",
-        "hecho": "{{nombre}} a retiré {{monto}} de son compte. Compte : {{cuenta}} · Espèces : {{efectivo}}."
+        "hecho": "{{nombre}} a retiré {{monto}} de son compte. Compte : {{cuenta}} · Espèces : {{efectivo}}.",
+        "enBanco": "En banque :"
       },
       "tarjetas": {
         "titulo": "Cartes à imprimer",
@@ -866,7 +878,9 @@
       "confirmarTitulo": "Ajouter de l’argent à la banque ?",
       "quedaBanco": "L’argent de la banque passera à $ {{n}}. Le solde virtuel augmente d’autant.",
       "buscarDocente": "Rechercher un enseignant…",
-      "sinResultados": "Aucun enseignant avec ce nom."
+      "sinResultados": "Aucun enseignant avec ce nom.",
+      "arqueoAyuda": "Comptez toutes les espèces de la banque et indiquez le total.",
+      "virtualAyuda": "Sans espèces : il sert aux virements vers les enseignants. Il est chargé du même montant que l’argent de la banque (total chargé : {{n}}). Il n’entre pas dans le comptage."
     },
     "montofondos": {
       "cuantoInvierte": "Combien investit-il ?",
@@ -915,7 +929,8 @@
         "banco": "Banque",
         "wfunds": "W-Funds",
         "cajaGoStore": "Caisse GO•STORE",
-        "cuentas": "Comptes et cartes"
+        "cuentas": "Comptes et cartes",
+        "productos": "Produits"
       },
       "rol": {
         "administrativo": "Personnel administratif",
@@ -1043,7 +1058,8 @@
         "formatoFecha": "d MMM, HH:mm"
       },
       "billetes": {
-        "billeteDe": "{{n}}"
+        "billeteDe": "{{n}}",
+        "quedan": "Restants"
       },
       "fondo": {
         "riesgoBajo": "Risque faible",
@@ -1126,7 +1142,9 @@
         "entregarA": "Remettre à {{nombre}}",
         "recibidoBanco": "Reçu de la banque",
         "entregadoA": "Remis à {{nombre}}",
-        "avisoEntregaste": "Vous avez remis {{monto}} à {{nombre}}."
+        "avisoEntregaste": "Vous avez remis {{monto}} à {{nombre}}.",
+        "tienes": "Vous avez {{n}}",
+        "totalAEntregar": "Total à remettre"
       },
       "rubrica": {
         "titulo": "Grille d'évaluation",
@@ -1171,10 +1189,38 @@
         "avisoRecomendacion": "Nous recommandons de donner {{n}}.",
         "deshecha": "Évaluation annulée.",
         "criterios": {
-          "uso_lengua": {},
-          "iniciativa": {},
-          "nivel_reto": {},
-          "colaboracion": {}
+          "uso_lengua": {
+            "titulo": "Usage de la langue",
+            "corto": "Langue",
+            "n0": "N'essaie pas",
+            "n1": "Mots isolés avec aide",
+            "n2": "Phrases fonctionnelles",
+            "n3": "Interaction soutenue et spontanée"
+          },
+          "iniciativa": {
+            "titulo": "Initiative",
+            "corto": "Initiative",
+            "n0": "Aucune",
+            "n1": "Répond quand on l'interroge",
+            "n2": "Lance des échanges",
+            "n3": "Encourage les autres à communiquer"
+          },
+          "nivel_reto": {
+            "titulo": "Niveau du défi",
+            "corto": "Défi",
+            "n0": "Aucun défi",
+            "n1": "Faible pour son âge",
+            "n2": "Adapté",
+            "n3": "Relève un défi adapté sans script"
+          },
+          "colaboracion": {
+            "titulo": "Collaboration",
+            "corto": "Collaboration",
+            "n0": "Interrompt",
+            "n1": "Participe peu",
+            "n2": "Coopère en parlant",
+            "n3": "Fait aussi parler les autres"
+          }
         }
       },
       "caja": {
@@ -1222,7 +1268,26 @@
         "ventasTitulo": "Ventes",
         "excedeMaximo": "A déjà acheté {{ya}} · max {{max}} par élève (peut prendre {{puede}})",
         "motivoEdicionCerrada": "L'édition n'est pas ouverte : impossible de vendre.",
-        "motivoExcede": "Un produit dépasse la quantité autorisée."
+        "motivoExcede": "Un produit dépasse la quantité autorisée.",
+        "vistaVender": "Vendre",
+        "vistaCaja": "Caisse",
+        "vistaVentas": "Ventes",
+        "tieneMin": "a",
+        "tiene": "A",
+        "elegir": "Choisir",
+        "cambiar": "Changer",
+        "vueltoQueDas": "Monnaie que vous rendez",
+        "entregoDebes": "A remis {{n}} · vous devez rendre <b>{{v}}</b>",
+        "sugerirVuelto": "Suggérer la monnaie",
+        "enCaja": "En caisse :",
+        "entregoLabel": "Remis",
+        "siguienteVuelto": "Suivant : rendre la monnaie",
+        "atras": "Retour",
+        "faltanVuelto": "Il manque {{n}} de monnaie",
+        "preciosHoy": "Prix du jour dans chaque monnaie",
+        "preciosAyuda": "Prix en pesos ÷ taux de la monnaie, arrondi au supérieur.",
+        "pesos": "{{n}} pesos",
+        "enOtras": "Dans les autres monnaies :"
       },
       "productos": {
         "titulo": "Produits",
@@ -1309,7 +1374,15 @@
         "virtualConfirmarTitulo": "Charger le solde virtuel ?",
         "bancoDe": "Banque de {{pais}}",
         "quedaVirtual": "Le solde virtuel sera de $ {{n}}.",
-        "virtualCargarSi": "Oui, charger"
+        "virtualCargarSi": "Oui, charger",
+        "impresos": "Imprimés",
+        "hoyProvistos": "{{n}} fournis à ce jour.",
+        "ocultar": "Masquer",
+        "impresosN": "Imprimés : {{n}}",
+        "provisionTotal": "Provision totale",
+        "totalBanco": "Total de la banque",
+        "bienvenidaNecesita": "Bienvenue nécessite",
+        "virtual": "Virtuel"
       },
       "fondos": {
         "intro": "Voici comment les élèves et les parents voient les entreprises.",
@@ -1556,7 +1629,8 @@
       "llave": "Clé :",
       "recibidaBanco": "Virement de la banque",
       "transferidoA": "Virement à {{nombre}}",
-      "disponibleVirtual": "Le compte virtuel de la banque contient {{n}}"
+      "disponibleVirtual": "Le compte virtuel de la banque contient {{n}}",
+      "disponibleBanco": "La banque a {{n}}"
     },
     "vistacuenta": {
       "enSuCuenta": "Sur son compte",

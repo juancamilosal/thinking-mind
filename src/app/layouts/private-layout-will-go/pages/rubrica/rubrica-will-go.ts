@@ -109,9 +109,10 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
         <!-- Estudiantes -->
         <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
                class="mt-5 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-        <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+        <ul class="mt-3 space-y-3">
           @for (e of filtrados; track e.id) {
-            <li class="flex items-center gap-3 px-4 py-3" [class.bg-gray-50]="!e.presente">
+            <!-- Cada estudiante en su tarjeta; en celular el botón Calificar va debajo -->
+            <li class="rounded-2xl border border-gray-200 shadow-sm px-4 py-4 flex flex-wrap sm:flex-nowrap items-center gap-3" [class]="e.presente ? 'bg-white' : 'bg-gray-50'">
               <button type="button" (click)="alternarAsistencia(e)" [disabled]="datos.edicion.estado !== 'abierta'"
                       class="shrink-0 w-11 h-11 p-0 rounded-full flex items-center justify-center border-2 transition disabled:opacity-50"
                       [class]="e.presente ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-gray-300 bg-white text-gray-300'"
@@ -119,40 +120,42 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
                 <svg class="shrink-0" width="24" height="24" style="width:24px;height:24px" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
               </button>
               <div class="min-w-0 flex-1">
-                <p class="font-semibold truncate" [class]="e.presente ? 'text-gray-800' : 'text-gray-400'">{{ e.nombre }} {{ e.apellido }}</p>
+                <p class="font-semibold leading-snug" [class]="e.presente ? 'text-gray-800' : 'text-gray-400'">{{ e.nombre }} {{ e.apellido }}</p>
                 <p class="text-xs text-gray-500">{{ (e.presente ? 'wg.operacion.rubrica.presente' : 'wg.operacion.rubrica.ausente') | translate }}@if (e.hoy) { · {{ (e.hoy === 1 ? 'wg.operacion.rubrica.calificadoVez' : 'wg.operacion.rubrica.calificadoVeces') | translate: { n: e.hoy } }} }</p>
               </div>
               <button type="button" (click)="abrir(e)" [disabled]="datos.edicion.estado !== 'abierta'"
-                      class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.operacion.rubrica.calificar' | translate }}</button>
+                      class="w-full sm:w-auto shrink-0 px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.operacion.rubrica.calificar' | translate }}</button>
             </li>
           }
           @if (!filtrados.length) {
-            <li class="px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ('wg.operacion.comun.noHayEstudiantesEn' | translate: { pais: pais.nombre }) }}</li>
+            <li class="bg-white rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ('wg.operacion.comun.noHayEstudiantesEn' | translate: { pais: pais.nombre }) }}</li>
           }
         </ul>
 
         <!-- Mis últimas calificaciones -->
         @if (datos.recientes.length) {
           <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.rubrica.ultimas' | translate }}</h2>
-          <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+          <ul class="mt-2 space-y-3">
             @for (r of datos.recientes; track r.id) {
-              <li class="px-4 py-3 flex items-center gap-3">
+              <li class="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-start gap-3">
                 <div class="w-12 h-12 shrink-0 rounded-xl bg-slate-800 text-white flex flex-col items-center justify-center leading-none">
                   <span class="text-lg font-black">{{ r.puntaje }}</span><span class="text-[10px] opacity-80">{{ 'wg.operacion.rubrica.de12' | translate }}</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <p class="font-semibold text-gray-800 truncate">{{ r.nombre }} {{ r.apellido }}</p>
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="font-semibold text-gray-800 leading-snug">{{ r.nombre }} {{ r.apellido }}</p>
+                    <span class="text-xs text-gray-500 whitespace-nowrap">{{ r.date_created | wgFecha:'h:mm a' }}</span>
+                  </div>
                   <div class="mt-1 flex flex-wrap gap-1">
                     @for (c of criterios; track c.id) {
                       <span class="text-[11px] px-1.5 py-0.5 rounded-full" [class]="r[c.id] >= 2 ? 'bg-emerald-100 text-emerald-800' : (r[c.id] === 1 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500')">{{ c.corto | translate }} {{ r[c.id] }}</span>
                     }
                   </div>
                   @if (r.evidencia) { <p class="text-xs text-gray-500 mt-1 truncate">“{{ r.evidencia }}”</p> }
-                  @if (r.recompensa) { <p class="text-xs font-semibold text-amber-700 mt-0.5">{{ 'wg.operacion.rubrica.recompensaRecomendada' | translate: { n: r.recompensa } }}</p> }
-                </div>
-                <div class="text-right shrink-0">
-                  <p class="text-xs text-gray-500">{{ r.date_created | wgFecha:'h:mm a' }}</p>
-                  @if (r.se_puede_deshacer) { <button type="button" (click)="deshacer(r.id)" class="text-xs font-semibold text-red-600 hover:underline">{{ 'wg.operacion.comun.deshacer' | translate }}</button> }
+                  <div class="mt-1 flex items-center justify-between gap-2">
+                    @if (r.recompensa) { <p class="text-xs font-semibold text-amber-700">{{ 'wg.operacion.rubrica.recompensaRecomendada' | translate: { n: r.recompensa } }}</p> } @else { <span></span> }
+                    @if (r.se_puede_deshacer) { <button type="button" (click)="deshacer(r.id)" class="text-xs font-semibold text-red-600 hover:underline">{{ 'wg.operacion.comun.deshacer' | translate }}</button> }
+                  </div>
                 </div>
               </li>
             }

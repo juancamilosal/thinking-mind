@@ -597,7 +597,9 @@
         "entregarMonto": "Entregar {{monto}}",
         "entregaste": "Entregaste {{monto}} a {{nombre}}.",
         "efectivo": "Efectivo",
-        "virtual": "Saldo virtual"
+        "virtual": "Saldo virtual",
+        "detalleBilletes": "{{n}} de {{valor}}",
+        "totalEntregar": "Total a entregar"
       },
       "arqueo": {
         "tabArqueo": "Arqueo",
@@ -623,7 +625,11 @@
         "guardadoFaltan": "Arqueo de {{pais}} guardado: faltan {{n}}.",
         "guardadoSobran": "Arqueo de {{pais}} guardado: sobran {{n}}.",
         "medioMovimientos": "Movimientos en efectivo o virtuales",
-        "sinMovimientosVirtual": "Todavía no hay movimientos en el saldo virtual."
+        "sinMovimientosVirtual": "Todavía no hay movimientos en el saldo virtual.",
+        "asignadosBanco": "Asignados al banco",
+        "noQuedan": "No quedan",
+        "asignados": "Asignados: {{n}}",
+        "contado": "Contado"
       },
       "wfunds": {
         "subtitulo": "Inversiones de los estudiantes en las empresas.",
@@ -693,8 +699,13 @@
         "avisoRetiro": "{{nombre}} retiró {{monto}} de {{empresa}}.",
         "avisoInversion": "{{nombre}} invirtió {{monto}} en {{empresa}}.",
         "verMasRondas": "Ver más rondas ({{n}})",
-        "verMenosRondas": "Ver menos rondas"
-      }
+        "verMenosRondas": "Ver menos rondas",
+        "enBanco": "En banco:",
+        "llevas": "Llevas {{n}} de {{total}}",
+        "tePasaste": "te pasaste {{n}}",
+        "faltan": "faltan {{n}}"
+      },
+      "quedan": "Quedan {{n}}"
     },
     "cuentas": {
       "titulo": "Cuentas y tarjetas",
@@ -730,7 +741,8 @@
         "total": "Total a retirar",
         "botonMonto": "Retirar {{monto}}",
         "enviando": "Retirando…",
-        "hecho": "{{nombre}} retiró {{monto}} de su cuenta. Cuenta: {{cuenta}} · Efectivo: {{efectivo}}."
+        "hecho": "{{nombre}} retiró {{monto}} de su cuenta. Cuenta: {{cuenta}} · Efectivo: {{efectivo}}.",
+        "enBanco": "En el banco:"
       },
       "tarjetas": {
         "titulo": "Tarjetas para imprimir",
@@ -866,7 +878,9 @@
       "confirmarTitulo": "¿Agregar dinero al banco?",
       "quedaBanco": "El dinero del banco quedará en $ {{n}}. El saldo virtual sube lo mismo.",
       "buscarDocente": "Buscar docente…",
-      "sinResultados": "No hay docentes con ese nombre."
+      "sinResultados": "No hay docentes con ese nombre.",
+      "arqueoAyuda": "Cuenta todo el efectivo que hay en el banco y escribe el total.",
+      "virtualAyuda": "Sin efectivo: es para transferir a los docentes. Se carga igual al dinero del banco (total cargado: {{n}}). No entra en el arqueo."
     },
     "montofondos": {
       "cuantoInvierte": "¿Cuánto invierte?",
@@ -915,7 +929,8 @@
         "banco": "Banco",
         "wfunds": "W-Funds",
         "cajaGoStore": "Caja GO•STORE",
-        "cuentas": "Cuentas y tarjetas"
+        "cuentas": "Cuentas y tarjetas",
+        "productos": "Productos"
       },
       "rol": {
         "administrativo": "Administrativo",
@@ -1043,7 +1058,8 @@
         "formatoFecha": "d MMM, h:mm a"
       },
       "billetes": {
-        "billeteDe": "{{n}}"
+        "billeteDe": "{{n}}",
+        "quedan": "Quedan"
       },
       "fondo": {
         "riesgoBajo": "Riesgo bajo",
@@ -1126,7 +1142,9 @@
         "entregarA": "Entregar a {{nombre}}",
         "recibidoBanco": "Recibido del banco",
         "entregadoA": "Entregado a {{nombre}}",
-        "avisoEntregaste": "Entregaste {{monto}} a {{nombre}}."
+        "avisoEntregaste": "Entregaste {{monto}} a {{nombre}}.",
+        "tienes": "Tienes {{n}}",
+        "totalAEntregar": "Total a entregar"
       },
       "rubrica": {
         "titulo": "Rúbrica",
@@ -1171,10 +1189,38 @@
         "avisoRecomendacion": "Te recomendamos darle {{n}}.",
         "deshecha": "Calificación deshecha.",
         "criterios": {
-          "uso_lengua": {},
-          "iniciativa": {},
-          "nivel_reto": {},
-          "colaboracion": {}
+          "uso_lengua": {
+            "titulo": "Uso de la lengua",
+            "corto": "Lengua",
+            "n0": "No intenta",
+            "n1": "Palabras aisladas con apoyo",
+            "n2": "Frases funcionales",
+            "n3": "Interacción sostenida y espontánea"
+          },
+          "iniciativa": {
+            "titulo": "Iniciativa",
+            "corto": "Iniciativa",
+            "n0": "Ninguna",
+            "n1": "Responde al ser llamado",
+            "n2": "Inicia intercambios",
+            "n3": "Promueve la comunicación de otros"
+          },
+          "nivel_reto": {
+            "titulo": "Nivel del reto",
+            "corto": "Reto",
+            "n0": "Sin reto",
+            "n1": "Bajo para su edad",
+            "n2": "Adecuado",
+            "n3": "Supera un reto apropiado sin guion"
+          },
+          "colaboracion": {
+            "titulo": "Colaboración",
+            "corto": "Colaboración",
+            "n0": "Interrumpe",
+            "n1": "Participa poco",
+            "n2": "Coopera hablando",
+            "n3": "Hace que otros también hablen"
+          }
         }
       },
       "caja": {
@@ -1222,7 +1268,26 @@
         "ventasTitulo": "Ventas",
         "excedeMaximo": "Ya compró {{ya}} · máximo {{max}} por estudiante (puede llevar {{puede}})",
         "motivoEdicionCerrada": "La edición no está abierta: no se puede vender.",
-        "motivoExcede": "Lleva más de lo permitido de un producto."
+        "motivoExcede": "Lleva más de lo permitido de un producto.",
+        "vistaVender": "Vender",
+        "vistaCaja": "Caja",
+        "vistaVentas": "Ventas",
+        "tieneMin": "tiene",
+        "tiene": "Tiene",
+        "elegir": "Elegir",
+        "cambiar": "Cambiar",
+        "vueltoQueDas": "Vuelto que le das",
+        "entregoDebes": "Entregó {{n}} · debes devolver <b>{{v}}</b>",
+        "sugerirVuelto": "Sugerir vuelto",
+        "enCaja": "En caja:",
+        "entregoLabel": "Entregó",
+        "siguienteVuelto": "Siguiente: dar vuelto",
+        "atras": "Atrás",
+        "faltanVuelto": "Faltan {{n}} de vuelto",
+        "preciosHoy": "Precios de hoy en cada moneda",
+        "preciosAyuda": "Precio en pesos ÷ tasa de la moneda, redondeado hacia arriba.",
+        "pesos": "{{n}} pesos",
+        "enOtras": "En otras monedas:"
       },
       "productos": {
         "titulo": "Productos",
@@ -1309,7 +1374,15 @@
         "virtualConfirmarTitulo": "¿Cargar saldo virtual?",
         "bancoDe": "Banco de {{pais}}",
         "quedaVirtual": "El saldo virtual quedará en $ {{n}}.",
-        "virtualCargarSi": "Sí, cargar"
+        "virtualCargarSi": "Sí, cargar",
+        "impresos": "Impresos",
+        "hoyProvistos": "Hoy hay {{n}} provistos.",
+        "ocultar": "Ocultar",
+        "impresosN": "Impresos: {{n}}",
+        "provisionTotal": "Provisión total",
+        "totalBanco": "Total del banco",
+        "bienvenidaNecesita": "Bienvenida necesita",
+        "virtual": "Virtual"
       },
       "fondos": {
         "intro": "Así ven las empresas los estudiantes y acudientes.",
@@ -1556,7 +1629,8 @@
       "llave": "Llave:",
       "recibidaBanco": "Transferencia del banco",
       "transferidoA": "Transferencia a {{nombre}}",
-      "disponibleVirtual": "En la cuenta virtual del banco hay {{n}}"
+      "disponibleVirtual": "En la cuenta virtual del banco hay {{n}}",
+      "disponibleBanco": "En el banco hay {{n}}"
     },
     "vistacuenta": {
       "enSuCuenta": "En su cuenta",

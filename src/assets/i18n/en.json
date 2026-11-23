@@ -597,7 +597,9 @@
         "entregarMonto": "Give {{monto}}",
         "entregaste": "You gave {{monto}} to {{nombre}}.",
         "efectivo": "Cash",
-        "virtual": "Virtual balance"
+        "virtual": "Virtual balance",
+        "detalleBilletes": "{{n}} × {{valor}}",
+        "totalEntregar": "Total to give"
       },
       "arqueo": {
         "tabArqueo": "Cash count",
@@ -623,7 +625,11 @@
         "guardadoFaltan": "{{pais}} count saved: {{n}} missing.",
         "guardadoSobran": "{{pais}} count saved: {{n}} extra.",
         "medioMovimientos": "Cash or virtual transactions",
-        "sinMovimientosVirtual": "No virtual balance transactions yet."
+        "sinMovimientosVirtual": "No virtual balance transactions yet.",
+        "asignadosBanco": "Assigned to the bank",
+        "noQuedan": "None left",
+        "asignados": "Assigned: {{n}}",
+        "contado": "Counted"
       },
       "wfunds": {
         "subtitulo": "Student investments in the companies.",
@@ -693,8 +699,13 @@
         "avisoRetiro": "{{nombre}} withdrew {{monto}} from {{empresa}}.",
         "avisoInversion": "{{nombre}} invested {{monto}} in {{empresa}}.",
         "verMasRondas": "See more rounds ({{n}})",
-        "verMenosRondas": "See fewer rounds"
-      }
+        "verMenosRondas": "See fewer rounds",
+        "enBanco": "In bank:",
+        "llevas": "You have {{n}} of {{total}}",
+        "tePasaste": "{{n}} too much",
+        "faltan": "{{n}} short"
+      },
+      "quedan": "{{n}} left"
     },
     "cuentas": {
       "titulo": "Accounts and cards",
@@ -730,7 +741,8 @@
         "total": "Total to withdraw",
         "botonMonto": "Withdraw {{monto}}",
         "enviando": "Withdrawing…",
-        "hecho": "{{nombre}} withdrew {{monto}} from their account. Account: {{cuenta}} · Cash: {{efectivo}}."
+        "hecho": "{{nombre}} withdrew {{monto}} from their account. Account: {{cuenta}} · Cash: {{efectivo}}.",
+        "enBanco": "In the bank:"
       },
       "tarjetas": {
         "titulo": "Cards to print",
@@ -866,7 +878,9 @@
       "confirmarTitulo": "Add money to the bank?",
       "quedaBanco": "The bank’s money will be $ {{n}}. The virtual balance goes up by the same amount.",
       "buscarDocente": "Search teacher…",
-      "sinResultados": "No teachers with that name."
+      "sinResultados": "No teachers with that name.",
+      "arqueoAyuda": "Count all the cash in the bank and enter the total.",
+      "virtualAyuda": "No cash: it is for transfers to teachers. It is loaded with the same amount as the bank’s money (total loaded: {{n}}). It is not part of the cash count."
     },
     "montofondos": {
       "cuantoInvierte": "How much do they invest?",
@@ -915,7 +929,8 @@
         "banco": "Bank",
         "wfunds": "W-Funds",
         "cajaGoStore": "GO•STORE checkout",
-        "cuentas": "Accounts and cards"
+        "cuentas": "Accounts and cards",
+        "productos": "Products"
       },
       "rol": {
         "administrativo": "Administrative staff",
@@ -1043,7 +1058,8 @@
         "formatoFecha": "MMM d, h:mm a"
       },
       "billetes": {
-        "billeteDe": "{{n}}"
+        "billeteDe": "{{n}}",
+        "quedan": "Left"
       },
       "fondo": {
         "riesgoBajo": "Low risk",
@@ -1126,7 +1142,9 @@
         "entregarA": "Hand out to {{nombre}}",
         "recibidoBanco": "Received from the bank",
         "entregadoA": "Handed to {{nombre}}",
-        "avisoEntregaste": "You handed {{monto}} to {{nombre}}."
+        "avisoEntregaste": "You handed {{monto}} to {{nombre}}.",
+        "tienes": "You have {{n}}",
+        "totalAEntregar": "Total to hand out"
       },
       "rubrica": {
         "titulo": "Rubric",
@@ -1171,10 +1189,38 @@
         "avisoRecomendacion": "We recommend giving {{n}}.",
         "deshecha": "Grade undone.",
         "criterios": {
-          "uso_lengua": {},
-          "iniciativa": {},
-          "nivel_reto": {},
-          "colaboracion": {}
+          "uso_lengua": {
+            "titulo": "Language use",
+            "corto": "Language",
+            "n0": "Does not try",
+            "n1": "Isolated words with support",
+            "n2": "Functional phrases",
+            "n3": "Sustained, spontaneous interaction"
+          },
+          "iniciativa": {
+            "titulo": "Initiative",
+            "corto": "Initiative",
+            "n0": "None",
+            "n1": "Responds when called on",
+            "n2": "Starts exchanges",
+            "n3": "Encourages others to communicate"
+          },
+          "nivel_reto": {
+            "titulo": "Challenge level",
+            "corto": "Challenge",
+            "n0": "No challenge",
+            "n1": "Low for their age",
+            "n2": "Appropriate",
+            "n3": "Meets a fitting challenge unscripted"
+          },
+          "colaboracion": {
+            "titulo": "Collaboration",
+            "corto": "Collaboration",
+            "n0": "Interrupts",
+            "n1": "Participates little",
+            "n2": "Cooperates by speaking",
+            "n3": "Gets others to speak too"
+          }
         }
       },
       "caja": {
@@ -1222,7 +1268,26 @@
         "ventasTitulo": "Sales",
         "excedeMaximo": "Already bought {{ya}} · max {{max}} per student (can take {{puede}})",
         "motivoEdicionCerrada": "The edition is not open: sales are not possible.",
-        "motivoExcede": "One product is over the allowed amount."
+        "motivoExcede": "One product is over the allowed amount.",
+        "vistaVender": "Sell",
+        "vistaCaja": "Checkout",
+        "vistaVentas": "Sales",
+        "tieneMin": "has",
+        "tiene": "Has",
+        "elegir": "Choose",
+        "cambiar": "Change",
+        "vueltoQueDas": "Change you give",
+        "entregoDebes": "Paid {{n}} · you owe <b>{{v}}</b>",
+        "sugerirVuelto": "Suggest change",
+        "enCaja": "In checkout:",
+        "entregoLabel": "Paid",
+        "siguienteVuelto": "Next: give change",
+        "atras": "Back",
+        "faltanVuelto": "{{n}} change missing",
+        "preciosHoy": "Today's prices in each currency",
+        "preciosAyuda": "Price in pesos ÷ the currency rate, rounded up.",
+        "pesos": "{{n}} pesos",
+        "enOtras": "In other currencies:"
       },
       "productos": {
         "titulo": "Products",
@@ -1309,7 +1374,15 @@
         "virtualConfirmarTitulo": "Load virtual balance?",
         "bancoDe": "{{pais}} bank",
         "quedaVirtual": "The virtual balance will be $ {{n}}.",
-        "virtualCargarSi": "Yes, load"
+        "virtualCargarSi": "Yes, load",
+        "impresos": "Printed",
+        "hoyProvistos": "{{n}} supplied so far.",
+        "ocultar": "Hide",
+        "impresosN": "Printed: {{n}}",
+        "provisionTotal": "Total supply",
+        "totalBanco": "Bank total",
+        "bienvenidaNecesita": "Welcome needs",
+        "virtual": "Virtual"
       },
       "fondos": {
         "intro": "This is how students and parents see the companies.",
@@ -1556,7 +1629,8 @@
       "llave": "Key:",
       "recibidaBanco": "Transfer from the bank",
       "transferidoA": "Transfer to {{nombre}}",
-      "disponibleVirtual": "The bank's virtual account has {{n}}"
+      "disponibleVirtual": "The bank's virtual account has {{n}}",
+      "disponibleBanco": "The bank has {{n}}"
     },
     "vistacuenta": {
       "enSuCuenta": "In their account",
