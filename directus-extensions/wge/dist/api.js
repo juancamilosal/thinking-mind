@@ -693,10 +693,17 @@ const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 
 
 /** Lo que trae toda edición nueva (se puede cambiar después). */
 const PAISES_POR_DEFECTO = [
-	{ nombre: 'Wonderland', codigo_moneda: 'WON', color: '#E0457B', orden: 1 },
-	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#C9A227', orden: 2 },
-	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#4F7A3A', orden: 3 },
+	{ nombre: 'Wonderland', codigo_moneda: 'WON', color: '#3B82F6', orden: 1 },
+	{ nombre: 'Neverland', codigo_moneda: 'NEV', color: '#22C55E', orden: 2 },
+	{ nombre: 'Dreamland', codigo_moneda: 'DRE', color: '#A855F7', orden: 3 },
 ];
+/** Países para una edición nueva: los de la última edición creada, o PAISES_POR_DEFECTO si no hay ninguna. */
+async function paisesDeReferencia(db) {
+	const ultima = await db('wge_ediciones').orderBy('date_created', 'desc').first('id');
+	const previos = ultima ? await db('wge_paises').where('edicion_id', ultima.id).orderBy('orden').select('nombre', 'codigo_moneda', 'color', 'orden') : [];
+	return previos.length ? previos.map((p, i) => ({ nombre: p.nombre, codigo_moneda: p.codigo_moneda, color: p.color, orden: p.orden ?? i + 1 })) : PAISES_POR_DEFECTO;
+}
+
 const FONDOS_POR_DEFECTO = [
 	{ nombre: 'CAPI GREEN', riesgo: 'bajo', rendimiento_base: 0.03, rendimiento_alterno: null, variacion: 0.02,
 		a_que_se_dedica: 'Sembramos bosques y producimos energía con el sol y el viento.',
@@ -870,7 +877,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 				parametros_fx: JSON.stringify({}), zona_horaria: 'America/Bogota', ...fila, estado: 'borrador',
 			});
 			await trx('wge_ediciones').insert(edicion);
-			await trx('wge_paises').insert(PAISES_POR_DEFECTO.map((p) => nueva(actor, { ...p, edicion_id: edicion.id, provision_inicial: 0 })));
+			// Los países salen como en la última edición creada (nombre, moneda y color); si no hay, los de siempre
+			await trx('wge_paises').insert((await paisesDeReferencia(trx)).map((p) => nueva(actor, { ...p, edicion_id: edicion.id, provision_inicial: 0 })));
 			// Cada fondo trae el logo y los textos que ya se cargaron en otras ediciones (si no, los de ejemplo)
 			const cargados = await fondosCargados(trx);
 			await trx('wge_fondos').insert(FONDOS_POR_DEFECTO.map((f, i) => {
