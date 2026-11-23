@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatosCaja, EstudianteCaja, PaisCaja, ProductoCaja, VentaCaja, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
+import { EscanerQrComponent } from '../../escaner-qr.component';
 import { formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
 import { SelectorBilletesComponent } from '../../selector-billetes.component';
@@ -11,13 +12,15 @@ import { FechaWillGoPipe } from '../../fecha.pipe';
 type Vista = 'vender' | 'caja' | 'ventas';
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const sumaBilletes = (b: Record<number, number | null>) => Object.entries(b).reduce((t, [d, n]) => t + Number(d) * (Number(n) || 0), 0);
+/** Llave de tarjeta como la guarda el servidor: minúsculas y con @ adelante. */
+const normalizarLlave = (t: string) => { const l = t.trim().toLowerCase(); return l.startsWith('@') ? l : '@' + l; };
 const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries(Object.entries(b).filter(([, n]) => Number(n) > 0).map(([d, n]) => [d, Number(n)]));
 
-/** Caja GO•STORE: el encargado vende los productos, recibe los billetes del estudiante y da el vuelto. */
+/** Caja GO•STORE: el encargado vende los productos y cobra en efectivo (billetes y vuelto) o con la tarjeta débito del estudiante. */
 @Component({
   selector: 'app-caja-will-go',
   standalone: true,
-  imports: [FormsModule, FechaWillGoPipe, SelectorBilletesComponent, SelectorEdicionComponent, TranslatePipe],
+  imports: [FormsModule, FechaWillGoPipe, SelectorBilletesComponent, SelectorEdicionComponent, EscanerQrComponent, TranslatePipe],
   template: `
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
@@ -92,8 +95,14 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           <button type="button" (click)="etapa = 'productos'" class="block mt-5 text-sm font-semibold text-orange-600 hover:underline p-0">← {{ 'wg.operacion.caja.volverProductos' | translate }}</button>
           <h2 class="mt-2 text-lg font-bold text-gray-800">{{ 'wg.operacion.caja.eligeEstudiante' | translate }}</h2>
           <p class="text-sm text-gray-500">{{ resumenCarrito }}</p>
-          <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
-                 class="mt-3 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+          <div class="mt-3 flex flex-col sm:flex-row gap-2">
+            <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
+                   class="flex-1 min-w-0 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <button type="button" (click)="abrirEscaner('estudiante')"
+                    class="shrink-0 px-4 py-3 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-700 flex items-center justify-center gap-2">
+              <span aria-hidden="true">💳</span> {{ 'wg.tarjeta.escanearTarjeta' | translate }}
+            </button>
+          </div>
           <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
             @for (e of filtrados; track e.id) {
               <li>
@@ -101,11 +110,11 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
                   <span class="w-3 h-10 rounded-full shrink-0" [style.background]="pais(e.pais_id)?.color || '#94a3b8'" aria-hidden="true"></span>
                   <span class="min-w-0 flex-1">
                     <span class="block font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</span>
-                    <span class="block text-xs text-gray-500">{{ pais(e.pais_id)?.nombre }} · {{ 'wg.operacion.caja.tieneMin' | translate }} <b class="text-gray-700">{{ miles(e.saldo) }} {{ pais(e.pais_id)?.codigo_moneda }}</b></span>
+                    <span class="block text-xs text-gray-500">{{ pais(e.pais_id)?.nombre }} · {{ 'wg.tarjeta.efectivo' | translate }} <b class="text-gray-700">{{ miles(e.saldo) }}</b> · {{ 'wg.tarjeta.cuenta' | translate }} <b class="text-gray-700">{{ miles(e.cuenta) }}</b> {{ pais(e.pais_id)?.codigo_moneda }}</span>
                   </span>
                   <span class="text-right shrink-0">
-                    <span class="block font-extrabold" [style.color]="totalPara(e) > e.saldo ? '#dc2626' : (pais(e.pais_id)?.color || '#111827')">{{ miles(totalPara(e)) }} {{ pais(e.pais_id)?.codigo_moneda }}</span>
-                    <span class="block text-[11px]" [class]="totalPara(e) > e.saldo ? 'text-red-600 font-semibold' : 'text-gray-400'">{{ (totalPara(e) > e.saldo ? 'wg.operacion.caja.noLeAlcanza' : 'wg.operacion.caja.leCuesta') | translate }}</span>
+                    <span class="block font-extrabold" [style.color]="noLeAlcanza(e) ? '#dc2626' : (pais(e.pais_id)?.color || '#111827')">{{ miles(totalPara(e)) }} {{ pais(e.pais_id)?.codigo_moneda }}</span>
+                    <span class="block text-[11px]" [class]="noLeAlcanza(e) ? 'text-red-600 font-semibold' : 'text-gray-400'">{{ (noLeAlcanza(e) ? 'wg.operacion.caja.noLeAlcanza' : 'wg.operacion.caja.leCuesta') | translate }}</span>
                   </span>
                 </button>
               </li>
@@ -118,7 +127,8 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           <div class="mt-2 rounded-2xl p-4 text-white shadow" [style.background]="paisEst?.color || '#1e293b'">
             <p class="text-xs opacity-90">{{ paisEst?.nombre }} · {{ 'wg.operacion.caja.unBillete' | translate: { n: miles(paisEst?.tasa_actual) } }}</p>
             <p class="text-lg font-extrabold truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
-            <p class="text-sm opacity-95">{{ 'wg.operacion.caja.tiene' | translate }} <b>{{ miles(estudiante.saldo) }} {{ paisEst?.codigo_moneda }}</b></p>
+            <p class="text-sm opacity-95">{{ 'wg.tarjeta.efectivo' | translate }} <b>{{ miles(estudiante.saldo) }} {{ paisEst?.codigo_moneda }}</b> · {{ 'wg.tarjeta.cuenta' | translate }} <b>{{ miles(estudiante.cuenta) }} {{ paisEst?.codigo_moneda }}</b></p>
+            @if (llaveLeida) { <p class="mt-1 inline-block rounded-md bg-white/20 px-2 py-0.5 text-xs font-semibold">💳 {{ 'wg.tarjeta.identificadoTarjeta' | translate: { llave: llaveLeida } }}</p> }
           </div>
           <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
             @for (p of enCarrito; track p.id) {
@@ -180,7 +190,11 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
                     <p class="font-extrabold whitespace-nowrap" [style.color]="pais(v.pais_id)?.color || '#111827'">{{ miles(v.total_billetes) }} {{ pais(v.pais_id)?.codigo_moneda }}</p>
                   </div>
                   <p class="text-sm text-gray-600 mt-1">{{ textoItems(v) }}</p>
-                  <p class="text-xs text-gray-500 mt-0.5">{{ 'wg.operacion.caja.entrego' | translate: { n: miles(suma(v.billetes_recibidos)) } }}{{ suma(v.billetes_vuelto) ? ' · ' + ('wg.operacion.caja.vueltoN' | translate: { n: miles(suma(v.billetes_vuelto)) }) : '' }}</p>
+                  @if (v.metodo_pago === 'tarjeta') {
+                    <p class="text-xs mt-0.5"><span class="rounded-md bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-700">💳 {{ 'wg.tarjeta.pagadoTarjeta' | translate }}</span></p>
+                  } @else {
+                    <p class="text-xs text-gray-500 mt-0.5"><span class="rounded-md bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">{{ 'wg.tarjeta.efectivo' | translate }}</span> · {{ 'wg.operacion.caja.entrego' | translate: { n: miles(suma(v.billetes_recibidos)) } }}{{ suma(v.billetes_vuelto) ? ' · ' + ('wg.operacion.caja.vueltoN' | translate: { n: miles(suma(v.billetes_vuelto)) }) : '' }}</p>
+                  }
                 </li>
               }
             </ul>
@@ -214,10 +228,16 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
       }
       @if (vista === 'vender' && estudiante && datos && unidades) {
         <div class="sticky bottom-0 sm:bottom-4 z-30 mt-6 -mx-4 sm:mx-0 bg-white border-t sm:border border-gray-200 sm:rounded-2xl shadow-[0_-6px_20px_rgba(0,0,0,.08)] sm:shadow-lg px-4 py-3">
+          <div class="mb-3 grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1" role="radiogroup" [attr.aria-label]="'wg.tarjeta.formaPago' | translate">
+            <button type="button" role="radio" [attr.aria-checked]="metodo === 'efectivo'" (click)="metodo = 'efectivo'"
+                    class="py-2 rounded-lg text-sm font-semibold" [class]="metodo === 'efectivo' ? 'bg-white shadow text-emerald-700' : 'text-gray-500'">💵 {{ 'wg.tarjeta.efectivo' | translate }}</button>
+            <button type="button" role="radio" [attr.aria-checked]="metodo === 'tarjeta'" (click)="metodo = 'tarjeta'"
+                    class="py-2 rounded-lg text-sm font-semibold" [class]="metodo === 'tarjeta' ? 'bg-white shadow text-slate-800' : 'text-gray-500'">💳 {{ 'wg.tarjeta.tarjeta' | translate }}</button>
+          </div>
           <div class="flex items-center gap-3">
             <div class="flex-1 min-w-0">
               <p class="text-xs text-gray-500">{{ unidades }} {{ (unidades === 1 ? 'wg.operacion.comun.producto' : 'wg.operacion.comun.productos') | translate }}</p>
-              <p class="text-xl font-extrabold" [class]="total > estudiante.saldo ? 'text-red-600' : 'text-gray-800'">{{ miles(total) }} {{ paisEst?.codigo_moneda }}</p>
+              <p class="text-xl font-extrabold" [class]="total > disponibleMetodo ? 'text-red-600' : 'text-gray-800'">{{ miles(total) }} {{ paisEst?.codigo_moneda }}</p>
               @if (motivoNoCobrar) { <p class="text-xs font-semibold text-red-600">{{ motivoNoCobrar }}</p> }
             </div>
             <button type="button" (click)="abrirCobro()" [disabled]="!!motivoNoCobrar"
@@ -292,11 +312,59 @@ const limpiarBilletes = (b: Record<number, number | null>) => Object.fromEntries
           </ul>
           <div class="mt-3 rounded-xl bg-gray-50 p-3 text-sm space-y-1">
             <p class="flex justify-between"><span>{{ 'wg.operacion.caja.total' | translate }}</span><b>{{ miles(recibo.total) }} {{ recibo.moneda }}</b></p>
-            <p class="flex justify-between"><span>{{ 'wg.operacion.caja.entregoLabel' | translate }}</span><span>{{ miles(recibo.recibido) }}</span></p>
-            <p class="flex justify-between"><span>{{ 'wg.operacion.caja.vuelto' | translate }}</span><span>{{ miles(recibo.vuelto) }}</span></p>
-            <p class="flex justify-between text-gray-500"><span>{{ 'wg.operacion.caja.leQuedan' | translate }}</span><span>{{ miles(recibo.saldo) }}</span></p>
+            @if (recibo.metodo === 'tarjeta') {
+              <p class="flex justify-between"><span>💳 {{ 'wg.tarjeta.pagadoTarjeta' | translate }}</span><span class="font-semibold">{{ recibo.llave }}</span></p>
+              <p class="flex justify-between text-gray-500"><span>{{ 'wg.tarjeta.leQuedanCuenta' | translate }}</span><span>{{ miles(recibo.saldo) }}</span></p>
+            } @else {
+              <p class="flex justify-between"><span>{{ 'wg.operacion.caja.entregoLabel' | translate }}</span><span>{{ miles(recibo.recibido) }}</span></p>
+              <p class="flex justify-between"><span>{{ 'wg.operacion.caja.vuelto' | translate }}</span><span>{{ miles(recibo.vuelto) }}</span></p>
+              <p class="flex justify-between text-gray-500"><span>{{ 'wg.operacion.caja.leQuedan' | translate }}</span><span>{{ miles(recibo.saldo) }}</span></p>
+            }
           </div>
           <button type="button" (click)="recibo = null" class="mt-5 w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600">{{ 'wg.operacion.caja.nuevaVenta' | translate }}</button>
+        </div>
+      </div>
+    }
+
+    <!-- Escanear la tarjeta (se quita del DOM al cerrar para apagar la cámara) -->
+    @if (escaneando) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarEscaner()">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] overflow-y-auto p-5" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-escaner">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <h2 id="titulo-escaner" class="text-lg font-bold text-gray-800">{{ 'wg.tarjeta.escanearTarjeta' | translate }}</h2>
+              <p class="text-sm text-gray-500">{{ (escaneando === 'pago' && estudiante ? 'wg.tarjeta.leeTarjetaDe' : 'wg.tarjeta.leeTarjeta') | translate: { nombre: estudiante?.nombre } }}</p>
+            </div>
+            <button type="button" (click)="cerrarEscaner()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
+          </div>
+          <wg-escaner-qr [activo]="!buscandoLlave" (leido)="alLeer($event)" />
+          @if (buscandoLlave) { <p class="mt-3 text-sm text-gray-500 text-center" role="status">{{ 'wg.tarjeta.buscando' | translate }}</p> }
+          @if (errorEscaner) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorEscaner }}</p> }
+        </div>
+      </div>
+    }
+
+    <!-- Confirmar pago con tarjeta -->
+    @if (pagandoTarjeta && estudiante && paisEst && datos) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrarPagoTarjeta()">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-5" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-pago-tarjeta">
+          <div class="flex items-start justify-between gap-3">
+            <h2 id="titulo-pago-tarjeta" class="text-lg font-bold text-gray-800">{{ 'wg.tarjeta.pagoTitulo' | translate }}</h2>
+            <button type="button" (click)="cerrarPagoTarjeta()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
+          </div>
+          <div class="mt-3 rounded-2xl p-4 text-white shadow" [style.background]="paisEst.color || '#1e293b'">
+            <p class="text-lg font-extrabold truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
+            <p class="text-sm opacity-95 font-mono">{{ llaveLeida }}</p>
+            <p class="mt-2 text-xs opacity-90">{{ 'wg.operacion.caja.total' | translate }}</p>
+            <p class="text-2xl font-extrabold">{{ miles(total) }} <span class="text-sm font-semibold opacity-90">{{ paisEst.codigo_moneda }}</span></p>
+          </div>
+          <p class="mt-3 text-sm text-gray-600" [innerHTML]="'wg.tarjeta.seDescuenta' | translate: { tiene: miles(estudiante.cuenta), quedan: miles(cuentaTras), moneda: paisEst.codigo_moneda }"></p>
+          @if (motivoNoCobrar) { <p class="mt-3 text-sm font-semibold text-red-600">{{ motivoNoCobrar }}</p> }
+          @if (errorCobro) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorCobro }}</p> }
+          <button type="button" (click)="pagarConTarjeta()" [disabled]="enviando || !!motivoNoCobrar"
+                  class="mt-4 w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-slate-700 to-slate-900 disabled:opacity-40">
+            {{ (enviando ? 'wg.tarjeta.pagando' : 'wg.tarjeta.pagarConTarjeta') | translate }}
+          </button>
         </div>
       </div>
     }
@@ -352,7 +420,18 @@ export class CajaWillGo implements OnInit {
   clave = '';
   enviando = false;
   errorCobro = '';
-  recibo: { numero: string; items: { nombre: string; cantidad: number; precio_billetes: number }[]; total: number; recibido: number; vuelto: number; saldo: number; moneda: string } | null = null;
+  recibo: { numero: string; items: { nombre: string; cantidad: number; precio_billetes: number }[]; total: number; recibido: number; vuelto: number; saldo: number; moneda: string; metodo: 'efectivo' | 'tarjeta'; llave?: string } | null = null;
+
+  /** Forma de pago elegida en la barra de cobro. */
+  metodo: 'efectivo' | 'tarjeta' = 'efectivo';
+  /** Llave de la tarjeta con la que se identificó el estudiante elegido (null si se eligió de la lista). */
+  llaveLeida: string | null = null;
+  /** Escáner abierto: para elegir al estudiante o para leer su tarjeta al pagar. */
+  escaneando: 'estudiante' | 'pago' | null = null;
+  buscandoLlave = false;
+  errorEscaner = '';
+  pagandoTarjeta = false;
+  private ultimaLectura = { texto: '', hora: 0 };
 
   entregaPais: PaisCaja | null = null;
   aEntregar: Record<number, number | null> = {};
@@ -397,8 +476,14 @@ export class CajaWillGo implements OnInit {
 
   /** Paso de la venta: primero los productos, luego quién compra. */
   etapa: 'productos' | 'estudiante' = 'productos';
-  elegir(e: EstudianteCaja): void { this.estudiante = e; }
-  cambiarEstudiante(): void { this.estudiante = null; this.etapa = 'estudiante'; }
+  elegir(e: EstudianteCaja, llave: string | null = null): void { this.estudiante = e; this.llaveLeida = llave; this.metodo = llave ? 'tarjeta' : 'efectivo'; }
+  cambiarEstudiante(): void { this.estudiante = null; this.llaveLeida = null; this.metodo = 'efectivo'; this.etapa = 'estudiante'; }
+  /** No le alcanza ni en efectivo ni en su cuenta. */
+  noLeAlcanza(e: EstudianteCaja): boolean { return this.totalPara(e) > Math.max(Number(e.saldo) || 0, Number(e.cuenta) || 0); }
+  /** Lo que tiene el estudiante elegido con la forma de pago elegida. */
+  get disponibleMetodo(): number { return Number(this.metodo === 'tarjeta' ? this.estudiante?.cuenta : this.estudiante?.saldo) || 0; }
+  /** Lo que le queda en la cuenta después de pagar con tarjeta. */
+  get cuentaTras(): number { return (Number(this.estudiante?.cuenta) || 0) - this.total; }
   /** Productos elegidos. */
   get enCarrito(): ProductoCaja[] { return (this.datos?.productos ?? []).filter((p) => this.cantidad(p) > 0); }
   /** «2 × Gorra, 1 × Snack» */
@@ -428,7 +513,9 @@ export class CajaWillGo implements OnInit {
     if (!d.puede_vender) return d.edicion.responsable_caja
       ? this.t.instant('wg.operacion.caja.manejaOtro', { nombre: d.edicion.responsable })
       : this.t.instant('wg.operacion.caja.sinEncargado');
-    if (this.total > e.saldo) return this.t.instant('wg.operacion.caja.noAlcanza', { n: this.miles(e.saldo) });
+    if (this.metodo === 'tarjeta') {
+      if (this.total > (Number(e.cuenta) || 0)) return this.t.instant('wg.tarjeta.noAlcanzaCuenta', { n: this.miles(e.cuenta) });
+    } else if (this.total > e.saldo) return this.t.instant('wg.operacion.caja.noAlcanza', { n: this.miles(e.saldo) });
     if (this.excede) return this.t.instant('wg.operacion.caja.motivoExcede');
     return '';
   }
@@ -473,6 +560,11 @@ export class CajaWillGo implements OnInit {
   get conVuelto(): number[] { return (this.datos?.denominaciones ?? []).filter((d) => d <= this.vueltoDebido && this.topesVuelto[d] > 0); }
 
   abrirCobro(): void {
+    if (this.metodo === 'tarjeta') {
+      // Con tarjeta: si no se identificó con su tarjeta, primero hay que leerla.
+      if (this.llaveLeida) this.abrirPagoTarjeta(); else this.abrirEscaner('pago');
+      return;
+    }
     this.cobrando = true;
     this.paso = 'recibido';
     this.recibidos = {};
@@ -514,9 +606,92 @@ export class CajaWillGo implements OnInit {
       next: (r) => {
         this.enviando = false;
         this.cobrando = false;
-        this.recibo = { numero: r.numero_recibo, items: r.items, total, recibido, vuelto, saldo: r.saldo, moneda: p.codigo_moneda ?? '' };
+        this.recibo = { numero: r.numero_recibo, items: r.items, total, recibido, vuelto, saldo: r.saldo, moneda: p.codigo_moneda ?? '', metodo: 'efectivo' };
         this.carrito = {};
         this.estudiante = null;
+        this.llaveLeida = null;
+        this.etapa = 'productos';
+        this.busqueda = '';
+        this.cargar();
+      },
+      error: (err) => { this.enviando = false; this.errorCobro = WillGoService.mensajeDeError(err); },
+    });
+  }
+
+  // ---- Tarjeta débito ----
+  abrirEscaner(para: 'estudiante' | 'pago'): void {
+    this.escaneando = para;
+    this.errorEscaner = '';
+    this.buscandoLlave = false;
+    this.ultimaLectura = { texto: '', hora: 0 };
+  }
+  cerrarEscaner(): void { this.escaneando = null; this.buscandoLlave = false; }
+
+  /** Llega la llave leída del QR (o escrita): busca al estudiante en esta caja. */
+  alLeer(texto: string): void {
+    if (this.buscandoLlave || !this.datos) return;
+    const llave = normalizarLlave(texto);
+    if (llave === '@') return;
+    // La cámara lee el mismo QR varias veces por segundo: no repetir el mismo aviso.
+    const ahora = Date.now();
+    if (llave === this.ultimaLectura.texto && ahora - this.ultimaLectura.hora < 2500) return;
+    this.ultimaLectura = { texto: llave, hora: ahora };
+    this.errorEscaner = '';
+    const local = this.datos.estudiantes.find((e) => (e.llave ?? '').toLowerCase() === llave);
+    if (local) { this.usarTarjeta(local, llave); return; }
+    this.buscandoLlave = true;
+    this.willGo.duenoDeLlave(llave).subscribe({
+      next: (d) => {
+        this.buscandoLlave = false;
+        const e = this.datos?.estudiantes.find((x) => x.id === d.participante_id);
+        if (e) this.usarTarjeta(e, d.llave ? normalizarLlave(d.llave) : llave);
+        else this.errorEscaner = this.t.instant('wg.tarjeta.noEstaEnCaja', { nombre: `${d.nombre} ${d.apellido}`.trim(), pais: d.pais });
+      },
+      error: (err) => {
+        this.buscandoLlave = false;
+        this.errorEscaner = err?.status === 404 ? this.t.instant('wg.tarjeta.llaveNoExiste', { llave }) : WillGoService.mensajeDeError(err);
+      },
+    });
+  }
+
+  private usarTarjeta(e: EstudianteCaja, llave: string): void {
+    if (this.escaneando === 'pago') {
+      if (this.estudiante && e.id !== this.estudiante.id) {
+        this.errorEscaner = this.t.instant('wg.tarjeta.esDeOtro', { nombre: `${e.nombre} ${e.apellido}`.trim(), elegido: this.estudiante.nombre });
+        return;
+      }
+      this.llaveLeida = llave;
+      this.cerrarEscaner();
+      this.abrirPagoTarjeta();
+      return;
+    }
+    this.cerrarEscaner();
+    this.elegir(e, llave);
+  }
+
+  abrirPagoTarjeta(): void {
+    this.pagandoTarjeta = true;
+    this.errorCobro = '';
+    this.clave = crypto.randomUUID();
+  }
+  cerrarPagoTarjeta(): void { if (!this.enviando) this.pagandoTarjeta = false; }
+
+  pagarConTarjeta(): void {
+    const e = this.estudiante, p = this.paisEst, llave = this.llaveLeida;
+    if (!e || !p || !llave || !this.datos || this.enviando || this.motivoNoCobrar) return;
+    const items = Object.entries(this.carrito).filter(([, n]) => n > 0).map(([producto_id, cantidad]) => ({ producto_id, cantidad }));
+    const total = this.total, quedan = this.cuentaTras;
+    this.enviando = true;
+    this.errorCobro = '';
+    this.willGo.vender({ participante_id: e.id, items, clave_idempotencia: this.clave, metodo: 'tarjeta', llave }).subscribe({
+      next: (r) => {
+        this.enviando = false;
+        this.pagandoTarjeta = false;
+        this.recibo = { numero: r.numero_recibo, items: r.items, total, recibido: 0, vuelto: 0, saldo: quedan, moneda: p.codigo_moneda ?? '', metodo: 'tarjeta', llave };
+        this.carrito = {};
+        this.estudiante = null;
+        this.llaveLeida = null;
+        this.metodo = 'efectivo';
         this.etapa = 'productos';
         this.busqueda = '';
         this.cargar();
