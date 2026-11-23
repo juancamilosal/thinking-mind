@@ -138,7 +138,9 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
                    class="mt-4 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
             <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
               @for (e of filtrados; track e.id) {
-                <li class="flex items-center gap-3 px-4 py-3">
+                <!-- Celular: nombre y saldos a todo lo ancho y el botón debajo. Desde tableta: el botón a la derecha -->
+                <li class="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div class="flex items-start gap-3 min-w-0 flex-1">
                   <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">
                     <p class="font-semibold text-gray-800 leading-snug">{{ e.nombre }} {{ e.apellido }}</p>
@@ -148,8 +150,9 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
                       @if (invertidoPor(e)) { <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">📈 {{ miles(invertidoPor(e)) }}</span> }
                     </div>
                   </div>
+                  </div>
                   <button type="button" (click)="abrirInversion(e)" [disabled]="!e.saldo && !e.cuenta"
-                          class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.banco.wfunds.invertir' | translate }}</button>
+                          class="w-full sm:w-auto shrink-0 px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.banco.wfunds.invertir' | translate }}</button>
                 </li>
               }
               @if (!filtrados.length) { <li class="px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.banco.wfunds.nadieCoincide' | translate: { q: busqueda }) : ('wg.banco.wfunds.sinEstudiantes' | translate: { pais: pais.nombre }) }}</li> }
