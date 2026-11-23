@@ -41,14 +41,15 @@ import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.direct
         <!-- Banco -->
         <div class="mt-4 rounded-2xl p-5 text-white shadow" [style.background]="pais.color || '#1e293b'">
           <p class="text-sm opacity-90">{{ 'wg.banco.repartir.bancoDe' | translate: { pais: pais.nombre } }}</p>
-          <div class="mt-2 grid grid-cols-2 gap-3">
+          <!-- Celular: un saldo debajo del otro. Desde tableta: lado a lado -->
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <p class="text-xs opacity-90">💵 {{ 'wg.banco.repartir.efectivo' | translate }}</p>
-              <p class="text-2xl sm:text-3xl font-extrabold break-all">{{ miles(pais.saldo_banco) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
+              <p class="text-sm opacity-90 whitespace-nowrap">💵 {{ 'wg.banco.repartir.efectivo' | translate }}</p>
+              <p class="text-2xl sm:text-3xl font-extrabold whitespace-nowrap">{{ miles(pais.saldo_banco) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
             </div>
-            <div class="border-l border-white/30 pl-3">
-              <p class="text-xs opacity-90">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
-              <p class="text-2xl sm:text-3xl font-extrabold break-all">{{ miles(pais.saldo_virtual ?? 0) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
+            <div class="border-t sm:border-t-0 sm:border-l border-white/30 pt-3 sm:pt-0 sm:pl-4">
+              <p class="text-sm opacity-90 whitespace-nowrap">💳 {{ 'wg.banco.repartir.virtual' | translate }}</p>
+              <p class="text-2xl sm:text-3xl font-extrabold whitespace-nowrap">{{ miles(pais.saldo_virtual ?? 0) }} <span class="text-sm font-semibold opacity-90">{{ pais.codigo_moneda }}</span></p>
             </div>
           </div>
           @if (datos.edicion.estado !== 'abierta') {
@@ -67,14 +68,21 @@ import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.direct
         } @else {
           <ul class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
             @for (d of pais.docentes; track d.id) {
-              <li class="flex items-center gap-3 px-4 py-3">
-                <div class="w-11 h-11 shrink-0 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center">{{ (d.nombre[0] || '') + (d.apellido[0] || '') }}</div>
-                <div class="min-w-0 flex-1">
-                  <p class="font-semibold text-gray-800 truncate">{{ d.nombre }} {{ d.apellido }}</p>
-                  <p class="text-xs text-gray-500">{{ 'wg.banco.tiene' | translate }} <b class="text-gray-700">{{ miles(d.saldo) }}</b> · {{ 'wg.transferir.cuenta' | translate }} <b class="text-gray-700">{{ miles(d.cuenta) }}</b> · {{ 'wg.banco.repartir.recibio' | translate: { n: miles(d.recibido) } }}</p>
+              <!-- Celular: nombre y saldos a todo lo ancho, y el botón debajo. Desde tableta: el botón a la derecha -->
+              <li class="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div class="flex items-start gap-3 min-w-0 flex-1">
+                  <div class="w-11 h-11 shrink-0 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center">{{ (d.nombre[0] || '') + (d.apellido[0] || '') }}</div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-gray-800 leading-snug">{{ d.nombre }} {{ d.apellido }}</p>
+                    <div class="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+                      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">💵 <b class="text-gray-800">{{ miles(d.saldo) }}</b></span>
+                      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">💳 <b class="text-gray-800">{{ miles(d.cuenta) }}</b></span>
+                      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">{{ 'wg.banco.repartir.recibio' | translate: { n: miles(d.recibido) } }}</span>
+                    </div>
+                  </div>
                 </div>
                 <button type="button" (click)="abrir(d)" [disabled]="datos.edicion.estado !== 'abierta'"
-                        class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.banco.repartir.entregar' | translate }}</button>
+                        class="w-full sm:w-auto shrink-0 px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-40">{{ 'wg.banco.repartir.entregar' | translate }}</button>
               </li>
             }
           </ul>
@@ -88,8 +96,8 @@ import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.direct
           <ul class="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
             @for (e of pais.entregas; track e.id) {
               <li class="px-4 py-3">
-                <div class="flex items-center justify-between gap-3">
-                  <p class="font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</p>
+                <div class="flex items-start justify-between gap-3">
+                  <p class="font-semibold text-gray-800 leading-snug min-w-0">{{ e.nombre }} {{ e.apellido }}</p>
                   <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(e.monto) }}</p>
                 </div>
                 @if (e.medio === 'transferencia') {
