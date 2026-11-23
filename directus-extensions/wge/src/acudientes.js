@@ -64,7 +64,10 @@ export function correoCodigoAcudiente({ nombre, codigo, minutos, idioma = 'es' }
 
 const deJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
-export function rutasAcudientes(router, { db, services, getSchema, logger }) {
+/** Nombre con el que llegan los correos de Will-Go (Directus usaría el nombre del proyecto, «Directus»). */
+export const REMITENTE_CORREOS = 'Thinking Mind';
+
+export function rutasAcudientes(router, { db, services, getSchema, logger, env }) {
 	const publica = (fn) => async (req, res) => {
 		try {
 			res.json({ data: await fn(req) });
@@ -133,6 +136,8 @@ export function rutasAcudientes(router, { db, services, getSchema, logger }) {
 		const correo = new services.MailService({ schema: await getSchema(), knex: db });
 		await correo.send({
 			to: acudiente.email,
+			// Remitente «Thinking Mind <EMAIL_FROM>»; sin EMAIL_FROM, Directus usa su remitente por defecto
+			...(env?.EMAIL_FROM ? { from: { name: REMITENTE_CORREOS, address: env.EMAIL_FROM } } : {}),
 			...correoCodigoAcudiente({ nombre: acudiente.nombre, codigo, minutos: MINUTOS_CODIGO, idioma: idiomaDe(req) }),
 		});
 		return { ...respuesta, correo: ocultarCorreo(acudiente.email) };

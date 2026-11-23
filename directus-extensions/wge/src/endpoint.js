@@ -19,8 +19,8 @@ const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
 
 export default {
 	id: 'wge',
-	handler: (router, { database: db, logger, services, getSchema }) => {
-		rutasAcudientes(router, { db, services, getSchema, logger });
+	handler: (router, { database: db, logger, services, getSchema, env }) => {
+		rutasAcudientes(router, { db, services, getSchema, logger, env });
 		const ruta = (fn) => async (req, res) => {
 			try {
 				if (!req.accountability?.user) throw new WgeError(401, 'SIN_SESION', 'Debes iniciar sesión');
