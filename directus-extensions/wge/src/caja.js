@@ -61,9 +61,10 @@ export function rutasCaja(router, { ruta, db }) {
 		const porProducto = new Map(vendidos.map((v) => [v.producto_id, Number(v.n)]));
 		for (const p of productos) p.vendidos = porProducto.get(p.id) ?? 0;
 		const estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })
+			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 			.where('pa.edicion_id', edicion.id).whereNotNull('pa.pais_id').whereRaw('coalesce(pa.retirado, false) = false')
-			.select('pa.id', 'pa.pais_id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'))
+			.leftJoin('wge_billeteras as c', function () { this.on('c.participante_id', 'pa.id').andOn('c.pais_id', 'pa.pais_id').andOnVal('c.tipo_dueno', 'cuenta'); })
+			.select('pa.id', 'pa.pais_id', 'pa.llave', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'), db.raw('coalesce(c.saldo, 0)::int as cuenta'))
 			.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);
 		// Lo que cada estudiante ya compró de cada producto (para el máximo por estudiante)
 		const compras = await db('wge_venta_items as i').join('wge_ventas as v', 'v.id', 'i.venta_id')
@@ -73,7 +74,7 @@ export function rutasCaja(router, { ruta, db }) {
 		for (const c of compras) (comprado[c.participante_id] ??= {})[c.producto_id] = Number(c.n);
 		const ventas = await db('wge_ventas as v').join('wge_participantes as pa', 'pa.id', 'v.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 			.where('v.edicion_id', edicion.id).orderBy('v.date_created', 'desc').limit(50)
-			.select('v.id', 'v.numero_recibo', 'v.total_billetes', 'v.tasa_aplicada', 'v.pais_id', 'v.billetes_recibidos', 'v.billetes_vuelto', 'v.date_created', 'e.nombre', 'e.apellido');
+			.select('v.id', 'v.numero_recibo', 'v.total_billetes', 'v.tasa_aplicada', 'v.pais_id', db.raw("coalesce(v.metodo_pago, 'efectivo') as metodo_pago"), 'v.billetes_recibidos', 'v.billetes_vuelto', 'v.date_created', 'e.nombre', 'e.apellido');
 		const items = ventas.length ? await db('wge_venta_items as i').join('wge_productos as p', 'p.id', 'i.producto_id')
 			.whereIn('i.venta_id', ventas.map((v) => v.id)).select('i.venta_id', 'p.nombre', 'i.cantidad', 'i.precio_billetes') : [];
 		for (const v of ventas) {

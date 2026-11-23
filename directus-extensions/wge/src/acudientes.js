@@ -185,9 +185,11 @@ export function rutasAcudientes(router, { db, services, getSchema, logger, env }
 		const acudiente = await db('clientes').where('id', acudienteId).first('nombre', 'apellido');
 		const familia = await mismaPersona(acudienteId);
 		const hijos = await participantesDe(familia).leftJoin('wge_paises as pa', 'pa.id', 'p.pais_id')
-			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
+			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 			.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }])
-			.select('p.id', 'p.edicion_id', 'p.pais_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda', db.raw('coalesce(b.saldo, 0)::int as saldo'));
+			.leftJoin('wge_billeteras as c', function () { this.on('c.participante_id', 'p.id').andOn('c.pais_id', 'p.pais_id').andOnVal('c.tipo_dueno', 'cuenta'); })
+			.select('p.id', 'p.edicion_id', 'p.pais_id', 'p.llave', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.color', 'pa.codigo_moneda',
+				db.raw('coalesce(b.saldo, 0)::int as saldo'), db.raw('coalesce(c.saldo, 0)::int as cuenta'));
 		for (const h of hijos) {
 			Object.assign(h, h.pais_id ? await movimientosEstudiante(db, h.id, h.pais_id) : { movimientos: [], total_entro: 0, total_salio: 0 });
 			delete h.pais_id;

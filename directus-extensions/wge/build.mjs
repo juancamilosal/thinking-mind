@@ -22,12 +22,13 @@ const wfunds = preparar(leer('wfunds.js'));
 const acudientes = preparar(leer('acudientes.js'));
 const rubrica = preparar(leer('rubrica.js'));
 const tipocambio = preparar(leer('tipocambio.js'));
+const cuentas = preparar(leer('cuentas.js'));
 const caja = preparar(leer('caja.js'));
 const cierre = preparar(leer('cierre.js'));
 const hook = preparar(leer('hook.js')).replace(/^export default /m, 'const configHook = ');
 const endpoint = preparar(leer('endpoint.js')).replace(/^export default /m, 'const configEndpoint = ');
 
-const cuerpo = [lib, mensajes, funcionarios, avisos, admin, arqueo, wfunds, rubrica, hook, tipocambio, caja, cierre, acudientes, endpoint].join('\n');
+const cuerpo = [lib, mensajes, funcionarios, avisos, admin, arqueo, wfunds, rubrica, hook, tipocambio, cuentas, caja, cierre, acudientes, endpoint].join('\n');
 if (/^\s*(import|export)\b/m.test(cuerpo)) throw new Error('Quedó un import/export sin convertir');
 
 const api = `// Generado por build.mjs: no editar a mano.

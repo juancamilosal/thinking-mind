@@ -25,6 +25,14 @@ const TRADUCCIONES = [
 	// Generales y sesión
 	['Error interno en Will Go Economy', 'Internal error in Will Go Economy', 'Erreur interne dans Will Go Economy'],
 	['Debes iniciar sesión', 'You must sign in', 'Vous devez vous connecter'],
+	// Cuentas, llaves y tarjeta débito
+	['Escribe o escanea la llave', 'Type or scan the key', 'Saisissez ou scannez la clé'],
+	['No hay ninguna cuenta con la llave $1', 'There is no account with the key $1', "Aucun compte n'a la clé $1"],
+	['Elige los billetes que consigna el estudiante', 'Choose the bills the student is depositing', "Choisissez les billets que l'élève dépose"],
+	['Elige los billetes que le entregas al estudiante', 'Choose the bills you give the student', "Choisissez les billets que vous remettez à l'élève"],
+	['En su cuenta solo hay $1', 'Their account only has $1', "Son compte ne contient que $1"],
+	['Una transferencia electrónica no lleva billetes', 'An electronic transfer has no bills', "Un virement électronique n'a pas de billets"],
+	['Esa tarjeta es de $1 $2', 'That card belongs to $1 $2', 'Cette carte appartient à $1 $2'],
 	['Tu rol no puede hacer esta operación', 'Your role cannot perform this operation', 'Votre rôle ne permet pas cette opération'],
 	['$1 debe ser un entero mayor que 0', '$1 must be a whole number greater than 0', '$1 doit être un entier supérieur à 0'],
 	['Falta $1', 'Missing $1', 'Il manque $1'],

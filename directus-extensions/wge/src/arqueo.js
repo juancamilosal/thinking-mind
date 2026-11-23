@@ -32,6 +32,12 @@ function acumularBilletes(quedan, lista, signo) {
  * más los que recibió de inversiones W-Funds, menos los que pagó al cobrar esas inversiones.
  * (La bienvenida no lleva detalle de billetes, así que es un tope: nunca bloquea de más.)
  */
+/** Dinero en las cuentas electrónicas (tarjetas) de un país: sus billetes están guardados en el banco. */
+export async function saldoCuentas(db, edicionId, paisId) {
+	const r = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'cuenta' }).sum({ s: 'saldo' }).first();
+	return Number(r?.s ?? 0);
+}
+
 export async function inventarioBanco(db, edicionId, paisId) {
 	const pais = await db('wge_paises').where('id', paisId).first('provision_billetes');
 	const asignados = (typeof pais?.provision_billetes === 'string' ? JSON.parse(pais.provision_billetes) : pais?.provision_billetes) ?? {};
@@ -48,6 +54,11 @@ export async function inventarioBanco(db, edicionId, paisId) {
 		// Billetes que la caja GO•STORE le entregó al banco
 		acumularBilletes(quedan, await db('wge_transferencias').where({ billetera_destino_id: banco.id, estado: 'aplicada' }).whereNotNull('billetes').pluck('billetes'), 1);
 	}
+	// Cuentas electrónicas: los billetes que se consignan quedan en el banco y los que se retiran salen de él
+	const conCuenta = (lado) => db('wge_transferencias as t').join('wge_billeteras as w', 'w.id', `t.billetera_${lado}_id`)
+		.where({ 't.edicion_id': edicionId, 't.pais_id': paisId, 't.estado': 'aplicada', 'w.tipo_dueno': 'cuenta' }).whereNotNull('t.billetes').pluck('t.billetes');
+	acumularBilletes(quedan, await conCuenta('destino'), 1);
+	acumularBilletes(quedan, await conCuenta('origen'), -1);
 	const inversiones = await db('wge_inversiones as i').join('wge_participantes as p', 'p.id', 'i.participante_id')
 		.join('wge_rondas as r', 'r.id', 'i.ronda_id').where({ 'r.edicion_id': edicionId, 'p.pais_id': paisId })
 		.select('i.billetes', 'i.billetes_pago');
@@ -87,7 +98,9 @@ export async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 	const ids = (tipo) => [...new Set(filas.filter((f) => f.referencia_tipo === tipo && f.referencia_id).map((f) => f.referencia_id))];
 	const transferencias = new Map((ids('transferencia').length ? await db('wge_transferencias as t')
 		.leftJoin('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id').leftJoin('directus_users as u', 'u.id', 'bd.docente_id')
-		.whereIn('t.id', ids('transferencia')).select('t.id', 't.billetes', 'u.first_name', 'u.last_name') : []).map((t) => [t.id, t]));
+		.whereIn('t.id', ids('transferencia')).select('t.id', 't.billetes', 'u.first_name', 'u.last_name', 'bd.tipo_dueno as destino_tipo') : []).map((t) => [t.id, t]));
+	const ventasConTarjeta = new Map((ids('venta').length ? await db('wge_ventas as v').join('wge_participantes as pa', 'pa.id', 'v.participante_id')
+		.join('estudiantes as e', 'e.id', 'pa.estudiante_id').whereIn('v.id', ids('venta')).select('v.id', 'e.nombre', 'e.apellido') : []).map((v) => [v.id, v]));
 	const inversiones = new Map((ids('inversion').length ? await db('wge_inversiones as i')
 		.join('wge_participantes as pa', 'pa.id', 'i.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 		.leftJoin('wge_fondos as f', 'f.id', 'i.fondo_id')
@@ -103,8 +116,12 @@ export async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 		let billetes = null;
 		if (f.referencia_tipo === 'transferencia') {
 			const t = transferencias.get(f.referencia_id);
-			titulo = entra ? 'Recibido de la caja GO•STORE' : `Entregado a ${nombre(t) || 'un docente'}`;
+			titulo = entra ? 'Recibido de la caja GO•STORE'
+				: t?.destino_tipo === 'cuenta' ? `Transferencia a ${nombre(t) || 'un docente'}` : `Entregado a ${nombre(t) || 'un docente'}`;
 			billetes = leerBilletes(t?.billetes);
+		} else if (f.tipo === 'pago_tarjeta') {
+			const v = ventasConTarjeta.get(f.referencia_id);
+			titulo = `Pago con tarjeta en GO•STORE${v ? ' · ' + nombre(v) : ''}`;
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);
 			titulo = entra ? `Inversión de ${nombre(i)}${i?.fondo ? ' en ' + i.fondo : ''}` : `Retiro de ${nombre(i)}${i?.fondo ? ' (' + i.fondo + ')' : ''}`;
@@ -124,17 +141,19 @@ export async function movimientosBanco(db, edicionId, paisId, limite = 100) {
 }
 
 /**
- * Movimientos del bolsillo de un estudiante (para el portal del acudiente): bienvenida, billetes del docente,
- * inversiones, pagos de las empresas, compras y devoluciones, con sus billetes cuando se registraron.
+ * Movimientos de un estudiante (para el portal del acudiente): su bolsillo (billetes) y su cuenta (tarjeta débito).
+ * Cada movimiento dice en qué `medio` ocurrió. Los totales no cuentan lo que pasa entre su bolsillo y su cuenta.
  */
 export async function movimientosEstudiante(db, participanteId, paisId, limite = 50) {
-	const billetera = await db('wge_billeteras').where({ participante_id: participanteId, pais_id: paisId, tipo_dueno: 'estudiante' }).first('id');
-	if (!billetera) return { movimientos: [], total_entro: 0, total_salio: 0 };
-	const totales = await db('wge_movimientos').where('billetera_id', billetera.id)
+	const billeteras = await db('wge_billeteras').where({ participante_id: participanteId, pais_id: paisId }).whereIn('tipo_dueno', ['estudiante', 'cuenta']).select('id', 'tipo_dueno');
+	if (!billeteras.length) return { movimientos: [], total_entro: 0, total_salio: 0 };
+	const medio = new Map(billeteras.map((b) => [b.id, b.tipo_dueno === 'cuenta' ? 'cuenta' : 'efectivo']));
+	const internos = ['consignacion', 'retiro_cuenta'];
+	const totales = await db('wge_movimientos').whereIn('billetera_id', [...medio.keys()]).whereNotIn('tipo', internos)
 		.select(db.raw('coalesce(sum(case when monto > 0 then monto else 0 end), 0)::bigint as entro'), db.raw('coalesce(sum(case when monto < 0 then -monto else 0 end), 0)::bigint as salio'))
 		.first();
-	const filas = await db('wge_movimientos').where('billetera_id', billetera.id).orderBy('consecutivo', 'desc').limit(limite)
-		.select('id', 'tipo', 'monto', 'referencia_tipo', 'referencia_id', 'date_created');
+	const filas = await db('wge_movimientos').whereIn('billetera_id', [...medio.keys()]).orderBy('date_created', 'desc').orderBy('consecutivo', 'desc').limit(limite)
+		.select('id', 'billetera_id', 'tipo', 'monto', 'referencia_tipo', 'referencia_id', 'date_created');
 	const ids = (tipo) => [...new Set(filas.filter((f) => f.referencia_tipo === tipo && f.referencia_id).map((f) => f.referencia_id))];
 	const transferencias = new Map((ids('transferencia').length ? await db('wge_transferencias as t')
 		.leftJoin('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id').leftJoin('directus_users as u', 'u.id', 'bo.docente_id')
@@ -144,13 +163,19 @@ export async function movimientosEstudiante(db, participanteId, paisId, limite =
 
 	const movimientos = filas.map((f) => {
 		const entra = Number(f.monto) > 0;
+		const m = medio.get(f.billetera_id);
 		let titulo = entra ? 'Entrada' : 'Salida';
 		let billetes = null;
-		if (f.referencia_tipo === 'transferencia') {
+		if (f.tipo === 'consignacion') {
+			titulo = m === 'cuenta' ? 'Consignación en su cuenta' : 'Consignó en su cuenta';
+		} else if (f.tipo === 'retiro_cuenta') {
+			titulo = m === 'cuenta' ? 'Retiro de su cuenta' : 'Retiró de su cuenta';
+		} else if (f.tipo === 'pago_tarjeta') {
+			titulo = 'Pagó con tarjeta en GO•STORE';
+		} else if (f.referencia_tipo === 'transferencia') {
 			const t = transferencias.get(f.referencia_id);
 			const docente = `${t?.first_name ?? ''} ${t?.last_name ?? ''}`.trim();
-			titulo = docente ? `Recibió de ${docente}` : 'Recibió de su docente';
-			billetes = leerBilletes(t?.billetes);
+			titulo = m === 'cuenta' ? (docente ? `Transferencia de ${docente}` : 'Transferencia de su docente') : (docente ? `Recibió de ${docente}` : 'Recibió de su docente');
 		} else if (f.referencia_tipo === 'inversion') {
 			const i = inversiones.get(f.referencia_id);
 			titulo = entra ? `Retiró su inversión de ${i?.fondo ?? 'una empresa'}` : `Invirtió en ${i?.fondo ?? 'una empresa'}`;
@@ -160,17 +185,26 @@ export async function movimientosEstudiante(db, participanteId, paisId, limite =
 		} else if (f.referencia_tipo === 'venta' || f.tipo === 'compra') {
 			titulo = 'Compra en GO•STORE';
 		} else if (f.referencia_tipo === 'retiro') {
-			titulo = 'Devolvió sus billetes al banco';
+			titulo = m === 'cuenta' ? 'Su cuenta volvió al banco' : 'Devolvió sus billetes al banco';
 		}
-		return { id: f.id, entra, titulo, monto: Math.abs(Number(f.monto)), fecha: f.date_created, billetes };
+		if (f.referencia_tipo === 'transferencia' && !billetes) billetes = leerBilletes(transferencias.get(f.referencia_id)?.billetes);
+		return { id: f.id, entra, titulo, monto: Math.abs(Number(f.monto)), fecha: f.date_created, billetes, medio: m };
 	});
 	return { movimientos, total_entro: Number(totales?.entro ?? 0), total_salio: Number(totales?.salio ?? 0) };
 }
 
 export function rutasArqueo(router, { ruta, db }) {
-	const saldoBanco = async (edicionId, paisId) => {
+	/**
+	 * Billetes que deben estar físicamente en el banco: su propio saldo más el dinero de todas las cuentas
+	 * electrónicas (docentes y estudiantes), porque esos billetes se quedan guardados en el banco.
+	 */
+	const saldoPropioBanco = async (edicionId, paisId) => {
 		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
 		return Number(b?.saldo ?? 0);
+	};
+	const saldoBanco = async (edicionId, paisId) => {
+		const b = await db('wge_billeteras').where({ edicion_id: edicionId, pais_id: paisId, tipo_dueno: 'banco' }).first('saldo');
+		return Number(b?.saldo ?? 0) + await saldoCuentas(db, edicionId, paisId);
 	};
 
 	const permitir = async (req, rol, edicionId) => {
@@ -190,7 +224,7 @@ export function rutasArqueo(router, { ruta, db }) {
 		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) consulta.where('responsable_banco', req.accountability.user);
 		const paises = await consulta;
 		for (const p of paises) {
-			p.saldo_banco = await saldoBanco(edicion.id, p.id);
+			p.saldo_banco = await saldoPropioBanco(edicion.id, p.id); // lo que el banco puede repartir (sin el dinero de las cuentas)
 			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			p.docentes = await db('wge_equipo as q').join('directus_users as u', 'u.id', 'q.usuario_id')
 				.join('directus_roles as r', 'r.id', 'u.role')
@@ -200,14 +234,16 @@ export function rutasArqueo(router, { ruta, db }) {
 				.where('q.edicion_id', edicion.id).where('r.name', ROLES.DOCENTE)
 				.where((w) => w.whereNull('q.pais_id').orWhere('q.pais_id', p.id))
 				.select('u.id', 'u.first_name as nombre', 'u.last_name as apellido', 'q.pais_id', db.raw('coalesce(b.saldo, 0)::int as saldo'),
+					db.raw(`coalesce((select c.saldo from wge_billeteras c where c.docente_id = q.usuario_id and c.pais_id = ? and c.tipo_dueno = 'cuenta'), 0)::int as cuenta`, [p.id]),
 					db.raw(`coalesce((select sum(t.monto) from wge_transferencias t join wge_billeteras bd on bd.id = t.billetera_destino_id
 						where bd.docente_id = q.usuario_id and bd.pais_id = ? and t.estado = 'aplicada'), 0)::int as recibido`, [p.id]))
 				.orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
 			p.entregas = await db('wge_transferencias as t').join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
 				.join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id').leftJoin('directus_users as u', 'u.id', 'bd.docente_id')
-				.where({ 'bo.pais_id': p.id, 'bo.tipo_dueno': 'banco', 'bd.tipo_dueno': 'docente' })
+				.where({ 'bo.pais_id': p.id, 'bo.tipo_dueno': 'banco' }).whereIn('bd.tipo_dueno', ['docente', 'cuenta']).whereNotNull('bd.docente_id')
 				.orderBy('t.date_created', 'desc').limit(20)
-				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'u.first_name as nombre', 'u.last_name as apellido');
+				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'u.first_name as nombre', 'u.last_name as apellido',
+					db.raw("case when bd.tipo_dueno = 'cuenta' then 'transferencia' else 'billetes' end as medio"));
 		}
 		return { edicion, denominaciones: DENOMINACIONES, paises };
 	}));
@@ -229,21 +265,26 @@ export function rutasArqueo(router, { ruta, db }) {
 			const billetera = await db('wge_billeteras').where({ edicion_id: edicion.id, pais_id: p.id, tipo_dueno: 'docente', docente_id: docenteId }).first('id', 'saldo');
 			p.saldo = Number(billetera?.saldo ?? 0);
 			p.inventario = await inventarioDocente(db, edicion.id, p.id, docenteId);
-			const suma = async (campo) => (billetera ? Number((await db('wge_transferencias').where({ [campo]: billetera.id, estado: 'aplicada' }).sum({ t: 'monto' }).first())?.t ?? 0) : 0);
+			const cuentaDoc = await db('wge_billeteras').where({ edicion_id: edicion.id, pais_id: p.id, tipo_dueno: 'cuenta', docente_id: docenteId }).first('id', 'saldo');
+			p.cuenta = Number(cuentaDoc?.saldo ?? 0);
+			const mias = [billetera?.id, cuentaDoc?.id].filter(Boolean);
+			const suma = async (campo) => (mias.length ? Number((await db('wge_transferencias').whereIn(campo, mias).where({ estado: 'aplicada' }).sum({ t: 'monto' }).first())?.t ?? 0) : 0);
 			p.total_recibido = await suma('billetera_destino_id');
 			p.total_entregado = await suma('billetera_origen_id');
-			p.recibidos = billetera ? await db('wge_transferencias as t').join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
+			const medio = db.raw("case when bd.tipo_dueno = 'cuenta' then 'transferencia' else 'billetes' end as medio");
+			p.recibidos = mias.length ? await db('wge_transferencias as t').join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id')
 				.leftJoin('directus_users as u', 'u.id', 't.user_created')
-				.where('t.billetera_destino_id', billetera.id).orderBy('t.date_created', 'desc').limit(50)
-				.select('t.id', 't.monto', 't.billetes', 't.date_created', db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien")) : [];
-			p.entregas = billetera ? await db('wge_transferencias as t').join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id')
+				.whereIn('t.billetera_destino_id', mias).orderBy('t.date_created', 'desc').limit(50)
+				.select('t.id', 't.monto', 't.billetes', 't.date_created', medio, db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien")) : [];
+			p.entregas = mias.length ? await db('wge_transferencias as t').join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id')
 				.join('wge_participantes as pa', 'pa.id', 'bd.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-				.where('t.billetera_origen_id', billetera.id).orderBy('t.date_created', 'desc').limit(50)
-				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'e.nombre', 'e.apellido') : [];
+				.whereIn('t.billetera_origen_id', mias).orderBy('t.date_created', 'desc').limit(50)
+				.select('t.id', 't.monto', 't.billetes', 't.date_created', 'e.nombre', 'e.apellido', medio) : [];
 			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })
+				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 				.where({ 'pa.edicion_id': edicion.id, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
-				.select('pa.id', 'pa.codigo', 'pa.presente', 'e.nombre', 'e.apellido', 'e.grado', db.raw('coalesce(b.saldo, 0)::int as saldo'))
+				.leftJoin('wge_billeteras as c', function () { this.on('c.participante_id', 'pa.id').andOn('c.pais_id', 'pa.pais_id').andOnVal('c.tipo_dueno', 'cuenta'); })
+				.select('pa.id', 'pa.codigo', 'pa.llave', 'pa.presente', 'e.nombre', 'e.apellido', 'e.grado', db.raw('coalesce(b.saldo, 0)::int as saldo'), db.raw('coalesce(c.saldo, 0)::int as cuenta'))
 				.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);
 		}
 		return { edicion, denominaciones: DENOMINACIONES, paises };
@@ -298,6 +339,7 @@ export function rutasArqueo(router, { ruta, db }) {
 			p.provision_inicial = Number(p.provision_inicial ?? 0);
 			p.provision_billetes = (typeof p.provision_billetes === 'string' ? JSON.parse(p.provision_billetes) : p.provision_billetes) ?? {};
 			p.en_circulacion = p.provision_inicial - p.saldo_sistema;
+			p.en_cuentas = await saldoCuentas(db, edicion.id, p.id);
 			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			Object.assign(p, await movimientosBanco(db, edicion.id, p.id));
 		}

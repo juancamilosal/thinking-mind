@@ -419,7 +419,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		return db('wge_participantes as p')
 			.join('estudiantes as e', 'e.id', 'p.estudiante_id')
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id')
-			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id'); })
+			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 			.where('p.edicion_id', req.params.id)
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
@@ -523,7 +523,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				if (p.retirado) continue;
 				const billeteras = await trx('wge_billeteras').where('participante_id', p.id).where('saldo', '>', 0).orderBy('id');
 				for (const b of billeteras) {
-					const est = await billeteraBloqueada(trx, { edicionId: b.edicion_id, paisId: b.pais_id, tipo: 'estudiante', participanteId: p.id });
+					const est = await billeteraBloqueada(trx, { edicionId: b.edicion_id, paisId: b.pais_id, tipo: b.tipo_dueno, participanteId: p.id });
 					const banco = await billeteraBloqueada(trx, { edicionId: b.edicion_id, paisId: b.pais_id, tipo: 'banco' });
 					const saldo = Number(est.saldo);
 					if (saldo <= 0) continue;
@@ -602,7 +602,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		if (paisId && !(await db('wge_paises').where({ id: paisId, edicion_id: fila.edicion_id }).first('id'))) {
 			throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
 		}
-		const conBilletes = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, tipo_dueno: 'docente', docente_id: fila.usuario_id })
+		const conBilletes = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, docente_id: fila.usuario_id }).whereIn('tipo_dueno', ['docente', 'cuenta'])
 			.where('saldo', '>', 0).modify((q) => { if (paisId) q.whereNot('pais_id', paisId); }).first('id');
 		if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', 'El docente tiene billetes de otro país; primero debe entregarlos o devolverlos');
 		await db('wge_equipo').where('id', fila.id).update({ pais_id: paisId });
@@ -614,7 +614,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		soloAdmin(rol);
 		const fila = await db('wge_equipo').where('id', req.params.id).first();
 		if (!fila) throw new WgeError(404, 'NO_EXISTE', 'No hace parte del equipo');
-		const [{ suma }] = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, tipo_dueno: 'docente', docente_id: fila.usuario_id }).sum({ suma: 'saldo' });
+		const [{ suma }] = await db('wge_billeteras').where({ edicion_id: fila.edicion_id, docente_id: fila.usuario_id }).whereIn('tipo_dueno', ['docente', 'cuenta']).sum({ suma: 'saldo' });
 		if (Number(suma) > 0) throw new WgeError(409, 'TIENE_BILLETES', `Tiene ${Number(suma)} billetes sin entregar en esta edición; primero debe entregarlos`);
 		await db('wge_equipo').where('id', fila.id).delete();
 		return { quitado: true };

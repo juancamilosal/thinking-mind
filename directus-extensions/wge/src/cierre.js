@@ -45,15 +45,17 @@ export async function resumenDelCierre(db, edicionId) {
 		p.saldo_banco = await saldo('banco');
 		p.saldo_caja = await saldo('caja');
 		p.saldo_docentes = await saldo('docente');
+		p.saldo_cuentas = await saldo('cuenta');
 		const ventas = await db('wge_ventas').where({ edicion_id: edicionId, pais_id: p.id, estado: 'pagada' })
 			.count({ n: '*' }).sum({ total: 'total_billetes' }).first();
 		p.ventas = Number(ventas?.n ?? 0);
 		p.total_ventas = Number(ventas?.total ?? 0);
 
 		const estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })
+			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 			.where({ 'pa.edicion_id': edicionId, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
-			.select('pa.id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'));
+			.leftJoin('wge_billeteras as c', function () { this.on('c.participante_id', 'pa.id').andOn('c.pais_id', 'pa.pais_id').andOnVal('c.tipo_dueno', 'cuenta'); })
+			.select('pa.id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'), db.raw('coalesce(c.saldo, 0)::int as cuenta'));
 		const ids = estudiantes.map((e) => e.id);
 		const invertido = new Map();
 		const ganado = new Map();
@@ -74,7 +76,7 @@ export async function resumenDelCierre(db, edicionId) {
 		p.estudiantes = estudiantes.map((e) => ({
 			...e,
 			invertido: invertido.get(e.id) ?? 0,
-			total: e.saldo + (invertido.get(e.id) ?? 0),
+			total: e.saldo + e.cuenta + (invertido.get(e.id) ?? 0),
 			ganancia_fondos: ganado.get(e.id) ?? 0,
 			gastado_tienda: gastado.get(e.id) ?? 0,
 			rubrica: nota.get(e.id) ?? null,

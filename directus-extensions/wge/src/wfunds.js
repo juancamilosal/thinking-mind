@@ -240,7 +240,7 @@ export function rutasWfunds(router, { ruta, db }) {
 			p.saldo_banco = Number(banco?.saldo ?? 0);
 			p.inventario = await inventarioBanco(db, edicion.id, p.id);
 			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id'); })
+				.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'pa.id').andOn('b.pais_id', 'pa.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 				.where({ 'pa.edicion_id': edicion.id, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
 				.select('pa.id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as saldo'))
 				.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);

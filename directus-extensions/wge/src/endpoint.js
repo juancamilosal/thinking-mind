@@ -13,6 +13,7 @@ import { rutasRubrica } from './rubrica.js';
 import { rutasTipoCambio } from './tipocambio.js';
 import { rutasCierre } from './cierre.js';
 import { idiomaDe, traducirMensaje } from './mensajes.js';
+import { rutasCuentas, participantePorLlave } from './cuentas.js';
 import { rutasCaja, inventarioCaja, exigirResponsableCaja, precioEnBilletesCaja } from './caja.js';
 
 const CLAVE_DUPLICADA = '23505'; // unique_violation de PostgreSQL
@@ -68,10 +69,14 @@ export default {
 		 * POST /wge/transferencias
 		 * Banco → docente: { tipo: "banco_docente", pais_id, docente_id, monto, clave_idempotencia }
 		 * Docente → estudiante: { tipo: "docente_estudiante", participante_id, monto, clave_idempotencia }
+		 * Con { electronica: true } es una transferencia entre cuentas, sin billetes: banco → cuenta del docente, o
+		 * cuenta del docente → cuenta del estudiante (que se puede indicar con su llave: { llave: "@sofia.gomez" }).
 		 */
 		router.post('/transferencias', ruta(async (req, rol) => {
 			const { tipo } = req.body ?? {};
 			// Si llegan los billetes entregados, el monto es su total
+			const electronica = req.body?.electronica === true;
+			if (electronica && req.body?.billetes) throw new WgeError(400, 'VALOR_INVALIDO', 'Una transferencia electrónica no lleva billetes');
 			const detalle = req.body?.billetes ? totalDelConteo(req.body.billetes) : null;
 			const monto = detalle ? enteroPositivo(detalle.total, 'monto') : enteroPositivo(req.body?.monto, 'monto');
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
@@ -98,22 +103,23 @@ export default {
 							if (n > quedan[d]) throw new WgeError(409, 'SIN_BILLETES', `En el banco solo quedan ${Math.max(quedan[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
 						}
 					}
-					destino = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: 'docente', docenteId });
+					destino = await billeteraBloqueada(trx, { edicionId: pais.edicion_id, paisId, tipo: electronica ? 'cuenta' : 'docente', docenteId });
 				} else if (tipo === 'docente_estudiante') {
 					exigirRol(rol, ROLES.DOCENTE);
-					const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
+					const participanteId = req.body?.llave ? (await participantePorLlave(trx, req.body.llave)).id : exigirTexto(req.body.participante_id, 'participante_id');
+					const participante = await participanteConPais(trx, participanteId);
 					await edicionAbierta(trx, participante.edicion_id);
 					paisId = participante.pais_id;
 					const docenteId = rol === ROLES.ADMIN && req.body.docente_id ? req.body.docente_id : actor;
 					await exigirEquipo(trx, { edicionId: participante.edicion_id, usuarioId: docenteId, rol: docenteId === actor ? rol : ROLES.DOCENTE, paisId, quien: docenteId === actor ? 'Tu usuario' : 'El docente' });
-					origen = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: 'docente', docenteId });
+					origen = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: electronica ? 'cuenta' : 'docente', docenteId });
 					if (detalle) {
 						const tiene = await inventarioDocente(trx, participante.edicion_id, paisId, docenteId);
 						for (const [d, n] of Object.entries(detalle.limpio)) {
 							if (n > tiene[d]) throw new WgeError(409, 'SIN_BILLETES', `Solo tienes ${Math.max(tiene[d], 0)} billetes de ${Number(d).toLocaleString('es-CO')}`);
 						}
 					}
-					destino = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: 'estudiante', participanteId: participante.id });
+					destino = await billeteraBloqueada(trx, { edicionId: participante.edicion_id, paisId, tipo: electronica ? 'cuenta' : 'estudiante', participanteId: participante.id });
 				} else {
 					throw new WgeError(400, 'VALOR_INVALIDO', 'tipo debe ser banco_docente o docente_estudiante');
 				}
@@ -143,8 +149,10 @@ export default {
 		 */
 		router.post('/ventas', ruta(async (req, rol) => {
 			exigirRol(rol, ROLES.CAJERO, ROLES.ADMIN_WG);
-			const recibidos = totalDelConteo(req.body?.billetes_recibidos ?? {});
-			const vuelto = totalDelConteo(req.body?.billetes_vuelto ?? {});
+			// Con tarjeta débito ({ metodo: "tarjeta", llave }) se descuenta de la cuenta del estudiante: sin billetes ni vuelto
+			const conTarjeta = req.body?.metodo === 'tarjeta';
+			const recibidos = totalDelConteo(conTarjeta ? {} : req.body?.billetes_recibidos ?? {});
+			const vuelto = totalDelConteo(conTarjeta ? {} : req.body?.billetes_vuelto ?? {});
 			const clave = exigirTexto(req.body?.clave_idempotencia, 'clave_idempotencia');
 			const items = Array.isArray(req.body?.items) ? req.body.items : [];
 			if (!items.length) throw new WgeError(400, 'VALOR_INVALIDO', 'La venta no tiene productos');
@@ -157,12 +165,17 @@ export default {
 
 			return unaSolaVez('wge_ventas', clave, async (trx) => {
 				const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
+				if (conTarjeta) {
+					// La tarjeta escaneada (o la llave escrita) debe ser la del estudiante que compra
+					const dueno = await participantePorLlave(trx, exigirTexto(req.body?.llave, 'llave'));
+					if (dueno.id !== participante.id) throw new WgeError(409, 'TARJETA_DE_OTRO', `Esa tarjeta es de ${dueno.nombre} ${dueno.apellido}`);
+				}
 				const edicion = await edicionAbierta(trx, participante.edicion_id);
 				await exigirEquipo(trx, { edicionId: edicion.id, usuarioId: actor, rol });
 				await exigirResponsableCaja(trx, { edicionId: edicion.id, usuarioId: actor, rol });
 				const pais = await trx('wge_paises').where('id', participante.pais_id).first(); // la tasa vigente al momento de la compra
 				const tasa = Number(pais.tasa_actual || edicion.tasa_inicial);
-				const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'estudiante', participanteId: participante.id });
+				const billetera = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'cuenta' : 'estudiante', participanteId: participante.id });
 
 				const productos = await trx('wge_productos').whereIn('id', [...pedido.keys()]).orderBy('id').forUpdate();
 				if (productos.length !== pedido.size) throw new WgeError(404, 'NO_EXISTE', 'Algún producto no existe');
@@ -185,8 +198,8 @@ export default {
 				}
 
 				// Billetes: lo recibido debe alcanzar y el vuelto debe ser exacto, con billetes que la caja tenga (o que acaba de recibir)
-				if (recibidos.total < total) throw new WgeError(409, 'PAGO_INSUFICIENTE', `El total es ${total}; el estudiante entregó ${recibidos.total}`);
-				if (recibidos.total - vuelto.total !== total) throw new WgeError(400, 'VUELTO_INCORRECTO', `El vuelto debe ser ${recibidos.total - total} (marcaste ${vuelto.total})`);
+				if (!conTarjeta && recibidos.total < total) throw new WgeError(409, 'PAGO_INSUFICIENTE', `El total es ${total}; el estudiante entregó ${recibidos.total}`);
+				if (!conTarjeta && recibidos.total - vuelto.total !== total) throw new WgeError(400, 'VUELTO_INCORRECTO', `El vuelto debe ser ${recibidos.total - total} (marcaste ${vuelto.total})`);
 				if (vuelto.total) {
 					const hay = await inventarioCaja(trx, edicion.id, pais.id);
 					for (const [d, n] of Object.entries(vuelto.limpio)) {
@@ -194,12 +207,16 @@ export default {
 						if (n > disponibles) throw new WgeError(409, 'SIN_BILLETES', `En la caja solo hay ${Math.max(0, disponibles)} billetes de ${d} para el vuelto`);
 					}
 				}
-				if (Number(billetera.saldo) < total) throw new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${billetera.saldo} billetes`);
+				if (Number(billetera.saldo) < total) {
+					throw conTarjeta ? new WgeError(409, 'SALDO_INSUFICIENTE', `En su cuenta solo hay ${billetera.saldo}`)
+						: new WgeError(409, 'SALDO_INSUFICIENTE', `El estudiante solo tiene ${billetera.saldo} billetes`);
+				}
 
 				const ventaId = crypto.randomUUID();
-				const movimientoId = await moverSaldo(trx, billetera, { tipo: 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
-				const caja = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: 'caja' });
-				await moverSaldo(trx, caja, { tipo: 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
+				const movimientoId = await moverSaldo(trx, billetera, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
+				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta al banco (sus billetes ya están allá)
+				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco' : 'caja' });
+				await moverSaldo(trx, recibe, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 
 				const recibo = `GS-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${ventaId.slice(0, 8).toUpperCase()}`;
@@ -208,6 +225,7 @@ export default {
 					tasa_aplicada: tasa, total_billetes: total, numero_recibo: recibo, movimiento_id: movimientoId,
 					estado: 'pagada', clave_idempotencia: clave, date_created: new Date(), user_created: actor,
 					pais_id: pais.id, billetes_recibidos: JSON.stringify(recibidos.limpio), billetes_vuelto: JSON.stringify(vuelto.limpio),
+					metodo_pago: conTarjeta ? 'tarjeta' : 'efectivo',
 				};
 				await trx('wge_ventas').insert(venta);
 				await trx('wge_venta_items').insert(lineas.map(({ p, cantidad, precio }) => ({
@@ -323,6 +341,7 @@ export default {
 		rutasRubrica(router, { ruta, db });
 		rutasCierre(router, { ruta, db });
 		rutasTipoCambio(router, { ruta, db });
+		rutasCuentas(router, { ruta, db, unaSolaVez });
 		rutasCaja(router, { ruta, db });
 
 		/** GET /wge/billetera/:codigo: saldo y últimos movimientos de un estudiante por su código (QR). */
@@ -333,7 +352,7 @@ export default {
 				.where('p.codigo', String(req.params.codigo).toUpperCase())
 				.first('p.id', 'p.edicion_id', 'p.pais_id', 'e.nombre', 'e.apellido', 'pa.nombre as pais', 'pa.codigo_moneda', 'pa.tasa_actual');
 			if (!p) throw new WgeError(404, 'NO_EXISTE', 'No hay ningún estudiante con ese código');
-			const billetera = p.pais_id ? await db('wge_billeteras').where({ participante_id: p.id, pais_id: p.pais_id }).first() : null;
+			const billetera = p.pais_id ? await db('wge_billeteras').where({ participante_id: p.id, pais_id: p.pais_id, tipo_dueno: 'estudiante' }).first() : null;
 			const movimientos = billetera
 				? await db('wge_movimientos').where('billetera_id', billetera.id).orderBy('consecutivo', 'desc').limit(20)
 					.select('tipo', 'monto', 'saldo_despues', 'date_created')
