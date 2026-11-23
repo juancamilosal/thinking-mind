@@ -111,7 +111,7 @@ import { EliminarEdicionComponent } from './eliminar-edicion.component';
               <wg-buscador-oferta inputId="e-oferta" [ofertas]="ofertas" [actual]="ofertaElegida" (elegida)="alElegirOferta($event)" />
               <p class="text-xs text-gray-500 mt-1">{{ 'wg.admin.ed.ayudaOferta' | translate }}</p>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label for="e-inicio" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.admin.inicia' | translate }}</label>
                 <input id="e-inicio" type="date" formControlName="fecha_inicio" class="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400">

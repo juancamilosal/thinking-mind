@@ -22,13 +22,13 @@ export interface OfertaElegida { colegio_id: string | null; curso_id: string; ed
         <div class="flex gap-3 w-full px-4 py-3 bg-orange-50 border-2 border-orange-200 rounded-xl" [class.items-start]="!compacto" [class.items-center]="compacto">
           <svg class="w-5 h-5 mt-0.5 text-orange-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-gray-800 truncate">{{ seleccionada.colegio || ('wg.nucleo.oferta.sinColegio' | translate) }}</p>
+            <p class="font-semibold text-gray-800 leading-snug break-words">{{ seleccionada.colegio || ('wg.nucleo.oferta.sinColegio' | translate) }}</p>
             @if (!compacto) {
               <p class="text-sm text-gray-600">{{ seleccionada.programa }} · <b>{{ 'wg.nucleo.oferta.edicion' | translate: { n: seleccionada.edicion } }}</b>{{ seleccionada.fecha_finalizacion ? ('wg.nucleo.oferta.termina' | translate: { fecha: (seleccionada.fecha_finalizacion | wgFecha:'d MMM y') }) : '' }}</p>
             }
           </div>
           @if (!desactivado) {
-            <button type="button" (click)="abrir()" class="text-sm font-semibold text-orange-700 hover:underline">{{ 'wg.nucleo.oferta.cambiar' | translate }}</button>
+            <button type="button" (click)="abrir()" class="shrink-0 text-sm font-semibold text-orange-700 hover:underline">{{ 'wg.nucleo.oferta.cambiar' | translate }}</button>
           }
         </div>
       } @else {

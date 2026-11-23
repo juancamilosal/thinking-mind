@@ -21,7 +21,8 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
         <wg-buscador-oferta inputId="g-oferta" [compacto]="true" [ofertas]="ofertas" [actual]="ofertaActual" [nombreEdicionActual]="edicion.nombre"
                             [soloPrograma]="edicion.participantes > 0 ? edicion.curso_id : null" (elegida)="alElegirOferta($event)" />
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <!-- Fechas: en celular una debajo de la otra para que se vean completas -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label for="g-inicio" class="etiqueta">{{ 'wg.admin.inicia' | translate }}</label>
           <input id="g-inicio" type="date" [(ngModel)]="datos.fecha_inicio" class="campo">
