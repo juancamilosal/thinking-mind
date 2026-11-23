@@ -43,9 +43,10 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
         <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.banco.sinPais' | translate }}</div>
       } @else if (datos && pais) {
         @if (datos.paises.length > 1) {
-          <div class="mt-5 flex flex-wrap gap-2">
+          <!-- Países en columnas iguales (tres por fila) -->
+          <div class="mt-5 grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
             @for (p of datos.paises; track p.id) {
-              <button type="button" (click)="elegirPais(p)" class="px-4 py-2 rounded-xl text-sm font-semibold border-2"
+              <button type="button" (click)="elegirPais(p)" class="min-w-0 px-1 sm:px-4 py-2 rounded-xl text-xs min-[380px]:text-sm leading-tight font-semibold border-2 whitespace-nowrap"
                       [style.background]="pais.id === p.id ? (p.color || '#1e293b') : '#fff'" [style.border-color]="p.color || '#cbd5e1'"
                       [style.color]="pais.id === p.id ? '#fff' : '#334155'">{{ p.nombre }}</button>
             }
@@ -57,22 +58,27 @@ const RIESGO: Record<string, { texto: string; clase: string }> = {
           @if (r.cierre_programado && restante <= 0) {
             <wg-procesando-ronda class="block mt-4" [ronda]="r.nombre" />
           } @else {
-          <div class="mt-4 rounded-2xl p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-teal-600">
+          <div class="mt-4 rounded-2xl p-4 sm:p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-teal-600">
             <div class="flex items-center gap-2 text-sm font-semibold opacity-95">
-              <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse" aria-hidden="true"></span>
-              {{ 'wg.banco.wfunds.rondaAbierta' | translate: { ronda: r.nombre } }}{{ r.duracion_minutos ? ('wg.banco.wfunds.duracionRondas' | translate: { n: r.duracion_minutos }) : '' }}
+              <span class="w-2.5 h-2.5 rounded-full bg-white animate-pulse shrink-0" aria-hidden="true"></span>
+              <span>{{ 'wg.banco.wfunds.rondaAbierta' | translate: { ronda: r.nombre } }}{{ r.duracion_minutos ? ('wg.banco.wfunds.duracionRondas' | translate: { n: r.duracion_minutos }) : '' }}</span>
             </div>
-            @if (r.cierre_programado) {
-              <p class="mt-2 text-sm opacity-90">{{ (restante > 0 ? 'wg.banco.wfunds.cierraEn' : 'wg.banco.wfunds.cerrando') | translate }}</p>
-              <p class="text-5xl font-extrabold tabular-nums leading-none" role="timer" aria-live="off">{{ reloj }}</p>
-              <p class="text-xs opacity-90 mt-1">{{ 'wg.banco.wfunds.aLas' | translate: { hora: (r.cierre_programado | wgFecha:'h:mm a') } }}{{ recortada(r) ? ('wg.banco.wfunds.finHorario' | translate) : '' }}</p>
-            }
-            <div class="mt-4 rounded-xl bg-white/15 px-4 py-3">
-              <p class="text-sm opacity-95">{{ 'wg.banco.wfunds.invertidoEn' | translate: { pais: pais.nombre } }}</p>
-              <p class="text-3xl font-extrabold whitespace-nowrap">{{ miles(totalInvertido) }}</p>
-              <p class="text-xs opacity-90">{{ pais.vigentes.length }} {{ (pais.vigentes.length === 1 ? 'wg.banco.wfunds.inversion' : 'wg.banco.wfunds.inversiones') | translate }} · {{ 'wg.banco.wfunds.nuevasRonda' | translate: { n: pais.inversiones.length } }}</p>
+            <!-- Tiempo que falta e invertido, lado a lado -->
+            <div class="mt-3 grid grid-cols-2 gap-3">
+              @if (r.cierre_programado) {
+                <div>
+                  <p class="text-xs opacity-90">{{ (restante > 0 ? 'wg.banco.wfunds.cierraEn' : 'wg.banco.wfunds.cerrando') | translate }}</p>
+                  <p class="text-4xl font-extrabold tabular-nums leading-tight" role="timer" aria-live="off">{{ reloj }}</p>
+                  <p class="text-[11px] opacity-90">{{ 'wg.banco.wfunds.aLas' | translate: { hora: (r.cierre_programado | wgFecha:'h:mm a') } }}</p>
+                </div>
+              }
+              <div class="rounded-xl bg-white/15 px-3 py-2">
+                <p class="text-xs opacity-90">{{ 'wg.banco.wfunds.invertido' | translate }}</p>
+                <p class="text-2xl font-extrabold whitespace-nowrap leading-tight">{{ miles(totalInvertido) }}</p>
+                <p class="text-[11px] opacity-90">{{ pais.vigentes.length }} {{ (pais.vigentes.length === 1 ? 'wg.banco.wfunds.inversion' : 'wg.banco.wfunds.inversiones') | translate }}</p>
+              </div>
             </div>
-            <button type="button" (click)="confirmarCierre = true" class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">{{ 'wg.banco.wfunds.cerrarAhora' | translate }}</button>
+            <button type="button" (click)="confirmarCierre = true" class="mt-3 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-white text-emerald-700 hover:bg-emerald-50">{{ 'wg.banco.wfunds.cerrarAhora' | translate }}</button>
           </div>
           }
         } @else {

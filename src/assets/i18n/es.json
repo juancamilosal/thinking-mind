@@ -631,7 +631,7 @@
         "riesgoMedio": "Riesgo medio",
         "riesgoAlto": "Riesgo alto",
         "rondaAbierta": "{{ronda}} abierta",
-        "duracionRondas": " · rondas de {{n}} min",
+        "duracionRondas": " · {{n}} min",
         "cierraEn": "Cierra en",
         "cerrando": "Cerrando…",
         "aLas": "a las {{hora}}",

@@ -631,7 +631,7 @@
         "riesgoMedio": "Risque moyen",
         "riesgoAlto": "Risque élevé",
         "rondaAbierta": "{{ronda}} ouverte",
-        "duracionRondas": " · manches de {{n}} min",
+        "duracionRondas": " · {{n}} min",
         "cierraEn": "Ferme dans",
         "cerrando": "Fermeture…",
         "aLas": "à {{hora}}",

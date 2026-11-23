@@ -631,7 +631,7 @@
         "riesgoMedio": "Medium risk",
         "riesgoAlto": "High risk",
         "rondaAbierta": "{{ronda}} open",
-        "duracionRondas": " · {{n}}-min rounds",
+        "duracionRondas": " · {{n}} min",
         "cierraEn": "Closes in",
         "cerrando": "Closing…",
         "aLas": "at {{hora}}",
