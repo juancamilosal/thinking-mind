@@ -107,7 +107,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
                   <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">
                     <p class="font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</p>
-                    @if (e.llave) { <p class="text-[11px] text-gray-400 font-mono truncate">{{ e.llave }}</p> }
+                    @if (e.llave) { <p class="text-[11px] text-gray-400 font-mono break-all">{{ e.llave }}</p> }
                     <p class="text-xs text-gray-500">{{ 'wg.operacion.entregar.tiene' | translate }} <b class="text-gray-700">{{ miles(e.saldo) }}</b> · {{ 'wg.transferir.cuenta' | translate }} <b class="text-gray-700">{{ miles(e.cuenta) }}</b></p>
                   </div>
                   <button type="button" (click)="abrir(e)" [disabled]="datos.edicion.estado !== 'abierta' || (!pais.saldo && !pais.cuenta)"
@@ -226,7 +226,7 @@ const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toL
                 <div class="w-12 h-12 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="paisDueno?.color || '#0d9488'">{{ (dueno.nombre[0] || '') + (dueno.apellido[0] || '') }}</div>
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold text-gray-800 truncate">{{ dueno.nombre }} {{ dueno.apellido }}</p>
-                  <p class="text-xs text-gray-500 truncate">{{ dueno.pais }} · <span class="font-mono">{{ dueno.llave }}</span></p>
+                  <p class="text-xs text-gray-500">{{ dueno.pais }}</p><p class="text-xs text-gray-500 font-mono break-all">{{ dueno.llave }}</p>
                 </div>
                 <button type="button" (click)="otraLlave()" [disabled]="enviando" class="shrink-0 text-sm font-semibold text-orange-700 hover:underline disabled:opacity-40">{{ 'wg.transferir.cambiar' | translate }}</button>
               </div>

@@ -84,13 +84,14 @@ type Operacion = 'consignar' | 'retirar';
                 <button type="button" (click)="abrir(e)" class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
                   <div class="w-11 h-11 shrink-0 rounded-full text-white font-bold flex items-center justify-center" [style.background]="pais.color || '#0d9488'">{{ (e.nombre[0] || '') + (e.apellido[0] || '') }}</div>
                   <div class="min-w-0 flex-1">
-                    <p class="font-semibold text-gray-800 truncate">{{ e.nombre }} {{ e.apellido }}</p>
-                    <p class="text-xs text-gray-500 truncate font-mono">{{ e.llave || ('wg.cuentas.sinLlave' | translate) }}</p>
+                    <p class="font-semibold text-gray-800 leading-snug">{{ e.nombre }} {{ e.apellido }}</p>
+                    <p class="text-xs text-gray-500 font-mono break-all">{{ e.llave || ('wg.cuentas.sinLlave' | translate) }}</p>
+                    <div class="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">💵 <b class="text-gray-800">{{ miles(e.efectivo) }}</b></span>
+                      <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">💳 <b class="text-gray-800">{{ miles(e.cuenta) }}</b> {{ pais.codigo_moneda }}</span>
+                    </div>
                   </div>
-                  <div class="shrink-0 text-right text-xs leading-tight">
-                    <p class="text-gray-500">{{ 'wg.cuentas.efectivo' | translate }} <b class="text-gray-800 text-sm">{{ miles(e.efectivo) }}</b></p>
-                    <p class="text-gray-500 mt-1">{{ 'wg.cuentas.cuenta' | translate }} <b class="text-gray-800 text-sm">{{ miles(e.cuenta) }}</b> <span class="text-gray-400">{{ pais.codigo_moneda }}</span></p>
-                  </div>
+                  <svg class="w-5 h-5 shrink-0 text-gray-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.17 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
                 </button>
               </li>
             }
@@ -118,30 +119,33 @@ type Operacion = 'consignar' | 'retirar';
           <div class="flex-1 overflow-y-auto px-5 pb-4">
             @if (!operacion) {
               <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-stretch">
-                <!-- Tarjeta en pequeño -->
-                <div class="w-full max-w-[300px] aspect-[85.6/54] rounded-2xl p-3 text-white shadow-lg flex gap-3"
+                <!-- Tarjeta en pequeño: arriba la marca y el QR; abajo la llave a todo lo ancho -->
+                <div class="w-full max-w-[320px] aspect-[85.6/54] rounded-2xl p-3.5 text-white shadow-lg flex flex-col"
                      [style.background]="degradado(pais.color)">
-                  <div class="flex-1 min-w-0 flex flex-col">
-                    <p class="text-[9px] font-bold tracking-[0.15em] opacity-90">WILL-GO ECONOMY</p>
-                    <p class="text-[10px] opacity-80">{{ 'wg.cuentas.tarjetaDebito' | translate }}</p>
-                    <p class="mt-auto font-mono font-bold leading-tight whitespace-nowrap overflow-hidden text-ellipsis" [style.font-size.px]="tamLlave(estudiante.llave)">{{ estudiante.llave }}</p>
-                    <p class="text-[11px] opacity-90 truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
-                  </div>
-                  @if (estudiante.llave) {
-                    <div class="h-full aspect-square bg-white rounded-lg p-1 shrink-0">
-                      <wg-qr-llave class="w-full h-full" [llave]="estudiante.llave" [color]="'#0f172a'" />
+                  <div class="flex items-start justify-between gap-3 min-h-0 flex-1">
+                    <div class="min-w-0">
+                      <p class="text-[10px] font-bold tracking-[0.15em] opacity-90 leading-tight">WILL-GO<br>ECONOMY</p>
+                      <p class="text-[11px] opacity-80 mt-0.5">{{ 'wg.cuentas.tarjetaDebito' | translate }}</p>
+                      <p class="text-[11px] opacity-90 mt-1">{{ pais.nombre }}</p>
                     </div>
-                  }
-                </div>
-                <!-- Saldos -->
-                <div class="w-full flex-1 grid grid-cols-2 sm:grid-cols-1 gap-3">
-                  <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
-                    <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">{{ 'wg.cuentas.efectivo' | translate }}</p>
-                    <p class="text-xl font-extrabold text-gray-800 break-all">{{ miles(estudiante.efectivo) }} <span class="text-xs font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></p>
+                    @if (estudiante.llave) {
+                      <div class="h-full max-h-[104px] aspect-square bg-white rounded-lg p-1 shrink-0">
+                        <wg-qr-llave class="w-full h-full" [llave]="estudiante.llave" [color]="'#0f172a'" />
+                      </div>
+                    }
                   </div>
-                  <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
-                    <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">{{ 'wg.cuentas.cuenta' | translate }}</p>
-                    <p class="text-xl font-extrabold text-gray-800 break-all">{{ miles(estudiante.cuenta) }} <span class="text-xs font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></p>
+                  <p class="mt-2 font-mono font-bold leading-tight whitespace-nowrap" [style.font-size.px]="tamLlave(estudiante.llave)">{{ estudiante.llave }}</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide opacity-90 truncate">{{ estudiante.nombre }} {{ estudiante.apellido }}</p>
+                </div>
+                <!-- Saldos: una fila cada uno, a todo lo ancho, para que quepan montos grandes -->
+                <div class="w-full flex-1 flex flex-col gap-3 min-w-0">
+                  <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 flex items-center justify-between gap-3 min-w-0">
+                    <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold shrink-0">💵 {{ 'wg.cuentas.efectivo' | translate }}</p>
+                    <p class="font-extrabold text-gray-800 text-right whitespace-nowrap min-w-0" [style.font-size.px]="tamMonto(estudiante.efectivo)">{{ miles(estudiante.efectivo) }} <span class="text-xs font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></p>
+                  </div>
+                  <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 flex items-center justify-between gap-3 min-w-0">
+                    <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold shrink-0">💳 {{ 'wg.cuentas.cuenta' | translate }}</p>
+                    <p class="font-extrabold text-gray-800 text-right whitespace-nowrap min-w-0" [style.font-size.px]="tamMonto(estudiante.cuenta)">{{ miles(estudiante.cuenta) }} <span class="text-xs font-semibold text-gray-500">{{ pais.codigo_moneda }}</span></p>
                   </div>
                 </div>
               </div>
@@ -350,5 +354,7 @@ export class CuentasWillGo implements OnInit {
   }
 
   /** Tamaño de letra para que la llave quepa en una línea de la tarjeta. */
-  tamLlave(llave: string): number { return Math.min(14, 92 / (0.62 * Math.max(1, llave.length))); }
+  tamLlave(llave: string): number { return Math.min(19, 270 / (0.62 * Math.max(1, (llave ?? '').length))); }
+  /** Letra del saldo: grande para montos cortos y más pequeña cuando tiene muchas cifras. */
+  tamMonto(n: number): number { const cifras = this.miles(n).length; return cifras <= 9 ? 24 : Math.max(15, 24 - (cifras - 9) * 1.6); }
 }
