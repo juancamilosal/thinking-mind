@@ -675,6 +675,142 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	}));
 }
 
+// Avisos por correo a los colaboradores cuando quedan asignados a una edición (equipo, banco de un país o caja).
+
+/** Dónde entran los colaboradores. */
+const URL_APP_COLABORADORES = 'https://appthinkingmind.com/login-will-go';
+
+const NOMBRE_ROL_AVISO = {
+	es: { [ROLES.DOCENTE]: 'Docente', [ROLES.BANCO]: 'Banco', [ROLES.CAJERO]: 'Cajero', [ROLES.ADMIN_WG]: 'Administrativo' },
+	en: { [ROLES.DOCENTE]: 'Teacher', [ROLES.BANCO]: 'Bank', [ROLES.CAJERO]: 'Cashier', [ROLES.ADMIN_WG]: 'Administrative staff' },
+	fr: { [ROLES.DOCENTE]: 'Enseignant', [ROLES.BANCO]: 'Banque', [ROLES.CAJERO]: 'Caissier', [ROLES.ADMIN_WG]: 'Administratif' },
+};
+
+const DIAS_AVISO = {
+	es: { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo' },
+	en: { lunes: 'Monday', martes: 'Tuesday', miercoles: 'Wednesday', jueves: 'Thursday', viernes: 'Friday', sabado: 'Saturday', domingo: 'Sunday' },
+	fr: { lunes: 'Lundi', martes: 'Mardi', miercoles: 'Mercredi', jueves: 'Jeudi', viernes: 'Vendredi', sabado: 'Samedi', domingo: 'Dimanche' },
+};
+
+const LOCALE_AVISO = { es: 'es-CO', en: 'en-US', fr: 'fr-FR' };
+
+const TEXTOS_AVISO = {
+	es: {
+		asunto: (ed) => `Quedaste en el equipo de ${ed} · Will-Go Economy`,
+		hola: (n) => `Hola, ${n}`,
+		intro: { equipo: 'Te agregaron como colaborador de esta edición de Will-Go Economy.', banco: (p) => `Quedaste como <b>responsable del banco de ${p}</b> en esta edición de Will-Go Economy.`, caja: 'Quedaste como <b>encargado de la caja de GO•STORE</b> en esta edición de Will-Go Economy.' },
+		edicion: 'Edición', colegio: 'Colegio', programa: 'Programa', rol: 'Tu rol', pais: 'País', inicio: 'Inicio', fin: 'Fin', horario: 'Horario',
+		numero: (n) => `Edición ${n}`, sinFecha: 'Por definir', sinHorario: 'Por definir', todosPaises: 'Todos los países',
+		entrar: 'Entrar a Will-Go', usuario: (c) => `Tu usuario es <b>${c}</b>. Si es tu primera vez, usa la clave temporal que te entregó el administrativo.`,
+		pie: 'Este correo se envió porque te asignaron en Will-Go Economy de Thinking Mind.',
+	},
+	en: {
+		asunto: (ed) => `You're on the team for ${ed} · Will-Go Economy`,
+		hola: (n) => `Hi ${n},`,
+		intro: { equipo: 'You were added as a staff member of this Will-Go Economy edition.', banco: (p) => `You are now <b>in charge of the ${p} bank</b> in this Will-Go Economy edition.`, caja: 'You are now <b>in charge of the GO•STORE checkout</b> in this Will-Go Economy edition.' },
+		edicion: 'Edition', colegio: 'School', programa: 'Program', rol: 'Your role', pais: 'Country', inicio: 'Starts', fin: 'Ends', horario: 'Schedule',
+		numero: (n) => `Edition ${n}`, sinFecha: 'To be defined', sinHorario: 'To be defined', todosPaises: 'All countries',
+		entrar: 'Go to Will-Go', usuario: (c) => `Your username is <b>${c}</b>. If this is your first time, use the temporary password the administrative staff gave you.`,
+		pie: 'You received this email because you were assigned in Will-Go Economy by Thinking Mind.',
+	},
+	fr: {
+		asunto: (ed) => `Vous faites partie de l'équipe de ${ed} · Will-Go Economy`,
+		hola: (n) => `Bonjour ${n},`,
+		intro: { equipo: 'Vous avez été ajouté comme collaborateur de cette édition de Will-Go Economy.', banco: (p) => `Vous êtes désormais <b>responsable de la banque de ${p}</b> dans cette édition de Will-Go Economy.`, caja: 'Vous êtes désormais <b>responsable de la caisse GO•STORE</b> dans cette édition de Will-Go Economy.' },
+		edicion: 'Édition', colegio: 'École', programa: 'Programme', rol: 'Votre rôle', pais: 'Pays', inicio: 'Début', fin: 'Fin', horario: 'Horaire',
+		numero: (n) => `Édition ${n}`, sinFecha: 'À définir', sinHorario: 'À définir', todosPaises: 'Tous les pays',
+		entrar: 'Accéder à Will-Go', usuario: (c) => `Votre identifiant est <b>${c}</b>. Si c'est votre première connexion, utilisez le mot de passe temporaire remis par l'administration.`,
+		pie: "Vous recevez cet e-mail car vous avez été affecté dans Will-Go Economy de Thinking Mind.",
+	},
+};
+
+const limpiarHtml = (v) => String(v ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
+const leerJsonAviso = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+
+function fechaAviso(valor, idioma) {
+	if (!valor) return null;
+	const d = new Date(valor);
+	if (Number.isNaN(d.getTime())) return null;
+	return d.toLocaleDateString(LOCALE_AVISO[idioma], { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
+/** «Sábado 08:00–18:00 · Domingo 08:00–18:00» (o fechas exactas). */
+function horarioAviso(horario, idioma = 'es') {
+	const lista = leerJsonAviso(horario);
+	if (!Array.isArray(lista) || !lista.length) return null;
+	return lista.map((h) => {
+		const cuando = h.fecha ? fechaAviso(h.fecha, idioma) : (DIAS_AVISO[idioma][String(h.dia ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()] ?? h.dia);
+		return `${cuando} ${h.inicio}–${h.fin}`;
+	}).join(' · ');
+}
+
+/**
+ * Asunto y HTML del aviso. `encargo`: 'equipo' (lo agregaron al equipo), 'banco' (responsable del banco de `pais`)
+ * o 'caja' (encargado de la caja).
+ */
+function correoAsignacion({ nombre, correo, rol, encargo = 'equipo', pais = null, edicion, idioma = 'es' }) {
+	const l = TEXTOS_AVISO[idioma] ? idioma : 'es';
+	const t = TEXTOS_AVISO[l];
+	const intro = encargo === 'banco' ? t.intro.banco(limpiarHtml(pais)) : encargo === 'caja' ? t.intro.caja : t.intro.equipo;
+	const filas = [
+		[t.edicion, `${limpiarHtml(edicion.nombre)}${edicion.edicion_programa ? ` · ${t.numero(limpiarHtml(edicion.edicion_programa))}` : ''}`],
+		[t.colegio, limpiarHtml(edicion.colegio) || '—'],
+		[t.programa, limpiarHtml(edicion.programa) || '—'],
+		[t.rol, NOMBRE_ROL_AVISO[l][rol] ?? limpiarHtml(rol)],
+		...(encargo === 'banco' || rol === ROLES.DOCENTE ? [[t.pais, limpiarHtml(pais) || t.todosPaises]] : []),
+		[t.inicio, fechaAviso(edicion.fecha_inicio, l) ?? t.sinFecha],
+		[t.fin, fechaAviso(edicion.fecha_fin, l) ?? t.sinFecha],
+		[t.horario, horarioAviso(edicion.horario, l) ?? t.sinHorario],
+	];
+	const tabla = filas.map(([k, v]) => `<tr><td style="padding:8px 12px;color:#6b7280;font-size:14px;white-space:nowrap;vertical-align:top">${k}</td><td style="padding:8px 12px;font-size:14px;color:#111827;font-weight:600">${v}</td></tr>`).join('');
+	return {
+		subject: t.asunto(String(edicion.nombre ?? '')),
+		html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;color:#1f2937">
+			<p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:3px;color:#ff6b1a">WILL-GO ECONOMY</p>
+			<h2 style="margin:0 0 12px">${t.hola(limpiarHtml(nombre))}</h2>
+			<p style="margin:0 0 16px;font-size:15px;line-height:1.5">${intro}</p>
+			<table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:12px">${tabla}</table>
+			<p style="margin:24px 0"><a href="${URL_APP_COLABORADORES}" style="background:#ff6b1a;color:#fff;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;display:inline-block">${t.entrar}</a></p>
+			<p style="font-size:14px;color:#374151;line-height:1.5">${t.usuario(limpiarHtml(correo))}</p>
+			<p style="font-size:12px;color:#9ca3af;margin-top:24px">${t.pie}</p></div>`,
+	};
+}
+
+/**
+ * Envía el aviso a cada colaborador. Nunca hace fallar la operación que lo dispara: si el correo falla, queda en el log.
+ * avisos: [{ usuarioId, encargo, paisId }]
+ */
+async function enviarAvisos({ db, services, getSchema, env, logger }, edicionId, avisos, idioma = 'es') {
+	if (!avisos.length || !services?.MailService) return 0;
+	try {
+		const edicion = await db('wge_ediciones as e').leftJoin('colegios as c', 'c.id', 'e.colegio_id').leftJoin('Cursos as k', 'k.id', 'e.curso_id')
+			.where('e.id', edicionId).first('e.nombre', 'e.edicion_programa', 'e.fecha_inicio', 'e.fecha_fin', 'e.horario', 'c.nombre as colegio', 'k.nombre as programa');
+		if (!edicion) return 0;
+		const mail = new services.MailService({ schema: await getSchema(), knex: db });
+		let enviados = 0;
+		for (const a of avisos) {
+			try {
+				const u = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role').where('u.id', a.usuarioId)
+					.first('u.email', 'u.first_name', 'u.status', 'r.name as rol');
+				if (!u?.email || u.status !== 'active') continue;
+				// País: el del encargo (banco) o el que tenga en el equipo (docente)
+				let paisId = a.paisId ?? null;
+				if (!paisId && a.encargo !== 'banco') paisId = (await db('wge_equipo').where({ edicion_id: edicionId, usuario_id: a.usuarioId }).first('pais_id'))?.pais_id ?? null;
+				const pais = paisId ? (await db('wge_paises').where('id', paisId).first('nombre'))?.nombre : null;
+				const contenido = correoAsignacion({ nombre: u.first_name, correo: u.email, rol: u.rol, encargo: a.encargo, pais, edicion, idioma });
+				await mail.send({ to: u.email, ...(env?.EMAIL_FROM ? { from: { name: 'Thinking Mind', address: env.EMAIL_FROM } } : {}), ...contenido });
+				enviados++;
+			} catch (error) {
+				logger?.warn?.(`wge: no se pudo enviar el aviso a ${a.usuarioId}: ${error?.message ?? error}`);
+			}
+		}
+		return enviados;
+	} catch (error) {
+		logger?.warn?.(`wge: avisos de la edición ${edicionId} no enviados: ${error?.message ?? error}`);
+		return 0;
+	}
+}
+
 // Administración de ediciones de WILL-GO ECONOMY (pantalla "Edición y participantes").
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
@@ -806,7 +942,10 @@ function validarHorario(horario) {
 	});
 }
 
-function rutasAdmin(router, { ruta, db, services, getSchema }) {
+function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
+	/** Avisa por correo a los colaboradores asignados (sin esperar: el correo nunca frena ni hace fallar la operación). */
+	const avisar = (req, edicionId, avisos) => { enviarAvisos({ db, services, getSchema, env, logger }, edicionId, avisos, idiomaDe(req)).catch(() => {}); };
+
 	const soloAdmin = (rol) => exigirRol(rol, ROLES.ADMIN_WG);
 	const nueva = (actor, fila) => ({ id: crypto.randomUUID(), ...fila, date_created: new Date(), user_created: actor });
 
@@ -925,6 +1064,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			})).onConflict('clave_unica').ignore();
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
+		if (fila.responsable_caja && fila.responsable_caja !== e.responsable_caja) avisar(req, e.id, [{ usuarioId: fila.responsable_caja, encargo: 'caja' }]);
 		const actualizada = await edicionExistente(e.id);
 		const { nuevos, quitados } = await traerInscritos(db, actualizada, req.accountability.user);
 		return { ...(await resumenEdicion(actualizada)), nuevos, quitados };
@@ -1020,6 +1160,9 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 					edicion_id: actual.edicion_id, usuario_id: fila.responsable_banco, clave_unica: `${actual.edicion_id}:${fila.responsable_banco}`,
 				})).onConflict('clave_unica').ignore();
 			}
+			// Aviso por correo al nuevo responsable del banco (cuando el cambio quede guardado)
+			const avisarBanco = nombre === 'paises' && fila.responsable_banco && fila.responsable_banco !== actual.responsable_banco
+				? () => avisar(req, actual.edicion_id, [{ usuarioId: fila.responsable_banco, encargo: 'banco', paisId: actual.id }]) : () => {};
 			if (nombre === 'paises' && 'provision_inicial' in fila && e.estado === 'borrador') {
 				// El banco recibe los billetes apenas se registran (y se ajusta si se corrigen), para poder contarlos antes de abrir
 				await db.transaction(async (trx) => {
@@ -1033,9 +1176,11 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 						});
 					}
 				});
+				avisarBanco();
 				return db(s.tabla).where('id', actual.id).first();
 			}
 			if (Object.keys(fila).length) await db(s.tabla).where('id', actual.id).update(fila);
+			avisarBanco();
 			return db(s.tabla).where('id', actual.id).first();
 		}));
 	}
@@ -1217,8 +1362,22 @@ function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		if (validos.length !== ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'Algún usuario no es colaborador de Will Go');
 		const r = await db('wge_equipo').insert(validos.map((usuario_id) => nueva(req.accountability.user, {
 			edicion_id: e.id, usuario_id, clave_unica: `${e.id}:${usuario_id}`,
-		}))).onConflict('clave_unica').ignore().returning('id');
+		}))).onConflict('clave_unica').ignore().returning('usuario_id');
+		// Aviso por correo a quienes quedaron en el equipo (los que ya estaban no reciben otro)
+		avisar(req, e.id, r.map((x) => ({ usuarioId: x.usuario_id ?? x, encargo: 'equipo' })));
 		return { agregados: r.length };
+	}));
+
+	/** POST /wge/admin/ediciones/:id/equipo/avisar: reenvía el aviso a todo el equipo (p. ej. si cambiaron fechas u horario). */
+	router.post('/admin/ediciones/:id/equipo/avisar', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		const equipo = await db('wge_equipo').where('edicion_id', e.id).pluck('usuario_id');
+		const bancos = new Map((await db('wge_paises').where('edicion_id', e.id).whereNotNull('responsable_banco').select('id', 'responsable_banco')).map((p) => [p.responsable_banco, p.id]));
+		const avisos = equipo.map((usuarioId) => (usuarioId === e.responsable_caja ? { usuarioId, encargo: 'caja' }
+			: bancos.has(usuarioId) ? { usuarioId, encargo: 'banco', paisId: bancos.get(usuarioId) } : { usuarioId, encargo: 'equipo' }));
+		const enviados = await enviarAvisos({ db, services, getSchema, env, logger }, e.id, avisos, idiomaDe(req));
+		return { equipo: equipo.length, enviados };
 	}));
 
 	/** PATCH /wge/admin/equipo/:id { pais_id }: país del docente (o null para que maneje todos). */
@@ -3064,7 +3223,7 @@ const configEndpoint = {
 		}));
 
 		rutasFuncionarios(router, { ruta, db, services, getSchema });
-		rutasAdmin(router, { ruta, db, services, getSchema });
+		rutasAdmin(router, { ruta, db, services, getSchema, env, logger });
 		rutasArqueo(router, { ruta, db });
 		rutasWfunds(router, { ruta, db });
 		rutasRubrica(router, { ruta, db });

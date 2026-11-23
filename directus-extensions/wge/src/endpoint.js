@@ -317,7 +317,7 @@ export default {
 		}));
 
 		rutasFuncionarios(router, { ruta, db, services, getSchema });
-		rutasAdmin(router, { ruta, db, services, getSchema });
+		rutasAdmin(router, { ruta, db, services, getSchema, env, logger });
 		rutasArqueo(router, { ruta, db });
 		rutasWfunds(router, { ruta, db });
 		rutasRubrica(router, { ruta, db });

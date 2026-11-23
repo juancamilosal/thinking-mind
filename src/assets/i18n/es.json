@@ -1467,7 +1467,12 @@
         "agregadosN": "Se agregaron {{n}} colaboradores al equipo.",
         "docenteDe": "{{nombre}} quedó como docente de {{pais}}.",
         "confirmarQuitar": "¿Quitar a {{nombre}} del equipo de esta edición?",
-        "yaNoEquipo": "{{nombre}} ya no hace parte del equipo."
+        "yaNoEquipo": "{{nombre}} ya no hace parte del equipo.",
+        "enviarAviso": "Enviar aviso al equipo",
+        "enviandoAviso": "Enviando…",
+        "notaCorreo": "Al agregar a alguien, o al nombrarlo responsable del banco o encargado de la caja, le llega un correo con la edición, su rol, las fechas y el horario.",
+        "lesLlegaCorreo": "Les llegará un correo con los datos de la edición.",
+        "avisoEnviado": "Aviso enviado a {{n}} de {{total}} colaboradores."
       },
       "resumen": {
         "cargando": "Cargando resumen…",

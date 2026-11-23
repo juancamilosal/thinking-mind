@@ -426,6 +426,11 @@ export class WillGoService {
     return this.http.get<{ data: MiembroEquipo[] }>(`${this.api}/admin/ediciones/${edicionId}/equipo`).pipe(this.enZona(), map((r) => r.data));
   }
 
+  /** Reenvía por correo el aviso de asignación a todo el equipo de la edición. */
+  avisarEquipo(edicionId: string): Observable<{ equipo: number; enviados: number }> {
+    return this.http.post<{ data: { equipo: number; enviados: number } }>(`${this.api}/admin/ediciones/${edicionId}/equipo/avisar`, {}).pipe(this.enZona(), map((r) => r.data));
+  }
+
   agregarAlEquipo(edicionId: string, usuarioIds: string[]): Observable<{ agregados: number }> {
     return this.http.post<{ data: any }>(`${this.api}/admin/ediciones/${edicionId}/equipo`, { usuario_ids: usuarioIds }).pipe(this.enZona(), map((r) => r.data));
   }

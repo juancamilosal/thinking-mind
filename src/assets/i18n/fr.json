@@ -1467,7 +1467,12 @@
         "agregadosN": "{{n}} collaborateurs ajoutés à l'équipe.",
         "docenteDe": "{{nombre}} est désormais enseignant de {{pais}}.",
         "confirmarQuitar": "Retirer {{nombre}} de l'équipe de cette édition ?",
-        "yaNoEquipo": "{{nombre}} ne fait plus partie de l'équipe."
+        "yaNoEquipo": "{{nombre}} ne fait plus partie de l'équipe.",
+        "enviarAviso": "Prévenir l'équipe",
+        "enviandoAviso": "Envoi…",
+        "notaCorreo": "Quand vous ajoutez quelqu'un, ou le nommez responsable d'une banque ou de la caisse, il reçoit un e-mail avec l'édition, son rôle, les dates et l'horaire.",
+        "lesLlegaCorreo": "Ils recevront un e-mail avec les informations de l'édition.",
+        "avisoEnviado": "E-mail envoyé à {{n}} collaborateurs sur {{total}}."
       },
       "resumen": {
         "cargando": "Chargement du résumé…",

@@ -14,10 +14,19 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
   template: `
     <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
       <p class="text-sm text-gray-500">{{ 'wg.pestanas.equipo.intro' | translate }}</p>
-      <button type="button" (click)="abrirAgregar()" class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow hover:brightness-110">
-        {{ 'wg.pestanas.equipo.agregarColaboradores' | translate }}
-      </button>
+      <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+        @if (equipo.length) {
+          <button type="button" (click)="avisar()" [disabled]="avisando" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            {{ avisando ? ('wg.pestanas.equipo.enviandoAviso' | translate) : ('wg.pestanas.equipo.enviarAviso' | translate) }}
+          </button>
+        }
+        <button type="button" (click)="abrirAgregar()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow hover:brightness-110">
+          {{ 'wg.pestanas.equipo.agregarColaboradores' | translate }}
+        </button>
+      </div>
     </div>
+    <p class="mt-2 text-xs text-gray-500">{{ 'wg.pestanas.equipo.notaCorreo' | translate }}</p>
 
     @if (aviso) {
       <p class="mt-4 rounded-xl px-4 py-3 text-sm" [class]="avisoError ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'" role="status">{{ aviso }}</p>
@@ -189,7 +198,8 @@ export class TabEquipo implements OnInit {
       next: (r) => {
         this.trabajando = false;
         this.agregando = false;
-        this.mostrar(r.agregados === 1 ? this.t.instant('wg.pestanas.equipo.agregadoUno') : this.t.instant('wg.pestanas.equipo.agregadosN', { n: r.agregados }), false);
+        this.mostrar((r.agregados === 1 ? this.t.instant('wg.pestanas.equipo.agregadoUno') : this.t.instant('wg.pestanas.equipo.agregadosN', { n: r.agregados }))
+          + (r.agregados ? ' ' + this.t.instant('wg.pestanas.equipo.lesLlegaCorreo') : ''), false);
         this.cargar();
         this.cambio.emit();
       },
@@ -218,6 +228,17 @@ export class TabEquipo implements OnInit {
         this.cambio.emit();
       },
       error: (e) => this.mostrar(WillGoService.mensajeDeError(e), true),
+    });
+  }
+
+  avisando = false;
+  /** Reenvía el correo con la edición, el rol, las fechas y el horario a todo el equipo. */
+  avisar(): void {
+    if (this.avisando) return;
+    this.avisando = true;
+    this.willGo.avisarEquipo(this.edicion.id).subscribe({
+      next: (r) => { this.avisando = false; this.mostrar(this.t.instant('wg.pestanas.equipo.avisoEnviado', { n: r.enviados, total: r.equipo }), false); },
+      error: (e) => { this.avisando = false; this.mostrar(WillGoService.mensajeDeError(e), true); },
     });
   }
 

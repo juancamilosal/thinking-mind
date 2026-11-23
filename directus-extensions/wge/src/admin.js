@@ -1,3 +1,5 @@
+import { enviarAvisos } from './avisos.js';
+import { idiomaDe } from './mensajes.js';
 // Administración de ediciones de WILL-GO ECONOMY (pantalla "Edición y participantes").
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
@@ -133,7 +135,10 @@ export function validarHorario(horario) {
 	});
 }
 
-export function rutasAdmin(router, { ruta, db, services, getSchema }) {
+export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
+	/** Avisa por correo a los colaboradores asignados (sin esperar: el correo nunca frena ni hace fallar la operación). */
+	const avisar = (req, edicionId, avisos) => { enviarAvisos({ db, services, getSchema, env, logger }, edicionId, avisos, idiomaDe(req)).catch(() => {}); };
+
 	const soloAdmin = (rol) => exigirRol(rol, ROLES.ADMIN_WG);
 	const nueva = (actor, fila) => ({ id: crypto.randomUUID(), ...fila, date_created: new Date(), user_created: actor });
 
@@ -252,6 +257,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 			})).onConflict('clave_unica').ignore();
 		}
 		if (Object.keys(fila).length) await db('wge_ediciones').where('id', e.id).update(fila);
+		if (fila.responsable_caja && fila.responsable_caja !== e.responsable_caja) avisar(req, e.id, [{ usuarioId: fila.responsable_caja, encargo: 'caja' }]);
 		const actualizada = await edicionExistente(e.id);
 		const { nuevos, quitados } = await traerInscritos(db, actualizada, req.accountability.user);
 		return { ...(await resumenEdicion(actualizada)), nuevos, quitados };
@@ -347,6 +353,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 					edicion_id: actual.edicion_id, usuario_id: fila.responsable_banco, clave_unica: `${actual.edicion_id}:${fila.responsable_banco}`,
 				})).onConflict('clave_unica').ignore();
 			}
+			// Aviso por correo al nuevo responsable del banco (cuando el cambio quede guardado)
+			const avisarBanco = nombre === 'paises' && fila.responsable_banco && fila.responsable_banco !== actual.responsable_banco
+				? () => avisar(req, actual.edicion_id, [{ usuarioId: fila.responsable_banco, encargo: 'banco', paisId: actual.id }]) : () => {};
 			if (nombre === 'paises' && 'provision_inicial' in fila && e.estado === 'borrador') {
 				// El banco recibe los billetes apenas se registran (y se ajusta si se corrigen), para poder contarlos antes de abrir
 				await db.transaction(async (trx) => {
@@ -360,9 +369,11 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 						});
 					}
 				});
+				avisarBanco();
 				return db(s.tabla).where('id', actual.id).first();
 			}
 			if (Object.keys(fila).length) await db(s.tabla).where('id', actual.id).update(fila);
+			avisarBanco();
 			return db(s.tabla).where('id', actual.id).first();
 		}));
 	}
@@ -544,8 +555,22 @@ export function rutasAdmin(router, { ruta, db, services, getSchema }) {
 		if (validos.length !== ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'Algún usuario no es colaborador de Will Go');
 		const r = await db('wge_equipo').insert(validos.map((usuario_id) => nueva(req.accountability.user, {
 			edicion_id: e.id, usuario_id, clave_unica: `${e.id}:${usuario_id}`,
-		}))).onConflict('clave_unica').ignore().returning('id');
+		}))).onConflict('clave_unica').ignore().returning('usuario_id');
+		// Aviso por correo a quienes quedaron en el equipo (los que ya estaban no reciben otro)
+		avisar(req, e.id, r.map((x) => ({ usuarioId: x.usuario_id ?? x, encargo: 'equipo' })));
 		return { agregados: r.length };
+	}));
+
+	/** POST /wge/admin/ediciones/:id/equipo/avisar: reenvía el aviso a todo el equipo (p. ej. si cambiaron fechas u horario). */
+	router.post('/admin/ediciones/:id/equipo/avisar', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		const equipo = await db('wge_equipo').where('edicion_id', e.id).pluck('usuario_id');
+		const bancos = new Map((await db('wge_paises').where('edicion_id', e.id).whereNotNull('responsable_banco').select('id', 'responsable_banco')).map((p) => [p.responsable_banco, p.id]));
+		const avisos = equipo.map((usuarioId) => (usuarioId === e.responsable_caja ? { usuarioId, encargo: 'caja' }
+			: bancos.has(usuarioId) ? { usuarioId, encargo: 'banco', paisId: bancos.get(usuarioId) } : { usuarioId, encargo: 'equipo' }));
+		const enviados = await enviarAvisos({ db, services, getSchema, env, logger }, e.id, avisos, idiomaDe(req));
+		return { equipo: equipo.length, enviados };
 	}));
 
 	/** PATCH /wge/admin/equipo/:id { pais_id }: país del docente (o null para que maneje todos). */

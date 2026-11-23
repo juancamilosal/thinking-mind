@@ -1467,7 +1467,12 @@
         "agregadosN": "{{n}} staff members added to the team.",
         "docenteDe": "{{nombre}} is now the teacher for {{pais}}.",
         "confirmarQuitar": "Remove {{nombre}} from this edition's team?",
-        "yaNoEquipo": "{{nombre}} is no longer on the team."
+        "yaNoEquipo": "{{nombre}} is no longer on the team.",
+        "enviarAviso": "Email the team",
+        "enviandoAviso": "Sending…",
+        "notaCorreo": "When you add someone, or make them head of a bank or of the checkout, they get an email with the edition, their role, the dates and the schedule.",
+        "lesLlegaCorreo": "They'll get an email with the edition details.",
+        "avisoEnviado": "Email sent to {{n}} of {{total}} staff members."
       },
       "resumen": {
         "cargando": "Loading summary…",
