@@ -1,3 +1,4 @@
+import { Roles } from '../../../../core/const/Roles';
 import { InstalarAppComponent } from '../../../private-layout-will-go/instalar-app.component';
 import { SelectorIdiomaComponent } from '../../../private-layout-will-go/selector-idioma.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -46,6 +47,7 @@ export class LoginWillGo implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    Roles.recordarLogin('/login-will-go'); // al vencerse la sesión, se vuelve a este ingreso
     if (typeof localStorage !== 'undefined') localStorage.setItem('app_context', 'will-go');
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],

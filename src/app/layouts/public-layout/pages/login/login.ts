@@ -1,3 +1,4 @@
+import { Roles } from '../../../../core/const/Roles';
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
@@ -31,6 +32,7 @@ export class Login implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    Roles.recordarLogin('/login'); // al vencerse la sesión, se vuelve a este ingreso
     // Set context for routing redirects
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('app_context', 'general');

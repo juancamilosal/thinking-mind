@@ -18,8 +18,25 @@ export class Roles {
     Roles.WG_ADMINISTRATIVO, Roles.WG_DOCENTE, Roles.WG_BANCO, Roles.WG_CAJERO
   ];
 
-  /** Login al que debe volver un usuario: Will Go, AYO (estudiantes y docentes) o el general para el resto. */
+  private static readonly CLAVE_LOGIN = 'login_origen';
+  private static readonly LOGINS = ['/login', '/login-ayo', '/login-will-go'];
+
+  /** Guarda por cuál ingreso entró el usuario, para devolverlo ahí cuando se le acabe la sesión. */
+  public static recordarLogin(ruta: string): void {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem(Roles.CLAVE_LOGIN, ruta); } catch { /* sin almacenamiento */ }
+  }
+
+  /**
+   * Login al que debe volver un usuario. En orden: el de la sección donde está (Will Go o AYO),
+   * el ingreso por el que entró la última vez y, si no se sabe, el que corresponde a su rol.
+   */
   public static loginRoute(role?: string | null): string {
+    const ruta = typeof location !== 'undefined' ? location.pathname : '';
+    if (ruta.startsWith('/private-will-go')) return '/login-will-go';
+    if (ruta.startsWith('/private-ayo')) return '/login-ayo';
+    let recordado: string | null = null;
+    try { recordado = typeof localStorage !== 'undefined' ? localStorage.getItem(Roles.CLAVE_LOGIN) : null; } catch { recordado = null; }
+    if (recordado && Roles.LOGINS.includes(recordado)) return recordado;
     if (role && Roles.WILL_GO_STAFF.includes(role)) return '/login-will-go';
     return role === Roles.STUDENT || role === Roles.TEACHER ? '/login-ayo' : '/login';
   }
