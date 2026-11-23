@@ -65,7 +65,7 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.terminado = true;
-    cancelAnimationFrame(this.cuadro);
+    if (this.navegador) cancelAnimationFrame(this.cuadro);
     this.stream?.getTracks().forEach((t) => t.stop());
   }
 

@@ -23,10 +23,18 @@ export class AjustarTextoDirective implements AfterViewInit, OnDestroy {
     setTimeout(() => this.ajustar(), 600);
   }
 
-  ngOnDestroy(): void { this.observador?.disconnect(); cancelAnimationFrame(this.cuadro); }
+  ngOnDestroy(): void {
+    this.observador?.disconnect();
+    // En el servidor (SSR) no existen las funciones de animación del navegador
+    if (this.navegador) cancelAnimationFrame(this.cuadro);
+  }
 
   @HostListener('input') @HostListener('change') @HostListener('focus') @HostListener('blur')
-  alCambiar(): void { cancelAnimationFrame(this.cuadro); this.cuadro = requestAnimationFrame(() => this.ajustar()); }
+  alCambiar(): void {
+    if (!this.navegador) return;
+    cancelAnimationFrame(this.cuadro);
+    this.cuadro = requestAnimationFrame(() => this.ajustar());
+  }
 
   private ajustar(): void {
     const el = this.el;
