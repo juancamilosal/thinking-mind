@@ -876,11 +876,11 @@
       "agregarDinero": "Agregar dinero",
       "agregado": "Dinero agregado al banco.",
       "confirmarTitulo": "¿Agregar dinero al banco?",
-      "quedaBanco": "El dinero del banco quedará en $ {{n}}. El saldo virtual sube lo mismo.",
+      "quedaBanco": "El dinero del banco quedará en $ {{n}}.",
       "buscarDocente": "Buscar docente…",
       "sinResultados": "No hay docentes con ese nombre.",
       "arqueoAyuda": "Cuenta todo el efectivo que hay en el banco y escribe el total.",
-      "virtualAyuda": "Sin efectivo: es para transferir a los docentes. Se carga igual al dinero del banco (total cargado: {{n}}). No entra en el arqueo."
+      "virtualAyuda": "Sin efectivo: es para transferir a los docentes. Solo sube cuando cargas un monto (total cargado: {{n}}). No entra en el arqueo."
     },
     "montofondos": {
       "cuantoInvierte": "¿Cuánto invierte?",
@@ -1365,7 +1365,7 @@
         "entranBanco": "Entran al banco",
         "agregarAlBanco": "Agregar al banco",
         "virtualTitulo": "Saldo virtual del banco",
-        "virtualAyuda": "Para transferir a las cuentas de los docentes. Se carga solo por el mismo valor del dinero del banco; aquí puedes cargar más.",
+        "virtualAyuda": "Para transferir a las cuentas de los docentes. Es independiente del efectivo: solo sube cuando escribes un monto y tocas «Cargar más».",
         "virtualHoy": "Saldo virtual hoy",
         "virtualMonto": "Monto a cargar",
         "virtualCargar": "Cargar más",

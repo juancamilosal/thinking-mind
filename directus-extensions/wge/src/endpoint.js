@@ -6,7 +6,7 @@ import {
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
-import { rutasArqueo, totalDelConteo, montoOConteo, inventarioBanco, inventarioDocente, igualarVirtual } from './arqueo.js';
+import { rutasArqueo, totalDelConteo, montoOConteo, inventarioBanco, inventarioDocente } from './arqueo.js';
 import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
 import { rutasAcudientes } from './acudientes.js';
 import { rutasRubrica } from './rubrica.js';
@@ -340,7 +340,6 @@ export default {
 						await moverSaldo(trx, banco, { tipo: 'provision', monto: Number(pais.provision_inicial), actor, referenciaTipo: 'edicion', referenciaId: edicion.id });
 						resumen.provisiones++;
 					}
-					await igualarVirtual(trx, edicion.id, pais.id, actor);
 					const participantes = await trx('wge_participantes').where({ edicion_id: edicion.id, pais_id: pais.id });
 					resumen.bienvenidas += await darBienvenida(trx, edicion, participantes, actor);
 				}

@@ -876,11 +876,11 @@
       "agregarDinero": "Add money",
       "agregado": "Money added to the bank.",
       "confirmarTitulo": "Add money to the bank?",
-      "quedaBanco": "The bank’s money will be $ {{n}}. The virtual balance goes up by the same amount.",
+      "quedaBanco": "The bank’s money will be $ {{n}}.",
       "buscarDocente": "Search teacher…",
       "sinResultados": "No teachers with that name.",
       "arqueoAyuda": "Count all the cash in the bank and enter the total.",
-      "virtualAyuda": "No cash: it is for transfers to teachers. It is loaded with the same amount as the bank’s money (total loaded: {{n}}). It is not part of the cash count."
+      "virtualAyuda": "No cash: it is for transfers to teachers. It only goes up when you load an amount (total loaded: {{n}}). It is not part of the cash count."
     },
     "montofondos": {
       "cuantoInvierte": "How much do they invest?",
@@ -1365,7 +1365,7 @@
         "entranBanco": "Going into the bank",
         "agregarAlBanco": "Add to bank",
         "virtualTitulo": "Bank's virtual balance",
-        "virtualAyuda": "For transfers to teachers' accounts. It's loaded automatically for the same amount as the bank's money; you can load more here.",
+        "virtualAyuda": "For transfers to teachers' accounts. It is independent from the cash: it only goes up when you enter an amount and tap «Load more».",
         "virtualHoy": "Virtual balance today",
         "virtualMonto": "Amount to load",
         "virtualCargar": "Load more",

@@ -4,7 +4,6 @@
 // Fuera del horario no hace nada: la tasa queda congelada y el día siguiente continúa desde el último valor.
 import { ahoraColombia, limitar } from './lib.js';
 import { cerrarRondasVencidas, abonarPendientes, reanudarRondas } from './wfunds.js';
-import { igualarVirtual } from './arqueo.js';
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
@@ -49,19 +48,6 @@ export default ({ schedule }, { database: db, logger }) => {
 			for (const r of await reanudarRondas(db)) logger.info(`wge: ${r.nombre} abierta sola al empezar el horario`);
 		} catch (error) {
 			logger.error(error, 'wge: cierre de rondas');
-		}
-	});
-
-	// Saldo virtual a la par de los billetes en las ediciones en curso (también pone al día las que ya existían)
-	schedule('*/5 * * * *', async () => {
-		try {
-			const paises = await db('wge_paises as p').join('wge_ediciones as e', 'e.id', 'p.edicion_id').whereIn('e.estado', ['borrador', 'abierta']).select('p.id', 'p.edicion_id');
-			for (const p of paises) {
-				const n = await db.transaction((trx) => igualarVirtual(trx, p.edicion_id, p.id));
-				if (n) logger.info(`wge: saldo virtual del país ${p.id} ajustado en ${n}`);
-			}
-		} catch (error) {
-			logger.error(error, 'wge: saldo virtual');
 		}
 	});
 

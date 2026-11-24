@@ -876,11 +876,11 @@
       "agregarDinero": "Ajouter de l’argent",
       "agregado": "Argent ajouté à la banque.",
       "confirmarTitulo": "Ajouter de l’argent à la banque ?",
-      "quedaBanco": "L’argent de la banque passera à $ {{n}}. Le solde virtuel augmente d’autant.",
+      "quedaBanco": "L’argent de la banque sera de $ {{n}}.",
       "buscarDocente": "Rechercher un enseignant…",
       "sinResultados": "Aucun enseignant avec ce nom.",
       "arqueoAyuda": "Comptez toutes les espèces de la banque et indiquez le total.",
-      "virtualAyuda": "Sans espèces : il sert aux virements vers les enseignants. Il est chargé du même montant que l’argent de la banque (total chargé : {{n}}). Il n’entre pas dans le comptage."
+      "virtualAyuda": "Sans espèces : il sert aux virements vers les enseignants. Il n’augmente que lorsque vous chargez un montant (total chargé : {{n}}). Il n’entre pas dans le comptage."
     },
     "montofondos": {
       "cuantoInvierte": "Combien investit-il ?",
@@ -1365,7 +1365,7 @@
         "entranBanco": "Entrent à la banque",
         "agregarAlBanco": "Ajouter à la banque",
         "virtualTitulo": "Solde virtuel de la banque",
-        "virtualAyuda": "Pour les virements aux comptes des enseignants. Il est chargé automatiquement du même montant que l'argent de la banque ; vous pouvez en charger plus ici.",
+        "virtualAyuda": "Pour les virements aux comptes des enseignants. Il est indépendant des espèces : il n'augmente que lorsque vous saisissez un montant et touchez « Charger plus ».",
         "virtualHoy": "Solde virtuel aujourd'hui",
         "virtualMonto": "Montant à charger",
         "virtualCargar": "Charger plus",

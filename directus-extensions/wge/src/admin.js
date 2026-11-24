@@ -4,7 +4,7 @@ import { idiomaDe } from './mensajes.js';
 // Todo pasa por aquí con una lista de campos permitidos: los roles de Will Go no tocan /items de Directus,
 // y ningún campo de dinero (saldos, tasas vigentes, movimientos) se puede escribir desde esta pantalla.
 import { Readable } from 'node:stream';
-import { totalDelConteo, montoOConteo, virtualDelBanco, igualarVirtual } from './arqueo.js';
+import { totalDelConteo, montoOConteo, virtualDelBanco } from './arqueo.js';
 import { retirarInversion } from './wfunds.js';
 import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
 
@@ -395,7 +395,6 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 							referenciaTipo: 'provision', referenciaId: actual.id,
 						});
 					}
-					await igualarVirtual(trx, e.id, actual.id, req.accountability.user);
 				});
 				avisarBanco();
 				return db(s.tabla).where('id', actual.id).first();
@@ -523,7 +522,6 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			await trx('wge_paises').where('id', pais.id).update({
 				provision_billetes: JSON.stringify(suma), provision_inicial: Number(pais.provision_inicial ?? 0) + total,
 			});
-			await igualarVirtual(trx, e.id, pais.id, actor);
 			return { agregado: total, saldo_banco: banco.saldo, provision_total: Number(pais.provision_inicial ?? 0) + total };
 		});
 	}));

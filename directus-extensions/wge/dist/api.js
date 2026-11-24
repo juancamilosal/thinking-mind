@@ -1224,7 +1224,6 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 							referenciaTipo: 'provision', referenciaId: actual.id,
 						});
 					}
-					await igualarVirtual(trx, e.id, actual.id, req.accountability.user);
 				});
 				avisarBanco();
 				return db(s.tabla).where('id', actual.id).first();
@@ -1352,7 +1351,6 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			await trx('wge_paises').where('id', pais.id).update({
 				provision_billetes: JSON.stringify(suma), provision_inicial: Number(pais.provision_inicial ?? 0) + total,
 			});
-			await igualarVirtual(trx, e.id, pais.id, actor);
 			return { agregado: total, saldo_banco: banco.saldo, provision_total: Number(pais.provision_inicial ?? 0) + total };
 		});
 	}));
@@ -1602,22 +1600,6 @@ async function virtualDelBanco(db, edicionId, paisId) {
 	if (!b) return { saldo: 0, cargado: 0 };
 	const r = await db('wge_movimientos').where({ billetera_id: b.id, tipo: 'carga_virtual' }).sum({ t: 'monto' }).first();
 	return { saldo: Number(b.saldo ?? 0), cargado: Number(r?.t ?? 0) };
-}
-
-/**
- * El saldo virtual del banco va a la par de los billetes impresos: cada vez que cambian (al registrarlos, al
- * agregar más o al corregirlos en preparación) se carga la diferencia. Lo que se cargue a mano va aparte.
- * Si se imprimieron menos, solo se descuenta lo que el banco todavía tenga en su cuenta virtual.
- */
-async function igualarVirtual(trx, edicionId, paisId, actor = null) {
-	const pais = await trx('wge_paises').where('id', paisId).first('provision_inicial');
-	const virtual = await billeteraBloqueada(trx, { edicionId, paisId, tipo: 'banco_virtual' });
-	const r = await trx('wge_movimientos').where({ billetera_id: virtual.id, tipo: 'carga_virtual', referencia_tipo: 'igual_billetes' }).sum({ t: 'monto' }).first();
-	let diferencia = Number(pais?.provision_inicial ?? 0) - Number(r?.t ?? 0);
-	if (diferencia < 0) diferencia = Math.max(diferencia, -Number(virtual.saldo));
-	if (!diferencia) return 0;
-	await moverSaldo(trx, virtual, { tipo: 'carga_virtual', monto: diferencia, actor, referenciaTipo: 'igual_billetes', referenciaId: paisId });
-	return diferencia;
 }
 
 /**
@@ -2500,19 +2482,6 @@ const configHook = ({ schedule }, { database: db, logger }) => {
 			for (const r of await reanudarRondas(db)) logger.info(`wge: ${r.nombre} abierta sola al empezar el horario`);
 		} catch (error) {
 			logger.error(error, 'wge: cierre de rondas');
-		}
-	});
-
-	// Saldo virtual a la par de los billetes en las ediciones en curso (también pone al día las que ya existían)
-	schedule('*/5 * * * *', async () => {
-		try {
-			const paises = await db('wge_paises as p').join('wge_ediciones as e', 'e.id', 'p.edicion_id').whereIn('e.estado', ['borrador', 'abierta']).select('p.id', 'p.edicion_id');
-			for (const p of paises) {
-				const n = await db.transaction((trx) => igualarVirtual(trx, p.edicion_id, p.id));
-				if (n) logger.info(`wge: saldo virtual del país ${p.id} ajustado en ${n}`);
-			}
-		} catch (error) {
-			logger.error(error, 'wge: saldo virtual');
 		}
 	});
 
@@ -3636,7 +3605,6 @@ const configEndpoint = {
 						await moverSaldo(trx, banco, { tipo: 'provision', monto: Number(pais.provision_inicial), actor, referenciaTipo: 'edicion', referenciaId: edicion.id });
 						resumen.provisiones++;
 					}
-					await igualarVirtual(trx, edicion.id, pais.id, actor);
 					const participantes = await trx('wge_participantes').where({ edicion_id: edicion.id, pais_id: pais.id });
 					resumen.bienvenidas += await darBienvenida(trx, edicion, participantes, actor);
 				}
