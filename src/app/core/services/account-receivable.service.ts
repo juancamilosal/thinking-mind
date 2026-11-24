@@ -487,3 +487,26 @@ export class AccountReceivableService {
     return this.http.post<ResponseAPI<any>>(this.apiUrlReturn, returnAccount);
   }
 }
+
+/**
+ * Los flows de Directus responden 200 aunque una operación falle: en ese caso el cuerpo es el error
+ * (p. ej. { code: 'RECORD_NOT_UNIQUE', extensions: { collection, field, value } }) o { errors: [...] }.
+ * Devuelve un mensaje para mostrar si la respuesta es un error, o null si no lo es.
+ */
+export function errorDeFlujo(respuesta: any): string | null {
+  const candidatos = [respuesta, respuesta?.data, ...(Array.isArray(respuesta?.errors) ? respuesta.errors : []), ...(Array.isArray(respuesta) ? respuesta : [])];
+  const err = candidatos.find((x) => x && typeof x === 'object' && (x.name === 'DirectusError' || (typeof x.code === 'string' && x.extensions) || x.extensions?.code));
+  if (!err) return null;
+  const codigo = err.code ?? err.extensions?.code;
+  const ext = err.extensions ?? {};
+  if (codigo === 'RECORD_NOT_UNIQUE') {
+    if (ext.collection === 'estudiantes' && ext.field === 'numero_documento') {
+      return `Ya existe un estudiante con el documento ${ext.value ?? ''}. Revisa el tipo de documento del estudiante: debe ser el mismo con el que se registró la primera vez.`;
+    }
+    if (ext.collection === 'clientes' && ext.field === 'numero_documento') {
+      return `Ya existe un acudiente con el documento ${ext.value ?? ''}. Revisa el tipo de documento del acudiente: debe ser el mismo con el que se registró la primera vez.`;
+    }
+    return 'Ese registro ya existe. Revisa los datos e inténtalo de nuevo.';
+  }
+  return err.message || 'No se pudo completar el registro. Por favor, inténtalo nuevamente.';
+}
