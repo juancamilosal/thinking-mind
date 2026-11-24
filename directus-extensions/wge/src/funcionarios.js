@@ -148,23 +148,36 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		puedeManejar(rol, actual.rol_nombre);
 		const id = req.params.id;
 		if (id === req.accountability.user) throw new WgeError(409, 'VALOR_INVALIDO', 'No puedes eliminar tu propio usuario');
-		const conHistorial = [
-			['wge_movimientos', 'user_created'], ['wge_transferencias', 'user_created'], ['wge_evaluaciones', 'user_created'],
-			['wge_ventas', 'user_created'], ['wge_inversiones', 'user_created'], ['wge_inversiones', 'cobrado_por'], ['wge_arqueos', 'user_created'],
+		// Solo se bloquea si tiene historial en ediciones que siguen activas (en preparación o abiertas).
+		// Lo de ediciones cerradas se conserva, pero sin su nombre (el «quién» queda en blanco).
+		const activas = db('wge_ediciones').whereNot('estado', 'cerrada').select('id');
+		const enActivas = [
+			db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id').where('m.user_created', id).whereIn('b.edicion_id', activas),
+			db('wge_transferencias').where('user_created', id).whereIn('edicion_id', activas),
+			db('wge_evaluaciones as e').join('wge_participantes as p', 'p.id', 'e.participante_id').where('e.user_created', id).whereIn('p.edicion_id', activas),
+			db('wge_ventas').where('user_created', id).whereIn('edicion_id', activas),
+			db('wge_inversiones as i').join('wge_rondas as r', 'r.id', 'i.ronda_id').where((q) => q.where('i.user_created', id).orWhere('i.cobrado_por', id)).whereIn('r.edicion_id', activas),
+			db('wge_arqueos').where('user_created', id).whereIn('edicion_id', activas),
+			db('wge_billeteras as b').join('wge_movimientos as m', 'm.billetera_id', 'b.id').where('b.docente_id', id).whereIn('b.edicion_id', activas),
 		];
-		for (const [tabla, campo] of conHistorial) {
-			if (await db(tabla).where(campo, id).first(db.raw('1'))) {
-				throw new WgeError(409, 'TIENE_HISTORIAL', `${actual.nombre} ya tiene movimientos en Will-Go; para no perder el historial, desactívalo en lugar de eliminarlo`);
+		for (const consulta of enActivas) {
+			if (await consulta.first(db.raw('1'))) {
+				throw new WgeError(409, 'TIENE_HISTORIAL', `${actual.nombre} tiene movimientos en una edición activa; para no perder el historial, desactívalo en lugar de eliminarlo`);
 			}
 		}
-		if (await db('wge_billeteras').where('docente_id', id).where('saldo', '>', 0).first('id')) {
+		if (await db('wge_billeteras').where('docente_id', id).where('saldo', '>', 0).whereIn('edicion_id', activas).first('id')) {
 			throw new WgeError(409, 'TIENE_BILLETES', `${actual.nombre} todavía tiene dinero; desactívalo en lugar de eliminarlo`);
 		}
 		await db.transaction(async (trx) => {
 			await trx('wge_equipo').where('usuario_id', id).delete();
 			await trx('wge_paises').where('responsable_banco', id).update({ responsable_banco: null });
 			await trx('wge_ediciones').where('responsable_caja', id).update({ responsable_caja: null });
-			await trx('wge_billeteras').where('docente_id', id).delete();
+			// Sus billeteras sin movimientos se borran; las que tienen historial (ediciones cerradas) se quedan sin dueño
+			await trx('wge_billeteras').where('docente_id', id).whereNotExists(trx('wge_movimientos as m').whereRaw('m.billetera_id = wge_billeteras.id')).delete();
+			await trx('wge_billeteras').where('docente_id', id).update({ docente_id: null });
+			// Estas referencias no se ponen en blanco solas al borrar el usuario
+			await trx('wge_arqueos').where('user_created', id).update({ user_created: null });
+			await trx('wge_equipo').where('user_created', id).update({ user_created: null });
 		});
 		await (await usuarios()).deleteOne(id);
 		return { eliminado: true };

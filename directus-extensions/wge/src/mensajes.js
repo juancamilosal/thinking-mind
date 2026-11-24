@@ -168,7 +168,7 @@ const TRADUCCIONES = [
 	['No puedes desactivar tu propio usuario', 'You cannot deactivate your own user', 'Vous ne pouvez pas désactiver votre propre utilisateur'],
 	['estado debe ser active o suspended', 'estado must be active or suspended', 'estado doit être active ou suspended'],
 	['No puedes eliminar tu propio usuario', 'You cannot delete your own user', 'Vous ne pouvez pas supprimer votre propre utilisateur'],
-	['$1 ya tiene movimientos en Will-Go; para no perder el historial, desactívalo en lugar de eliminarlo', '$1 already has activity in Will-Go; to keep the history, deactivate them instead of deleting them', "$1 a déjà des mouvements dans Will-Go ; pour conserver l'historique, désactivez-le au lieu de le supprimer"],
+	['$1 tiene movimientos en una edición activa; para no perder el historial, desactívalo en lugar de eliminarlo', '$1 has movements in an active edition; to keep the history, deactivate them instead of deleting them', "$1 a des mouvements dans une édition active ; pour garder l'historique, désactivez-le au lieu de le supprimer"],
 	['$1 todavía tiene dinero; desactívalo en lugar de eliminarlo', '$1 still has money; deactivate them instead of deleting them', "$1 a encore de l'argent ; désactivez-le au lieu de le supprimer"],
 
 	// Rúbrica

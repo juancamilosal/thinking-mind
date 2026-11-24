@@ -391,7 +391,7 @@
         "confClaveTitulo": "Generate a new password?",
         "confDesactivarTexto": "They won't be able to log in until you activate them again. Their transactions are kept.",
         "confDesactivarTitulo": "Deactivate {{nombre}}?",
-        "confEliminarNota": "If they already handed out money, sold or graded, they can't be deleted so history isn't lost: deactivate them instead.",
+        "confEliminarNota": "If they have movements in an active edition (in preparation or open), they cannot be deleted: deactivate them. If they only have history in closed editions, they are deleted and that history stays without their name.",
         "confEliminarTexto": "Their user is deleted and removed from the edition teams. This cannot be undone.",
         "confEliminarTitulo": "Delete {{nombre}}?",
         "confirmar": "Confirm",

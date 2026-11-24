@@ -391,7 +391,7 @@
         "confClaveTitulo": "¿Generar una nueva clave?",
         "confDesactivarTexto": "No podrá ingresar hasta que lo vuelvas a activar. Sus movimientos quedan guardados.",
         "confDesactivarTitulo": "¿Desactivar a {{nombre}}?",
-        "confEliminarNota": "Si ya entregó dinero, vendió o calificó, no se podrá eliminar para no perder el historial: en ese caso desactívalo.",
+        "confEliminarNota": "Si tiene movimientos en una edición activa (en preparación o abierta), no se podrá eliminar: desactívalo. Si solo tiene historial en ediciones cerradas, se elimina y ese historial queda sin su nombre.",
         "confEliminarTexto": "Se borra su usuario y sale de los equipos de las ediciones. No se puede deshacer.",
         "confEliminarTitulo": "¿Eliminar a {{nombre}}?",
         "confirmar": "Confirmar",

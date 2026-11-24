@@ -391,7 +391,7 @@
         "confClaveTitulo": "Générer un nouveau mot de passe ?",
         "confDesactivarTexto": "Il ne pourra plus se connecter jusqu'à sa réactivation. Ses mouvements sont conservés.",
         "confDesactivarTitulo": "Désactiver {{nombre}} ?",
-        "confEliminarNota": "S'il a déjà remis de l'argent, vendu ou évalué, il ne peut pas être supprimé pour garder l'historique : désactivez-le plutôt.",
+        "confEliminarNota": "S'il a des mouvements dans une édition active (en préparation ou ouverte), il ne peut pas être supprimé : désactivez-le. S'il n'a de l'historique que dans des éditions clôturées, il est supprimé et cet historique reste sans son nom.",
         "confEliminarTexto": "Son compte est supprimé et retiré des équipes des éditions. Action irréversible.",
         "confEliminarTitulo": "Supprimer {{nombre}} ?",
         "confirmar": "Confirmer",
