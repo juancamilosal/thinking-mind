@@ -452,7 +452,7 @@
         "administrar": "Administrar →",
         "nombrePlaceholder": "Ej.: Will-Go Economy · Noviembre 2026",
         "colegioPrograma": "Colegio, programa y edición",
-        "ayudaOferta": "Solo entran los estudiantes inscritos en esa edición del programa en ese colegio, incluidos los inscritos como segundo y tercer hermano.",
+        "ayudaOferta": "Solo entran los estudiantes con el programa pagado por completo en esa edición del programa en ese colegio, incluidos los inscritos como segundo y tercer hermano.",
         "notaCreacion": "Se crea con Wonderland, Neverland y Dreamland, los 5 fondos y horario sábado y domingo de 8:00 a 18:00. Todo se puede cambiar después.",
         "creando": "Creando…",
         "crear": "Crear edición",
@@ -1455,7 +1455,7 @@
         "confirmarEliminar": "¿Eliminar «{{nombre}}»? Si ya tiene ventas, solo se ocultará de la caja."
       },
       "participantes": {
-        "intro": "Los inscritos aparecen aquí solos. Asigna a cada uno su país.",
+        "intro": "Los inscritos con el programa pagado por completo aparecen aquí solos. Asigna a cada uno su país.",
         "repartir": "Repartir {{n}} sin país en partes iguales",
         "sinPais": "Sin país",
         "retirados": "Retirados",

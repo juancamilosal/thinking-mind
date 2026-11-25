@@ -191,7 +191,8 @@ async function traerInscritos(db, edicion, actor) {
 	const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
 		.leftJoin('wge_participantes as p', function () { this.on('p.estudiante_id', 'e.id').andOnVal('p.edicion_id', edicion.id); })
 		.whereRaw(sqlCursosDelPrograma('c.curso_id', edicion.curso_id).sql, sqlCursosDelPrograma('c.curso_id', edicion.curso_id).valores)
-		.whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
+		// Solo entran quienes pagaron el programa completo (sin pendientes, devoluciones ni traslados)
+		.where('c.estado', 'PAGADA')
 		.distinct('e.id as estudiante_id', db.raw('p.id is not null as ya_esta'));
 	if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
 	// Solo los inscritos en ESA edición del programa (la siguiente vez que el colegio repita el programa es otra edición)
@@ -224,7 +225,7 @@ async function traerInscritos(db, edicion, actor) {
  */
 function sqlCorresponde(edicion) {
 	const programa = sqlCursosDelPrograma('cc.curso_id', edicion.curso_id);
-	const condiciones = ['cc.estudiante_id = e.id', programa.sql];
+	const condiciones = ['cc.estudiante_id = e.id', programa.sql, "cc.estado = 'PAGADA'"];
 	const valores = [...programa.valores];
 	if (edicion.edicion_programa) { condiciones.push('cc.edicion_programa = ?'); valores.push(String(edicion.edicion_programa)); }
 	let sql = `exists (select 1 from cuentas_cobrar cc where ${condiciones.join(' and ')})`;
@@ -1288,10 +1289,12 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			.where('p.edicion_id', req.params.id)
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
-				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
 				db.raw(`${sqlCorresponde(e).sql} as corresponde`, sqlCorresponde(e).valores),
-				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
-					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))
+				// Pidió reembolso: tiene alguna cuenta del programa (o de sus variantes de hermanos) y todas están devueltas o trasladadas
+				db.raw(`(exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and ${sqlCursosDelPrograma('cc.curso_id', e.curso_id).sql})
+					and not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and ${sqlCursosDelPrograma('cc.curso_id', e.curso_id).sql}
+					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS'))) as pidio_reembolso`,
+					[...sqlCursosDelPrograma('cc.curso_id', e.curso_id).valores, ...sqlCursosDelPrograma('cc.curso_id', e.curso_id).valores]))
 			.orderBy([{ column: 'e.apellido' }, { column: 'e.nombre' }]);
 	}));
 

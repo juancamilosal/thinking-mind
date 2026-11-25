@@ -452,7 +452,7 @@
         "administrar": "Gérer →",
         "nombrePlaceholder": "Ex. : Will-Go Economy · Novembre 2026",
         "colegioPrograma": "École, programme et édition",
-        "ayudaOferta": "Seuls les élèves inscrits à cette édition du programme dans cet établissement y entrent, y compris ceux inscrits comme deuxième et troisième frère ou sœur.",
+        "ayudaOferta": "Seuls les élèves ayant entièrement payé cette édition du programme dans cet établissement y entrent, y compris ceux inscrits comme deuxième et troisième frère ou sœur.",
         "notaCreacion": "Elle est créée avec Wonderland, Neverland et Dreamland, les 5 entreprises et un horaire samedi et dimanche de 8 h à 18 h. Tout est modifiable ensuite.",
         "creando": "Création…",
         "crear": "Créer l'édition",
@@ -1455,7 +1455,7 @@
         "confirmarEliminar": "Supprimer « {{nombre}} » ? S'il a déjà des ventes, il sera seulement masqué de la caisse."
       },
       "participantes": {
-        "intro": "Les inscrits apparaissent ici automatiquement. Attribuez un pays à chacun.",
+        "intro": "Les élèves ayant entièrement payé le programme apparaissent ici automatiquement. Attribuez un pays à chacun.",
         "repartir": "Répartir {{n}} sans pays à parts égales",
         "sinPais": "Sans pays",
         "retirados": "Retirés",

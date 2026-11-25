@@ -6,7 +6,7 @@ import { idiomaDe } from './mensajes.js';
 import { Readable } from 'node:stream';
 import { totalDelConteo, montoOConteo, virtualDelBanco } from './arqueo.js';
 import { retirarInversion } from './wfunds.js';
-import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde, sqlCursosDelPrograma } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 /** Cada cuántos minutos puede recalcularse el tipo de cambio (dividen la hora exacta, así los cálculos caen en horas redondas). */
@@ -432,10 +432,12 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			.where('p.edicion_id', req.params.id)
 			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
-				// Pidió reembolso: todas sus cuentas del programa están devueltas o trasladadas
 				db.raw(`${sqlCorresponde(e).sql} as corresponde`, sqlCorresponde(e).valores),
-				db.raw(`not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and cc.curso_id = ?
-					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS')) as pidio_reembolso`, [e.curso_id]))
+				// Pidió reembolso: tiene alguna cuenta del programa (o de sus variantes de hermanos) y todas están devueltas o trasladadas
+				db.raw(`(exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and ${sqlCursosDelPrograma('cc.curso_id', e.curso_id).sql})
+					and not exists (select 1 from cuentas_cobrar cc where cc.estudiante_id = e.id and ${sqlCursosDelPrograma('cc.curso_id', e.curso_id).sql}
+					and cc.estado not in ('DEVOLUCION', 'FONDOS TRASLADADOS'))) as pidio_reembolso`,
+					[...sqlCursosDelPrograma('cc.curso_id', e.curso_id).valores, ...sqlCursosDelPrograma('cc.curso_id', e.curso_id).valores]))
 			.orderBy([{ column: 'e.apellido' }, { column: 'e.nombre' }]);
 	}));
 
