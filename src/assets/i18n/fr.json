@@ -1515,7 +1515,10 @@
         "bienvenidaVarios": "{{n}} ont reçu {{billetes}} de bienvenue.",
         "filtrarGrado": "Filtrer par niveau",
         "todosGrados": "Tous les niveaux",
-        "sinGrado": "Sans niveau"
+        "sinGrado": "Sans niveau",
+        "filtrarGrupo": "Filtrer par groupe",
+        "todosGrupos": "Tous les groupes",
+        "grupo": "Groupe"
       },
       "equipo": {
         "intro": "Seuls les collaborateurs de cette liste peuvent opérer dans l'édition : remettre de l'argent, encaisser au magasin ou distribuer depuis la banque.",

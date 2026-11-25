@@ -1515,7 +1515,10 @@
         "bienvenidaVarios": "{{n}} received {{billetes}} as welcome money.",
         "filtrarGrado": "Filter by grade",
         "todosGrados": "All grades",
-        "sinGrado": "No grade"
+        "sinGrado": "No grade",
+        "filtrarGrupo": "Filter by group",
+        "todosGrupos": "All groups",
+        "grupo": "Group"
       },
       "equipo": {
         "intro": "Only the staff on this list can operate in the edition: give money, charge at the store or distribute from the bank.",

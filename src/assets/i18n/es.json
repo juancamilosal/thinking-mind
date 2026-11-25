@@ -1515,7 +1515,10 @@
         "bienvenidaVarios": "{{n}} recibieron {{billetes}} de bienvenida.",
         "filtrarGrado": "Filtrar por grado",
         "todosGrados": "Todos los grados",
-        "sinGrado": "Sin grado"
+        "sinGrado": "Sin grado",
+        "filtrarGrupo": "Filtrar por grupo",
+        "todosGrupos": "Todos los grupos",
+        "grupo": "Grupo"
       },
       "equipo": {
         "intro": "Solo los colaboradores de esta lista pueden operar en la edición: entregar dinero, cobrar en la tienda o repartir desde el banco.",

@@ -41,12 +41,20 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
     <div class="mt-3 flex flex-col sm:flex-row gap-2">
       <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.pestanas.participantes.buscar' | translate" [attr.aria-label]="'wg.pestanas.participantes.buscarAria' | translate"
              class="flex-1 min-w-0 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
-      <select [(ngModel)]="filtroGrado" (ngModelChange)="seleccion.clear()" [attr.aria-label]="'wg.pestanas.participantes.filtrarGrado' | translate"
-              class="sm:w-56 px-4 py-3 bg-white border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
-              [class]="filtroGrado ? 'border-orange-300 text-gray-900 font-semibold' : 'border-gray-200 text-gray-600'">
-        <option value="">{{ 'wg.pestanas.participantes.todosGrados' | translate }}</option>
-        @for (g of grados; track g.nivel) { <option [value]="g.nivel">{{ nombreNivel(g.nivel) }} · {{ g.n }}</option> }
-      </select>
+      <div class="grid grid-cols-2 gap-2 sm:flex">
+        <select [(ngModel)]="filtroGrado" (ngModelChange)="filtroGrupo = ''; seleccion.clear()" [attr.aria-label]="'wg.pestanas.participantes.filtrarGrado' | translate"
+                class="min-w-0 sm:w-44 px-4 py-3 bg-white border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                [class]="filtroGrado ? 'border-orange-300 text-gray-900 font-semibold' : 'border-gray-200 text-gray-600'">
+          <option value="">{{ 'wg.pestanas.participantes.todosGrados' | translate }}</option>
+          @for (g of grados; track g) { <option [value]="g">{{ nombreNivel(g) }}</option> }
+        </select>
+        <select [(ngModel)]="filtroGrupo" (ngModelChange)="seleccion.clear()" [disabled]="!filtroGrado" [attr.aria-label]="'wg.pestanas.participantes.filtrarGrupo' | translate"
+                class="min-w-0 sm:w-44 px-4 py-3 bg-white border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:opacity-50 disabled:bg-gray-50"
+                [class]="filtroGrupo ? 'border-orange-300 text-gray-900 font-semibold' : 'border-gray-200 text-gray-600'">
+          <option value="">{{ 'wg.pestanas.participantes.todosGrupos' | translate }}</option>
+          @for (g of grupos; track g) { <option [value]="g">{{ 'wg.pestanas.participantes.grupo' | translate }} {{ g }}</option> }
+        </select>
+      </div>
     </div>
 
     <!-- Barra de selección -->
@@ -268,7 +276,8 @@ export class TabParticipantes implements OnInit {
     return base.filter((p) =>
       (['', 'retirados', 'reembolso'].includes(this.filtro) || (this.filtro === 'sin' ? !p.pais_id : p.pais_id === this.filtro)) &&
       (!q || `${p.nombre} ${p.apellido} ${p.codigo}`.toLowerCase().includes(q)) &&
-      (!this.filtroGrado || this.nivelDe(p.grado) === this.filtroGrado));
+      (!this.filtroGrado || this.nivelDe(p.grado) === this.filtroGrado) &&
+      (!this.filtroGrupo || this.grupoDe(p.grado) === this.filtroGrupo));
   }
 
   /** Filtro por grado: se agrupa por el nivel (la primera palabra del grado: «2 03» → 2, «TRANSICIÓN 01» → TRANSICIÓN). */
@@ -276,13 +285,24 @@ export class TabParticipantes implements OnInit {
   nivelDe(grado: string | null | undefined): string {
     return (grado ?? '').trim().split(/\s+/)[0]?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase() || '—';
   }
-  /** Niveles presentes en la lista (en orden: preescolar primero y luego 1°, 2°…), con cuántos estudiantes tiene cada uno. */
-  get grados(): { nivel: string; n: number }[] {
-    const base = this.filtro === 'retirados' ? this.retirados : this.filtro === 'reembolso' ? this.conReembolso : this.activos;
-    const cuenta = new Map<string, number>();
-    for (const p of base) { const n = this.nivelDe(p.grado); cuenta.set(n, (cuenta.get(n) ?? 0) + 1); }
+  /** Grupo: lo que va después del nivel («2 03» → 03). */
+  filtroGrupo = '';
+  grupoDe(grado: string | null | undefined): string {
+    return (grado ?? '').trim().split(/\s+/).slice(1).join(' ').toUpperCase();
+  }
+  private get baseGrado(): Participante[] {
+    return this.filtro === 'retirados' ? this.retirados : this.filtro === 'reembolso' ? this.conReembolso : this.activos;
+  }
+  /** Niveles presentes en la lista (en orden: preescolar primero y luego 1°, 2°…). */
+  get grados(): string[] {
     const orden = (n: string) => { const num = Number(n); return Number.isFinite(num) ? 100 + num : ({ PREJARDIN: 1, JARDIN: 2, KINDER: 3, TRANSICION: 4 } as Record<string, number>)[n] ?? (n === '—' ? 999 : 50); };
-    return [...cuenta.entries()].map(([nivel, n]) => ({ nivel, n })).sort((a, b) => orden(a.nivel) - orden(b.nivel) || a.nivel.localeCompare(b.nivel));
+    return [...new Set(this.baseGrado.map((p) => this.nivelDe(p.grado)))].sort((a, b) => orden(a) - orden(b) || a.localeCompare(b));
+  }
+  /** Grupos del grado elegido. */
+  get grupos(): string[] {
+    if (!this.filtroGrado) return [];
+    return [...new Set(this.baseGrado.filter((p) => this.nivelDe(p.grado) === this.filtroGrado).map((p) => this.grupoDe(p.grado)).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   }
   nombreNivel(nivel: string): string {
     if (nivel === '—') return this.t.instant('wg.pestanas.participantes.sinGrado');
