@@ -1,0 +1,18 @@
+{
+  "id": "/login-will-go",
+  "name": "Will-Go Economy",
+  "short_name": "Will-Go",
+  "description": "Banco, caja, docentes y W-Funds de Will-Go Economy.",
+  "lang": "es-CO",
+  "start_url": "/login-will-go?origen=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b2a4a",
+  "theme_color": "#1b2a4a",
+  "icons": [
+    { "src": "/will-go/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/will-go/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/will-go/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

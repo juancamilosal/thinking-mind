@@ -7,7 +7,7 @@ import { PrecioProgramaAyo } from '../../../../core/models/Course';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { StudentService } from '../../../../core/services/student.service';
 import { SchoolService } from '../../../../core/services/school.service';
-import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { AccountReceivableService, errorDeFlujo } from '../../../../core/services/account-receivable.service';
 import { PaymentModel } from '../../../../core/models/AccountReceivable';
 import { environment } from '../../../../../environments/environment';
 import * as CryptoJS from 'crypto-js';
@@ -450,7 +450,7 @@ export class PaymentRecordAyoComponent implements OnInit {
                         this.searchGuardianPayment(guardianDocType, guardianDocNum);
                     }, 500);
                 } else {
-                    this.showErrorNotification('Error inesperado. Inténtelo más tarde.');
+                    this.showErrorNotification(errorDeFlujo(response) || 'Error inesperado. Inténtelo más tarde.');
                 }
             },
             error: (error) => {

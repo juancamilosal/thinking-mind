@@ -20,6 +20,23 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'private-will-go',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'private-will-go/**',
+    renderMode: RenderMode.Client
+  },
+  // Portal de acudientes: su sesión también vive en localStorage
+  {
+    path: 'acudiente-will-go',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'acudiente-will-go/**',
+    renderMode: RenderMode.Client
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender
   }

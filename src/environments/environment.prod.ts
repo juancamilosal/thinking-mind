@@ -36,6 +36,7 @@ export const environment = {
   grado: apiUrl + 'items/grado',
   certificados: apiUrl + 'items/certificados',
   advertising: apiUrl + 'items/publicidad',
+  willGo: apiUrl + 'wge',
   security: {
     login: apiUrl + 'auth/login',
     logout: apiUrl + 'auth/logout',

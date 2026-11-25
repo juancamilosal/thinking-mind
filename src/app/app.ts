@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { initFlowbite } from 'flowbite';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
+import { AppInstalableService } from './core/services/app-instalable.service';
+import { IdiomaWillGoService } from './core/services/idioma-will-go.service';
 import { TokenRefreshService } from './core/services/token-refresh.service';
 import { StorageServices } from './core/services/storage.services';
 import { TranslateModule } from '@ngx-translate/core';
@@ -16,8 +18,16 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class App implements OnInit, OnDestroy {
   constructor(
-    private tokenRefreshService: TokenRefreshService
-  ) {}
+    private tokenRefreshService: TokenRefreshService,
+    router: Router,
+    appInstalable: AppInstalableService,
+    idiomaWillGo: IdiomaWillGoService,
+  ) {
+    // Will-Go tiene su propio idioma (inglés, francés y, en desarrollo, español)
+    idiomaWillGo.iniciar(router);
+    // Will-Go se puede instalar en el celular (manifiesto + service worker solo en sus pantallas)
+    appInstalable.iniciar(router);
+  }
 
   ngOnInit(): void {
     // Iniciar el servicio de renovación automática de tokens si hay un token válido

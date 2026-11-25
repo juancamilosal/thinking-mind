@@ -515,6 +515,20 @@ export class Courses {
 
   async saveEditedFecha() {
     if (this.editFechaForm.valid && this.selectedColegioCurso) {
+      // La edición no se puede repetir ni bajar en el mismo colegio y programa
+      const cc = this.selectedColegioCurso;
+      const idDe = (v: any) => (v && typeof v === 'object' ? v.id : v) ?? null;
+      const errorEdicion = await this.colegioCursosService.validarEdicion({
+        colegioId: idDe(cc.colegio_id),
+        cursoId: idDe(cc.curso_id),
+        edicion: this.editFechaForm.get('edicion')?.value,
+        colegioCursoId: cc.id,
+        edicionActual: cc.edicion,
+      }).catch(() => null);
+      if (errorEdicion) {
+        this.notificationService.showError('Edición no válida', errorEdicion);
+        return;
+      }
 
       // Handle Google Calendar Logic
       if (this.editFechaForm.get('agendar_google_calendar')?.value) {

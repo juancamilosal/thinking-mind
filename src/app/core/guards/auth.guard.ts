@@ -7,6 +7,13 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Roles } from '../const/Roles';
 
+/** Login que corresponde a la ruta protegida (o al último rol, si la ruta no lo dice). */
+function loginDeLaRuta(url: string, lastRole: string | null): string {
+  if (url.includes('/private-will-go')) return '/login-will-go';
+  if (url.includes('/private-ayo')) return '/login-ayo';
+  return Roles.loginRoute(lastRole);
+}
+
 export const authGuard: CanActivateFn = (route, state): Observable<boolean> | boolean => {
   const router = inject(Router);
   const loginService = inject(LoginService);
@@ -18,7 +25,7 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
   if (!accessToken) {
     // Sin sesión: volver al login que corresponde (AYO si la ruta o el último rol son de AYO)
     const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-    router.navigate([state.url.includes('/private-ayo') ? '/login-ayo' : Roles.loginRoute(lastRole)]);
+    router.navigate([loginDeLaRuta(state.url, lastRole)]);
     return false;
   }
 
@@ -38,7 +45,7 @@ export const authGuard: CanActivateFn = (route, state): Observable<boolean> | bo
       StorageServices.clearSession();
 
       const lastRole = typeof localStorage !== 'undefined' ? localStorage.getItem('last_user_role') : null;
-      router.navigate([state.url.includes('/private-ayo') ? '/login-ayo' : Roles.loginRoute(lastRole)]);
+      router.navigate([loginDeLaRuta(state.url, lastRole)]);
       return of(false);
     })
   );

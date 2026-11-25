@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1b2a4a">
+  <title>Offline · Will-Go</title>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body { display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
+      background: #1b2a4a; color: #e2e8f0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; text-align: center; }
+    img { width: 88px; height: 88px; border-radius: 22px; }
+    h1 { font-size: 22px; margin: 20px 0 8px; color: #fff; }
+    p { margin: 0 auto; max-width: 320px; line-height: 1.5; color: #94a3b8; }
+    button { margin-top: 24px; padding: 14px 28px; border: 0; border-radius: 14px; font-size: 16px; font-weight: 700;
+      color: #fff; background: #ff6b1a; }
+  </style>
+</head>
+<body>
+  <div>
+    <img src="/will-go/icon-192.png" alt="">
+    <h1 id="t">No internet connection</h1>
+    <p id="d">Will-Go needs internet to show up-to-date balances and transactions. Check your connection and try again.</p>
+    <button id="b" type="button" onclick="location.reload()">Try again</button>
+  </div>
+  <script>
+    // Mismo idioma que eligió la persona en Will-Go (inglés por defecto)
+    var textos = {
+      es: ['Sin conexión · Will-Go', 'No hay conexión a internet', 'Will-Go necesita internet para mostrar saldos y movimientos al día. Revisa tu conexión e intenta de nuevo.', 'Reintentar'],
+      fr: ['Hors ligne · Will-Go', 'Pas de connexion internet', 'Will-Go a besoin d\'internet pour afficher les soldes et les mouvements à jour. Vérifiez votre connexion et réessayez.', 'Réessayer']
+    };
+    try {
+      var l = localStorage.getItem('wg_idioma') || (navigator.language || '').slice(0, 2);
+      var t = textos[l];
+      if (t) { document.title = t[0]; document.getElementById('t').textContent = t[1]; document.getElementById('d').textContent = t[2]; document.getElementById('b').textContent = t[3]; document.documentElement.lang = l; }
+    } catch (e) {}
+  </script>
+</body>
+</html>

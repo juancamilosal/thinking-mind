@@ -1,0 +1,12 @@
+.wg-codigo {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  text-align: center;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.9rem;
+  background: #f9fafb;
+}
+.wg-codigo:focus { outline: none; border-color: #ff6b1a; box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.2); }

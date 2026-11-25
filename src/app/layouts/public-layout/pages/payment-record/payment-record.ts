@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { DOCUMENT_TYPE } from '../../../../core/const/DocumentTypeConst';
 import { CourseService } from '../../../../core/services/course.service';
 import { Course } from '../../../../core/models/Course';
-import { AccountReceivableService } from '../../../../core/services/account-receivable.service';
+import { AccountReceivableService, errorDeFlujo } from '../../../../core/services/account-receivable.service';
 import { ClientService } from '../../../../core/services/client.service';
 import { SchoolService } from '../../../../core/services/school.service';
 import { PaymentConfirmationComponent } from './payment-confirmation/payment-confirmation.component';
@@ -1472,6 +1472,15 @@ export class PaymentRecord implements OnInit {
     };
     this.accountReceivableService.createAccountRecord(paymentForm).subscribe({
       next: (response: any) => {
+        // El flow responde 200 aunque falle (p. ej. documento de estudiante repetido): se revisa el cuerpo
+        const fallo = errorDeFlujo(response);
+        if (fallo) {
+          this.isSubmitting = false;
+          this.showConfirmation = false;
+          this.showServerErrorNotification(fallo);
+          this.cdRef.detectChanges();
+          return;
+        }
         // Verificar si la respuesta tiene status ERROR
         if (response && response.status === 'ERROR') {
           this.isSubmitting = false;

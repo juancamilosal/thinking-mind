@@ -46,6 +46,7 @@ export class LoginAyo implements OnInit {
     ) { }
 
     ngOnInit(): void {
+    Roles.recordarLogin('/login-ayo'); // al vencerse la sesión, se vuelve a este ingreso
         // Subscribe to notification service
         this.notificationService.notification$.subscribe(notification => {
             this.notificationData = notification;
