@@ -124,6 +124,14 @@ export interface MiembroEquipo {
   billetes: number;
 }
 
+/** Una operación con dinero hecha por un colaborador (sus dos patas unidas). */
+export interface TransaccionEquipo {
+  id: string; tipo: string; fecha: string; monto: number; medio: 'efectivo' | 'virtual';
+  pais_id: string | null; pais: string | null; moneda: string | null;
+  origen: { tipo: string; nombre: string } | null; destino: { tipo: string; nombre: string } | null;
+  colaborador_id: string; colaborador: string;
+}
+
 export interface PaisArqueo {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   /** Billetes que hoy tiene el banco según el sistema. */
@@ -447,6 +455,12 @@ export class WillGoService {
 
   equipo(edicionId: string): Observable<MiembroEquipo[]> {
     return this.http.get<{ data: MiembroEquipo[] }>(`${this.api}/admin/ediciones/${edicionId}/equipo`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Transacciones (efectivo y virtual) de los colaboradores de la edición; con `usuarioId`, solo las de ese colaborador. */
+  transaccionesEquipo(edicionId: string, usuarioId?: string): Observable<{ operaciones: TransaccionEquipo[]; total: number }> {
+    const q = usuarioId ? `?usuario=${encodeURIComponent(usuarioId)}` : '';
+    return this.http.get<{ data: { operaciones: TransaccionEquipo[]; total: number } }>(`${this.api}/admin/ediciones/${edicionId}/transacciones${q}`).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** Reenvía por correo el aviso de asignación a todo el equipo de la edición. */

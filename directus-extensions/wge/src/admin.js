@@ -595,6 +595,37 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		return filas.map((f) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null }));
 	}));
 
+	/**
+	 * GET /wge/admin/ediciones/:id/transacciones?usuario=: todo lo que hicieron los colaboradores con el dinero de la edición
+	 * (efectivo y virtual), para que el administrador lleve el control. Con `usuario` trae solo las de ese colaborador.
+	 */
+	router.get('/admin/ediciones/:id/transacciones', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const e = await edicionExistente(req.params.id);
+		const usuario = typeof req.query?.usuario === 'string' && req.query.usuario ? req.query.usuario : null;
+		const filas = await db('wge_movimientos as m').join('wge_billeteras as b', 'b.id', 'm.billetera_id')
+			.leftJoin('wge_paises as pa', 'pa.id', 'b.pais_id')
+			.leftJoin('directus_users as du', 'du.id', 'b.docente_id')
+			.leftJoin('wge_participantes as wp', 'wp.id', 'b.participante_id').leftJoin('estudiantes as es', 'es.id', 'wp.estudiante_id')
+			.leftJoin('directus_users as u', 'u.id', 'm.user_created')
+			.where('b.edicion_id', e.id).whereNotNull('m.user_created')
+			.modify((q) => { if (usuario) q.where('m.user_created', usuario); })
+			.orderBy('m.date_created', 'desc').limit(4000)
+			.select('m.id', 'm.tipo', 'm.monto', 'm.referencia_tipo', 'm.referencia_id', 'm.date_created', 'm.user_created',
+				'b.tipo_dueno', 'pa.id as pais_id', 'pa.nombre as pais', 'pa.codigo_moneda as moneda',
+				db.raw("trim(coalesce(du.first_name, '') || ' ' || coalesce(du.last_name, '')) as docente"),
+				db.raw("trim(coalesce(es.nombre, '') || ' ' || coalesce(es.apellido, '')) as estudiante"),
+				db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as actor"));
+		const operaciones = agruparOperaciones(filas);
+		const totales = {};
+		for (const o of operaciones) {
+			const k = `${o.pais_id}:${o.medio}`;
+			totales[k] ??= { pais_id: o.pais_id, pais: o.pais, moneda: o.moneda, medio: o.medio, n: 0, monto: 0 };
+			totales[k].n += 1; totales[k].monto += o.monto;
+		}
+		return { operaciones: operaciones.slice(0, 1000), total: operaciones.length, totales: Object.values(totales) };
+	}));
+
 	/** POST /wge/admin/ediciones/:id/equipo { usuario_ids }: agrega colaboradores (solo usuarios con rol de Will Go). */
 	router.post('/admin/ediciones/:id/equipo', ruta(async (req, rol) => {
 		soloAdmin(rol);
@@ -710,4 +741,42 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			res.status(404).end();
 		}
 	});
+}
+
+const BILLETERAS_VIRTUALES = new Set(['banco_virtual', 'cuenta']);
+
+/**
+ * Une las dos patas de cada operación (lo que sale de una billetera y lo que entra a otra) en una sola fila.
+ * Se emparejan por referencia y monto; lo que no tiene pareja (p. ej. la carga del banco) queda solo.
+ * El medio (efectivo o virtual) es el de la billetera de donde sale el dinero.
+ */
+export function agruparOperaciones(filas) {
+	const grupos = new Map();
+	for (const f of filas) {
+		const k = f.referencia_tipo && f.referencia_id ? `${f.referencia_tipo}:${f.referencia_id}:${f.user_created}` : f.id;
+		if (!grupos.has(k)) grupos.set(k, []);
+		grupos.get(k).push(f);
+	}
+	const lado = (f) => f && { tipo: f.tipo_dueno, nombre: f.tipo_dueno === 'docente' ? f.docente : ['estudiante', 'cuenta'].includes(f.tipo_dueno) ? f.estudiante : '' };
+	const operaciones = [];
+	for (const g of grupos.values()) {
+		const salen = g.filter((f) => Number(f.monto) < 0);
+		const entran = g.filter((f) => Number(f.monto) > 0);
+		for (const s of salen) {
+			const i = entran.findIndex((x) => Number(x.monto) === -Number(s.monto));
+			const d = i >= 0 ? entran.splice(i, 1)[0] : null;
+			operaciones.push({ s, d });
+		}
+		for (const d of entran) operaciones.push({ s: null, d });
+	}
+	return operaciones.map(({ s, d }) => {
+		const f = s ?? d;
+		return {
+			id: f.id, tipo: f.tipo, fecha: f.date_created, monto: Math.abs(Number(f.monto)),
+			medio: BILLETERAS_VIRTUALES.has(f.tipo_dueno) ? 'virtual' : 'efectivo',
+			pais_id: f.pais_id, pais: f.pais, moneda: f.moneda,
+			origen: lado(s), destino: lado(d),
+			colaborador_id: f.user_created, colaborador: f.actor || '',
+		};
+	}).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }

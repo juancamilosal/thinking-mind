@@ -4,18 +4,23 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Edicion, Funcionario, MiembroEquipo, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { formatearNumero } from '../../../numero-miles.directive';
+import { TransaccionesEquipoComponent } from './transacciones-equipo.component';
 
 type Rol = NonNullable<MiembroEquipo['rol']>;
 
 @Component({
   selector: 'app-tab-equipo',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe],
+  imports: [FormsModule, RouterLink, TranslatePipe, TransaccionesEquipoComponent],
   template: `
     <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
       <p class="text-sm text-gray-500">{{ 'wg.pestanas.equipo.intro' | translate }}</p>
       <div class="flex flex-col sm:flex-row gap-2 shrink-0">
         @if (equipo.length) {
+          <button type="button" (click)="verTransacciones(null)" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+            {{ 'wg.pestanas.transacciones.verTodas' | translate }}
+          </button>
           <button type="button" (click)="avisar()" [disabled]="avisando" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             {{ avisando ? ('wg.pestanas.equipo.enviandoAviso' | translate) : ('wg.pestanas.equipo.enviarAviso' | translate) }}
@@ -57,6 +62,9 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
                         <p class="font-semibold text-gray-800 truncate">{{ m.nombre }} {{ m.apellido }}</p>
                         <p class="text-xs text-gray-500 truncate">{{ m.email }}{{ m.estado !== 'active' ? ' · ' + ('wg.pestanas.equipo.inactivo' | translate) : '' }}</p>
                       </div>
+                    </div>
+                    <div class="mt-2 pl-[3.25rem] flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <button type="button" (click)="verTransacciones(m)" class="text-sm font-semibold text-orange-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.transacciones.ver' | translate }}</button>
                       <button type="button" (click)="quitar(m)" class="text-sm font-semibold text-red-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.equipo.quitar' | translate }}</button>
                     </div>
                     @if (m.rol === 'docente') {
@@ -76,6 +84,10 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
           }
         }
       </div>
+    }
+
+    @if (transacciones) {
+      <wg-transacciones-equipo [edicionId]="edicion.id" [miembro]="transacciones.miembro" [equipo]="equipo" (cerrar)="transacciones = null" />
     }
 
     @if (agregando) {
@@ -229,6 +241,12 @@ export class TabEquipo implements OnInit {
       },
       error: (e) => this.mostrar(WillGoService.mensajeDeError(e), true),
     });
+  }
+
+  /** Modal de transacciones: de un colaborador o de todo el equipo (miembro null). */
+  transacciones: { miembro: MiembroEquipo | null } | null = null;
+  verTransacciones(miembro: MiembroEquipo | null): void {
+    this.transacciones = { miembro };
   }
 
   avisando = false;

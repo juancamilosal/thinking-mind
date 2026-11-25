@@ -1587,6 +1587,43 @@
         "rubrica": "Rúbrica",
         "invertido": "Invertido",
         "total": "Total"
+      },
+      "transacciones": {
+        "titulo": "Transacciones",
+        "todoElEquipo": "Todo el equipo",
+        "filtrarColaborador": "Filtrar por colaborador",
+        "todosColaboradores": "Todos los colaboradores",
+        "todas": "Todas",
+        "efectivo": "Efectivo",
+        "virtual": "Virtual",
+        "cargando": "Cargando transacciones…",
+        "nOperaciones": "{{n}} operaciones",
+        "sinTransacciones": "Aún no hay transacciones.",
+        "hizo": "Hizo: {{nombre}}",
+        "soloUltimas": "Se muestran las últimas {{n}}.",
+        "verTodas": "Ver transacciones",
+        "ver": "Ver transacciones",
+        "tipos": {
+          "provision": "Dinero asignado al banco",
+          "transferencia": "Transferencia",
+          "bienvenida": "Dinero de bienvenida",
+          "compra": "Compra en GO•STORE (efectivo)",
+          "pagoTarjeta": "Pago con tarjeta en GO•STORE",
+          "inversion": "Inversión en W-Funds",
+          "pagoFondo": "Pago de W-Funds",
+          "reverso": "Devolución",
+          "consignacion": "Consignación a cuenta",
+          "retiroCuenta": "Retiro de cuenta",
+          "cargaVirtual": "Saldo virtual cargado",
+          "otro": "Movimiento"
+        },
+        "lados": {
+          "banco": "Banco de {{pais}}",
+          "bancoVirtual": "Cuenta virtual del banco de {{pais}}",
+          "caja": "Caja GO•STORE",
+          "cuenta": "Cuenta de {{nombre}}",
+          "estudiante": "{{nombre}} (efectivo)"
+        }
       }
     },
     "tarjeta": {

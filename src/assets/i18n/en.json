@@ -1587,6 +1587,43 @@
         "rubrica": "Rubric",
         "invertido": "Invested",
         "total": "Total"
+      },
+      "transacciones": {
+        "titulo": "Transactions",
+        "todoElEquipo": "Whole team",
+        "filtrarColaborador": "Filter by team member",
+        "todosColaboradores": "All team members",
+        "todas": "All",
+        "efectivo": "Cash",
+        "virtual": "Virtual",
+        "cargando": "Loading transactions…",
+        "nOperaciones": "{{n}} operations",
+        "sinTransacciones": "No transactions yet.",
+        "hizo": "By: {{nombre}}",
+        "soloUltimas": "Showing the latest {{n}}.",
+        "verTodas": "View transactions",
+        "ver": "View transactions",
+        "tipos": {
+          "provision": "Money assigned to the bank",
+          "transferencia": "Transfer",
+          "bienvenida": "Welcome money",
+          "compra": "GO•STORE purchase (cash)",
+          "pagoTarjeta": "GO•STORE card payment",
+          "inversion": "W-Funds investment",
+          "pagoFondo": "W-Funds payout",
+          "reverso": "Refund",
+          "consignacion": "Deposit to account",
+          "retiroCuenta": "Account withdrawal",
+          "cargaVirtual": "Virtual balance loaded",
+          "otro": "Movement"
+        },
+        "lados": {
+          "banco": "{{pais}} bank",
+          "bancoVirtual": "{{pais}} bank virtual account",
+          "caja": "GO•STORE till",
+          "cuenta": "{{nombre}}'s account",
+          "estudiante": "{{nombre}} (cash)"
+        }
       }
     },
     "tarjeta": {

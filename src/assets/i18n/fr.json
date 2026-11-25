@@ -1587,6 +1587,43 @@
         "rubrica": "Grille d'évaluation",
         "invertido": "Investi",
         "total": "Total"
+      },
+      "transacciones": {
+        "titulo": "Transactions",
+        "todoElEquipo": "Toute l'équipe",
+        "filtrarColaborador": "Filtrer par collaborateur",
+        "todosColaboradores": "Tous les collaborateurs",
+        "todas": "Toutes",
+        "efectivo": "Espèces",
+        "virtual": "Virtuel",
+        "cargando": "Chargement des transactions…",
+        "nOperaciones": "{{n}} opérations",
+        "sinTransacciones": "Aucune transaction pour l'instant.",
+        "hizo": "Par : {{nombre}}",
+        "soloUltimas": "Les {{n}} dernières sont affichées.",
+        "verTodas": "Voir les transactions",
+        "ver": "Voir les transactions",
+        "tipos": {
+          "provision": "Argent attribué à la banque",
+          "transferencia": "Virement",
+          "bienvenida": "Argent de bienvenue",
+          "compra": "Achat GO•STORE (espèces)",
+          "pagoTarjeta": "Paiement par carte GO•STORE",
+          "inversion": "Investissement W-Funds",
+          "pagoFondo": "Paiement W-Funds",
+          "reverso": "Remboursement",
+          "consignacion": "Dépôt sur le compte",
+          "retiroCuenta": "Retrait du compte",
+          "cargaVirtual": "Solde virtuel chargé",
+          "otro": "Mouvement"
+        },
+        "lados": {
+          "banco": "Banque de {{pais}}",
+          "bancoVirtual": "Compte virtuel de la banque de {{pais}}",
+          "caja": "Caisse GO•STORE",
+          "cuenta": "Compte de {{nombre}}",
+          "estudiante": "{{nombre}} (espèces)"
+        }
       }
     },
     "tarjeta": {
