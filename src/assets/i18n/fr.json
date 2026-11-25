@@ -1452,7 +1452,9 @@
         "avisoEncargado": "{{nombre}} est responsable de la caisse (et a été ajouté à l'équipe).",
         "sinEncargado": "La caisse n'a plus de responsable.",
         "faltanDatos": "Saisissez le nom et le prix.",
-        "confirmarEliminar": "Supprimer « {{nombre}} » ? S'il a déjà des ventes, il sera seulement masqué de la caisse."
+        "confirmarEliminar": "Supprimer « {{nombre}} » ? S'il a déjà des ventes, il sera seulement masqué de la caisse.",
+        "descuento": "Remise",
+        "descuentoInvalido": "La remise doit être un nombre de 0 à 100."
       },
       "participantes": {
         "intro": "Les élèves ayant entièrement payé le programme apparaissent ici automatiquement. Attribuez un pays à chacun.",

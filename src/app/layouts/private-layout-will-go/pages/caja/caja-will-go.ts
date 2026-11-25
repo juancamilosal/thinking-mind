@@ -6,6 +6,7 @@ import { EscanerQrComponent } from '../../escaner-qr.component';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
 import { FechaWillGoPipe } from '../../fecha.pipe';
+import { precioEnBilletes } from '../ediciones/estado-edicion';
 
 type Vista = 'vender' | 'caja' | 'ventas';
 const normalizar = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -74,6 +75,7 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold text-gray-800 truncate">{{ p.nombre }}</p>
                   <div class="mt-1 flex flex-wrap gap-1.5">
+                    @if (p.descuento) { <span class="rounded-md px-2 py-0.5 text-xs font-extrabold bg-red-100 text-red-700">-{{ p.descuento }}%</span> }
                     @for (pa of datos.paises; track pa.id) {
                       <span class="rounded-md px-2 py-0.5 text-xs font-extrabold" [style.color]="pa.color || '#111827'" [style.background]="(pa.color || '#64748b') + '14'">{{ miles(precioEn(p, pa)) }} {{ pa.codigo_moneda }}</span>
                     }
@@ -514,9 +516,9 @@ export class CajaWillGo implements OnInit {
   }
 
   // ---- Carrito ----
-  precio(p: ProductoCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(this.paisEst?.tasa_actual) || 1, 1)); }
+  precio(p: ProductoCaja): number { return precioEnBilletes(Number(p.precio_cop), Number(this.paisEst?.tasa_actual) || 1, Number(p.descuento) || 0); }
   /** Lo que vale un producto en la moneda de un país (precio en pesos ÷ tasa, hacia arriba, igual que al cobrar). */
-  precioEn(p: ProductoCaja, pais: PaisCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(pais.tasa_actual) || 1, 1)); }
+  precioEn(p: ProductoCaja, pais: PaisCaja): number { return precioEnBilletes(Number(p.precio_cop), Number(pais.tasa_actual) || 1, Number(p.descuento) || 0); }
   /** Los países distintos al del estudiante elegido (para mostrar el precio en las otras monedas). */
   cantidad(p: ProductoCaja): number { return this.carrito[p.id] ?? 0; }
   /** Cuántas unidades más puede llevar este estudiante (stock y máximo por estudiante). */

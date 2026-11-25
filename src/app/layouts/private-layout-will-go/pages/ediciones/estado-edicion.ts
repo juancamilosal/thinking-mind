@@ -17,7 +17,11 @@ export const DIAS_SEMANA = [
 ];
 
 /** Precio en billetes con la tasa (igual que la caja: hacia arriba). */
-export const precioEnBilletes = (precioCop: number, tasa: number): number => Math.ceil(precioCop / Math.max(tasa, 1));
+/** Precio en la moneda del país: pesos con el descuento (0 a 100 %) ÷ tasa, siempre hacia arriba (igual que el servidor). */
+export const precioEnBilletes = (precioCop: number, tasa: number, descuento = 0): number => {
+  const d = Math.min(Math.max(Number(descuento) || 0, 0), 100);
+  return Math.ceil((precioCop * (100 - d)) / 100 / Math.max(tasa, 1));
+};
 
 /**
  * Reduce una foto en el navegador a máx. 800 px y la devuelve como JPEG en base64.

@@ -15,7 +15,7 @@ export const INTERVALOS_FX = [10, 15, 20, 30, 60];
 /** Qué se puede leer y escribir de cada parte de una edición. */
 export const SECCIONES = {
 	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'orden', 'responsable_banco'], orden: 'orden' },
-	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
+	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
 const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill', 'responsable_caja'];
@@ -98,7 +98,7 @@ export function ejemploDeFondo(fondo) {
 	return f ? { a_que_se_dedica: f.a_que_se_dedica, por_que_invertir: f.por_que_invertir } : null;
 }
 
-const ENTEROS = ['provision_inicial', 'orden', 'precio_cop', 'stock', 'maximo_por_estudiante', 'tasa_inicial', 'investment_bill'];
+const ENTEROS = ['provision_inicial', 'orden', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante', 'tasa_inicial', 'investment_bill'];
 const DECIMALES = ['rendimiento_base', 'rendimiento_alterno', 'variacion', 'tope_minimo', 'tope_maximo'];
 
 /** Deja solo los campos permitidos y revisa que los números tengan sentido. */
@@ -112,6 +112,7 @@ export function limpiar(datos, permitidos) {
 			v = Number(v);
 			if (!Number.isInteger(v) || v < 0) throw new WgeError(400, 'VALOR_INVALIDO', `${campo} debe ser un número entero de 0 en adelante`);
 		}
+		if (campo === 'descuento' && v !== null && v > 100) throw new WgeError(400, 'VALOR_INVALIDO', 'El descuento debe ser de 0 a 100 %');
 		if (v !== null && DECIMALES.includes(campo)) {
 			v = Number(v);
 			if (!Number.isFinite(v)) throw new WgeError(400, 'VALOR_INVALIDO', `${campo} debe ser un número`);

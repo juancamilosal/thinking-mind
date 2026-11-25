@@ -1452,7 +1452,9 @@
         "avisoEncargado": "{{nombre}} is the checkout manager (and was added to the team).",
         "sinEncargado": "The checkout no longer has a manager.",
         "faltanDatos": "Enter the name and the price.",
-        "confirmarEliminar": "Delete “{{nombre}}”? If it already has sales, it will only be hidden from checkout."
+        "confirmarEliminar": "Delete “{{nombre}}”? If it already has sales, it will only be hidden from checkout.",
+        "descuento": "Discount",
+        "descuentoInvalido": "The discount must be a number from 0 to 100."
       },
       "participantes": {
         "intro": "Students who fully paid the program show up here automatically. Assign each one a country.",

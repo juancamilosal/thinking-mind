@@ -1452,7 +1452,9 @@
         "avisoEncargado": "{{nombre}} es el encargado de la caja (y quedó en el equipo).",
         "sinEncargado": "La caja quedó sin encargado.",
         "faltanDatos": "Escribe el nombre y el precio.",
-        "confirmarEliminar": "¿Eliminar «{{nombre}}»? Si ya tiene ventas, solo se ocultará de la caja."
+        "confirmarEliminar": "¿Eliminar «{{nombre}}»? Si ya tiene ventas, solo se ocultará de la caja.",
+        "descuento": "Descuento",
+        "descuentoInvalido": "El descuento debe ser un número de 0 a 100."
       },
       "participantes": {
         "intro": "Los inscritos con el programa pagado por completo aparecen aquí solos. Asigna a cada uno su país.",

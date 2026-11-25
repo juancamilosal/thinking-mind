@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { precioEnBilletes } from '../ediciones/estado-edicion';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatosCaja, EdicionVigente, PaisCaja, ProductoCaja, WillGoService } from '../../../../core/services/will-go.service';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
@@ -125,7 +126,7 @@ export class ProductosWillGo implements OnInit {
   get agotados(): number { return (this.datos?.productos ?? []).filter((p) => !Number(p.stock)).length; }
 
   /** Igual que la caja: precio en pesos ÷ tasa del país, hacia arriba. */
-  precio(p: ProductoCaja, pais: PaisCaja): number { return Math.ceil(Number(p.precio_cop) / Math.max(Number(pais.tasa_actual) || 1, 1)); }
+  precio(p: ProductoCaja, pais: PaisCaja): number { return precioEnBilletes(Number(p.precio_cop), Number(pais.tasa_actual) || 1, Number(p.descuento) || 0); }
   foto(id: string): string { return this.willGo.urlFoto(id); }
   miles(v: number): string { return formatearNumero(Number(v) || 0); }
 }

@@ -207,7 +207,7 @@ export default {
 							.sum({ total: 'i.cantidad' }).first();
 						if (Number(ya?.total ?? 0) + cantidad > p.maximo_por_estudiante) throw new WgeError(409, 'MAXIMO_POR_ESTUDIANTE', `Máximo ${p.maximo_por_estudiante} de ${p.nombre} por estudiante`);
 					}
-					const precio = precioEnBilletesCaja(p.precio_cop, tasa);
+					const precio = precioEnBilletesCaja(p.precio_cop, tasa, p.descuento);
 					total += precio * cantidad;
 					lineas.push({ p, cantidad, precio });
 				}
@@ -251,7 +251,7 @@ export default {
 				return {
 					...venta, saldo: billetera.saldo, billetes_recibidos: recibidos.limpio, billetes_vuelto: vuelto.limpio,
 					recibido: conTarjeta ? total : recibidos.total, vuelto: conTarjeta ? 0 : vuelto.total,
-					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio })),
+					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio, descuento: Number(p.descuento) || 0 })),
 				};
 			}));
 		}));

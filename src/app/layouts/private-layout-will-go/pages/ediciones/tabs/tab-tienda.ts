@@ -64,7 +64,10 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="font-semibold text-gray-800 leading-tight">{{ p.nombre }}</p>
-                  <p class="text-sm text-gray-500 mt-0.5">{{ 'wg.pestanas.tienda.pesos' | translate: { n: (p.precio_cop | number) } }}</p>
+                  <p class="text-sm text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-2">
+                    <span [class.line-through]="p.descuento">{{ 'wg.pestanas.tienda.pesos' | translate: { n: (p.precio_cop | number) } }}</span>
+                    @if (p.descuento) { <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">-{{ p.descuento }}%</span> }
+                  </p>
                   <p class="text-xs mt-1" [class]="p.stock > 0 ? 'text-gray-500' : 'text-red-600 font-semibold'">
                     {{ p.stock > 0 ? ('wg.pestanas.tienda.disponibles' | translate: { n: (p.stock | number) }) : ('wg.pestanas.tienda.agotado' | translate) }}{{ p.maximo_por_estudiante ? ' · ' + ('wg.pestanas.tienda.maxPorEstudiante' | translate: { n: p.maximo_por_estudiante }) : '' }}
                   </p>
@@ -105,7 +108,7 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
               <label for="p-nombre" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.comun.nombre' | translate }}</label>
               <input id="p-nombre" [(ngModel)]="borrador.nombre" class="campo" [placeholder]="'wg.pestanas.tienda.ejemploNombre' | translate">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
               <div>
                 <label for="p-precio" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.precio' | translate }}</label>
                 <input id="p-precio" wgNumero [(ngModel)]="borrador.precio_cop" class="campo">
@@ -115,9 +118,18 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
                 <input id="p-stock" wgNumero [(ngModel)]="borrador.stock" class="campo">
               </div>
             </div>
-            <div>
-              <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.maximo' | translate }} <span class="font-normal text-gray-400">{{ 'wg.pestanas.tienda.sinLimite' | translate }}</span></label>
-              <input id="p-max" wgNumero [(ngModel)]="borrador.maximo_por_estudiante" class="campo">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
+              <div>
+                <label for="p-descuento" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.descuento' | translate }}</label>
+                <div class="relative">
+                  <input id="p-descuento" type="number" inputmode="numeric" min="0" max="100" step="1" [(ngModel)]="borrador.descuento" placeholder="0" class="campo pr-9">
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">%</span>
+                </div>
+              </div>
+              <div>
+                <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.maximo' | translate }} <span class="font-normal text-gray-400">{{ 'wg.pestanas.tienda.sinLimite' | translate }}</span></label>
+                <input id="p-max" wgNumero [(ngModel)]="borrador.maximo_por_estudiante" class="campo">
+              </div>
             </div>
             @if (borrador.precio_cop) {
               <p class="text-sm text-gray-600 bg-gray-50 rounded-xl px-4 py-3">{{ 'wg.pestanas.tienda.hoyCostaria' | translate }}
@@ -200,12 +212,12 @@ export class TabTienda implements OnInit {
   }
 
   billetes(p: Partial<Producto>, pais: Pais): number {
-    return precioEnBilletes(Number(p.precio_cop) || 0, Number(pais.tasa_actual || this.edicion.tasa_inicial));
+    return precioEnBilletes(Number(p.precio_cop) || 0, Number(pais.tasa_actual || this.edicion.tasa_inicial), Number(p.descuento) || 0);
   }
 
   nuevo(): void {
     this.error = '';
-    this.borrador = { nombre: '', precio_cop: undefined, stock: 0, maximo_por_estudiante: null, activo: true, foto: null, fotoVista: null };
+    this.borrador = { nombre: '', precio_cop: undefined, descuento: null, stock: 0, maximo_por_estudiante: null, activo: true, foto: null, fotoVista: null };
   }
 
   editar(p: Producto): void {
@@ -238,8 +250,13 @@ export class TabTienda implements OnInit {
       this.error = this.t.instant('wg.pestanas.tienda.faltanDatos');
       return;
     }
+    const descuento = b.descuento === null || b.descuento === undefined || String(b.descuento) === '' ? 0 : Number(b.descuento);
+    if (!Number.isInteger(descuento) || descuento < 0 || descuento > 100) {
+      this.error = this.t.instant('wg.pestanas.tienda.descuentoInvalido');
+      return;
+    }
     const datos: Partial<Producto> = {
-      nombre: b.nombre.trim(), precio_cop: Number(b.precio_cop), stock: Number(b.stock) || 0,
+      nombre: b.nombre.trim(), precio_cop: Number(b.precio_cop), descuento, stock: Number(b.stock) || 0,
       maximo_por_estudiante: b.maximo_por_estudiante ? Number(b.maximo_por_estudiante) : null,
       activo: !!b.activo, foto: b.foto ?? null,
     };
