@@ -164,6 +164,7 @@ coleccion('wge_productos', 'storefront', 'Catálogo de GO•STORE por edición',
     m2o('edicion_id', requerido=True), campo('nombre', 'string', requerido=True),
     {'field': 'foto', 'type': 'uuid', 'meta': {'interface': 'file-image', 'special': ['file']}, 'schema': {}},
     campo('precio_cop', 'integer', 'Precio en pesos educativos', requerido=True),
+    campo('descuento', 'integer', 'Descuento en % (0 a 100) sobre el precio', default=0),
     campo('stock', 'integer', default=0), campo('maximo_por_estudiante', 'integer'),
     campo('activo', 'boolean', default=True),
 ])

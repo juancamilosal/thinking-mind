@@ -30,8 +30,11 @@ export async function exigirResponsableCaja(db, { edicionId, usuarioId, rol }) {
 	if (e.responsable_caja !== usuarioId) throw new WgeError(403, 'OTRO_RESPONSABLE', `La caja la maneja ${`${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()}`);
 }
 
-/** Precio en billetes de un producto con la tasa de un país (siempre hacia arriba). */
-export const precioEnBilletesCaja = (precioCop, tasa) => Math.ceil(Number(precioCop) / Math.max(Number(tasa), 1));
+/** Precio en la moneda del país con la tasa vigente y el descuento del producto (0 a 100 %), siempre hacia arriba. */
+export const precioEnBilletesCaja = (precioCop, tasa, descuento = 0) => {
+	const d = Math.min(Math.max(Number(descuento) || 0, 0), 100);
+	return Math.ceil((Number(precioCop) * (100 - d)) / 100 / Math.max(Number(tasa), 1));
+};
 
 export function rutasCaja(router, { ruta, db }) {
 	const permitir = async (req, rol, edicionId) => {
@@ -54,7 +57,7 @@ export function rutasCaja(router, { ruta, db }) {
 			p.inventario = await inventarioCaja(db, edicion.id, p.id);
 		}
 		const productos = await db('wge_productos').where({ edicion_id: edicion.id, activo: true }).orderBy('nombre')
-			.select('id', 'nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante');
+			.select('id', 'nombre', 'foto', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante');
 		// Unidades vendidas de cada producto (ventas pagadas)
 		const vendidos = await db('wge_venta_items as i').join('wge_ventas as v', 'v.id', 'i.venta_id')
 			.where({ 'v.edicion_id': edicion.id, 'v.estado': 'pagada' }).groupBy('i.producto_id').select('i.producto_id').sum({ n: 'i.cantidad' });

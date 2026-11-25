@@ -399,6 +399,7 @@ const TRADUCCIONES = [
 	['Esta edición ya tiene movimientos de dinero y no se puede eliminar, para no perder el historial', 'This edition already has money movements and cannot be deleted, so the history is kept', "Cette édition a déjà des mouvements d'argent et ne peut pas être supprimée, afin de garder l'historique"],
 	['Los países se agregan antes de abrir la edición', 'Countries are added before opening the edition', "Les pays s'ajoutent avant d'ouvrir l'édition"],
 	['Falta el precio', 'The price is missing', 'Le prix est manquant'],
+	['El descuento debe ser de 0 a 100 %', 'The discount must be from 0 to 100%', 'La remise doit être comprise entre 0 et 100 %'],
 	['No existe', 'Does not exist', "N'existe pas"],
 	['La provisión del banco se define antes de abrir la edición', "The bank's supply is set before opening the edition", "La dotation de la banque se définit avant d'ouvrir l'édition"],
 	['El responsable del banco debe ser un colaborador con rol Banco', 'The bank manager must be a staff member with the Bank role', 'Le responsable de la banque doit être un collaborateur avec le rôle Banque'],
@@ -872,7 +873,7 @@ const INTERVALOS_FX = [10, 15, 20, 30, 60];
 /** Qué se puede leer y escribir de cada parte de una edición. */
 const SECCIONES = {
 	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'orden', 'responsable_banco'], orden: 'orden' },
-	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
+	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
 const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill', 'responsable_caja'];
@@ -955,7 +956,7 @@ function ejemploDeFondo(fondo) {
 	return f ? { a_que_se_dedica: f.a_que_se_dedica, por_que_invertir: f.por_que_invertir } : null;
 }
 
-const ENTEROS = ['provision_inicial', 'orden', 'precio_cop', 'stock', 'maximo_por_estudiante', 'tasa_inicial', 'investment_bill'];
+const ENTEROS = ['provision_inicial', 'orden', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante', 'tasa_inicial', 'investment_bill'];
 const DECIMALES = ['rendimiento_base', 'rendimiento_alterno', 'variacion', 'tope_minimo', 'tope_maximo'];
 
 /** Deja solo los campos permitidos y revisa que los números tengan sentido. */
@@ -969,6 +970,7 @@ function limpiar(datos, permitidos) {
 			v = Number(v);
 			if (!Number.isInteger(v) || v < 0) throw new WgeError(400, 'VALOR_INVALIDO', `${campo} debe ser un número entero de 0 en adelante`);
 		}
+		if (campo === 'descuento' && v !== null && v > 100) throw new WgeError(400, 'VALOR_INVALIDO', 'El descuento debe ser de 0 a 100 %');
 		if (v !== null && DECIMALES.includes(campo)) {
 			v = Number(v);
 			if (!Number.isFinite(v)) throw new WgeError(400, 'VALOR_INVALIDO', `${campo} debe ser un número`);
@@ -2894,8 +2896,11 @@ async function exigirResponsableCaja(db, { edicionId, usuarioId, rol }) {
 	if (e.responsable_caja !== usuarioId) throw new WgeError(403, 'OTRO_RESPONSABLE', `La caja la maneja ${`${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()}`);
 }
 
-/** Precio en billetes de un producto con la tasa de un país (siempre hacia arriba). */
-const precioEnBilletesCaja = (precioCop, tasa) => Math.ceil(Number(precioCop) / Math.max(Number(tasa), 1));
+/** Precio en la moneda del país con la tasa vigente y el descuento del producto (0 a 100 %), siempre hacia arriba. */
+const precioEnBilletesCaja = (precioCop, tasa, descuento = 0) => {
+	const d = Math.min(Math.max(Number(descuento) || 0, 0), 100);
+	return Math.ceil((Number(precioCop) * (100 - d)) / 100 / Math.max(Number(tasa), 1));
+};
 
 function rutasCaja(router, { ruta, db }) {
 	const permitir = async (req, rol, edicionId) => {
@@ -2918,7 +2923,7 @@ function rutasCaja(router, { ruta, db }) {
 			p.inventario = await inventarioCaja(db, edicion.id, p.id);
 		}
 		const productos = await db('wge_productos').where({ edicion_id: edicion.id, activo: true }).orderBy('nombre')
-			.select('id', 'nombre', 'foto', 'precio_cop', 'stock', 'maximo_por_estudiante');
+			.select('id', 'nombre', 'foto', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante');
 		// Unidades vendidas de cada producto (ventas pagadas)
 		const vendidos = await db('wge_venta_items as i').join('wge_ventas as v', 'v.id', 'i.venta_id')
 			.where({ 'v.edicion_id': edicion.id, 'v.estado': 'pagada' }).groupBy('i.producto_id').select('i.producto_id').sum({ n: 'i.cantidad' });
@@ -3614,7 +3619,7 @@ async function enviarFactura({ db, services, getSchema, logger, env }, venta, id
 			const pdf = pdfFactura({
 				recibo: venta.numero_recibo, fecha, estudiante, acudiente, colegio: datos.colegio, edicion: datos.edicion,
 				pais: datos.pais, moneda: datos.moneda, metodo: venta.metodo_pago, cajero: cajero ? `${cajero.first_name ?? ''} ${cajero.last_name ?? ''}`.trim() : '',
-				items: venta.items.map((i) => ({ nombre: i.nombre, cantidad: i.cantidad, precio: i.precio_billetes })),
+				items: venta.items.map((i) => ({ nombre: i.descuento ? `${i.nombre} (-${i.descuento}%)` : i.nombre, cantidad: i.cantidad, precio: i.precio_billetes })),
 				total: venta.total_billetes, recibido: venta.recibido, vuelto: venta.vuelto,
 			}, idioma);
 			await correo.send({
@@ -3822,7 +3827,7 @@ const configEndpoint = {
 							.sum({ total: 'i.cantidad' }).first();
 						if (Number(ya?.total ?? 0) + cantidad > p.maximo_por_estudiante) throw new WgeError(409, 'MAXIMO_POR_ESTUDIANTE', `Máximo ${p.maximo_por_estudiante} de ${p.nombre} por estudiante`);
 					}
-					const precio = precioEnBilletesCaja(p.precio_cop, tasa);
+					const precio = precioEnBilletesCaja(p.precio_cop, tasa, p.descuento);
 					total += precio * cantidad;
 					lineas.push({ p, cantidad, precio });
 				}
@@ -3866,7 +3871,7 @@ const configEndpoint = {
 				return {
 					...venta, saldo: billetera.saldo, billetes_recibidos: recibidos.limpio, billetes_vuelto: vuelto.limpio,
 					recibido: conTarjeta ? total : recibidos.total, vuelto: conTarjeta ? 0 : vuelto.total,
-					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio })),
+					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio, descuento: Number(p.descuento) || 0 })),
 				};
 			}));
 		}));

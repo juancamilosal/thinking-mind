@@ -234,7 +234,7 @@ export async function enviarFactura({ db, services, getSchema, logger, env }, ve
 			const pdf = pdfFactura({
 				recibo: venta.numero_recibo, fecha, estudiante, acudiente, colegio: datos.colegio, edicion: datos.edicion,
 				pais: datos.pais, moneda: datos.moneda, metodo: venta.metodo_pago, cajero: cajero ? `${cajero.first_name ?? ''} ${cajero.last_name ?? ''}`.trim() : '',
-				items: venta.items.map((i) => ({ nombre: i.nombre, cantidad: i.cantidad, precio: i.precio_billetes })),
+				items: venta.items.map((i) => ({ nombre: i.descuento ? `${i.nombre} (-${i.descuento}%)` : i.nombre, cantidad: i.cantidad, precio: i.precio_billetes })),
 				total: venta.total_billetes, recibido: venta.recibido, vuelto: venta.vuelto,
 			}, idioma);
 			await correo.send({

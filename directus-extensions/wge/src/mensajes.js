@@ -94,6 +94,7 @@ const TRADUCCIONES = [
 	['Esta edición ya tiene movimientos de dinero y no se puede eliminar, para no perder el historial', 'This edition already has money movements and cannot be deleted, so the history is kept', "Cette édition a déjà des mouvements d'argent et ne peut pas être supprimée, afin de garder l'historique"],
 	['Los países se agregan antes de abrir la edición', 'Countries are added before opening the edition', "Les pays s'ajoutent avant d'ouvrir l'édition"],
 	['Falta el precio', 'The price is missing', 'Le prix est manquant'],
+	['El descuento debe ser de 0 a 100 %', 'The discount must be from 0 to 100%', 'La remise doit être comprise entre 0 et 100 %'],
 	['No existe', 'Does not exist', "N'existe pas"],
 	['La provisión del banco se define antes de abrir la edición', "The bank's supply is set before opening the edition", "La dotation de la banque se définit avant d'ouvrir l'édition"],
 	['El responsable del banco debe ser un colaborador con rol Banco', 'The bank manager must be a staff member with the Bank role', 'Le responsable de la banque doit être un collaborateur avec le rôle Banque'],

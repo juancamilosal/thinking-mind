@@ -97,6 +97,8 @@ export interface Pais {
 
 export interface Producto {
   id: string; nombre: string; foto: string | null; precio_cop: number; stock: number;
+  /** Descuento en % (0 a 100) sobre el precio. */
+  descuento?: number | null;
   maximo_por_estudiante: number | null; activo: boolean;
 }
 
@@ -228,7 +230,7 @@ export interface DatosTipoCambio {
 }
 
 export interface PaisCaja { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; saldo_caja: number; inventario: Record<string, number>; }
-export interface ProductoCaja { id: string; nombre: string; foto: string | null; precio_cop: number; stock: number; maximo_por_estudiante: number | null; vendidos?: number; }
+export interface ProductoCaja { id: string; nombre: string; foto: string | null; precio_cop: number; descuento?: number | null; stock: number; maximo_por_estudiante: number | null; vendidos?: number; }
 /** saldo = efectivo (billetes en el bolsillo); cuenta = cuenta de la tarjeta débito. */
 export interface EstudianteCaja { id: string; pais_id: string; llave?: string | null; nombre: string; apellido: string; saldo: number; cuenta?: number; }
 export interface VentaCaja {

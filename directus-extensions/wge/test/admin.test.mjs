@@ -64,3 +64,14 @@ test('las transacciones de los colaboradores unen sus dos patas y separan efecti
 	const carga = ops.find((o) => !o.origen);
 	assert.deepEqual([carga.medio, carga.monto, carga.tipo], ['virtual', 300, 'carga_virtual']);
 });
+
+import { precioEnBilletesCaja } from '../src/caja.js';
+test('el descuento del producto baja su precio y debe ser de 0 a 100 %', () => {
+	assert.equal(precioEnBilletesCaja(10000, 1000), 10);
+	assert.equal(precioEnBilletesCaja(10000, 1000, 20), 8);
+	assert.equal(precioEnBilletesCaja(10000, 1000, 15), 9); // 8,5 → hacia arriba
+	assert.equal(precioEnBilletesCaja(10000, 1000, 100), 0);
+	assert.deepEqual(limpiar({ descuento: '25' }, SECCIONES.productos.campos), { descuento: 25 });
+	assert.throws(() => limpiar({ descuento: 101 }, SECCIONES.productos.campos));
+	assert.throws(() => limpiar({ descuento: -5 }, SECCIONES.productos.campos));
+});
