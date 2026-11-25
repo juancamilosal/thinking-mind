@@ -1512,7 +1512,10 @@
         "asignadosN": "{{n}} estudiantes asignados.",
         "paisAsignado": "País asignado.",
         "bienvenidaUno": "Recibió {{billetes}} de bienvenida.",
-        "bienvenidaVarios": "{{n}} recibieron {{billetes}} de bienvenida."
+        "bienvenidaVarios": "{{n}} recibieron {{billetes}} de bienvenida.",
+        "filtrarGrado": "Filtrar por grado",
+        "todosGrados": "Todos los grados",
+        "sinGrado": "Sin grado"
       },
       "equipo": {
         "intro": "Solo los colaboradores de esta lista pueden operar en la edición: entregar dinero, cobrar en la tienda o repartir desde el banco.",

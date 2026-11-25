@@ -37,8 +37,17 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
       }
     </div>
 
-    <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.pestanas.participantes.buscar' | translate" [attr.aria-label]="'wg.pestanas.participantes.buscarAria' | translate"
-           class="mt-3 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+    <!-- Buscador y filtro por grado (agrupa por nivel: Kinder, Transición, 1°, 2°…) -->
+    <div class="mt-3 flex flex-col sm:flex-row gap-2">
+      <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.pestanas.participantes.buscar' | translate" [attr.aria-label]="'wg.pestanas.participantes.buscarAria' | translate"
+             class="flex-1 min-w-0 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+      <select [(ngModel)]="filtroGrado" (ngModelChange)="seleccion.clear()" [attr.aria-label]="'wg.pestanas.participantes.filtrarGrado' | translate"
+              class="sm:w-56 px-4 py-3 bg-white border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+              [class]="filtroGrado ? 'border-orange-300 text-gray-900 font-semibold' : 'border-gray-200 text-gray-600'">
+        <option value="">{{ 'wg.pestanas.participantes.todosGrados' | translate }}</option>
+        @for (g of grados; track g.nivel) { <option [value]="g.nivel">{{ nombreNivel(g.nivel) }} · {{ g.n }}</option> }
+      </select>
+    </div>
 
     <!-- Barra de selección -->
     @if (seleccion.size) {
@@ -71,15 +80,15 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
           <p class="text-sm text-gray-500 mt-1">{{ edicion.colegio_nombre ? ('wg.pestanas.participantes.sinInscritosAyudaColegio' | translate: { colegio: edicion.colegio_nombre }) : ('wg.pestanas.participantes.sinInscritosAyuda' | translate) }}</p>
         </div>
       } @else {
-        <div class="hidden md:grid grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] gap-3 px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
+        <div class="hidden xl:grid grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] gap-3 px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-100">
           <label class="flex items-center"><input type="checkbox" [checked]="todosSeleccionados" (change)="seleccionarTodos($any($event.target).checked)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarTodos' | translate"></label>
           <span>{{ 'wg.pestanas.participantes.estudiante' | translate }}</span><span [title]="'wg.pestanas.participantes.codigoAyuda' | translate">{{ 'wg.pestanas.participantes.codigo' | translate }} ⓘ</span><span>{{ 'wg.pestanas.comun.pais' | translate }}</span><span class="text-right">{{ 'wg.pestanas.participantes.saldo' | translate }}</span><span class="text-center">{{ 'wg.pestanas.participantes.presente' | translate }}</span><span></span>
         </div>
         <ul class="divide-y divide-gray-100">
           @for (p of filtrados; track p.id) {
-            <li class="px-4 py-4 md:py-3 md:grid md:grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] md:gap-x-3 md:items-center" [class.bg-gray-50]="p.retirado">
+            <li class="px-4 py-4 xl:py-3 xl:grid xl:grid-cols-[2.5rem_1fr_7rem_12rem_6rem_5rem_6rem] xl:gap-x-3 xl:items-center" [class.bg-gray-50]="p.retirado">
               <!-- Celular: nombre y código arriba, país a lo ancho, y abajo saldo, presente y retirar -->
-              <div class="md:hidden space-y-3">
+              <div class="xl:hidden space-y-3">
                 <div class="flex items-start gap-3">
                   <input type="checkbox" class="mt-1 w-4 h-4 shrink-0" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarA' | translate: { nombre: p.nombre }">
                   <div class="min-w-0 flex-1">
@@ -115,7 +124,7 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
                 </div>
               </div>
               <!-- Computador: una fila de tabla -->
-              <div class="hidden md:contents">
+              <div class="hidden xl:contents">
               <label class="flex items-center"><input type="checkbox" [checked]="seleccion.has(p.id)" (change)="alternar(p.id)" [attr.aria-label]="'wg.pestanas.participantes.seleccionarA' | translate: { nombre: p.nombre }"></label>
               <div class="min-w-0">
                 <p class="font-semibold truncate" [class]="p.retirado ? 'text-gray-500 line-through' : 'text-gray-800'">{{ p.nombre }} {{ p.apellido }}</p>
@@ -131,18 +140,18 @@ import { Edicion, Pais, Participante, WillGoService } from '../../../../../core/
                   <p class="text-xs text-gray-500 truncate">{{ edicion.colegio_id ? '' : (p.colegio || ('wg.pestanas.participantes.sinColegio' | translate)) }}{{ !edicion.colegio_id && p.grado ? ' · ' : '' }}{{ p.grado ? ('wg.pestanas.participantes.grado' | translate: { n: p.grado }) : '' }}</p>
                 }
               </div>
-              <span class="col-start-2 md:col-start-auto font-mono text-sm text-gray-700">{{ p.codigo }}</span>
-              <select class="col-start-2 md:col-start-auto px-3 py-2 rounded-lg border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+              <span class="col-start-2 xl:col-start-auto font-mono text-sm text-gray-700">{{ p.codigo }}</span>
+              <select class="col-start-2 xl:col-start-auto px-3 py-2 rounded-lg border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
                       [style.border-color]="colorDe(p.pais_id) || '#fcd34d'" [disabled]="!!p.retirado" [ngModel]="p.pais_id" (ngModelChange)="asignar([p.id], $event)" [attr.aria-label]="'wg.pestanas.participantes.paisDe' | translate: { nombre: p.nombre }">
                 <option [ngValue]="null">{{ 'wg.pestanas.participantes.sinPais' | translate }}</option>
                 @for (pa of paises; track pa.id) { <option [ngValue]="pa.id">{{ pa.nombre }}</option> }
               </select>
-              <span class="col-start-2 md:col-start-auto md:text-right text-sm font-semibold text-gray-800">{{ miles(p.saldo) }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
-              <label class="col-start-2 md:col-start-auto flex md:justify-center items-center gap-2 text-sm text-gray-600">
+              <span class="col-start-2 xl:col-start-auto xl:text-right text-sm font-semibold text-gray-800">{{ miles(p.saldo) }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
+              <label class="col-start-2 xl:col-start-auto flex xl:justify-center items-center gap-2 text-sm text-gray-600">
                 <input type="checkbox" [checked]="p.presente" [disabled]="!!p.retirado" (change)="marcarPresente(p, $any($event.target).checked)">
-                <span class="md:hidden">{{ 'wg.pestanas.participantes.presente' | translate }}</span>
+                <span class="xl:hidden">{{ 'wg.pestanas.participantes.presente' | translate }}</span>
               </label>
-              <div class="col-start-2 md:col-start-auto md:text-right">
+              <div class="col-start-2 xl:col-start-auto xl:text-right">
                 @if (p.retirado) {
                   <button type="button" (click)="reintegrar([p])" class="text-sm font-semibold text-emerald-700 hover:underline">{{ 'wg.pestanas.participantes.reintegrar' | translate }}</button>
                 } @else {
@@ -258,7 +267,28 @@ export class TabParticipantes implements OnInit {
     const base = this.filtro === 'retirados' ? this.retirados : this.filtro === 'reembolso' ? this.conReembolso : this.activos;
     return base.filter((p) =>
       (['', 'retirados', 'reembolso'].includes(this.filtro) || (this.filtro === 'sin' ? !p.pais_id : p.pais_id === this.filtro)) &&
-      (!q || `${p.nombre} ${p.apellido} ${p.codigo}`.toLowerCase().includes(q)));
+      (!q || `${p.nombre} ${p.apellido} ${p.codigo}`.toLowerCase().includes(q)) &&
+      (!this.filtroGrado || this.nivelDe(p.grado) === this.filtroGrado));
+  }
+
+  /** Filtro por grado: se agrupa por el nivel (la primera palabra del grado: «2 03» → 2, «TRANSICIÓN 01» → TRANSICIÓN). */
+  filtroGrado = '';
+  nivelDe(grado: string | null | undefined): string {
+    return (grado ?? '').trim().split(/\s+/)[0]?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase() || '—';
+  }
+  /** Niveles presentes en la lista (en orden: preescolar primero y luego 1°, 2°…), con cuántos estudiantes tiene cada uno. */
+  get grados(): { nivel: string; n: number }[] {
+    const base = this.filtro === 'retirados' ? this.retirados : this.filtro === 'reembolso' ? this.conReembolso : this.activos;
+    const cuenta = new Map<string, number>();
+    for (const p of base) { const n = this.nivelDe(p.grado); cuenta.set(n, (cuenta.get(n) ?? 0) + 1); }
+    const orden = (n: string) => { const num = Number(n); return Number.isFinite(num) ? 100 + num : ({ PREJARDIN: 1, JARDIN: 2, KINDER: 3, TRANSICION: 4 } as Record<string, number>)[n] ?? (n === '—' ? 999 : 50); };
+    return [...cuenta.entries()].map(([nivel, n]) => ({ nivel, n })).sort((a, b) => orden(a.nivel) - orden(b.nivel) || a.nivel.localeCompare(b.nivel));
+  }
+  nombreNivel(nivel: string): string {
+    if (nivel === '—') return this.t.instant('wg.pestanas.participantes.sinGrado');
+    if (Number.isFinite(Number(nivel))) return `${nivel}°`;
+    const conTilde: Record<string, string> = { TRANSICION: 'Transición', JARDIN: 'Jardín', PREJARDIN: 'Prejardín' };
+    return conTilde[nivel] ?? nivel.charAt(0) + nivel.slice(1).toLowerCase();
   }
 
   get todosSeleccionados(): boolean {

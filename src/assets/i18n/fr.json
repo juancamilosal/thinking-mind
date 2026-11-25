@@ -1512,7 +1512,10 @@
         "asignadosN": "{{n}} élèves attribués.",
         "paisAsignado": "Pays attribué.",
         "bienvenidaUno": "A reçu {{billetes}} de bienvenue.",
-        "bienvenidaVarios": "{{n}} ont reçu {{billetes}} de bienvenue."
+        "bienvenidaVarios": "{{n}} ont reçu {{billetes}} de bienvenue.",
+        "filtrarGrado": "Filtrer par niveau",
+        "todosGrados": "Tous les niveaux",
+        "sinGrado": "Sans niveau"
       },
       "equipo": {
         "intro": "Seuls les collaborateurs de cette liste peuvent opérer dans l'édition : remettre de l'argent, encaisser au magasin ou distribuer depuis la banque.",
