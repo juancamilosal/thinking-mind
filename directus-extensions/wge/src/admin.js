@@ -200,6 +200,8 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			// Cada programa habilitado en un colegio con su número de edición (lo que se elige al crear la edición)
 			db('colegios_cursos as cc').join('Cursos as k', 'k.id', 'cc.curso_id').leftJoin('colegios as c', 'c.id', 'cc.colegio_id')
 				.whereNotNull('cc.edicion')
+				// Las variantes de hermanos («(Segundo hermano)»…) no se eligen: entran solas con su programa principal
+				.whereRaw("k.nombre not ilike '%(%hermano%)'")
 				.select('cc.id', 'cc.colegio_id', 'c.nombre as colegio', 'cc.curso_id', 'k.nombre as programa', 'cc.edicion', 'cc.fecha_finalizacion',
 					db.raw(`(select we.nombre from wge_ediciones we where we.colegio_id is not distinct from cc.colegio_id
 						and we.curso_id = cc.curso_id and we.edicion_programa = cc.edicion::text limit 1) as edicion_will_go`))

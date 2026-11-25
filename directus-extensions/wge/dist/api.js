@@ -174,11 +174,24 @@ const CLAVE_REPETIDA = '23505'; // unique_violation de PostgreSQL
  * Trae a la edición a los estudiantes inscritos en su programa (y colegio, si la edición tiene uno).
  * No cuenta las cuentas devueltas ni trasladadas. Nunca duplica: se puede llamar cuantas veces se quiera.
  */
+/**
+ * Programas que cuentan para una edición: el elegido y sus variantes de hermanos, que en el sistema son
+ * programas aparte con el mismo nombre y «(Segundo hermano)», «(Tercer hermano)»… al final.
+ * Devuelve SQL para «curso_id in (…)» con sus valores.
+ */
+function sqlCursosDelPrograma(columna, cursoId) {
+	return {
+		sql: `${columna} in (select k.id from "Cursos" k where k.id = ? or k.nombre ilike (select b.nombre || ' (%hermano%)' from "Cursos" b where b.id = ?))`,
+		valores: [cursoId, cursoId],
+	};
+}
+
 async function traerInscritos(db, edicion, actor) {
 	if (!edicion?.curso_id || edicion.estado === 'cerrada') return { inscritos: 0, nuevos: 0, quitados: 0 };
 	const consulta = db('cuentas_cobrar as c').join('estudiantes as e', 'e.id', 'c.estudiante_id')
 		.leftJoin('wge_participantes as p', function () { this.on('p.estudiante_id', 'e.id').andOnVal('p.edicion_id', edicion.id); })
-		.where('c.curso_id', edicion.curso_id).whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
+		.whereRaw(sqlCursosDelPrograma('c.curso_id', edicion.curso_id).sql, sqlCursosDelPrograma('c.curso_id', edicion.curso_id).valores)
+		.whereNotIn('c.estado', ['DEVOLUCION', 'FONDOS TRASLADADOS'])
 		.distinct('e.id as estudiante_id', db.raw('p.id is not null as ya_esta'));
 	if (edicion.colegio_id) consulta.where('e.colegio_id', edicion.colegio_id);
 	// Solo los inscritos en ESA edición del programa (la siguiente vez que el colegio repita el programa es otra edición)
@@ -210,8 +223,9 @@ async function traerInscritos(db, edicion, actor) {
  * es del colegio de la edición y tiene una inscripción de ese programa y de esa edición (aunque esté devuelta).
  */
 function sqlCorresponde(edicion) {
-	const condiciones = ['cc.estudiante_id = e.id', 'cc.curso_id = ?'];
-	const valores = [edicion.curso_id];
+	const programa = sqlCursosDelPrograma('cc.curso_id', edicion.curso_id);
+	const condiciones = ['cc.estudiante_id = e.id', programa.sql];
+	const valores = [...programa.valores];
 	if (edicion.edicion_programa) { condiciones.push('cc.edicion_programa = ?'); valores.push(String(edicion.edicion_programa)); }
 	let sql = `exists (select 1 from cuentas_cobrar cc where ${condiciones.join(' and ')})`;
 	if (edicion.colegio_id) { sql = `(e.colegio_id = ? and ${sql})`; valores.unshift(edicion.colegio_id); }
@@ -1042,6 +1056,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			// Cada programa habilitado en un colegio con su número de edición (lo que se elige al crear la edición)
 			db('colegios_cursos as cc').join('Cursos as k', 'k.id', 'cc.curso_id').leftJoin('colegios as c', 'c.id', 'cc.colegio_id')
 				.whereNotNull('cc.edicion')
+				// Las variantes de hermanos («(Segundo hermano)»…) no se eligen: entran solas con su programa principal
+				.whereRaw("k.nombre not ilike '%(%hermano%)'")
 				.select('cc.id', 'cc.colegio_id', 'c.nombre as colegio', 'cc.curso_id', 'k.nombre as programa', 'cc.edicion', 'cc.fecha_finalizacion',
 					db.raw(`(select we.nombre from wge_ediciones we where we.colegio_id is not distinct from cc.colegio_id
 						and we.curso_id = cc.curso_id and we.edicion_programa = cc.edicion::text limit 1) as edicion_will_go`))

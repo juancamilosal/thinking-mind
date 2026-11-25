@@ -39,3 +39,11 @@ test('tipo de cambio: cada cuántos minutos se calcula (configurable por edició
 	assert.throws(() => limpiar({ parametros_fx: { intervalo_minutos: 7 } }, ['parametros_fx']), /minutos/);
 	assert.throws(() => limpiar({ parametros_fx: { intervalo_minutos: 45 } }, ['parametros_fx']), /minutos/);
 });
+
+test('sqlCursosDelPrograma: el programa elegido y sus variantes de hermanos', async () => {
+	const { sqlCursosDelPrograma } = await import('../src/lib.js');
+	const { sql, valores } = sqlCursosDelPrograma('cc.curso_id', 'K1');
+	assert.match(sql, /^cc\.curso_id in \(select k\.id from "Cursos" k where k\.id = \? or k\.nombre ilike/);
+	assert.match(sql, /\(%hermano%\)/);
+	assert.deepEqual(valores, ['K1', 'K1']);
+});
