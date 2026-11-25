@@ -18,13 +18,16 @@ import { AppInstalableService } from '../../core/services/app-instalable.service
           <span class="font-medium">{{ 'wg.nucleo.instalar.menu' | translate }}</span>
         </button>
       } @else {
-        <div class="flex items-center gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-3 text-left">
+        <!-- Ícono y texto arriba; el botón debajo a todo lo ancho (cabe bien aunque la tarjeta sea angosta) -->
+        <div class="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-left">
+          <div class="flex items-center gap-3">
           <img src="/will-go/icon-192.png" alt="" class="w-11 h-11 rounded-xl shrink-0">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-gray-800">{{ 'wg.nucleo.instalar.instalaEn' | translate: { nombre: familias ? ('wg.nucleo.instalar.familias' | translate) : 'Will-Go' } }}</p>
-            <p class="text-xs text-gray-600">{{ 'wg.nucleo.instalar.abrelaDesde' | translate }}</p>
+            <p class="text-sm font-bold text-gray-800 leading-snug">{{ 'wg.nucleo.instalar.instalaEn' | translate: { nombre: familias ? ('wg.nucleo.instalar.familias' | translate) : 'Will-Go' } }}</p>
+            <p class="text-xs text-gray-600 leading-snug mt-0.5">{{ 'wg.nucleo.instalar.abrelaDesde' | translate }}</p>
           </div>
-          <button type="button" (click)="tocar()" class="shrink-0 px-3 py-2 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600">{{ 'wg.nucleo.instalar.instalar' | translate }}</button>
+          </div>
+          <button type="button" (click)="tocar()" class="mt-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600">{{ 'wg.nucleo.instalar.instalar' | translate }}</button>
         </div>
       }
     }
