@@ -47,3 +47,20 @@ test('sqlCursosDelPrograma: el programa elegido y sus variantes de hermanos', as
 	assert.match(sql, /\(%hermano%\)/);
 	assert.deepEqual(valores, ['K1', 'K1']);
 });
+
+import { agruparOperaciones } from '../src/admin.js';
+test('las transacciones de los colaboradores unen sus dos patas y separan efectivo de virtual', () => {
+	const f = (id, tipo_dueno, monto, ref, extra = {}) => ({ id, tipo: 'transferencia_salida', monto, referencia_tipo: ref && 'transferencia', referencia_id: ref, date_created: `2026-11-25T10:0${id.length}:00Z`, user_created: 'u1', tipo_dueno, pais_id: 'p', actor: 'Ana', docente: 'Doc', estudiante: 'Sara', ...extra });
+	const ops = agruparOperaciones([
+		f('a', 'banco', -100, 't1'), f('b', 'docente', 100, 't1'),
+		f('cc', 'banco_virtual', -50, 't2'), f('dd', 'cuenta', 50, 't2'),
+		f('eee', 'banco_virtual', 300, null, { tipo: 'carga_virtual' }),
+	]);
+	assert.equal(ops.length, 3);
+	const efectivo = ops.find((o) => o.origen?.tipo === 'banco');
+	assert.deepEqual([efectivo.medio, efectivo.monto, efectivo.destino.nombre], ['efectivo', 100, 'Doc']);
+	const virtual = ops.find((o) => o.origen?.tipo === 'banco_virtual');
+	assert.deepEqual([virtual.medio, virtual.destino.tipo, virtual.destino.nombre], ['virtual', 'cuenta', 'Sara']);
+	const carga = ops.find((o) => !o.origen);
+	assert.deepEqual([carga.medio, carga.monto, carga.tipo], ['virtual', 300, 'carga_virtual']);
+});

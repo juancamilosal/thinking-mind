@@ -9,6 +9,7 @@ import { rutasAdmin } from './admin.js';
 import { rutasArqueo, totalDelConteo, montoOConteo, inventarioBanco, inventarioDocente } from './arqueo.js';
 import { rutasWfunds, cerrarYSeguir } from './wfunds.js';
 import { rutasAcudientes } from './acudientes.js';
+import { enviarFactura } from './factura.js';
 import { rutasRubrica } from './rubrica.js';
 import { rutasTipoCambio } from './tipocambio.js';
 import { rutasCierre } from './cierre.js';
@@ -33,6 +34,12 @@ export default {
 				logger.error(error, 'wge');
 				res.status(500).json({ errors: [{ message: traducirMensaje('Error interno en Will Go Economy', idioma), extensions: { code: 'ERROR_INTERNO' } }] });
 			}
+		};
+
+		// Al acudiente le llega la factura en PDF por correo (sin esperar: la venta no se demora ni falla por el correo)
+		const conFactura = (req, venta) => {
+			if (!venta?.repetida && Array.isArray(venta?.items)) enviarFactura({ db, services, getSchema, logger, env }, venta, idiomaDe(req));
+			return venta;
 		};
 
 		// Si la misma petición llega dos veces (doble toque, reintento), devuelve el resultado ya guardado.
@@ -171,7 +178,7 @@ export default {
 			}
 			const actor = req.accountability.user;
 
-			return unaSolaVez('wge_ventas', clave, async (trx) => {
+			return conFactura(req, await unaSolaVez('wge_ventas', clave, async (trx) => {
 				const participante = await participanteConPais(trx, exigirTexto(req.body.participante_id, 'participante_id'));
 				if (conTarjeta) {
 					// La tarjeta escaneada (o la llave escrita) debe ser la del estudiante que compra
@@ -246,7 +253,7 @@ export default {
 					recibido: conTarjeta ? total : recibidos.total, vuelto: conTarjeta ? 0 : vuelto.total,
 					items: lineas.map(({ p, cantidad, precio }) => ({ producto_id: p.id, nombre: p.nombre, cantidad, precio_billetes: precio })),
 				};
-			});
+			}));
 		}));
 
 		/**
