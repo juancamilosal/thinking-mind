@@ -108,7 +108,7 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
               <label for="p-nombre" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.comun.nombre' | translate }}</label>
               <input id="p-nombre" [(ngModel)]="borrador.nombre" class="campo" [placeholder]="'wg.pestanas.tienda.ejemploNombre' | translate">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
               <div>
                 <label for="p-precio" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.precio' | translate }}</label>
                 <input id="p-precio" wgNumero [(ngModel)]="borrador.precio_cop" class="campo">
@@ -118,7 +118,7 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
                 <input id="p-stock" wgNumero [(ngModel)]="borrador.stock" class="campo">
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
               <div>
                 <label for="p-descuento" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.descuento' | translate }}</label>
                 <div class="relative">
