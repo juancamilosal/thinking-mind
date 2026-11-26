@@ -1567,7 +1567,17 @@
         "enviandoAviso": "Envoi…",
         "notaCorreo": "Quand vous ajoutez quelqu'un, ou le nommez responsable d'une banque ou de la caisse, il reçoit un e-mail avec l'édition, son rôle, les dates et l'horaire.",
         "lesLlegaCorreo": "Ils recevront un e-mail avec les informations de l'édition.",
-        "avisoEnviado": "E-mail envoyé à {{n}} collaborateurs sur {{total}}."
+        "avisoEnviado": "E-mail envoyé à {{n}} collaborateurs sur {{total}}.",
+        "buscarEnEquipo": "Rechercher par nom ou e-mail…",
+        "colColaborador": "Collaborateur",
+        "colRoles": "Rôles",
+        "colPais": "Pays (enseignants)",
+        "colAcciones": "Actions",
+        "editarRoles": "+ Rôles",
+        "editarRolesDe": "Modifier les rôles de {{nombre}}",
+        "rolesDe": "Rôles du collaborateur",
+        "rolesAyuda": "Il peut avoir plusieurs rôles. Le changement s'applique à toute la plateforme, pas seulement à cette édition.",
+        "rolesGuardados": "C'est fait : les rôles de {{nombre}} ont été mis à jour."
       },
       "resumen": {
         "cargando": "Chargement du résumé…",

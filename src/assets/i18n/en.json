@@ -1567,7 +1567,17 @@
         "enviandoAviso": "Sending…",
         "notaCorreo": "When you add someone, or make them head of a bank or of the checkout, they get an email with the edition, their role, the dates and the schedule.",
         "lesLlegaCorreo": "They'll get an email with the edition details.",
-        "avisoEnviado": "Email sent to {{n}} of {{total}} staff members."
+        "avisoEnviado": "Email sent to {{n}} of {{total}} staff members.",
+        "buscarEnEquipo": "Search by name or email…",
+        "colColaborador": "Team member",
+        "colRoles": "Roles",
+        "colPais": "Country (teachers)",
+        "colAcciones": "Actions",
+        "editarRoles": "+ Roles",
+        "editarRolesDe": "Change {{nombre}}'s roles",
+        "rolesDe": "Team member roles",
+        "rolesAyuda": "They can have several roles. The change applies across the platform, not only in this edition.",
+        "rolesGuardados": "Done: {{nombre}}'s roles were updated."
       },
       "resumen": {
         "cargando": "Loading summary…",

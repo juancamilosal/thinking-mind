@@ -1567,7 +1567,17 @@
         "enviandoAviso": "Enviando…",
         "notaCorreo": "Al agregar a alguien, o al nombrarlo responsable del banco o encargado de la caja, le llega un correo con la edición, su rol, las fechas y el horario.",
         "lesLlegaCorreo": "Les llegará un correo con los datos de la edición.",
-        "avisoEnviado": "Aviso enviado a {{n}} de {{total}} colaboradores."
+        "avisoEnviado": "Aviso enviado a {{n}} de {{total}} colaboradores.",
+        "buscarEnEquipo": "Buscar por nombre o correo…",
+        "colColaborador": "Colaborador",
+        "colRoles": "Roles",
+        "colPais": "País (docentes)",
+        "colAcciones": "Acciones",
+        "editarRoles": "+ Roles",
+        "editarRolesDe": "Cambiar los roles de {{nombre}}",
+        "rolesDe": "Roles del colaborador",
+        "rolesAyuda": "Puede tener varios roles. El cambio aplica en toda la plataforma, no solo en esta edición.",
+        "rolesGuardados": "Listo: se actualizaron los roles de {{nombre}}."
       },
       "resumen": {
         "cargando": "Cargando resumen…",
