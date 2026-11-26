@@ -39,9 +39,7 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
       } @else if (!ediciones.length) {
         <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.operacion.comun.sinEquipo' | translate }}</div>
       } @else if (datos) {
-        @if (!datos.puede_vender) {
-          <p class="mt-4 rounded-xl px-4 py-3 text-sm bg-amber-50 border border-amber-200 text-amber-800">{{ 'wg.operacion.caja.soloCajeros' | translate }}</p>
-        } @else if (datos.edicion.estado !== 'abierta') {
+        @if (datos.puede_vender && datos.edicion.estado !== 'abierta') {
           <p class="mt-4 rounded-xl px-4 py-3 text-sm bg-gray-100 text-gray-600">{{ 'wg.operacion.caja.podrasVender' | translate }}</p>
         }
         @if (aviso) { <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800" role="status">{{ aviso }}</p> }
