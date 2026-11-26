@@ -29,7 +29,7 @@ export class IngresoAcudiente implements OnInit {
   logoFallo = false;
 
   /** Fotos de Will-Go que se turnan en el panel de marca. */
-  readonly fotosFondo = ['assets/images/will-go/login-1.webp', 'assets/images/will-go/login-2.webp', 'assets/images/will-go/login-3.webp', 'assets/images/will-go/login-4.webp'];
+  readonly fotosFondo = Array.from({ length: 8 }, (_, i) => `assets/images/will-go/login-${i + 1}.webp`);
 
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
