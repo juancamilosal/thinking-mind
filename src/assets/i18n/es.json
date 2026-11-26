@@ -1454,7 +1454,8 @@
         "faltanDatos": "Escribe el nombre y el precio.",
         "confirmarEliminar": "¿Eliminar «{{nombre}}»? Si ya tiene ventas, solo se ocultará de la caja.",
         "descuento": "Descuento",
-        "descuentoInvalido": "El descuento debe ser un número de 0 a 100."
+        "descuentoInvalido": "El descuento debe ser un número de 0 a 100.",
+        "sinLimiteCorto": "Sin límite"
       },
       "participantes": {
         "intro": "Los inscritos con el programa pagado por completo aparecen aquí solos. Asigna a cada uno su país.",

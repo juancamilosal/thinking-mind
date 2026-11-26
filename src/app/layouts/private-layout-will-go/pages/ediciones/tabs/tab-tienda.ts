@@ -127,8 +127,8 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
                 </div>
               </div>
               <div>
-                <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.tienda.maximo' | translate }} <span class="font-normal text-gray-400">{{ 'wg.pestanas.tienda.sinLimite' | translate }}</span></label>
-                <input id="p-max" wgNumero [(ngModel)]="borrador.maximo_por_estudiante" class="campo">
+                <label for="p-max" class="block text-sm font-semibold text-gray-700 mb-1 truncate">{{ 'wg.pestanas.tienda.maximo' | translate }}</label>
+                <input id="p-max" wgNumero [(ngModel)]="borrador.maximo_por_estudiante" class="campo" [placeholder]="'wg.pestanas.tienda.sinLimiteCorto' | translate">
               </div>
             </div>
             @if (borrador.precio_cop) {
