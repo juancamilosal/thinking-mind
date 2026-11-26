@@ -233,7 +233,8 @@ export default {
 				const ventaId = crypto.randomUUID();
 				const movimientoId = await moverSaldo(trx, billetera, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta a la cuenta virtual del banco
-				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco_virtual' : 'caja' });
+				// En efectivo entra a la caja propia de quien vende; con tarjeta, a la cuenta virtual del banco
+				const recibe = await billeteraBloqueada(trx, conTarjeta ? { edicionId: edicion.id, paisId: pais.id, tipo: 'banco_virtual' } : { edicionId: edicion.id, paisId: pais.id, tipo: 'caja', docenteId: actor });
 				await moverSaldo(trx, recibe, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 

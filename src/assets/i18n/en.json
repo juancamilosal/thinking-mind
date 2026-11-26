@@ -1291,7 +1291,14 @@
         "preciosHoy": "Today's prices in each currency",
         "preciosAyuda": "Price in pesos ÷ the currency rate, rounded up.",
         "pesos": "{{n}} pesos",
-        "enOtras": "In other currencies:"
+        "enOtras": "In other currencies:",
+        "soloCajeros": "Only the cashiers on this edition's team can sell.",
+        "tuCaja": "Money in your till",
+        "totalCajas": "Money in the tills (all cashiers)",
+        "cajasPorCajero": "Each cashier's till",
+        "cajaGeneral": "General till (previous)",
+        "entregar": "Hand over",
+        "cobro": "Charged by: {{nombre}}"
       },
       "productos": {
         "titulo": "Products",
@@ -1459,7 +1466,10 @@
         "confirmarEliminar": "Delete “{{nombre}}”? If it already has sales, it will only be hidden from checkout.",
         "descuento": "Discount",
         "descuentoInvalido": "The discount must be a number from 0 to 100.",
-        "sinLimiteCorto": "No limit"
+        "sinLimiteCorto": "No limit",
+        "cajerosEdicion": "Cashiers in this edition",
+        "cajerosAyuda": "Every cashier on the team can sell at the same time. Each one keeps their own till and movements; the products are shared.",
+        "sinCajerosEquipo": "There are no cashiers on the team yet. Add them in the Team tab."
       },
       "participantes": {
         "intro": "Students who fully paid the program show up here automatically. Assign each one a country.",

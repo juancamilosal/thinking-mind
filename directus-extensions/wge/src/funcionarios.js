@@ -65,21 +65,22 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	 * Ediciones vigentes (no cerradas y sin pasar su fecha final) en las que está cada colaborador,
 	 * con lo que maneja en ella: el banco de algún país o la caja.
 	 */
-	const edicionesActivas = async (ids) => {
+	const edicionesActivas = async (ids, cajeros = new Set()) => {
 		if (!ids.length) return new Map();
 		const hoy = new Date().toISOString().slice(0, 10);
 		const filas = await db('wge_equipo as q').join('wge_ediciones as e', 'e.id', 'q.edicion_id')
 			.whereIn('q.usuario_id', ids).whereNot('e.estado', 'cerrada')
 			.where((w) => w.whereNull('e.fecha_fin').orWhere('e.fecha_fin', '>=', hoy))
-			.select('q.usuario_id', 'e.id', 'e.nombre', 'e.estado', 'e.responsable_caja')
+			.select('q.usuario_id', 'e.id', 'e.nombre', 'e.estado')
 			.orderBy('e.nombre');
 		const bancos = filas.length ? await db('wge_paises').whereIn('edicion_id', [...new Set(filas.map((f) => f.id))])
 			.whereIn('responsable_banco', ids).select('edicion_id', 'responsable_banco', 'nombre') : [];
 		const mapa = new Map();
 		for (const f of filas) {
+			f.es_cajero = cajeros.has(f.usuario_id); // todo cajero del equipo vende con su propia caja
 			const encargos = [
 				...bancos.filter((b) => b.edicion_id === f.id && b.responsable_banco === f.usuario_id).map((b) => ({ tipo: 'banco', pais: b.nombre })),
-				...(f.responsable_caja === f.usuario_id ? [{ tipo: 'caja' }] : []),
+				...(f.es_cajero ? [{ tipo: 'caja' }] : []),
 			];
 			if (!mapa.has(f.usuario_id)) mapa.set(f.usuario_id, []);
 			mapa.get(f.usuario_id).push({ id: f.id, nombre: f.nombre, estado: f.estado, encargos });
@@ -129,8 +130,10 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	router.get('/funcionarios', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const lista = await consultaFuncionarios().orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
-		const activas = await edicionesActivas(lista.map((u) => u.id));
-		return lista.map((u) => ({ ...comoFuncionario(u), ediciones_activas: activas.get(u.id) ?? [] }));
+		const comoLista = lista.map(comoFuncionario);
+		const cajeros = new Set(comoLista.filter((u) => u.roles.includes('cajero')).map((u) => u.id));
+		const activas = await edicionesActivas(lista.map((u) => u.id), cajeros);
+		return comoLista.map((u) => ({ ...u, ediciones_activas: activas.get(u.id) ?? [] }));
 	}));
 
 	/** POST /wge/funcionarios { nombre, apellido, email, rol, tipo_documento, numero_documento, celular } */

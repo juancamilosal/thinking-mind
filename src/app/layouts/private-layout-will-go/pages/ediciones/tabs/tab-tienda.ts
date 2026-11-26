@@ -3,8 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
 import { DecimalPipe } from '@angular/common';
-import { Edicion, Funcionario, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
-import { BuscadorPersonaComponent } from '../../../buscador-persona.component';
+import { Edicion, MiembroEquipo, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
 import { precioEnBilletes, reducirFoto } from '../estado-edicion';
 
 type Borrador = Partial<Producto> & { fotoVista?: string | null };
@@ -12,29 +11,29 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
 @Component({
   selector: 'app-tab-tienda',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, DecimalPipe, BuscadorPersonaComponent, TranslatePipe],
+  imports: [FormsModule, NumeroMilesDirective, DecimalPipe, TranslatePipe],
   template: `
     <!-- Logo de la tienda -->
     <div class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center justify-center sm:justify-start">
       <img src="assets/images/will-go/gostore-logo.png" alt="GO.STORE · Earn · Shop · Take Home" class="h-14 sm:h-16 w-auto max-w-full">
     </div>
 
-    <!-- Encargado de la caja -->
+    <!-- Cajeros: todos los del equipo venden; cada uno con su caja, los productos son de todos -->
     <section class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
-      <label for="encargado-caja" class="block text-sm font-semibold text-gray-700">{{ 'wg.pestanas.tienda.encargadoCaja' | translate }}</label>
-      <p class="text-xs text-gray-500 mb-2">{{ 'wg.pestanas.tienda.soloEncargado' | translate }}</p>
-      <div class="flex flex-col sm:flex-row gap-2">
-        <div class="flex-1">
-          <wg-buscador-persona inputId="encargado-caja" [(ngModel)]="encargado" [personas]="cajeros"
-                               [placeholder]="'wg.pestanas.tienda.buscarCajero' | translate" [vacio]="'wg.pestanas.tienda.sinCajeros' | translate" />
+      <p class="text-sm font-semibold text-gray-700">{{ 'wg.pestanas.tienda.cajerosEdicion' | translate }}</p>
+      <p class="text-xs text-gray-500 mt-0.5">{{ 'wg.pestanas.tienda.cajerosAyuda' | translate }}</p>
+      @if (cajeros.length) {
+        <div class="mt-3 flex flex-wrap gap-2">
+          @for (c of cajeros; track c.id) {
+            <span class="inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-amber-50 ring-1 ring-amber-200 text-sm font-semibold text-amber-900">
+              <span class="w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">{{ (c.nombre[0] || '') + (c.apellido[0] || '') }}</span>
+              {{ c.nombre }} {{ c.apellido }}
+            </span>
+          }
         </div>
-        <button type="button" (click)="guardarEncargado()" [disabled]="guardandoEncargado || encargado === (edicion.responsable_caja ?? null)"
-                class="shrink-0 px-5 py-3 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">
-          {{ (guardandoEncargado ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}
-        </button>
-      </div>
-      @if (!cajeros.length) { <p class="text-xs text-gray-500 mt-2" [innerHTML]="'wg.pestanas.tienda.crearCajero' | translate"></p> }
-      @if (avisoEncargado) { <p class="text-sm text-emerald-700 mt-2" role="status">{{ avisoEncargado }}</p> }
+      } @else {
+        <p class="mt-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">{{ 'wg.pestanas.tienda.sinCajerosEquipo' | translate }}</p>
+      }
     </section>
 
     <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
@@ -171,10 +170,8 @@ export class TabTienda implements OnInit {
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
 
-  cajeros: Funcionario[] = [];
-  encargado: string | null = null;
-  guardandoEncargado = false;
-  avisoEncargado = '';
+  /** Cajeros del equipo de la edición (todos pueden vender). */
+  cajeros: MiembroEquipo[] = [];
 
   productos: Producto[] = [];
   paises: Pais[] = [];
@@ -185,30 +182,14 @@ export class TabTienda implements OnInit {
   error = '';
 
   ngOnInit(): void {
-    this.encargado = this.edicion.responsable_caja ?? null;
-    this.willGo.funcionarios().subscribe({ next: (l) => (this.cajeros = l.filter((f) => (f.roles ?? [f.rol]).includes('cajero') && f.estado === 'active')) });
+    this.willGo.equipo(this.edicion.id).subscribe({
+      next: (l) => (this.cajeros = l.filter((m) => (m.roles ?? (m.rol ? [m.rol] : [])).includes('cajero') && m.estado === 'active')
+        .sort((a, b) => `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`))),
+    });
     this.willGo.seccion<Pais>(this.edicion.id, 'paises').subscribe({ next: (p) => (this.paises = p) });
     this.willGo.seccion<Producto>(this.edicion.id, 'productos').subscribe({
       next: (l) => { this.productos = l; this.cargando = false; },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
-    });
-  }
-
-  guardarEncargado(): void {
-    this.guardandoEncargado = true;
-    this.error = '';
-    this.willGo.actualizarEdicion(this.edicion.id, { responsable_caja: this.encargado }).subscribe({
-      next: (e) => {
-        this.guardandoEncargado = false;
-        this.edicion = e;
-        this.guardada.emit(e);
-        const c = this.cajeros.find((x) => x.id === e.responsable_caja);
-        this.avisoEncargado = c
-          ? this.t.instant('wg.pestanas.tienda.avisoEncargado', { nombre: `${c.nombre} ${c.apellido}` })
-          : this.t.instant('wg.pestanas.tienda.sinEncargado');
-        setTimeout(() => (this.avisoEncargado = ''), 5000);
-      },
-      error: (err) => { this.guardandoEncargado = false; this.error = WillGoService.mensajeDeError(err); },
     });
   }
 

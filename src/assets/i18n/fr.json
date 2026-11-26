@@ -1291,7 +1291,14 @@
         "preciosHoy": "Prix du jour dans chaque monnaie",
         "preciosAyuda": "Prix en pesos ÷ taux de la monnaie, arrondi au supérieur.",
         "pesos": "{{n}} pesos",
-        "enOtras": "Dans les autres monnaies :"
+        "enOtras": "Dans les autres monnaies :",
+        "soloCajeros": "Seuls les caissiers de l'équipe de cette édition peuvent vendre.",
+        "tuCaja": "Argent dans votre caisse",
+        "totalCajas": "Argent dans les caisses (tous les caissiers)",
+        "cajasPorCajero": "Caisse de chaque caissier",
+        "cajaGeneral": "Caisse générale (ancienne)",
+        "entregar": "Remettre",
+        "cobro": "Encaissé par : {{nombre}}"
       },
       "productos": {
         "titulo": "Produits",
@@ -1459,7 +1466,10 @@
         "confirmarEliminar": "Supprimer « {{nombre}} » ? S'il a déjà des ventes, il sera seulement masqué de la caisse.",
         "descuento": "Remise",
         "descuentoInvalido": "La remise doit être un nombre de 0 à 100.",
-        "sinLimiteCorto": "Sans limite"
+        "sinLimiteCorto": "Sans limite",
+        "cajerosEdicion": "Caissiers de cette édition",
+        "cajerosAyuda": "Tous les caissiers de l'équipe peuvent vendre en même temps. Chacun a sa propre caisse et ses mouvements ; les produits sont partagés.",
+        "sinCajerosEquipo": "Il n'y a pas encore de caissiers dans l'équipe. Ajoutez-les dans l'onglet Collaborateurs."
       },
       "participantes": {
         "intro": "Les élèves ayant entièrement payé le programme apparaissent ici automatiquement. Attribuez un pays à chacun.",

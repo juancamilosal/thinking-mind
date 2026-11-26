@@ -86,7 +86,8 @@ export function exigirTexto(valor, campo) {
 export async function billeteraBloqueada(trx, { edicionId, paisId, tipo, docenteId = null, participanteId = null }) {
 	// 'cuenta' es la cuenta electrónica (tarjeta débito) de un estudiante o de un docente; sus billetes quedan en el banco
 	// 'banco_virtual' es la cuenta virtual del banco: dinero sin billetes, para transferir a las cuentas de los docentes
-	const dueno = tipo === 'banco' || tipo === 'caja' || tipo === 'banco_virtual' ? tipo : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
+	// 'caja' con docenteId es la caja propia de ese cajero (cada cajero lleva sus ventas y su efectivo); sin él, la caja general de antes
+	const dueno = tipo === 'banco' || tipo === 'banco_virtual' ? tipo : tipo === 'caja' ? (docenteId ?? 'caja') : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
 	if (!dueno) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el dueño de la billetera');
 	const clave = `${edicionId}:${paisId}:${tipo}:${dueno}`;
 	await trx('wge_billeteras')
