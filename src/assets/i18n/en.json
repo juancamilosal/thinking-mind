@@ -433,7 +433,10 @@
         "unMomento": "One moment…",
         "usuario": "Username",
         "vacio": "No staff members yet",
-        "vacioAyuda": "Create the first one with the “New staff member” button."
+        "vacioAyuda": "Create the first one with the “New staff member” button.",
+        "variosRoles": "You can check several roles (for example, Teacher and Cashier). Administrative goes alone.",
+        "encargoBanco": "{{pais}} bank",
+        "encargoCaja": "Checkout"
       },
       "ed": {
         "titulo": "Editions",
@@ -945,7 +948,8 @@
         "cerrarSesion": "Sign out",
         "menuAria": "Will Go menu",
         "pronto": "Soon",
-        "saliendo": "Signing out…"
+        "saliendo": "Signing out…",
+        "verComo": "View as"
       },
       "inicio": {
         "hola": "Hi, {{nombre}} 👋",

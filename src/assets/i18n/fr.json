@@ -433,7 +433,10 @@
         "unMomento": "Un instant…",
         "usuario": "Identifiant",
         "vacio": "Aucun collaborateur pour l'instant",
-        "vacioAyuda": "Créez le premier avec le bouton « Nouveau collaborateur »."
+        "vacioAyuda": "Créez le premier avec le bouton « Nouveau collaborateur ».",
+        "variosRoles": "Vous pouvez cocher plusieurs rôles (par exemple, Enseignant et Caissier). L'administratif va seul.",
+        "encargoBanco": "Banque de {{pais}}",
+        "encargoCaja": "Caisse"
       },
       "ed": {
         "titulo": "Éditions",
@@ -945,7 +948,8 @@
         "cerrarSesion": "Se déconnecter",
         "menuAria": "Menu Will Go",
         "pronto": "Bientôt",
-        "saliendo": "Déconnexion…"
+        "saliendo": "Déconnexion…",
+        "verComo": "Voir en tant que"
       },
       "inicio": {
         "hola": "Bonjour, {{nombre}} 👋",

@@ -5,7 +5,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LoginService } from '../../core/services/login.service';
 import { TokenRefreshService } from '../../core/services/token-refresh.service';
-import { PerfilWillGo, WillGoService } from '../../core/services/will-go.service';
+import { PerfilWillGo, RolWillGo, WillGoService, guardarRolActivo } from '../../core/services/will-go.service';
 import { OpcionMenu, menuPara } from './menu-will-go';
 
 @Component({
@@ -32,6 +32,24 @@ export class PrivateLayoutWillGo implements OnInit {
     // Primero lo que no depende de una edición; luego, solo las secciones que la persona puede usar hoy
     this.menu = menuPara(this.perfil?.rol, null);
     if (this.perfil?.rol) this.willGo.miMenu().subscribe((acceso) => (this.menu = menuPara(this.perfil?.rol, acceso)));
+  }
+
+  /** Roles asignados, si tiene más de uno (para el selector «Ver como»). */
+  get roles(): RolWillGo[] {
+    const r = this.perfil?.roles ?? [];
+    return r.length > 1 ? r : [];
+  }
+
+  cambiandoRol = false;
+  /** Cambia el rol con el que trabaja: se guarda, se pide de nuevo su perfil y se vuelve al inicio con el menú de ese rol. */
+  cambiarRol(rol: RolWillGo): void {
+    if (!rol || rol === this.perfil?.rol || this.cambiandoRol) return;
+    this.cambiandoRol = true;
+    guardarRolActivo(rol);
+    this.willGo.yo().subscribe({
+      next: () => { if (typeof window !== 'undefined') window.location.assign('/private-will-go/inicio'); },
+      error: () => { this.cambiandoRol = false; },
+    });
   }
 
   /** Clave de traducción del nombre del rol (wg.nucleo.rol.*). */

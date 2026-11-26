@@ -29,3 +29,9 @@ test('escapa HTML y tolera datos faltantes', () => {
 	assert.equal(horarioAviso(null), null);
 	assert.equal(horarioAviso([{ fecha: '2026-12-05', inicio: '09:00', fin: '11:00' }], 'en'), 'December 5, 2026 09:00–11:00');
 });
+
+test('el aviso muestra todos los roles del colaborador', () => {
+	const c = correoAsignacion({ nombre: 'Juan', correo: 'j@x.co', rol: ROLES.CAJERO, roles: [ROLES.CAJERO, ROLES.DOCENTE], pais: 'Wonderland', edicion: { nombre: 'E' }, idioma: 'es' });
+	assert.match(c.html, /Cajero · Docente/);
+	assert.match(c.html, /Wonderland/);
+});

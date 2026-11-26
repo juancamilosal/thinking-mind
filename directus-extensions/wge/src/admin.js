@@ -6,7 +6,7 @@ import { idiomaDe } from './mensajes.js';
 import { Readable } from 'node:stream';
 import { totalDelConteo, montoOConteo, virtualDelBanco } from './arqueo.js';
 import { retirarInversion } from './wfunds.js';
-import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde, sqlCursosDelPrograma } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde, sqlCursosDelPrograma, tieneRol, rolesDe, llavesDe } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 /** Cada cuántos minutos puede recalcularse el tipo de cambio (dividen la hora exacta, así los cálculos caen en horas redondas). */
@@ -271,8 +271,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			await validarOferta({ colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa, ...fila }, e.id);
 		}
 		if (fila.responsable_caja) {
-			const esCajero = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
-				.where({ 'u.id': fila.responsable_caja, 'r.name': ROLES.CAJERO }).first('u.id');
+			const esCajero = await tieneRol(db, fila.responsable_caja, ROLES.CAJERO);
 			if (!esCajero) throw new WgeError(400, 'VALOR_INVALIDO', 'El encargado de la caja debe ser un colaborador con rol Cajero');
 			// Queda en el equipo de la edición
 			await db('wge_equipo').insert(nueva(req.accountability.user, {
@@ -375,8 +374,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				throw new WgeError(409, 'EDICION_ABIERTA', 'La provisión del banco se define antes de abrir la edición');
 			}
 			if (nombre === 'paises' && fila.responsable_banco) {
-				const esBanco = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
-					.where({ 'u.id': fila.responsable_banco, 'r.name': ROLES.BANCO }).first('u.id');
+				const esBanco = await tieneRol(db, fila.responsable_banco, ROLES.BANCO);
 				if (!esBanco) throw new WgeError(400, 'VALOR_INVALIDO', 'El responsable del banco debe ser un colaborador con rol Banco');
 				// Queda en el equipo de la edición
 				await db('wge_equipo').insert(nueva(req.accountability.user, {
@@ -589,11 +587,12 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			.leftJoin('directus_roles as r', 'r.id', 'u.role').leftJoin('wge_paises as pa', 'pa.id', 'q.pais_id')
 			.where('q.edicion_id', e.id)
 			.select('q.id', 'q.usuario_id', 'q.pais_id', 'pa.nombre as pais', 'u.first_name as nombre', 'u.last_name as apellido', 'u.email',
-				'u.status as estado', 'r.name as rol_nombre',
+				'u.status as estado', 'r.name as rol_nombre', 'u.wge_roles_extra',
 				db.raw(`coalesce((select sum(b.saldo) from wge_billeteras b where b.edicion_id = q.edicion_id
 					and b.tipo_dueno = 'docente' and b.docente_id = q.usuario_id), 0)::int as billetes`))
 			.orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
-		return filas.map((f) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null }));
+		// rol: el principal; roles: todos los que tiene (p. ej. docente y cajero)
+		return filas.map(({ wge_roles_extra, ...f }) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null, roles: llavesDe(rolesDe(f.rol_nombre, wge_roles_extra)) }));
 	}));
 
 	/**

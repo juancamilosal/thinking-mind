@@ -433,7 +433,10 @@
         "unMomento": "Un momento…",
         "usuario": "Usuario",
         "vacio": "Todavía no hay colaboradores",
-        "vacioAyuda": "Crea el primero con el botón «Nuevo colaborador»."
+        "vacioAyuda": "Crea el primero con el botón «Nuevo colaborador».",
+        "variosRoles": "Puedes marcar varios roles (por ejemplo, Docente y Cajero). El administrativo va solo.",
+        "encargoBanco": "Banco de {{pais}}",
+        "encargoCaja": "Caja"
       },
       "ed": {
         "titulo": "Ediciones",
@@ -945,7 +948,8 @@
         "cerrarSesion": "Cerrar sesión",
         "menuAria": "Menú de Will Go",
         "pronto": "Pronto",
-        "saliendo": "Saliendo…"
+        "saliendo": "Saliendo…",
+        "verComo": "Ver como"
       },
       "inicio": {
         "hola": "Hola, {{nombre}} 👋",

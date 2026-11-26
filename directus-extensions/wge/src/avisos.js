@@ -1,5 +1,5 @@
 // Avisos por correo a los colaboradores cuando quedan asignados a una edición (equipo, banco de un país o caja).
-import { ROLES } from './lib.js';
+import { ROLES, rolesDe } from './lib.js';
 
 /** Dónde entran los colaboradores. */
 export const URL_APP_COLABORADORES = 'https://appthinkingmind.com/login-will-go';
@@ -72,7 +72,7 @@ export function horarioAviso(horario, idioma = 'es') {
  * Asunto y HTML del aviso. `encargo`: 'equipo' (lo agregaron al equipo), 'banco' (responsable del banco de `pais`)
  * o 'caja' (encargado de la caja).
  */
-export function correoAsignacion({ nombre, correo, rol, encargo = 'equipo', pais = null, edicion, idioma = 'es' }) {
+export function correoAsignacion({ nombre, correo, rol, roles = null, encargo = 'equipo', pais = null, edicion, idioma = 'es' }) {
 	const l = TEXTOS_AVISO[idioma] ? idioma : 'es';
 	const t = TEXTOS_AVISO[l];
 	const intro = encargo === 'banco' ? t.intro.banco(limpiarHtml(pais)) : encargo === 'caja' ? t.intro.caja : t.intro.equipo;
@@ -80,8 +80,9 @@ export function correoAsignacion({ nombre, correo, rol, encargo = 'equipo', pais
 		[t.edicion, `${limpiarHtml(edicion.nombre)}${edicion.edicion_programa ? ` · ${t.numero(limpiarHtml(edicion.edicion_programa))}` : ''}`],
 		[t.colegio, limpiarHtml(edicion.colegio) || '—'],
 		[t.programa, limpiarHtml(edicion.programa) || '—'],
-		[t.rol, NOMBRE_ROL_AVISO[l][rol] ?? limpiarHtml(rol)],
-		...(encargo === 'banco' || rol === ROLES.DOCENTE ? [[t.pais, limpiarHtml(pais) || t.todosPaises]] : []),
+		// Todos sus roles (quien tiene varios los ve juntos: «Docente · Cajero»)
+		[t.rol, (roles?.length ? roles : [rol]).map((r) => NOMBRE_ROL_AVISO[l][r] ?? limpiarHtml(r)).join(' · ')],
+		...(encargo === 'banco' || (roles?.length ? roles : [rol]).includes(ROLES.DOCENTE) ? [[t.pais, limpiarHtml(pais) || t.todosPaises]] : []),
 		[t.inicio, fechaAviso(edicion.fecha_inicio, l) ?? t.sinFecha],
 		[t.fin, fechaAviso(edicion.fecha_fin, l) ?? t.sinFecha],
 		[t.horario, horarioAviso(edicion.horario, l) ?? t.sinHorario],
@@ -115,13 +116,13 @@ export async function enviarAvisos({ db, services, getSchema, env, logger }, edi
 		for (const a of avisos) {
 			try {
 				const u = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role').where('u.id', a.usuarioId)
-					.first('u.email', 'u.first_name', 'u.status', 'r.name as rol');
+					.first('u.email', 'u.first_name', 'u.status', 'r.name as rol', 'u.wge_roles_extra');
 				if (!u?.email || u.status !== 'active') continue;
 				// País: el del encargo (banco) o el que tenga en el equipo (docente)
 				let paisId = a.paisId ?? null;
 				if (!paisId && a.encargo !== 'banco') paisId = (await db('wge_equipo').where({ edicion_id: edicionId, usuario_id: a.usuarioId }).first('pais_id'))?.pais_id ?? null;
 				const pais = paisId ? (await db('wge_paises').where('id', paisId).first('nombre'))?.nombre : null;
-				const contenido = correoAsignacion({ nombre: u.first_name, correo: u.email, rol: u.rol, encargo: a.encargo, pais, edicion, idioma });
+				const contenido = correoAsignacion({ nombre: u.first_name, correo: u.email, rol: u.rol, roles: rolesDe(u.rol, u.wge_roles_extra), encargo: a.encargo, pais, edicion, idioma });
 				await mail.send({ to: u.email, ...(env?.EMAIL_FROM ? { from: { name: 'Thinking Mind', address: env.EMAIL_FROM } } : {}), ...contenido });
 				enviados++;
 			} catch (error) {

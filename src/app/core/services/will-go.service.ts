@@ -13,9 +13,30 @@ export interface PerfilWillGo {
   nombre: string;
   apellido: string;
   email: string;
+  /** Rol con el que trabaja ahora (quien tiene varios lo elige). */
   rol: RolWillGo | null;
+  /** Todos los roles asignados, empezando por el principal. */
+  roles?: RolWillGo[];
   es_will_go: boolean;
   debe_cambiar_clave: boolean;
+}
+
+/** Rol elegido por quien tiene varios; viaja en cada petición a /wge/ (parámetro wg_rol). */
+const ROL_ACTIVO = 'wg_rol_activo';
+export function rolActivoGuardado(): string | null {
+  try { return typeof localStorage !== 'undefined' ? localStorage.getItem(ROL_ACTIVO) : null; } catch { return null; }
+}
+export function guardarRolActivo(rol: string | null): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (rol) localStorage.setItem(ROL_ACTIVO, rol); else localStorage.removeItem(ROL_ACTIVO);
+  } catch { /* sin almacenamiento: se usa el rol principal */ }
+}
+
+/** Una edición vigente en la que está un colaborador y lo que maneja en ella. */
+export interface EdicionActivaColaborador {
+  id: string; nombre: string; estado: string;
+  encargos: { tipo: 'banco' | 'caja'; pais?: string }[];
 }
 
 export interface Funcionario {
@@ -29,7 +50,12 @@ export interface Funcionario {
   estado: 'active' | 'suspended' | string;
   ultimo_ingreso: string | null;
   debe_cambiar_clave: boolean;
+  /** Rol principal. */
   rol: Exclude<RolWillGo, 'administrador'>;
+  /** Todos sus roles (el principal primero). */
+  roles?: Exclude<RolWillGo, 'administrador'>[];
+  /** Ediciones vigentes en las que está. */
+  ediciones_activas?: EdicionActivaColaborador[];
 }
 
 export interface NuevoFuncionario {
@@ -37,6 +63,8 @@ export interface NuevoFuncionario {
   apellido: string;
   email: string;
   rol: Funcionario['rol'];
+  /** Todos los roles (el primero es el principal). */
+  roles?: Funcionario['rol'][];
   tipo_documento?: string;
   numero_documento?: string;
   celular?: string;
@@ -122,6 +150,8 @@ export interface MiembroEquipo {
   id: string; usuario_id: string; pais_id: string | null; pais: string | null;
   nombre: string; apellido: string; email: string; estado: string;
   rol: 'docente' | 'banco' | 'cajero' | 'administrativo' | null;
+  /** Todos sus roles. */
+  roles?: ('docente' | 'banco' | 'cajero' | 'administrativo')[];
   /** Billetes que el docente tiene en mano en esta edición. */
   billetes: number;
 }
@@ -332,6 +362,7 @@ export class WillGoService {
 
   static olvidarPerfil(): void {
     if (typeof localStorage !== 'undefined') localStorage.removeItem(PERFIL);
+    guardarRolActivo(null);
     WillGoService.accesoMenu$ = null;
   }
 

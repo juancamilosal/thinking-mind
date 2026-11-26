@@ -186,7 +186,7 @@ export class TabTienda implements OnInit {
 
   ngOnInit(): void {
     this.encargado = this.edicion.responsable_caja ?? null;
-    this.willGo.funcionarios().subscribe({ next: (l) => (this.cajeros = l.filter((f) => f.rol === 'cajero' && f.estado === 'active')) });
+    this.willGo.funcionarios().subscribe({ next: (l) => (this.cajeros = l.filter((f) => (f.roles ?? [f.rol]).includes('cajero') && f.estado === 'active')) });
     this.willGo.seccion<Pais>(this.edicion.id, 'paises').subscribe({ next: (p) => (this.paises = p) });
     this.willGo.seccion<Producto>(this.edicion.id, 'productos').subscribe({
       next: (l) => { this.productos = l; this.cargando = false; },

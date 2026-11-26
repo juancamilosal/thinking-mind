@@ -45,45 +45,49 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
         <p class="text-sm text-gray-500 mt-1">{{ 'wg.pestanas.equipo.sinEquipoAyuda' | translate }}</p>
       </div>
     } @else {
-      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <!-- Filtro por rol (quien tiene varios roles cuenta en cada uno) -->
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button type="button" class="chip" [class.activo]="filtroLista === ''" (click)="filtroLista = ''">{{ 'wg.pestanas.comun.todos' | translate }} · {{ equipo.length }}</button>
         @for (g of grupos; track g.rol) {
           @if (deRol(g.rol).length) {
-            <section class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-gray-800">{{ g.titulo | translate }}</h3>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ deRol(g.rol).length }}</span>
-              </div>
-              <ul class="divide-y divide-gray-100">
-                @for (m of deRol(g.rol); track m.id) {
-                  <li class="px-5 py-3">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-bold text-white" [class]="g.color">{{ (m.nombre[0] || '') + (m.apellido[0] || '') }}</div>
-                      <div class="min-w-0 flex-1">
-                        <p class="font-semibold text-gray-800 truncate">{{ m.nombre }} {{ m.apellido }}</p>
-                        <p class="text-xs text-gray-500 truncate">{{ m.email }}{{ m.estado !== 'active' ? ' · ' + ('wg.pestanas.equipo.inactivo' | translate) : '' }}</p>
-                      </div>
-                    </div>
-                    <div class="mt-2 pl-[3.25rem] flex flex-wrap items-center gap-x-4 gap-y-1">
-                      <button type="button" (click)="verTransacciones(m)" class="text-sm font-semibold text-orange-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.transacciones.ver' | translate }}</button>
-                      <button type="button" (click)="quitar(m)" class="text-sm font-semibold text-red-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.equipo.quitar' | translate }}</button>
-                    </div>
-                    @if (m.rol === 'docente') {
-                      <div class="mt-2 pl-[3.25rem] flex flex-wrap items-center gap-3">
-                        <label class="text-xs text-gray-500" [attr.for]="'pais-' + m.id">{{ 'wg.pestanas.comun.pais' | translate }}</label>
-                        <select [id]="'pais-' + m.id" [ngModel]="m.pais_id" (ngModelChange)="asignarPais(m, $event)" class="px-3 py-1.5 rounded-lg border-2 border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
-                          <option [ngValue]="null">{{ 'wg.pestanas.equipo.todosPaises' | translate }}</option>
-                          @for (p of paises; track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
-                        </select>
-                        @if (m.billetes) { <span class="text-sm text-gray-600" [innerHTML]="'wg.pestanas.equipo.tieneBilletes' | translate: { n: miles(m.billetes) }"></span> }
-                      </div>
-                    }
-                  </li>
-                }
-              </ul>
-            </section>
+            <button type="button" class="chip" [class.activo]="filtroLista === g.rol" (click)="filtroLista = g.rol">{{ g.titulo | translate }} · {{ deRol(g.rol).length }}</button>
           }
         }
       </div>
+
+      <!-- Una sola lista, ordenada por nombre; los roles van como etiquetas -->
+      <ul class="mt-3 bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+        @for (m of listaEquipo; track m.id) {
+          <li class="px-4 sm:px-5 py-4">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-bold text-white" [class]="colorDe(rolesDe(m)[0])">{{ (m.nombre[0] || '') + (m.apellido[0] || '') }}</div>
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-gray-800 truncate">{{ m.nombre }} {{ m.apellido }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ m.email }}{{ m.estado !== 'active' ? ' · ' + ('wg.pestanas.equipo.inactivo' | translate) : '' }}</p>
+                <div class="mt-1.5 flex flex-wrap gap-1.5">
+                  @for (r of rolesDe(m); track r) {
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" [class]="etiquetaDe(r)">{{ ('wg.pestanas.equipo.roles.' + r) | translate }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+            @if (rolesDe(m).includes('docente')) {
+              <div class="mt-3 pl-[3.25rem] flex flex-wrap items-center gap-3">
+                <label class="text-xs text-gray-500" [attr.for]="'pais-' + m.id">{{ 'wg.pestanas.comun.pais' | translate }}</label>
+                <select [id]="'pais-' + m.id" [ngModel]="m.pais_id" (ngModelChange)="asignarPais(m, $event)" class="px-3 py-1.5 rounded-lg border-2 border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
+                  <option [ngValue]="null">{{ 'wg.pestanas.equipo.todosPaises' | translate }}</option>
+                  @for (p of paises; track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
+                </select>
+                @if (m.billetes) { <span class="text-sm text-gray-600" [innerHTML]="'wg.pestanas.equipo.tieneBilletes' | translate: { n: miles(m.billetes) }"></span> }
+              </div>
+            }
+            <div class="mt-2 pl-[3.25rem] flex flex-wrap items-center gap-x-5 gap-y-1">
+              <button type="button" (click)="verTransacciones(m)" class="text-sm font-semibold text-orange-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.transacciones.ver' | translate }}</button>
+              <button type="button" (click)="quitar(m)" class="text-sm font-semibold text-red-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.equipo.quitar' | translate }}</button>
+            </div>
+          </li>
+        }
+      </ul>
     }
 
     @if (transacciones) {
@@ -172,15 +176,36 @@ export class TabEquipo implements OnInit {
     this.cargar();
   }
 
+  /** Filtro de la lista por rol ('' = todos). */
+  filtroLista: Rol | '' = '';
+
+  rolesDe(m: { rol: Rol | null; roles?: Rol[] }): Rol[] {
+    return m.roles?.length ? m.roles : m.rol ? [m.rol] : [];
+  }
+
   deRol(rol: Rol): MiembroEquipo[] {
-    return this.equipo.filter((m) => m.rol === rol);
+    return this.equipo.filter((m) => this.rolesDe(m).includes(rol));
+  }
+
+  /** La lista, filtrada por rol y ordenada por nombre. */
+  get listaEquipo(): MiembroEquipo[] {
+    return (this.filtroLista ? this.deRol(this.filtroLista) : this.equipo)
+      .slice().sort((a, b) => `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`));
+  }
+
+  colorDe(rol: Rol | undefined): string {
+    return this.grupos.find((g) => g.rol === rol)?.color ?? 'bg-slate-700';
+  }
+
+  etiquetaDe(rol: Rol): string {
+    return ({ docente: 'bg-teal-50 text-teal-800 ring-1 ring-teal-200', banco: 'bg-blue-50 text-blue-800 ring-1 ring-blue-200', cajero: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200' } as Record<string, string>)[rol] ?? 'bg-slate-100 text-slate-700 ring-1 ring-slate-200';
   }
 
   get disponibles(): Funcionario[] {
     const enEquipo = new Set(this.equipo.map((m) => m.usuario_id));
     const q = this.busqueda.trim().toLowerCase();
     return this.todos.filter((c) => !enEquipo.has(c.id) && c.estado === 'active'
-      && (!this.filtroRol || c.rol === this.filtroRol)
+      && (!this.filtroRol || (c.roles ?? [c.rol]).includes(this.filtroRol))
       && (!q || `${c.nombre} ${c.apellido} ${c.email}`.toLowerCase().includes(q)));
   }
 

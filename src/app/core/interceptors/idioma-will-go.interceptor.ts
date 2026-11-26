@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { map } from 'rxjs';
 import { IdiomaWillGoService } from '../services/idioma-will-go.service';
+import { rolActivoGuardado } from '../services/will-go.service';
 
 /** Cómo se dice «Ronda N» en cada idioma (el servidor guarda los nombres en español). */
 const RONDA: Record<string, string> = { en: 'Round', fr: 'Manche' };
@@ -27,7 +28,9 @@ export const IdiomaWillGoInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.includes('/wge/')) return next(req);
   const idioma = inject(IdiomaWillGoService).actual;
   const palabra = RONDA[idioma];
-  const salida = next(req.clone({ setHeaders: { 'Accept-Language': idioma } }));
+  // Quien tiene varios roles manda el que eligió (como parámetro: no necesita permiso CORS)
+  const rol = rolActivoGuardado();
+  const salida = next(req.clone({ setHeaders: { 'Accept-Language': idioma }, ...(rol ? { setParams: { wg_rol: rol } } : {}) }));
   if (!palabra) return salida;
   return salida.pipe(map((ev) => (ev instanceof HttpResponse && ev.body ? ev.clone({ body: traducirRondas(ev.body, palabra) }) : ev)));
 };
