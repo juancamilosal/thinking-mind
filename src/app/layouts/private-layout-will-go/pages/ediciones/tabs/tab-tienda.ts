@@ -14,6 +14,11 @@ type Borrador = Partial<Producto> & { fotoVista?: string | null };
   standalone: true,
   imports: [FormsModule, NumeroMilesDirective, DecimalPipe, BuscadorPersonaComponent, TranslatePipe],
   template: `
+    <!-- Logo de la tienda -->
+    <div class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center justify-center sm:justify-start">
+      <img src="assets/images/will-go/gostore-logo.png" alt="GO.STORE · Earn · Shop · Take Home" class="h-14 sm:h-16 w-auto max-w-full">
+    </div>
+
     <!-- Encargado de la caja -->
     <section class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
       <label for="encargado-caja" class="block text-sm font-semibold text-gray-700">{{ 'wg.pestanas.tienda.encargadoCaja' | translate }}</label>

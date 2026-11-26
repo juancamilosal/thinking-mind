@@ -25,8 +25,9 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.operacion.caja.titulo' | translate }}</h1>
-          <p class="text-gray-500 mt-1">{{ 'wg.operacion.caja.subtitulo' | translate }}</p>
+          <h1 class="sr-only">{{ 'wg.operacion.caja.titulo' | translate }}</h1>
+          <img src="assets/images/will-go/gostore-logo.png" alt="GO.STORE · Earn · Shop · Take Home" class="h-14 sm:h-16 w-auto max-w-full -ml-1">
+          <p class="text-gray-500 mt-2">{{ 'wg.operacion.caja.subtitulo' | translate }}</p>
         </div>
       </div>
       <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" (cambio)="cargar()" />
