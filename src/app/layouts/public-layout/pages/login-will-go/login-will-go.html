@@ -7,16 +7,10 @@
       <wg-selector-idioma variante="oscuro" alinear="derecha" />
     </div>
 
-    <!-- Billetes flotando de fondo -->
-    <div class="wg-billetes" aria-hidden="true">
-      @for (b of billetesFondo; track $index) {
-        <svg class="wg-billete-fondo" [style.top.%]="b.top" [style.left.%]="b.left" [style.width.px]="b.ancho"
-             [style.animation-delay.s]="b.retraso" [style.--giro]="b.giro + 'deg'" viewBox="0 0 120 64">
-          <rect x="1" y="1" width="118" height="62" rx="10" [attr.fill]="b.color" />
-          <rect x="7" y="7" width="106" height="50" rx="6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" />
-          <ellipse cx="60" cy="32" rx="17" ry="17" fill="rgba(255,255,255,.85)" />
-          <text x="60" y="39" text-anchor="middle" font-size="20" font-weight="900" fill="#1B2A4A">W</text>
-        </svg>
+    <!-- Fotos de Will-Go de fondo (se van turnando) -->
+    <div class="wg-fotos" aria-hidden="true">
+      @for (f of fotosFondo; track f; let i = $index) {
+        <div class="wg-foto" [style.background-image]="'url(' + f + ')'" [style.animation-delay.s]="i * 6"></div>
       }
     </div>
 

@@ -18,8 +18,13 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
       <!-- Resumen de los países -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         @for (p of paises; track p.id) {
-          <button type="button" (click)="elegir(p)" class="text-left bg-white rounded-2xl border-2 p-4 transition"
+          <button type="button" (click)="elegir(p)" class="text-left bg-white rounded-2xl border-2 p-4 transition flex flex-col justify-start"
                   [style.border-color]="actual?.id === p.id ? (p.color || '#94a3b8') : '#e5e7eb'">
+            <!-- Billete de la moneda del país (solo de referencia) -->
+            @if (billeteDe(p); as billete) {
+              <img [src]="billete" [alt]="'Billete ' + (p.codigo_moneda || p.nombre)" loading="lazy"
+                   class="block w-full aspect-[520/281] object-cover rounded-xl mb-3 shadow-sm ring-1 ring-black/5">
+            }
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full" [style.background]="p.color"></span>
               <span class="font-bold text-gray-800">{{ p.nombre }}</span>
@@ -176,6 +181,12 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
   styles: [ESTILOS_CAMPOS],
 })
 export class TabPaises implements OnInit {
+  /** Imagen del billete del país (Wonderland, Neverland o Dreamland); otros países no tienen. */
+  billeteDe(p: { nombre: string }): string | null {
+    const n = (p.nombre ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    return ['wonderland', 'neverland', 'dreamland'].includes(n) ? `assets/images/billetes/${n}/5000.jpg` : null;
+  }
+
   @Input({ required: true }) edicion!: Edicion;
   @Output() paisesCambiaron = new EventEmitter<Pais[]>();
   private willGo = inject(WillGoService);

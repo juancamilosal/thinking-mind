@@ -20,9 +20,9 @@
   width: 50%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  padding: 3rem 2rem;
+  padding: 3rem 2rem 4.5rem;
   overflow: hidden;
   color: #fff;
   text-align: center;
@@ -32,22 +32,41 @@
     linear-gradient(150deg, var(--azul) 0%, var(--azul-noche) 100%);
 }
 
-.wg-billetes {
+/* Fotos de fondo: se turnan con un fundido; encima, un velo azul para que el texto se lea */
+.wg-fotos {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.wg-billete-fondo {
+.wg-foto {
   position: absolute;
-  opacity: 0.18;
-  transform: rotate(var(--giro, 0deg));
-  animation: flotar 9s ease-in-out infinite;
+  inset: 0;
+  background-size: cover;
+  background-position: center 30%;
+  opacity: 0;
+  transform: scale(1.04);
+  animation: fundido 48s ease-in-out infinite;
 }
 
-@keyframes flotar {
-  0%, 100% { transform: translateY(0) rotate(var(--giro, 0deg)); }
-  50% { transform: translateY(-18px) rotate(calc(var(--giro, 0deg) + 4deg)); }
+.wg-foto:first-child {
+  opacity: 1;
+}
+
+.wg-fotos::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(15, 26, 51, 0.15) 0%, rgba(15, 26, 51, 0.35) 40%, rgba(15, 26, 51, 0.78) 75%, rgba(15, 26, 51, 0.92) 100%);
+}
+
+@keyframes fundido {
+  0% { opacity: 0; transform: scale(1.04); }
+  2.5% { opacity: 1; }
+  12.5% { opacity: 1; }
+  15% { opacity: 0; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
 }
 
 /* Selector de idioma: en computador, en la esquina; en celular, en su propia fila sobre el logo */
@@ -114,13 +133,15 @@
   margin: 0;
   font-size: 2.75rem;
   font-weight: 800;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
 }
 
 .wg-lema {
   margin: 0.75rem 0 2rem;
   font-size: 1.1rem;
   font-weight: 300;
-  opacity: 0.85;
+  opacity: 0.92;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
 
 .wg-paises {
@@ -398,17 +419,29 @@
     flex-direction: column;
   }
 
+  /* Celular: la foto va sola arriba (sin nada encima) y el logo y el saludo debajo, sobre el azul */
   .wg-marca {
     width: 100%;
-    padding: 1rem 1.25rem 4.5rem;
+    justify-content: flex-start;
+    padding: calc(56vw + 1.25rem) 1.25rem 4.5rem;
+  }
+
+  /* La foto se desvanece hacia abajo, sin borde marcado */
+  .wg-fotos {
+    inset: 0 0 auto 0;
+    height: 56vw;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  }
+
+  .wg-fotos::after {
+    background: none;
   }
 
   .wg-idioma-arriba {
-    position: relative;
-    top: auto;
-    right: auto;
-    align-self: flex-end;
-    margin-bottom: 1rem;
+    top: 0.75rem;
+    right: 0.75rem;
   }
 
   .wg-logo {
@@ -445,5 +478,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wg-billete-fondo { animation: none; }
+  .wg-foto { animation: none; }
 }

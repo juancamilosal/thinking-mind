@@ -28,13 +28,8 @@ export class LoginWillGo implements OnInit {
   logoFallo = false;
 
   /** Billetes decorativos del panel de marca (posición en %, ancho en px, giro en grados). */
-  readonly billetesFondo = [
-    { top: 8, left: 6, ancho: 120, giro: -14, retraso: 0, color: '#FF6B1A' },
-    { top: 16, left: 74, ancho: 90, giro: 12, retraso: 1.5, color: '#FFE3C7' },
-    { top: 62, left: 3, ancho: 96, giro: 8, retraso: 3, color: '#FFE3C7' },
-    { top: 74, left: 70, ancho: 130, giro: -10, retraso: 2, color: '#FF6B1A' },
-    { top: 40, left: 86, ancho: 70, giro: 20, retraso: 4, color: '#FF6B1A' },
-  ];
+  /** Fotos de Will-Go que se turnan en el panel de marca. */
+  readonly fotosFondo = Array.from({ length: 8 }, (_, i) => `assets/images/will-go/login-${i + 1}.webp`);
 
   constructor(
     private fb: FormBuilder,
