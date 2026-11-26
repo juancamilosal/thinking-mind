@@ -106,6 +106,35 @@ export class FuncionariosWillGo implements OnInit {
     this.form.patchValue({ rol: lista[0] });
   }
 
+  /** Ventana para cambiar solo los roles de un colaborador. */
+  rolesEditando: { funcionario: Funcionario; roles: RolFuncionario[]; guardando: boolean; error: string } | null = null;
+
+  abrirRoles(f: Funcionario): void {
+    this.rolesEditando = { funcionario: f, roles: [...this.rolesDe(f)], guardando: false, error: '' };
+  }
+
+  alternarRolEditando(r: RolFuncionario): void {
+    const e = this.rolesEditando;
+    if (!e) return;
+    e.roles = e.roles.includes(r) ? e.roles.filter((x) => x !== r) : [...e.roles, r];
+  }
+
+  guardarRoles(): void {
+    const e = this.rolesEditando;
+    if (!e || !e.roles.length) return;
+    e.guardando = true;
+    e.error = '';
+    this.willGo.actualizarFuncionario(e.funcionario.id, { rol: e.roles[0], roles: [...e.roles] }).subscribe({
+      next: (f) => {
+        this.reemplazar(f);
+        this.rolesEditando = null;
+        this.mostrarAviso(this.t.instant('wg.pestanas.equipo.rolesGuardados', { nombre: f.nombre }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => { e.guardando = false; e.error = WillGoService.mensajeDeError(err); this.cdr.detectChanges(); },
+    });
+  }
+
   /** Lo que maneja en una edición: «Banco de Wonderland», «Caja». */
   textoEncargo(e: { tipo: 'banco' | 'caja'; pais?: string }): string {
     return e.tipo === 'banco' ? this.t.instant('wg.admin.col.encargoBanco', { pais: e.pais ?? '' }) : this.t.instant('wg.admin.col.encargoCaja');
