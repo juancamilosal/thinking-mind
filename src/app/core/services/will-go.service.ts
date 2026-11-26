@@ -62,7 +62,7 @@ export interface NuevoFuncionario {
   nombre: string;
   apellido: string;
   email: string;
-  rol: Funcionario['rol'];
+  rol?: Funcionario['rol'];
   /** Todos los roles (el primero es el principal). */
   roles?: Funcionario['rol'][];
   tipo_documento?: string;

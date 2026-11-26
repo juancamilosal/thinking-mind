@@ -434,7 +434,7 @@
         "usuario": "Username",
         "vacio": "No staff members yet",
         "vacioAyuda": "Create the first one with the “New staff member” button.",
-        "variosRoles": "You can check several roles (for example, Teacher and Cashier). Administrative goes alone.",
+        "variosRoles": "You can check several roles (for example, Teacher and Cashier).",
         "encargoBanco": "{{pais}} bank",
         "encargoCaja": "Checkout"
       },

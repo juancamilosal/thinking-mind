@@ -87,12 +87,13 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		return mapa;
 	};
 
-	/** Roles pedidos ({ roles: [...] } o, como antes, { rol }): el primero es el principal. El administrativo va solo. */
+	/** Roles pedidos ({ roles: [...] } o, como antes, { rol }): el primero es el principal. El administrativo no se asigna aquí. */
 	const leerRoles = (b) => {
 		const lista = Array.isArray(b.roles) ? [...new Set(b.roles)] : b.rol !== undefined ? [b.rol] : null;
 		if (!lista) return null;
 		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
-		if (lista.includes('administrativo') && lista.length > 1) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol administrativo no se combina con otros roles');
+		// Los perfiles administrativos no se crean ni se asignan desde Colaboradores
+		if (lista.includes('administrativo')) throw new WgeError(403, 'SIN_PERMISO', 'El rol administrativo no se asigna desde aquí');
 		return { principal: ROLES_FUNCIONARIOS[lista[0]], extra: lista.slice(1).filter((r) => ROLES_COMBINABLES.includes(r)) };
 	};
 

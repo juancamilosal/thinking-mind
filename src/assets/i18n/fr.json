@@ -434,7 +434,7 @@
         "usuario": "Identifiant",
         "vacio": "Aucun collaborateur pour l'instant",
         "vacioAyuda": "Créez le premier avec le bouton « Nouveau collaborateur ».",
-        "variosRoles": "Vous pouvez cocher plusieurs rôles (par exemple, Enseignant et Caissier). L'administratif va seul.",
+        "variosRoles": "Vous pouvez cocher plusieurs rôles (par exemple, Enseignant et Caissier).",
         "encargoBanco": "Banque de {{pais}}",
         "encargoCaja": "Caisse"
       },

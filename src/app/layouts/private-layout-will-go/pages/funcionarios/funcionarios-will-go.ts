@@ -85,7 +85,8 @@ export class FuncionariosWillGo implements OnInit {
   }
 
   get rolesDisponibles(): RolFuncionario[] {
-    return this.esAdministradorGeneral ? ['docente', 'banco', 'cajero', 'administrativo'] : ['docente', 'banco', 'cajero'];
+    // Los perfiles administrativos no se crean ni se asignan desde esta pantalla
+    return ['docente', 'banco', 'cajero'];
   }
 
   /** Roles marcados en el formulario (el primero es el principal). */
@@ -168,7 +169,9 @@ export class FuncionariosWillGo implements OnInit {
     this.errorFormulario = '';
     const v = this.form.getRawValue();
     const datos: NuevoFuncionario = {
-      nombre: v.nombre!.trim(), apellido: v.apellido!.trim(), email: v.email!.trim().toLowerCase(), rol: this.rolesElegidos[0], roles: [...this.rolesElegidos],
+      nombre: v.nombre!.trim(), apellido: v.apellido!.trim(), email: v.email!.trim().toLowerCase(),
+      // A un administrativo no se le cambia el rol desde aquí
+      ...(this.editando?.rol === 'administrativo' ? {} : { rol: this.rolesElegidos[0], roles: [...this.rolesElegidos] }),
       tipo_documento: v.tipo_documento || undefined, numero_documento: v.numero_documento?.trim() || undefined, celular: v.celular?.trim() || undefined,
     };
 

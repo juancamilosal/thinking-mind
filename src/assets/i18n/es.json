@@ -434,7 +434,7 @@
         "usuario": "Usuario",
         "vacio": "Todavía no hay colaboradores",
         "vacioAyuda": "Crea el primero con el botón «Nuevo colaborador».",
-        "variosRoles": "Puedes marcar varios roles (por ejemplo, Docente y Cajero). El administrativo va solo.",
+        "variosRoles": "Puedes marcar varios roles (por ejemplo, Docente y Cajero).",
         "encargoBanco": "Banco de {{pais}}",
         "encargoCaja": "Caja"
       },

@@ -166,7 +166,7 @@ const TRADUCCIONES = [
 	['No existe el rol $1 en Directus', 'The role $1 does not exist in Directus', "Le rôle $1 n'existe pas dans Directus"],
 	['El colaborador no existe o no es de Will Go', 'The staff member does not exist or is not from Will Go', "Le collaborateur n'existe pas ou n'appartient pas à Will Go"],
 	['El rol debe ser docente, banco, cajero o administrativo', 'The role must be teacher, bank, cashier or administrative', 'Le rôle doit être enseignant, banque, caissier ou administratif'],
-	['El rol administrativo no se combina con otros roles', 'The administrative role cannot be combined with other roles', 'Le rôle administratif ne se combine pas avec d\'autres rôles'],
+	['El rol administrativo no se asigna desde aquí', 'The administrative role is not assigned here', 'Le rôle administratif ne s\'attribue pas ici'],
 	['Ya existe un usuario con ese correo', 'A user with that email already exists', 'Un utilisateur avec cette adresse e-mail existe déjà'],
 	['No puedes desactivar tu propio usuario', 'You cannot deactivate your own user', 'Vous ne pouvez pas désactiver votre propre utilisateur'],
 	['estado debe ser active o suspended', 'estado must be active or suspended', 'estado doit être active ou suspended'],

@@ -163,7 +163,10 @@
       <form [formGroup]="form" (ngSubmit)="guardar()" class="px-6 pb-6 space-y-4" novalidate>
         <div>
           <p class="block text-sm font-semibold text-gray-700 mb-2">{{ 'wg.admin.col.rol' | translate }}</p>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          @if (editando?.rol === 'administrativo') {
+            <p class="text-sm font-semibold px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 inline-block">{{ nombreRol['administrativo'] | translate }}</p>
+          } @else {
+          <div class="grid grid-cols-3 gap-2">
             @for (r of rolesDisponibles; track r) {
               <label class="cursor-pointer">
                 <input type="checkbox" [checked]="rolesElegidos.includes(r)" (change)="alternarRol(r)" class="peer sr-only">
@@ -175,6 +178,7 @@
             }
           </div>
           <p class="text-xs text-gray-500 mt-2">{{ 'wg.admin.col.variosRoles' | translate }}</p>
+          }
         </div>
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
