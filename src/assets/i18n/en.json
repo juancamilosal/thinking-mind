@@ -1573,11 +1573,10 @@
         "colRoles": "Roles",
         "colPais": "Country (teachers)",
         "colAcciones": "Actions",
-        "editarRoles": "+ Roles",
-        "editarRolesDe": "Change {{nombre}}'s roles",
         "rolesDe": "Team member roles",
         "rolesAyuda": "They can have several roles. The change applies across the platform, not only in this edition.",
-        "rolesGuardados": "Done: {{nombre}}'s roles were updated."
+        "rolesGuardados": "Done: {{nombre}}'s roles were updated.",
+        "cambiarRoles": "Change roles"
       },
       "resumen": {
         "cargando": "Loading summary…",

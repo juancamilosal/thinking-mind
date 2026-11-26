@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -60,8 +60,8 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
       </div>
 
       <!-- Lista ordenada por nombre: en computador como tabla (colaborador · roles · país · acciones) -->
-      <div class="mt-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="hidden lg:grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1fr)_auto] gap-4 px-5 py-2.5 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div class="mt-3 bg-white rounded-2xl border border-gray-200 shadow-sm">
+        <div class="hidden lg:grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,1fr)_auto] gap-4 px-5 py-2.5 bg-gray-50 rounded-t-2xl border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
           <span>{{ 'wg.pestanas.equipo.colColaborador' | translate }}</span>
           <span>{{ 'wg.pestanas.equipo.colRoles' | translate }}</span>
           <span>{{ 'wg.pestanas.equipo.colPais' | translate }}</span>
@@ -83,10 +83,6 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
                 @for (r of rolesDe(m); track r) {
                   <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" [class]="etiquetaDe(r)">{{ ('wg.pestanas.equipo.roles.' + r) | translate }}</span>
                 }
-                @if (m.rol !== 'administrativo') {
-                  <button type="button" (click)="abrirRoles(m)" class="text-[11px] font-semibold px-2 py-0.5 rounded-full border border-dashed border-gray-300 text-gray-600 hover:border-orange-300 hover:text-orange-700"
-                          [attr.aria-label]="'wg.pestanas.equipo.editarRolesDe' | translate: { nombre: m.nombre }">{{ 'wg.pestanas.equipo.editarRoles' | translate }}</button>
-                }
               </div>
               <!-- País y dinero (solo docentes) -->
               <div class="pl-[3.25rem] lg:pl-0 min-w-0" [class.hidden]="!rolesDe(m).includes('docente')" [class.lg:block]="!rolesDe(m).includes('docente')">
@@ -103,10 +99,24 @@ type Rol = NonNullable<MiembroEquipo['rol']>;
                   <span class="text-sm text-gray-300">—</span>
                 }
               </div>
-              <!-- Acciones -->
-              <div class="pl-[3.25rem] lg:pl-0 flex items-center gap-x-4 lg:justify-end">
-                <button type="button" (click)="verTransacciones(m)" class="text-sm font-semibold text-orange-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.transacciones.ver' | translate }}</button>
-                <button type="button" (click)="quitar(m)" class="text-sm font-semibold text-red-700 hover:underline whitespace-nowrap">{{ 'wg.pestanas.equipo.quitar' | translate }}</button>
+              <!-- Acciones: menú como en la pantalla Colaboradores -->
+              <div class="relative pl-[3.25rem] lg:pl-0 flex lg:justify-end">
+                <button type="button" (click)="alternarMenu(m, $event)" [attr.aria-expanded]="menuAbierto === m.id" aria-haspopup="menu"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">
+                  {{ 'wg.admin.col.acciones' | translate }}
+                  <svg class="w-4 h-4 transition-transform" [class.rotate-180]="menuAbierto === m.id" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                </button>
+                @if (menuAbierto === m.id) {
+                  <div role="menu" (click)="$event.stopPropagation()"
+                       class="absolute z-30 top-full mt-1 left-[3.25rem] lg:left-auto lg:right-0 w-52 bg-white rounded-xl border border-gray-200 shadow-lg py-1">
+                    <button type="button" role="menuitem" (click)="menuAbierto = null; verTransacciones(m)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.transacciones.ver' | translate }}</button>
+                    @if (m.rol !== 'administrativo') {
+                      <button type="button" role="menuitem" (click)="menuAbierto = null; abrirRoles(m)" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.equipo.cambiarRoles' | translate }}</button>
+                    }
+                    <div class="my-1 border-t border-gray-100"></div>
+                    <button type="button" role="menuitem" (click)="menuAbierto = null; quitar(m)" class="w-full text-left px-4 py-2.5 text-sm text-red-700 hover:bg-red-50">{{ 'wg.pestanas.equipo.quitar' | translate }}</button>
+                  </div>
+                }
               </div>
             </li>
           } @empty {
@@ -242,6 +252,16 @@ export class TabEquipo implements OnInit {
 
   deRol(rol: Rol): MiembroEquipo[] {
     return this.equipo.filter((m) => this.rolesDe(m).includes(rol));
+  }
+
+  /** Menú de acciones abierto (id del miembro). Se cierra al tocar fuera. */
+  menuAbierto: string | null = null;
+  alternarMenu(m: MiembroEquipo, evento: Event): void {
+    evento.stopPropagation();
+    this.menuAbierto = this.menuAbierto === m.id ? null : m.id;
+  }
+  @HostListener('document:click') cerrarMenu(): void {
+    this.menuAbierto = null;
   }
 
   /** Búsqueda por nombre o correo dentro del equipo. */

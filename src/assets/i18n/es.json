@@ -1573,11 +1573,10 @@
         "colRoles": "Roles",
         "colPais": "País (docentes)",
         "colAcciones": "Acciones",
-        "editarRoles": "+ Roles",
-        "editarRolesDe": "Cambiar los roles de {{nombre}}",
         "rolesDe": "Roles del colaborador",
         "rolesAyuda": "Puede tener varios roles. El cambio aplica en toda la plataforma, no solo en esta edición.",
-        "rolesGuardados": "Listo: se actualizaron los roles de {{nombre}}."
+        "rolesGuardados": "Listo: se actualizaron los roles de {{nombre}}.",
+        "cambiarRoles": "Cambiar roles"
       },
       "resumen": {
         "cargando": "Cargando resumen…",

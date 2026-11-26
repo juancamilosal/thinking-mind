@@ -1573,11 +1573,10 @@
         "colRoles": "Rôles",
         "colPais": "Pays (enseignants)",
         "colAcciones": "Actions",
-        "editarRoles": "+ Rôles",
-        "editarRolesDe": "Modifier les rôles de {{nombre}}",
         "rolesDe": "Rôles du collaborateur",
         "rolesAyuda": "Il peut avoir plusieurs rôles. Le changement s'applique à toute la plateforme, pas seulement à cette édition.",
-        "rolesGuardados": "C'est fait : les rôles de {{nombre}} ont été mis à jour."
+        "rolesGuardados": "C'est fait : les rôles de {{nombre}} ont été mis à jour.",
+        "cambiarRoles": "Modifier les rôles"
       },
       "resumen": {
         "cargando": "Chargement du résumé…",
