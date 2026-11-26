@@ -5,6 +5,7 @@ import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.dir
 import { DecimalPipe } from '@angular/common';
 import { Edicion, MiembroEquipo, Pais, Producto, WillGoService } from '../../../../../core/services/will-go.service';
 import { precioEnBilletes, reducirFoto } from '../estado-edicion';
+import { ConfirmacionService } from '../../../../../core/services/confirmacion.service';
 
 type Borrador = Partial<Producto> & { fotoVista?: string | null };
 
@@ -169,6 +170,7 @@ export class TabTienda implements OnInit {
   @Output() guardada = new EventEmitter<Edicion>();
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
+  private confirmacion = inject(ConfirmacionService);
 
   /** Cajeros del equipo de la edición (todos pueden vender). */
   cajeros: MiembroEquipo[] = [];
@@ -260,9 +262,14 @@ export class TabTienda implements OnInit {
     });
   }
 
-  borrar(): void {
+  async borrar(): Promise<void> {
     const b = this.borrador;
-    if (!b?.id || !confirm(this.t.instant('wg.pestanas.tienda.confirmarEliminar', { nombre: b.nombre }))) return;
+    if (!b?.id) return;
+    const ok = await this.confirmacion.pedir({
+      titulo: this.t.instant('wg.pestanas.tienda.confirmarEliminar', { nombre: b.nombre }),
+      aceptar: this.t.instant('wg.pestanas.comun.eliminar'), peligro: true,
+    });
+    if (!ok) return;
     this.guardando = true;
     this.willGo.borrarProducto(b.id).subscribe({
       next: (r) => {

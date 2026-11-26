@@ -1118,6 +1118,9 @@
         "escribirLlave": "Saisir la clé",
         "placeholder": "@prenom.nom",
         "usar": "Utiliser"
+      },
+      "confirmar": {
+        "aceptar": "Confirmer"
       }
     },
     "operacion": {

@@ -1118,6 +1118,9 @@
         "escribirLlave": "Escribir la llave",
         "placeholder": "@nombre.apellido",
         "usar": "Usar"
+      },
+      "confirmar": {
+        "aceptar": "Aceptar"
       }
     },
     "operacion": {

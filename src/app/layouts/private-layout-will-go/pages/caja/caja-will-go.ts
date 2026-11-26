@@ -193,7 +193,12 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
                       <p class="font-semibold text-gray-800 truncate">{{ v.nombre }} {{ v.apellido }}</p>
                       <p class="text-xs text-gray-500">{{ v.numero_recibo }} · {{ v.date_created | wgFecha:'d MMM, h:mm a' }}@if (datos.es_admin && v.cajero) { · {{ 'wg.operacion.caja.cobro' | translate: { nombre: v.cajero } }} }</p>
                     </div>
-                    <p class="font-extrabold whitespace-nowrap" [style.color]="pais(v.pais_id)?.color || '#111827'">{{ miles(v.total_billetes) }} {{ pais(v.pais_id)?.codigo_moneda }}</p>
+                    <!-- En efectivo entra a la caja (verde, «+»); con tarjeta va al banco, no a la caja (gris) -->
+                    @if (v.metodo_pago === 'tarjeta') {
+                      <p class="font-extrabold whitespace-nowrap text-gray-700">{{ miles(v.total_billetes) }} <span class="text-xs font-semibold text-gray-500">{{ pais(v.pais_id)?.codigo_moneda }}</span></p>
+                    } @else {
+                      <p class="font-extrabold whitespace-nowrap text-emerald-700">+{{ miles(v.total_billetes) }} <span class="text-xs font-semibold text-emerald-600">{{ pais(v.pais_id)?.codigo_moneda }}</span></p>
+                    }
                   </div>
                   <p class="text-sm text-gray-600 mt-1">{{ textoItems(v) }}</p>
                   @if (v.metodo_pago === 'tarjeta') {
@@ -214,7 +219,8 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
                     <p class="font-semibold text-gray-800">{{ 'wg.operacion.caja.alBancoDe' | translate: { pais: pais(t.pais_id)?.nombre } }}</p>
                     <p class="text-xs text-gray-500">{{ t.date_created | wgFecha:'d MMM, h:mm a' }}{{ t.quien ? ' · ' + t.quien : '' }}</p>
                   </div>
-                  <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(t.monto) }}</p>
+                  <!-- Sale de la caja: en rojo y con «−» -->
+                  <p class="font-bold text-red-600 whitespace-nowrap">−{{ miles(t.monto) }} <span class="text-xs font-semibold text-red-400">{{ pais(t.pais_id)?.codigo_moneda }}</span></p>
                 </li>
               }
             </ul>

@@ -29,21 +29,22 @@ export interface MovimientoLista {
         </div>
         <div class="bg-white rounded-2xl border border-gray-200 p-3">
           <p class="text-xs text-gray-500">{{ 'wg.nucleo.movimientos.salio' | translate }}</p>
-          <p class="text-lg font-extrabold text-gray-800 break-all">−{{ miles(totalSalio) }}</p>
+          <p class="text-lg font-extrabold text-red-600 break-all">−{{ miles(totalSalio) }}</p>
         </div>
       </div>
       <ul class="mt-3 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
         @for (m of movimientos; track m.id) {
           <li>
             <div class="flex items-center gap-3 px-4 py-3">
-              <span class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center" [class]="m.entra ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'" aria-hidden="true">
+              <span class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center" [class]="m.entra ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'" aria-hidden="true">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" [attr.d]="m.entra ? 'M19 14l-7 7m0 0l-7-7m7 7V3' : 'M5 10l7-7m0 0l7 7m-7-7v18'"/></svg>
               </span>
               <span class="min-w-0 flex-1">
                 <span class="block font-semibold text-gray-800 leading-snug">{{ m.titulo }}</span>
                 <span class="block text-xs text-gray-500">{{ m.fecha | wgFecha: ('wg.nucleo.movimientos.formatoFecha' | translate) }}{{ m.quien ? ' · ' + m.quien : '' }}</span>
               </span>
-              <span class="font-bold whitespace-nowrap" [class]="m.entra ? 'text-emerald-700' : 'text-gray-800'">{{ m.entra ? '+' : '−' }}{{ miles(m.monto) }}</span>
+              <!-- Lo que sale (retiros, entregas, pagos) va en rojo y con «−» -->
+              <span class="font-bold whitespace-nowrap" [class]="m.entra ? 'text-emerald-700' : 'text-red-600'">{{ m.entra ? '+' : '−' }}{{ miles(m.monto) }}</span>
             </div>
           </li>
         }

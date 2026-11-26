@@ -1118,6 +1118,9 @@
         "escribirLlave": "Type the key",
         "placeholder": "@name.surname",
         "usar": "Use"
+      },
+      "confirmar": {
+        "aceptar": "Confirm"
       }
     },
     "operacion": {

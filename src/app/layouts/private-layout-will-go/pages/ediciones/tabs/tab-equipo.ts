@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Edicion, Funcionario, MiembroEquipo, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { formatearNumero } from '../../../numero-miles.directive';
+import { ConfirmacionService } from '../../../../../core/services/confirmacion.service';
 import { TransaccionesEquipoComponent } from './transacciones-equipo.component';
 
 type Rol = NonNullable<MiembroEquipo['rol']>;
@@ -217,6 +218,7 @@ export class TabEquipo implements OnInit {
   @Output() cambio = new EventEmitter<void>();
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
+  private confirmacion = inject(ConfirmacionService);
   readonly miles = (v: unknown) => formatearNumero(v as number);
   readonly grupos: { rol: Rol; titulo: string; color: string }[] = [
     { rol: 'docente', titulo: 'wg.pestanas.equipo.grupos.docente', color: 'bg-teal-600' },
@@ -373,8 +375,12 @@ export class TabEquipo implements OnInit {
     });
   }
 
-  quitar(m: MiembroEquipo): void {
-    if (!confirm(this.t.instant('wg.pestanas.equipo.confirmarQuitar', { nombre: `${m.nombre} ${m.apellido}` }))) return;
+  async quitar(m: MiembroEquipo): Promise<void> {
+    const ok = await this.confirmacion.pedir({
+      titulo: this.t.instant('wg.pestanas.equipo.confirmarQuitar', { nombre: `${m.nombre} ${m.apellido}` }),
+      aceptar: this.t.instant('wg.pestanas.equipo.quitar'), peligro: true,
+    });
+    if (!ok) return;
     this.willGo.quitarDelEquipo(m.id).subscribe({
       next: () => {
         this.equipo = this.equipo.filter((x) => x.id !== m.id);

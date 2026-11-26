@@ -1,4 +1,5 @@
 import { InstalarAppComponent } from './instalar-app.component';
+import { ConfirmacionComponent } from './confirmacion.component';
 import { SelectorIdiomaComponent } from './selector-idioma.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, OnInit } from '@angular/core';
@@ -11,7 +12,7 @@ import { OpcionMenu, menuPara } from './menu-will-go';
 @Component({
   selector: 'app-private-layout-will-go',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, InstalarAppComponent, SelectorIdiomaComponent, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, InstalarAppComponent, ConfirmacionComponent, SelectorIdiomaComponent, TranslatePipe],
   templateUrl: './private-layout-will-go.html',
 })
 export class PrivateLayoutWillGo implements OnInit {
