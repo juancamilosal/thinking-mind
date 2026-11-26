@@ -2,7 +2,7 @@
 // Cada operación con billetes corre dentro de una transacción; si algo falla, no queda nada a medias.
 import {
 	WgeError, ROLES, rolDelUsuario, exigirRol, enteroPositivo, exigirTexto,
-	billeteraBloqueada, moverSaldo, aleatorioConSemilla, limitar, traerInscritos, darBienvenida, exigirEquipo, exigirResponsableBanco,
+	billeteraBloqueada, moverSaldo, tieneRol, aleatorioConSemilla, limitar, traerInscritos, darBienvenida, exigirEquipo, exigirResponsableBanco,
 } from './lib.js';
 import { rutasFuncionarios } from './funcionarios.js';
 import { rutasAdmin } from './admin.js';
@@ -26,7 +26,7 @@ export default {
 		const ruta = (fn) => async (req, res) => {
 			try {
 				if (!req.accountability?.user) throw new WgeError(401, 'SIN_SESION', 'Debes iniciar sesión');
-				const rol = await rolDelUsuario(db, req.accountability);
+				const rol = await rolDelUsuario(db, req.accountability, req.query?.wg_rol);
 				res.json({ data: await fn(req, rol) });
 			} catch (error) {
 				const idioma = idiomaDe(req);
@@ -95,7 +95,9 @@ export default {
 					exigirRol(rol, ROLES.BANCO);
 					paisId = exigirTexto(req.body.pais_id, 'pais_id');
 					const docenteId = exigirTexto(req.body.docente_id, 'docente_id');
-					if ((await rolDelUsuario(trx, { user: docenteId })) !== ROLES.DOCENTE) throw new WgeError(409, 'NO_ES_DOCENTE', 'El destinatario no es docente de Will Go');
+					if (!(await tieneRol(trx, docenteId, ROLES.DOCENTE))) throw new WgeError(409, 'NO_ES_DOCENTE', 'El destinatario no es docente de Will Go');
+					// Quien es banco y docente a la vez no se entrega dinero a sí mismo: lo hace otro banco o un administrativo
+					if (docenteId === actor) throw new WgeError(409, 'A_SI_MISMO', 'No puedes entregarte dinero a ti mismo desde el banco');
 					const pais = await trx('wge_paises').where('id', paisId).first();
 					if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 					await edicionAbierta(trx, pais.edicion_id);
@@ -231,7 +233,8 @@ export default {
 				const ventaId = crypto.randomUUID();
 				const movimientoId = await moverSaldo(trx, billetera, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta a la cuenta virtual del banco
-				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco_virtual' : 'caja' });
+				// En efectivo entra a la caja propia de quien vende; con tarjeta, a la cuenta virtual del banco
+				const recibe = await billeteraBloqueada(trx, conTarjeta ? { edicionId: edicion.id, paisId: pais.id, tipo: 'banco_virtual' } : { edicionId: edicion.id, paisId: pais.id, tipo: 'caja', docenteId: actor });
 				await moverSaldo(trx, recibe, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 

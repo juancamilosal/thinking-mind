@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { DatosCaja, EstudianteCaja, PaisCaja, ProductoCaja, VentaCaja, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
+import { CajaCajero, DatosCaja, EstudianteCaja, PaisCaja, ProductoCaja, VentaCaja, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { EscanerQrComponent } from '../../escaner-qr.component';
 import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
@@ -39,11 +39,7 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
       } @else if (!ediciones.length) {
         <div class="mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.operacion.comun.sinEquipo' | translate }}</div>
       } @else if (datos) {
-        @if (!datos.puede_vender) {
-          <p class="mt-4 rounded-xl px-4 py-3 text-sm bg-amber-50 border border-amber-200 text-amber-800">
-            {{ datos.edicion.responsable_caja ? ('wg.operacion.caja.manejaOtro' | translate: { nombre: datos.edicion.responsable }) : ('wg.operacion.caja.sinEncargado' | translate) }}
-          </p>
-        } @else if (datos.edicion.estado !== 'abierta') {
+        @if (datos.puede_vender && datos.edicion.estado !== 'abierta') {
           <p class="mt-4 rounded-xl px-4 py-3 text-sm bg-gray-100 text-gray-600">{{ 'wg.operacion.caja.podrasVender' | translate }}</p>
         }
         @if (aviso) { <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-emerald-50 border border-emerald-200 text-emerald-800" role="status">{{ aviso }}</p> }
@@ -150,7 +146,7 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
         <!-- MOVIMIENTOS: ventas y entregas al banco -->
         @if (vista === 'ventas') {
           <!-- Dinero que hay en la caja de cada país (solo el monto) -->
-          <h2 class="mt-5 text-sm font-bold text-gray-700">{{ 'wg.montotienda.dineroEnCaja' | translate }}</h2>
+          <h2 class="mt-5 text-sm font-bold text-gray-700">{{ (datos.es_admin ? 'wg.operacion.caja.totalCajas' : 'wg.operacion.caja.tuCaja') | translate }}</h2>
           <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
             @for (p of datos.paises; track p.id) {
               <section class="rounded-2xl p-4 text-white shadow-sm flex items-center gap-3" [style.background]="p.color || '#1e293b'">
@@ -158,12 +154,31 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
                   <p class="text-sm opacity-90">{{ 'wg.operacion.caja.cajaDe' | translate: { pais: p.nombre } }}</p>
                   <p class="text-2xl font-extrabold break-all">{{ miles(p.saldo_caja) }} <span class="text-sm font-semibold opacity-90">{{ p.codigo_moneda }}</span></p>
                 </div>
-                @if (datos.puede_vender && p.saldo_caja > 0) {
+                @if (datos.puede_vender && !datos.es_admin && p.saldo_caja > 0) {
                   <button type="button" (click)="abrirEntrega(p)" class="shrink-0 px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-semibold">{{ 'wg.operacion.caja.entregarAlBanco' | translate }}</button>
                 }
               </section>
             }
           </div>
+          <!-- Administrativo: la caja de cada cajero (cada uno lleva su propio efectivo) -->
+          @if (datos.es_admin && datos.cajas?.length) {
+            <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.cajasPorCajero' | translate }}</h2>
+            <ul class="mt-2 bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+              @for (c of datos.cajas; track (c.usuario_id ?? 'general') + c.pais_id) {
+                <li class="px-4 py-3 flex items-center gap-3">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" [style.background]="pais(c.pais_id)?.color || '#64748b'"></span>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-gray-800 truncate">{{ c.usuario_id ? c.nombre : ('wg.operacion.caja.cajaGeneral' | translate) }}</p>
+                    <p class="text-xs text-gray-500">{{ pais(c.pais_id)?.nombre }}</p>
+                  </div>
+                  <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(c.saldo) }} <span class="text-xs font-semibold text-gray-500">{{ pais(c.pais_id)?.codigo_moneda }}</span></p>
+                  @if (c.saldo > 0) {
+                    <button type="button" (click)="abrirEntregaDe(c)" class="shrink-0 px-3 py-1.5 rounded-lg border border-orange-200 text-sm font-semibold text-orange-700 hover:bg-orange-50">{{ 'wg.operacion.caja.entregar' | translate }}</button>
+                  }
+                </li>
+              }
+            </ul>
+          }
           <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.caja.ventasTitulo' | translate }}</h2>
           @if (!datos.ventas.length) {
             <p class="mt-4 text-sm text-gray-500">{{ 'wg.operacion.caja.sinVentas' | translate }}</p>
@@ -174,9 +189,14 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                       <p class="font-semibold text-gray-800 truncate">{{ v.nombre }} {{ v.apellido }}</p>
-                      <p class="text-xs text-gray-500">{{ v.numero_recibo }} · {{ v.date_created | wgFecha:'d MMM, h:mm a' }}</p>
+                      <p class="text-xs text-gray-500">{{ v.numero_recibo }} · {{ v.date_created | wgFecha:'d MMM, h:mm a' }}@if (datos.es_admin && v.cajero) { · {{ 'wg.operacion.caja.cobro' | translate: { nombre: v.cajero } }} }</p>
                     </div>
-                    <p class="font-extrabold whitespace-nowrap" [style.color]="pais(v.pais_id)?.color || '#111827'">{{ miles(v.total_billetes) }} {{ pais(v.pais_id)?.codigo_moneda }}</p>
+                    <!-- En efectivo entra a la caja (verde, «+»); con tarjeta va al banco, no a la caja (gris) -->
+                    @if (v.metodo_pago === 'tarjeta') {
+                      <p class="font-extrabold whitespace-nowrap text-gray-700">{{ miles(v.total_billetes) }} <span class="text-xs font-semibold text-gray-500">{{ pais(v.pais_id)?.codigo_moneda }}</span></p>
+                    } @else {
+                      <p class="font-extrabold whitespace-nowrap text-emerald-700">+{{ miles(v.total_billetes) }} <span class="text-xs font-semibold text-emerald-600">{{ pais(v.pais_id)?.codigo_moneda }}</span></p>
+                    }
                   </div>
                   <p class="text-sm text-gray-600 mt-1">{{ textoItems(v) }}</p>
                   @if (v.metodo_pago === 'tarjeta') {
@@ -197,7 +217,8 @@ const PASOS_REDONDEO = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
                     <p class="font-semibold text-gray-800">{{ 'wg.operacion.caja.alBancoDe' | translate: { pais: pais(t.pais_id)?.nombre } }}</p>
                     <p class="text-xs text-gray-500">{{ t.date_created | wgFecha:'d MMM, h:mm a' }}{{ t.quien ? ' · ' + t.quien : '' }}</p>
                   </div>
-                  <p class="font-bold text-gray-800 whitespace-nowrap">{{ miles(t.monto) }}</p>
+                  <!-- Sale de la caja: en rojo y con «−» -->
+                  <p class="font-bold text-red-600 whitespace-nowrap">−{{ miles(t.monto) }} <span class="text-xs font-semibold text-red-400">{{ pais(t.pais_id)?.codigo_moneda }}</span></p>
                 </li>
               }
             </ul>
@@ -506,9 +527,7 @@ export class CajaWillGo implements OnInit {
     const d = this.datos, e = this.estudiante;
     if (!d || !e) return '';
     if (d.edicion.estado !== 'abierta') return this.t.instant('wg.operacion.caja.motivoEdicionCerrada');
-    if (!d.puede_vender) return d.edicion.responsable_caja
-      ? this.t.instant('wg.operacion.caja.manejaOtro', { nombre: d.edicion.responsable })
-      : this.t.instant('wg.operacion.caja.sinEncargado');
+    if (!d.puede_vender) return this.t.instant('wg.operacion.caja.soloCajeros');
     if (this.metodo === 'tarjeta') {
       if (this.total > (Number(e.cuenta) || 0)) return this.t.instant('wg.tarjeta.noAlcanzaCuenta', { n: this.miles(e.cuenta) });
     } else if (this.total > e.saldo) return this.t.instant('wg.operacion.caja.noAlcanza', { n: this.miles(e.saldo) });
@@ -678,7 +697,17 @@ export class CajaWillGo implements OnInit {
   }
 
   // ---- Entregar al banco ----
-  abrirEntrega(p: PaisCaja): void { this.entregaPais = p; this.montoBanco = null; this.errorCobro = ''; this.clave = crypto.randomUUID(); }
+  /** De qué caja se entrega (solo el administrativo elige la de un cajero; null = la propia). */
+  entregaCajaDe: string | null = null;
+  abrirEntrega(p: PaisCaja): void { this.entregaCajaDe = null; this.entregaPais = p; this.montoBanco = null; this.errorCobro = ''; this.clave = crypto.randomUUID(); }
+  /** El administrativo entrega al banco el efectivo de la caja de un cajero. */
+  abrirEntregaDe(c: CajaCajero): void {
+    const p = this.datos?.paises.find((x) => x.id === c.pais_id);
+    if (!p) return;
+    this.entregaCajaDe = c.usuario_id ?? 'general';
+    this.entregaPais = { ...p, saldo_caja: c.saldo };
+    this.montoBanco = null; this.errorCobro = ''; this.clave = crypto.randomUUID();
+  }
   cerrarEntrega(): void { if (!this.enviando) this.entregaPais = null; }
   todoAlBanco(): void { if (this.entregaPais) this.montoBanco = Number(this.entregaPais.saldo_caja) || 0; }
   get montoBancoNum(): number { return Number(this.montoBanco) || 0; }
@@ -688,7 +717,7 @@ export class CajaWillGo implements OnInit {
     if (!p || !this.datos || this.enviando || !this.montoBancoValido) return;
     this.enviando = true;
     this.errorCobro = '';
-    this.willGo.entregarCajaAlBanco(this.datos.edicion.id, p.id, this.montoBancoNum, this.clave).subscribe({
+    this.willGo.entregarCajaAlBanco(this.datos.edicion.id, p.id, this.montoBancoNum, this.clave, this.entregaCajaDe).subscribe({
       next: (r) => { this.enviando = false; this.entregaPais = null; this.avisar(this.t.instant('wg.operacion.caja.avisoEntregaste', { monto: this.miles(r.monto), pais: p.nombre })); this.cargar(); },
       error: (err) => { this.enviando = false; this.errorCobro = WillGoService.mensajeDeError(err); },
     });

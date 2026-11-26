@@ -75,3 +75,12 @@ test('el descuento del producto baja su precio y debe ser de 0 a 100 %', () => {
 	assert.throws(() => limpiar({ descuento: 101 }, SECCIONES.productos.campos));
 	assert.throws(() => limpiar({ descuento: -5 }, SECCIONES.productos.campos));
 });
+
+import { rolesDe, llavesDe, leerRolesExtra, ROLES as R } from '../src/lib.js';
+test('un colaborador puede tener varios roles; el administrativo va solo', () => {
+	assert.deepEqual(llavesDe(rolesDe(R.DOCENTE, ['cajero', 'banco', 'cajero'])), ['docente', 'cajero', 'banco']);
+	assert.deepEqual(llavesDe(rolesDe(R.BANCO, '["docente"]')), ['banco', 'docente']);
+	assert.deepEqual(llavesDe(rolesDe(R.ADMIN_WG, ['docente'])), ['administrativo']);
+	assert.deepEqual(leerRolesExtra(['administrativo', 'x', 'banco']), ['banco']);
+	assert.deepEqual(llavesDe(rolesDe(R.CAJERO, null)), ['cajero']);
+});

@@ -1,7 +1,7 @@
 // Funcionarios de WILL-GO ECONOMY: quién soy, cambio de clave y perfiles que crea el Administrativo.
 // Las cuentas se crean con el servicio de usuarios de Directus (que cifra la clave), pero solo
 // con roles de Will Go: desde aquí nunca se puede crear ni tocar un usuario de otra parte de la plataforma.
-import { WgeError, ROLES, exigirRol, exigirTexto } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, rolesDe, llavesDe, ROLES_COMBINABLES } from './lib.js';
 
 /** Roles que maneja la pantalla de funcionarios. */
 export const ROLES_FUNCIONARIOS = {
@@ -54,9 +54,49 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	const consultaFuncionarios = () => db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
 		.whereIn('r.name', NOMBRES_FUNCIONARIOS)
 		.select('u.id', 'u.first_name as nombre', 'u.last_name as apellido', 'u.email', 'u.tipo_documento', 'u.numero_documento',
-			'u.celular', 'u.status as estado', 'u.last_access as ultimo_ingreso', 'u.debe_cambiar_clave', 'r.name as rol_nombre');
+			'u.celular', 'u.status as estado', 'u.last_access as ultimo_ingreso', 'u.debe_cambiar_clave', 'r.name as rol_nombre', 'u.wge_roles_extra');
 
-	const comoFuncionario = (u) => ({ ...u, rol: LLAVE_POR_NOMBRE[u.rol_nombre], debe_cambiar_clave: !!u.debe_cambiar_clave });
+	// rol: el principal; roles: todos los que tiene, empezando por el principal
+	const comoFuncionario = ({ wge_roles_extra, ...u }) => ({
+		...u, rol: LLAVE_POR_NOMBRE[u.rol_nombre], roles: llavesDe(rolesDe(u.rol_nombre, wge_roles_extra)), debe_cambiar_clave: !!u.debe_cambiar_clave,
+	});
+
+	/**
+	 * Ediciones vigentes (no cerradas y sin pasar su fecha final) en las que está cada colaborador,
+	 * con lo que maneja en ella: el banco de algún país o la caja.
+	 */
+	const edicionesActivas = async (ids, cajeros = new Set()) => {
+		if (!ids.length) return new Map();
+		const hoy = new Date().toISOString().slice(0, 10);
+		const filas = await db('wge_equipo as q').join('wge_ediciones as e', 'e.id', 'q.edicion_id')
+			.whereIn('q.usuario_id', ids).whereNot('e.estado', 'cerrada')
+			.where((w) => w.whereNull('e.fecha_fin').orWhere('e.fecha_fin', '>=', hoy))
+			.select('q.usuario_id', 'e.id', 'e.nombre', 'e.estado')
+			.orderBy('e.nombre');
+		const bancos = filas.length ? await db('wge_paises').whereIn('edicion_id', [...new Set(filas.map((f) => f.id))])
+			.whereIn('responsable_banco', ids).select('edicion_id', 'responsable_banco', 'nombre') : [];
+		const mapa = new Map();
+		for (const f of filas) {
+			f.es_cajero = cajeros.has(f.usuario_id); // todo cajero del equipo vende con su propia caja
+			const encargos = [
+				...bancos.filter((b) => b.edicion_id === f.id && b.responsable_banco === f.usuario_id).map((b) => ({ tipo: 'banco', pais: b.nombre })),
+				...(f.es_cajero ? [{ tipo: 'caja' }] : []),
+			];
+			if (!mapa.has(f.usuario_id)) mapa.set(f.usuario_id, []);
+			mapa.get(f.usuario_id).push({ id: f.id, nombre: f.nombre, estado: f.estado, encargos });
+		}
+		return mapa;
+	};
+
+	/** Roles pedidos ({ roles: [...] } o, como antes, { rol }): el primero es el principal. El administrativo no se asigna aquí. */
+	const leerRoles = (b) => {
+		const lista = Array.isArray(b.roles) ? [...new Set(b.roles)] : b.rol !== undefined ? [b.rol] : null;
+		if (!lista) return null;
+		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		// Los perfiles administrativos no se crean ni se asignan desde Colaboradores
+		if (lista.includes('administrativo')) throw new WgeError(403, 'SIN_PERMISO', 'El rol administrativo no se asigna desde aquí');
+		return { principal: ROLES_FUNCIONARIOS[lista[0]], extra: lista.slice(1).filter((r) => ROLES_COMBINABLES.includes(r)) };
+	};
 
 	const funcionarioExistente = async (id) => {
 		const u = await consultaFuncionarios().where('u.id', id).first();
@@ -67,11 +107,14 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	/** GET /wge/yo: quién inició sesión y a qué parte de Will Go entra. */
 	router.get('/yo', ruta(async (req, rol) => {
 		const u = await db('directus_users').where('id', req.accountability.user)
-			.first('id', 'first_name', 'last_name', 'email', 'role', 'debe_cambiar_clave');
+			.first('id', 'first_name', 'last_name', 'email', 'role', 'debe_cambiar_clave', 'wge_roles_extra');
+		const principal = u.role ? await db('directus_roles').where('id', u.role).first('name as nombre') : null;
 		const esWillGo = [...NOMBRES_FUNCIONARIOS, ROLES.ADMIN].includes(rol);
 		return {
 			id: u.id, role: u.role, nombre: u.first_name, apellido: u.last_name, email: u.email,
 			rol: rol === ROLES.ADMIN ? 'administrador' : (LLAVE_POR_NOMBRE[rol] ?? null),
+			// Todos los roles asignados (quien tiene varios elige con cuál trabajar)
+			roles: rol === ROLES.ADMIN ? ['administrador'] : llavesDe(rolesDe(principal?.nombre, u.wge_roles_extra)),
 			es_will_go: esWillGo, debe_cambiar_clave: !!u.debe_cambiar_clave,
 		};
 	}));
@@ -87,15 +130,19 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	router.get('/funcionarios', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const lista = await consultaFuncionarios().orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
-		return lista.map(comoFuncionario);
+		const comoLista = lista.map(comoFuncionario);
+		const cajeros = new Set(comoLista.filter((u) => u.roles.includes('cajero')).map((u) => u.id));
+		const activas = await edicionesActivas(lista.map((u) => u.id), cajeros);
+		return comoLista.map((u) => ({ ...u, ediciones_activas: activas.get(u.id) ?? [] }));
 	}));
 
 	/** POST /wge/funcionarios { nombre, apellido, email, rol, tipo_documento, numero_documento, celular } */
 	router.post('/funcionarios', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const b = req.body ?? {};
-		const rolNombre = ROLES_FUNCIONARIOS[b.rol];
-		if (!rolNombre) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		const roles = leerRoles(b);
+		if (!roles) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		const rolNombre = roles.principal;
 		puedeManejar(rol, rolNombre);
 		const email = validarCorreo(b.email);
 		if (await db('directus_users').whereRaw('lower(email) = ?', [email]).first('id')) {
@@ -106,7 +153,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			first_name: exigirTexto(b.nombre, 'nombre'), last_name: exigirTexto(b.apellido, 'apellido'), email,
 			tipo_documento: b.tipo_documento || null, numero_documento: b.numero_documento ? String(b.numero_documento).trim() : null,
 			celular: b.celular ? String(b.celular).trim() : null,
-			role: await idDelRol(rolNombre), status: 'active', password: clave, debe_cambiar_clave: true,
+			role: await idDelRol(rolNombre), wge_roles_extra: roles.extra, status: 'active', password: clave, debe_cambiar_clave: true,
 		});
 		return { funcionario: comoFuncionario(await funcionarioExistente(id)), clave_temporal: clave };
 	}));
@@ -128,11 +175,11 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			if (!['active', 'suspended'].includes(b.estado)) throw new WgeError(400, 'VALOR_INVALIDO', 'estado debe ser active o suspended');
 			cambios.status = b.estado;
 		}
-		if (b.rol !== undefined) {
-			const nuevo = ROLES_FUNCIONARIOS[b.rol];
-			if (!nuevo) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
-			puedeManejar(rol, nuevo);
-			cambios.role = await idDelRol(nuevo);
+		const roles = leerRoles(b);
+		if (roles) {
+			puedeManejar(rol, roles.principal);
+			cambios.role = await idDelRol(roles.principal);
+			cambios.wge_roles_extra = roles.extra;
 		}
 		if (Object.keys(cambios).length) await (await usuarios()).updateOne(req.params.id, cambios);
 		return comoFuncionario(await funcionarioExistente(req.params.id));

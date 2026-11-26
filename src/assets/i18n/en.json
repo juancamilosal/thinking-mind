@@ -433,7 +433,10 @@
         "unMomento": "One moment…",
         "usuario": "Username",
         "vacio": "No staff members yet",
-        "vacioAyuda": "Create the first one with the “New staff member” button."
+        "vacioAyuda": "Create the first one with the “New staff member” button.",
+        "variosRoles": "You can check several roles (for example, Teacher and Cashier).",
+        "encargoBanco": "{{pais}} bank",
+        "encargoCaja": "Checkout"
       },
       "ed": {
         "titulo": "Editions",
@@ -945,7 +948,8 @@
         "cerrarSesion": "Sign out",
         "menuAria": "Will Go menu",
         "pronto": "Soon",
-        "saliendo": "Signing out…"
+        "saliendo": "Signing out…",
+        "verComo": "View as"
       },
       "inicio": {
         "hola": "Hi, {{nombre}} 👋",
@@ -1114,6 +1118,9 @@
         "escribirLlave": "Type the key",
         "placeholder": "@name.surname",
         "usar": "Use"
+      },
+      "confirmar": {
+        "aceptar": "Confirm"
       }
     },
     "operacion": {
@@ -1287,7 +1294,14 @@
         "preciosHoy": "Today's prices in each currency",
         "preciosAyuda": "Price in pesos ÷ the currency rate, rounded up.",
         "pesos": "{{n}} pesos",
-        "enOtras": "In other currencies:"
+        "enOtras": "In other currencies:",
+        "soloCajeros": "Only the cashiers on this edition's team can sell.",
+        "tuCaja": "Money in your till",
+        "totalCajas": "Money in the tills (all cashiers)",
+        "cajasPorCajero": "Each cashier's till",
+        "cajaGeneral": "General till (previous)",
+        "entregar": "Hand over",
+        "cobro": "Charged by: {{nombre}}"
       },
       "productos": {
         "titulo": "Products",
@@ -1455,7 +1469,10 @@
         "confirmarEliminar": "Delete “{{nombre}}”? If it already has sales, it will only be hidden from checkout.",
         "descuento": "Discount",
         "descuentoInvalido": "The discount must be a number from 0 to 100.",
-        "sinLimiteCorto": "No limit"
+        "sinLimiteCorto": "No limit",
+        "cajerosEdicion": "Cashiers in this edition",
+        "cajerosAyuda": "Every cashier on the team can sell at the same time. Each one keeps their own till and movements; the products are shared.",
+        "sinCajerosEquipo": "There are no cashiers on the team yet. Add them in the Team tab."
       },
       "participantes": {
         "intro": "Students who fully paid the program show up here automatically. Assign each one a country.",
@@ -1563,7 +1580,16 @@
         "enviandoAviso": "Sending…",
         "notaCorreo": "When you add someone, or make them head of a bank or of the checkout, they get an email with the edition, their role, the dates and the schedule.",
         "lesLlegaCorreo": "They'll get an email with the edition details.",
-        "avisoEnviado": "Email sent to {{n}} of {{total}} staff members."
+        "avisoEnviado": "Email sent to {{n}} of {{total}} staff members.",
+        "buscarEnEquipo": "Search by name or email…",
+        "colColaborador": "Team member",
+        "colRoles": "Roles",
+        "colPais": "Country (teachers)",
+        "colAcciones": "Actions",
+        "rolesDe": "Team member roles",
+        "rolesAyuda": "They can have several roles. The change applies across the platform, not only in this edition.",
+        "rolesGuardados": "Done: {{nombre}}'s roles were updated.",
+        "cambiarRoles": "Change roles"
       },
       "resumen": {
         "cargando": "Loading summary…",

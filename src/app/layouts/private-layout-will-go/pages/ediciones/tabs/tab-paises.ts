@@ -214,7 +214,7 @@ export class TabPaises implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.willGo.funcionarios().subscribe({ next: (l) => (this.banqueros = l.filter((f) => f.rol === 'banco' && f.estado === 'active')) });
+    this.willGo.funcionarios().subscribe({ next: (l) => (this.banqueros = l.filter((f) => (f.roles ?? [f.rol]).includes('banco') && f.estado === 'active')) });
     this.willGo.participantes(this.edicion.id).subscribe({
       next: (l) => { this.conteo = {}; for (const p of l) if (p.pais_id && !p.retirado) this.conteo[p.pais_id] = (this.conteo[p.pais_id] ?? 0) + 1; },
     });

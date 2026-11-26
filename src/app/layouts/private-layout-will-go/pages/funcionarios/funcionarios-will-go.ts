@@ -85,18 +85,70 @@ export class FuncionariosWillGo implements OnInit {
   }
 
   get rolesDisponibles(): RolFuncionario[] {
-    return this.esAdministradorGeneral ? ['docente', 'banco', 'cajero', 'administrativo'] : ['docente', 'banco', 'cajero'];
+    // Los perfiles administrativos no se crean ni se asignan desde esta pantalla
+    return ['docente', 'banco', 'cajero'];
+  }
+
+  /** Roles marcados en el formulario (el primero es el principal). */
+  rolesElegidos: RolFuncionario[] = ['docente'];
+
+  rolesDe(f: Funcionario): RolFuncionario[] {
+    return f.roles?.length ? f.roles : [f.rol];
+  }
+
+  /** Marca o desmarca un rol: el administrativo va solo; siempre queda al menos uno. */
+  alternarRol(r: RolFuncionario): void {
+    let lista = this.rolesElegidos.includes(r) ? this.rolesElegidos.filter((x) => x !== r) : [...this.rolesElegidos, r];
+    if (r === 'administrativo' && lista.includes('administrativo')) lista = ['administrativo'];
+    else if (r !== 'administrativo') lista = lista.filter((x) => x !== 'administrativo');
+    if (!lista.length) return;
+    this.rolesElegidos = lista;
+    this.form.patchValue({ rol: lista[0] });
+  }
+
+  /** Ventana para cambiar solo los roles de un colaborador. */
+  rolesEditando: { funcionario: Funcionario; roles: RolFuncionario[]; guardando: boolean; error: string } | null = null;
+
+  abrirRoles(f: Funcionario): void {
+    this.rolesEditando = { funcionario: f, roles: [...this.rolesDe(f)], guardando: false, error: '' };
+  }
+
+  alternarRolEditando(r: RolFuncionario): void {
+    const e = this.rolesEditando;
+    if (!e) return;
+    e.roles = e.roles.includes(r) ? e.roles.filter((x) => x !== r) : [...e.roles, r];
+  }
+
+  guardarRoles(): void {
+    const e = this.rolesEditando;
+    if (!e || !e.roles.length) return;
+    e.guardando = true;
+    e.error = '';
+    this.willGo.actualizarFuncionario(e.funcionario.id, { rol: e.roles[0], roles: [...e.roles] }).subscribe({
+      next: (f) => {
+        this.reemplazar(f);
+        this.rolesEditando = null;
+        this.mostrarAviso(this.t.instant('wg.pestanas.equipo.rolesGuardados', { nombre: f.nombre }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => { e.guardando = false; e.error = WillGoService.mensajeDeError(err); this.cdr.detectChanges(); },
+    });
+  }
+
+  /** Lo que maneja en una edición: «Banco de Wonderland», «Caja». */
+  textoEncargo(e: { tipo: 'banco' | 'caja'; pais?: string }): string {
+    return e.tipo === 'banco' ? this.t.instant('wg.admin.col.encargoBanco', { pais: e.pais ?? '' }) : this.t.instant('wg.admin.col.encargoCaja');
   }
 
   get filtrados(): Funcionario[] {
     const q = this.busqueda.trim().toLowerCase();
     return this.funcionarios.filter((f) =>
-      (!this.filtroRol || f.rol === this.filtroRol) &&
+      (!this.filtroRol || this.rolesDe(f).includes(this.filtroRol)) &&
       (!q || `${f.nombre} ${f.apellido} ${f.email} ${f.numero_documento ?? ''}`.toLowerCase().includes(q)));
   }
 
   conteo(rol: RolFuncionario): number {
-    return this.funcionarios.filter((f) => f.rol === rol && f.estado === 'active').length;
+    return this.funcionarios.filter((f) => this.rolesDe(f).includes(rol) && f.estado === 'active').length;
   }
 
   /** Solo el administrador general maneja a otros administrativos; nadie se desactiva a sí mismo. */
@@ -117,6 +169,7 @@ export class FuncionariosWillGo implements OnInit {
     this.editando = null;
     this.errorFormulario = '';
     this.form.reset({ nombre: '', apellido: '', email: '', rol: 'docente', tipo_documento: 'CC', numero_documento: '', celular: '' });
+    this.rolesElegidos = ['docente'];
     this.form.get('email')?.enable();
     this.formularioAbierto = true;
   }
@@ -128,6 +181,7 @@ export class FuncionariosWillGo implements OnInit {
       nombre: f.nombre, apellido: f.apellido, email: f.email, rol: f.rol,
       tipo_documento: f.tipo_documento || 'CC', numero_documento: f.numero_documento || '', celular: f.celular || '',
     });
+    this.rolesElegidos = [...this.rolesDe(f)];
     this.form.get('email')?.disable(); // el correo es el usuario de ingreso
     this.formularioAbierto = true;
   }
@@ -144,7 +198,9 @@ export class FuncionariosWillGo implements OnInit {
     this.errorFormulario = '';
     const v = this.form.getRawValue();
     const datos: NuevoFuncionario = {
-      nombre: v.nombre!.trim(), apellido: v.apellido!.trim(), email: v.email!.trim().toLowerCase(), rol: v.rol!,
+      nombre: v.nombre!.trim(), apellido: v.apellido!.trim(), email: v.email!.trim().toLowerCase(),
+      // A un administrativo no se le cambia el rol desde aquí
+      ...(this.editando?.rol === 'administrativo' ? {} : { rol: this.rolesElegidos[0], roles: [...this.rolesElegidos] }),
       tipo_documento: v.tipo_documento || undefined, numero_documento: v.numero_documento?.trim() || undefined, celular: v.celular?.trim() || undefined,
     };
 
@@ -227,7 +283,8 @@ export class FuncionariosWillGo implements OnInit {
   }
 
   private reemplazar(f: Funcionario): void {
-    this.funcionarios = this.funcionarios.map((x) => (x.id === f.id ? f : x));
+    // Las ediciones vigentes no cambian al editar: se conservan las que ya tenía
+    this.funcionarios = this.funcionarios.map((x) => (x.id === f.id ? { ...f, ediciones_activas: f.ediciones_activas ?? x.ediciones_activas } : x));
   }
 
   private falloFormulario(e: unknown): void {

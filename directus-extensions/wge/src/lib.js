@@ -18,15 +18,52 @@ export const ROLES = {
 	ADMIN: 'Administrador',
 };
 
-/** Nombre del rol del usuario que hace la petición (Directus 11). */
-export async function rolDelUsuario(db, accountability) {
+/** Roles de Will Go por su llave (la que usa la app) y al revés. */
+export const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, administrativo: ROLES.ADMIN_WG };
+const LLAVE_DE_ROL = Object.fromEntries(Object.entries(LLAVES_ROL).map(([k, v]) => [v, k]));
+/** Roles que se pueden sumar al rol principal (el administrativo va solo). */
+export const ROLES_COMBINABLES = ['docente', 'banco', 'cajero'];
+
+/** Roles extra guardados en el usuario (directus_users.wge_roles_extra): lista de llaves válidas, sin repetir. */
+export function leerRolesExtra(valor) {
+	let lista = valor;
+	if (typeof lista === 'string') { try { lista = JSON.parse(lista); } catch { lista = []; } }
+	return Array.isArray(lista) ? [...new Set(lista.filter((r) => ROLES_COMBINABLES.includes(r)))] : [];
+}
+
+/** Todos los roles (nombres de Directus) de un usuario: el principal y los extra (solo si el principal es combinable). */
+export function rolesDe(rolPrincipal, extra) {
+	const principalLlave = LLAVE_DE_ROL[rolPrincipal];
+	if (!ROLES_COMBINABLES.includes(principalLlave)) return rolPrincipal ? [rolPrincipal] : [];
+	return [...new Set([rolPrincipal, ...leerRolesExtra(extra).map((k) => LLAVES_ROL[k])])];
+}
+
+/** Llaves de los roles de un usuario, empezando por el principal. */
+export function llavesDe(roles) {
+	return roles.map((r) => LLAVE_DE_ROL[r]).filter(Boolean);
+}
+
+/**
+ * Rol con el que trabaja el usuario en esta petición (Directus 11). Quien tiene varios roles elige uno en la app
+ * (`pedido`, la llave: docente, banco o cajero); si no lo tiene asignado, se usa su rol principal.
+ */
+export async function rolDelUsuario(db, accountability, pedido = null) {
 	if (!accountability?.user) return null;
 	if (accountability.admin) return ROLES.ADMIN;
 	const fila = await db('directus_users as u')
 		.leftJoin('directus_roles as r', 'r.id', 'u.role')
 		.where('u.id', accountability.user)
-		.first('r.name as nombre');
-	return fila?.nombre ?? null;
+		.first('r.name as nombre', 'u.wge_roles_extra');
+	if (!fila?.nombre) return null;
+	const pedidoNombre = typeof pedido === 'string' ? LLAVES_ROL[pedido] : null;
+	return pedidoNombre && rolesDe(fila.nombre, fila.wge_roles_extra).includes(pedidoNombre) ? pedidoNombre : fila.nombre;
+}
+
+/** ¿El usuario tiene ese rol (principal o extra)? */
+export async function tieneRol(db, usuarioId, rolNombre) {
+	const fila = await db('directus_users as u').leftJoin('directus_roles as r', 'r.id', 'u.role')
+		.where('u.id', usuarioId).first('r.name as nombre', 'u.wge_roles_extra');
+	return !!fila && rolesDe(fila.nombre, fila.wge_roles_extra).includes(rolNombre);
 }
 
 export function exigirRol(rol, ...permitidos) {
@@ -49,7 +86,8 @@ export function exigirTexto(valor, campo) {
 export async function billeteraBloqueada(trx, { edicionId, paisId, tipo, docenteId = null, participanteId = null }) {
 	// 'cuenta' es la cuenta electrónica (tarjeta débito) de un estudiante o de un docente; sus billetes quedan en el banco
 	// 'banco_virtual' es la cuenta virtual del banco: dinero sin billetes, para transferir a las cuentas de los docentes
-	const dueno = tipo === 'banco' || tipo === 'caja' || tipo === 'banco_virtual' ? tipo : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
+	// 'caja' con docenteId es la caja propia de ese cajero (cada cajero lleva sus ventas y su efectivo); sin él, la caja general de antes
+	const dueno = tipo === 'banco' || tipo === 'banco_virtual' ? tipo : tipo === 'caja' ? (docenteId ?? 'caja') : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
 	if (!dueno) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el dueño de la billetera');
 	const clave = `${edicionId}:${paisId}:${tipo}:${dueno}`;
 	await trx('wge_billeteras')

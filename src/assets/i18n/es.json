@@ -433,7 +433,10 @@
         "unMomento": "Un momento…",
         "usuario": "Usuario",
         "vacio": "Todavía no hay colaboradores",
-        "vacioAyuda": "Crea el primero con el botón «Nuevo colaborador»."
+        "vacioAyuda": "Crea el primero con el botón «Nuevo colaborador».",
+        "variosRoles": "Puedes marcar varios roles (por ejemplo, Docente y Cajero).",
+        "encargoBanco": "Banco de {{pais}}",
+        "encargoCaja": "Caja"
       },
       "ed": {
         "titulo": "Ediciones",
@@ -945,7 +948,8 @@
         "cerrarSesion": "Cerrar sesión",
         "menuAria": "Menú de Will Go",
         "pronto": "Pronto",
-        "saliendo": "Saliendo…"
+        "saliendo": "Saliendo…",
+        "verComo": "Ver como"
       },
       "inicio": {
         "hola": "Hola, {{nombre}} 👋",
@@ -1114,6 +1118,9 @@
         "escribirLlave": "Escribir la llave",
         "placeholder": "@nombre.apellido",
         "usar": "Usar"
+      },
+      "confirmar": {
+        "aceptar": "Aceptar"
       }
     },
     "operacion": {
@@ -1287,7 +1294,14 @@
         "preciosHoy": "Precios de hoy en cada moneda",
         "preciosAyuda": "Precio en pesos ÷ tasa de la moneda, redondeado hacia arriba.",
         "pesos": "{{n}} pesos",
-        "enOtras": "En otras monedas:"
+        "enOtras": "En otras monedas:",
+        "soloCajeros": "Solo los cajeros del equipo de esta edición pueden vender.",
+        "tuCaja": "Dinero en tu caja",
+        "totalCajas": "Dinero en las cajas (todos los cajeros)",
+        "cajasPorCajero": "Caja de cada cajero",
+        "cajaGeneral": "Caja general (anterior)",
+        "entregar": "Entregar",
+        "cobro": "Cobró: {{nombre}}"
       },
       "productos": {
         "titulo": "Productos",
@@ -1455,7 +1469,10 @@
         "confirmarEliminar": "¿Eliminar «{{nombre}}»? Si ya tiene ventas, solo se ocultará de la caja.",
         "descuento": "Descuento",
         "descuentoInvalido": "El descuento debe ser un número de 0 a 100.",
-        "sinLimiteCorto": "Sin límite"
+        "sinLimiteCorto": "Sin límite",
+        "cajerosEdicion": "Cajeros de esta edición",
+        "cajerosAyuda": "Todos los cajeros del equipo pueden vender al mismo tiempo. Cada uno lleva su propia caja y sus movimientos; los productos son compartidos.",
+        "sinCajerosEquipo": "Aún no hay cajeros en el equipo. Agrégalos en la pestaña Colaboradores."
       },
       "participantes": {
         "intro": "Los inscritos con el programa pagado por completo aparecen aquí solos. Asigna a cada uno su país.",
@@ -1563,7 +1580,16 @@
         "enviandoAviso": "Enviando…",
         "notaCorreo": "Al agregar a alguien, o al nombrarlo responsable del banco o encargado de la caja, le llega un correo con la edición, su rol, las fechas y el horario.",
         "lesLlegaCorreo": "Les llegará un correo con los datos de la edición.",
-        "avisoEnviado": "Aviso enviado a {{n}} de {{total}} colaboradores."
+        "avisoEnviado": "Aviso enviado a {{n}} de {{total}} colaboradores.",
+        "buscarEnEquipo": "Buscar por nombre o correo…",
+        "colColaborador": "Colaborador",
+        "colRoles": "Roles",
+        "colPais": "País (docentes)",
+        "colAcciones": "Acciones",
+        "rolesDe": "Roles del colaborador",
+        "rolesAyuda": "Puede tener varios roles. El cambio aplica en toda la plataforma, no solo en esta edición.",
+        "rolesGuardados": "Listo: se actualizaron los roles de {{nombre}}.",
+        "cambiarRoles": "Cambiar roles"
       },
       "resumen": {
         "cargando": "Cargando resumen…",

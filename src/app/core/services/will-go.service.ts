@@ -13,9 +13,30 @@ export interface PerfilWillGo {
   nombre: string;
   apellido: string;
   email: string;
+  /** Rol con el que trabaja ahora (quien tiene varios lo elige). */
   rol: RolWillGo | null;
+  /** Todos los roles asignados, empezando por el principal. */
+  roles?: RolWillGo[];
   es_will_go: boolean;
   debe_cambiar_clave: boolean;
+}
+
+/** Rol elegido por quien tiene varios; viaja en cada petición a /wge/ (parámetro wg_rol). */
+const ROL_ACTIVO = 'wg_rol_activo';
+export function rolActivoGuardado(): string | null {
+  try { return typeof localStorage !== 'undefined' ? localStorage.getItem(ROL_ACTIVO) : null; } catch { return null; }
+}
+export function guardarRolActivo(rol: string | null): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (rol) localStorage.setItem(ROL_ACTIVO, rol); else localStorage.removeItem(ROL_ACTIVO);
+  } catch { /* sin almacenamiento: se usa el rol principal */ }
+}
+
+/** Una edición vigente en la que está un colaborador y lo que maneja en ella. */
+export interface EdicionActivaColaborador {
+  id: string; nombre: string; estado: string;
+  encargos: { tipo: 'banco' | 'caja'; pais?: string }[];
 }
 
 export interface Funcionario {
@@ -29,14 +50,21 @@ export interface Funcionario {
   estado: 'active' | 'suspended' | string;
   ultimo_ingreso: string | null;
   debe_cambiar_clave: boolean;
+  /** Rol principal. */
   rol: Exclude<RolWillGo, 'administrador'>;
+  /** Todos sus roles (el principal primero). */
+  roles?: Exclude<RolWillGo, 'administrador'>[];
+  /** Ediciones vigentes en las que está. */
+  ediciones_activas?: EdicionActivaColaborador[];
 }
 
 export interface NuevoFuncionario {
   nombre: string;
   apellido: string;
   email: string;
-  rol: Funcionario['rol'];
+  rol?: Funcionario['rol'];
+  /** Todos los roles (el primero es el principal). */
+  roles?: Funcionario['rol'][];
   tipo_documento?: string;
   numero_documento?: string;
   celular?: string;
@@ -122,6 +150,8 @@ export interface MiembroEquipo {
   id: string; usuario_id: string; pais_id: string | null; pais: string | null;
   nombre: string; apellido: string; email: string; estado: string;
   rol: 'docente' | 'banco' | 'cajero' | 'administrativo' | null;
+  /** Todos sus roles. */
+  roles?: ('docente' | 'banco' | 'cajero' | 'administrativo')[];
   /** Billetes que el docente tiene en mano en esta edición. */
   billetes: number;
 }
@@ -237,10 +267,18 @@ export interface VentaCaja {
   id: string; numero_recibo: string; total_billetes: number; tasa_aplicada: number; pais_id: string; metodo_pago?: 'efectivo' | 'tarjeta';
   billetes_recibidos: Record<string, number>; billetes_vuelto: Record<string, number>; date_created: string; nombre: string; apellido: string;
   items: { nombre: string; cantidad: number; precio_billetes: number }[];
+  /** Quién la cobró. */
+  cajero?: string;
 }
+
+/** La caja de un cajero en un país (usuario_id null = la caja general de antes). */
+export interface CajaCajero { pais_id: string; usuario_id: string | null; nombre: string; saldo: number; }
 export interface DatosCaja {
   edicion: { id: string; nombre: string; estado: string; responsable_caja: string | null; responsable: string };
-  puede_vender: boolean; denominaciones: number[]; paises: PaisCaja[]; productos: ProductoCaja[]; estudiantes: EstudianteCaja[];
+  puede_vender: boolean; es_admin?: boolean;
+  /** Solo para el administrativo: la caja de cada cajero. */
+  cajas?: CajaCajero[];
+  denominaciones: number[]; paises: PaisCaja[]; productos: ProductoCaja[]; estudiantes: EstudianteCaja[];
   /** Unidades que cada estudiante ya compró de cada producto: { estudiante: { producto: n } } */
   comprado: Record<string, Record<string, number>>;
   ventas: VentaCaja[];
@@ -332,6 +370,7 @@ export class WillGoService {
 
   static olvidarPerfil(): void {
     if (typeof localStorage !== 'undefined') localStorage.removeItem(PERFIL);
+    guardarRolActivo(null);
     WillGoService.accesoMenu$ = null;
   }
 
@@ -613,8 +652,9 @@ export class WillGoService {
   }
 
   /** La caja entrega billetes al banco de un país. */
-  entregarCajaAlBanco(edicionId: string, paisId: string, billetes: Record<string, number> | number, clave: string): Observable<{ monto: number }> {
-    return this.http.post<{ data: { monto: number } }>(`${this.api}/ediciones/${edicionId}/caja/entregar`, { pais_id: paisId, ...WillGoService.dinero(billetes), clave_idempotencia: clave })
+  /** Entrega al banco el efectivo de la caja propia (o, el administrativo, la de un cajero con `cajaDe`; 'general' = la caja de antes). */
+  entregarCajaAlBanco(edicionId: string, paisId: string, billetes: Record<string, number> | number, clave: string, cajaDe?: string | null): Observable<{ monto: number }> {
+    return this.http.post<{ data: { monto: number } }>(`${this.api}/ediciones/${edicionId}/caja/entregar`, { pais_id: paisId, ...WillGoService.dinero(billetes), clave_idempotencia: clave, ...(cajaDe ? { caja_de: cajaDe } : {}) })
       .pipe(this.enZona(), map((r) => r.data));
   }
 

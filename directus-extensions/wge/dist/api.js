@@ -21,15 +21,52 @@ const ROLES = {
 	ADMIN: 'Administrador',
 };
 
-/** Nombre del rol del usuario que hace la petición (Directus 11). */
-async function rolDelUsuario(db, accountability) {
+/** Roles de Will Go por su llave (la que usa la app) y al revés. */
+const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, administrativo: ROLES.ADMIN_WG };
+const LLAVE_DE_ROL = Object.fromEntries(Object.entries(LLAVES_ROL).map(([k, v]) => [v, k]));
+/** Roles que se pueden sumar al rol principal (el administrativo va solo). */
+const ROLES_COMBINABLES = ['docente', 'banco', 'cajero'];
+
+/** Roles extra guardados en el usuario (directus_users.wge_roles_extra): lista de llaves válidas, sin repetir. */
+function leerRolesExtra(valor) {
+	let lista = valor;
+	if (typeof lista === 'string') { try { lista = JSON.parse(lista); } catch { lista = []; } }
+	return Array.isArray(lista) ? [...new Set(lista.filter((r) => ROLES_COMBINABLES.includes(r)))] : [];
+}
+
+/** Todos los roles (nombres de Directus) de un usuario: el principal y los extra (solo si el principal es combinable). */
+function rolesDe(rolPrincipal, extra) {
+	const principalLlave = LLAVE_DE_ROL[rolPrincipal];
+	if (!ROLES_COMBINABLES.includes(principalLlave)) return rolPrincipal ? [rolPrincipal] : [];
+	return [...new Set([rolPrincipal, ...leerRolesExtra(extra).map((k) => LLAVES_ROL[k])])];
+}
+
+/** Llaves de los roles de un usuario, empezando por el principal. */
+function llavesDe(roles) {
+	return roles.map((r) => LLAVE_DE_ROL[r]).filter(Boolean);
+}
+
+/**
+ * Rol con el que trabaja el usuario en esta petición (Directus 11). Quien tiene varios roles elige uno en la app
+ * (`pedido`, la llave: docente, banco o cajero); si no lo tiene asignado, se usa su rol principal.
+ */
+async function rolDelUsuario(db, accountability, pedido = null) {
 	if (!accountability?.user) return null;
 	if (accountability.admin) return ROLES.ADMIN;
 	const fila = await db('directus_users as u')
 		.leftJoin('directus_roles as r', 'r.id', 'u.role')
 		.where('u.id', accountability.user)
-		.first('r.name as nombre');
-	return fila?.nombre ?? null;
+		.first('r.name as nombre', 'u.wge_roles_extra');
+	if (!fila?.nombre) return null;
+	const pedidoNombre = typeof pedido === 'string' ? LLAVES_ROL[pedido] : null;
+	return pedidoNombre && rolesDe(fila.nombre, fila.wge_roles_extra).includes(pedidoNombre) ? pedidoNombre : fila.nombre;
+}
+
+/** ¿El usuario tiene ese rol (principal o extra)? */
+async function tieneRol(db, usuarioId, rolNombre) {
+	const fila = await db('directus_users as u').leftJoin('directus_roles as r', 'r.id', 'u.role')
+		.where('u.id', usuarioId).first('r.name as nombre', 'u.wge_roles_extra');
+	return !!fila && rolesDe(fila.nombre, fila.wge_roles_extra).includes(rolNombre);
 }
 
 function exigirRol(rol, ...permitidos) {
@@ -52,7 +89,8 @@ function exigirTexto(valor, campo) {
 async function billeteraBloqueada(trx, { edicionId, paisId, tipo, docenteId = null, participanteId = null }) {
 	// 'cuenta' es la cuenta electrónica (tarjeta débito) de un estudiante o de un docente; sus billetes quedan en el banco
 	// 'banco_virtual' es la cuenta virtual del banco: dinero sin billetes, para transferir a las cuentas de los docentes
-	const dueno = tipo === 'banco' || tipo === 'caja' || tipo === 'banco_virtual' ? tipo : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
+	// 'caja' con docenteId es la caja propia de ese cajero (cada cajero lleva sus ventas y su efectivo); sin él, la caja general de antes
+	const dueno = tipo === 'banco' || tipo === 'banco_virtual' ? tipo : tipo === 'caja' ? (docenteId ?? 'caja') : tipo === 'docente' ? docenteId : tipo === 'cuenta' ? (participanteId ?? docenteId) : participanteId;
 	if (!dueno) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el dueño de la billetera');
 	const clave = `${edicionId}:${paisId}:${tipo}:${dueno}`;
 	await trx('wge_billeteras')
@@ -443,6 +481,7 @@ const TRADUCCIONES = [
 	['El estudiante fue retirado de la edición', 'The student was withdrawn from the edition', "L'élève a été retiré de l'édition"],
 	['El participante no tiene país asignado', 'The participant has no country assigned', "Le participant n'a pas de pays attribué"],
 	['El destinatario no es docente de Will Go', 'The recipient is not a Will Go teacher', "Le destinataire n'est pas enseignant de Will Go"],
+	['No puedes entregarte dinero a ti mismo desde el banco', 'You cannot give money to yourself from the bank', 'Vous ne pouvez pas vous remettre de l\'argent à vous-même depuis la banque'],
 	['En el banco solo quedan $1 billetes de $2', 'The bank only has $1 bills of $2 left', 'Il ne reste que $1 billets de $2 à la banque'],
 	['Solo tienes $1 billetes de $2', 'You only have $1 bills of $2', "Vous n'avez que $1 billets de $2"],
 	['tipo debe ser banco_docente o docente_estudiante', 'tipo must be banco_docente or docente_estudiante', 'tipo doit être banco_docente ou docente_estudiante'],
@@ -470,6 +509,7 @@ const TRADUCCIONES = [
 	['No existe el rol $1 en Directus', 'The role $1 does not exist in Directus', "Le rôle $1 n'existe pas dans Directus"],
 	['El colaborador no existe o no es de Will Go', 'The staff member does not exist or is not from Will Go', "Le collaborateur n'existe pas ou n'appartient pas à Will Go"],
 	['El rol debe ser docente, banco, cajero o administrativo', 'The role must be teacher, bank, cashier or administrative', 'Le rôle doit être enseignant, banque, caissier ou administratif'],
+	['El rol administrativo no se asigna desde aquí', 'The administrative role is not assigned here', 'Le rôle administratif ne s\'attribue pas ici'],
 	['Ya existe un usuario con ese correo', 'A user with that email already exists', 'Un utilisateur avec cette adresse e-mail existe déjà'],
 	['No puedes desactivar tu propio usuario', 'You cannot deactivate your own user', 'Vous ne pouvez pas désactiver votre propre utilisateur'],
 	['estado debe ser active o suspended', 'estado must be active or suspended', 'estado doit être active ou suspended'],
@@ -586,9 +626,49 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	const consultaFuncionarios = () => db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
 		.whereIn('r.name', NOMBRES_FUNCIONARIOS)
 		.select('u.id', 'u.first_name as nombre', 'u.last_name as apellido', 'u.email', 'u.tipo_documento', 'u.numero_documento',
-			'u.celular', 'u.status as estado', 'u.last_access as ultimo_ingreso', 'u.debe_cambiar_clave', 'r.name as rol_nombre');
+			'u.celular', 'u.status as estado', 'u.last_access as ultimo_ingreso', 'u.debe_cambiar_clave', 'r.name as rol_nombre', 'u.wge_roles_extra');
 
-	const comoFuncionario = (u) => ({ ...u, rol: LLAVE_POR_NOMBRE[u.rol_nombre], debe_cambiar_clave: !!u.debe_cambiar_clave });
+	// rol: el principal; roles: todos los que tiene, empezando por el principal
+	const comoFuncionario = ({ wge_roles_extra, ...u }) => ({
+		...u, rol: LLAVE_POR_NOMBRE[u.rol_nombre], roles: llavesDe(rolesDe(u.rol_nombre, wge_roles_extra)), debe_cambiar_clave: !!u.debe_cambiar_clave,
+	});
+
+	/**
+	 * Ediciones vigentes (no cerradas y sin pasar su fecha final) en las que está cada colaborador,
+	 * con lo que maneja en ella: el banco de algún país o la caja.
+	 */
+	const edicionesActivas = async (ids, cajeros = new Set()) => {
+		if (!ids.length) return new Map();
+		const hoy = new Date().toISOString().slice(0, 10);
+		const filas = await db('wge_equipo as q').join('wge_ediciones as e', 'e.id', 'q.edicion_id')
+			.whereIn('q.usuario_id', ids).whereNot('e.estado', 'cerrada')
+			.where((w) => w.whereNull('e.fecha_fin').orWhere('e.fecha_fin', '>=', hoy))
+			.select('q.usuario_id', 'e.id', 'e.nombre', 'e.estado')
+			.orderBy('e.nombre');
+		const bancos = filas.length ? await db('wge_paises').whereIn('edicion_id', [...new Set(filas.map((f) => f.id))])
+			.whereIn('responsable_banco', ids).select('edicion_id', 'responsable_banco', 'nombre') : [];
+		const mapa = new Map();
+		for (const f of filas) {
+			f.es_cajero = cajeros.has(f.usuario_id); // todo cajero del equipo vende con su propia caja
+			const encargos = [
+				...bancos.filter((b) => b.edicion_id === f.id && b.responsable_banco === f.usuario_id).map((b) => ({ tipo: 'banco', pais: b.nombre })),
+				...(f.es_cajero ? [{ tipo: 'caja' }] : []),
+			];
+			if (!mapa.has(f.usuario_id)) mapa.set(f.usuario_id, []);
+			mapa.get(f.usuario_id).push({ id: f.id, nombre: f.nombre, estado: f.estado, encargos });
+		}
+		return mapa;
+	};
+
+	/** Roles pedidos ({ roles: [...] } o, como antes, { rol }): el primero es el principal. El administrativo no se asigna aquí. */
+	const leerRoles = (b) => {
+		const lista = Array.isArray(b.roles) ? [...new Set(b.roles)] : b.rol !== undefined ? [b.rol] : null;
+		if (!lista) return null;
+		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		// Los perfiles administrativos no se crean ni se asignan desde Colaboradores
+		if (lista.includes('administrativo')) throw new WgeError(403, 'SIN_PERMISO', 'El rol administrativo no se asigna desde aquí');
+		return { principal: ROLES_FUNCIONARIOS[lista[0]], extra: lista.slice(1).filter((r) => ROLES_COMBINABLES.includes(r)) };
+	};
 
 	const funcionarioExistente = async (id) => {
 		const u = await consultaFuncionarios().where('u.id', id).first();
@@ -599,11 +679,14 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	/** GET /wge/yo: quién inició sesión y a qué parte de Will Go entra. */
 	router.get('/yo', ruta(async (req, rol) => {
 		const u = await db('directus_users').where('id', req.accountability.user)
-			.first('id', 'first_name', 'last_name', 'email', 'role', 'debe_cambiar_clave');
+			.first('id', 'first_name', 'last_name', 'email', 'role', 'debe_cambiar_clave', 'wge_roles_extra');
+		const principal = u.role ? await db('directus_roles').where('id', u.role).first('name as nombre') : null;
 		const esWillGo = [...NOMBRES_FUNCIONARIOS, ROLES.ADMIN].includes(rol);
 		return {
 			id: u.id, role: u.role, nombre: u.first_name, apellido: u.last_name, email: u.email,
 			rol: rol === ROLES.ADMIN ? 'administrador' : (LLAVE_POR_NOMBRE[rol] ?? null),
+			// Todos los roles asignados (quien tiene varios elige con cuál trabajar)
+			roles: rol === ROLES.ADMIN ? ['administrador'] : llavesDe(rolesDe(principal?.nombre, u.wge_roles_extra)),
 			es_will_go: esWillGo, debe_cambiar_clave: !!u.debe_cambiar_clave,
 		};
 	}));
@@ -619,15 +702,19 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	router.get('/funcionarios', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const lista = await consultaFuncionarios().orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
-		return lista.map(comoFuncionario);
+		const comoLista = lista.map(comoFuncionario);
+		const cajeros = new Set(comoLista.filter((u) => u.roles.includes('cajero')).map((u) => u.id));
+		const activas = await edicionesActivas(lista.map((u) => u.id), cajeros);
+		return comoLista.map((u) => ({ ...u, ediciones_activas: activas.get(u.id) ?? [] }));
 	}));
 
 	/** POST /wge/funcionarios { nombre, apellido, email, rol, tipo_documento, numero_documento, celular } */
 	router.post('/funcionarios', ruta(async (req, rol) => {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const b = req.body ?? {};
-		const rolNombre = ROLES_FUNCIONARIOS[b.rol];
-		if (!rolNombre) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		const roles = leerRoles(b);
+		if (!roles) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		const rolNombre = roles.principal;
 		puedeManejar(rol, rolNombre);
 		const email = validarCorreo(b.email);
 		if (await db('directus_users').whereRaw('lower(email) = ?', [email]).first('id')) {
@@ -638,7 +725,7 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			first_name: exigirTexto(b.nombre, 'nombre'), last_name: exigirTexto(b.apellido, 'apellido'), email,
 			tipo_documento: b.tipo_documento || null, numero_documento: b.numero_documento ? String(b.numero_documento).trim() : null,
 			celular: b.celular ? String(b.celular).trim() : null,
-			role: await idDelRol(rolNombre), status: 'active', password: clave, debe_cambiar_clave: true,
+			role: await idDelRol(rolNombre), wge_roles_extra: roles.extra, status: 'active', password: clave, debe_cambiar_clave: true,
 		});
 		return { funcionario: comoFuncionario(await funcionarioExistente(id)), clave_temporal: clave };
 	}));
@@ -660,11 +747,11 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			if (!['active', 'suspended'].includes(b.estado)) throw new WgeError(400, 'VALOR_INVALIDO', 'estado debe ser active o suspended');
 			cambios.status = b.estado;
 		}
-		if (b.rol !== undefined) {
-			const nuevo = ROLES_FUNCIONARIOS[b.rol];
-			if (!nuevo) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
-			puedeManejar(rol, nuevo);
-			cambios.role = await idDelRol(nuevo);
+		const roles = leerRoles(b);
+		if (roles) {
+			puedeManejar(rol, roles.principal);
+			cambios.role = await idDelRol(roles.principal);
+			cambios.wge_roles_extra = roles.extra;
 		}
 		if (Object.keys(cambios).length) await (await usuarios()).updateOne(req.params.id, cambios);
 		return comoFuncionario(await funcionarioExistente(req.params.id));
@@ -799,7 +886,7 @@ function horarioAviso(horario, idioma = 'es') {
  * Asunto y HTML del aviso. `encargo`: 'equipo' (lo agregaron al equipo), 'banco' (responsable del banco de `pais`)
  * o 'caja' (encargado de la caja).
  */
-function correoAsignacion({ nombre, correo, rol, encargo = 'equipo', pais = null, edicion, idioma = 'es' }) {
+function correoAsignacion({ nombre, correo, rol, roles = null, encargo = 'equipo', pais = null, edicion, idioma = 'es' }) {
 	const l = TEXTOS_AVISO[idioma] ? idioma : 'es';
 	const t = TEXTOS_AVISO[l];
 	const intro = encargo === 'banco' ? t.intro.banco(limpiarHtml(pais)) : encargo === 'caja' ? t.intro.caja : t.intro.equipo;
@@ -807,8 +894,9 @@ function correoAsignacion({ nombre, correo, rol, encargo = 'equipo', pais = null
 		[t.edicion, `${limpiarHtml(edicion.nombre)}${edicion.edicion_programa ? ` · ${t.numero(limpiarHtml(edicion.edicion_programa))}` : ''}`],
 		[t.colegio, limpiarHtml(edicion.colegio) || '—'],
 		[t.programa, limpiarHtml(edicion.programa) || '—'],
-		[t.rol, NOMBRE_ROL_AVISO[l][rol] ?? limpiarHtml(rol)],
-		...(encargo === 'banco' || rol === ROLES.DOCENTE ? [[t.pais, limpiarHtml(pais) || t.todosPaises]] : []),
+		// Todos sus roles (quien tiene varios los ve juntos: «Docente · Cajero»)
+		[t.rol, (roles?.length ? roles : [rol]).map((r) => NOMBRE_ROL_AVISO[l][r] ?? limpiarHtml(r)).join(' · ')],
+		...(encargo === 'banco' || (roles?.length ? roles : [rol]).includes(ROLES.DOCENTE) ? [[t.pais, limpiarHtml(pais) || t.todosPaises]] : []),
 		[t.inicio, fechaAviso(edicion.fecha_inicio, l) ?? t.sinFecha],
 		[t.fin, fechaAviso(edicion.fecha_fin, l) ?? t.sinFecha],
 		[t.horario, horarioAviso(edicion.horario, l) ?? t.sinHorario],
@@ -842,13 +930,13 @@ async function enviarAvisos({ db, services, getSchema, env, logger }, edicionId,
 		for (const a of avisos) {
 			try {
 				const u = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role').where('u.id', a.usuarioId)
-					.first('u.email', 'u.first_name', 'u.status', 'r.name as rol');
+					.first('u.email', 'u.first_name', 'u.status', 'r.name as rol', 'u.wge_roles_extra');
 				if (!u?.email || u.status !== 'active') continue;
 				// País: el del encargo (banco) o el que tenga en el equipo (docente)
 				let paisId = a.paisId ?? null;
 				if (!paisId && a.encargo !== 'banco') paisId = (await db('wge_equipo').where({ edicion_id: edicionId, usuario_id: a.usuarioId }).first('pais_id'))?.pais_id ?? null;
 				const pais = paisId ? (await db('wge_paises').where('id', paisId).first('nombre'))?.nombre : null;
-				const contenido = correoAsignacion({ nombre: u.first_name, correo: u.email, rol: u.rol, encargo: a.encargo, pais, edicion, idioma });
+				const contenido = correoAsignacion({ nombre: u.first_name, correo: u.email, rol: u.rol, roles: rolesDe(u.rol, u.wge_roles_extra), encargo: a.encargo, pais, edicion, idioma });
 				await mail.send({ to: u.email, ...(env?.EMAIL_FROM ? { from: { name: 'Thinking Mind', address: env.EMAIL_FROM } } : {}), ...contenido });
 				enviados++;
 			} catch (error) {
@@ -1129,8 +1217,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			await validarOferta({ colegio_id: e.colegio_id, curso_id: e.curso_id, edicion_programa: e.edicion_programa, ...fila }, e.id);
 		}
 		if (fila.responsable_caja) {
-			const esCajero = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
-				.where({ 'u.id': fila.responsable_caja, 'r.name': ROLES.CAJERO }).first('u.id');
+			const esCajero = await tieneRol(db, fila.responsable_caja, ROLES.CAJERO);
 			if (!esCajero) throw new WgeError(400, 'VALOR_INVALIDO', 'El encargado de la caja debe ser un colaborador con rol Cajero');
 			// Queda en el equipo de la edición
 			await db('wge_equipo').insert(nueva(req.accountability.user, {
@@ -1233,8 +1320,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				throw new WgeError(409, 'EDICION_ABIERTA', 'La provisión del banco se define antes de abrir la edición');
 			}
 			if (nombre === 'paises' && fila.responsable_banco) {
-				const esBanco = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
-					.where({ 'u.id': fila.responsable_banco, 'r.name': ROLES.BANCO }).first('u.id');
+				const esBanco = await tieneRol(db, fila.responsable_banco, ROLES.BANCO);
 				if (!esBanco) throw new WgeError(400, 'VALOR_INVALIDO', 'El responsable del banco debe ser un colaborador con rol Banco');
 				// Queda en el equipo de la edición
 				await db('wge_equipo').insert(nueva(req.accountability.user, {
@@ -1447,11 +1533,12 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			.leftJoin('directus_roles as r', 'r.id', 'u.role').leftJoin('wge_paises as pa', 'pa.id', 'q.pais_id')
 			.where('q.edicion_id', e.id)
 			.select('q.id', 'q.usuario_id', 'q.pais_id', 'pa.nombre as pais', 'u.first_name as nombre', 'u.last_name as apellido', 'u.email',
-				'u.status as estado', 'r.name as rol_nombre',
+				'u.status as estado', 'r.name as rol_nombre', 'u.wge_roles_extra',
 				db.raw(`coalesce((select sum(b.saldo) from wge_billeteras b where b.edicion_id = q.edicion_id
 					and b.tipo_dueno = 'docente' and b.docente_id = q.usuario_id), 0)::int as billetes`))
 			.orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
-		return filas.map((f) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null }));
+		// rol: el principal; roles: todos los que tiene (p. ej. docente y cajero)
+		return filas.map(({ wge_roles_extra, ...f }) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null, roles: llavesDe(rolesDe(f.rol_nombre, wge_roles_extra)) }));
 	}));
 
 	/**
@@ -2866,9 +2953,9 @@ function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 	return { saldoDe };
 }
 
-// Caja GO•STORE: un encargado por edición vende los productos de la tienda.
-// El estudiante paga con billetes físicos de su país; la caja da el vuelto con los billetes que tiene.
-// Los billetes se quedan en la caja (una billetera por país) hasta que el encargado los entrega al banco.
+// Caja GO•STORE: todos los cajeros del equipo de la edición venden los mismos productos (el inventario es compartido).
+// Cada cajero lleva su propia caja por país: el efectivo de sus ventas entra a su caja y él lo entrega al banco.
+// Las ventas con tarjeta van directo a la cuenta virtual del banco.
 
 const leerBilletesCaja = (b) => (typeof b === 'string' ? JSON.parse(b) : b) ?? {};
 
@@ -2886,14 +2973,13 @@ async function inventarioCaja(db, edicionId, paisId) {
 	return quedan;
 }
 
-/** Solo el encargado de la caja de la edición (o un administrativo) vende y entrega al banco. */
-async function exigirResponsableCaja(db, { edicionId, usuarioId, rol }) {
-	if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG) return;
-	const e = await db('wge_ediciones as e').leftJoin('directus_users as u', 'u.id', 'e.responsable_caja')
-		.where('e.id', edicionId).first('e.responsable_caja', 'u.first_name', 'u.last_name');
-	// Sin encargado asignado, cualquier cajero del equipo de la edición puede vender (el equipo se revisa antes)
-	if (!e?.responsable_caja) return;
-	if (e.responsable_caja !== usuarioId) throw new WgeError(403, 'OTRO_RESPONSABLE', `La caja la maneja ${`${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()}`);
+/**
+ * Quién puede vender: cualquier cajero del equipo de la edición (el equipo se revisa antes) o un administrativo.
+ * Ya no hay un solo encargado: varios cajeros venden a la vez, cada uno con su caja.
+ */
+async function exigirResponsableCaja(db, { rol }) {
+	if (rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG || rol === ROLES.CAJERO) return;
+	throw new WgeError(403, 'SIN_PERMISO', 'Tu rol no puede hacer esta operación');
 }
 
 /** Precio en la moneda del país con la tasa vigente y el descuento del producto (0 a 100 %), siempre hacia arriba. */
@@ -2916,10 +3002,16 @@ function rutasCaja(router, { ruta, db }) {
 		await permitir(req, rol, edicion.id);
 		const esAdmin = rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG;
 		const paises = await db('wge_paises').where('edicion_id', edicion.id).orderBy('orden').select('id', 'nombre', 'codigo_moneda', 'color', 'tasa_actual');
+		const yo = req.accountability.user;
+		// Cajas de la edición: una por cajero y país (y la general de antes, si tiene saldo)
+		const cajas = (await db('wge_billeteras as b').leftJoin('directus_users as u', 'u.id', 'b.docente_id')
+			.where({ 'b.edicion_id': edicion.id, 'b.tipo_dueno': 'caja' })
+			.select('b.pais_id', 'b.docente_id as usuario_id', 'b.saldo', db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as nombre")))
+			.map((c) => ({ ...c, saldo: Number(c.saldo) }));
 		for (const p of paises) {
 			p.tasa_actual = Number(p.tasa_actual ?? edicion.tasa_inicial);
-			const caja = await db('wge_billeteras').where({ edicion_id: edicion.id, pais_id: p.id, tipo_dueno: 'caja' }).first('saldo');
-			p.saldo_caja = Number(caja?.saldo ?? 0);
+			// El cajero ve su propia caja; el administrativo, el total de todas
+			p.saldo_caja = cajas.filter((c) => c.pais_id === p.id && (esAdmin || c.usuario_id === yo)).reduce((t, c) => t + c.saldo, 0);
 			p.inventario = await inventarioCaja(db, edicion.id, p.id);
 		}
 		const productos = await db('wge_productos').where({ edicion_id: edicion.id, activo: true }).orderBy('nombre')
@@ -2942,8 +3034,11 @@ function rutasCaja(router, { ruta, db }) {
 		const comprado = {};
 		for (const c of compras) (comprado[c.participante_id] ??= {})[c.producto_id] = Number(c.n);
 		const ventas = await db('wge_ventas as v').join('wge_participantes as pa', 'pa.id', 'v.participante_id').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
-			.where('v.edicion_id', edicion.id).orderBy('v.date_created', 'desc').limit(50)
-			.select('v.id', 'v.numero_recibo', 'v.total_billetes', 'v.tasa_aplicada', 'v.pais_id', db.raw("coalesce(v.metodo_pago, 'efectivo') as metodo_pago"), 'v.billetes_recibidos', 'v.billetes_vuelto', 'v.date_created', 'e.nombre', 'e.apellido');
+			.leftJoin('directus_users as uv', 'uv.id', 'v.user_created')
+			.where('v.edicion_id', edicion.id).modify((q) => { if (!esAdmin) q.where('v.user_created', yo); }) // cada cajero ve sus ventas
+			.orderBy('v.date_created', 'desc').limit(esAdmin ? 100 : 50)
+			.select('v.id', 'v.numero_recibo', 'v.total_billetes', 'v.tasa_aplicada', 'v.pais_id', db.raw("coalesce(v.metodo_pago, 'efectivo') as metodo_pago"), 'v.billetes_recibidos', 'v.billetes_vuelto', 'v.date_created', 'e.nombre', 'e.apellido',
+				db.raw("trim(coalesce(uv.first_name, '') || ' ' || coalesce(uv.last_name, '')) as cajero"));
 		const items = ventas.length ? await db('wge_venta_items as i').join('wge_productos as p', 'p.id', 'i.producto_id')
 			.whereIn('i.venta_id', ventas.map((v) => v.id)).select('i.venta_id', 'p.nombre', 'i.cantidad', 'i.precio_billetes') : [];
 		for (const v of ventas) {
@@ -2953,15 +3048,18 @@ function rutasCaja(router, { ruta, db }) {
 		}
 		const entregas = await db('wge_transferencias as t').join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
 			.leftJoin('directus_users as u', 'u.id', 't.user_created')
-			.where({ 'bo.edicion_id': edicion.id, 'bo.tipo_dueno': 'caja' }).orderBy('t.date_created', 'desc').limit(30)
+			.where({ 'bo.edicion_id': edicion.id, 'bo.tipo_dueno': 'caja' }).modify((q) => { if (!esAdmin) q.where('bo.docente_id', yo); })
+			.orderBy('t.date_created', 'desc').limit(30)
 			.select('t.id', 't.pais_id', 't.monto', 't.billetes', 't.date_created', db.raw("trim(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) as quien"));
 		return {
-			edicion, puede_vender: esAdmin || edicion.responsable_caja === req.accountability.user || (!edicion.responsable_caja && rol === ROLES.CAJERO),
+			edicion, puede_vender: esAdmin || rol === ROLES.CAJERO, es_admin: esAdmin,
+			// El administrativo ve la caja de cada cajero (para entregar al banco por él si hace falta)
+			cajas: esAdmin ? cajas.filter((c) => c.usuario_id || c.saldo) : [],
 			denominaciones: DENOMINACIONES, paises, productos, estudiantes, comprado, ventas, entregas,
 		};
 	}));
 
-	/** POST /wge/ediciones/:id/caja/entregar { pais_id, billetes, clave_idempotencia }: la caja entrega billetes al banco del país. */
+	/** POST /wge/ediciones/:id/caja/entregar { pais_id, monto, caja_de?, clave_idempotencia }: el cajero entrega al banco el efectivo de su caja. */
 	router.post('/ediciones/:id/caja/entregar', ruta(async (req, rol) => {
 		const edicionId = req.params.id;
 		await permitir(req, rol, edicionId);
@@ -2974,7 +3072,10 @@ function rutasCaja(router, { ruta, db }) {
 		return db.transaction(async (trx) => {
 			const pais = await trx('wge_paises').where({ id: String(req.body?.pais_id ?? ''), edicion_id: edicionId }).first('id', 'nombre');
 			if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no es de esta edición');
-			const caja = await billeteraBloqueada(trx, { edicionId, paisId: pais.id, tipo: 'caja' });
+			// Cada cajero entrega de su propia caja; el administrativo puede entregar la de un cajero (caja_de) o la general ('general')
+			const esAdmin = rol === ROLES.ADMIN || rol === ROLES.ADMIN_WG;
+			const cajaDe = esAdmin && typeof req.body?.caja_de === 'string' && req.body.caja_de ? req.body.caja_de : actor;
+			const caja = await billeteraBloqueada(trx, { edicionId, paisId: pais.id, tipo: 'caja', docenteId: cajaDe === 'general' ? null : cajaDe });
 			const quedan = await inventarioCaja(trx, edicionId, pais.id);
 			for (const [d, n] of Object.entries(limpio ?? {})) {
 				if (n > (quedan[d] ?? 0)) throw new WgeError(409, 'SIN_BILLETES', `En la caja solo hay ${Math.max(0, quedan[d] ?? 0)} billetes de ${d}`);
@@ -3646,7 +3747,7 @@ const configEndpoint = {
 		const ruta = (fn) => async (req, res) => {
 			try {
 				if (!req.accountability?.user) throw new WgeError(401, 'SIN_SESION', 'Debes iniciar sesión');
-				const rol = await rolDelUsuario(db, req.accountability);
+				const rol = await rolDelUsuario(db, req.accountability, req.query?.wg_rol);
 				res.json({ data: await fn(req, rol) });
 			} catch (error) {
 				const idioma = idiomaDe(req);
@@ -3715,7 +3816,9 @@ const configEndpoint = {
 					exigirRol(rol, ROLES.BANCO);
 					paisId = exigirTexto(req.body.pais_id, 'pais_id');
 					const docenteId = exigirTexto(req.body.docente_id, 'docente_id');
-					if ((await rolDelUsuario(trx, { user: docenteId })) !== ROLES.DOCENTE) throw new WgeError(409, 'NO_ES_DOCENTE', 'El destinatario no es docente de Will Go');
+					if (!(await tieneRol(trx, docenteId, ROLES.DOCENTE))) throw new WgeError(409, 'NO_ES_DOCENTE', 'El destinatario no es docente de Will Go');
+					// Quien es banco y docente a la vez no se entrega dinero a sí mismo: lo hace otro banco o un administrativo
+					if (docenteId === actor) throw new WgeError(409, 'A_SI_MISMO', 'No puedes entregarte dinero a ti mismo desde el banco');
 					const pais = await trx('wge_paises').where('id', paisId).first();
 					if (!pais) throw new WgeError(404, 'NO_EXISTE', 'El país no existe');
 					await edicionAbierta(trx, pais.edicion_id);
@@ -3851,7 +3954,8 @@ const configEndpoint = {
 				const ventaId = crypto.randomUUID();
 				const movimientoId = await moverSaldo(trx, billetera, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: -total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				// En efectivo los billetes quedan en la caja; con tarjeta el dinero pasa de la cuenta a la cuenta virtual del banco
-				const recibe = await billeteraBloqueada(trx, { edicionId: edicion.id, paisId: pais.id, tipo: conTarjeta ? 'banco_virtual' : 'caja' });
+				// En efectivo entra a la caja propia de quien vende; con tarjeta, a la cuenta virtual del banco
+				const recibe = await billeteraBloqueada(trx, conTarjeta ? { edicionId: edicion.id, paisId: pais.id, tipo: 'banco_virtual' } : { edicionId: edicion.id, paisId: pais.id, tipo: 'caja', docenteId: actor });
 				await moverSaldo(trx, recibe, { tipo: conTarjeta ? 'pago_tarjeta' : 'compra', monto: total, actor, referenciaTipo: 'venta', referenciaId: ventaId });
 				for (const { p, cantidad } of lineas) await trx('wge_productos').where('id', p.id).update({ stock: Number(p.stock) - cantidad });
 

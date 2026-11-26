@@ -433,7 +433,10 @@
         "unMomento": "Un instant…",
         "usuario": "Identifiant",
         "vacio": "Aucun collaborateur pour l'instant",
-        "vacioAyuda": "Créez le premier avec le bouton « Nouveau collaborateur »."
+        "vacioAyuda": "Créez le premier avec le bouton « Nouveau collaborateur ».",
+        "variosRoles": "Vous pouvez cocher plusieurs rôles (par exemple, Enseignant et Caissier).",
+        "encargoBanco": "Banque de {{pais}}",
+        "encargoCaja": "Caisse"
       },
       "ed": {
         "titulo": "Éditions",
@@ -945,7 +948,8 @@
         "cerrarSesion": "Se déconnecter",
         "menuAria": "Menu Will Go",
         "pronto": "Bientôt",
-        "saliendo": "Déconnexion…"
+        "saliendo": "Déconnexion…",
+        "verComo": "Voir en tant que"
       },
       "inicio": {
         "hola": "Bonjour, {{nombre}} 👋",
@@ -1114,6 +1118,9 @@
         "escribirLlave": "Saisir la clé",
         "placeholder": "@prenom.nom",
         "usar": "Utiliser"
+      },
+      "confirmar": {
+        "aceptar": "Confirmer"
       }
     },
     "operacion": {
@@ -1287,7 +1294,14 @@
         "preciosHoy": "Prix du jour dans chaque monnaie",
         "preciosAyuda": "Prix en pesos ÷ taux de la monnaie, arrondi au supérieur.",
         "pesos": "{{n}} pesos",
-        "enOtras": "Dans les autres monnaies :"
+        "enOtras": "Dans les autres monnaies :",
+        "soloCajeros": "Seuls les caissiers de l'équipe de cette édition peuvent vendre.",
+        "tuCaja": "Argent dans votre caisse",
+        "totalCajas": "Argent dans les caisses (tous les caissiers)",
+        "cajasPorCajero": "Caisse de chaque caissier",
+        "cajaGeneral": "Caisse générale (ancienne)",
+        "entregar": "Remettre",
+        "cobro": "Encaissé par : {{nombre}}"
       },
       "productos": {
         "titulo": "Produits",
@@ -1455,7 +1469,10 @@
         "confirmarEliminar": "Supprimer « {{nombre}} » ? S'il a déjà des ventes, il sera seulement masqué de la caisse.",
         "descuento": "Remise",
         "descuentoInvalido": "La remise doit être un nombre de 0 à 100.",
-        "sinLimiteCorto": "Sans limite"
+        "sinLimiteCorto": "Sans limite",
+        "cajerosEdicion": "Caissiers de cette édition",
+        "cajerosAyuda": "Tous les caissiers de l'équipe peuvent vendre en même temps. Chacun a sa propre caisse et ses mouvements ; les produits sont partagés.",
+        "sinCajerosEquipo": "Il n'y a pas encore de caissiers dans l'équipe. Ajoutez-les dans l'onglet Collaborateurs."
       },
       "participantes": {
         "intro": "Les élèves ayant entièrement payé le programme apparaissent ici automatiquement. Attribuez un pays à chacun.",
@@ -1563,7 +1580,16 @@
         "enviandoAviso": "Envoi…",
         "notaCorreo": "Quand vous ajoutez quelqu'un, ou le nommez responsable d'une banque ou de la caisse, il reçoit un e-mail avec l'édition, son rôle, les dates et l'horaire.",
         "lesLlegaCorreo": "Ils recevront un e-mail avec les informations de l'édition.",
-        "avisoEnviado": "E-mail envoyé à {{n}} collaborateurs sur {{total}}."
+        "avisoEnviado": "E-mail envoyé à {{n}} collaborateurs sur {{total}}.",
+        "buscarEnEquipo": "Rechercher par nom ou e-mail…",
+        "colColaborador": "Collaborateur",
+        "colRoles": "Rôles",
+        "colPais": "Pays (enseignants)",
+        "colAcciones": "Actions",
+        "rolesDe": "Rôles du collaborateur",
+        "rolesAyuda": "Il peut avoir plusieurs rôles. Le changement s'applique à toute la plateforme, pas seulement à cette édition.",
+        "rolesGuardados": "C'est fait : les rôles de {{nombre}} ont été mis à jour.",
+        "cambiarRoles": "Modifier les rôles"
       },
       "resumen": {
         "cargando": "Chargement du résumé…",
