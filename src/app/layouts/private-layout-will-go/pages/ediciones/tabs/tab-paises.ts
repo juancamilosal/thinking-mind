@@ -15,6 +15,10 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
     @if (cargando) {
       <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.pestanas.comun.cargando' | translate }}</div>
     } @else {
+      <!-- Logo del banco -->
+      <div class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center justify-center sm:justify-start">
+        <img src="assets/images/will-go/gobank-logo.png" alt="GO.BANK · Save · Invest · Grow" class="h-14 sm:h-16 w-auto max-w-full">
+      </div>
       <!-- Resumen de los países -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         @for (p of paises; track p.id) {

@@ -15,6 +15,7 @@ import { NumeroMilesDirective, formatearNumero } from '../../numero-miles.direct
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
+          <img src="assets/images/will-go/gobank-logo.png" alt="GO.BANK · Save · Invest · Grow" class="h-10 w-auto max-w-full -ml-1 mb-2">
           <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.banco.repartir.titulo' | translate }}</h1>
           <p class="text-gray-500 mt-1">{{ 'wg.banco.repartir.subtitulo' | translate }}</p>
         </div>
