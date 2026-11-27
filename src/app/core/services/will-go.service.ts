@@ -303,7 +303,8 @@ export interface DatosCaja {
 /** Edición vigente del usuario (para el selector de edición de cada pantalla). */
 /** Resumen de la economía para el televisor (solo administradores). */
 export interface RankingPaisTv { nombre: string; apellido: string; efectivo: number; cuenta: number; invertido: number; total: number; }
-export interface PaisTv { id: string; nombre: string; codigo_moneda: string; color: string | null; tasa_actual: number; historial: { ventana: string; tasa: number }[]; estudiantes: number; ranking: RankingPaisTv[]; }
+export interface DocenteTv { nombre: string; apellido: string; repartido: number; estudiantes: number; }
+export interface PaisTv { id: string; nombre: string; codigo_moneda: string; color: string | null; tasa_actual: number; historial: { ventana: string; tasa: number }[]; estudiantes: number; ranking: RankingPaisTv[]; docentes?: DocenteTv[]; }
 export interface RankingFondoTv { nombre: string; apellido: string; pais_id: string; pais: string; codigo_moneda: string; color: string | null; invertido: number; en_pesos: number; }
 export interface FondoTv { id: string; nombre: string; logo: string | null; riesgo: string | null; activo: boolean; puntos: { ronda: string | null; valor: number }[]; ultimo_rendimiento: number | null; ranking: RankingFondoTv[]; }
 export interface DatosPantallaTv { edicion: { id: string; nombre: string; estado: string }; tasa_inicial: number; intervalo_minutos: number; ahora: string; rondas: number; paises: PaisTv[]; fondos: FondoTv[]; }

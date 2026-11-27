@@ -90,6 +90,40 @@ const COLORES_FONDOS = ['#F97316', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '
           </section>
         }
 
+        <!-- Docentes que más han repartido -->
+        <h2 class="mt-8 text-lg font-bold text-gray-800">{{ 'wg.tv.docentes' | translate }}</h2>
+        <p class="text-sm text-gray-500">{{ 'wg.tv.docentesAyuda' | translate }}</p>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          @for (p of datos.paises; track p.id) {
+            <div class="bg-white rounded-2xl border-2 p-4" [style.border-color]="p.color || '#e5e7eb'">
+              <p class="font-bold" [style.color]="p.color || '#1f2937'">{{ p.nombre }}</p>
+              @if (p.docentes?.length) {
+                @let top = p.docentes![0];
+                <div class="mt-2 flex items-center gap-3">
+                  <span class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center font-extrabold bg-amber-400 text-amber-950">1</span>
+                  <div class="min-w-0">
+                    <p class="font-bold text-gray-900 truncate">{{ top.nombre }} {{ top.apellido }}</p>
+                    <p class="text-sm text-gray-600"><b class="text-gray-900 tabular-nums">{{ miles(top.repartido) }}</b> {{ p.codigo_moneda }} · {{ 'wg.tv.aEstudiantes' | translate: { n: top.estudiantes } }}</p>
+                  </div>
+                </div>
+                @if (p.docentes!.length > 1) {
+                  <ol class="mt-3 border-t border-gray-100">
+                    @for (d of p.docentes!.slice(1); track $index; let i = $index) {
+                      <li class="flex items-center gap-2 py-1.5 border-b border-gray-100 last:border-0 text-sm">
+                        <span class="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-extrabold" [class]="medalla(i + 1)">{{ i + 2 }}</span>
+                        <span class="min-w-0 flex-1 truncate text-gray-800">{{ d.nombre }} {{ d.apellido }}</span>
+                        <span class="shrink-0 font-bold text-gray-900 tabular-nums">{{ miles(d.repartido) }}</span>
+                      </li>
+                    }
+                  </ol>
+                }
+              } @else {
+                <p class="mt-2 text-sm text-gray-500">{{ 'wg.tv.sinRepartos' | translate }}</p>
+              }
+            </div>
+          }
+        </div>
+
         <!-- W-Funds -->
         @if (datos.fondos.length) {
           <h2 class="mt-8 text-lg font-bold text-gray-800">{{ 'wg.tv.fondos' | translate }}</h2>

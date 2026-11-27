@@ -14,6 +14,7 @@ const COLORES_FONDOS = ['#F97316', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '
 type Diapositiva =
   | { tipo: 'tasas' }
   | { tipo: 'pais'; pais: PaisTv }
+  | { tipo: 'docentes' }
   | { tipo: 'fondos' }
   | { tipo: 'fondo'; fondo: FondoTv; color: string };
 
@@ -130,6 +131,40 @@ type Diapositiva =
                   </div>
                 </div>
               }
+              @case ('docentes') {
+                <!-- 2b. Los docentes que más dinero han repartido, por país -->
+                <div class="h-full flex flex-col tv-entra">
+                  <h1 class="tv-h1 font-extrabold">{{ 'wg.tv.docentes' | translate }}</h1>
+                  <p class="tv-p text-white/70">{{ 'wg.tv.docentesAyuda' | translate }}</p>
+                  <div class="flex-1 min-h-0 mt-[2vw] grid gap-[2vw]" [style.grid-template-columns]="'repeat(' + Math.min(datos.paises.length, 3) + ', minmax(0, 1fr))'">
+                    @for (p of datos.paises; track p.id) {
+                      <div class="tv-caja flex flex-col min-h-0 border-2" [style.border-color]="p.color || '#475569'">
+                        <p class="tv-h2 font-extrabold text-center" [style.color]="claro(p.color)">{{ p.nombre }}</p>
+                        @if (p.docentes?.length) {
+                          @let top = p.docentes![0];
+                          <div class="mt-[1.2vw] flex flex-col items-center text-center">
+                            <span class="tv-medalla rounded-full flex items-center justify-center font-extrabold bg-amber-400 text-amber-950">1</span>
+                            <p class="mt-[0.8vw] tv-h2 font-extrabold leading-tight">{{ top.nombre }} {{ top.apellido }}</p>
+                            <p class="mt-[0.4vw] tv-numero font-extrabold tabular-nums leading-none">{{ miles(top.repartido) }}</p>
+                            <p class="tv-p text-white/70">{{ p.codigo_moneda }} · {{ 'wg.tv.aEstudiantes' | translate: { n: top.estudiantes } }}</p>
+                          </div>
+                          <ol class="mt-[1.4vw] border-t border-white/10">
+                            @for (d of p.docentes!.slice(1); track $index; let i = $index) {
+                              <li class="tv-fila flex items-center gap-[1vw] border-b border-white/10 last:border-0">
+                                <span class="tv-puesto shrink-0 rounded-full flex items-center justify-center font-extrabold" [class]="claseMedalla(i + 1)">{{ i + 2 }}</span>
+                                <span class="min-w-0 flex-1 truncate font-semibold">{{ d.nombre }} {{ d.apellido }}</span>
+                                <span class="shrink-0 font-extrabold tabular-nums">{{ miles(d.repartido) }}</span>
+                              </li>
+                            }
+                          </ol>
+                        } @else {
+                          <p class="flex-1 flex items-center justify-center text-center tv-p text-white/60">{{ 'wg.tv.sinRepartos' | translate }}</p>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
               @case ('fondos') {
                 <!-- 3. Todas las empresas (W-Funds) -->
                 <div class="h-full flex flex-col tv-entra">
@@ -242,6 +277,7 @@ type Diapositiva =
     .tv-chico { font-size: clamp(11px, 0.95vw, 26px); }
     .tv-caja { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.6vw; padding: 1.4vw 1.8vw; }
     .tv-fila { font-size: clamp(14px, 1.5vw, 40px); padding: 0.55vh 0; }
+    .tv-medalla { width: 4.5vw; height: 4.5vw; font-size: clamp(18px, 2.2vw, 60px); }
     .tv-puesto { width: 2.4vw; height: 2.4vw; min-width: 26px; min-height: 26px; font-size: clamp(12px, 1.1vw, 30px); }
     .tv-boton { min-width: 44px; height: 44px; border-radius: 9999px; background: rgba(255,255,255,0.15); color: #fff; backdrop-filter: blur(6px); }
     .tv-boton:hover { background: rgba(255,255,255,0.3); }
@@ -342,6 +378,8 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
     const lista: Diapositiva[] = [];
     if (d.paises.length) lista.push({ tipo: 'tasas' });
     for (const p of d.paises) lista.push({ tipo: 'pais', pais: p });
+    // Los docentes que más han repartido (si alguno ya repartió)
+    if (d.paises.some((p) => p.docentes?.length)) lista.push({ tipo: 'docentes' });
     if (d.fondos.length) {
       lista.push({ tipo: 'fondos' });
       d.fondos.forEach((f, k) => lista.push({ tipo: 'fondo', fondo: f, color: COLORES_FONDOS[k % COLORES_FONDOS.length] }));

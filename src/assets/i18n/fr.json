@@ -1832,7 +1832,11 @@
       "seguir": "Reprendre",
       "pantallaCompleta": "Plein écran",
       "cambiar": "Changer d'édition",
-      "salir": "Quitter"
+      "salir": "Quitter",
+      "docentes": "Enseignants qui ont le plus distribué",
+      "docentesAyuda": "L'argent que chaque enseignant a remis à ses élèves, dans la monnaie de son pays.",
+      "aEstudiantes": "à {{n}} élèves",
+      "sinRepartos": "Aucun enseignant n'a encore distribué d'argent."
     },
     "vistacuenta": {
       "enSuCuenta": "Sur son compte",

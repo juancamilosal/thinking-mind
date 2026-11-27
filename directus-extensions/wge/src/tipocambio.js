@@ -67,7 +67,8 @@ export function primeros(lista, clave, n = 10) {
 export function rutasTipoCambio(router, { ruta, db }) {
 	/**
 	 * GET /wge/ediciones/:id/pantalla: resumen de la economía para proyectar en un televisor (administradores y rol TV).
-	 * Por país: tasa, su historial y los 10 estudiantes con más dinero (efectivo + cuenta + inversiones vigentes).
+	 * Por país: tasa, su historial, los 10 estudiantes con más dinero (efectivo + cuenta + inversiones vigentes)
+	 * y los docentes que más dinero han repartido.
 	 * Por empresa: cómo ha rendido ronda tras ronda y los 10 estudiantes que más han invertido en ella.
 	 */
 	router.get('/ediciones/:id/pantalla', ruta(async (req, rol) => {
@@ -83,11 +84,22 @@ export function rutasTipoCambio(router, { ruta, db }) {
 				.select('pa.id', 'e.nombre', 'e.apellido', db.raw('coalesce(b.saldo, 0)::int as efectivo'), db.raw('coalesce(c.saldo, 0)::int as cuenta'),
 					db.raw(`(select coalesce(sum(coalesce(i.valor_actual, i.monto)), 0) from wge_inversiones i where i.participante_id = pa.id and i.estado = 'abierta')::int as invertido`));
 			const conTotal = filas.map((f) => ({ ...f, total: f.efectivo + f.cuenta + f.invertido }));
+			// Los docentes que más dinero han repartido a sus estudiantes (en billetes o por transferencia)
+			const docentes = await db('wge_transferencias as t')
+				.join('wge_billeteras as bo', 'bo.id', 't.billetera_origen_id')
+				.join('wge_billeteras as bd', 'bd.id', 't.billetera_destino_id')
+				.join('directus_users as u', 'u.id', 'bo.docente_id')
+				.where({ 't.edicion_id': edicionId, 't.pais_id': p.id, 't.estado': 'aplicada' })
+				.whereIn('bo.tipo_dueno', ['docente', 'cuenta']).whereNotNull('bd.participante_id')
+				.groupBy('u.id', 'u.first_name', 'u.last_name')
+				.select('u.first_name as nombre', 'u.last_name as apellido', db.raw('sum(t.monto)::int as repartido'), db.raw('count(distinct bd.participante_id)::int as estudiantes'))
+				.orderByRaw('sum(t.monto) desc').limit(5);
 			paises.push({
 				id: p.id, nombre: p.nombre, codigo_moneda: p.codigo_moneda, color: p.color, tasa_actual: p.tasa_actual,
 				historial: p.historial.map((h) => ({ ventana: h.ventana, tasa: Number(h.tasa_nueva) })),
 				estudiantes: filas.length,
 				ranking: primeros(conTotal, 'total').map(({ id, ...resto }) => resto),
+				docentes: docentes.map((d) => ({ ...d, nombre: d.nombre ?? '', apellido: d.apellido ?? '' })),
 			});
 		}
 		const fondos = await db('wge_fondos').where('edicion_id', edicionId).orderBy('orden').select('id', 'nombre', 'logo', 'riesgo', 'activo');

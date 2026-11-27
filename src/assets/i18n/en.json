@@ -1832,7 +1832,11 @@
       "seguir": "Resume",
       "pantallaCompleta": "Full screen",
       "cambiar": "Change edition",
-      "salir": "Exit"
+      "salir": "Exit",
+      "docentes": "Teachers who have given out the most",
+      "docentesAyuda": "The money each teacher has given to their students, in their country's currency.",
+      "aEstudiantes": "to {{n}} students",
+      "sinRepartos": "No teacher has given out money yet."
     },
     "vistacuenta": {
       "enSuCuenta": "In their account",

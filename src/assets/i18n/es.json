@@ -1832,7 +1832,11 @@
       "seguir": "Seguir",
       "pantallaCompleta": "Pantalla completa",
       "cambiar": "Cambiar edición",
-      "salir": "Salir"
+      "salir": "Salir",
+      "docentes": "Docentes que más han repartido",
+      "docentesAyuda": "El dinero que cada docente ha entregado a sus estudiantes, en la moneda de su país.",
+      "aEstudiantes": "a {{n}} estudiantes",
+      "sinRepartos": "Ningún docente ha repartido dinero todavía."
     },
     "vistacuenta": {
       "enSuCuenta": "En su cuenta",
