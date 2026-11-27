@@ -21,7 +21,7 @@ import { AppInstalableService } from '../../core/services/app-instalable.service
         <!-- Ícono y texto arriba; el botón debajo a todo lo ancho (cabe bien aunque la tarjeta sea angosta) -->
         <div class="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-left">
           <div class="flex items-center gap-3">
-          <img src="/will-go/icon-192.png" alt="" class="w-11 h-11 rounded-xl shrink-0">
+          <img src="/will-go/icono-192-v2.png" alt="" class="w-11 h-11 rounded-xl shrink-0">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-bold text-gray-800 leading-snug">{{ 'wg.nucleo.instalar.instalaEn' | translate: { nombre: familias ? ('wg.nucleo.instalar.familias' | translate) : 'Will-Go' } }}</p>
             <p class="text-xs text-gray-600 leading-snug mt-0.5">{{ 'wg.nucleo.instalar.abrelaDesde' | translate }}</p>
@@ -36,7 +36,7 @@ import { AppInstalableService } from '../../core/services/app-instalable.service
       <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="ayudaIos = false">
         <div class="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 text-gray-800" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-ios">
           <div class="flex items-center gap-3">
-            <img src="/will-go/icon-192.png" alt="" class="w-12 h-12 rounded-xl">
+            <img src="/will-go/icono-192-v2.png" alt="" class="w-12 h-12 rounded-xl">
             <h2 id="titulo-ios" class="text-lg font-bold">{{ 'wg.nucleo.instalar.tituloIos' | translate: { nombre: familias ? ('wg.nucleo.instalar.familias' | translate) : 'Will-Go' } }}</h2>
           </div>
           <ol class="mt-4 space-y-3 text-sm">

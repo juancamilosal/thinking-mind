@@ -76,9 +76,9 @@ export class AppInstalableService {
       return;
     }
     const familias = app === 'familias';
-    this.etiqueta('link', 'wg-manifest', { rel: 'manifest', href: familias ? '/will-go/acudientes.webmanifest' : '/will-go/manifest.webmanifest' });
+    this.etiqueta('link', 'wg-manifest', { rel: 'manifest', href: familias ? '/will-go/acudientes.webmanifest?v=2' : '/will-go/manifest.webmanifest?v=2' });
     this.etiqueta('meta', 'wg-theme', { name: 'theme-color', content: '#1b2a4a' });
-    this.etiqueta('link', 'wg-apple-icon', { rel: 'apple-touch-icon', href: '/will-go/apple-touch-icon.png' });
+    this.etiqueta('link', 'wg-apple-icon', { rel: 'apple-touch-icon', href: '/will-go/apple-touch-icon-v2.png' });
     this.etiqueta('meta', 'wg-apple-capable', { name: 'apple-mobile-web-app-capable', content: 'yes' });
     this.etiqueta('meta', 'wg-apple-barra', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' });
     this.etiqueta('meta', 'wg-apple-title', { name: 'apple-mobile-web-app-title', content: familias ? 'Will-Go Familias' : 'Will-Go' });

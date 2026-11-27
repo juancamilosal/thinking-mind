@@ -2,11 +2,11 @@
 // No guarda en caché la aplicación (cada despliegue se ve de una vez); solo, si no hay internet
 // al abrir una pantalla de Will-Go, muestra un aviso en lugar del error del navegador.
 const OFFLINE = '/will-go/sin-conexion.html';
-const ICONO = '/will-go/icon-192.png';
+const ICONO = '/will-go/icono-192-v2.png';
 const RUTAS_WILL_GO = ['/login-will-go', '/private-will-go', '/acudiente-will-go'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open('will-go-v2').then((c) => c.addAll([OFFLINE, ICONO])).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open('will-go-v3').then((c) => c.addAll([OFFLINE, ICONO])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
