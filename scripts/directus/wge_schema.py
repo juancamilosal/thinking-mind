@@ -94,8 +94,17 @@ coleccion('wge_paises', 'flag', 'Wonderland, Neverland y Dreamland de cada edici
 rel('wge_paises', 'edicion_id', 'wge_ediciones')
 rel('wge_paises', 'responsable_banco', 'directus_users', 'SET NULL')
 
+coleccion('wge_grupos', 'groups', 'Grupos de estudiantes dentro de un país', [
+    m2o('edicion_id', requerido=True), m2o('pais_id', requerido=True),
+    campo('nombre', 'string', requerido=True), campo('color', 'string', interfaz='select-color'),
+    campo('orden', 'integer'),
+])
+rel('wge_grupos', 'edicion_id', 'wge_ediciones')
+rel('wge_grupos', 'pais_id', 'wge_paises')
+
 coleccion('wge_participantes', 'badge', 'Estudiante inscrito en una edición (sus datos vienen de estudiantes)', [
     m2o('edicion_id', requerido=True), m2o('estudiante_id', requerido=True), m2o('pais_id', 'Lo asigna el administrador'),
+    m2o('grupo_id', 'Grupo dentro de su país (opcional)'),
     campo('codigo', 'string', 'Código corto para el QR', unico=True),
     campo('presente', 'boolean', default=False),
     campo('clave_unica', 'string', 'edicion:estudiante (evita duplicados)', unico=True),
@@ -106,6 +115,7 @@ coleccion('wge_participantes', 'badge', 'Estudiante inscrito en una edición (su
 rel('wge_participantes', 'edicion_id', 'wge_ediciones')
 rel('wge_participantes', 'estudiante_id', 'estudiantes', EXT)
 rel('wge_participantes', 'pais_id', 'wge_paises')
+rel('wge_participantes', 'grupo_id', 'wge_grupos', 'SET NULL')
 
 coleccion('wge_billeteras', 'account_balance_wallet', 'Saldo por dueño y moneda (solo lo cambian las operaciones de billetes)', [
     m2o('edicion_id', requerido=True), m2o('pais_id', 'Moneda de la billetera', requerido=True),

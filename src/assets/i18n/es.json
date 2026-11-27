@@ -570,7 +570,8 @@
         "paises": "Países y banco",
         "reglas": "Economía",
         "horario": "Horario",
-        "fondos": "Fondos"
+        "fondos": "Fondos",
+        "grupos": "Grupos"
       }
     },
     "banco": {
@@ -862,6 +863,30 @@
         "avisoQuitaste": "Quitaste tu voto por {{fondo}}.",
         "avisoVotaste": "¡Listo! Votaste por {{fondo}} en la {{ronda}}."
       }
+    },
+    "grupos": {
+      "intro": "Crea grupos dentro de cada país (con nombre y color) y ubica a los estudiantes. Los docentes ven los grupos en la rúbrica y pueden calificar a todo un grupo.",
+      "sinPaises": "Primero crea los países de la edición.",
+      "gruposDe": "Grupos de {{pais}}",
+      "nuevo": "+ Nuevo grupo",
+      "vacio": "Este país todavía no tiene grupos.",
+      "quitar": "Quitar",
+      "sinEstudiantes": "Sin estudiantes todavía.",
+      "sinGrupo": "Sin grupo asignado",
+      "agregarA": "Agregar al grupo",
+      "eligeGrupo": "Elige el grupo…",
+      "agregarN": "Agregar ({{n}})",
+      "todosConGrupo": "Todos los estudiantes del país tienen grupo.",
+      "todos": "Seleccionar todos",
+      "editarTitulo": "Editar grupo",
+      "nuevoTitulo": "Nuevo grupo en {{pais}}",
+      "ejemploNombre": "Ej.: Los Exploradores",
+      "color": "Color",
+      "otroColor": "Otro color",
+      "guardado": "Listo: grupo «{{nombre}}» guardado.",
+      "confirmarBorrar": "¿Eliminar el grupo «{{nombre}}»?",
+      "confirmarBorrarTexto": "Sus estudiantes quedan en el país, sin grupo.",
+      "borrado": "Grupo «{{nombre}}» eliminado."
     },
     "montobanco": {
       "efectivo": "Efectivo",
@@ -1236,7 +1261,20 @@
             "n2": "Coopera hablando",
             "n3": "Hace que otros también hablen"
           }
-        }
+        },
+        "grupos": "Grupos",
+        "nEstudiantes": "{{n}} estudiantes",
+        "nPresentes": "{{n}} presentes",
+        "sinGrupo": "Sin grupo asignado",
+        "sinGrupoAyuda": "Estudiantes del país que aún no tienen grupo (solo los ve el administrativo).",
+        "regresar": "Regresar a los grupos",
+        "calificarGrupo": "Calificar a todo el grupo",
+        "grupoVacio": "Este grupo no tiene estudiantes.",
+        "calificarGrupoA": "Calificar al grupo {{grupo}} ({{n}} estudiantes)",
+        "mismosCriterios": "Todos reciben la misma calificación.",
+        "avisoGrupo": "Listo: se calificaron {{n}} estudiantes de {{grupo}} con {{puntaje}} de 12.",
+        "avisoRecomendacionCada": "Recompensa recomendada: {{n}} por estudiante.",
+        "nEstudiante": "1 estudiante"
       },
       "caja": {
         "titulo": "Caja GO•STORE",

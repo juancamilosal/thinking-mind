@@ -140,7 +140,7 @@ export interface Fondo {
 }
 
 export interface Participante {
-  id: string; codigo: string; pais_id: string | null; presente: boolean;
+  id: string; codigo: string; pais_id: string | null; grupo_id?: string | null; presente: boolean;
   nombre: string; apellido: string; grado: string | null; colegio_id: string | null; colegio: string | null; saldo: number;
   corresponde: boolean;
   retirado: boolean | null; motivo_retiro: string | null; fecha_retiro: string | null; pidio_reembolso: boolean;
@@ -253,8 +253,10 @@ export interface DatosWfunds {
 }
 
 export type CriterioRubrica = 'uso_lengua' | 'iniciativa' | 'nivel_reto' | 'colaboracion';
-export interface EstudianteRubrica { id: string; nombre: string; apellido: string; presente: boolean; hoy: number; ultima: string | null; }
-export interface PaisRubrica { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; estudiantes: EstudianteRubrica[]; }
+export interface EstudianteRubrica { id: string; nombre: string; apellido: string; presente: boolean; hoy: number; ultima: string | null; grupo_id?: string | null; }
+/** Grupo de estudiantes dentro de un país. */
+export interface GrupoRubrica { id: string; nombre: string; color: string | null; }
+export interface PaisRubrica { id: string; nombre: string; codigo_moneda: string | null; color: string | null; tasa_actual: number; estudiantes: EstudianteRubrica[]; grupos?: GrupoRubrica[]; }
 export interface CalificacionRubrica {
   id: string; participante_id: string; uso_lengua: number; iniciativa: number; nivel_reto: number; colaboracion: number;
   puntaje: number; idioma: 'ingles' | 'frances' | null; evidencia: string | null; recompensa: number; date_created: string; nombre: string; apellido: string; se_puede_deshacer: boolean;
@@ -300,7 +302,10 @@ export interface EdicionVigente {
   fecha_inicio?: string | null; fecha_fin?: string | null; colegio?: string | null; programa?: string | null;
 }
 
-export type SeccionEdicion = 'paises' | 'productos' | 'fondos';
+export type SeccionEdicion = 'paises' | 'productos' | 'fondos' | 'grupos';
+
+/** Grupo de estudiantes dentro de un país de la edición (administrativo). */
+export interface Grupo { id: string; edicion_id: string; pais_id: string; nombre: string; color: string | null; orden: number | null; }
 
 export const NOMBRE_ROL: Record<RolWillGo, string> = {
   administrativo: 'Administrativo',
@@ -479,7 +484,7 @@ export class WillGoService {
     return this.http.get<{ data: Participante[] }>(`${this.api}/admin/ediciones/${edicionId}/participantes`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  actualizarParticipantes(ids: string[], cambios: { pais_id?: string | null; presente?: boolean }): Observable<{ actualizados: number; bienvenidas: number }> {
+  actualizarParticipantes(ids: string[], cambios: { pais_id?: string | null; grupo_id?: string | null; presente?: boolean }): Observable<{ actualizados: number; bienvenidas: number }> {
     return this.http.patch<{ data: any }>(`${this.api}/admin/participantes`, { ids, ...cambios }).pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -642,6 +647,17 @@ export class WillGoService {
   }
 
   /** Califica (cada criterio de 0 a 3) y devuelve el puntaje (0 a 12) y la recompensa recomendada en billetes. */
+  /** Califica a todo un grupo con los mismos criterios. */
+  calificarGrupo(grupoId: string, criterios: Record<CriterioRubrica, number>, idioma: 'ingles' | 'frances', evidencia: string): Observable<{ calificados: number; puntaje: number; recompensa: number; grupo: string }> {
+    return this.http.post<{ data: { calificados: number; puntaje: number; recompensa: number; grupo: string } }>(`${this.api}/evaluaciones/grupo`, { grupo_id: grupoId, ...criterios, idioma, evidencia })
+      .pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Borra un grupo (sus estudiantes quedan en el país, sin grupo). */
+  borrarGrupo(id: string): Observable<{ borrado: boolean }> {
+    return this.http.delete<{ data: { borrado: boolean } }>(`${this.api}/admin/grupos/${id}`).pipe(this.enZona(), map((r) => r.data));
+  }
+
   calificar(participanteId: string, criterios: Record<CriterioRubrica, number>, idioma: 'ingles' | 'frances', evidencia: string): Observable<{ id: string; puntaje: number; recompensa: number }> {
     return this.http.post<{ data: { id: string; puntaje: number; recompensa: number } }>(`${this.api}/evaluaciones`, { participante_id: participanteId, ...criterios, idioma, evidencia })
       .pipe(this.enZona(), map((r) => r.data));
