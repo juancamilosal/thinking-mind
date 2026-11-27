@@ -1674,8 +1674,15 @@
       "buscando": "Buscando…",
       "enCuenta": "Saldo en su cuenta (tarjeta)",
       "enEfectivo": "En efectivo",
-      "consultarOtro": "Consultar otro",
-      "volver": "Volver"
+      "tituloCliente": "Consulta tu saldo GO.BANK",
+      "subtituloCliente": "Escanea tu tarjeta o escribe tu llave.",
+      "pantallaCompleta": "Pantalla completa",
+      "pantallaCompletaAyuda": "Con «Pantalla completa» solo se ve la consulta, para dejar el dispositivo a los estudiantes. Para salir, desmárcala.",
+      "qrCliente": "Acerca el QR de tu tarjeta débito a la cámara.",
+      "llaveCliente": "Escribe tu llave, por ejemplo @sofia.gomez.",
+      "empezar": "Empezar",
+      "cerrar": "Cerrar",
+      "vuelveEn": "vuelve en {{n}} s"
     },
     "tarjeta": {
       "escanearTarjeta": "Escanear tarjeta",

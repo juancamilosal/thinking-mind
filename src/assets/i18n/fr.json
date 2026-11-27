@@ -1674,8 +1674,15 @@
       "buscando": "Recherche…",
       "enCuenta": "Solde du compte (carte)",
       "enEfectivo": "En espèces",
-      "consultarOtro": "Consulter un autre",
-      "volver": "Retour"
+      "tituloCliente": "Consulte ton solde GO.BANK",
+      "subtituloCliente": "Scanne ta carte ou saisis ta clé.",
+      "pantallaCompleta": "Plein écran",
+      "pantallaCompletaAyuda": "Avec « Plein écran », seule la consultation s'affiche, pour laisser l'appareil aux élèves. Décochez pour quitter.",
+      "qrCliente": "Approche le QR de ta carte de débit de la caméra.",
+      "llaveCliente": "Saisis ta clé, par exemple @sofia.gomez.",
+      "empezar": "Commencer",
+      "cerrar": "Fermer",
+      "vuelveEn": "retour dans {{n}} s"
     },
     "tarjeta": {
       "escanearTarjeta": "Scanner la carte",
