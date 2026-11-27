@@ -436,7 +436,8 @@
         "vacioAyuda": "Create the first one with the “New staff member” button.",
         "variosRoles": "You can check several roles (for example, Teacher and Cashier).",
         "encargoBanco": "{{pais}} bank",
-        "encargoCaja": "Checkout"
+        "encargoCaja": "Checkout",
+        "porPagina": "Per page"
       },
       "ed": {
         "titulo": "Editions",

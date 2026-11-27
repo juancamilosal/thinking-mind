@@ -30,7 +30,14 @@ export class FuncionariosWillGo implements OnInit {
   busqueda = '';
   filtroRol: RolFuncionario | '' = '';
   /** Paginador: 10 colaboradores por página. */
-  readonly porPagina = 10;
+  /** Cuántos colaboradores por página (se recuerda en el dispositivo). */
+  readonly opcionesPorPagina = [10, 20, 50, 100];
+  porPagina = (() => { try { const n = Number(localStorage.getItem('wg_colaboradores_por_pagina')); return [10, 20, 50, 100].includes(n) ? n : 10; } catch { return 10; } })();
+  cambiarPorPagina(n: number): void {
+    this.porPagina = Number(n) || 10;
+    this.pagina = 1;
+    try { localStorage.setItem('wg_colaboradores_por_pagina', String(this.porPagina)); } catch { /* sin almacenamiento */ }
+  }
   pagina = 1;
   get totalPaginas(): number { return Math.max(1, Math.ceil(this.filtrados.length / this.porPagina)); }
   get paginaActual(): Funcionario[] {
