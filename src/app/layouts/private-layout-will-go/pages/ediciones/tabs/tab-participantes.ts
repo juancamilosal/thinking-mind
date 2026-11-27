@@ -173,7 +173,7 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
                   <div class="min-w-0 flex-1">
                     <p class="font-semibold leading-snug" [class]="p.retirado ? 'text-gray-500 line-through' : 'text-gray-800'">{{ p.nombre }} {{ p.apellido }}</p>
                     <p class="text-xs text-gray-500">
-                      @if (p.grado) { {{ 'wg.pestanas.participantes.grado' | translate: { n: p.grado } }} }
+                      @if (p.grado) { {{ 'wg.pestanas.participantes.grado' | translate: { n: curso(p.grado) } }} }
                     </p>
                     @if (p.retirado) {
                       <p class="text-xs text-red-700">{{ 'wg.pestanas.participantes.retiradoMotivo' | translate: { motivo: p.motivo_retiro } }}</p>
@@ -224,7 +224,7 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
                 }
                 <!-- El colegio solo se muestra si la edición reúne varios colegios -->
                 @if (!edicion.colegio_id || p.grado || p.grupo_id) {
-                  <p class="text-xs text-gray-500 truncate">{{ edicion.colegio_id ? '' : (p.colegio || ('wg.pestanas.participantes.sinColegio' | translate)) }}{{ !edicion.colegio_id && p.grado ? ' · ' : '' }}{{ p.grado ? ('wg.pestanas.participantes.grado' | translate: { n: p.grado }) : '' }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ edicion.colegio_id ? '' : (p.colegio || ('wg.pestanas.participantes.sinColegio' | translate)) }}{{ !edicion.colegio_id && p.grado ? ' · ' : '' }}{{ p.grado ? ('wg.pestanas.participantes.grado' | translate: { n: curso(p.grado) }) : '' }}</p>
                 }
               </div>
               <select class="col-start-2 xl:col-start-auto px-3 py-2 rounded-lg border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
@@ -360,6 +360,12 @@ export class TabParticipantes implements OnInit {
   esDeKids(p: Participante): boolean { return !!p.grupo_id && p.grupo_id === this.grupoKids?.id; }
   get totalVisibles(): number { return this.delPaisFiltro.length; }
   get sinGrupoCuenta(): number { return this.delPaisFiltro.filter((p) => !p.grupo_id).length; }
+  /** El grado como lo usa el colegio: «5 02» → «502» (los demás, como vienen: «KINDER 01», «4 C»). */
+  curso(grado: string | null | undefined): string {
+    const g = String(grado ?? '').trim();
+    const m = /^(\d{1,2})\s+(\d{2})$/.exec(g);
+    return m ? `${m[1]}${m[2]}` : g;
+  }
   readonly logoKids = LOGO_WILL_GO_KIDS;
   esKids(nombre: string | null | undefined): boolean { return esGrupoKids(nombre); }
 
