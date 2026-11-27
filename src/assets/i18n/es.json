@@ -1124,7 +1124,8 @@
         "ayuda": "Pon el QR de la tarjeta dentro del recuadro.",
         "escribirLlave": "Escribir la llave",
         "placeholder": "@nombre.apellido",
-        "usar": "Usar"
+        "usar": "Usar",
+        "sinCamaraSolo": "No se pudo usar la cámara. Revisa que el navegador tenga permiso para usarla."
       },
       "confirmar": {
         "aceptar": "Aceptar"

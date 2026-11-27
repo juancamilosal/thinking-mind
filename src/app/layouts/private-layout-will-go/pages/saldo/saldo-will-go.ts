@@ -19,7 +19,8 @@ const PANTALLA_COMPLETA = 'wg_saldo_pantalla_completa';
     <div [class]="completa ? 'fixed inset-0 z-[70] overflow-y-auto bg-gradient-to-br from-[#001938] via-[#0b2a55] to-[#001938] text-white' : ''">
       <div class="mx-auto" [class]="completa ? 'max-w-3xl px-5 py-6 min-h-full flex flex-col' : 'max-w-2xl'">
 
-        <!-- Encabezado -->
+        <!-- Encabezado (en el modo QR solo se ve la cámara) -->
+        @if (modo !== 'qr' || resultado) {
         <div class="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-3">
           <div class="min-w-0">
             @if (completa) {
@@ -40,6 +41,7 @@ const PANTALLA_COMPLETA = 'wg_saldo_pantalla_completa';
           </label>
         </div>
         @if (!completa) { <p class="mt-2 text-xs text-gray-500">{{ 'wg.saldo.pantallaCompletaAyuda' | translate }}</p> }
+        }
 
         <div [class]="completa ? 'flex-1 flex flex-col justify-center py-6' : ''">
         @if (resultado) {
@@ -92,15 +94,19 @@ const PANTALLA_COMPLETA = 'wg_saldo_pantalla_completa';
             </button>
           </div>
         } @else {
+          @if (modo === 'qr') {
+            <!-- Solo la cámara, con la X para volver -->
+            <div class="relative">
+              <button type="button" (click)="cerrar()" class="absolute top-3 right-3 z-10 w-11 h-11 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center text-xl" [attr.aria-label]="'wg.saldo.cerrar' | translate">✕</button>
+              <wg-escaner-qr [activo]="!buscando" [soloCamara]="true" (leido)="consultar($event)" />
+              @if (error) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ error }}</p> }
+            </div>
+          } @else {
           <section class="mt-6 rounded-3xl shadow-xl p-5 sm:p-6" [class]="completa ? 'bg-white text-gray-800' : 'bg-white border border-gray-200'">
             <div class="flex items-center justify-between gap-3">
-              <h2 class="text-xl font-bold text-gray-800">{{ (modo === 'qr' ? 'wg.saldo.qr' : 'wg.saldo.llave') | translate }}</h2>
+              <h2 class="text-xl font-bold text-gray-800">{{ 'wg.saldo.llave' | translate }}</h2>
               <button type="button" (click)="cerrar()" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600" [attr.aria-label]="'wg.saldo.cerrar' | translate">✕</button>
             </div>
-            @if (modo === 'qr') {
-              <p class="mt-1 text-sm text-gray-500">{{ 'wg.saldo.qrAyuda' | translate }}</p>
-              <div class="mt-4"><wg-escaner-qr [activo]="!buscando" (leido)="consultar($event)" /></div>
-            } @else {
               <form class="mt-4 flex flex-col sm:flex-row gap-2" (ngSubmit)="consultar(llave)">
                 <input name="llave" [(ngModel)]="llave" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="@nombre.apellido"
                        [attr.aria-label]="'wg.saldo.llave' | translate"
@@ -109,10 +115,9 @@ const PANTALLA_COMPLETA = 'wg_saldo_pantalla_completa';
                   {{ (buscando ? 'wg.saldo.buscando' : 'wg.saldo.consultar') | translate }}
                 </button>
               </form>
-            }
-            @if (buscando && modo === 'qr') { <p class="mt-3 text-sm text-gray-500 text-center" role="status">{{ 'wg.saldo.buscando' | translate }}</p> }
             @if (error) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">{{ error }}</p> }
           </section>
+          }
         }
         </div>
       </div>

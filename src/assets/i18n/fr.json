@@ -1124,7 +1124,8 @@
         "ayuda": "Placez le QR de la carte dans le cadre.",
         "escribirLlave": "Saisir la clé",
         "placeholder": "@prenom.nom",
-        "usar": "Utiliser"
+        "usar": "Utiliser",
+        "sinCamaraSolo": "Impossible d'utiliser la caméra. Vérifiez que le navigateur a l'autorisation."
       },
       "confirmar": {
         "aceptar": "Confirmer"

@@ -1124,7 +1124,8 @@
         "ayuda": "Place the card's QR inside the frame.",
         "escribirLlave": "Type the key",
         "placeholder": "@name.surname",
-        "usar": "Use"
+        "usar": "Use",
+        "sinCamaraSolo": "The camera could not be used. Check that the browser has permission to use it."
       },
       "confirmar": {
         "aceptar": "Confirm"

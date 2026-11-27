@@ -18,10 +18,11 @@ import { TranslatePipe } from '@ngx-translate/core';
       <div class="absolute inset-[18%] border-4 border-white/80 rounded-2xl pointer-events-none" aria-hidden="true"></div>
       @if (estado !== 'leyendo') {
         <div class="absolute inset-0 flex items-center justify-center p-6 text-center text-white text-sm bg-slate-900/80">
-          {{ (estado === 'iniciando' ? 'wg.nucleo.qr.iniciando' : 'wg.nucleo.qr.sinCamara') | translate }}
+          {{ (estado === 'iniciando' ? 'wg.nucleo.qr.iniciando' : (soloCamara ? 'wg.nucleo.qr.sinCamaraSolo' : 'wg.nucleo.qr.sinCamara')) | translate }}
         </div>
       }
     </div>
+    @if (!soloCamara) {
     <p class="mt-2 text-xs text-gray-500 text-center">{{ 'wg.nucleo.qr.ayuda' | translate }}</p>
     <form class="mt-3 flex gap-2" (submit)="$event.preventDefault(); enviarEscrita()">
       <label class="sr-only" for="llave-manual">{{ 'wg.nucleo.qr.escribirLlave' | translate }}</label>
@@ -30,10 +31,13 @@ import { TranslatePipe } from '@ngx-translate/core';
              class="flex-1 min-w-0 px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
       <button type="submit" [disabled]="!escrita.trim()" class="shrink-0 px-4 py-3 rounded-xl font-semibold text-white bg-slate-800 disabled:opacity-40">{{ 'wg.nucleo.qr.usar' | translate }}</button>
     </form>
+    }
   `,
 })
 export class EscanerQrComponent implements OnInit, OnDestroy {
   @Input() activo = true;
+  /** Solo la cámara: sin ayuda ni campo para escribir la llave. */
+  @Input() soloCamara = false;
   @Output() leido = new EventEmitter<string>();
   @ViewChild('video', { static: true }) videoRef!: ElementRef<HTMLVideoElement>;
 
