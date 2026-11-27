@@ -81,9 +81,6 @@
                     <span class="text-xs font-semibold px-2.5 py-1 rounded-full"
                           [class]="r === 'docente' ? 'bg-teal-50 text-teal-800 ring-1 ring-teal-200' : r === 'banco' ? 'bg-blue-50 text-blue-800 ring-1 ring-blue-200' : r === 'cajero' ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-200' : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'">{{ nombreRol[r] | translate }}</span>
                   }
-                  @if (f.vinculado) {
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200" [title]="'wg.admin.col.vinculadoAyuda' | translate">{{ 'wg.admin.col.cuentaPlataforma' | translate: { rol: f.rol_plataforma } }}</span>
-                  }
                   @if (f.estado !== 'active') {
                     <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">{{ 'wg.admin.col.inactivo' | translate }}</span>
                   } @else if (f.debe_cambiar_clave) {
