@@ -458,9 +458,9 @@ export class TabParticipantes implements OnInit {
   /** Grupos para el filtro: los del país elegido en los chips o, si no, todos. */
   get gruposFiltro(): Grupo[] {
     const pais = ['', 'sin', 'retirados', 'reembolso'].includes(this.filtro) ? null : this.filtro;
-    // Will-Go Kids (sin país) siempre de primero
+    // Will-Go Kids (sin país) siempre de último, justo antes de «Sin grupo»
     return (pais ? this.gruposWillGo.filter((g) => g.pais_id === pais || g === this.grupoKids) : this.gruposWillGo)
-      .slice().sort((a, b) => Number(b === this.grupoKids) - Number(a === this.grupoKids) || (a.pais_id || '').localeCompare(b.pais_id || '') || a.nombre.localeCompare(b.nombre));
+      .slice().sort((a, b) => Number(a === this.grupoKids) - Number(b === this.grupoKids) || (a.pais_id || '').localeCompare(b.pais_id || '') || a.nombre.localeCompare(b.nombre));
   }
   nombrePais(id: string | null): string { return this.paises.find((p) => p.id === id)?.nombre ?? ''; }
 
