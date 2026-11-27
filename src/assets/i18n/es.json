@@ -977,7 +977,8 @@
         "cajaGoStore": "Caja GO•STORE",
         "cuentas": "Cuentas y tarjetas",
         "productos": "Productos",
-        "consultarSaldo": "Consultar saldo"
+        "consultarSaldo": "Consultar saldo",
+        "resumenTv": "Resumen economía (TV)"
       },
       "rol": {
         "administrativo": "Administrativo",
@@ -1786,6 +1787,37 @@
       "transferidoA": "Transferencia a {{nombre}}",
       "disponibleVirtual": "En la cuenta virtual del banco hay {{n}}",
       "disponibleBanco": "En el banco hay {{n}}"
+    },
+    "tv": {
+      "titulo": "Resumen economía por país",
+      "elegir": "Elige la edición que quieres proyectar en el televisor.",
+      "cargando": "Cargando…",
+      "sinEdiciones": "No hay ediciones abiertas.",
+      "iniciar": "Proyectar",
+      "volver": "Volver a Will-Go Economy",
+      "precioMoneda": "Precio de la moneda hoy",
+      "precioAyuda": "Cuántos pesos vale 1 billete de cada país en este momento.",
+      "pesos": "pesos",
+      "desdeInicio": "desde el inicio",
+      "comportamiento": "Comportamiento",
+      "top10Dinero": "Top 10 · Estudiantes con más dinero",
+      "sinHistorial": "Aún no hay cambios en la tasa.",
+      "sinDinero": "Todavía nadie tiene dinero en este país.",
+      "fondos": "W-Funds · Empresas",
+      "fondosAyuda": "Cuánto valdrían hoy 100 invertidos desde el comienzo ({{n}} rondas).",
+      "valen": "100 invertidos hoy valen {{v}}",
+      "ultimaRonda": "Última ronda {{v}}",
+      "sinRondas": "Aún no se ha cerrado ninguna ronda.",
+      "top10Inversion": "Top 10 · Estudiantes que más han invertido",
+      "sinInversiones": "Nadie ha invertido todavía en esta empresa.",
+      "inicio": "Inicio",
+      "anterior": "Anterior",
+      "siguiente": "Siguiente",
+      "pausar": "Pausar",
+      "seguir": "Seguir",
+      "pantallaCompleta": "Pantalla completa",
+      "cambiar": "Cambiar edición",
+      "salir": "Salir"
     },
     "vistacuenta": {
       "enSuCuenta": "En su cuenta",

@@ -977,7 +977,8 @@
         "cajaGoStore": "Caisse GO•STORE",
         "cuentas": "Comptes et cartes",
         "productos": "Produits",
-        "consultarSaldo": "Consulter le solde"
+        "consultarSaldo": "Consulter le solde",
+        "resumenTv": "Résumé économie (TV)"
       },
       "rol": {
         "administrativo": "Personnel administratif",
@@ -1786,6 +1787,37 @@
       "transferidoA": "Virement à {{nombre}}",
       "disponibleVirtual": "Le compte virtuel de la banque contient {{n}}",
       "disponibleBanco": "La banque a {{n}}"
+    },
+    "tv": {
+      "titulo": "Résumé de l'économie par pays",
+      "elegir": "Choisissez l'édition à afficher sur le téléviseur.",
+      "cargando": "Chargement…",
+      "sinEdiciones": "Aucune édition ouverte.",
+      "iniciar": "Afficher",
+      "volver": "Retour à Will-Go Economy",
+      "precioMoneda": "Prix de la monnaie aujourd'hui",
+      "precioAyuda": "Combien de pesos vaut 1 billet de chaque pays en ce moment.",
+      "pesos": "pesos",
+      "desdeInicio": "depuis le début",
+      "comportamiento": "Évolution",
+      "top10Dinero": "Top 10 · Élèves avec le plus d'argent",
+      "sinHistorial": "Le taux n'a pas encore changé.",
+      "sinDinero": "Personne n'a encore d'argent dans ce pays.",
+      "fondos": "W-Funds · Entreprises",
+      "fondosAyuda": "Ce que vaudraient aujourd'hui 100 investis depuis le début ({{n}} manches).",
+      "valen": "100 investis valent {{v}} aujourd'hui",
+      "ultimaRonda": "Dernière manche {{v}}",
+      "sinRondas": "Aucune manche n'a encore été clôturée.",
+      "top10Inversion": "Top 10 · Élèves qui ont le plus investi",
+      "sinInversiones": "Personne n'a encore investi dans cette entreprise.",
+      "inicio": "Début",
+      "anterior": "Précédent",
+      "siguiente": "Suivant",
+      "pausar": "Pause",
+      "seguir": "Reprendre",
+      "pantallaCompleta": "Plein écran",
+      "cambiar": "Changer d'édition",
+      "salir": "Quitter"
     },
     "vistacuenta": {
       "enSuCuenta": "Sur son compte",

@@ -20,6 +20,7 @@ import { TarjetasWillGo } from './layouts/private-layout-will-go/pages/tarjetas/
 import { ProductosWillGo } from './layouts/private-layout-will-go/pages/productos/productos-will-go';
 import { CajaWillGo } from './layouts/private-layout-will-go/pages/caja/caja-will-go';
 import { SaldoWillGo } from './layouts/private-layout-will-go/pages/saldo/saldo-will-go';
+import { PantallaTvWillGo } from './layouts/private-layout-will-go/pages/pantalla-tv/pantalla-tv-will-go';
 import { IngresoAcudiente } from './layouts/public-layout/pages/acudiente-will-go/ingreso-acudiente';
 import { PanelAcudiente } from './layouts/public-layout/pages/acudiente-will-go/panel-acudiente';
 
@@ -45,6 +46,14 @@ export const willGoRoutes: Routes = [
   // Portal de acudientes (sin usuario de Directus: entran con documento + código al correo)
   { path: 'acudiente-will-go', title: 'Will-Go Economy | Acudientes', component: IngresoAcudiente },
   { path: 'acudiente-will-go/panel', title: 'Will-Go Economy | Mi familia', component: PanelAcudiente },
+  // Resumen de la economía para el televisor: pantalla completa, sin menú (solo administradores)
+  {
+    path: 'will-go-tv',
+    title: 'Will-Go Economy | Resumen economía',
+    component: PantallaTvWillGo,
+    canActivate: [authGuard, willGoGuard],
+    data: { roles: ['administrativo', 'administrador'] },
+  },
   {
     path: 'private-will-go',
     component: PrivateLayoutWillGo,
