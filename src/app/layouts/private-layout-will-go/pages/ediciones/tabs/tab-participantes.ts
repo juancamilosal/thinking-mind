@@ -47,7 +47,7 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
       @if (!gruposFiltro.length) {
         <p class="mt-2 rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-4 text-sm text-gray-500">{{ 'wg.grupos.vacioCorto' | translate }}</p>
       } @else {
-        <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-3">
           <!-- Todos -->
           <button type="button" (click)="filtroGrupoWillGo = ''; seleccion.clear()"
                   class="text-left rounded-2xl px-4 py-3 border-2 bg-white transition hover:shadow-md"
