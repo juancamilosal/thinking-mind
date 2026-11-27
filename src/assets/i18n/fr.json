@@ -939,7 +939,8 @@
         "wfunds": "W-Funds",
         "cajaGoStore": "Caisse GO•STORE",
         "cuentas": "Comptes et cartes",
-        "productos": "Produits"
+        "productos": "Produits",
+        "consultarSaldo": "Consulter le solde"
       },
       "rol": {
         "administrativo": "Personnel administratif",
@@ -1661,6 +1662,27 @@
           "estudiante": "{{nombre}} (espèces)"
         }
       }
+    },
+    "saldo": {
+      "titulo": "Consulter le solde",
+      "subtitulo": "Scannez le QR de la carte de débit ou saisissez la clé GO.BANK de l'élève.",
+      "qr": "QR",
+      "qrAyuda": "Scannez le QR de la carte de débit avec la caméra.",
+      "llave": "Clé Go Bank",
+      "llaveAyuda": "Saisissez la clé de l'élève, par exemple @sofia.gomez.",
+      "consultar": "Consulter",
+      "buscando": "Recherche…",
+      "enCuenta": "Solde du compte (carte)",
+      "enEfectivo": "En espèces",
+      "tituloCliente": "Consulte ton solde GO.BANK",
+      "subtituloCliente": "Scanne ta carte ou saisis ta clé.",
+      "pantallaCompleta": "Plein écran",
+      "pantallaCompletaAyuda": "Avec « Plein écran », seule la consultation s'affiche, pour laisser l'appareil aux élèves. Décochez pour quitter.",
+      "qrCliente": "Approche le QR de ta carte de débit de la caméra.",
+      "llaveCliente": "Saisis ta clé, par exemple @sofia.gomez.",
+      "empezar": "Commencer",
+      "cerrar": "Fermer",
+      "vuelveEn": "retour dans {{n}} s"
     },
     "tarjeta": {
       "escanearTarjeta": "Scanner la carte",

@@ -939,7 +939,8 @@
         "wfunds": "W-Funds",
         "cajaGoStore": "GO•STORE checkout",
         "cuentas": "Accounts and cards",
-        "productos": "Products"
+        "productos": "Products",
+        "consultarSaldo": "Check balance"
       },
       "rol": {
         "administrativo": "Administrative staff",
@@ -1661,6 +1662,27 @@
           "estudiante": "{{nombre}} (cash)"
         }
       }
+    },
+    "saldo": {
+      "titulo": "Check balance",
+      "subtitulo": "Scan the debit card QR or type the student's GO.BANK key.",
+      "qr": "QR",
+      "qrAyuda": "Scan the debit card QR with the camera.",
+      "llave": "Go Bank key",
+      "llaveAyuda": "Type the student's key, for example @sofia.gomez.",
+      "consultar": "Check",
+      "buscando": "Searching…",
+      "enCuenta": "Account balance (card)",
+      "enEfectivo": "In cash",
+      "tituloCliente": "Check your GO.BANK balance",
+      "subtituloCliente": "Scan your card or type your key.",
+      "pantallaCompleta": "Full screen",
+      "pantallaCompletaAyuda": "With “Full screen” only the balance check is shown, so the device can be left with the students. Uncheck it to exit.",
+      "qrCliente": "Hold your debit card QR up to the camera.",
+      "llaveCliente": "Type your key, for example @sofia.gomez.",
+      "empezar": "Start",
+      "cerrar": "Close",
+      "vuelveEn": "back in {{n}} s"
     },
     "tarjeta": {
       "escanearTarjeta": "Scan card",

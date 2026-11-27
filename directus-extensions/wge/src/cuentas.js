@@ -126,6 +126,21 @@ export function rutasCuentas(router, { ruta, db, unaSolaVez }) {
 		};
 	}));
 
+	/**
+	 * GET /wge/cuentas/saldo/:llave: «Consultar saldo» (QR o llave GO.BANK). Lo usan todos los roles de Will-Go
+	 * del equipo de la edición del estudiante: nombre, país, saldo de su cuenta (tarjeta) y su dinero en efectivo.
+	 */
+	router.get('/cuentas/saldo/:llave', ruta(async (req, rol) => {
+		exigirRol(rol, ROLES.BANCO, ROLES.DOCENTE, ROLES.CAJERO, ROLES.ADMIN_WG);
+		const p = await participantePorLlave(db, req.params.llave);
+		await exigirEquipo(db, { edicionId: p.edicion_id, usuarioId: req.accountability.user, rol });
+		const [cuenta, efectivo] = await Promise.all([
+			saldoDe(db, { participante_id: p.id, pais_id: p.pais_id, tipo_dueno: 'cuenta' }),
+			saldoDe(db, { participante_id: p.id, pais_id: p.pais_id, tipo_dueno: 'estudiante' }),
+		]);
+		return { llave: p.llave, nombre: p.nombre, apellido: p.apellido, pais: p.pais, codigo_moneda: p.codigo_moneda, cuenta, efectivo };
+	}));
+
 	/** POST /wge/cuentas/consignar { participante_id, billetes, clave_idempotencia }: billetes del estudiante → su cuenta. */
 	router.post('/cuentas/consignar', ruta(async (req, rol) => {
 		const { limpio, total } = montoOConteo(req.body, 'billetes') ?? (() => { throw new WgeError(400, 'VALOR_INVALIDO', 'Escribe el monto que consigna el estudiante'); })();

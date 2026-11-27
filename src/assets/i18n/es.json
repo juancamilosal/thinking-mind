@@ -939,7 +939,8 @@
         "wfunds": "W-Funds",
         "cajaGoStore": "Caja GO•STORE",
         "cuentas": "Cuentas y tarjetas",
-        "productos": "Productos"
+        "productos": "Productos",
+        "consultarSaldo": "Consultar saldo"
       },
       "rol": {
         "administrativo": "Administrativo",
@@ -1661,6 +1662,27 @@
           "estudiante": "{{nombre}} (efectivo)"
         }
       }
+    },
+    "saldo": {
+      "titulo": "Consultar saldo",
+      "subtitulo": "Escanea el QR de la tarjeta débito o escribe la llave GO.BANK del estudiante.",
+      "qr": "QR",
+      "qrAyuda": "Escanea el QR de la tarjeta débito con la cámara.",
+      "llave": "Llave Go Bank",
+      "llaveAyuda": "Escribe la llave del estudiante, por ejemplo @sofia.gomez.",
+      "consultar": "Consultar",
+      "buscando": "Buscando…",
+      "enCuenta": "Saldo en su cuenta (tarjeta)",
+      "enEfectivo": "En efectivo",
+      "tituloCliente": "Consulta tu saldo GO.BANK",
+      "subtituloCliente": "Escanea tu tarjeta o escribe tu llave.",
+      "pantallaCompleta": "Pantalla completa",
+      "pantallaCompletaAyuda": "Con «Pantalla completa» solo se ve la consulta, para dejar el dispositivo a los estudiantes. Para salir, desmárcala.",
+      "qrCliente": "Acerca el QR de tu tarjeta débito a la cámara.",
+      "llaveCliente": "Escribe tu llave, por ejemplo @sofia.gomez.",
+      "empezar": "Empezar",
+      "cerrar": "Cerrar",
+      "vuelveEn": "vuelve en {{n}} s"
     },
     "tarjeta": {
       "escanearTarjeta": "Escanear tarjeta",
