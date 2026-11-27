@@ -1678,12 +1678,13 @@
       "tituloCliente": "Consulta tu saldo GO.BANK",
       "subtituloCliente": "Escanea tu tarjeta o escribe tu llave.",
       "pantallaCompleta": "Pantalla completa",
-      "pantallaCompletaAyuda": "Con «Pantalla completa» solo se ve la consulta, para dejar el dispositivo a los estudiantes. Para salir, desmárcala.",
+      "pantallaCompletaAyuda": "Con «Pantalla completa» solo se ve la consulta, para dejar el dispositivo a los estudiantes. Con «Cámara frontal» el QR se lee con la cámara de adelante. Para salir, desmárcalas.",
       "qrCliente": "Acerca el QR de tu tarjeta débito a la cámara.",
       "llaveCliente": "Escribe tu llave, por ejemplo @sofia.gomez.",
       "empezar": "Empezar",
       "cerrar": "Cerrar",
-      "vuelveEn": "vuelve en {{n}} s"
+      "vuelveEn": "vuelve en {{n}} s",
+      "camaraFrontal": "Cámara frontal"
     },
     "tarjeta": {
       "escanearTarjeta": "Escanear tarjeta",

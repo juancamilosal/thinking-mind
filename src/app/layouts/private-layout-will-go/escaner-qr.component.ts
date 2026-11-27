@@ -14,7 +14,8 @@ import { TranslatePipe } from '@ngx-translate/core';
   imports: [FormsModule, TranslatePipe],
   template: `
     <div class="relative rounded-2xl overflow-hidden bg-slate-900 aspect-square max-h-[60vh] mx-auto">
-      <video #video class="w-full h-full object-cover" playsinline muted></video>
+      <!-- La frontal se ve en espejo, como un espejo normal (el QR se lee igual: se analiza la imagen sin voltear) -->
+      <video #video class="w-full h-full object-cover" [style.transform]="frontal ? 'scaleX(-1)' : null" playsinline muted></video>
       <div class="absolute inset-[18%] border-4 border-white/80 rounded-2xl pointer-events-none" aria-hidden="true"></div>
       @if (estado !== 'leyendo') {
         <div class="absolute inset-0 flex items-center justify-center p-6 text-center text-white text-sm bg-slate-900/80">
@@ -38,6 +39,8 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
   @Input() activo = true;
   /** Solo la cámara: sin ayuda ni campo para escribir la llave. */
   @Input() soloCamara = false;
+  /** Usar la cámara frontal (para dejar el dispositivo a los estudiantes); por defecto, la trasera. */
+  @Input() frontal = false;
   @Output() leido = new EventEmitter<string>();
   @ViewChild('video', { static: true }) videoRef!: ElementRef<HTMLVideoElement>;
 
@@ -54,7 +57,7 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     if (!this.navegador || !navigator.mediaDevices?.getUserMedia) { this.estado = 'sin-camara'; return; }
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.frontal ? 'user' : 'environment' }, audio: false });
       const v = this.videoRef.nativeElement;
       v.srcObject = this.stream;
       await v.play();

@@ -1678,12 +1678,13 @@
       "tituloCliente": "Check your GO.BANK balance",
       "subtituloCliente": "Scan your card or type your key.",
       "pantallaCompleta": "Full screen",
-      "pantallaCompletaAyuda": "With “Full screen” only the balance check is shown, so the device can be left with the students. Uncheck it to exit.",
+      "pantallaCompletaAyuda": "With “Full screen” only the balance check is shown, so the device can be left with the students. With “Front camera” the QR is read with the front camera. Uncheck them to exit.",
       "qrCliente": "Hold your debit card QR up to the camera.",
       "llaveCliente": "Type your key, for example @sofia.gomez.",
       "empezar": "Start",
       "cerrar": "Close",
-      "vuelveEn": "back in {{n}} s"
+      "vuelveEn": "back in {{n}} s",
+      "camaraFrontal": "Front camera"
     },
     "tarjeta": {
       "escanearTarjeta": "Scan card",
