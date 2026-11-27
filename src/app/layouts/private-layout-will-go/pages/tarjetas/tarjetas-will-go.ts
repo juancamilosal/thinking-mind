@@ -1,6 +1,7 @@
 import { Component, DOCUMENT, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TarjetaImprimir, WillGoService } from '../../../../core/services/will-go.service';
 import { QrLlaveComponent } from '../../qr-llave.component';
@@ -18,6 +19,10 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
     <div class="wg-tj">
       <!-- Encabezado (no se imprime) -->
       <div class="wg-tj-noimprimir max-w-4xl mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5">
+        <button type="button" (click)="volver()" class="mb-2 inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-gray-800">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          {{ 'wg.cuentas.tarjetas.volver' | translate }}
+        </button>
         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ 'wg.cuentas.tarjetas.titulo' | translate }}</p>
         <h1 class="text-xl font-bold text-gray-800 break-words">{{ nombreEdicion || '—' }}</h1>
         @if (!cargando && !error && tarjetas.length) {
@@ -238,6 +243,8 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
   private willGo = inject(WillGoService);
   private ruta = inject(ActivatedRoute);
   private documento = inject(DOCUMENT);
+  private ubicacion = inject(Location);
+  private router = inject(Router);
 
   nombreEdicion = '';
   tarjetas: TarjetaImprimir[] = [];
@@ -280,6 +287,12 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
   }
 
   imprimir(): void { window.print(); }
+
+  /** Vuelve a la pantalla anterior (Cuentas y tarjetas o la edición); si se abrió directo, a Cuentas y tarjetas. */
+  volver(): void {
+    if (typeof history !== 'undefined' && history.length > 1) this.ubicacion.back();
+    else this.router.navigateByUrl('/private-will-go/cuentas');
+  }
 
   /** Achica la llave para que quepa en una sola línea de la tarjeta (unos 47 mm de ancho). */
   tamLlave(llave: string): string {

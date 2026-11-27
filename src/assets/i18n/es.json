@@ -760,7 +760,8 @@
         "frente": "Frente",
         "reverso": "Reverso",
         "ambas": "Frente y reverso",
-        "consejoReverso": "Cada tarjeta sale con su frente y, al lado, su reverso. Recorta las dos partes y pégalas espalda con espalda (o dobla por la mitad antes de plastificar)."
+        "consejoReverso": "Cada tarjeta sale con su frente y, al lado, su reverso. Recorta las dos partes y pégalas espalda con espalda (o dobla por la mitad antes de plastificar).",
+        "volver": "Volver"
       }
     },
     "errores": {

@@ -760,7 +760,8 @@
         "frente": "Front",
         "reverso": "Back",
         "ambas": "Front and back",
-        "consejoReverso": "Each card comes with its front and, next to it, its back. Cut both parts and glue them back to back (or fold in half before laminating)."
+        "consejoReverso": "Each card comes with its front and, next to it, its back. Cut both parts and glue them back to back (or fold in half before laminating).",
+        "volver": "Back"
       }
     },
     "errores": {

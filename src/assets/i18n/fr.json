@@ -760,7 +760,8 @@
         "frente": "Recto",
         "reverso": "Verso",
         "ambas": "Recto et verso",
-        "consejoReverso": "Chaque carte sort avec son recto et, à côté, son verso. Découpez les deux parties et collez-les dos à dos (ou pliez en deux avant de plastifier)."
+        "consejoReverso": "Chaque carte sort avec son recto et, à côté, son verso. Découpez les deux parties et collez-les dos à dos (ou pliez en deux avant de plastifier).",
+        "volver": "Retour"
       }
     },
     "errores": {

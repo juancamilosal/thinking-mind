@@ -1,5 +1,4 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -201,7 +200,6 @@ export class CuentasWillGo implements OnInit {
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
   private router = inject(Router);
-  private location = inject(Location);
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
 
   ediciones: EdicionVigente[] = [];
@@ -257,8 +255,8 @@ export class CuentasWillGo implements OnInit {
   }
 
   imprimirTarjetas(): void {
-    const url = this.router.serializeUrl(this.router.createUrlTree(['/private-will-go/tarjetas'], { queryParams: { edicion: this.edicionId } }));
-    window.open(this.location.prepareExternalUrl(url), '_blank');
+    // En la misma pestaña: una pestaña nueva no tiene la sesión en el celular ni en la app instalada
+    this.router.navigate(['/private-will-go/tarjetas'], { queryParams: { edicion: this.edicionId } });
   }
 
   get total(): number { return Number(this.monto) || 0; }
