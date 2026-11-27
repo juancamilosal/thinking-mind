@@ -42,8 +42,9 @@
 .wg-foto {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center 30%;
+  /* En computador la foto va un poco más grande y subida, para que el logo no tape lo de la mitad (p. ej. la moneda Thinking Mind) */
+  background-size: auto 122%;
+  background-position: center 85%;
   opacity: 0;
   transform: scale(1.04);
   animation: fundido 48s ease-in-out infinite;
@@ -442,6 +443,12 @@
 
   .wg-fotos::after {
     background: none;
+  }
+
+  /* En celular la foto va completa arriba, sin nada encima */
+  .wg-foto {
+    background-size: cover;
+    background-position: center 30%;
   }
 
   .wg-idioma-arriba {
