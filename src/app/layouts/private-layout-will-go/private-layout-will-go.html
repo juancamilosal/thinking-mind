@@ -8,9 +8,12 @@
   <!-- Menú lateral: fijo en computador, deslizable en celular -->
   <aside class="fixed md:sticky top-0 left-0 z-40 h-screen w-72 shrink-0 flex flex-col text-white bg-gradient-to-b from-slate-900 via-slate-800 to-slate-700 transition-transform duration-300 md:translate-x-0"
          [class.-translate-x-full]="!menuAbierto">
-    <div class="px-6 pt-6 pb-5 border-b border-white/10">
-      <p class="text-xs font-semibold tracking-[0.2em] text-teal-300">THINKING MIND</p>
-      <p class="text-xl font-extrabold tracking-wide">WILL-GO ECONOMY</p>
+    <div class="px-4 pt-5 pb-4 border-b border-white/10">
+      <!-- Logo de Will-Go Economy (es azul oscuro: va sobre blanco) -->
+      <div class="bg-white rounded-2xl px-3 py-2.5 shadow-sm">
+        <img src="assets/images/will-go-economy-logo.png" alt="Will-Go Economy" class="block w-full h-auto">
+      </div>
+      <p class="mt-2 text-[10px] font-semibold tracking-[0.25em] text-teal-300 text-center">THINKING MIND</p>
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" [attr.aria-label]="'wg.nucleo.layout.menuAria' | translate">
@@ -55,7 +58,7 @@
         <button type="button" class="md:hidden -ml-1 p-2 rounded-lg text-gray-600 hover:bg-gray-100" (click)="menuAbierto = true" [attr.aria-label]="'wg.nucleo.layout.abrirMenu' | translate">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <p class="md:hidden font-extrabold tracking-wide text-slate-800">WILL-GO</p>
+        <img src="assets/images/will-go-economy-logo.png" alt="Will-Go Economy" class="md:hidden h-8 w-auto min-w-0 max-w-[45vw] object-contain">
         <div class="ml-auto flex items-center gap-2 sm:gap-3 min-w-0">
           <!-- Quien tiene varios roles elige con cuál trabajar -->
           @if (roles.length) {

@@ -84,10 +84,15 @@
 }
 
 .wg-logo-imagen {
-  width: min(420px, 80%);
+  display: block;
+  width: min(420px, 85%);
   height: auto;
   margin: 0 auto 2rem;
-  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.35));
+  /* El logo es azul oscuro: va sobre una tarjeta blanca para que se lea sobre las fotos */
+  padding: 0.9rem 1.25rem;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
 }
 
 .wg-logo {
@@ -454,7 +459,7 @@
   .wg-logo-billete { width: 72px; }
   .wg-logo-will { font-size: 1.65rem; }
   .wg-logo-economy { font-size: 0.75rem; }
-  .wg-logo-imagen { width: min(280px, 75%); margin-bottom: 1rem; }
+  .wg-logo-imagen { width: min(300px, 82%); margin-bottom: 1rem; padding: 0.6rem 0.9rem; border-radius: 16px; }
 
   .wg-saludo { font-size: 1.9rem; }
   .wg-lema { margin: 0.4rem 0 0; font-size: 0.95rem; }

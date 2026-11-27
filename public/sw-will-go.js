@@ -6,7 +6,7 @@ const ICONO = '/will-go/icon-192.png';
 const RUTAS_WILL_GO = ['/login-will-go', '/private-will-go', '/acudiente-will-go'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open('will-go-v1').then((c) => c.addAll([OFFLINE, ICONO])).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open('will-go-v2').then((c) => c.addAll([OFFLINE, ICONO])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
