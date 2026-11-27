@@ -70,7 +70,7 @@ export class IdiomaWillGoService {
 
   static esRutaWillGo(url: string): boolean {
     const r = url.split('?')[0];
-    return r.startsWith('/login-will-go') || r.startsWith('/private-will-go') || r.startsWith('/acudiente-will-go');
+    return r.startsWith('/login-will-go') || r.startsWith('/private-will-go') || r.startsWith('/acudiente-will-go') || r.startsWith('/will-go-tv');
   }
 
   private aplicar(): void {

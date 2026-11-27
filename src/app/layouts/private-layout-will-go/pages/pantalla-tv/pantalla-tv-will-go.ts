@@ -4,6 +4,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatosPantallaTv, EdicionVigente, FondoTv, PaisTv, WillGoService } from '../../../../core/services/will-go.service';
 import { formatearNumero } from '../../numero-miles.directive';
 import { GraficaTvComponent, SerieTv } from './grafica-tv.component';
+import { SelectorIdiomaComponent } from '../../selector-idioma.component';
+import { IdiomaWillGoService } from '../../../../core/services/idioma-will-go.service';
 
 /** Cada cuánto pasa a la siguiente pantalla. */
 const SEGUNDOS = 15;
@@ -23,11 +25,12 @@ type Diapositiva =
 @Component({
   selector: 'app-pantalla-tv-will-go',
   standalone: true,
-  imports: [TranslatePipe, GraficaTvComponent],
+  imports: [TranslatePipe, GraficaTvComponent, SelectorIdiomaComponent],
   template: `
     <div class="tv fixed inset-0 overflow-hidden text-white select-none" [class.tv-oculto]="!controles" (mousemove)="mostrarControles()">
       @if (!edicionId) {
         <!-- Elegir la edición -->
+        <div class="absolute top-4 right-4"><wg-selector-idioma variante="oscuro" /></div>
         <div class="h-full flex flex-col items-center justify-center p-6">
           <div class="bg-white rounded-2xl px-6 py-4"><img src="assets/images/will-go-economy-logo.png" alt="Will-Go Economy" class="h-16 w-auto"></div>
           <h1 class="tv-h1 mt-8 font-extrabold text-center">{{ 'wg.tv.titulo' | translate }}</h1>
@@ -209,7 +212,8 @@ type Diapositiva =
             @if (!pausa) { @for (v of [vuelta]; track v) { <div class="tv-barra h-full bg-gradient-to-r from-orange-400 to-amber-300 rounded-full" [style.animation-duration]="segundos + 's'"></div> } }
           </div>
             <!-- Controles (aparecen al mover el mouse) -->
-        <div class="tv-controles shrink-0 flex gap-2">
+        <div class="tv-controles shrink-0 flex items-center gap-2">
+              <wg-selector-idioma variante="oscuro" abrir="arriba" />
           <button type="button" (click)="anterior()" class="tv-boton" [attr.aria-label]="'wg.tv.anterior' | translate">◀</button>
           <button type="button" (click)="alternarPausa()" class="tv-boton" [attr.aria-label]="(pausa ? 'wg.tv.seguir' : 'wg.tv.pausar') | translate">{{ pausa ? '▶' : '❚❚' }}</button>
           <button type="button" (click)="siguiente()" class="tv-boton" [attr.aria-label]="'wg.tv.siguiente' | translate">▶▶</button>
@@ -256,6 +260,7 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
   private router = inject(Router);
   private t = inject(TranslateService);
   private zona = inject(NgZone);
+  private idioma = inject(IdiomaWillGoService);
   readonly Math = Math;
   readonly segundos = SEGUNDOS;
   readonly miles = (v: unknown) => formatearNumero((v as number) ?? 0);
@@ -397,7 +402,7 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
   }
 
   private actualizarHora(): void {
-    this.hora = new Date().toLocaleTimeString(this.t.currentLang === 'en' ? 'en-US' : this.t.currentLang === 'fr' ? 'fr-FR' : 'es-CO', { hour: 'numeric', minute: '2-digit' });
+    this.hora = new Date().toLocaleTimeString(this.idioma.locale, { hour: 'numeric', minute: '2-digit' });
   }
 
   // ----- Datos para cada pantalla -----
@@ -406,7 +411,7 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
     return ['wonderland', 'neverland', 'dreamland'].includes(n) ? `assets/images/billetes/${n}/1.jpg` : null;
   }
   cambio(p: PaisTv): number { const i = this.datos?.tasa_inicial || p.tasa_actual || 1; return ((p.tasa_actual - i) / i) * 100; }
-  pct(v: number): string { return `${v > 0 ? '+' : ''}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`; }
+  pct(v: number): string { return `${v > 0 ? '+' : ''}${v.toLocaleString(this.idioma.locale, { maximumFractionDigits: 1 })} %`; }
   claro(color: string | null): string { return color ? `color-mix(in srgb, ${color} 55%, #fff)` : '#fff'; }
   claseMedalla(i: number): string {
     return i === 0 ? 'bg-amber-400 text-amber-950' : i === 1 ? 'bg-slate-300 text-slate-900' : i === 2 ? 'bg-orange-700 text-white' : 'bg-white/10 text-white/80';
@@ -417,7 +422,7 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
     return [{ nombre: p.nombre, color: p.color || '#F97316', valores: [this.datos!.tasa_inicial, ...p.historial.map((h) => h.tasa)] }];
   }
   horasPais(p: PaisTv): string[] {
-    return ['', ...p.historial.map((h) => new Date(h.ventana).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }))];
+    return ['', ...p.historial.map((h) => new Date(h.ventana).toLocaleTimeString(this.idioma.locale, { hour: 'numeric', minute: '2-digit' }))];
   }
 
   valores(f: FondoTv): number[] { return f.puntos.map((x) => x.valor); }

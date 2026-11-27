@@ -17,7 +17,7 @@ import { IdiomaWillGoService } from '../../core/services/idioma-will-go.service'
         <svg class="w-4 h-4 opacity-70" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
       @if (abierto) {
-        <div role="menu" class="absolute z-50 mt-1 min-w-[13rem] bg-white rounded-xl border border-gray-200 shadow-lg py-1" [class]="alinear === 'izquierda' ? 'left-0' : 'right-0'">
+        <div role="menu" class="absolute z-50 min-w-[13rem] bg-white rounded-xl border border-gray-200 shadow-lg py-1" [class]="(alinear === 'izquierda' ? 'left-0' : 'right-0') + (abrir === 'arriba' ? ' bottom-full mb-1' : ' mt-1')">
           @for (i of idioma.idiomas; track i.id) {
             <button type="button" role="menuitemradio" [attr.aria-checked]="i.id === idioma.actual" (click)="elegir(i.id)"
                     class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left whitespace-nowrap hover:bg-gray-50"
@@ -34,6 +34,8 @@ import { IdiomaWillGoService } from '../../core/services/idioma-will-go.service'
 export class SelectorIdiomaComponent {
   @Input() variante: 'claro' | 'oscuro' = 'claro';
   @Input() alinear: 'izquierda' | 'derecha' = 'derecha';
+  /** Hacia dónde se abre la lista (arriba, si el selector está al pie de la pantalla). */
+  @Input() abrir: 'abajo' | 'arriba' = 'abajo';
   idioma = inject(IdiomaWillGoService);
   abierto = false;
 
