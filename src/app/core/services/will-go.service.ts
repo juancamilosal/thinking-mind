@@ -164,6 +164,15 @@ export interface TransaccionEquipo {
   colaborador_id: string; colaborador: string;
 }
 
+/** Resultado de «Consultar saldo» por QR o llave GO.BANK. */
+export interface SaldoLlave {
+  llave: string; nombre: string; apellido: string; pais: string | null; codigo_moneda: string | null;
+  /** Saldo de su cuenta (tarjeta débito). */
+  cuenta: number;
+  /** Su dinero en efectivo. */
+  efectivo: number;
+}
+
 export interface PaisArqueo {
   id: string; nombre: string; codigo_moneda: string | null; color: string | null;
   /** Billetes que hoy tiene el banco según el sistema. */
@@ -496,6 +505,11 @@ export class WillGoService {
 
   equipo(edicionId: string): Observable<MiembroEquipo[]> {
     return this.http.get<{ data: MiembroEquipo[] }>(`${this.api}/admin/ediciones/${edicionId}/equipo`).pipe(this.enZona(), map((r) => r.data));
+  }
+
+  /** Consultar saldo: nombre y saldo del estudiante dueño de una llave (o de lo que trae su QR). */
+  saldoPorLlave(llave: string): Observable<SaldoLlave> {
+    return this.http.get<{ data: SaldoLlave }>(`${this.api}/cuentas/saldo/${encodeURIComponent(llave)}`).pipe(this.enZona(), map((r) => r.data));
   }
 
   /** Transacciones (efectivo y virtual) de los colaboradores de la edición; con `usuarioId`, solo las de ese colaborador. */

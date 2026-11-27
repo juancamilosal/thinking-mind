@@ -939,7 +939,8 @@
         "wfunds": "W-Funds",
         "cajaGoStore": "GO•STORE checkout",
         "cuentas": "Accounts and cards",
-        "productos": "Products"
+        "productos": "Products",
+        "consultarSaldo": "Check balance"
       },
       "rol": {
         "administrativo": "Administrative staff",
@@ -1661,6 +1662,20 @@
           "estudiante": "{{nombre}} (cash)"
         }
       }
+    },
+    "saldo": {
+      "titulo": "Check balance",
+      "subtitulo": "Scan the debit card QR or type the student's GO.BANK key.",
+      "qr": "QR",
+      "qrAyuda": "Scan the debit card QR with the camera.",
+      "llave": "Go Bank key",
+      "llaveAyuda": "Type the student's key, for example @sofia.gomez.",
+      "consultar": "Check",
+      "buscando": "Searching…",
+      "enCuenta": "Account balance (card)",
+      "enEfectivo": "In cash",
+      "consultarOtro": "Check another",
+      "volver": "Back"
     },
     "tarjeta": {
       "escanearTarjeta": "Scan card",

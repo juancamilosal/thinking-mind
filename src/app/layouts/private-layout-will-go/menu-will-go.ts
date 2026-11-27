@@ -19,9 +19,12 @@ const ICONOS = {
   tienda: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
   tarjeta: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
   tasas: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
+  saldo: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
 };
 
 const INICIO: OpcionMenu = { texto: 'wg.nucleo.menu.inicio', ruta: '/private-will-go/inicio', icono: ICONOS.inicio };
+/** Consultar saldo (QR o llave GO.BANK): la tienen todos los roles. */
+const SALDO: OpcionMenu = { texto: 'wg.nucleo.menu.consultarSaldo', ruta: '/private-will-go/saldo', icono: ICONOS.saldo };
 
 /** Lo que ve cada colaborador en su menú. */
 export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
@@ -30,18 +33,21 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
     { texto: 'wg.nucleo.menu.colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
     { texto: 'wg.nucleo.menu.ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
     { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
+    SALDO,
   ],
   administrador: [
     INICIO,
     { texto: 'wg.nucleo.menu.colaboradores', ruta: '/private-will-go/colaboradores', icono: ICONOS.personas },
     { texto: 'wg.nucleo.menu.ediciones', ruta: '/private-will-go/ediciones', icono: ICONOS.edicion },
     { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas },
+    SALDO,
   ],
   docente: [
     INICIO,
     { texto: 'wg.nucleo.menu.entregarBilletes', ruta: '/private-will-go/entregar', icono: ICONOS.billetes, requiere: 'equipo' },
     { texto: 'wg.nucleo.menu.rubrica', ruta: '/private-will-go/rubrica', icono: ICONOS.rubrica, requiere: 'equipo' },
     { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
+    SALDO,
   ],
   banco: [
     INICIO,
@@ -50,11 +56,13 @@ export const MENU_POR_ROL: Record<RolWillGo, OpcionMenu[]> = {
     { texto: 'wg.nucleo.menu.cuentas', ruta: '/private-will-go/cuentas', icono: ICONOS.tarjeta, requiere: 'banco' },
     { texto: 'wg.nucleo.menu.wfunds', ruta: '/private-will-go/wfunds', icono: ICONOS.fondos, requiere: 'banco' },
     { texto: 'wg.nucleo.menu.tipoCambio', ruta: '/private-will-go/tipo-cambio', icono: ICONOS.tasas, requiere: 'equipo' },
+    SALDO,
   ],
   // El cajero solo usa la tienda: cobra al estudiante y le entrega su producto
   cajero: [
     INICIO,
     { texto: 'wg.nucleo.menu.cajaGoStore', ruta: '/private-will-go/caja', icono: ICONOS.caja, requiere: 'caja' },
+    SALDO,
   ],
 };
 

@@ -19,6 +19,7 @@ import { CuentasWillGo } from './layouts/private-layout-will-go/pages/cuentas/cu
 import { TarjetasWillGo } from './layouts/private-layout-will-go/pages/tarjetas/tarjetas-will-go';
 import { ProductosWillGo } from './layouts/private-layout-will-go/pages/productos/productos-will-go';
 import { CajaWillGo } from './layouts/private-layout-will-go/pages/caja/caja-will-go';
+import { SaldoWillGo } from './layouts/private-layout-will-go/pages/saldo/saldo-will-go';
 import { IngresoAcudiente } from './layouts/public-layout/pages/acudiente-will-go/ingreso-acudiente';
 import { PanelAcudiente } from './layouts/public-layout/pages/acudiente-will-go/panel-acudiente';
 
@@ -118,6 +119,12 @@ export const willGoRoutes: Routes = [
         title: 'Will-Go Economy | Cuentas y tarjetas',
         component: CuentasWillGo,
         data: { roles: ['banco', 'administrativo', 'administrador'] },
+      },
+      {
+        path: 'saldo',
+        title: 'Will-Go Economy | Consultar saldo',
+        component: SaldoWillGo,
+        data: { roles: ['banco', 'docente', 'cajero', 'administrativo', 'administrador'] },
       },
       {
         path: 'tarjetas',
