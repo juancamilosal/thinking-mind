@@ -25,20 +25,20 @@ const ABAJO = 56;
       </defs>
       <!-- Líneas guía con su valor -->
       @for (m of marcas; track m) {
-        <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(m)" [attr.y2]="y(m)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
-        <text [attr.x]="izq - 14" [attr.y]="y(m) + 8" text-anchor="end" fill="rgba(255,255,255,0.7)" font-size="22" font-weight="600">{{ formato(m) }}</text>
+        <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(m)" [attr.y2]="y(m)" [attr.stroke]="claro ? '#e5e7eb' : 'rgba(255,255,255,0.12)'" stroke-width="1.5" />
+        <text [attr.x]="izq - 14" [attr.y]="y(m) + 8" text-anchor="end" [attr.fill]="claro ? '#6b7280' : 'rgba(255,255,255,0.7)'" [attr.font-size]="tamTexto" font-weight="600">{{ formato(m) }}</text>
       }
       @if (referencia !== null) {
-        <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(referencia)" [attr.y2]="y(referencia)" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-dasharray="8 8" />
+        <line [attr.x1]="izq" [attr.x2]="ancho - der" [attr.y1]="y(referencia)" [attr.y2]="y(referencia)" [attr.stroke]="claro ? '#9ca3af' : 'rgba(255,255,255,0.45)'" stroke-width="2" stroke-dasharray="8 8" />
       }
       <!-- Etiquetas del eje x -->
       @for (e of etiquetasX; track e.i) {
-        <text [attr.x]="x(e.i)" [attr.y]="alto - 16" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="22" font-weight="600">{{ e.texto }}</text>
+        <text [attr.x]="x(e.i)" [attr.y]="alto - 16" text-anchor="middle" [attr.fill]="claro ? '#6b7280' : 'rgba(255,255,255,0.7)'" [attr.font-size]="tamTexto" font-weight="600">{{ e.texto }}</text>
       }
       @for (s of trazos; track s.nombre; let k = $index) {
         @if (rellenar) { <path [attr.d]="s.area" [attr.fill]="'url(#' + idRelleno + k + ')'" /> }
-        <polyline [attr.points]="s.linea" fill="none" [attr.stroke]="s.color" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" />
-        <circle [attr.cx]="s.fin.x" [attr.cy]="s.fin.y" r="11" [attr.fill]="s.color" stroke="#fff" stroke-width="4" />
+        <polyline [attr.points]="s.linea" fill="none" [attr.stroke]="s.color" [attr.stroke-width]="claro ? 4 : 6" stroke-linejoin="round" stroke-linecap="round" />
+        <circle [attr.cx]="s.fin.x" [attr.cy]="s.fin.y" [attr.r]="claro ? 8 : 11" [attr.fill]="s.color" stroke="#fff" stroke-width="4" />
       }
     </svg>
   `,
@@ -51,6 +51,10 @@ export class GraficaTvComponent implements OnChanges {
   @Input() referencia: number | null = null;
   @Input() rellenar = true;
   @Input() titulo = '';
+  /** Para usarla sobre fondo blanco (en la plataforma) en vez del fondo oscuro del televisor. */
+  @Input() claro = false;
+  /** Tamaño de las letras de los ejes (en unidades del dibujo de 1000 de ancho). */
+  @Input() tamTexto = 22;
   @Input() formato: (v: number) => string = (v) => Math.round(v).toLocaleString('es-CO');
 
   readonly ancho = ANCHO; readonly alto = ALTO; readonly izq = IZQ; readonly der = DER;

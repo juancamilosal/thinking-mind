@@ -5,7 +5,7 @@ import { Observable, MonoTypeOperatorFunction, catchError, map, of, shareReplay,
 import { environment } from '../../../environments/environment';
 import { StorageServices } from './storage.services';
 
-export type RolWillGo = 'administrativo' | 'docente' | 'banco' | 'cajero' | 'administrador';
+export type RolWillGo = 'administrativo' | 'docente' | 'banco' | 'cajero' | 'tv' | 'administrador';
 
 export interface PerfilWillGo {
   id: string;
@@ -153,9 +153,9 @@ export interface Participante {
 export interface MiembroEquipo {
   id: string; usuario_id: string; pais_id: string | null; pais: string | null;
   nombre: string; apellido: string; email: string; estado: string;
-  rol: 'docente' | 'banco' | 'cajero' | 'administrativo' | null;
+  rol: 'docente' | 'banco' | 'cajero' | 'tv' | 'administrativo' | null;
   /** Todos sus roles. */
-  roles?: ('docente' | 'banco' | 'cajero' | 'administrativo')[];
+  roles?: ('docente' | 'banco' | 'cajero' | 'tv' | 'administrativo')[];
   /** Billetes que el docente tiene en mano en esta edición. */
   billetes: number;
 }
@@ -323,6 +323,7 @@ export const NOMBRE_ROL: Record<RolWillGo, string> = {
   docente: 'Docente',
   banco: 'Banco',
   cajero: 'Cajero',
+  tv: 'TV',
   administrador: 'Administrador',
 };
 

@@ -8,6 +8,7 @@ export const ROLES_FUNCIONARIOS = {
 	docente: ROLES.DOCENTE,
 	banco: ROLES.BANCO,
 	cajero: ROLES.CAJERO,
+	tv: ROLES.TV,
 	administrativo: ROLES.ADMIN_WG,
 };
 const NOMBRES_FUNCIONARIOS = Object.values(ROLES_FUNCIONARIOS);
@@ -101,7 +102,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	const leerRoles = (b) => {
 		const lista = Array.isArray(b.roles) ? [...new Set(b.roles)] : b.rol !== undefined ? [b.rol] : null;
 		if (!lista) return null;
-		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero, TV o administrativo');
 		// Los perfiles administrativos no se crean ni se asignan desde Colaboradores
 		if (lista.includes('administrativo')) throw new WgeError(403, 'SIN_PERMISO', 'El rol administrativo no se asigna desde aquí');
 		return { principal: ROLES_FUNCIONARIOS[lista[0]], extra: lista.slice(1).filter((r) => ROLES_COMBINABLES.includes(r)) };
@@ -151,7 +152,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const b = req.body ?? {};
 		const roles = leerRoles(b);
-		if (!roles) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		if (!roles) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero, TV o administrativo');
 		const rolNombre = roles.principal;
 		puedeManejar(rol, rolNombre);
 		const email = validarCorreo(b.email);

@@ -63,6 +63,7 @@ export class InicioWillGo implements OnInit {
     this.willGo.miMenu().subscribe((acceso) => {
       // El cajero entra directo a la tienda (si no está asignado, la tienda le explica qué falta)
       if (this.perfil?.rol === 'cajero') { this.router.navigateByUrl('/private-will-go/caja', { replaceUrl: true }); return; }
+      if (this.perfil?.rol === 'tv') { this.router.navigateByUrl('/private-will-go/proyectar', { replaceUrl: true }); return; }
       this.opciones = this.sinInicio(menuPara(this.perfil?.rol, acceso));
       const rol = this.perfil?.rol;
       this.faltaPrincipal = (rol === 'banco' && !acceso.banco) || (rol === 'docente' && !acceso.equipo);

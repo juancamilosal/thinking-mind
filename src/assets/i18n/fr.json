@@ -367,7 +367,8 @@
         "docente": "Enseignant",
         "banco": "Banque",
         "cajero": "Caissier",
-        "administrador": "Administrateur"
+        "administrador": "Administrateur",
+        "tv": "TV"
       },
       "col": {
         "textoCopiar": "Will-Go Economy\nIdentifiant : {{usuario}}\nMot de passe temporaire : {{clave}}\nConnectez-vous sur : {{url}}",
@@ -978,14 +979,16 @@
         "cuentas": "Comptes et cartes",
         "productos": "Produits",
         "consultarSaldo": "Consulter le solde",
-        "resumenTv": "Résumé économie (TV)"
+        "resumenTv": "Résumé économie",
+        "proyectar": "Afficher sur la TV"
       },
       "rol": {
         "administrativo": "Personnel administratif",
         "administrador": "Administrateur",
         "docente": "Enseignant",
         "banco": "Banque",
-        "cajero": "Caissier"
+        "cajero": "Caissier",
+        "tv": "TV"
       },
       "layout": {
         "abrirMenu": "Ouvrir le menu",
@@ -1717,6 +1720,18 @@
         }
       }
     },
+    "proyectar": {
+      "titulo": "Afficher sur le téléviseur",
+      "subtitulo": "Choisissez l'économie à afficher. Elle s'ouvre en plein écran et change toute seule toutes les 15 secondes.",
+      "enCurso": "En cours",
+      "preparacion": "En préparation",
+      "boton": "Afficher"
+    },
+    "resumenEco": {
+      "titulo": "Résumé de l'économie",
+      "subtitulo": "Le prix des monnaies, les élèves avec le plus d'argent et l'évolution des entreprises W-Funds.",
+      "verEnTv": "Afficher sur le téléviseur"
+    },
     "saldo": {
       "titulo": "Consulter le solde",
       "subtitulo": "Scannez le QR de la carte de débit ou saisissez la clé GO.BANK de l'élève.",
@@ -1794,7 +1809,7 @@
       "cargando": "Chargement…",
       "sinEdiciones": "Aucune édition ouverte.",
       "iniciar": "Afficher",
-      "volver": "Retour à Will-Go Economy",
+      "volver": "Retour au résumé",
       "precioMoneda": "Prix de la monnaie aujourd'hui",
       "precioAyuda": "Combien de pesos vaut 1 billet de chaque pays en ce moment.",
       "pesos": "pesos",

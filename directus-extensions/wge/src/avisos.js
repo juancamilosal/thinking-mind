@@ -5,9 +5,9 @@ import { ROLES, rolesDe } from './lib.js';
 export const URL_APP_COLABORADORES = 'https://appthinkingmind.com/login-will-go';
 
 const NOMBRE_ROL_AVISO = {
-	es: { [ROLES.DOCENTE]: 'Docente', [ROLES.BANCO]: 'Banco', [ROLES.CAJERO]: 'Cajero', [ROLES.ADMIN_WG]: 'Administrativo' },
-	en: { [ROLES.DOCENTE]: 'Teacher', [ROLES.BANCO]: 'Bank', [ROLES.CAJERO]: 'Cashier', [ROLES.ADMIN_WG]: 'Administrative staff' },
-	fr: { [ROLES.DOCENTE]: 'Enseignant', [ROLES.BANCO]: 'Banque', [ROLES.CAJERO]: 'Caissier', [ROLES.ADMIN_WG]: 'Administratif' },
+	es: { [ROLES.DOCENTE]: 'Docente', [ROLES.BANCO]: 'Banco', [ROLES.CAJERO]: 'Cajero', [ROLES.TV]: 'TV', [ROLES.ADMIN_WG]: 'Administrativo' },
+	en: { [ROLES.DOCENTE]: 'Teacher', [ROLES.BANCO]: 'Bank', [ROLES.CAJERO]: 'Cashier', [ROLES.TV]: 'TV', [ROLES.ADMIN_WG]: 'Administrative staff' },
+	fr: { [ROLES.DOCENTE]: 'Enseignant', [ROLES.BANCO]: 'Banque', [ROLES.CAJERO]: 'Caissier', [ROLES.TV]: 'TV', [ROLES.ADMIN_WG]: 'Administratif' },
 };
 
 const DIAS_AVISO = {

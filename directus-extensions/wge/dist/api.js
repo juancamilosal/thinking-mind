@@ -18,14 +18,16 @@ const ROLES = {
 	DOCENTE: 'Docente Will Go',
 	CAJERO: 'Cajero Will Go',
 	ADMIN_WG: 'Administrativo Will Go',
+	/** Solo proyecta el resumen de la economía en el televisor. */
+	TV: 'TV Will Go',
 	ADMIN: 'Administrador',
 };
 
 /** Roles de Will Go por su llave (la que usa la app) y al revés. */
-const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, administrativo: ROLES.ADMIN_WG };
+const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, tv: ROLES.TV, administrativo: ROLES.ADMIN_WG };
 const LLAVE_DE_ROL = Object.fromEntries(Object.entries(LLAVES_ROL).map(([k, v]) => [v, k]));
 /** Roles que se pueden sumar al rol principal (el administrativo va solo). */
-const ROLES_COMBINABLES = ['docente', 'banco', 'cajero'];
+const ROLES_COMBINABLES = ['docente', 'banco', 'cajero', 'tv'];
 
 /** Roles extra guardados en el usuario (directus_users.wge_roles_extra): lista de llaves válidas, sin repetir. */
 function leerRolesExtra(valor) {
@@ -556,7 +558,7 @@ const TRADUCCIONES = [
 	['Solo el administrador general puede manejar perfiles administrativos', 'Only the general administrator can manage administrative profiles', "Seul l'administrateur général peut gérer les profils administratifs"],
 	['No existe el rol $1 en Directus', 'The role $1 does not exist in Directus', "Le rôle $1 n'existe pas dans Directus"],
 	['El colaborador no existe o no es de Will Go', 'The staff member does not exist or is not from Will Go', "Le collaborateur n'existe pas ou n'appartient pas à Will Go"],
-	['El rol debe ser docente, banco, cajero o administrativo', 'The role must be teacher, bank, cashier or administrative', 'Le rôle doit être enseignant, banque, caissier ou administratif'],
+	['El rol debe ser docente, banco, cajero, TV o administrativo', 'The role must be teacher, bank, cashier, TV or administrative', 'Le rôle doit être enseignant, banque, caissier, TV ou administratif'],
 	['El rol administrativo no se asigna desde aquí', 'The administrative role is not assigned here', 'Le rôle administratif ne s\'attribue pas ici'],
 	['Ya existe un usuario con ese correo', 'A user with that email already exists', 'Un utilisateur avec cette adresse e-mail existe déjà'],
 	['No puedes desactivar tu propio usuario', 'You cannot deactivate your own user', 'Vous ne pouvez pas désactiver votre propre utilisateur'],
@@ -628,6 +630,7 @@ const ROLES_FUNCIONARIOS = {
 	docente: ROLES.DOCENTE,
 	banco: ROLES.BANCO,
 	cajero: ROLES.CAJERO,
+	tv: ROLES.TV,
 	administrativo: ROLES.ADMIN_WG,
 };
 const NOMBRES_FUNCIONARIOS = Object.values(ROLES_FUNCIONARIOS);
@@ -721,7 +724,7 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 	const leerRoles = (b) => {
 		const lista = Array.isArray(b.roles) ? [...new Set(b.roles)] : b.rol !== undefined ? [b.rol] : null;
 		if (!lista) return null;
-		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		if (!lista.length || lista.some((r) => !ROLES_FUNCIONARIOS[r])) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero, TV o administrativo');
 		// Los perfiles administrativos no se crean ni se asignan desde Colaboradores
 		if (lista.includes('administrativo')) throw new WgeError(403, 'SIN_PERMISO', 'El rol administrativo no se asigna desde aquí');
 		return { principal: ROLES_FUNCIONARIOS[lista[0]], extra: lista.slice(1).filter((r) => ROLES_COMBINABLES.includes(r)) };
@@ -771,7 +774,7 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const b = req.body ?? {};
 		const roles = leerRoles(b);
-		if (!roles) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero o administrativo');
+		if (!roles) throw new WgeError(400, 'VALOR_INVALIDO', 'El rol debe ser docente, banco, cajero, TV o administrativo');
 		const rolNombre = roles.principal;
 		puedeManejar(rol, rolNombre);
 		const email = validarCorreo(b.email);
@@ -900,9 +903,9 @@ function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 const URL_APP_COLABORADORES = 'https://appthinkingmind.com/login-will-go';
 
 const NOMBRE_ROL_AVISO = {
-	es: { [ROLES.DOCENTE]: 'Docente', [ROLES.BANCO]: 'Banco', [ROLES.CAJERO]: 'Cajero', [ROLES.ADMIN_WG]: 'Administrativo' },
-	en: { [ROLES.DOCENTE]: 'Teacher', [ROLES.BANCO]: 'Bank', [ROLES.CAJERO]: 'Cashier', [ROLES.ADMIN_WG]: 'Administrative staff' },
-	fr: { [ROLES.DOCENTE]: 'Enseignant', [ROLES.BANCO]: 'Banque', [ROLES.CAJERO]: 'Caissier', [ROLES.ADMIN_WG]: 'Administratif' },
+	es: { [ROLES.DOCENTE]: 'Docente', [ROLES.BANCO]: 'Banco', [ROLES.CAJERO]: 'Cajero', [ROLES.TV]: 'TV', [ROLES.ADMIN_WG]: 'Administrativo' },
+	en: { [ROLES.DOCENTE]: 'Teacher', [ROLES.BANCO]: 'Bank', [ROLES.CAJERO]: 'Cashier', [ROLES.TV]: 'TV', [ROLES.ADMIN_WG]: 'Administrative staff' },
+	fr: { [ROLES.DOCENTE]: 'Enseignant', [ROLES.BANCO]: 'Banque', [ROLES.CAJERO]: 'Caissier', [ROLES.TV]: 'TV', [ROLES.ADMIN_WG]: 'Administratif' },
 };
 
 const DIAS_AVISO = {
@@ -2224,7 +2227,8 @@ function rutasArqueo(router, { ruta, db }) {
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id').leftJoin('Cursos as k', 'k.id', 'e.curso_id')
 			.select('e.id', 'e.nombre', 'e.estado', 'e.edicion_programa', 'e.fecha_inicio', 'e.fecha_fin', 'c.nombre as colegio', 'k.nombre as programa')
 			.orderBy([{ column: 'e.fecha_inicio', order: 'asc' }, { column: 'e.date_created', order: 'desc' }]);
-		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) {
+		// El rol TV proyecta cualquier edición vigente (no hace parte de ningún equipo)
+		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG && rol !== ROLES.TV) {
 			q.join('wge_equipo as q', 'q.edicion_id', 'e.id').where('q.usuario_id', req.accountability.user);
 		}
 		return q;
@@ -2972,12 +2976,12 @@ function primeros(lista, clave, n = 10) {
 
 function rutasTipoCambio(router, { ruta, db }) {
 	/**
-	 * GET /wge/ediciones/:id/pantalla: resumen de la economía para proyectar en un televisor (solo administradores).
+	 * GET /wge/ediciones/:id/pantalla: resumen de la economía para proyectar en un televisor (administradores y rol TV).
 	 * Por país: tasa, su historial y los 10 estudiantes con más dinero (efectivo + cuenta + inversiones vigentes).
 	 * Por empresa: cómo ha rendido ronda tras ronda y los 10 estudiantes que más han invertido en ella.
 	 */
 	router.get('/ediciones/:id/pantalla', ruta(async (req, rol) => {
-		exigirRol(rol, ROLES.ADMIN_WG);
+		exigirRol(rol, ROLES.ADMIN_WG, ROLES.TV);
 		const fx = await datosTipoCambio(db, req.params.id);
 		const edicionId = fx.edicion.id;
 		const paises = [];

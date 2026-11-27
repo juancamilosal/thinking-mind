@@ -66,12 +66,12 @@ export function primeros(lista, clave, n = 10) {
 
 export function rutasTipoCambio(router, { ruta, db }) {
 	/**
-	 * GET /wge/ediciones/:id/pantalla: resumen de la economía para proyectar en un televisor (solo administradores).
+	 * GET /wge/ediciones/:id/pantalla: resumen de la economía para proyectar en un televisor (administradores y rol TV).
 	 * Por país: tasa, su historial y los 10 estudiantes con más dinero (efectivo + cuenta + inversiones vigentes).
 	 * Por empresa: cómo ha rendido ronda tras ronda y los 10 estudiantes que más han invertido en ella.
 	 */
 	router.get('/ediciones/:id/pantalla', ruta(async (req, rol) => {
-		exigirRol(rol, ROLES.ADMIN_WG);
+		exigirRol(rol, ROLES.ADMIN_WG, ROLES.TV);
 		const fx = await datosTipoCambio(db, req.params.id);
 		const edicionId = fx.edicion.id;
 		const paises = [];

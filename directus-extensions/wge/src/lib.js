@@ -15,14 +15,16 @@ export const ROLES = {
 	DOCENTE: 'Docente Will Go',
 	CAJERO: 'Cajero Will Go',
 	ADMIN_WG: 'Administrativo Will Go',
+	/** Solo proyecta el resumen de la economía en el televisor. */
+	TV: 'TV Will Go',
 	ADMIN: 'Administrador',
 };
 
 /** Roles de Will Go por su llave (la que usa la app) y al revés. */
-export const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, administrativo: ROLES.ADMIN_WG };
+export const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, tv: ROLES.TV, administrativo: ROLES.ADMIN_WG };
 const LLAVE_DE_ROL = Object.fromEntries(Object.entries(LLAVES_ROL).map(([k, v]) => [v, k]));
 /** Roles que se pueden sumar al rol principal (el administrativo va solo). */
-export const ROLES_COMBINABLES = ['docente', 'banco', 'cajero'];
+export const ROLES_COMBINABLES = ['docente', 'banco', 'cajero', 'tv'];
 
 /** Roles extra guardados en el usuario (directus_users.wge_roles_extra): lista de llaves válidas, sin repetir. */
 export function leerRolesExtra(valor) {

@@ -367,7 +367,8 @@
         "docente": "Docente",
         "banco": "Banco",
         "cajero": "Cajero",
-        "administrador": "Administrador"
+        "administrador": "Administrador",
+        "tv": "TV"
       },
       "col": {
         "textoCopiar": "Will-Go Economy\nUsuario: {{usuario}}\nClave temporal: {{clave}}\nIngresa en: {{url}}",
@@ -978,14 +979,16 @@
         "cuentas": "Cuentas y tarjetas",
         "productos": "Productos",
         "consultarSaldo": "Consultar saldo",
-        "resumenTv": "Resumen economía (TV)"
+        "resumenTv": "Resumen economía",
+        "proyectar": "Proyectar en TV"
       },
       "rol": {
         "administrativo": "Administrativo",
         "administrador": "Administrador",
         "docente": "Docente",
         "banco": "Banco",
-        "cajero": "Cajero"
+        "cajero": "Cajero",
+        "tv": "TV"
       },
       "layout": {
         "abrirMenu": "Abrir menú",
@@ -1717,6 +1720,18 @@
         }
       }
     },
+    "proyectar": {
+      "titulo": "Proyectar en el televisor",
+      "subtitulo": "Elige la economía que quieres mostrar. Se abre en pantalla completa y cambia sola cada 15 segundos.",
+      "enCurso": "En curso",
+      "preparacion": "En preparación",
+      "boton": "Proyectar"
+    },
+    "resumenEco": {
+      "titulo": "Resumen de la economía",
+      "subtitulo": "El precio de la moneda, los estudiantes con más dinero y cómo van las empresas de W-Funds.",
+      "verEnTv": "Ver en el televisor"
+    },
     "saldo": {
       "titulo": "Consultar saldo",
       "subtitulo": "Escanea el QR de la tarjeta débito o escribe la llave GO.BANK del estudiante.",
@@ -1794,7 +1809,7 @@
       "cargando": "Cargando…",
       "sinEdiciones": "No hay ediciones abiertas.",
       "iniciar": "Proyectar",
-      "volver": "Volver a Will-Go Economy",
+      "volver": "Volver al resumen",
       "precioMoneda": "Precio de la moneda hoy",
       "precioAyuda": "Cuántos pesos vale 1 billete de cada país en este momento.",
       "pesos": "pesos",

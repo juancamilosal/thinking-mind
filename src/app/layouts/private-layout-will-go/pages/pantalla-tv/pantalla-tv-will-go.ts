@@ -172,7 +172,7 @@ type Diapositiva =
                       <p class="tv-sub font-bold text-white/80">{{ 'wg.tv.comportamiento' | translate }}</p>
                       <div class="flex-1 min-h-0 mt-[0.8vw] flex items-center">
                         @if (d.fondo.puntos.length > 1) {
-                          <wg-grafica-tv class="block w-full h-full" [series]="[{ nombre: d.fondo.nombre, color: d.color, valores: valores(d.fondo) }]" [etiquetas]="etiquetasRondas" [referencia]="100" [titulo]="d.fondo.nombre" />
+                          <wg-grafica-tv class="block w-full h-full" [series]="serieFondo(d.fondo, d.color)" [etiquetas]="etiquetasRondas" [referencia]="100" [titulo]="d.fondo.nombre" />
                         } @else {
                           <p class="w-full text-center tv-p text-white/60">{{ 'wg.tv.sinRondas' | translate }}</p>
                         }
@@ -315,7 +315,7 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
   cambiarEdicion(): void { this.router.navigate([], { queryParams: {} }); }
   salir(): void {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    this.router.navigateByUrl('/private-will-go/inicio');
+    this.router.navigateByUrl(WillGoService.perfilGuardado()?.rol === 'tv' ? '/private-will-go/proyectar' : '/private-will-go/resumen-economia');
   }
 
   /** Trae los datos; al comenzar cada vuelta se actualizan (tasas, saldos e inversiones cambian durante el día). */
@@ -323,7 +323,7 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
     this.willGo.pantallaTv(this.edicionId).subscribe({
       next: (d) => {
         const anterior = this.actual;
-        this.datos = d;
+        this.datos = d; this.memo.clear();
         this.error = '';
         this.armar();
         if (desdeElInicio || !anterior) this.indice = 0;
@@ -417,26 +417,34 @@ export class PantallaTvWillGo implements OnInit, OnDestroy {
     return i === 0 ? 'bg-amber-400 text-amber-950' : i === 1 ? 'bg-slate-300 text-slate-900' : i === 2 ? 'bg-orange-700 text-white' : 'bg-white/10 text-white/80';
   }
 
+  /** Lo calculado para las gráficas se guarda hasta que lleguen datos nuevos (así no se redibujan en cada ciclo). */
+  private memo = new Map<string, unknown>();
+  private recordar<T>(clave: string, calcular: () => T): T {
+    if (!this.memo.has(clave)) this.memo.set(clave, calcular());
+    return this.memo.get(clave) as T;
+  }
+
   seriePais(p: PaisTv): SerieTv[] {
     // La gráfica arranca en la tasa inicial y sigue cada cálculo
-    return [{ nombre: p.nombre, color: p.color || '#F97316', valores: [this.datos!.tasa_inicial, ...p.historial.map((h) => h.tasa)] }];
+    return this.recordar('sp' + p.id, () => [{ nombre: p.nombre, color: p.color || '#F97316', valores: [this.datos!.tasa_inicial, ...p.historial.map((h) => h.tasa)] }]);
   }
   horasPais(p: PaisTv): string[] {
-    return ['', ...p.historial.map((h) => new Date(h.ventana).toLocaleTimeString(this.idioma.locale, { hour: 'numeric', minute: '2-digit' }))];
+    return this.recordar('hp' + p.id + this.idioma.actual, () => ['', ...p.historial.map((h) => new Date(h.ventana).toLocaleTimeString(this.idioma.locale, { hour: 'numeric', minute: '2-digit' }))]);
   }
 
   valores(f: FondoTv): number[] { return f.puntos.map((x) => x.valor); }
+  serieFondo(f: FondoTv, color: string): SerieTv[] { return this.recordar('s1' + f.id, () => [{ nombre: f.nombre, color, valores: this.valores(f) }]); }
   valorFinal(f: FondoTv): number { return f.puntos[f.puntos.length - 1]?.valor ?? 100; }
   get etiquetasRondas(): string[] {
     const primero = this.datos?.fondos[0];
-    return (primero?.puntos ?? []).map((x, i) => (i === 0 ? this.t.instant('wg.tv.inicio') : (x.ronda ?? '').replace(/^(Ronda|Round|Manche)\s*/i, 'R')));
+    return this.recordar('er' + this.idioma.actual, () => (primero?.puntos ?? []).map((x, i) => (i === 0 ? this.t.instant('wg.tv.inicio') : (x.ronda ?? '').replace(/^(Ronda|Round|Manche)\s*/i, 'R'))));
   }
   get seriesFondos(): SerieTv[] {
-    return (this.datos?.fondos ?? []).map((f, k) => ({ nombre: f.nombre, color: COLORES_FONDOS[k % COLORES_FONDOS.length], valores: this.valores(f) }));
+    return this.recordar('sf', () => (this.datos?.fondos ?? []).map((f, k) => ({ nombre: f.nombre, color: COLORES_FONDOS[k % COLORES_FONDOS.length], valores: this.valores(f) })));
   }
   get fondosOrdenados(): { fondo: FondoTv; color: string }[] {
-    return (this.datos?.fondos ?? []).map((f, k) => ({ fondo: f, color: COLORES_FONDOS[k % COLORES_FONDOS.length] }))
-      .sort((a, b) => this.valorFinal(b.fondo) - this.valorFinal(a.fondo));
+    return this.recordar('fo', () => (this.datos?.fondos ?? []).map((f, k) => ({ fondo: f, color: COLORES_FONDOS[k % COLORES_FONDOS.length] }))
+      .sort((a, b) => this.valorFinal(b.fondo) - this.valorFinal(a.fondo)));
   }
   logo(f: FondoTv): string | null { return f.logo ? this.willGo.urlFoto(f.logo) : null; }
 }
