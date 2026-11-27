@@ -53,17 +53,23 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         <div class="wg-tj-hoja">
           @for (t of visibles; track t.id) {
             <div class="wg-tj-celda">
-              <article class="wg-tj-tarjeta" [style.background]="degradado(t.color)">
-                <div class="wg-tj-datos">
-                  <p class="wg-tj-marca">WILL-GO ECONOMY · <span>{{ 'wg.cuentas.tarjetaDebito' | translate }}</span></p>
-                  <p class="wg-tj-pais">{{ t.pais }}@if (t.codigo_moneda) { · {{ t.codigo_moneda }} }</p>
-                  <div class="wg-tj-pie">
-                    <p class="wg-tj-llave" [style.font-size]="tamLlave(t.llave)">{{ t.llave }}</p>
-                    <p class="wg-tj-nombre">{{ t.nombre }} {{ t.apellido }}</p>
-                  </div>
+              <!-- Tarjeta débito GO.BANK (cada QR lleva la llave del estudiante) -->
+              <article class="wg-tj-tarjeta">
+                <svg class="wg-tj-onda" viewBox="0 0 856 540" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M856 300 C 760 430 520 505 200 540 L 856 540 Z" fill="#f47216" />
+                  <path d="M856 300 C 760 430 520 505 200 540" fill="none" stroke="#f9a04a" stroke-width="3" />
+                  <path d="M720 452 C 560 500 380 528 120 540" fill="none" stroke="#5fd32c" stroke-width="3" />
+                </svg>
+                <img class="wg-tj-gobank" src="assets/images/will-go/tarjeta-gobank.png" alt="GO.BANK">
+                <span class="wg-tj-debito">Debit Card <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7c2 3 2 7 0 10M12 5c3 4 3 10 0 14M16 3c4 5 4 13 0 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+                <img class="wg-tj-willgo" src="assets/images/will-go/tarjeta-willgo.png" alt="Will-go! Will-Go Economy">
+                <p class="wg-tj-lema">Who translates, betrays! <b>Just speak!</b></p>
+                <div class="wg-tj-pie">
+                  <p class="wg-tj-llave" [style.font-size]="tamLlave(t.llave)">{{ t.llave }}</p>
+                  <p class="wg-tj-nombre">{{ t.nombre }} {{ t.apellido }}</p>
                 </div>
                 <div class="wg-tj-qr">
-                  <wg-qr-llave [llave]="t.llave" [color]="'#0f172a'" />
+                  <wg-qr-llave [llave]="t.llave" [color]="'#001938'" />
                 </div>
               </article>
             </div>
@@ -88,55 +94,67 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       break-inside: avoid;
       page-break-inside: avoid;
     }
+    /* Diseño GO.BANK: azul noche, logos arriba, lema, llave y QR; onda naranja abajo a la derecha */
     .wg-tj-tarjeta {
+      position: relative;
       box-sizing: border-box;
       width: 100%;
       height: 100%;
       border-radius: 3.2mm;
-      padding: 3.6mm;
-      display: flex;
-      gap: 3mm;
+      background: #001938;
       color: #fff;
       overflow: hidden;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, .18);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, .25);
+      font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .wg-tj-datos { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .wg-tj-marca { margin: 0; font-size: 2.3mm; font-weight: 800; letter-spacing: .12em; line-height: 1.25; opacity: .95; }
-    .wg-tj-marca span { font-weight: 600; letter-spacing: .02em; }
-    .wg-tj-pais { margin: 1mm 0 0; font-size: 3mm; font-weight: 600; opacity: .9; }
-    .wg-tj-pie { margin-top: auto; }
+    .wg-tj-onda { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .wg-tj-gobank { position: absolute; left: 4.6mm; top: 3.6mm; height: 7.4mm; width: auto; }
+    .wg-tj-debito {
+      position: absolute; right: 4mm; top: 4.2mm;
+      display: inline-flex; align-items: center; gap: .8mm;
+      padding: .9mm 2.4mm; border: .35mm solid #5fd32c; border-radius: 99mm;
+      font-size: 2.6mm; font-weight: 500; line-height: 1; white-space: nowrap;
+    }
+    .wg-tj-debito svg { width: 3mm; height: 3mm; }
+    .wg-tj-willgo { position: absolute; left: 4.4mm; top: 13.2mm; height: 10.6mm; width: auto; }
+    .wg-tj-lema {
+      position: absolute; left: 4.4mm; top: 25.6mm; margin: 0;
+      padding: .8mm 2.4mm; border: .3mm solid #f47216; border-radius: 99mm;
+      font-size: 2.05mm; font-style: italic; font-weight: 500; line-height: 1.1; white-space: nowrap;
+    }
+    .wg-tj-lema b { color: #f9a04a; font-weight: 800; }
+    .wg-tj-pie { position: absolute; left: 4.8mm; bottom: 6.2mm; width: 47mm; }
     .wg-tj-llave {
       margin: 0;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 4.4mm;
-      font-weight: 800;
+      font-size: 4.6mm;
+      font-weight: 700;
       line-height: 1.15;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
     }
     .wg-tj-nombre {
-      margin: 1mm 0 0;
-      font-size: 3.2mm;
+      margin: .9mm 0 0;
+      font-size: 2.1mm;
       font-weight: 600;
       line-height: 1.2;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       text-transform: uppercase;
-      letter-spacing: .04em;
+      letter-spacing: .28em;
     }
     .wg-tj-qr {
-      flex-shrink: 0;
-      align-self: center;
-      width: 36mm;
-      height: 36mm;
-      padding: 1.5mm;
+      position: absolute;
+      right: 4mm;
+      top: 11mm;
+      width: 28mm;
+      height: 28mm;
+      padding: 1.6mm;
       background: #fff;
-      border-radius: 2.4mm;
+      border-radius: 2.6mm;
       box-sizing: border-box;
     }
     .wg-tj-qr wg-qr-llave { width: 100%; height: 100%; }
@@ -195,16 +213,10 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
     return this.paisId ? this.tarjetas.filter((t) => t.pais_id === this.paisId) : this.tarjetas;
   }
 
-  /** Degradado con el color del país (más oscuro hacia abajo a la derecha). */
-  degradado(color: string | null): string {
-    const c = color || '#1e293b';
-    return `linear-gradient(135deg, ${c} 0%, color-mix(in srgb, ${c} 62%, #000) 100%)`;
-  }
-
   imprimir(): void { window.print(); }
 
-  /** Achica la llave para que quepa en una sola línea de la tarjeta (unos 40 mm de ancho). */
+  /** Achica la llave para que quepa en una sola línea de la tarjeta (unos 47 mm de ancho). */
   tamLlave(llave: string): string {
-    return `${Math.min(4.4, 40 / (0.62 * Math.max(1, llave.length))).toFixed(2)}mm`;
+    return `${Math.min(4.6, 47 / (0.6 * Math.max(1, llave.length))).toFixed(2)}mm`;
   }
 }
