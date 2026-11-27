@@ -16,6 +16,8 @@ export const INTERVALOS_FX = [10, 15, 20, 30, 60];
 export const SECCIONES = {
 	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'orden', 'responsable_banco'], orden: 'orden' },
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
+	// Grupos de estudiantes dentro de cada país (nombre y color)
+	grupos: { tabla: 'wge_grupos', campos: ['nombre', 'color', 'pais_id', 'orden'], orden: 'orden' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
 const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill', 'responsable_caja'];
@@ -311,6 +313,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			await trx('wge_billeteras').where('edicion_id', e.id).delete();
 			await trx('wge_fx').whereIn('pais_id', paises).delete();
 			await trx('wge_participantes').where('edicion_id', e.id).delete();
+			await trx('wge_grupos').where('edicion_id', e.id).delete();
 			await trx('wge_productos').where('edicion_id', e.id).delete();
 			await trx('wge_fondos').where('edicion_id', e.id).delete();
 			await trx('wge_equipo').where('edicion_id', e.id).delete();
@@ -348,6 +351,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			const fila = nueva(req.accountability.user, { ...limpiar(req.body, s.campos), edicion_id: e.id });
 			exigirTexto(fila.nombre, 'nombre');
 			if (nombre === 'productos' && fila.precio_cop == null) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el precio');
+			if (nombre === 'grupos') await exigirPaisDeLaEdicion(fila.pais_id, e.id);
 			await db(s.tabla).insert(fila);
 			return db(s.tabla).where('id', fila.id).first();
 		}));
@@ -358,6 +362,11 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			if (!actual) throw new WgeError(404, 'NO_EXISTE', 'No existe');
 			const e = await edicionExistente(actual.edicion_id);
 			const fila = limpiar(req.body, s.campos);
+			if (nombre === 'grupos' && 'pais_id' in fila && fila.pais_id !== actual.pais_id) {
+				// El grupo cambia de país: sus estudiantes (del país anterior) quedan sin grupo
+				await exigirPaisDeLaEdicion(fila.pais_id, e.id);
+				await db('wge_participantes').where('grupo_id', actual.id).update({ grupo_id: null });
+			}
 			if (nombre === 'paises' && req.body && 'provision_billetes' in req.body) {
 				// La provisión se define por billetes impresos: el total sale del conteo
 				const { limpio, total } = totalDelConteo(req.body.provision_billetes ?? {});
@@ -406,6 +415,25 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		}));
 	}
 
+	/** El país debe existir y ser de la edición. */
+	const exigirPaisDeLaEdicion = async (paisId, edicionId) => {
+		if (!paisId || !(await db('wge_paises').where({ id: paisId, edicion_id: edicionId }).first('id'))) {
+			throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el país del grupo');
+		}
+	};
+
+	/** DELETE /wge/admin/grupos/:id: borra el grupo; sus estudiantes quedan en el país, sin grupo. */
+	router.delete('/admin/grupos/:itemId', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const g = await db('wge_grupos').where('id', req.params.itemId).first('id');
+		if (!g) throw new WgeError(404, 'NO_EXISTE', 'No existe');
+		await db.transaction(async (trx) => {
+			await trx('wge_participantes').where('grupo_id', g.id).update({ grupo_id: null });
+			await trx('wge_grupos').where('id', g.id).delete();
+		});
+		return { borrado: true };
+	}));
+
 	/** Los productos con ventas no se borran: se desactivan, para no perder el historial. */
 	router.delete('/admin/productos/:itemId', ruta(async (req, rol) => {
 		soloAdmin(rol);
@@ -429,7 +457,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 			.where('p.edicion_id', req.params.id)
-			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
+			.select('p.id', 'p.codigo', 'p.pais_id', 'p.grupo_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
 				db.raw(`${sqlCorresponde(e).sql} as corresponde`, sqlCorresponde(e).valores),
 				// Pidió reembolso: tiene alguna cuenta del programa (o de sus variantes de hermanos) y todas están devueltas o trasladadas
@@ -441,7 +469,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 	}));
 
 	/**
-	 * PATCH /wge/admin/participantes { ids, pais_id?, presente? }
+	 * PATCH /wge/admin/participantes { ids, pais_id?, grupo_id?, presente? }
 	 * No se cambia de país a quien ya tiene billetes en otra moneda: los billetes no se convierten solos.
 	 */
 	router.patch('/admin/participantes', ruta(async (req, rol) => {
@@ -466,6 +494,19 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				.first('e.nombre', 'e.apellido');
 			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en su moneda actual; no se puede cambiar de país`);
 			cambios.pais_id = paisId;
+		}
+		// Cambiar de país saca del grupo (los grupos son de un país)
+		if ('pais_id' in cambios) cambios.grupo_id = null;
+		if ('grupo_id' in (req.body ?? {})) {
+			const grupoId = req.body.grupo_id || null;
+			if (grupoId) {
+				const g = await db('wge_grupos').where({ id: grupoId, edicion_id: [...ediciones][0] }).first('id', 'pais_id', 'nombre');
+				if (!g) throw new WgeError(400, 'VALOR_INVALIDO', 'El grupo no es de esta edición');
+				const paisFinal = 'pais_id' in cambios ? cambios.pais_id : null;
+				const deOtroPais = lista.find((p) => (paisFinal ?? p.pais_id) !== g.pais_id);
+				if (deOtroPais) throw new WgeError(409, 'OTRO_PAIS', 'Solo se agregan al grupo estudiantes de su mismo país');
+			}
+			cambios.grupo_id = grupoId;
 		}
 		if ('presente' in (req.body ?? {})) cambios.presente = !!req.body.presente;
 		if (!Object.keys(cambios).length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay cambios');

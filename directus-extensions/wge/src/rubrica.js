@@ -74,9 +74,11 @@ export function rutasRubrica(router, { ruta, db }) {
 		const hoy = inicioDelDia();
 		for (const p of paises) {
 			p.tasa_actual = Number(p.tasa_actual ?? edicion.tasa_inicial);
+			// Grupos del país (nombre y color); cada estudiante dice su grupo
+			p.grupos = await db('wge_grupos').where({ edicion_id: edicion.id, pais_id: p.id }).orderBy([{ column: 'orden' }, { column: 'nombre' }]).select('id', 'nombre', 'color');
 			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 				.where({ 'pa.edicion_id': edicion.id, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
-				.select('pa.id', 'pa.presente', 'e.nombre', 'e.apellido',
+				.select('pa.id', 'pa.presente', 'pa.grupo_id', 'e.nombre', 'e.apellido',
 					db.raw('(select count(*) from wge_evaluaciones ev where ev.participante_id = pa.id and ev.date_created >= ?)::int as hoy', [hoy]),
 					db.raw('(select max(ev.date_created) from wge_evaluaciones ev where ev.participante_id = pa.id) as ultima'))
 				.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);
@@ -117,6 +119,35 @@ export function rutasRubrica(router, { ruta, db }) {
 			await trx('wge_evaluaciones').insert(nueva);
 			if (!p.presente) await trx('wge_participantes').where('id', p.id).update({ presente: true });
 			return { ...nueva, recompensa: recompensaSugerida(nueva.puntaje) };
+		});
+	}));
+
+	/**
+	 * POST /wge/evaluaciones/grupo { grupo_id, participante_ids?, uso_lengua, iniciativa, nivel_reto, colaboracion, idioma, evidencia }
+	 * Califica a todo el grupo (o a los estudiantes elegidos de él) con los mismos criterios, en una sola operación.
+	 */
+	router.post('/evaluaciones/grupo', ruta(async (req, rol) => {
+		exigirRol(rol, ROLES.DOCENTE, ROLES.ADMIN_WG);
+		const fila = armarCalificacion(req.body);
+		const actor = req.accountability.user;
+		return db.transaction(async (trx) => {
+			const g = await trx('wge_grupos').where('id', String(req.body?.grupo_id ?? '')).first('id', 'edicion_id', 'pais_id', 'nombre');
+			if (!g) throw new WgeError(404, 'NO_EXISTE', 'El grupo no existe');
+			const edicion = await trx('wge_ediciones').where('id', g.edicion_id).first('estado');
+			if (edicion?.estado !== 'abierta') throw new WgeError(409, 'EDICION_CERRADA', 'La edición no está abierta');
+			await exigirEquipo(trx, { edicionId: g.edicion_id, usuarioId: actor, rol, paisId: g.pais_id });
+			const elegidos = Array.isArray(req.body?.participante_ids) ? req.body.participante_ids.filter((x) => typeof x === 'string') : null;
+			const miembros = await trx('wge_participantes').where({ grupo_id: g.id, pais_id: g.pais_id }).whereRaw('coalesce(retirado, false) = false')
+				.modify((q) => { if (elegidos) q.whereIn('id', elegidos); }).forUpdate().select('id', 'presente');
+			if (!miembros.length) throw new WgeError(409, 'GRUPO_VACIO', 'El grupo no tiene estudiantes para calificar');
+			// Doble toque: si este docente calificó a este grupo hace menos de 5 segundos, no se repite
+			const reciente = await trx('wge_evaluaciones').whereIn('participante_id', miembros.map((m) => m.id)).where('user_created', actor)
+				.where('date_created', '>', new Date(Date.now() - 5000)).first('id');
+			if (reciente) return { calificados: 0, repetida: true, recompensa: recompensaSugerida(fila.puntaje) };
+			const ahora = new Date();
+			await trx('wge_evaluaciones').insert(miembros.map((m) => ({ id: crypto.randomUUID(), participante_id: m.id, ...fila, date_created: ahora, user_created: actor })));
+			await trx('wge_participantes').whereIn('id', miembros.filter((m) => !m.presente).map((m) => m.id)).update({ presente: true });
+			return { calificados: miembros.length, grupo: g.nombre, puntaje: fila.puntaje, recompensa: recompensaSugerida(fila.puntaje) };
 		});
 	}));
 

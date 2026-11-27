@@ -481,6 +481,11 @@ const TRADUCCIONES = [
 	['El estudiante fue retirado de la edición', 'The student was withdrawn from the edition', "L'élève a été retiré de l'édition"],
 	['El participante no tiene país asignado', 'The participant has no country assigned', "Le participant n'a pas de pays attribué"],
 	['El destinatario no es docente de Will Go', 'The recipient is not a Will Go teacher', "Le destinataire n'est pas enseignant de Will Go"],
+	['Elige el país del grupo', 'Choose the group\'s country', 'Choisissez le pays du groupe'],
+	['El grupo no es de esta edición', 'The group is not part of this edition', 'Le groupe ne fait pas partie de cette édition'],
+	['Solo se agregan al grupo estudiantes de su mismo país', 'Only students from the same country can join the group', 'Seuls les élèves du même pays peuvent rejoindre le groupe'],
+	['El grupo no existe', 'The group does not exist', "Le groupe n'existe pas"],
+	['El grupo no tiene estudiantes para calificar', 'The group has no students to grade', "Le groupe n'a pas d'élèves à évaluer"],
 	['No puedes entregarte dinero a ti mismo desde el banco', 'You cannot give money to yourself from the bank', 'Vous ne pouvez pas vous remettre de l\'argent à vous-même depuis la banque'],
 	['En el banco solo quedan $1 billetes de $2', 'The bank only has $1 bills of $2 left', 'Il ne reste que $1 billets de $2 à la banque'],
 	['Solo tienes $1 billetes de $2', 'You only have $1 bills of $2', "Vous n'avez que $1 billets de $2"],
@@ -962,6 +967,8 @@ const INTERVALOS_FX = [10, 15, 20, 30, 60];
 const SECCIONES = {
 	paises: { tabla: 'wge_paises', campos: ['nombre', 'codigo_moneda', 'color', 'orden', 'responsable_banco'], orden: 'orden' },
 	productos: { tabla: 'wge_productos', campos: ['nombre', 'foto', 'precio_cop', 'descuento', 'stock', 'maximo_por_estudiante', 'activo'], orden: 'nombre' },
+	// Grupos de estudiantes dentro de cada país (nombre y color)
+	grupos: { tabla: 'wge_grupos', campos: ['nombre', 'color', 'pais_id', 'orden'], orden: 'orden' },
 	fondos: { tabla: 'wge_fondos', campos: ['nombre', 'historia', 'logo', 'a_que_se_dedica', 'por_que_invertir', 'riesgo', 'rendimiento_base', 'rendimiento_alterno', 'variacion', 'activo', 'orden'], orden: 'orden' },
 };
 const CAMPOS_EDICION = ['nombre', 'colegio_id', 'curso_id', 'edicion_programa', 'fecha_inicio', 'fecha_fin', 'horario', 'tasa_inicial', 'tope_minimo', 'tope_maximo', 'parametros_fx', 'investment_bill', 'responsable_caja'];
@@ -1257,6 +1264,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			await trx('wge_billeteras').where('edicion_id', e.id).delete();
 			await trx('wge_fx').whereIn('pais_id', paises).delete();
 			await trx('wge_participantes').where('edicion_id', e.id).delete();
+			await trx('wge_grupos').where('edicion_id', e.id).delete();
 			await trx('wge_productos').where('edicion_id', e.id).delete();
 			await trx('wge_fondos').where('edicion_id', e.id).delete();
 			await trx('wge_equipo').where('edicion_id', e.id).delete();
@@ -1294,6 +1302,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			const fila = nueva(req.accountability.user, { ...limpiar(req.body, s.campos), edicion_id: e.id });
 			exigirTexto(fila.nombre, 'nombre');
 			if (nombre === 'productos' && fila.precio_cop == null) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el precio');
+			if (nombre === 'grupos') await exigirPaisDeLaEdicion(fila.pais_id, e.id);
 			await db(s.tabla).insert(fila);
 			return db(s.tabla).where('id', fila.id).first();
 		}));
@@ -1304,6 +1313,11 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			if (!actual) throw new WgeError(404, 'NO_EXISTE', 'No existe');
 			const e = await edicionExistente(actual.edicion_id);
 			const fila = limpiar(req.body, s.campos);
+			if (nombre === 'grupos' && 'pais_id' in fila && fila.pais_id !== actual.pais_id) {
+				// El grupo cambia de país: sus estudiantes (del país anterior) quedan sin grupo
+				await exigirPaisDeLaEdicion(fila.pais_id, e.id);
+				await db('wge_participantes').where('grupo_id', actual.id).update({ grupo_id: null });
+			}
 			if (nombre === 'paises' && req.body && 'provision_billetes' in req.body) {
 				// La provisión se define por billetes impresos: el total sale del conteo
 				const { limpio, total } = totalDelConteo(req.body.provision_billetes ?? {});
@@ -1352,6 +1366,25 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		}));
 	}
 
+	/** El país debe existir y ser de la edición. */
+	const exigirPaisDeLaEdicion = async (paisId, edicionId) => {
+		if (!paisId || !(await db('wge_paises').where({ id: paisId, edicion_id: edicionId }).first('id'))) {
+			throw new WgeError(400, 'VALOR_INVALIDO', 'Elige el país del grupo');
+		}
+	};
+
+	/** DELETE /wge/admin/grupos/:id: borra el grupo; sus estudiantes quedan en el país, sin grupo. */
+	router.delete('/admin/grupos/:itemId', ruta(async (req, rol) => {
+		soloAdmin(rol);
+		const g = await db('wge_grupos').where('id', req.params.itemId).first('id');
+		if (!g) throw new WgeError(404, 'NO_EXISTE', 'No existe');
+		await db.transaction(async (trx) => {
+			await trx('wge_participantes').where('grupo_id', g.id).update({ grupo_id: null });
+			await trx('wge_grupos').where('id', g.id).delete();
+		});
+		return { borrado: true };
+	}));
+
 	/** Los productos con ventas no se borran: se desactivan, para no perder el historial. */
 	router.delete('/admin/productos/:itemId', ruta(async (req, rol) => {
 		soloAdmin(rol);
@@ -1375,7 +1408,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id')
 			.leftJoin('wge_billeteras as b', function () { this.on('b.participante_id', 'p.id').andOn('b.pais_id', 'p.pais_id').andOnVal('b.tipo_dueno', 'estudiante'); })
 			.where('p.edicion_id', req.params.id)
-			.select('p.id', 'p.codigo', 'p.pais_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
+			.select('p.id', 'p.codigo', 'p.pais_id', 'p.grupo_id', 'p.presente', 'p.retirado', 'p.motivo_retiro', 'p.fecha_retiro',
 				'e.nombre', 'e.apellido', 'e.grado', 'e.colegio_id', 'c.nombre as colegio', db.raw('coalesce(b.saldo, 0)::int as saldo'),
 				db.raw(`${sqlCorresponde(e).sql} as corresponde`, sqlCorresponde(e).valores),
 				// Pidió reembolso: tiene alguna cuenta del programa (o de sus variantes de hermanos) y todas están devueltas o trasladadas
@@ -1387,7 +1420,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 	}));
 
 	/**
-	 * PATCH /wge/admin/participantes { ids, pais_id?, presente? }
+	 * PATCH /wge/admin/participantes { ids, pais_id?, grupo_id?, presente? }
 	 * No se cambia de país a quien ya tiene billetes en otra moneda: los billetes no se convierten solos.
 	 */
 	router.patch('/admin/participantes', ruta(async (req, rol) => {
@@ -1412,6 +1445,19 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				.first('e.nombre', 'e.apellido');
 			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en su moneda actual; no se puede cambiar de país`);
 			cambios.pais_id = paisId;
+		}
+		// Cambiar de país saca del grupo (los grupos son de un país)
+		if ('pais_id' in cambios) cambios.grupo_id = null;
+		if ('grupo_id' in (req.body ?? {})) {
+			const grupoId = req.body.grupo_id || null;
+			if (grupoId) {
+				const g = await db('wge_grupos').where({ id: grupoId, edicion_id: [...ediciones][0] }).first('id', 'pais_id', 'nombre');
+				if (!g) throw new WgeError(400, 'VALOR_INVALIDO', 'El grupo no es de esta edición');
+				const paisFinal = 'pais_id' in cambios ? cambios.pais_id : null;
+				const deOtroPais = lista.find((p) => (paisFinal ?? p.pais_id) !== g.pais_id);
+				if (deOtroPais) throw new WgeError(409, 'OTRO_PAIS', 'Solo se agregan al grupo estudiantes de su mismo país');
+			}
+			cambios.grupo_id = grupoId;
 		}
 		if ('presente' in (req.body ?? {})) cambios.presente = !!req.body.presente;
 		if (!Object.keys(cambios).length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay cambios');
@@ -2551,9 +2597,11 @@ function rutasRubrica(router, { ruta, db }) {
 		const hoy = inicioDelDia();
 		for (const p of paises) {
 			p.tasa_actual = Number(p.tasa_actual ?? edicion.tasa_inicial);
+			// Grupos del país (nombre y color); cada estudiante dice su grupo
+			p.grupos = await db('wge_grupos').where({ edicion_id: edicion.id, pais_id: p.id }).orderBy([{ column: 'orden' }, { column: 'nombre' }]).select('id', 'nombre', 'color');
 			p.estudiantes = await db('wge_participantes as pa').join('estudiantes as e', 'e.id', 'pa.estudiante_id')
 				.where({ 'pa.edicion_id': edicion.id, 'pa.pais_id': p.id }).whereRaw('coalesce(pa.retirado, false) = false')
-				.select('pa.id', 'pa.presente', 'e.nombre', 'e.apellido',
+				.select('pa.id', 'pa.presente', 'pa.grupo_id', 'e.nombre', 'e.apellido',
 					db.raw('(select count(*) from wge_evaluaciones ev where ev.participante_id = pa.id and ev.date_created >= ?)::int as hoy', [hoy]),
 					db.raw('(select max(ev.date_created) from wge_evaluaciones ev where ev.participante_id = pa.id) as ultima'))
 				.orderBy([{ column: 'e.nombre' }, { column: 'e.apellido' }]);
@@ -2594,6 +2642,35 @@ function rutasRubrica(router, { ruta, db }) {
 			await trx('wge_evaluaciones').insert(nueva);
 			if (!p.presente) await trx('wge_participantes').where('id', p.id).update({ presente: true });
 			return { ...nueva, recompensa: recompensaSugerida(nueva.puntaje) };
+		});
+	}));
+
+	/**
+	 * POST /wge/evaluaciones/grupo { grupo_id, participante_ids?, uso_lengua, iniciativa, nivel_reto, colaboracion, idioma, evidencia }
+	 * Califica a todo el grupo (o a los estudiantes elegidos de él) con los mismos criterios, en una sola operación.
+	 */
+	router.post('/evaluaciones/grupo', ruta(async (req, rol) => {
+		exigirRol(rol, ROLES.DOCENTE, ROLES.ADMIN_WG);
+		const fila = armarCalificacion(req.body);
+		const actor = req.accountability.user;
+		return db.transaction(async (trx) => {
+			const g = await trx('wge_grupos').where('id', String(req.body?.grupo_id ?? '')).first('id', 'edicion_id', 'pais_id', 'nombre');
+			if (!g) throw new WgeError(404, 'NO_EXISTE', 'El grupo no existe');
+			const edicion = await trx('wge_ediciones').where('id', g.edicion_id).first('estado');
+			if (edicion?.estado !== 'abierta') throw new WgeError(409, 'EDICION_CERRADA', 'La edición no está abierta');
+			await exigirEquipo(trx, { edicionId: g.edicion_id, usuarioId: actor, rol, paisId: g.pais_id });
+			const elegidos = Array.isArray(req.body?.participante_ids) ? req.body.participante_ids.filter((x) => typeof x === 'string') : null;
+			const miembros = await trx('wge_participantes').where({ grupo_id: g.id, pais_id: g.pais_id }).whereRaw('coalesce(retirado, false) = false')
+				.modify((q) => { if (elegidos) q.whereIn('id', elegidos); }).forUpdate().select('id', 'presente');
+			if (!miembros.length) throw new WgeError(409, 'GRUPO_VACIO', 'El grupo no tiene estudiantes para calificar');
+			// Doble toque: si este docente calificó a este grupo hace menos de 5 segundos, no se repite
+			const reciente = await trx('wge_evaluaciones').whereIn('participante_id', miembros.map((m) => m.id)).where('user_created', actor)
+				.where('date_created', '>', new Date(Date.now() - 5000)).first('id');
+			if (reciente) return { calificados: 0, repetida: true, recompensa: recompensaSugerida(fila.puntaje) };
+			const ahora = new Date();
+			await trx('wge_evaluaciones').insert(miembros.map((m) => ({ id: crypto.randomUUID(), participante_id: m.id, ...fila, date_created: ahora, user_created: actor })));
+			await trx('wge_participantes').whereIn('id', miembros.filter((m) => !m.presente).map((m) => m.id)).update({ presente: true });
+			return { calificados: miembros.length, grupo: g.nombre, puntaje: fila.puntaje, recompensa: recompensaSugerida(fila.puntaje) };
 		});
 	}));
 

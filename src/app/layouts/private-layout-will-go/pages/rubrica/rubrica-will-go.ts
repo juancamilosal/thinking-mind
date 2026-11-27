@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { CalificacionRubrica, CriterioRubrica, DatosRubrica, EstudianteRubrica, PaisRubrica, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
+import { CalificacionRubrica, CriterioRubrica, DatosRubrica, EstudianteRubrica, GrupoRubrica, PaisRubrica, WillGoService, EdicionVigente } from '../../../../core/services/will-go.service';
 import { formatearNumero } from '../../numero-miles.directive';
 import { SelectorEdicionComponent } from '../../selector-edicion.component';
 import { FechaWillGoPipe } from '../../fecha.pipe';
@@ -68,7 +68,7 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
         @if (datos.paises.length > 1) {
           <div class="mt-4 flex flex-wrap gap-2">
             @for (p of datos.paises; track p.id) {
-              <button type="button" (click)="pais = p; busqueda = ''" class="px-4 py-2 rounded-xl text-sm font-semibold border-2"
+              <button type="button" (click)="pais = p; busqueda = ''; grupo = null; sinGrupo = false" class="px-4 py-2 rounded-xl text-sm font-semibold border-2"
                       [style.background]="pais.id === p.id ? (p.color || '#1e293b') : '#fff'" [style.border-color]="p.color || '#cbd5e1'"
                       [style.color]="pais.id === p.id ? '#fff' : '#334155'">{{ p.nombre }}</button>
             }
@@ -106,6 +106,53 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
         }
         @if (error) { <p class="mt-3 rounded-xl px-4 py-3 text-sm bg-red-50 border border-red-200 text-red-700" role="alert">{{ error }}</p> }
 
+        <!-- Grupos del país: primero las tarjetas; al elegir una, se centra y debajo van sus estudiantes -->
+        @if (tieneGrupos && !grupo && !sinGrupo) {
+          <h2 class="mt-6 text-sm font-bold text-gray-700">{{ 'wg.operacion.rubrica.grupos' | translate }}</h2>
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (g of pais.grupos; track g.id) {
+              <button type="button" (click)="elegirGrupo(g)"
+                      class="relative overflow-hidden text-left rounded-2xl p-5 text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg transition"
+                      [style.background]="fondoGrupo(g.color)">
+                <span class="absolute -right-6 -bottom-8 w-28 h-28 rounded-full bg-white/15"></span>
+                <p class="relative text-xl font-extrabold break-words">{{ g.nombre }}</p>
+                <p class="relative mt-1 text-sm opacity-90">{{ cuantos(deGrupo(g.id).length) }} · {{ 'wg.operacion.rubrica.nPresentes' | translate: { n: presentesDe(deGrupo(g.id)) } }}</p>
+              </button>
+            }
+            <!-- Solo el administrativo ve a quienes no tienen grupo -->
+            @if (esAdmin && sinGrupoLista.length) {
+              <button type="button" (click)="sinGrupo = true; busqueda = ''"
+                      class="text-left rounded-2xl p-5 border-2 border-dashed border-gray-300 bg-white hover:border-gray-400 transition">
+                <p class="text-xl font-extrabold text-gray-700">{{ 'wg.operacion.rubrica.sinGrupo' | translate }}</p>
+                <p class="mt-1 text-sm text-gray-500">{{ cuantos(sinGrupoLista.length) }}</p>
+              </button>
+            }
+          </div>
+        }
+
+        @if (tieneGrupos && (grupo || sinGrupo)) {
+          <button type="button" (click)="regresar()" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-gray-600 hover:text-gray-900">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            {{ 'wg.operacion.rubrica.regresar' | translate }}
+          </button>
+          @if (grupo) {
+            <!-- El grupo elegido, centrado -->
+            <div class="mt-3 max-w-sm mx-auto relative overflow-hidden rounded-2xl p-5 text-white shadow-lg text-center" [style.background]="fondoGrupo(grupo.color)">
+              <span class="absolute -right-6 -bottom-8 w-28 h-28 rounded-full bg-white/15"></span>
+              <p class="relative text-2xl font-extrabold break-words">{{ grupo.nombre }}</p>
+              <p class="relative mt-1 text-sm opacity-90">{{ cuantos(deGrupo(grupo.id).length) }} · {{ 'wg.operacion.rubrica.nPresentes' | translate: { n: presentesDe(deGrupo(grupo.id)) } }}</p>
+              <button type="button" (click)="abrirGrupo()" [disabled]="datos.edicion.estado !== 'abierta' || !deGrupo(grupo.id).length"
+                      class="relative mt-4 w-full py-3 rounded-xl font-bold bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50">{{ 'wg.operacion.rubrica.calificarGrupo' | translate }}</button>
+            </div>
+          } @else {
+            <div class="mt-3 max-w-sm mx-auto rounded-2xl p-5 border-2 border-dashed border-gray-300 bg-white text-center">
+              <p class="text-2xl font-extrabold text-gray-700">{{ 'wg.operacion.rubrica.sinGrupo' | translate }}</p>
+              <p class="mt-1 text-sm text-gray-500">{{ 'wg.operacion.rubrica.sinGrupoAyuda' | translate }}</p>
+            </div>
+          }
+        }
+
+        @if (!tieneGrupos || grupo || sinGrupo) {
         <!-- Estudiantes -->
         <input type="search" [(ngModel)]="busqueda" [placeholder]="'wg.operacion.comun.buscarEstudiante' | translate" [attr.aria-label]="'wg.operacion.comun.buscarEstudianteAria' | translate"
                class="mt-5 w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
@@ -128,9 +175,10 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
             </li>
           }
           @if (!filtrados.length) {
-            <li class="bg-white rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">{{ pais.estudiantes.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ('wg.operacion.comun.noHayEstudiantesEn' | translate: { pais: pais.nombre }) }}</li>
+            <li class="bg-white rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">{{ base.length ? ('wg.operacion.comun.nadieCoincide' | translate: { q: busqueda }) : ((grupo ? 'wg.operacion.rubrica.grupoVacio' : 'wg.operacion.comun.noHayEstudiantesEn') | translate: { pais: pais.nombre }) }}</li>
           }
         </ul>
+        }
 
         <!-- Mis últimas calificaciones -->
         @if (datos.recientes.length) {
@@ -164,13 +212,14 @@ const recompensa = (p: number) => (p >= 11 ? 20 : p >= 9 ? 10 : p >= 7 ? 5 : p >
       }
     </div>
 
-    <!-- Calificar: cada criterio de 0 a 3 -->
-    @if (estudiante) {
+    <!-- Calificar: cada criterio de 0 a 3 (a un estudiante o a todo un grupo) -->
+    @if (estudiante || masivo) {
       <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="cerrar()">
         <div class="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[94vh] flex flex-col" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-calificar">
           <div class="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
             <div>
-              <h2 id="titulo-calificar" class="text-lg font-bold text-gray-800">{{ 'wg.operacion.rubrica.calificarA' | translate: { nombre: estudiante.nombre } }}</h2>
+              <h2 id="titulo-calificar" class="text-lg font-bold text-gray-800">{{ masivo ? ('wg.operacion.rubrica.calificarGrupoA' | translate: { grupo: masivo.nombre, n: deGrupo(masivo.id).length }) : ('wg.operacion.rubrica.calificarA' | translate: { nombre: estudiante?.nombre }) }}</h2>
+              @if (masivo) { <p class="text-sm font-semibold text-orange-700">{{ 'wg.operacion.rubrica.mismosCriterios' | translate }}</p> }
               <p class="text-sm text-gray-500">{{ 'wg.operacion.rubrica.eligeNivel' | translate: { idioma: ((idioma === 'frances' ? 'wg.operacion.rubrica.claseFrances' : 'wg.operacion.rubrica.claseIngles') | translate) } }}</p>
             </div>
             <button type="button" (click)="cerrar()" class="p-1 text-gray-400 hover:text-gray-600" [attr.aria-label]="'wg.operacion.comun.cerrar' | translate">✕</button>
@@ -247,6 +296,12 @@ export class RubricaWillGo implements OnInit {
   private temporizador: ReturnType<typeof setTimeout> | null = null;
 
   estudiante: EstudianteRubrica | null = null;
+  /** Grupo elegido (se muestran solo sus estudiantes) o la lista «Sin grupo asignado» (solo administrativo). */
+  grupo: GrupoRubrica | null = null;
+  sinGrupo = false;
+  /** Grupo que se califica completo (mismos criterios para todos). */
+  masivo: GrupoRubrica | null = null;
+  readonly esAdmin = ['administrativo', 'administrador'].includes(WillGoService.perfilGuardado()?.rol ?? '');
   /** Nivel elegido en cada criterio (null = todavía no lo eligió: los 4 son obligatorios). */
   valores: Record<CriterioRubrica, number | null> = { uso_lengua: null, iniciativa: null, nivel_reto: null, colaboracion: null };
   evidencia = '';
@@ -266,7 +321,12 @@ export class RubricaWillGo implements OnInit {
   cargar(): void {
     this.cargando = true;
     this.willGo.rubrica(this.edicionId).subscribe({
-      next: (d) => { this.datos = d; this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null; this.cargando = false; },
+      next: (d) => {
+        this.datos = d;
+        this.pais = d.paises.find((p) => p.id === this.pais?.id) ?? d.paises[0] ?? null;
+        this.grupo = this.grupo ? (this.pais?.grupos ?? []).find((g) => g.id === this.grupo!.id) ?? null : null;
+        this.cargando = false;
+      },
       error: (e) => { this.error = WillGoService.mensajeDeError(e); this.cargando = false; },
     });
   }
@@ -276,9 +336,39 @@ export class RubricaWillGo implements OnInit {
     try { localStorage.setItem(CLAVE_IDIOMA, i); } catch { /* sin almacenamiento */ }
   }
 
+  get tieneGrupos(): boolean { return !!this.pais?.grupos?.length; }
+  deGrupo(id: string): EstudianteRubrica[] { return (this.pais?.estudiantes ?? []).filter((e) => e.grupo_id === id); }
+  get sinGrupoLista(): EstudianteRubrica[] {
+    const ids = new Set((this.pais?.grupos ?? []).map((g) => g.id));
+    return (this.pais?.estudiantes ?? []).filter((e) => !e.grupo_id || !ids.has(e.grupo_id));
+  }
+  /** «1 estudiante» / «N estudiantes». */
+  cuantos(n: number): string { return this.t.instant(n === 1 ? 'wg.operacion.rubrica.nEstudiante' : 'wg.operacion.rubrica.nEstudiantes', { n }); }
+  presentesDe(l: EstudianteRubrica[]): number { return l.filter((e) => e.presente).length; }
+  /** Estudiantes que se listan: los del grupo elegido, los sin grupo o, si el país no tiene grupos, todos. */
+  get base(): EstudianteRubrica[] {
+    if (!this.tieneGrupos) return this.pais?.estudiantes ?? [];
+    if (this.grupo) return this.deGrupo(this.grupo.id);
+    return this.sinGrupo ? this.sinGrupoLista : [];
+  }
   get filtrados(): EstudianteRubrica[] {
     const palabras = normalizar(this.busqueda).split(/\s+/).filter(Boolean);
-    return (this.pais?.estudiantes ?? []).filter((e) => { const n = normalizar(`${e.nombre} ${e.apellido}`); return palabras.every((w) => n.includes(w)); });
+    return this.base.filter((e) => { const n = normalizar(`${e.nombre} ${e.apellido}`); return palabras.every((w) => n.includes(w)); });
+  }
+  elegirGrupo(g: GrupoRubrica): void { this.grupo = g; this.sinGrupo = false; this.busqueda = ''; }
+  regresar(): void { this.grupo = null; this.sinGrupo = false; this.busqueda = ''; }
+  /** Fondo de la tarjeta del grupo con su color. */
+  fondoGrupo(color: string | null): string {
+    const c = color || '#475569';
+    return `linear-gradient(135deg, ${c} 0%, color-mix(in srgb, ${c} 70%, #000) 100%)`;
+  }
+  abrirGrupo(): void {
+    if (!this.grupo) return;
+    this.masivo = this.grupo;
+    this.estudiante = null;
+    this.valores = { uso_lengua: null, iniciativa: null, nivel_reto: null, colaboracion: null };
+    this.evidencia = '';
+    this.errorPanel = '';
   }
   get presentes(): number { return (this.pais?.estudiantes ?? []).filter((e) => e.presente).length; }
   get calificadosHoy(): number { return (this.pais?.estudiantes ?? []).filter((e) => e.hoy > 0).length; }
@@ -316,9 +406,10 @@ export class RubricaWillGo implements OnInit {
     this.errorPanel = '';
   }
 
-  cerrar(): void { if (!this.enviando) this.estudiante = null; }
+  cerrar(): void { if (!this.enviando) { this.estudiante = null; this.masivo = null; } }
 
   guardar(): void {
+    if (this.masivo) { this.guardarGrupo(); return; }
     const e = this.estudiante;
     if (!e || this.enviando || this.faltan) return;
     this.enviando = true;
@@ -330,6 +421,25 @@ export class RubricaWillGo implements OnInit {
         const texto = this.t.instant('wg.operacion.rubrica.avisoPuntaje', { nombre: e.nombre, puntaje: r.puntaje })
           + (r.recompensa ? ' ' + this.t.instant('wg.operacion.rubrica.avisoRecomendacion', { n: r.recompensa }) : '');
         this.avisar(texto, r.id ?? null, r.recompensa ? { id: e.id, billetes: r.recompensa } : null);
+        this.cargar();
+      },
+      error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },
+    });
+  }
+
+  /** Califica a todo el grupo con los mismos criterios. */
+  private guardarGrupo(): void {
+    const g = this.masivo;
+    if (!g || this.enviando || this.faltan) return;
+    this.enviando = true;
+    this.errorPanel = '';
+    this.willGo.calificarGrupo(g.id, { ...this.valores } as Record<CriterioRubrica, number>, this.idioma, this.evidencia).subscribe({
+      next: (r) => {
+        this.enviando = false;
+        this.masivo = null;
+        const texto = this.t.instant('wg.operacion.rubrica.avisoGrupo', { n: r.calificados, grupo: g.nombre, puntaje: r.puntaje })
+          + (r.recompensa ? ' ' + this.t.instant('wg.operacion.rubrica.avisoRecomendacionCada', { n: r.recompensa }) : '');
+        this.avisar(texto);
         this.cargar();
       },
       error: (err) => { this.enviando = false; this.errorPanel = WillGoService.mensajeDeError(err); },

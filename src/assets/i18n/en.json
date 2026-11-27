@@ -570,7 +570,8 @@
         "paises": "Countries and bank",
         "reglas": "Economy",
         "horario": "Schedule",
-        "fondos": "Companies"
+        "fondos": "Companies",
+        "grupos": "Groups"
       }
     },
     "banco": {
@@ -862,6 +863,30 @@
         "avisoQuitaste": "You removed your vote for {{fondo}}.",
         "avisoVotaste": "Done! You voted for {{fondo}} in {{ronda}}."
       }
+    },
+    "grupos": {
+      "intro": "Create groups inside each country (with a name and a color) and place the students. Teachers see the groups in the rubric and can grade a whole group.",
+      "sinPaises": "First create the edition's countries.",
+      "gruposDe": "{{pais}} groups",
+      "nuevo": "+ New group",
+      "vacio": "This country has no groups yet.",
+      "quitar": "Remove",
+      "sinEstudiantes": "No students yet.",
+      "sinGrupo": "No group assigned",
+      "agregarA": "Add to group",
+      "eligeGrupo": "Choose the group…",
+      "agregarN": "Add ({{n}})",
+      "todosConGrupo": "Every student in the country has a group.",
+      "todos": "Select all",
+      "editarTitulo": "Edit group",
+      "nuevoTitulo": "New group in {{pais}}",
+      "ejemploNombre": "E.g.: The Explorers",
+      "color": "Color",
+      "otroColor": "Other color",
+      "guardado": "Done: group “{{nombre}}” saved.",
+      "confirmarBorrar": "Delete the group “{{nombre}}”?",
+      "confirmarBorrarTexto": "Its students stay in the country, with no group.",
+      "borrado": "Group “{{nombre}}” deleted."
     },
     "montobanco": {
       "efectivo": "Cash",
@@ -1236,7 +1261,20 @@
             "n2": "Cooperates by speaking",
             "n3": "Gets others to speak too"
           }
-        }
+        },
+        "grupos": "Groups",
+        "nEstudiantes": "{{n}} students",
+        "nPresentes": "{{n}} present",
+        "sinGrupo": "No group assigned",
+        "sinGrupoAyuda": "Students in the country without a group (only the administrative staff sees them).",
+        "regresar": "Back to groups",
+        "calificarGrupo": "Grade the whole group",
+        "grupoVacio": "This group has no students.",
+        "calificarGrupoA": "Grade group {{grupo}} ({{n}} students)",
+        "mismosCriterios": "Everyone gets the same grade.",
+        "avisoGrupo": "Done: {{n}} students in {{grupo}} graded with {{puntaje}} out of 12.",
+        "avisoRecomendacionCada": "Recommended reward: {{n}} per student.",
+        "nEstudiante": "1 student"
       },
       "caja": {
         "titulo": "GO•STORE checkout",

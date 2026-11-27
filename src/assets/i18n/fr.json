@@ -570,7 +570,8 @@
         "paises": "Pays et banque",
         "reglas": "Économie",
         "horario": "Horaire",
-        "fondos": "Entreprises"
+        "fondos": "Entreprises",
+        "grupos": "Groupes"
       }
     },
     "banco": {
@@ -862,6 +863,30 @@
         "avisoQuitaste": "Vous avez retiré votre vote pour {{fondo}}.",
         "avisoVotaste": "C'est fait ! Vous avez voté pour {{fondo}} dans la {{ronda}}."
       }
+    },
+    "grupos": {
+      "intro": "Créez des groupes dans chaque pays (avec un nom et une couleur) et placez-y les élèves. Les enseignants voient les groupes dans la grille et peuvent évaluer tout un groupe.",
+      "sinPaises": "Créez d'abord les pays de l'édition.",
+      "gruposDe": "Groupes de {{pais}}",
+      "nuevo": "+ Nouveau groupe",
+      "vacio": "Ce pays n'a pas encore de groupes.",
+      "quitar": "Retirer",
+      "sinEstudiantes": "Pas encore d'élèves.",
+      "sinGrupo": "Sans groupe",
+      "agregarA": "Ajouter au groupe",
+      "eligeGrupo": "Choisissez le groupe…",
+      "agregarN": "Ajouter ({{n}})",
+      "todosConGrupo": "Tous les élèves du pays ont un groupe.",
+      "todos": "Tout sélectionner",
+      "editarTitulo": "Modifier le groupe",
+      "nuevoTitulo": "Nouveau groupe à {{pais}}",
+      "ejemploNombre": "Ex. : Les Explorateurs",
+      "color": "Couleur",
+      "otroColor": "Autre couleur",
+      "guardado": "C'est fait : groupe « {{nombre}} » enregistré.",
+      "confirmarBorrar": "Supprimer le groupe « {{nombre}} » ?",
+      "confirmarBorrarTexto": "Ses élèves restent dans le pays, sans groupe.",
+      "borrado": "Groupe « {{nombre}} » supprimé."
     },
     "montobanco": {
       "efectivo": "Espèces",
@@ -1236,7 +1261,20 @@
             "n2": "Coopère en parlant",
             "n3": "Fait aussi parler les autres"
           }
-        }
+        },
+        "grupos": "Groupes",
+        "nEstudiantes": "{{n}} élèves",
+        "nPresentes": "{{n}} présents",
+        "sinGrupo": "Sans groupe",
+        "sinGrupoAyuda": "Élèves du pays sans groupe (seule l'administration les voit).",
+        "regresar": "Retour aux groupes",
+        "calificarGrupo": "Évaluer tout le groupe",
+        "grupoVacio": "Ce groupe n'a pas d'élèves.",
+        "calificarGrupoA": "Évaluer le groupe {{grupo}} ({{n}} élèves)",
+        "mismosCriterios": "Tous reçoivent la même note.",
+        "avisoGrupo": "C'est fait : {{n}} élèves de {{grupo}} évalués avec {{puntaje}} sur 12.",
+        "avisoRecomendacionCada": "Récompense recommandée : {{n}} par élève.",
+        "nEstudiante": "1 élève"
       },
       "caja": {
         "titulo": "Caisse GO•STORE",
