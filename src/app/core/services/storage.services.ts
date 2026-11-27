@@ -50,9 +50,25 @@ export class StorageServices {
     return null;
   }
 
+  /**
+   * En Will-Go la sesión también se guarda en el navegador (localStorage), no solo en la pestaña:
+   * en el celular, imprimir o abrir algo desde la app instalada pasa la página a otra pestaña, y sin esto pedía el login.
+   * Al cerrar sesión se borra de los dos lados (clearSession / clearTokens).
+   */
+  private static esWillGo(): boolean {
+    if (!this.isBrowser) return false;
+    try { return !!localStorage.getItem('wge_perfil') || location.pathname.includes('will-go'); } catch { return false; }
+  }
+
+  private static tambienEnNavegador(name: string, item: string): void {
+    if (!this.esWillGo()) return;
+    try { localStorage.setItem(name, item); } catch { /* sin almacenamiento */ }
+  }
+
   // Métodos específicos para tokens de autenticación
   static setAccessToken(token: string): void {
     this.saveInSessionStorage('access_token', token);
+    this.tambienEnNavegador('access_token', token);
   }
 
   static getAccessToken(): string | null {
@@ -61,6 +77,7 @@ export class StorageServices {
 
   static setRefreshToken(token: string): void {
     this.saveInSessionStorage('refresh_token', token);
+    this.tambienEnNavegador('refresh_token', token);
   }
 
   static getRefreshToken(): string | null {
@@ -69,6 +86,7 @@ export class StorageServices {
 
   static setUserData(current_user: any): void {
     this.saveObjectInSessionStorage(this.CURRENT_USER, current_user);
+    this.tambienEnNavegador(this.CURRENT_USER, JSON.stringify(current_user));
   }
 
   static getCurrentUser(): any {

@@ -1124,7 +1124,8 @@
         "ayuda": "Placez le QR de la carte dans le cadre.",
         "escribirLlave": "Saisir la clé",
         "placeholder": "@prenom.nom",
-        "usar": "Utiliser"
+        "usar": "Utiliser",
+        "sinCamaraSolo": "Impossible d'utiliser la caméra. Vérifiez que le navigateur a l'autorisation."
       },
       "confirmar": {
         "aceptar": "Confirmer"
@@ -1677,12 +1678,13 @@
       "tituloCliente": "Consulte ton solde GO.BANK",
       "subtituloCliente": "Scanne ta carte ou saisis ta clé.",
       "pantallaCompleta": "Plein écran",
-      "pantallaCompletaAyuda": "Avec « Plein écran », seule la consultation s'affiche, pour laisser l'appareil aux élèves. Décochez pour quitter.",
+      "pantallaCompletaAyuda": "Avec « Plein écran », seule la consultation s'affiche, pour laisser l'appareil aux élèves. Avec « Caméra avant », le QR est lu avec la caméra avant. Décochez pour quitter.",
       "qrCliente": "Approche le QR de ta carte de débit de la caméra.",
       "llaveCliente": "Saisis ta clé, par exemple @sofia.gomez.",
       "empezar": "Commencer",
       "cerrar": "Fermer",
-      "vuelveEn": "retour dans {{n}} s"
+      "vuelveEn": "retour dans {{n}} s",
+      "camaraFrontal": "Caméra avant"
     },
     "tarjeta": {
       "escanearTarjeta": "Scanner la carte",

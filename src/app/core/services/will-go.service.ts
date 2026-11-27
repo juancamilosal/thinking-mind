@@ -365,8 +365,12 @@ export class WillGoService {
       this.enZona(),
       map((r) => r.data),
       tap((p) => {
-        StorageServices.setUserData({ id: p.id, email: p.email, first_name: p.nombre, last_name: p.apellido, role: p.role });
         StorageServices.saveObjectInLocalStorage(PERFIL, p);
+        StorageServices.setUserData({ id: p.id, email: p.email, first_name: p.nombre, last_name: p.apellido, role: p.role });
+        // La sesión de Will-Go queda también en el navegador (ver StorageServices.tambienEnNavegador)
+        const acceso = StorageServices.getAccessToken(), refresco = StorageServices.getRefreshToken();
+        if (acceso) StorageServices.setAccessToken(acceso);
+        if (refresco) StorageServices.setRefreshToken(refresco);
         WillGoService.accesoMenu$ = null; // al entrar (o cambiar de usuario) se vuelve a preguntar qué puede usar
         if (typeof localStorage !== 'undefined') localStorage.setItem('last_user_role', p.role);
       })
