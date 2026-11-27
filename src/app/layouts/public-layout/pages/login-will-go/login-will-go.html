@@ -9,8 +9,8 @@
 
     <!-- Fotos de Will-Go de fondo (se van turnando) -->
     <div class="wg-fotos" aria-hidden="true">
-      @for (f of fotosFondo; track f; let i = $index) {
-        <div class="wg-foto" [style.background-image]="'url(' + f + ')'" [style.animation-delay.s]="i * 6"></div>
+      @for (f of fotosFondo; track f.src; let i = $index) {
+        <div class="wg-foto" [class.wg-foto-billetes]="f.billetes" [style.background-image]="'url(' + f.src + ')'" [style.animation-delay.s]="i * 6"></div>
       }
     </div>
 

@@ -42,11 +42,17 @@
 .wg-foto {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center 30%;
+  /* En computador la foto va un poco más grande y subida, para que el logo no tape lo de la mitad (p. ej. la moneda Thinking Mind) */
+  background-size: auto 122%;
+  background-position: center 85%;
   opacity: 0;
   transform: scale(1.04);
   animation: fundido 48s ease-in-out infinite;
+}
+
+.wg-foto-billetes {
+  background-size: auto 145%;
+  background-position: center 100%;
 }
 
 .wg-foto:first-child {
@@ -84,10 +90,15 @@
 }
 
 .wg-logo-imagen {
-  width: min(420px, 80%);
+  display: block;
+  width: min(420px, 85%);
   height: auto;
   margin: 0 auto 2rem;
-  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.35));
+  /* El logo es azul oscuro: va sobre una tarjeta blanca para que se lea sobre las fotos */
+  padding: 0.9rem 1.25rem;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
 }
 
 .wg-logo {
@@ -439,6 +450,13 @@
     background: none;
   }
 
+  /* En celular la foto va completa arriba, sin nada encima */
+  .wg-foto,
+  .wg-foto-billetes {
+    background-size: cover;
+    background-position: center 30%;
+  }
+
   .wg-idioma-arriba {
     top: 0.75rem;
     right: 0.75rem;
@@ -454,7 +472,7 @@
   .wg-logo-billete { width: 72px; }
   .wg-logo-will { font-size: 1.65rem; }
   .wg-logo-economy { font-size: 0.75rem; }
-  .wg-logo-imagen { width: min(280px, 75%); margin-bottom: 1rem; }
+  .wg-logo-imagen { width: min(300px, 82%); margin-bottom: 1rem; padding: 0.6rem 0.9rem; border-radius: 16px; }
 
   .wg-saludo { font-size: 1.9rem; }
   .wg-lema { margin: 0.4rem 0 0; font-size: 0.95rem; }

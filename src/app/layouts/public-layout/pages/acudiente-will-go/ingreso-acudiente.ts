@@ -29,7 +29,11 @@ export class IngresoAcudiente implements OnInit {
   logoFallo = false;
 
   /** Fotos de Will-Go que se turnan en el panel de marca. */
-  readonly fotosFondo = Array.from({ length: 8 }, (_, i) => `assets/images/will-go/login-${i + 1}.webp`);
+  readonly fotosFondo = Array.from({ length: 8 }, (_, i) => ({
+    src: `assets/images/will-go/login-${i + 1}.webp`,
+    // Las fotos de billetes (1.ª y 3.ª) suben más en computador, para que el logo no tape la moneda Thinking Mind
+    billetes: i === 0 || i === 2,
+  }));
 
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 

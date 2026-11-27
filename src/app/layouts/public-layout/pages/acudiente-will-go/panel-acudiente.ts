@@ -24,7 +24,7 @@ type VistaHijo = 'inversiones' | 'movimientos' | 'rubrica';
     <div class="min-h-screen bg-slate-50">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
         <div class="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span class="font-black tracking-tight text-slate-800">WILL-GO <span class="text-orange-500">ECONOMY</span></span>
+          <img src="assets/images/will-go-economy-logo.png" alt="Will-Go Economy" class="h-9 w-auto max-w-[55vw] object-contain">
           <div class="flex items-center gap-3">
             <wg-selector-idioma variante="claro" alinear="derecha" />
             <button type="button" (click)="salir()" class="text-sm font-semibold text-gray-500 hover:text-gray-800">{{ 'wg.familias.panel.salir' | translate }}</button>
