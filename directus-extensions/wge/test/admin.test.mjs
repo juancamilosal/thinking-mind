@@ -94,3 +94,12 @@ test('una cuenta de otra parte de la plataforma se vincula a Will-Go con solo su
 	assert.deepEqual(llavesDe(rolesDe('Docente', null)), []);
 	assert.deepEqual(llavesDe(rolesDe(R.ADMIN, ['docente'])), []);
 });
+
+import { rolesDe as rolesDeTv, ROLES as ROLES_TV, LLAVES_ROL as LLAVES_TV } from '../src/lib.js';
+
+test('roles: el rol TV (solo proyecta el televisor) existe y se puede sumar a otros', () => {
+	assert.equal(LLAVES_TV.tv, 'TV Will Go');
+	assert.deepEqual(rolesDeTv(ROLES_TV.TV, null), ['TV Will Go']);
+	assert.deepEqual(rolesDeTv(ROLES_TV.DOCENTE, ['tv']), ['Docente Will Go', 'TV Will Go']);
+	assert.deepEqual(rolesDeTv('Docente', ['tv']), ['TV Will Go']); // cuenta de la plataforma vinculada solo como TV
+});

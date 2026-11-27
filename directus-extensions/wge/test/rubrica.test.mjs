@@ -27,3 +27,28 @@ test('rúbrica: resumen para el acudiente con el nivel promedio de cada criterio
 	assert.deepEqual(r, { total: 2, criterios: { uso_lengua: 2.5, iniciativa: 1.5, nivel_reto: 1, colaboracion: 2.5 }, ultima: '2026-11-28T15:00:00Z', maximo: 3 });
 	assert.equal(resumenCalificaciones([]).total, 0);
 });
+
+import { esGrupoKids, GRUPO_KIDS } from '../src/lib.js';
+
+test('grupos: Will-Go Kids se reconoce por su nombre', () => {
+	assert.equal(GRUPO_KIDS, 'Will-Go Kids');
+	for (const n of ['Will-Go Kids', 'will go kids', 'WILL-GO KIDS', ' Willgo  Kids ']) assert.equal(esGrupoKids(n), true, n);
+	for (const n of ['Kids', 'Will-Go', 'Grupo 1', null]) assert.equal(esGrupoKids(n), false, String(n));
+});
+
+import { seriesDeFondos, primeros } from '../src/tipocambio.js';
+
+test('pantalla: rendimiento acumulado de cada empresa y los 10 primeros', () => {
+	const [a, b] = seriesDeFondos([{ id: 'a' }, { id: 'b' }], [
+		{ nombre: 'R1', resultados: [{ fondo_id: 'a', rendimiento: 0.1 }, { fondo_id: 'b', rendimiento: -0.2 }] },
+		{ nombre: 'R2', resultados: [{ fondo_id: 'a', rendimiento: 0.1 }] },
+	]);
+	assert.deepEqual(a.puntos.map((p) => p.valor), [100, 110, 121]);
+	assert.deepEqual(b.puntos.map((p) => p.valor), [100, 80, 80]);
+	assert.equal(a.ultimo_rendimiento, 0.1);
+	const lista = Array.from({ length: 12 }, (_, i) => ({ nombre: `E${i}`, apellido: '', total: i }));
+	const top = primeros(lista, 'total');
+	assert.equal(top.length, 10);
+	assert.equal(top[0].total, 11);
+	assert.ok(top.every((x) => x.total > 0));
+});

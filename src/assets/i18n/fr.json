@@ -367,7 +367,8 @@
         "docente": "Enseignant",
         "banco": "Banque",
         "cajero": "Caissier",
-        "administrador": "Administrateur"
+        "administrador": "Administrateur",
+        "tv": "TV"
       },
       "col": {
         "textoCopiar": "Will-Go Economy\nIdentifiant : {{usuario}}\nMot de passe temporaire : {{clave}}\nConnectez-vous sur : {{url}}",
@@ -896,7 +897,9 @@
       "verTodos": "Tous",
       "estudiantes": "élèves",
       "estudiante": "élève",
-      "crearEn": "+ Créer un groupe à {{pais}}"
+      "crearEn": "+ Créer un groupe à {{pais}}",
+      "kidsFuera": "Hors de l'économie",
+      "kidsNoJuega": "Ne joue pas (Kids)"
     },
     "montobanco": {
       "efectivo": "Espèces",
@@ -975,14 +978,17 @@
         "cajaGoStore": "Caisse GO•STORE",
         "cuentas": "Comptes et cartes",
         "productos": "Produits",
-        "consultarSaldo": "Consulter le solde"
+        "consultarSaldo": "Consulter le solde",
+        "resumenTv": "Résumé économie",
+        "proyectar": "Afficher sur la TV"
       },
       "rol": {
         "administrativo": "Personnel administratif",
         "administrador": "Administrateur",
         "docente": "Enseignant",
         "banco": "Banque",
-        "cajero": "Caissier"
+        "cajero": "Caissier",
+        "tv": "TV"
       },
       "layout": {
         "abrirMenu": "Ouvrir le menu",
@@ -1714,6 +1720,18 @@
         }
       }
     },
+    "proyectar": {
+      "titulo": "Afficher sur le téléviseur",
+      "subtitulo": "Choisissez l'économie à afficher. Elle s'ouvre en plein écran et change toute seule toutes les 15 secondes.",
+      "enCurso": "En cours",
+      "preparacion": "En préparation",
+      "boton": "Afficher"
+    },
+    "resumenEco": {
+      "titulo": "Résumé de l'économie",
+      "subtitulo": "Le prix des monnaies, les élèves avec le plus d'argent et l'évolution des entreprises W-Funds.",
+      "verEnTv": "Afficher sur le téléviseur"
+    },
     "saldo": {
       "titulo": "Consulter le solde",
       "subtitulo": "Scannez le QR de la carte de débit ou saisissez la clé GO.BANK de l'élève.",
@@ -1784,6 +1802,41 @@
       "transferidoA": "Virement à {{nombre}}",
       "disponibleVirtual": "Le compte virtuel de la banque contient {{n}}",
       "disponibleBanco": "La banque a {{n}}"
+    },
+    "tv": {
+      "titulo": "Résumé de l'économie par pays",
+      "elegir": "Choisissez l'édition à afficher sur le téléviseur.",
+      "cargando": "Chargement…",
+      "sinEdiciones": "Aucune édition ouverte.",
+      "iniciar": "Afficher",
+      "volver": "Retour au résumé",
+      "precioMoneda": "Prix de la monnaie aujourd'hui",
+      "precioAyuda": "Combien de pesos vaut 1 billet de chaque pays en ce moment.",
+      "pesos": "pesos",
+      "desdeInicio": "depuis le début",
+      "comportamiento": "Évolution",
+      "top10Dinero": "Top 10 · Élèves avec le plus d'argent",
+      "sinHistorial": "Le taux n'a pas encore changé.",
+      "sinDinero": "Personne n'a encore d'argent dans ce pays.",
+      "fondos": "W-Funds · Entreprises",
+      "fondosAyuda": "Ce que vaudraient aujourd'hui 100 investis depuis le début ({{n}} manches).",
+      "valen": "100 investis valent {{v}} aujourd'hui",
+      "ultimaRonda": "Dernière manche {{v}}",
+      "sinRondas": "Aucune manche n'a encore été clôturée.",
+      "top10Inversion": "Top 10 · Élèves qui ont le plus investi",
+      "sinInversiones": "Personne n'a encore investi dans cette entreprise.",
+      "inicio": "Début",
+      "anterior": "Précédent",
+      "siguiente": "Suivant",
+      "pausar": "Pause",
+      "seguir": "Reprendre",
+      "pantallaCompleta": "Plein écran",
+      "cambiar": "Changer d'édition",
+      "salir": "Quitter",
+      "docentes": "Enseignants qui ont le plus distribué",
+      "docentesAyuda": "L'argent que chaque enseignant a remis à ses élèves, dans la monnaie de son pays.",
+      "aEstudiantes": "à {{n}} élèves",
+      "sinRepartos": "Aucun enseignant n'a encore distribué d'argent."
     },
     "vistacuenta": {
       "enSuCuenta": "Sur son compte",

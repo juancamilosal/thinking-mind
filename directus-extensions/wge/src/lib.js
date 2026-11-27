@@ -15,14 +15,16 @@ export const ROLES = {
 	DOCENTE: 'Docente Will Go',
 	CAJERO: 'Cajero Will Go',
 	ADMIN_WG: 'Administrativo Will Go',
+	/** Solo proyecta el resumen de la economía en el televisor. */
+	TV: 'TV Will Go',
 	ADMIN: 'Administrador',
 };
 
 /** Roles de Will Go por su llave (la que usa la app) y al revés. */
-export const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, administrativo: ROLES.ADMIN_WG };
+export const LLAVES_ROL = { docente: ROLES.DOCENTE, banco: ROLES.BANCO, cajero: ROLES.CAJERO, tv: ROLES.TV, administrativo: ROLES.ADMIN_WG };
 const LLAVE_DE_ROL = Object.fromEntries(Object.entries(LLAVES_ROL).map(([k, v]) => [v, k]));
 /** Roles que se pueden sumar al rol principal (el administrativo va solo). */
-export const ROLES_COMBINABLES = ['docente', 'banco', 'cajero'];
+export const ROLES_COMBINABLES = ['docente', 'banco', 'cajero', 'tv'];
 
 /** Roles extra guardados en el usuario (directus_users.wge_roles_extra): lista de llaves válidas, sin repetir. */
 export function leerRolesExtra(valor) {
@@ -351,4 +353,24 @@ export async function exigirResponsableBanco(db, { paisId, usuarioId, rol }) {
 	if (pais?.responsable_banco && pais.responsable_banco !== usuarioId) {
 		throw new WgeError(403, 'OTRO_RESPONSABLE', `El banco de ${pais.nombre} lo maneja ${`${pais.first_name ?? ''} ${pais.last_name ?? ''}`.trim()}`);
 	}
+}
+
+/**
+ * Will-Go Kids: grupo que cada edición tiene siempre, sin país. Sus estudiantes no juegan la economía
+ * (no tienen país, dinero, tarjeta ni rúbrica). No se borra ni se renombra.
+ */
+export const GRUPO_KIDS = 'Will-Go Kids';
+export const COLOR_KIDS = '#F97316';
+export function esGrupoKids(nombre) {
+	return String(nombre ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'willgokids';
+}
+
+/** El grupo Will-Go Kids de la edición; si aún no existe, lo crea. */
+export async function asegurarGrupoKids(db, edicionId) {
+	const grupos = await db('wge_grupos').where('edicion_id', edicionId).whereNull('pais_id').select('id', 'nombre');
+	const kids = grupos.find((g) => esGrupoKids(g.nombre));
+	if (kids) return kids.id;
+	const id = crypto.randomUUID();
+	await db('wge_grupos').insert({ id, edicion_id: edicionId, pais_id: null, nombre: GRUPO_KIDS, color: COLOR_KIDS, orden: 0, date_created: new Date() });
+	return id;
 }

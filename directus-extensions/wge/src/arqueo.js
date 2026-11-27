@@ -347,7 +347,8 @@ export function rutasArqueo(router, { ruta, db }) {
 			.leftJoin('colegios as c', 'c.id', 'e.colegio_id').leftJoin('Cursos as k', 'k.id', 'e.curso_id')
 			.select('e.id', 'e.nombre', 'e.estado', 'e.edicion_programa', 'e.fecha_inicio', 'e.fecha_fin', 'c.nombre as colegio', 'k.nombre as programa')
 			.orderBy([{ column: 'e.fecha_inicio', order: 'asc' }, { column: 'e.date_created', order: 'desc' }]);
-		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG) {
+		// El rol TV proyecta cualquier edición vigente (no hace parte de ningún equipo)
+		if (rol !== ROLES.ADMIN && rol !== ROLES.ADMIN_WG && rol !== ROLES.TV) {
 			q.join('wge_equipo as q', 'q.edicion_id', 'e.id').where('q.usuario_id', req.accountability.user);
 		}
 		return q;

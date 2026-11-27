@@ -18,7 +18,7 @@ export class FuncionariosWillGo implements OnInit {
   /** Claves de traducción del nombre de cada rol. */
   readonly nombreRol: Record<string, string> = {
     administrativo: 'wg.admin.rol.administrativo', docente: 'wg.admin.rol.docente', banco: 'wg.admin.rol.banco',
-    cajero: 'wg.admin.rol.cajero', administrador: 'wg.admin.rol.administrador',
+    cajero: 'wg.admin.rol.cajero', tv: 'wg.admin.rol.tv', administrador: 'wg.admin.rol.administrador',
   };
   private t = inject(TranslateService);
   readonly esAdministradorGeneral = WillGoService.perfilGuardado()?.rol === 'administrador';
@@ -93,7 +93,7 @@ export class FuncionariosWillGo implements OnInit {
 
   get rolesDisponibles(): RolFuncionario[] {
     // Los perfiles administrativos no se crean ni se asignan desde esta pantalla
-    return ['docente', 'banco', 'cajero'];
+    return ['docente', 'banco', 'cajero', 'tv'];
   }
 
   /** Roles marcados en el formulario (el primero es el principal). */

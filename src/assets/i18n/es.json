@@ -367,7 +367,8 @@
         "docente": "Docente",
         "banco": "Banco",
         "cajero": "Cajero",
-        "administrador": "Administrador"
+        "administrador": "Administrador",
+        "tv": "TV"
       },
       "col": {
         "textoCopiar": "Will-Go Economy\nUsuario: {{usuario}}\nClave temporal: {{clave}}\nIngresa en: {{url}}",
@@ -896,7 +897,9 @@
       "verTodos": "Todos",
       "estudiantes": "estudiantes",
       "estudiante": "estudiante",
-      "crearEn": "+ Crear grupo en {{pais}}"
+      "crearEn": "+ Crear grupo en {{pais}}",
+      "kidsFuera": "Fuera de la economía",
+      "kidsNoJuega": "No juega (Kids)"
     },
     "montobanco": {
       "efectivo": "Efectivo",
@@ -975,14 +978,17 @@
         "cajaGoStore": "Caja GO•STORE",
         "cuentas": "Cuentas y tarjetas",
         "productos": "Productos",
-        "consultarSaldo": "Consultar saldo"
+        "consultarSaldo": "Consultar saldo",
+        "resumenTv": "Resumen economía",
+        "proyectar": "Proyectar en TV"
       },
       "rol": {
         "administrativo": "Administrativo",
         "administrador": "Administrador",
         "docente": "Docente",
         "banco": "Banco",
-        "cajero": "Cajero"
+        "cajero": "Cajero",
+        "tv": "TV"
       },
       "layout": {
         "abrirMenu": "Abrir menú",
@@ -1714,6 +1720,18 @@
         }
       }
     },
+    "proyectar": {
+      "titulo": "Proyectar en el televisor",
+      "subtitulo": "Elige la economía que quieres mostrar. Se abre en pantalla completa y cambia sola cada 15 segundos.",
+      "enCurso": "En curso",
+      "preparacion": "En preparación",
+      "boton": "Proyectar"
+    },
+    "resumenEco": {
+      "titulo": "Resumen de la economía",
+      "subtitulo": "El precio de la moneda, los estudiantes con más dinero y cómo van las empresas de W-Funds.",
+      "verEnTv": "Ver en el televisor"
+    },
     "saldo": {
       "titulo": "Consultar saldo",
       "subtitulo": "Escanea el QR de la tarjeta débito o escribe la llave GO.BANK del estudiante.",
@@ -1784,6 +1802,41 @@
       "transferidoA": "Transferencia a {{nombre}}",
       "disponibleVirtual": "En la cuenta virtual del banco hay {{n}}",
       "disponibleBanco": "En el banco hay {{n}}"
+    },
+    "tv": {
+      "titulo": "Resumen economía por país",
+      "elegir": "Elige la edición que quieres proyectar en el televisor.",
+      "cargando": "Cargando…",
+      "sinEdiciones": "No hay ediciones abiertas.",
+      "iniciar": "Proyectar",
+      "volver": "Volver al resumen",
+      "precioMoneda": "Precio de la moneda hoy",
+      "precioAyuda": "Cuántos pesos vale 1 billete de cada país en este momento.",
+      "pesos": "pesos",
+      "desdeInicio": "desde el inicio",
+      "comportamiento": "Comportamiento",
+      "top10Dinero": "Top 10 · Estudiantes con más dinero",
+      "sinHistorial": "Aún no hay cambios en la tasa.",
+      "sinDinero": "Todavía nadie tiene dinero en este país.",
+      "fondos": "W-Funds · Empresas",
+      "fondosAyuda": "Cuánto valdrían hoy 100 invertidos desde el comienzo ({{n}} rondas).",
+      "valen": "100 invertidos hoy valen {{v}}",
+      "ultimaRonda": "Última ronda {{v}}",
+      "sinRondas": "Aún no se ha cerrado ninguna ronda.",
+      "top10Inversion": "Top 10 · Estudiantes que más han invertido",
+      "sinInversiones": "Nadie ha invertido todavía en esta empresa.",
+      "inicio": "Inicio",
+      "anterior": "Anterior",
+      "siguiente": "Siguiente",
+      "pausar": "Pausar",
+      "seguir": "Seguir",
+      "pantallaCompleta": "Pantalla completa",
+      "cambiar": "Cambiar edición",
+      "salir": "Salir",
+      "docentes": "Docentes que más han repartido",
+      "docentesAyuda": "El dinero que cada docente ha entregado a sus estudiantes, en la moneda de su país.",
+      "aEstudiantes": "a {{n}} estudiantes",
+      "sinRepartos": "Ningún docente ha repartido dinero todavía."
     },
     "vistacuenta": {
       "enSuCuenta": "En su cuenta",

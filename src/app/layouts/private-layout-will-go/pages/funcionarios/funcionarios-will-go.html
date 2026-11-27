@@ -62,7 +62,7 @@
             <li class="p-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3" [class.opacity-60]="f.estado !== 'active'">
               <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div class="w-11 h-11 shrink-0 rounded-full flex items-center justify-center font-bold text-white"
-                     [class]="f.rol === 'docente' ? 'bg-teal-600' : f.rol === 'banco' ? 'bg-blue-600' : f.rol === 'cajero' ? 'bg-amber-500' : 'bg-slate-700'">
+                     [class]="f.rol === 'docente' ? 'bg-teal-600' : f.rol === 'banco' ? 'bg-blue-600' : f.rol === 'cajero' ? 'bg-amber-500' : f.rol === 'tv' ? 'bg-violet-600' : 'bg-slate-700'">
                   {{ (f.nombre[0] || '') + (f.apellido[0] || '') }}
                 </div>
                 <div class="min-w-0">
@@ -79,7 +79,7 @@
                 <div class="flex flex-wrap items-center gap-1.5">
                   @for (r of rolesDe(f); track r) {
                     <span class="text-xs font-semibold px-2.5 py-1 rounded-full"
-                          [class]="r === 'docente' ? 'bg-teal-50 text-teal-800 ring-1 ring-teal-200' : r === 'banco' ? 'bg-blue-50 text-blue-800 ring-1 ring-blue-200' : r === 'cajero' ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-200' : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'">{{ nombreRol[r] | translate }}</span>
+                          [class]="r === 'docente' ? 'bg-teal-50 text-teal-800 ring-1 ring-teal-200' : r === 'banco' ? 'bg-blue-50 text-blue-800 ring-1 ring-blue-200' : r === 'cajero' ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-200' : r === 'tv' ? 'bg-violet-50 text-violet-800 ring-1 ring-violet-200' : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'">{{ nombreRol[r] | translate }}</span>
                   }
                   @if (f.estado !== 'active') {
                     <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700">{{ 'wg.admin.col.inactivo' | translate }}</span>
@@ -185,7 +185,7 @@
           @if (editando?.rol === 'administrativo') {
             <p class="text-sm font-semibold px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 inline-block">{{ nombreRol['administrativo'] | translate }}</p>
           } @else {
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             @for (r of rolesDisponibles; track r) {
               <label class="cursor-pointer">
                 <input type="checkbox" [checked]="rolesElegidos.includes(r)" (change)="alternarRol(r)" class="peer sr-only">

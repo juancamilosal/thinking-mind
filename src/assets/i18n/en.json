@@ -367,7 +367,8 @@
         "docente": "Teacher",
         "banco": "Bank",
         "cajero": "Cashier",
-        "administrador": "Administrator"
+        "administrador": "Administrator",
+        "tv": "TV"
       },
       "col": {
         "textoCopiar": "Will-Go Economy\nUsername: {{usuario}}\nTemporary password: {{clave}}\nLog in at: {{url}}",
@@ -896,7 +897,9 @@
       "verTodos": "All",
       "estudiantes": "students",
       "estudiante": "student",
-      "crearEn": "+ Create group in {{pais}}"
+      "crearEn": "+ Create group in {{pais}}",
+      "kidsFuera": "Outside the economy",
+      "kidsNoJuega": "Not playing (Kids)"
     },
     "montobanco": {
       "efectivo": "Cash",
@@ -975,14 +978,17 @@
         "cajaGoStore": "GO•STORE checkout",
         "cuentas": "Accounts and cards",
         "productos": "Products",
-        "consultarSaldo": "Check balance"
+        "consultarSaldo": "Check balance",
+        "resumenTv": "Economy summary",
+        "proyectar": "Show on TV"
       },
       "rol": {
         "administrativo": "Administrative staff",
         "administrador": "Administrator",
         "docente": "Teacher",
         "banco": "Bank",
-        "cajero": "Cashier"
+        "cajero": "Cashier",
+        "tv": "TV"
       },
       "layout": {
         "abrirMenu": "Open menu",
@@ -1714,6 +1720,18 @@
         }
       }
     },
+    "proyectar": {
+      "titulo": "Show on the TV",
+      "subtitulo": "Choose the economy you want to show. It opens in full screen and changes by itself every 15 seconds.",
+      "enCurso": "In progress",
+      "preparacion": "Being prepared",
+      "boton": "Show on TV"
+    },
+    "resumenEco": {
+      "titulo": "Economy summary",
+      "subtitulo": "Currency prices, the students with the most money and how the W-Funds companies are doing.",
+      "verEnTv": "Show on TV"
+    },
     "saldo": {
       "titulo": "Check balance",
       "subtitulo": "Scan the debit card QR or type the student's GO.BANK key.",
@@ -1784,6 +1802,41 @@
       "transferidoA": "Transfer to {{nombre}}",
       "disponibleVirtual": "The bank's virtual account has {{n}}",
       "disponibleBanco": "The bank has {{n}}"
+    },
+    "tv": {
+      "titulo": "Economy summary by country",
+      "elegir": "Choose the edition you want to show on the TV.",
+      "cargando": "Loading…",
+      "sinEdiciones": "There are no open editions.",
+      "iniciar": "Show on TV",
+      "volver": "Back to the summary",
+      "precioMoneda": "Currency price today",
+      "precioAyuda": "How many pesos 1 bill of each country is worth right now.",
+      "pesos": "pesos",
+      "desdeInicio": "since the start",
+      "comportamiento": "Trend",
+      "top10Dinero": "Top 10 · Students with the most money",
+      "sinHistorial": "The rate has not changed yet.",
+      "sinDinero": "Nobody has money in this country yet.",
+      "fondos": "W-Funds · Companies",
+      "fondosAyuda": "What 100 invested from the start would be worth today ({{n}} rounds).",
+      "valen": "100 invested are worth {{v}} today",
+      "ultimaRonda": "Last round {{v}}",
+      "sinRondas": "No round has closed yet.",
+      "top10Inversion": "Top 10 · Students who invested the most",
+      "sinInversiones": "Nobody has invested in this company yet.",
+      "inicio": "Start",
+      "anterior": "Previous",
+      "siguiente": "Next",
+      "pausar": "Pause",
+      "seguir": "Resume",
+      "pantallaCompleta": "Full screen",
+      "cambiar": "Change edition",
+      "salir": "Exit",
+      "docentes": "Teachers who have given out the most",
+      "docentesAyuda": "The money each teacher has given to their students, in their country's currency.",
+      "aEstudiantes": "to {{n}} students",
+      "sinRepartos": "No teacher has given out money yet."
     },
     "vistacuenta": {
       "enSuCuenta": "In their account",

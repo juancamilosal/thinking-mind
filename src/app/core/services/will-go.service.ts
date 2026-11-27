@@ -5,7 +5,7 @@ import { Observable, MonoTypeOperatorFunction, catchError, map, of, shareReplay,
 import { environment } from '../../../environments/environment';
 import { StorageServices } from './storage.services';
 
-export type RolWillGo = 'administrativo' | 'docente' | 'banco' | 'cajero' | 'administrador';
+export type RolWillGo = 'administrativo' | 'docente' | 'banco' | 'cajero' | 'tv' | 'administrador';
 
 export interface PerfilWillGo {
   id: string;
@@ -153,9 +153,9 @@ export interface Participante {
 export interface MiembroEquipo {
   id: string; usuario_id: string; pais_id: string | null; pais: string | null;
   nombre: string; apellido: string; email: string; estado: string;
-  rol: 'docente' | 'banco' | 'cajero' | 'administrativo' | null;
+  rol: 'docente' | 'banco' | 'cajero' | 'tv' | 'administrativo' | null;
   /** Todos sus roles. */
-  roles?: ('docente' | 'banco' | 'cajero' | 'administrativo')[];
+  roles?: ('docente' | 'banco' | 'cajero' | 'tv' | 'administrativo')[];
   /** Billetes que el docente tiene en mano en esta edición. */
   billetes: number;
 }
@@ -301,6 +301,14 @@ export interface DatosCaja {
 }
 
 /** Edición vigente del usuario (para el selector de edición de cada pantalla). */
+/** Resumen de la economía para el televisor (solo administradores). */
+export interface RankingPaisTv { nombre: string; apellido: string; efectivo: number; cuenta: number; invertido: number; total: number; }
+export interface DocenteTv { nombre: string; apellido: string; repartido: number; estudiantes: number; }
+export interface PaisTv { id: string; nombre: string; codigo_moneda: string; color: string | null; tasa_actual: number; historial: { ventana: string; tasa: number }[]; estudiantes: number; ranking: RankingPaisTv[]; docentes?: DocenteTv[]; }
+export interface RankingFondoTv { nombre: string; apellido: string; pais_id: string; pais: string; codigo_moneda: string; color: string | null; invertido: number; en_pesos: number; }
+export interface FondoTv { id: string; nombre: string; logo: string | null; riesgo: string | null; activo: boolean; puntos: { ronda: string | null; valor: number }[]; ultimo_rendimiento: number | null; ranking: RankingFondoTv[]; }
+export interface DatosPantallaTv { edicion: { id: string; nombre: string; estado: string }; tasa_inicial: number; intervalo_minutos: number; ahora: string; rondas: number; paises: PaisTv[]; fondos: FondoTv[]; }
+
 export interface EdicionVigente {
   id: string; nombre: string; estado: string; edicion_programa?: string | null;
   fecha_inicio?: string | null; fecha_fin?: string | null; colegio?: string | null; programa?: string | null;
@@ -316,6 +324,7 @@ export const NOMBRE_ROL: Record<RolWillGo, string> = {
   docente: 'Docente',
   banco: 'Banco',
   cajero: 'Cajero',
+  tv: 'TV',
   administrador: 'Administrador',
 };
 
@@ -675,6 +684,10 @@ export class WillGoService {
     return this.http.patch<{ data: { presente: boolean } }>(`${this.api}/asistencia`, { participante_id: participanteId, presente }).pipe(this.enZona(), map((r) => r.data));
   }
 
+  pantallaTv(edicionId: string): Observable<DatosPantallaTv> {
+    return this.http.get<{ data: DatosPantallaTv }>(`${this.api}/ediciones/${edicionId}/pantalla`).pipe(this.enZona(), map((r) => r.data));
+  }
+
   tipoCambio(edicionId: string): Observable<DatosTipoCambio> {
     return this.http.get<{ data: DatosTipoCambio }>(`${this.api}/ediciones/${edicionId}/tipo-cambio`).pipe(this.enZona(), map((r) => r.data));
   }
@@ -740,4 +753,10 @@ export class WillGoService {
       ? IdiomaWillGoService.traducir('wg.errores.sinConexion', 'Sin conexión con el servidor. Revisa el internet.')
       : porDefecto ?? IdiomaWillGoService.traducir('wg.errores.generico', 'No se pudo completar la operación. Intenta de nuevo.'));
   }
+}
+
+/** Grupo que cada país tiene siempre por defecto (se muestra con su logo; no se borra ni se renombra). */
+export const LOGO_WILL_GO_KIDS = 'assets/images/will-go/will-go-kids.jpeg';
+export function esGrupoKids(nombre: string | null | undefined): boolean {
+  return String(nombre ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'willgokids';
 }
