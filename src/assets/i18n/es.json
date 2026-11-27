@@ -436,7 +436,8 @@
         "vacioAyuda": "Crea el primero con el botón «Nuevo colaborador».",
         "variosRoles": "Puedes marcar varios roles (por ejemplo, Docente y Cajero).",
         "encargoBanco": "Banco de {{pais}}",
-        "encargoCaja": "Caja"
+        "encargoCaja": "Caja",
+        "porPagina": "Por página"
       },
       "ed": {
         "titulo": "Ediciones",

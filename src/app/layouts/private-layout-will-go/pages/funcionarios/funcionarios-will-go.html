@@ -137,10 +137,20 @@
             </li>
           }
         </ul>
-        <!-- Paginador -->
-        @if (totalPaginas > 1) {
+        <!-- Paginador: cuántos por página (10, 20, 50, 100) y las páginas -->
+        @if (filtrados.length > opcionesPorPagina[0]) {
           <nav class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100" [attr.aria-label]="'wg.admin.col.paginas' | translate">
-            <p class="text-sm text-gray-500">{{ 'wg.admin.col.rango' | translate: { desde: desde, hasta: hasta, total: filtrados.length } }}</p>
+            <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <p class="text-sm text-gray-500">{{ 'wg.admin.col.rango' | translate: { desde: desde, hasta: hasta, total: filtrados.length } }}</p>
+              <label class="flex items-center gap-2 text-sm text-gray-500">
+                {{ 'wg.admin.col.porPagina' | translate }}
+                <select [value]="porPagina" (change)="cambiarPorPagina($any($event.target).value)"
+                        class="px-2 py-1.5 rounded-lg border-2 border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                  @for (n of opcionesPorPagina; track n) { <option [value]="n" [selected]="n === porPagina">{{ n }}</option> }
+                </select>
+              </label>
+            </div>
+            @if (totalPaginas > 1) {
             <div class="flex items-center gap-1">
               <button type="button" (click)="irA(pagina - 1)" [disabled]="pagina === 1" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" [attr.aria-label]="'wg.admin.col.paginaAnterior' | translate">{{ 'wg.admin.col.anterior' | translate }}</button>
               @for (n of paginas; track n) {
@@ -149,6 +159,7 @@
               }
               <button type="button" (click)="irA(pagina + 1)" [disabled]="pagina === totalPaginas" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40" [attr.aria-label]="'wg.admin.col.paginaSiguiente' | translate">{{ 'wg.admin.col.siguiente' | translate }}</button>
             </div>
+            }
           </nav>
         }
       </div>

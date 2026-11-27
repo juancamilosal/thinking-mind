@@ -436,7 +436,8 @@
         "vacioAyuda": "Créez le premier avec le bouton « Nouveau collaborateur ».",
         "variosRoles": "Vous pouvez cocher plusieurs rôles (par exemple, Enseignant et Caissier).",
         "encargoBanco": "Banque de {{pais}}",
-        "encargoCaja": "Caisse"
+        "encargoCaja": "Caisse",
+        "porPagina": "Par page"
       },
       "ed": {
         "titulo": "Éditions",
