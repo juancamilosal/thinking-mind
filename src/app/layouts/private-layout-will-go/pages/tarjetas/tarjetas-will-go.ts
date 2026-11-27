@@ -27,6 +27,14 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         <h1 class="text-xl font-bold text-gray-800 break-words">{{ nombreEdicion || '—' }}</h1>
         @if (!cargando && !error && tarjetas.length) {
           <div class="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
+            <div class="sm:w-64">
+              <label for="wg-tj-buscar" class="block text-xs font-semibold text-gray-500 mb-1">{{ 'wg.cuentas.tarjetas.buscar' | translate }}</label>
+              <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                <input id="wg-tj-buscar" type="search" [(ngModel)]="busqueda" [placeholder]="'wg.cuentas.tarjetas.buscarPh' | translate" autocomplete="off"
+                       class="w-full h-11 pl-9 pr-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-300" />
+              </div>
+            </div>
             @if (paises.length > 1) {
               <div class="sm:w-60">
                 <label for="wg-tj-pais" class="block text-xs font-semibold text-gray-500 mb-1">{{ 'wg.cuentas.tarjetas.pais' | translate }}</label>
@@ -46,7 +54,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                 }
               </div>
             </div>
-            <p class="flex-1 text-sm text-gray-600">{{ (visibles.length === 1 ? 'wg.cuentas.tarjetas.una' : 'wg.cuentas.tarjetas.varias') | translate: { n: visibles.length } }}</p>
+            <p class="flex-1 text-sm text-gray-600 whitespace-nowrap">{{ (visibles.length === 1 ? 'wg.cuentas.tarjetas.una' : 'wg.cuentas.tarjetas.varias') | translate: { n: visibles.length } }}</p>
             <button type="button" (click)="imprimir()" [disabled]="!visibles.length"
                     class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
@@ -63,7 +71,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       } @else if (error) {
         <div class="wg-tj-noimprimir max-w-4xl mx-auto mt-5 bg-white rounded-2xl border border-red-200 p-8 text-center text-red-700">{{ error }}</div>
       } @else if (!visibles.length) {
-        <div class="wg-tj-noimprimir max-w-4xl mx-auto mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.cuentas.tarjetas.sinTarjetas' | translate }}</div>
+        <div class="wg-tj-noimprimir max-w-4xl mx-auto mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ (tarjetas.length ? 'wg.cuentas.tarjetas.sinCoincidencias' : 'wg.cuentas.tarjetas.sinTarjetas') | translate }}</div>
       } @else {
         <!-- Cada tarjeta en su fila: el frente y, al lado, su reverso -->
         <div class="wg-tj-hoja">
@@ -83,7 +91,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                   <p class="wg-tj-lema">Who translates, betrays! <b>Just speak!</b></p>
                   <div class="wg-tj-pie">
                     <p class="wg-tj-llave" [style.font-size]="tamLlave(t.llave)">{{ t.llave }}</p>
-                    <p class="wg-tj-nombre">{{ t.nombre }} {{ t.apellido }}</p>
+                    <p class="wg-tj-nombre" [style.font-size]="tamNombre(t).tam" [style.letter-spacing]="tamNombre(t).espacio">{{ t.nombre }} {{ t.apellido }}</p>
                   </div>
                   <div class="wg-tj-qr">
                     <wg-qr-llave [llave]="t.llave" [color]="'#001938'" />
@@ -103,7 +111,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                       <div class="wg-tj-banda"></div>
                       <div class="wg-tj-firma">
                         <span class="wg-tj-firma-titulo">Authorized signature</span>
-                        <span class="wg-tj-firma-nombre">{{ t.nombre }} {{ t.apellido }}</span>
+                        <span class="wg-tj-firma-nombre" [style.font-size]="tamFirma(t)">{{ t.nombre }} {{ t.apellido }}</span>
                       </div>
                       <span class="wg-tj-atras-sin">)))</span>
                       <p class="wg-tj-atras-texto">This card belongs to the <b>Will-Go Economy</b> program by Thinking Mind. It is personal and has no commercial value. If you find it, please return it to the <b>GO.BANK</b>.</p>
@@ -174,17 +182,13 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       font-weight: 700;
       line-height: 1.15;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .wg-tj-nombre {
       margin: .9mm 0 0;
       font-size: 2.1mm;
       font-weight: 600;
-      line-height: 1.2;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
       text-transform: uppercase;
       letter-spacing: .28em;
     }
@@ -210,7 +214,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       color: #001938; display: flex; flex-direction: column; justify-content: center; overflow: hidden;
     }
     .wg-tj-firma-titulo { font-size: 1.5mm; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #64748b; }
-    .wg-tj-firma-nombre { font-size: 3mm; font-weight: 600; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wg-tj-firma-nombre { font-size: 3mm; font-weight: 600; font-style: italic; white-space: nowrap; }
     .wg-tj-atras-sin { position: absolute; left: 59mm; top: 18mm; font-size: 3.4mm; font-weight: 800; color: #5fd32c; letter-spacing: -.1em; }
     .wg-tj-atras-texto {
       position: absolute; left: 4.6mm; top: 26.6mm; width: 50mm; margin: 0;
@@ -282,8 +286,20 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
   /** Por defecto, cada tarjeta con su frente y al lado su reverso. */
   lado: 'frente' | 'reverso' | 'ambas' = 'ambas';
 
+  /** Nombre, apellido o llave (sin importar tildes ni mayúsculas), para imprimir solo algunas. */
+  busqueda = '';
+  private static normal(v: string): string {
+    return (v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
   get visibles(): TarjetaImprimir[] {
-    return this.paisId ? this.tarjetas.filter((t) => t.pais_id === this.paisId) : this.tarjetas;
+    const palabras = TarjetasWillGo.normal(this.busqueda).split(/\s+/).filter(Boolean);
+    return this.tarjetas.filter((t) => {
+      if (this.paisId && t.pais_id !== this.paisId) return false;
+      if (!palabras.length) return true;
+      const texto = TarjetasWillGo.normal(`${t.nombre} ${t.apellido} ${t.llave}`);
+      return palabras.every((p) => texto.includes(p));
+    });
   }
 
   imprimir(): void { window.print(); }
@@ -296,6 +312,21 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
 
   /** Achica la llave para que quepa en una sola línea de la tarjeta (unos 47 mm de ancho). */
   tamLlave(llave: string): string {
-    return `${Math.min(4.6, 47 / (0.6 * Math.max(1, llave.length))).toFixed(2)}mm`;
+    // Ancho medio de una letra en negrilla ≈ 0,62 del tamaño: la llave siempre cabe completa en una línea.
+    return `${Math.min(4.6, 47 / (0.62 * Math.max(1, llave.length))).toFixed(2)}mm`;
+  }
+
+  /** Nombre en el recuadro de la firma (reverso): se achica para que quepa completo. */
+  tamFirma(t: TarjetaImprimir): string {
+    const n = Math.max(1, `${t.nombre} ${t.apellido}`.trim().length);
+    return `${Math.min(3, 48 / (0.56 * n)).toFixed(2)}mm`;
+  }
+
+  /** El nombre completo: con nombres largos se junta el espaciado y se achica la letra (y si aún no cabe, pasa a 2 líneas). */
+  tamNombre(t: TarjetaImprimir): { tam: string; espacio: string } {
+    const n = Math.max(1, `${t.nombre} ${t.apellido}`.trim().length);
+    const espacio = n <= 22 ? 0.28 : n <= 30 ? 0.16 : 0.08;
+    const tam = Math.max(1.6, Math.min(2.1, 47 / ((0.66 + espacio) * n)));
+    return { tam: `${tam.toFixed(2)}mm`, espacio: `${espacio}em` };
   }
 }
