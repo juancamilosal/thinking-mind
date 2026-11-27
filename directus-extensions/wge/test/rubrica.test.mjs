@@ -27,3 +27,11 @@ test('rúbrica: resumen para el acudiente con el nivel promedio de cada criterio
 	assert.deepEqual(r, { total: 2, criterios: { uso_lengua: 2.5, iniciativa: 1.5, nivel_reto: 1, colaboracion: 2.5 }, ultima: '2026-11-28T15:00:00Z', maximo: 3 });
 	assert.equal(resumenCalificaciones([]).total, 0);
 });
+
+import { esGrupoKids, GRUPO_KIDS } from '../src/lib.js';
+
+test('grupos: Will-Go Kids se reconoce por su nombre', () => {
+	assert.equal(GRUPO_KIDS, 'Will-Go Kids');
+	for (const n of ['Will-Go Kids', 'will go kids', 'WILL-GO KIDS', ' Willgo  Kids ']) assert.equal(esGrupoKids(n), true, n);
+	for (const n of ['Kids', 'Will-Go', 'Grupo 1', null]) assert.equal(esGrupoKids(n), false, String(n));
+});

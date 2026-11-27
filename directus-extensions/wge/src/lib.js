@@ -352,3 +352,23 @@ export async function exigirResponsableBanco(db, { paisId, usuarioId, rol }) {
 		throw new WgeError(403, 'OTRO_RESPONSABLE', `El banco de ${pais.nombre} lo maneja ${`${pais.first_name ?? ''} ${pais.last_name ?? ''}`.trim()}`);
 	}
 }
+
+/**
+ * Will-Go Kids: grupo que cada edición tiene siempre, sin país. Sus estudiantes no juegan la economía
+ * (no tienen país, dinero, tarjeta ni rúbrica). No se borra ni se renombra.
+ */
+export const GRUPO_KIDS = 'Will-Go Kids';
+export const COLOR_KIDS = '#F97316';
+export function esGrupoKids(nombre) {
+	return String(nombre ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'willgokids';
+}
+
+/** El grupo Will-Go Kids de la edición; si aún no existe, lo crea. */
+export async function asegurarGrupoKids(db, edicionId) {
+	const grupos = await db('wge_grupos').where('edicion_id', edicionId).whereNull('pais_id').select('id', 'nombre');
+	const kids = grupos.find((g) => esGrupoKids(g.nombre));
+	if (kids) return kids.id;
+	const id = crypto.randomUUID();
+	await db('wge_grupos').insert({ id, edicion_id: edicionId, pais_id: null, nombre: GRUPO_KIDS, color: COLOR_KIDS, orden: 0, date_created: new Date() });
+	return id;
+}

@@ -896,7 +896,9 @@
       "verTodos": "All",
       "estudiantes": "students",
       "estudiante": "student",
-      "crearEn": "+ Create group in {{pais}}"
+      "crearEn": "+ Create group in {{pais}}",
+      "kidsFuera": "Outside the economy",
+      "kidsNoJuega": "Not playing (Kids)"
     },
     "montobanco": {
       "efectivo": "Cash",

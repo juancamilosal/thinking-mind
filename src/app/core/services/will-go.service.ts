@@ -741,3 +741,9 @@ export class WillGoService {
       : porDefecto ?? IdiomaWillGoService.traducir('wg.errores.generico', 'No se pudo completar la operación. Intenta de nuevo.'));
   }
 }
+
+/** Grupo que cada país tiene siempre por defecto (se muestra con su logo; no se borra ni se renombra). */
+export const LOGO_WILL_GO_KIDS = 'assets/images/will-go/will-go-kids.jpeg';
+export function esGrupoKids(nombre: string | null | undefined): boolean {
+  return String(nombre ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'willgokids';
+}

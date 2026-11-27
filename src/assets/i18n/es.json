@@ -896,7 +896,9 @@
       "verTodos": "Todos",
       "estudiantes": "estudiantes",
       "estudiante": "estudiante",
-      "crearEn": "+ Crear grupo en {{pais}}"
+      "crearEn": "+ Crear grupo en {{pais}}",
+      "kidsFuera": "Fuera de la economía",
+      "kidsNoJuega": "No juega (Kids)"
     },
     "montobanco": {
       "efectivo": "Efectivo",

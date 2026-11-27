@@ -356,6 +356,26 @@ async function exigirResponsableBanco(db, { paisId, usuarioId, rol }) {
 	}
 }
 
+/**
+ * Will-Go Kids: grupo que cada edición tiene siempre, sin país. Sus estudiantes no juegan la economía
+ * (no tienen país, dinero, tarjeta ni rúbrica). No se borra ni se renombra.
+ */
+const GRUPO_KIDS = 'Will-Go Kids';
+const COLOR_KIDS = '#F97316';
+function esGrupoKids(nombre) {
+	return String(nombre ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'willgokids';
+}
+
+/** El grupo Will-Go Kids de la edición; si aún no existe, lo crea. */
+async function asegurarGrupoKids(db, edicionId) {
+	const grupos = await db('wge_grupos').where('edicion_id', edicionId).whereNull('pais_id').select('id', 'nombre');
+	const kids = grupos.find((g) => esGrupoKids(g.nombre));
+	if (kids) return kids.id;
+	const id = crypto.randomUUID();
+	await db('wge_grupos').insert({ id, edicion_id: edicionId, pais_id: null, nombre: GRUPO_KIDS, color: COLOR_KIDS, orden: 0, date_created: new Date() });
+	return id;
+}
+
 // Traducción de los mensajes de error de WILL-GO ECONOMY (es → en, fr).
 // Los mensajes se siguen escribiendo en español en el código; al responder se traducen según el
 // encabezado Accept-Language. Cada entrada es [español, inglés, francés]; en el texto español, $1, $2…
@@ -462,6 +482,7 @@ const TRADUCCIONES = [
 	['Los participantes deben ser de la misma edición', 'Participants must be from the same edition', 'Les participants doivent appartenir à la même édition'],
 	['El país no es de esta edición', 'The country is not part of this edition', 'Le pays ne fait pas partie de cette édition'],
 	['$1 $2 ya tiene dinero en su moneda actual; no se puede cambiar de país', '$1 $2 already has money in their current currency; the country cannot be changed', "$1 $2 a déjà de l'argent dans sa monnaie actuelle ; impossible de changer de pays"],
+	['$1 $2 ya tiene dinero en Will-Go Economy; no se puede pasar a Will-Go Kids', '$1 $2 already has money in Will-Go Economy; they cannot be moved to Will-Go Kids', "$1 $2 a déjà de l'argent dans Will-Go Economy ; impossible de le passer à Will-Go Kids"],
 	['No hay cambios', 'No changes', 'Aucune modification'],
 	['Escribe cuántos billetes entran al banco', 'Enter how many bills go into the bank', 'Indiquez combien de billets entrent à la banque'],
 	['El país no existe', 'The country does not exist', "Le pays n'existe pas"],
@@ -501,6 +522,10 @@ const TRADUCCIONES = [
 	['Solo se agregan al grupo estudiantes de su mismo país', 'Only students from the same country can join the group', 'Seuls les élèves du même pays peuvent rejoindre le groupe'],
 	['El grupo no existe', 'The group does not exist', "Le groupe n'existe pas"],
 	['El grupo no tiene estudiantes para calificar', 'The group has no students to grade', "Le groupe n'a pas d'élèves à évaluer"],
+	['El grupo Will-Go Kids no se puede renombrar ni asignar a un país', 'The Will-Go Kids group cannot be renamed or assigned to a country', 'Le groupe Will-Go Kids ne peut pas être renommé ni attribué à un pays'],
+	['La edición ya tiene su grupo Will-Go Kids', 'The edition already has its Will-Go Kids group', "L'édition a déjà son groupe Will-Go Kids"],
+	['Los estudiantes de Will-Go Kids no tienen país', 'Will-Go Kids students have no country', "Les élèves de Will-Go Kids n'ont pas de pays"],
+	['El grupo Will-Go Kids no se puede borrar', 'The Will-Go Kids group cannot be deleted', 'Le groupe Will-Go Kids ne peut pas être supprimé'],
 	['Ya existe un colaborador de Will-Go con ese correo', 'There is already a Will-Go team member with that email', 'Il existe déjà un collaborateur Will-Go avec cet e-mail'],
 	['Esta cuenta es de otra parte de la plataforma: para que no use Will-Go, quítala de Will-Go', 'This account belongs to another part of the platform: to stop it using Will-Go, remove it from Will-Go', "Ce compte appartient à une autre partie de la plateforme : pour qu'il n'utilise plus Will-Go, retirez-le de Will-Go"],
 	['Esta cuenta es de otra parte de la plataforma: usa su misma contraseña', 'This account belongs to another part of the platform: it uses its same password', 'Ce compte appartient à une autre partie de la plateforme : il utilise le même mot de passe'],
@@ -1185,7 +1210,9 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 	const resumenEdicion = async (e) => {
 		const activos = () => db('wge_participantes').where('edicion_id', e.id).whereRaw('coalesce(retirado, false) = false');
 		const [{ total }] = await activos().count({ total: '*' });
-		const [{ sinPais }] = await activos().whereNull('pais_id').count({ sinPais: '*' });
+		// Sin país y pendientes de asignar (los de Will-Go Kids no juegan la economía: no cuentan)
+		const kids = db('wge_grupos').where('edicion_id', e.id).whereNull('pais_id').whereRaw("regexp_replace(lower(nombre), '[^a-z]', '', 'g') = 'willgokids'").select('id');
+		const [{ sinPais }] = await activos().whereNull('pais_id').where((q) => q.whereNull('grupo_id').orWhereNotIn('grupo_id', kids)).count({ sinPais: '*' });
 		const [{ retirados }] = await db('wge_participantes').where({ edicion_id: e.id, retirado: true }).count({ retirados: '*' });
 		const [{ equipo }] = await db('wge_equipo').where('edicion_id', e.id).count({ equipo: '*' });
 		const colegio = e.colegio_id ? await db('colegios').where('id', e.colegio_id).first('nombre') : null;
@@ -1330,6 +1357,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		router.get(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {
 			soloAdmin(rol);
 			await edicionExistente(req.params.id);
+			// La edición tiene siempre su grupo Will-Go Kids (sin país)
+			if (nombre === 'grupos') await asegurarGrupoKids(db, req.params.id);
 			const filas = await db(s.tabla).where('edicion_id', req.params.id).orderBy(s.orden);
 			if (nombre === 'paises') {
 				// Cuánto hay en el banco y cuánto circula (provisión que ya salió del banco)
@@ -1353,7 +1382,10 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			const fila = nueva(req.accountability.user, { ...limpiar(req.body, s.campos), edicion_id: e.id });
 			exigirTexto(fila.nombre, 'nombre');
 			if (nombre === 'productos' && fila.precio_cop == null) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el precio');
-			if (nombre === 'grupos') await exigirPaisDeLaEdicion(fila.pais_id, e.id);
+			if (nombre === 'grupos') {
+				if (esGrupoKids(fila.nombre)) throw new WgeError(409, 'GRUPO_KIDS', 'La edición ya tiene su grupo Will-Go Kids');
+				await exigirPaisDeLaEdicion(fila.pais_id, e.id);
+			}
 			await db(s.tabla).insert(fila);
 			return db(s.tabla).where('id', fila.id).first();
 		}));
@@ -1364,6 +1396,15 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 			if (!actual) throw new WgeError(404, 'NO_EXISTE', 'No existe');
 			const e = await edicionExistente(actual.edicion_id);
 			const fila = limpiar(req.body, s.campos);
+			if (nombre === 'grupos' && esGrupoKids(actual.nombre)) {
+				// El grupo por defecto no tiene país y conserva su nombre
+				if (('nombre' in fila && !esGrupoKids(fila.nombre)) || ('pais_id' in fila && fila.pais_id)) {
+					throw new WgeError(409, 'GRUPO_KIDS', 'El grupo Will-Go Kids no se puede renombrar ni asignar a un país');
+				}
+				delete fila.pais_id;
+			} else if (nombre === 'grupos' && 'nombre' in fila && esGrupoKids(fila.nombre)) {
+				throw new WgeError(409, 'GRUPO_KIDS', 'La edición ya tiene su grupo Will-Go Kids');
+			}
 			if (nombre === 'grupos' && 'pais_id' in fila && fila.pais_id !== actual.pais_id) {
 				// El grupo cambia de país: sus estudiantes (del país anterior) quedan sin grupo
 				await exigirPaisDeLaEdicion(fila.pais_id, e.id);
@@ -1427,8 +1468,9 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 	/** DELETE /wge/admin/grupos/:id: borra el grupo; sus estudiantes quedan en el país, sin grupo. */
 	router.delete('/admin/grupos/:itemId', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		const g = await db('wge_grupos').where('id', req.params.itemId).first('id');
+		const g = await db('wge_grupos').where('id', req.params.itemId).first('id', 'nombre');
 		if (!g) throw new WgeError(404, 'NO_EXISTE', 'No existe');
+		if (esGrupoKids(g.nombre)) throw new WgeError(409, 'GRUPO_KIDS', 'El grupo Will-Go Kids no se puede borrar');
 		await db.transaction(async (trx) => {
 			await trx('wge_participantes').where('grupo_id', g.id).update({ grupo_id: null });
 			await trx('wge_grupos').where('id', g.id).delete();
@@ -1484,8 +1526,12 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		if (lista.some((p) => p.retirado)) throw new WgeError(409, 'RETIRADO', 'Hay estudiantes retirados en la selección; reintégralos primero');
 		const ediciones = new Set(lista.map((p) => p.edicion_id));
 		if (ediciones.size !== 1) throw new WgeError(400, 'VALOR_INVALIDO', 'Los participantes deben ser de la misma edición');
-		if ('pais_id' in (req.body ?? {})) {
-			const paisId = req.body.pais_id || null;
+		// Will-Go Kids: sus estudiantes no juegan la economía, así que quedan sin país
+		const grupoPedido = req.body?.grupo_id ? await db('wge_grupos').where({ id: req.body.grupo_id, edicion_id: [...ediciones][0] }).first('id', 'pais_id', 'nombre') : null;
+		const aKids = !!grupoPedido && esGrupoKids(grupoPedido.nombre) && !grupoPedido.pais_id;
+		if (aKids && req.body?.pais_id) throw new WgeError(409, 'GRUPO_KIDS', 'Los estudiantes de Will-Go Kids no tienen país');
+		if ('pais_id' in (req.body ?? {}) || aKids) {
+			const paisId = aKids ? null : (req.body.pais_id || null);
 			if (paisId && !(await db('wge_paises').where({ id: paisId, edicion_id: [...ediciones][0] }).first('id'))) {
 				throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
 			}
@@ -1494,6 +1540,7 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 				.whereIn('b.participante_id', ids).where('b.saldo', '<>', 0)
 				.modify((q) => { if (paisId) q.whereNot('b.pais_id', paisId); })
 				.first('e.nombre', 'e.apellido');
+			if (conBilletes && aKids) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en Will-Go Economy; no se puede pasar a Will-Go Kids`);
 			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en su moneda actual; no se puede cambiar de país`);
 			cambios.pais_id = paisId;
 		}
@@ -1501,8 +1548,8 @@ function rutasAdmin(router, { ruta, db, services, getSchema, env, logger }) {
 		if ('pais_id' in cambios) cambios.grupo_id = null;
 		if ('grupo_id' in (req.body ?? {})) {
 			const grupoId = req.body.grupo_id || null;
-			if (grupoId) {
-				const g = await db('wge_grupos').where({ id: grupoId, edicion_id: [...ediciones][0] }).first('id', 'pais_id', 'nombre');
+			if (grupoId && !aKids) {
+				const g = grupoPedido;
 				if (!g) throw new WgeError(400, 'VALOR_INVALIDO', 'El grupo no es de esta edición');
 				const paisFinal = 'pais_id' in cambios ? cambios.pais_id : null;
 				const deOtroPais = lista.find((p) => (paisFinal ?? p.pais_id) !== g.pais_id);

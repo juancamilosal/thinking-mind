@@ -6,7 +6,7 @@ import { idiomaDe } from './mensajes.js';
 import { Readable } from 'node:stream';
 import { totalDelConteo, montoOConteo, virtualDelBanco } from './arqueo.js';
 import { retirarInversion } from './wfunds.js';
-import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde, sqlCursosDelPrograma, tieneRol, rolesDe, llavesDe } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, traerInscritos, darBienvenida, billeteraBloqueada, moverSaldo, sqlCorresponde, sqlCursosDelPrograma, tieneRol, rolesDe, llavesDe, asegurarGrupoKids, esGrupoKids } from './lib.js';
 
 const CAMPOS_JSON = ['horario', 'parametros_fx'];
 /** Cada cuántos minutos puede recalcularse el tipo de cambio (dividen la hora exacta, así los cálculos caen en horas redondas). */
@@ -183,7 +183,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 	const resumenEdicion = async (e) => {
 		const activos = () => db('wge_participantes').where('edicion_id', e.id).whereRaw('coalesce(retirado, false) = false');
 		const [{ total }] = await activos().count({ total: '*' });
-		const [{ sinPais }] = await activos().whereNull('pais_id').count({ sinPais: '*' });
+		// Sin país y pendientes de asignar (los de Will-Go Kids no juegan la economía: no cuentan)
+		const kids = db('wge_grupos').where('edicion_id', e.id).whereNull('pais_id').whereRaw("regexp_replace(lower(nombre), '[^a-z]', '', 'g') = 'willgokids'").select('id');
+		const [{ sinPais }] = await activos().whereNull('pais_id').where((q) => q.whereNull('grupo_id').orWhereNotIn('grupo_id', kids)).count({ sinPais: '*' });
 		const [{ retirados }] = await db('wge_participantes').where({ edicion_id: e.id, retirado: true }).count({ retirados: '*' });
 		const [{ equipo }] = await db('wge_equipo').where('edicion_id', e.id).count({ equipo: '*' });
 		const colegio = e.colegio_id ? await db('colegios').where('id', e.colegio_id).first('nombre') : null;
@@ -328,6 +330,8 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		router.get(`/admin/ediciones/:id/${nombre}`, ruta(async (req, rol) => {
 			soloAdmin(rol);
 			await edicionExistente(req.params.id);
+			// La edición tiene siempre su grupo Will-Go Kids (sin país)
+			if (nombre === 'grupos') await asegurarGrupoKids(db, req.params.id);
 			const filas = await db(s.tabla).where('edicion_id', req.params.id).orderBy(s.orden);
 			if (nombre === 'paises') {
 				// Cuánto hay en el banco y cuánto circula (provisión que ya salió del banco)
@@ -351,7 +355,10 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			const fila = nueva(req.accountability.user, { ...limpiar(req.body, s.campos), edicion_id: e.id });
 			exigirTexto(fila.nombre, 'nombre');
 			if (nombre === 'productos' && fila.precio_cop == null) throw new WgeError(400, 'VALOR_INVALIDO', 'Falta el precio');
-			if (nombre === 'grupos') await exigirPaisDeLaEdicion(fila.pais_id, e.id);
+			if (nombre === 'grupos') {
+				if (esGrupoKids(fila.nombre)) throw new WgeError(409, 'GRUPO_KIDS', 'La edición ya tiene su grupo Will-Go Kids');
+				await exigirPaisDeLaEdicion(fila.pais_id, e.id);
+			}
 			await db(s.tabla).insert(fila);
 			return db(s.tabla).where('id', fila.id).first();
 		}));
@@ -362,6 +369,15 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 			if (!actual) throw new WgeError(404, 'NO_EXISTE', 'No existe');
 			const e = await edicionExistente(actual.edicion_id);
 			const fila = limpiar(req.body, s.campos);
+			if (nombre === 'grupos' && esGrupoKids(actual.nombre)) {
+				// El grupo por defecto no tiene país y conserva su nombre
+				if (('nombre' in fila && !esGrupoKids(fila.nombre)) || ('pais_id' in fila && fila.pais_id)) {
+					throw new WgeError(409, 'GRUPO_KIDS', 'El grupo Will-Go Kids no se puede renombrar ni asignar a un país');
+				}
+				delete fila.pais_id;
+			} else if (nombre === 'grupos' && 'nombre' in fila && esGrupoKids(fila.nombre)) {
+				throw new WgeError(409, 'GRUPO_KIDS', 'La edición ya tiene su grupo Will-Go Kids');
+			}
 			if (nombre === 'grupos' && 'pais_id' in fila && fila.pais_id !== actual.pais_id) {
 				// El grupo cambia de país: sus estudiantes (del país anterior) quedan sin grupo
 				await exigirPaisDeLaEdicion(fila.pais_id, e.id);
@@ -425,8 +441,9 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 	/** DELETE /wge/admin/grupos/:id: borra el grupo; sus estudiantes quedan en el país, sin grupo. */
 	router.delete('/admin/grupos/:itemId', ruta(async (req, rol) => {
 		soloAdmin(rol);
-		const g = await db('wge_grupos').where('id', req.params.itemId).first('id');
+		const g = await db('wge_grupos').where('id', req.params.itemId).first('id', 'nombre');
 		if (!g) throw new WgeError(404, 'NO_EXISTE', 'No existe');
+		if (esGrupoKids(g.nombre)) throw new WgeError(409, 'GRUPO_KIDS', 'El grupo Will-Go Kids no se puede borrar');
 		await db.transaction(async (trx) => {
 			await trx('wge_participantes').where('grupo_id', g.id).update({ grupo_id: null });
 			await trx('wge_grupos').where('id', g.id).delete();
@@ -482,8 +499,12 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		if (lista.some((p) => p.retirado)) throw new WgeError(409, 'RETIRADO', 'Hay estudiantes retirados en la selección; reintégralos primero');
 		const ediciones = new Set(lista.map((p) => p.edicion_id));
 		if (ediciones.size !== 1) throw new WgeError(400, 'VALOR_INVALIDO', 'Los participantes deben ser de la misma edición');
-		if ('pais_id' in (req.body ?? {})) {
-			const paisId = req.body.pais_id || null;
+		// Will-Go Kids: sus estudiantes no juegan la economía, así que quedan sin país
+		const grupoPedido = req.body?.grupo_id ? await db('wge_grupos').where({ id: req.body.grupo_id, edicion_id: [...ediciones][0] }).first('id', 'pais_id', 'nombre') : null;
+		const aKids = !!grupoPedido && esGrupoKids(grupoPedido.nombre) && !grupoPedido.pais_id;
+		if (aKids && req.body?.pais_id) throw new WgeError(409, 'GRUPO_KIDS', 'Los estudiantes de Will-Go Kids no tienen país');
+		if ('pais_id' in (req.body ?? {}) || aKids) {
+			const paisId = aKids ? null : (req.body.pais_id || null);
 			if (paisId && !(await db('wge_paises').where({ id: paisId, edicion_id: [...ediciones][0] }).first('id'))) {
 				throw new WgeError(400, 'VALOR_INVALIDO', 'El país no es de esta edición');
 			}
@@ -492,6 +513,7 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 				.whereIn('b.participante_id', ids).where('b.saldo', '<>', 0)
 				.modify((q) => { if (paisId) q.whereNot('b.pais_id', paisId); })
 				.first('e.nombre', 'e.apellido');
+			if (conBilletes && aKids) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en Will-Go Economy; no se puede pasar a Will-Go Kids`);
 			if (conBilletes) throw new WgeError(409, 'TIENE_BILLETES', `${conBilletes.nombre} ${conBilletes.apellido} ya tiene dinero en su moneda actual; no se puede cambiar de país`);
 			cambios.pais_id = paisId;
 		}
@@ -499,8 +521,8 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		if ('pais_id' in cambios) cambios.grupo_id = null;
 		if ('grupo_id' in (req.body ?? {})) {
 			const grupoId = req.body.grupo_id || null;
-			if (grupoId) {
-				const g = await db('wge_grupos').where({ id: grupoId, edicion_id: [...ediciones][0] }).first('id', 'pais_id', 'nombre');
+			if (grupoId && !aKids) {
+				const g = grupoPedido;
 				if (!g) throw new WgeError(400, 'VALOR_INVALIDO', 'El grupo no es de esta edición');
 				const paisFinal = 'pais_id' in cambios ? cambios.pais_id : null;
 				const deOtroPais = lista.find((p) => (paisFinal ?? p.pais_id) !== g.pais_id);

@@ -896,7 +896,9 @@
       "verTodos": "Tous",
       "estudiantes": "élèves",
       "estudiante": "élève",
-      "crearEn": "+ Créer un groupe à {{pais}}"
+      "crearEn": "+ Créer un groupe à {{pais}}",
+      "kidsFuera": "Hors de l'économie",
+      "kidsNoJuega": "Ne joue pas (Kids)"
     },
     "montobanco": {
       "efectivo": "Espèces",
