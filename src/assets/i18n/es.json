@@ -755,7 +755,12 @@
         "varias": "{{n}} tarjetas",
         "imprimir": "Imprimir",
         "consejo": "Imprime en hoja A4 a tamaño real (100 %), con gráficos de fondo activados, y recorta por la línea punteada.",
-        "sinTarjetas": "No hay tarjetas para imprimir."
+        "sinTarjetas": "No hay tarjetas para imprimir.",
+        "lado": "Lado",
+        "frente": "Frente",
+        "reverso": "Reverso",
+        "ambas": "Frente y reverso",
+        "consejoReverso": "Cada tarjeta sale con su frente y, al lado, su reverso. Recorta las dos partes y pégalas espalda con espalda (o dobla por la mitad antes de plastificar)."
       }
     },
     "errores": {
@@ -1396,7 +1401,8 @@
         "provisionTotal": "Provisión total",
         "totalBanco": "Total del banco",
         "bienvenidaNecesita": "Bienvenida necesita",
-        "virtual": "Virtual"
+        "virtual": "Virtual",
+        "tarjetasDebito": "Imprimir tarjetas débito"
       },
       "fondos": {
         "intro": "Así ven las empresas los estudiantes y acudientes.",

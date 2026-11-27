@@ -755,7 +755,12 @@
         "varias": "{{n}} cartes",
         "imprimir": "Imprimer",
         "consejo": "Imprimez sur papier A4 en taille réelle (100 %), avec les graphiques d'arrière-plan activés, et découpez le long du pointillé.",
-        "sinTarjetas": "Il n'y a aucune carte à imprimer."
+        "sinTarjetas": "Il n'y a aucune carte à imprimer.",
+        "lado": "Face",
+        "frente": "Recto",
+        "reverso": "Verso",
+        "ambas": "Recto et verso",
+        "consejoReverso": "Chaque carte sort avec son recto et, à côté, son verso. Découpez les deux parties et collez-les dos à dos (ou pliez en deux avant de plastifier)."
       }
     },
     "errores": {
@@ -1396,7 +1401,8 @@
         "provisionTotal": "Provision totale",
         "totalBanco": "Total de la banque",
         "bienvenidaNecesita": "Bienvenue nécessite",
-        "virtual": "Virtuel"
+        "virtual": "Virtuel",
+        "tarjetasDebito": "Imprimer les cartes de débit"
       },
       "fondos": {
         "intro": "Voici comment les élèves et les parents voient les entreprises.",

@@ -755,7 +755,12 @@
         "varias": "{{n}} cards",
         "imprimir": "Print",
         "consejo": "Print on A4 paper at actual size (100%), with background graphics on, and cut along the dotted line.",
-        "sinTarjetas": "There are no cards to print."
+        "sinTarjetas": "There are no cards to print.",
+        "lado": "Side",
+        "frente": "Front",
+        "reverso": "Back",
+        "ambas": "Front and back",
+        "consejoReverso": "Each card comes with its front and, next to it, its back. Cut both parts and glue them back to back (or fold in half before laminating)."
       }
     },
     "errores": {
@@ -1396,7 +1401,8 @@
         "provisionTotal": "Total supply",
         "totalBanco": "Bank total",
         "bienvenidaNecesita": "Welcome needs",
-        "virtual": "Virtual"
+        "virtual": "Virtual",
+        "tarjetasDebito": "Print debit cards"
       },
       "fondos": {
         "intro": "This is how students and parents see the companies.",
