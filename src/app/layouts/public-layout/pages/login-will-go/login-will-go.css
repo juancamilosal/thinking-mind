@@ -50,6 +50,11 @@
   animation: fundido 48s ease-in-out infinite;
 }
 
+.wg-foto-billetes {
+  background-size: auto 145%;
+  background-position: center 100%;
+}
+
 .wg-foto:first-child {
   opacity: 1;
 }
@@ -446,7 +451,8 @@
   }
 
   /* En celular la foto va completa arriba, sin nada encima */
-  .wg-foto {
+  .wg-foto,
+  .wg-foto-billetes {
     background-size: cover;
     background-position: center 30%;
   }
