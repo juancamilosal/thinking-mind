@@ -759,8 +759,8 @@
         "lado": "Lado",
         "frente": "Frente",
         "reverso": "Reverso",
-        "ambas": "Doble cara",
-        "consejoReverso": "Para doble cara: imprime y voltea la hoja por el borde largo; el reverso ya viene con las columnas invertidas para que coincida con su frente."
+        "ambas": "Frente y reverso",
+        "consejoReverso": "Cada tarjeta sale con su frente y, al lado, su reverso. Recorta las dos partes y pégalas espalda con espalda (o dobla por la mitad antes de plastificar)."
       }
     },
     "errores": {

@@ -759,8 +759,8 @@
         "lado": "Face",
         "frente": "Recto",
         "reverso": "Verso",
-        "ambas": "Recto verso",
-        "consejoReverso": "Pour le recto verso : imprimez et retournez la feuille sur le bord long ; le verso a déjà ses colonnes inversées pour correspondre au recto."
+        "ambas": "Recto et verso",
+        "consejoReverso": "Chaque carte sort avec son recto et, à côté, son verso. Découpez les deux parties et collez-les dos à dos (ou pliez en deux avant de plastifier)."
       }
     },
     "errores": {

@@ -759,8 +759,8 @@
         "lado": "Side",
         "frente": "Front",
         "reverso": "Back",
-        "ambas": "Double-sided",
-        "consejoReverso": "For double-sided: print and flip the sheet on the long edge; the back already has its columns swapped so it lines up with its front."
+        "ambas": "Front and back",
+        "consejoReverso": "Each card comes with its front and, next to it, its back. Cut both parts and glue them back to back (or fold in half before laminating)."
       }
     },
     "errores": {

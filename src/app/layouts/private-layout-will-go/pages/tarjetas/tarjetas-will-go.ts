@@ -49,7 +49,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
             </button>
           </div>
           <p class="mt-3 text-xs text-gray-500">{{ 'wg.cuentas.tarjetas.consejo' | translate }}</p>
-          @if (lado !== 'frente') { <p class="mt-1 text-xs text-gray-500">{{ 'wg.cuentas.tarjetas.consejoReverso' | translate }}</p> }
+          @if (lado === 'ambas') { <p class="mt-1 text-xs text-gray-500">{{ 'wg.cuentas.tarjetas.consejoReverso' | translate }}</p> }
         }
       </div>
 
@@ -60,12 +60,11 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       } @else if (!visibles.length) {
         <div class="wg-tj-noimprimir max-w-4xl mx-auto mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ 'wg.cuentas.tarjetas.sinTarjetas' | translate }}</div>
       } @else {
-        <!-- Hojas de 8 tarjetas: el frente y, detrás, el reverso con las columnas invertidas (así coinciden al imprimir a doble cara) -->
-        @for (hoja of hojas; track $index) {
-          @if (lado !== 'reverso') {
-            <div class="wg-tj-hoja">
-              @for (t of hoja; track t.id) {
-                <div class="wg-tj-celda">
+        <!-- Cada tarjeta en su fila: el frente y, al lado, su reverso -->
+        <div class="wg-tj-hoja">
+          @for (t of visibles; track t.id) {
+            @if (lado !== 'reverso') {
+              <div class="wg-tj-celda">
               <!-- Tarjeta débito GO.BANK (cada QR lleva la llave del estudiante) -->
                 <article class="wg-tj-tarjeta">
                   <svg class="wg-tj-onda" viewBox="0 0 856 540" preserveAspectRatio="none" aria-hidden="true">
@@ -85,15 +84,10 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                     <wg-qr-llave [llave]="t.llave" [color]="'#001938'" />
                   </div>
                 </article>
-                  </div>
-              }
-            </div>
-          }
-          @if (lado !== 'frente') {
-            <div class="wg-tj-hoja wg-tj-hoja-reverso">
-              @for (t of espejo(hoja); track $index) {
-                <div class="wg-tj-celda" [class.wg-tj-vacia]="!t">
-                  @if (t) {
+                </div>
+            }
+            @if (lado !== 'frente') {
+              <div class="wg-tj-celda">
                     <!-- Reverso de la tarjeta -->
                     <article class="wg-tj-tarjeta wg-tj-atras">
                       <svg class="wg-tj-onda" viewBox="0 0 856 540" preserveAspectRatio="none" aria-hidden="true">
@@ -112,12 +106,10 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                       <img class="wg-tj-atras-gobank" src="assets/images/will-go/tarjeta-gobank.png" alt="GO.BANK">
                       <img class="wg-tj-atras-willgo" src="assets/images/will-go/tarjeta-willgo.png" alt="Will-go!">
                     </article>
-                  }
-                </div>
-              }
-            </div>
+              </div>
+            }
           }
-        }
+        </div>
       }
     </div>
   `,
@@ -129,7 +121,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       gap: 4mm;
       margin-top: 1.25rem;
     }
-    /* En pantalla, igual que en la hoja: 2 columnas (así se ve cómo queda el reverso al voltear) */
+    /* En pantalla, igual que en la hoja: 2 columnas (frente y, al lado, su reverso) */
     @media (min-width: 640px) { .wg-tj-hoja { grid-template-columns: repeat(2, 85.6mm); } }
     .wg-tj-celda {
       width: 85.6mm;
@@ -205,7 +197,6 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
     .wg-tj-qr wg-qr-llave { width: 100%; height: 100%; }
 
     /* Reverso */
-    .wg-tj-vacia { outline: none; }
     .wg-tj-banda { position: absolute; left: 0; right: 0; top: 4.5mm; height: 9mm; background: #0a0f1c; }
     .wg-tj-firma {
       position: absolute; left: 4.6mm; top: 16.4mm; width: 52mm; height: 8.4mm; box-sizing: border-box;
@@ -237,12 +228,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         grid-template-columns: repeat(2, 85.6mm);
         gap: 3mm 4mm;
         margin: 0;
-        /* Cada grupo de 8 tarjetas (y su reverso) en su propia hoja */
-        break-after: page;
-        page-break-after: always;
       }
-      body.${CLASE_BODY} .wg-tj-hoja:last-child { break-after: auto; page-break-after: auto; }
-      body.${CLASE_BODY} .wg-tj-vacia { visibility: hidden; }
       body.${CLASE_BODY} .wg-tj-tarjeta { box-shadow: none; }
       body.${CLASE_BODY} * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
@@ -282,29 +268,12 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
 
   /** Qué lado imprimir: frente, reverso o ambos (doble cara). */
   readonly lados: { id: 'frente' | 'reverso' | 'ambas'; texto: string }[] = [
+    { id: 'ambas', texto: 'wg.cuentas.tarjetas.ambas' },
     { id: 'frente', texto: 'wg.cuentas.tarjetas.frente' },
     { id: 'reverso', texto: 'wg.cuentas.tarjetas.reverso' },
-    { id: 'ambas', texto: 'wg.cuentas.tarjetas.ambas' },
   ];
-  lado: 'frente' | 'reverso' | 'ambas' = 'frente';
-
-  /** Tarjetas por hoja A4 (2 columnas × 4 filas). */
-  private readonly porHoja = 8;
-  get hojas(): TarjetaImprimir[][] {
-    const v = this.visibles, h: TarjetaImprimir[][] = [];
-    for (let i = 0; i < v.length; i += this.porHoja) h.push(v.slice(i, i + this.porHoja));
-    return h;
-  }
-
-  /**
-   * Orden del reverso: en cada fila se invierten las dos columnas (al voltear la hoja, la tarjeta de la izquierda
-   * queda a la derecha). Si la última fila tiene una sola, su reverso va a la derecha.
-   */
-  espejo(hoja: TarjetaImprimir[]): (TarjetaImprimir | null)[] {
-    const r: (TarjetaImprimir | null)[] = [];
-    for (let i = 0; i < hoja.length; i += 2) r.push(hoja[i + 1] ?? null, hoja[i]);
-    return r;
-  }
+  /** Por defecto, cada tarjeta con su frente y al lado su reverso. */
+  lado: 'frente' | 'reverso' | 'ambas' = 'ambas';
 
   get visibles(): TarjetaImprimir[] {
     return this.paisId ? this.tarjetas.filter((t) => t.pais_id === this.paisId) : this.tarjetas;
