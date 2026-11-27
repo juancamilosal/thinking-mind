@@ -437,7 +437,15 @@
         "variosRoles": "Vous pouvez cocher plusieurs rôles (par exemple, Enseignant et Caissier).",
         "encargoBanco": "Banque de {{pais}}",
         "encargoCaja": "Caisse",
-        "porPagina": "Par page"
+        "porPagina": "Par page",
+        "avisoVinculado": "{{nombre}} avait déjà un compte sur la plateforme : il est maintenant aussi collaborateur Will-Go. Il se connecte à Will-Go avec le même e-mail ({{correo}}) et le même mot de passe.",
+        "avisoDesvinculado": "{{nombre}} n'est plus collaborateur Will-Go. Son compte sur la plateforme ne change pas.",
+        "quitarDeWillGo": "Retirer de Will-Go",
+        "cuentaPlataforma": "Compte de la plateforme · {{rol}}",
+        "vinculadoAyuda": "Cette personne avait déjà un compte sur la plateforme : elle garde son rôle et son mot de passe, et dans Will-Go elle a les rôles que vous lui attribuez.",
+        "confQuitarTitulo": "Retirer {{nombre}} de Will-Go ?",
+        "confQuitarTexto": "Il cesse d'être collaborateur Will-Go, mais son compte sur la plateforme n'est ni supprimé ni modifié.",
+        "correoExistente": "Si l'e-mail a déjà un compte sur la plateforme (par exemple, dans AYO), il est lié : il se connectera à Will-Go avec le même mot de passe."
       },
       "ed": {
         "titulo": "Éditions",

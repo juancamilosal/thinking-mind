@@ -84,3 +84,13 @@ test('un colaborador puede tener varios roles; el administrativo va solo', () =>
 	assert.deepEqual(leerRolesExtra(['administrativo', 'x', 'banco']), ['banco']);
 	assert.deepEqual(llavesDe(rolesDe(R.CAJERO, null)), ['cajero']);
 });
+
+import { esVinculado } from '../src/lib.js';
+test('una cuenta de otra parte de la plataforma se vincula a Will-Go con solo sus roles de Will-Go', () => {
+	assert.equal(esVinculado('Docente'), true);
+	assert.equal(esVinculado(R.DOCENTE), false);
+	assert.equal(esVinculado(R.ADMIN), false);
+	assert.deepEqual(llavesDe(rolesDe('Docente', ['docente', 'cajero'])), ['docente', 'cajero']);
+	assert.deepEqual(llavesDe(rolesDe('Docente', null)), []);
+	assert.deepEqual(llavesDe(rolesDe(R.ADMIN, ['docente'])), []);
+});

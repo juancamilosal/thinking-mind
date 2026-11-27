@@ -56,6 +56,10 @@ export interface Funcionario {
   roles?: Exclude<RolWillGo, 'administrador'>[];
   /** Ediciones vigentes en las que está. */
   ediciones_activas?: EdicionActivaColaborador[];
+  /** Cuenta de otra parte de la plataforma (p. ej. AYO) vinculada a Will-Go: conserva su rol y su contraseña. */
+  vinculado?: boolean;
+  /** Rol que tiene en la plataforma, si está vinculada. */
+  rol_plataforma?: string | null;
 }
 
 export interface NuevoFuncionario {
@@ -419,8 +423,8 @@ export class WillGoService {
     return this.http.get<{ data: Funcionario[] }>(`${this.api}/funcionarios`).pipe(this.enZona(), map((r) => r.data));
   }
 
-  crearFuncionario(datos: NuevoFuncionario): Observable<{ funcionario: Funcionario; clave_temporal: string }> {
-    return this.http.post<{ data: { funcionario: Funcionario; clave_temporal: string } }>(`${this.api}/funcionarios`, datos)
+  crearFuncionario(datos: NuevoFuncionario): Observable<{ funcionario: Funcionario; clave_temporal: string | null; vinculado?: boolean }> {
+    return this.http.post<{ data: { funcionario: Funcionario; clave_temporal: string | null; vinculado?: boolean } }>(`${this.api}/funcionarios`, datos)
       .pipe(this.enZona(), map((r) => r.data));
   }
 
@@ -429,8 +433,8 @@ export class WillGoService {
   }
 
   /** Elimina un colaborador (solo si nunca movió nada en Will-Go; si no, hay que desactivarlo). */
-  eliminarFuncionario(id: string): Observable<{ eliminado: boolean }> {
-    return this.http.delete<{ data: { eliminado: boolean } }>(`${this.api}/funcionarios/${id}`).pipe(this.enZona(), map((r) => r.data));
+  eliminarFuncionario(id: string): Observable<{ eliminado: boolean; desvinculado?: boolean }> {
+    return this.http.delete<{ data: { eliminado: boolean; desvinculado?: boolean } }>(`${this.api}/funcionarios/${id}`).pipe(this.enZona(), map((r) => r.data));
   }
 
   restablecerClave(id: string): Observable<{ funcionario: Funcionario; clave_temporal: string }> {

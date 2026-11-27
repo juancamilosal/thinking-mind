@@ -31,11 +31,23 @@ export function leerRolesExtra(valor) {
 	return Array.isArray(lista) ? [...new Set(lista.filter((r) => ROLES_COMBINABLES.includes(r)))] : [];
 }
 
-/** Todos los roles (nombres de Directus) de un usuario: el principal y los extra (solo si el principal es combinable). */
+/**
+ * Todos los roles de Will-Go (nombres de Directus) de un usuario:
+ * - rol principal de Will-Go combinable (docente, banco, cajero): el principal y los extra;
+ * - administrativo o administrador: solo ese;
+ * - cuenta de otra parte de la plataforma (p. ej. AYO) vinculada a Will-Go: solo sus roles de Will-Go (los extra).
+ */
 export function rolesDe(rolPrincipal, extra) {
 	const principalLlave = LLAVE_DE_ROL[rolPrincipal];
-	if (!ROLES_COMBINABLES.includes(principalLlave)) return rolPrincipal ? [rolPrincipal] : [];
-	return [...new Set([rolPrincipal, ...leerRolesExtra(extra).map((k) => LLAVES_ROL[k])])];
+	if (rolPrincipal === ROLES.ADMIN || principalLlave === 'administrativo') return [rolPrincipal];
+	const extras = leerRolesExtra(extra).map((k) => LLAVES_ROL[k]);
+	if (!ROLES_COMBINABLES.includes(principalLlave)) return [...new Set(extras)];
+	return [...new Set([rolPrincipal, ...extras])];
+}
+
+/** ¿Es una cuenta de otra parte de la plataforma vinculada a Will-Go (su rol principal no es de Will-Go)? */
+export function esVinculado(rolPrincipal) {
+	return !!rolPrincipal && rolPrincipal !== ROLES.ADMIN && !LLAVE_DE_ROL[rolPrincipal];
 }
 
 /** Llaves de los roles de un usuario, empezando por el principal. */
@@ -55,8 +67,11 @@ export async function rolDelUsuario(db, accountability, pedido = null) {
 		.where('u.id', accountability.user)
 		.first('r.name as nombre', 'u.wge_roles_extra');
 	if (!fila?.nombre) return null;
+	const roles = rolesDe(fila.nombre, fila.wge_roles_extra);
 	const pedidoNombre = typeof pedido === 'string' ? LLAVES_ROL[pedido] : null;
-	return pedidoNombre && rolesDe(fila.nombre, fila.wge_roles_extra).includes(pedidoNombre) ? pedidoNombre : fila.nombre;
+	if (pedidoNombre && roles.includes(pedidoNombre)) return pedidoNombre;
+	// Una cuenta vinculada (p. ej. de AYO) trabaja en Will-Go con su primer rol de Will-Go
+	return esVinculado(fila.nombre) && roles.length ? roles[0] : fila.nombre;
 }
 
 /** ¿El usuario tiene ese rol (principal o extra)? */

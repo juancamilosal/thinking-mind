@@ -1,7 +1,7 @@
 // Funcionarios de WILL-GO ECONOMY: quién soy, cambio de clave y perfiles que crea el Administrativo.
 // Las cuentas se crean con el servicio de usuarios de Directus (que cifra la clave), pero solo
 // con roles de Will Go: desde aquí nunca se puede crear ni tocar un usuario de otra parte de la plataforma.
-import { WgeError, ROLES, exigirRol, exigirTexto, rolesDe, llavesDe, ROLES_COMBINABLES } from './lib.js';
+import { WgeError, ROLES, exigirRol, exigirTexto, rolesDe, llavesDe, ROLES_COMBINABLES, esVinculado } from './lib.js';
 
 /** Roles que maneja la pantalla de funcionarios. */
 export const ROLES_FUNCIONARIOS = {
@@ -12,6 +12,7 @@ export const ROLES_FUNCIONARIOS = {
 };
 const NOMBRES_FUNCIONARIOS = Object.values(ROLES_FUNCIONARIOS);
 const LLAVE_POR_NOMBRE = Object.fromEntries(Object.entries(ROLES_FUNCIONARIOS).map(([k, v]) => [v, k]));
+const ROLES_FUNCIONARIOS_LLAVE = LLAVE_POR_NOMBRE;
 
 /** Clave temporal fácil de dictar: sin letras que se confunden (0/O, 1/l/I). */
 export function claveTemporal() {
@@ -51,15 +52,23 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		return r.id;
 	};
 
+	// Colaboradores: cuentas con rol de Will-Go y cuentas de otras partes de la plataforma vinculadas (con roles de Will-Go)
 	const consultaFuncionarios = () => db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
-		.whereIn('r.name', NOMBRES_FUNCIONARIOS)
+		.where((w) => w.whereIn('r.name', NOMBRES_FUNCIONARIOS)
+			.orWhere((v) => v.whereNot('r.name', ROLES.ADMIN).whereNotNull('u.wge_roles_extra').whereRaw("u.wge_roles_extra::text not in ('[]', 'null')")))
 		.select('u.id', 'u.first_name as nombre', 'u.last_name as apellido', 'u.email', 'u.tipo_documento', 'u.numero_documento',
 			'u.celular', 'u.status as estado', 'u.last_access as ultimo_ingreso', 'u.debe_cambiar_clave', 'r.name as rol_nombre', 'u.wge_roles_extra');
 
 	// rol: el principal; roles: todos los que tiene, empezando por el principal
-	const comoFuncionario = ({ wge_roles_extra, ...u }) => ({
-		...u, rol: LLAVE_POR_NOMBRE[u.rol_nombre], roles: llavesDe(rolesDe(u.rol_nombre, wge_roles_extra)), debe_cambiar_clave: !!u.debe_cambiar_clave,
-	});
+	const comoFuncionario = ({ wge_roles_extra, ...u }) => {
+		const roles = llavesDe(rolesDe(u.rol_nombre, wge_roles_extra));
+		const vinculado = esVinculado(u.rol_nombre);
+		return {
+			...u, rol: vinculado ? roles[0] : LLAVE_POR_NOMBRE[u.rol_nombre], roles, debe_cambiar_clave: !!u.debe_cambiar_clave,
+			// Cuenta de otra parte de la plataforma: conserva su rol y su contraseña; en Will-Go solo tiene sus roles de Will-Go
+			vinculado, rol_plataforma: vinculado ? u.rol_nombre : null,
+		};
+	};
 
 	/**
 	 * Ediciones vigentes (no cerradas y sin pasar su fecha final) en las que está cada colaborador,
@@ -115,6 +124,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			rol: rol === ROLES.ADMIN ? 'administrador' : (LLAVE_POR_NOMBRE[rol] ?? null),
 			// Todos los roles asignados (quien tiene varios elige con cuál trabajar)
 			roles: rol === ROLES.ADMIN ? ['administrador'] : llavesDe(rolesDe(principal?.nombre, u.wge_roles_extra)),
+			vinculado: esVinculado(principal?.nombre),
 			es_will_go: esWillGo, debe_cambiar_clave: !!u.debe_cambiar_clave,
 		};
 	}));
@@ -145,8 +155,17 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		const rolNombre = roles.principal;
 		puedeManejar(rol, rolNombre);
 		const email = validarCorreo(b.email);
-		if (await db('directus_users').whereRaw('lower(email) = ?', [email]).first('id')) {
-			throw new WgeError(409, 'CORREO_EXISTE', 'Ya existe un usuario con ese correo');
+		const existente = await db('directus_users as u').leftJoin('directus_roles as r', 'r.id', 'u.role')
+			.whereRaw('lower(u.email) = ?', [email]).first('u.id', 'r.name as rol_nombre', 'u.wge_roles_extra');
+		if (existente) {
+			// Ya es colaborador de Will-Go (o administrador): no se crea de nuevo
+			if (!esVinculado(existente.rol_nombre) || rolesDe(existente.rol_nombre, existente.wge_roles_extra).length) {
+				throw new WgeError(409, 'CORREO_EXISTE', 'Ya existe un colaborador de Will-Go con ese correo');
+			}
+			// Cuenta de otra parte de la plataforma (p. ej. AYO): se vincula. Conserva su rol, sus datos y su contraseña;
+			// en Will-Go recibe los roles pedidos (todos como roles de Will-Go).
+			await (await usuarios()).updateOne(existente.id, { wge_roles_extra: [ROLES_FUNCIONARIOS_LLAVE[roles.principal], ...roles.extra] });
+			return { funcionario: comoFuncionario(await funcionarioExistente(existente.id)), clave_temporal: null, vinculado: true };
 		}
 		const clave = claveTemporal();
 		const id = await (await usuarios()).createOne({
@@ -176,10 +195,17 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			cambios.status = b.estado;
 		}
 		const roles = leerRoles(b);
+		const vinculado = esVinculado(actual.rol_nombre);
+		if (vinculado && b.estado !== undefined) throw new WgeError(409, 'VINCULADO', 'Esta cuenta es de otra parte de la plataforma: para que no use Will-Go, quítala de Will-Go');
 		if (roles) {
 			puedeManejar(rol, roles.principal);
-			cambios.role = await idDelRol(roles.principal);
-			cambios.wge_roles_extra = roles.extra;
+			if (vinculado) {
+				// Su rol de la plataforma no se toca: solo cambian sus roles de Will-Go
+				cambios.wge_roles_extra = [LLAVE_POR_NOMBRE[roles.principal], ...roles.extra];
+			} else {
+				cambios.role = await idDelRol(roles.principal);
+				cambios.wge_roles_extra = roles.extra;
+			}
 		}
 		if (Object.keys(cambios).length) await (await usuarios()).updateOne(req.params.id, cambios);
 		return comoFuncionario(await funcionarioExistente(req.params.id));
@@ -195,6 +221,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		puedeManejar(rol, actual.rol_nombre);
 		const id = req.params.id;
 		if (id === req.accountability.user) throw new WgeError(409, 'VALOR_INVALIDO', 'No puedes eliminar tu propio usuario');
+		const vinculado = esVinculado(actual.rol_nombre);
 		// Solo se bloquea si tiene historial en ediciones que siguen activas (en preparación o abiertas).
 		// Lo de ediciones cerradas se conserva, pero sin su nombre (el «quién» queda en blanco).
 		const activas = db('wge_ediciones').whereNot('estado', 'cerrada').select('id');
@@ -226,6 +253,11 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 			await trx('wge_arqueos').where('user_created', id).update({ user_created: null });
 			await trx('wge_equipo').where('user_created', id).update({ user_created: null });
 		});
+		// Una cuenta vinculada no se borra (es de otra parte de la plataforma): solo deja de ser colaborador de Will-Go
+		if (vinculado) {
+			await (await usuarios()).updateOne(id, { wge_roles_extra: null });
+			return { eliminado: false, desvinculado: true };
+		}
 		await (await usuarios()).deleteOne(id);
 		return { eliminado: true };
 	}));
@@ -235,6 +267,7 @@ export function rutasFuncionarios(router, { ruta, db, services, getSchema }) {
 		exigirRol(rol, ROLES.ADMIN_WG);
 		const actual = await funcionarioExistente(req.params.id);
 		puedeManejar(rol, actual.rol_nombre);
+		if (esVinculado(actual.rol_nombre)) throw new WgeError(409, 'VINCULADO', 'Esta cuenta es de otra parte de la plataforma: usa su misma contraseña');
 		const clave = claveTemporal();
 		await (await usuarios()).updateOne(req.params.id, { password: clave, debe_cambiar_clave: true });
 		return { funcionario: comoFuncionario(await funcionarioExistente(req.params.id)), clave_temporal: clave };
