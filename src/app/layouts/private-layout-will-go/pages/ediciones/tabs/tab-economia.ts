@@ -5,15 +5,14 @@ import { TabPaises } from './tab-paises';
 import { TabReglas } from './tab-reglas';
 import { TabHorario } from './tab-horario';
 import { TabFondos } from './tab-fondos';
-import { TabGrupos } from './tab-grupos';
 
-type Seccion = 'paises' | 'grupos' | 'reglas' | 'horario' | 'fondos';
+type Seccion = 'paises' | 'reglas' | 'horario' | 'fondos';
 
 /** Pestaña Economía: agrupa países y banco, reglas de la tasa, horario y fondos. */
 @Component({
   selector: 'app-tab-economia',
   standalone: true,
-  imports: [TabPaises, TabGrupos, TabReglas, TabHorario, TabFondos, TranslatePipe],
+  imports: [TabPaises, TabReglas, TabHorario, TabFondos, TranslatePipe],
   template: `
     <div class="flex flex-wrap gap-1" role="tablist">
       @for (s of secciones; track s.id) {
@@ -27,7 +26,6 @@ type Seccion = 'paises' | 'grupos' | 'reglas' | 'horario' | 'fondos';
     <div class="mt-5">
       @switch (seccion) {
         @case ('paises') { <app-tab-paises [edicion]="edicion" /> }
-        @case ('grupos') { <app-tab-grupos [edicion]="edicion" /> }
         @case ('reglas') { <app-tab-reglas [edicion]="edicion" (guardada)="guardada.emit($event)" /> }
         @case ('horario') { <app-tab-horario [edicion]="edicion" (guardada)="guardada.emit($event)" /> }
         @case ('fondos') { <app-tab-fondos [edicion]="edicion" /> }
@@ -40,7 +38,6 @@ export class TabEconomia {
   @Output() guardada = new EventEmitter<Edicion>();
   readonly secciones: { id: Seccion; texto: string }[] = [
     { id: 'paises', texto: 'wg.admin.eco.paises' },
-    { id: 'grupos', texto: 'wg.admin.eco.grupos' },
     { id: 'reglas', texto: 'wg.admin.eco.reglas' },
     { id: 'horario', texto: 'wg.admin.eco.horario' },
     { id: 'fondos', texto: 'wg.admin.eco.fondos' },
