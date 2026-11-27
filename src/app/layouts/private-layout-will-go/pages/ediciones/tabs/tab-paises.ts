@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Edicion, Funcionario, Pais, WillGoService } from '../../../../../core/services/will-go.service';
 import { NumeroMilesDirective, formatearNumero } from '../../../numero-miles.directive';
@@ -10,14 +11,20 @@ import { ESTILOS_CAMPOS } from './estilos-tabs';
 @Component({
   selector: 'app-tab-paises',
   standalone: true,
-  imports: [FormsModule, NumeroMilesDirective, BuscadorPersonaComponent, TranslatePipe],
+  imports: [FormsModule, RouterLink, NumeroMilesDirective, BuscadorPersonaComponent, TranslatePipe],
   template: `
     @if (cargando) {
       <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-500">{{ 'wg.pestanas.comun.cargando' | translate }}</div>
     } @else {
       <!-- Logo del banco -->
-      <div class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex items-center justify-center sm:justify-start">
+      <div class="mb-5 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row items-center gap-3 sm:justify-between">
         <img src="assets/images/will-go/gobank-logo.png" alt="GO.BANK · Save · Invest · Grow" class="h-14 sm:h-16 w-auto max-w-full">
+        <!-- Tarjetas débito de los estudiantes de la edición (frente y reverso) -->
+        <a [routerLink]="['/private-will-go/tarjetas']" [queryParams]="{ edicion: edicion.id }" target="_blank"
+           class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          {{ 'wg.pestanas.paises.tarjetasDebito' | translate }}
+        </a>
       </div>
       <!-- Resumen de los países -->
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
