@@ -883,7 +883,8 @@
       "sacados": "Done: {{n}} student(s) now have no group.",
       "verTodos": "All",
       "estudiantes": "students",
-      "estudiante": "student"
+      "estudiante": "student",
+      "crearEn": "+ Create group in {{pais}}"
     },
     "montobanco": {
       "efectivo": "Cash",
@@ -1584,7 +1585,7 @@
         "grupoWillGo": "Group",
         "grupoDe": "{{nombre}}'s group",
         "sinGrupoWillGo": "No group",
-        "sinGruposPais": "No groups"
+        "sinGruposPais": "No groups yet"
       },
       "equipo": {
         "intro": "Only the staff on this list can operate in the edition: give money, charge at the store or distribute from the bank.",

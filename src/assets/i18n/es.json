@@ -883,7 +883,8 @@
       "sacados": "Listo: {{n}} estudiante(s) quedaron sin grupo.",
       "verTodos": "Todos",
       "estudiantes": "estudiantes",
-      "estudiante": "estudiante"
+      "estudiante": "estudiante",
+      "crearEn": "+ Crear grupo en {{pais}}"
     },
     "montobanco": {
       "efectivo": "Efectivo",
@@ -1584,7 +1585,7 @@
         "grupoWillGo": "Grupo",
         "grupoDe": "Grupo de {{nombre}}",
         "sinGrupoWillGo": "Sin grupo",
-        "sinGruposPais": "Sin grupos"
+        "sinGruposPais": "Sin grupos aún"
       },
       "equipo": {
         "intro": "Solo los colaboradores de esta lista pueden operar en la edición: entregar dinero, cobrar en la tienda o repartir desde el banco.",

@@ -883,7 +883,8 @@
       "sacados": "C'est fait : {{n}} élève(s) sans groupe.",
       "verTodos": "Tous",
       "estudiantes": "élèves",
-      "estudiante": "élève"
+      "estudiante": "élève",
+      "crearEn": "+ Créer un groupe à {{pais}}"
     },
     "montobanco": {
       "efectivo": "Espèces",
@@ -1584,7 +1585,7 @@
         "grupoWillGo": "Groupe",
         "grupoDe": "Groupe de {{nombre}}",
         "sinGrupoWillGo": "Sans groupe",
-        "sinGruposPais": "Aucun groupe"
+        "sinGruposPais": "Pas de groupes"
       },
       "equipo": {
         "intro": "Seuls les collaborateurs de cette liste peuvent opérer dans l'édition : remettre de l'argent, encaisser au magasin ou distribuer depuis la banque.",

@@ -116,6 +116,10 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
           @for (p of paises; track p.id) {
             <button type="button" (click)="asignarSeleccion(p.id)" class="px-3 py-1.5 rounded-lg text-sm font-semibold" [style.background]="p.color">{{ p.nombre }}</button>
           }
+          @if (!gruposSeleccion.length && paisUnicoSeleccion) {
+            <!-- El país de los seleccionados todavía no tiene grupos -->
+            <button type="button" (click)="nuevoGrupo(paisUnicoSeleccion)" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-900 bg-white hover:bg-gray-100">{{ 'wg.grupos.crearEn' | translate: { pais: nombrePais(paisUnicoSeleccion) } }}</button>
+          }
           @if (gruposSeleccion.length) {
             <select [ngModel]="''" (ngModelChange)="asignarGrupoSeleccion($event)" [attr.aria-label]="'wg.grupos.agregarA' | translate"
                     class="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-900 bg-white">
@@ -178,7 +182,7 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
                 </select>
                 <select class="w-full min-w-0 px-3 py-2.5 rounded-xl border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:bg-gray-50 disabled:text-gray-400"
                         [style.border-color]="colorGrupo(p.grupo_id) || '#e5e7eb'" [disabled]="!!p.retirado || !p.pais_id || !gruposDe(p.pais_id).length" [ngModel]="p.grupo_id ?? null" (ngModelChange)="asignarGrupo(p, $event)" [attr.aria-label]="'wg.pestanas.participantes.grupoDe' | translate: { nombre: p.nombre }">
-                  <option [ngValue]="null">{{ (p.pais_id && gruposDe(p.pais_id).length ? 'wg.pestanas.participantes.sinGrupoWillGo' : 'wg.pestanas.participantes.sinGruposPais') | translate }}</option>
+                  <option [ngValue]="null">{{ (p.pais_id && gruposDe(p.pais_id).length ? 'wg.pestanas.participantes.sinGrupoWillGo' : 'wg.pestanas.participantes.sinGruposPais') | translate: { pais: nombrePais(p.pais_id) } }}</option>
                   @for (g of gruposDe(p.pais_id); track g.id) { <option [ngValue]="g.id">{{ g.nombre }}</option> }
                 </select>
                 </div>
@@ -218,7 +222,7 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
               </select>
               <select class="col-start-2 xl:col-start-auto min-w-0 px-3 py-2 rounded-lg border-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:bg-gray-50 disabled:text-gray-400"
                         [style.border-color]="colorGrupo(p.grupo_id) || '#e5e7eb'" [disabled]="!!p.retirado || !p.pais_id || !gruposDe(p.pais_id).length" [ngModel]="p.grupo_id ?? null" (ngModelChange)="asignarGrupo(p, $event)" [attr.aria-label]="'wg.pestanas.participantes.grupoDe' | translate: { nombre: p.nombre }">
-                  <option [ngValue]="null">{{ (p.pais_id && gruposDe(p.pais_id).length ? 'wg.pestanas.participantes.sinGrupoWillGo' : 'wg.pestanas.participantes.sinGruposPais') | translate }}</option>
+                  <option [ngValue]="null">{{ (p.pais_id && gruposDe(p.pais_id).length ? 'wg.pestanas.participantes.sinGrupoWillGo' : 'wg.pestanas.participantes.sinGruposPais') | translate: { pais: nombrePais(p.pais_id) } }}</option>
                   @for (g of gruposDe(p.pais_id); track g.id) { <option [ngValue]="g.id">{{ g.nombre }}</option> }
                 </select>
               <span class="col-start-2 xl:col-start-auto xl:text-right text-sm font-semibold text-gray-800">{{ miles(p.saldo) }} <span class="text-xs font-normal text-gray-500">{{ monedaDe(p.pais_id) }}</span></span>
@@ -346,6 +350,11 @@ export class TabParticipantes implements OnInit {
   }
 
   /** Grupos que se pueden asignar a la selección: los del país de los seleccionados (si todos son del mismo). */
+  /** País de los seleccionados, si todos son del mismo (si no, null). */
+  get paisUnicoSeleccion(): string | null {
+    const paises = new Set(this.seleccionLista.map((p) => p.pais_id));
+    return paises.size === 1 ? [...paises][0] ?? null : null;
+  }
   get gruposSeleccion(): Grupo[] {
     const paises = new Set(this.seleccionLista.map((p) => p.pais_id));
     if (paises.size !== 1) return [];
@@ -366,8 +375,8 @@ export class TabParticipantes implements OnInit {
     });
   }
 
-  nuevoGrupo(): void {
-    const pais = this.paisDelFiltro ?? this.paises[0]?.id ?? '';
+  nuevoGrupo(paisId?: string | null): void {
+    const pais = paisId ?? this.paisDelFiltro ?? this.paises[0]?.id ?? '';
     this.errorGrupo = '';
     this.borradorGrupo = { pais_id: pais, nombre: '', color: this.coloresGrupo[this.gruposDe(pais).length % this.coloresGrupo.length] };
   }
@@ -390,6 +399,8 @@ export class TabParticipantes implements OnInit {
         // Si el grupo cambió de país, sus estudiantes quedaron sin grupo
         if (anterior && anterior.pais_id !== g.pais_id) this.activos.forEach((p) => { if (p.grupo_id === g.id) p.grupo_id = null; });
         this.gruposWillGo = anterior ? this.gruposWillGo.map((x) => (x.id === g.id ? g : x)) : [...this.gruposWillGo, g];
+        // Si se creó desde la barra de selección, los seleccionados (de ese país) entran de una vez al grupo nuevo
+        if (!anterior && this.seleccion.size && this.paisUnicoSeleccion === g.pais_id) this.asignarGrupoSeleccion(g.id);
         this.guardandoGrupo = false;
         this.borradorGrupo = null;
         this.mostrar(this.t.instant('wg.grupos.guardado', { nombre: g.nombre }), false);
