@@ -880,7 +880,10 @@
       "eliminarA": "Eliminar el grupo {{nombre}}",
       "nuevoTituloCorto": "Nuevo grupo",
       "agregados": "Listo: {{n}} estudiante(s) agregados al grupo.",
-      "sacados": "Listo: {{n}} estudiante(s) quedaron sin grupo."
+      "sacados": "Listo: {{n}} estudiante(s) quedaron sin grupo.",
+      "verTodos": "Todos",
+      "estudiantes": "estudiantes",
+      "estudiante": "estudiante"
     },
     "montobanco": {
       "efectivo": "Efectivo",
@@ -1581,9 +1584,7 @@
         "grupoWillGo": "Grupo",
         "grupoDe": "Grupo de {{nombre}}",
         "sinGrupoWillGo": "Sin grupo",
-        "sinGruposPais": "Sin grupos",
-        "filtrarGrupoWillGo": "Filtrar por grupo de Will-Go",
-        "todosGruposWillGo": "Todos los grupos Will-Go"
+        "sinGruposPais": "Sin grupos"
       },
       "equipo": {
         "intro": "Solo los colaboradores de esta lista pueden operar en la edición: entregar dinero, cobrar en la tienda o repartir desde el banco.",

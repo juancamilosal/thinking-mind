@@ -880,7 +880,10 @@
       "eliminarA": "Supprimer le groupe {{nombre}}",
       "nuevoTituloCorto": "Nouveau groupe",
       "agregados": "C'est fait : {{n}} élève(s) ajouté(s) au groupe.",
-      "sacados": "C'est fait : {{n}} élève(s) sans groupe."
+      "sacados": "C'est fait : {{n}} élève(s) sans groupe.",
+      "verTodos": "Tous",
+      "estudiantes": "élèves",
+      "estudiante": "élève"
     },
     "montobanco": {
       "efectivo": "Espèces",
@@ -1581,9 +1584,7 @@
         "grupoWillGo": "Groupe",
         "grupoDe": "Groupe de {{nombre}}",
         "sinGrupoWillGo": "Sans groupe",
-        "sinGruposPais": "Aucun groupe",
-        "filtrarGrupoWillGo": "Filtrer par groupe Will-Go",
-        "todosGruposWillGo": "Tous les groupes Will-Go"
+        "sinGruposPais": "Aucun groupe"
       },
       "equipo": {
         "intro": "Seuls les collaborateurs de cette liste peuvent opérer dans l'édition : remettre de l'argent, encaisser au magasin ou distribuer depuis la banque.",

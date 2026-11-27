@@ -38,25 +38,49 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
       }
     </div>
 
-    <!-- Grupos de Will-Go: etiquetas compactas (tocar una filtra la lista; ✎ edita; ✕ elimina) -->
-    <section class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3">
+    <!-- Grupos de Will-Go: tarjetas de color; tocar una filtra la lista (✎ edita, ✕ elimina) -->
+    <section class="mt-4">
       <div class="flex items-center justify-between gap-3">
         <h3 class="text-sm font-bold text-gray-800">{{ 'wg.grupos.titulo' | translate }}</h3>
         <button type="button" (click)="nuevoGrupo()" [disabled]="!paises.length" class="shrink-0 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-40">{{ 'wg.grupos.nuevo' | translate }}</button>
       </div>
       @if (!gruposFiltro.length) {
-        <p class="mt-2 text-xs text-gray-500">{{ 'wg.grupos.vacioCorto' | translate }}</p>
+        <p class="mt-2 rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-4 text-sm text-gray-500">{{ 'wg.grupos.vacioCorto' | translate }}</p>
       } @else {
-        <div class="mt-2 flex flex-wrap gap-2">
+        <div class="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <!-- Todos -->
+          <button type="button" (click)="filtroGrupoWillGo = ''; seleccion.clear()"
+                  class="text-left rounded-2xl px-4 py-3 border-2 bg-white transition hover:shadow-md"
+                  [class]="!filtroGrupoWillGo ? 'border-slate-800 shadow-md' : 'border-gray-200'">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ 'wg.grupos.verTodos' | translate }}</p>
+            <p class="mt-1 text-2xl font-extrabold text-gray-800">{{ totalVisibles }}</p>
+            <p class="text-xs text-gray-500">{{ (totalVisibles === 1 ? 'wg.grupos.estudiante' : 'wg.grupos.estudiantes') | translate }}</p>
+          </button>
           @for (g of gruposFiltro; track g.id) {
-            <span class="inline-flex items-center rounded-full text-white text-sm font-semibold shadow-sm overflow-hidden" [style.background]="g.color || '#475569'"
-                  [class.ring-2]="filtroGrupoWillGo === g.id" [class.ring-offset-2]="filtroGrupoWillGo === g.id" [class.ring-gray-800]="filtroGrupoWillGo === g.id">
-              <button type="button" (click)="filtroGrupoWillGo = filtroGrupoWillGo === g.id ? '' : g.id; seleccion.clear()" class="pl-3 pr-2 py-1 hover:bg-black/10"
-                      [attr.aria-pressed]="filtroGrupoWillGo === g.id">{{ g.nombre }}@if (paises.length > 1 && !paisDelFiltro) { <span class="font-normal opacity-80"> · {{ nombrePais(g.pais_id) }}</span> } · {{ enGrupo(g.id) }}</button>
-              <button type="button" (click)="editarGrupo(g)" class="px-1.5 py-1 hover:bg-black/10" [attr.aria-label]="'wg.grupos.editarA' | translate: { nombre: g.nombre }">✎</button>
-              <button type="button" (click)="borrarGrupo(g)" class="pl-1 pr-2.5 py-1 hover:bg-black/10" [attr.aria-label]="'wg.grupos.eliminarA' | translate: { nombre: g.nombre }">✕</button>
-            </span>
+            <div class="group relative overflow-hidden rounded-2xl text-white shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
+                 [style.background]="fondoGrupo(g.color)"
+                 [class.ring-4]="filtroGrupoWillGo === g.id" [class.ring-offset-2]="filtroGrupoWillGo === g.id" [class.ring-slate-800]="filtroGrupoWillGo === g.id">
+              <span class="absolute -right-5 -bottom-7 w-20 h-20 rounded-full bg-white/15 pointer-events-none"></span>
+              <button type="button" (click)="filtroGrupoWillGo = filtroGrupoWillGo === g.id ? '' : g.id; seleccion.clear()" [attr.aria-pressed]="filtroGrupoWillGo === g.id"
+                      class="relative block w-full text-left px-4 pt-3 pb-11">
+                <p class="text-xs font-semibold uppercase tracking-wide opacity-85 truncate">{{ nombrePais(g.pais_id) }}</p>
+                <p class="mt-0.5 font-extrabold leading-tight break-words">{{ g.nombre }}</p>
+                <p class="absolute left-4 bottom-3 text-sm opacity-90"><b>{{ enGrupo(g.id) }}</b> {{ (enGrupo(g.id) === 1 ? 'wg.grupos.estudiante' : 'wg.grupos.estudiantes') | translate }}</p>
+              </button>
+              <div class="absolute bottom-2 right-2 flex gap-1">
+                <button type="button" (click)="editarGrupo(g)" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/35 text-sm flex items-center justify-center" [attr.aria-label]="'wg.grupos.editarA' | translate: { nombre: g.nombre }">✎</button>
+                <button type="button" (click)="borrarGrupo(g)" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/35 text-sm flex items-center justify-center" [attr.aria-label]="'wg.grupos.eliminarA' | translate: { nombre: g.nombre }">✕</button>
+              </div>
+            </div>
           }
+          <!-- Sin grupo -->
+          <button type="button" (click)="filtroGrupoWillGo = filtroGrupoWillGo === '__sin' ? '' : '__sin'; seleccion.clear()"
+                  class="text-left rounded-2xl px-4 py-3 border-2 border-dashed bg-white transition hover:shadow-md"
+                  [class]="filtroGrupoWillGo === '__sin' ? 'border-slate-800 shadow-md' : 'border-gray-300'">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ 'wg.pestanas.participantes.sinGrupoWillGo' | translate }}</p>
+            <p class="mt-1 text-2xl font-extrabold text-gray-800">{{ sinGrupoCuenta }}</p>
+            <p class="text-xs text-gray-500">{{ (sinGrupoCuenta === 1 ? 'wg.grupos.estudiante' : 'wg.grupos.estudiantes') | translate }}</p>
+          </button>
         </div>
       }
     </section>
@@ -78,16 +102,6 @@ import { ConfirmacionService } from '../../../../../core/services/confirmacion.s
           <option value="">{{ 'wg.pestanas.participantes.todosGrupos' | translate }}</option>
           @for (g of grupos; track g) { <option [value]="g">{{ 'wg.pestanas.participantes.grupo' | translate }} {{ g }}</option> }
         </select>
-        <!-- Grupo de Will-Go (dentro del país) -->
-        @if (gruposWillGo.length) {
-          <select [(ngModel)]="filtroGrupoWillGo" (ngModelChange)="seleccion.clear()" [attr.aria-label]="'wg.pestanas.participantes.filtrarGrupoWillGo' | translate"
-                  class="col-span-2 sm:col-span-1 min-w-0 sm:w-60 sm:shrink-0 px-4 py-3 bg-white border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
-                  [class]="filtroGrupoWillGo ? 'border-orange-300 text-gray-900 font-semibold' : 'border-gray-200 text-gray-600'">
-            <option value="">{{ 'wg.pestanas.participantes.todosGruposWillGo' | translate }}</option>
-            <option value="__sin">{{ 'wg.pestanas.participantes.sinGrupoWillGo' | translate }}</option>
-            @for (g of gruposFiltro; track g.id) { <option [value]="g.id">{{ g.nombre }}{{ paises.length > 1 ? ' · ' + nombrePais(g.pais_id) : '' }}</option> }
-          </select>
-        }
       </div>
     </div>
 
@@ -319,6 +333,17 @@ export class TabParticipantes implements OnInit {
   /** País elegido en los chips de arriba (o null). */
   get paisDelFiltro(): string | null { return ['', 'sin', 'retirados', 'reembolso'].includes(this.filtro) ? null : this.filtro; }
   enGrupo(id: string): number { return this.activos.filter((p) => p.grupo_id === id).length; }
+  /** Estudiantes del país elegido (o de todos) para las tarjetas «Todos» y «Sin grupo». */
+  private get delPaisFiltro(): Participante[] {
+    const pais = this.paisDelFiltro;
+    return this.activos.filter((p) => (pais ? p.pais_id === pais : !!p.pais_id));
+  }
+  get totalVisibles(): number { return this.delPaisFiltro.length; }
+  get sinGrupoCuenta(): number { return this.delPaisFiltro.filter((p) => !p.grupo_id).length; }
+  fondoGrupo(color: string | null): string {
+    const c = color || '#475569';
+    return `linear-gradient(135deg, ${c} 0%, color-mix(in srgb, ${c} 70%, #000) 100%)`;
+  }
 
   /** Grupos que se pueden asignar a la selección: los del país de los seleccionados (si todos son del mismo). */
   get gruposSeleccion(): Grupo[] {

@@ -880,7 +880,10 @@
       "eliminarA": "Delete group {{nombre}}",
       "nuevoTituloCorto": "New group",
       "agregados": "Done: {{n}} student(s) added to the group.",
-      "sacados": "Done: {{n}} student(s) now have no group."
+      "sacados": "Done: {{n}} student(s) now have no group.",
+      "verTodos": "All",
+      "estudiantes": "students",
+      "estudiante": "student"
     },
     "montobanco": {
       "efectivo": "Cash",
@@ -1581,9 +1584,7 @@
         "grupoWillGo": "Group",
         "grupoDe": "{{nombre}}'s group",
         "sinGrupoWillGo": "No group",
-        "sinGruposPais": "No groups",
-        "filtrarGrupoWillGo": "Filter by Will-Go group",
-        "todosGruposWillGo": "All Will-Go groups"
+        "sinGruposPais": "No groups"
       },
       "equipo": {
         "intro": "Only the staff on this list can operate in the edition: give money, charge at the store or distribute from the bank.",
