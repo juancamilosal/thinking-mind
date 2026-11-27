@@ -224,11 +224,13 @@ export class FuncionariosWillGo implements OnInit {
       });
     } else {
       this.willGo.crearFuncionario(datos).subscribe({
-        next: ({ funcionario, clave_temporal }) => {
+        next: ({ funcionario, clave_temporal, vinculado }) => {
           this.funcionarios = [...this.funcionarios, funcionario].sort((a, b) => `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`));
           this.formularioAbierto = false;
           this.guardando = false;
-          this.mostrarClave(funcionario, clave_temporal, true);
+          // Ya tenía cuenta en la plataforma: se vinculó; entra a Will-Go con su misma contraseña
+          if (vinculado || !clave_temporal) this.mostrarAviso(this.t.instant('wg.admin.col.avisoVinculado', { nombre: `${funcionario.nombre} ${funcionario.apellido}`, correo: funcionario.email }));
+          else this.mostrarClave(funcionario, clave_temporal, true);
         },
         error: (e) => this.falloFormulario(e),
       });
@@ -247,10 +249,10 @@ export class FuncionariosWillGo implements OnInit {
 
     if (tipo === 'eliminar') {
       this.willGo.eliminarFuncionario(funcionario.id).subscribe({
-        next: () => {
+        next: (r) => {
           this.funcionarios = this.funcionarios.filter((x) => x.id !== funcionario.id);
           terminar();
-          this.mostrarAviso(this.t.instant('wg.admin.col.avisoEliminado', { nombre: `${funcionario.nombre} ${funcionario.apellido}` }));
+          this.mostrarAviso(this.t.instant(r.desvinculado ? 'wg.admin.col.avisoDesvinculado' : 'wg.admin.col.avisoEliminado', { nombre: `${funcionario.nombre} ${funcionario.apellido}` }));
         },
         error: (e) => { terminar(); this.mostrarAviso(WillGoService.mensajeDeError(e)); },
       });

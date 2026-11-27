@@ -437,7 +437,15 @@
         "variosRoles": "Puedes marcar varios roles (por ejemplo, Docente y Cajero).",
         "encargoBanco": "Banco de {{pais}}",
         "encargoCaja": "Caja",
-        "porPagina": "Por página"
+        "porPagina": "Por página",
+        "avisoVinculado": "{{nombre}} ya tenía cuenta en la plataforma: ahora también es colaborador de Will-Go. Entra en Will-Go con su mismo correo ({{correo}}) y su misma contraseña.",
+        "avisoDesvinculado": "{{nombre}} ya no es colaborador de Will-Go. Su cuenta de la plataforma sigue igual.",
+        "quitarDeWillGo": "Quitar de Will-Go",
+        "cuentaPlataforma": "Cuenta de la plataforma · {{rol}}",
+        "vinculadoAyuda": "Esta persona ya tenía cuenta en la plataforma: conserva su rol y su contraseña, y en Will-Go tiene los roles que le asignes.",
+        "confQuitarTitulo": "¿Quitar a {{nombre}} de Will-Go?",
+        "confQuitarTexto": "Deja de ser colaborador de Will-Go, pero su cuenta de la plataforma no se borra ni cambia.",
+        "correoExistente": "Si el correo ya tiene cuenta en la plataforma (por ejemplo, en AYO), se vincula: entrará a Will-Go con su misma contraseña."
       },
       "ed": {
         "titulo": "Ediciones",

@@ -437,7 +437,15 @@
         "variosRoles": "You can check several roles (for example, Teacher and Cashier).",
         "encargoBanco": "{{pais}} bank",
         "encargoCaja": "Checkout",
-        "porPagina": "Per page"
+        "porPagina": "Per page",
+        "avisoVinculado": "{{nombre}} already had a platform account: they are now also a Will-Go team member. They sign in to Will-Go with the same email ({{correo}}) and password.",
+        "avisoDesvinculado": "{{nombre}} is no longer a Will-Go team member. Their platform account is unchanged.",
+        "quitarDeWillGo": "Remove from Will-Go",
+        "cuentaPlataforma": "Platform account · {{rol}}",
+        "vinculadoAyuda": "This person already had a platform account: they keep their role and password, and in Will-Go they have the roles you assign.",
+        "confQuitarTitulo": "Remove {{nombre}} from Will-Go?",
+        "confQuitarTexto": "They stop being a Will-Go team member, but their platform account is not deleted or changed.",
+        "correoExistente": "If the email already has a platform account (for example, in AYO), it is linked: they will sign in to Will-Go with the same password."
       },
       "ed": {
         "titulo": "Editions",

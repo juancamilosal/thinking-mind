@@ -633,7 +633,10 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 					and b.tipo_dueno = 'docente' and b.docente_id = q.usuario_id), 0)::int as billetes`))
 			.orderBy([{ column: 'u.first_name' }, { column: 'u.last_name' }]);
 		// rol: el principal; roles: todos los que tiene (p. ej. docente y cajero)
-		return filas.map(({ wge_roles_extra, ...f }) => ({ ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? null, roles: llavesDe(rolesDe(f.rol_nombre, wge_roles_extra)) }));
+		return filas.map(({ wge_roles_extra, ...f }) => {
+			const roles = llavesDe(rolesDe(f.rol_nombre, wge_roles_extra));
+			return { ...f, rol: ROLES_EQUIPO[f.rol_nombre] ?? roles[0] ?? null, roles };
+		});
 	}));
 
 	/**
@@ -673,8 +676,10 @@ export function rutasAdmin(router, { ruta, db, services, getSchema, env, logger 
 		const e = await edicionExistente(req.params.id);
 		const ids = Array.isArray(req.body?.usuario_ids) ? req.body.usuario_ids.filter((x) => typeof x === 'string') : [];
 		if (!ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'No hay colaboradores seleccionados');
-		const validos = await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role')
-			.whereIn('u.id', ids).whereIn('r.name', Object.keys(ROLES_EQUIPO)).pluck('u.id');
+		// Colaboradores de Will-Go: con rol de Will-Go o cuentas vinculadas con roles de Will-Go
+		const validos = (await db('directus_users as u').join('directus_roles as r', 'r.id', 'u.role').whereIn('u.id', ids)
+			.select('u.id', 'r.name as rol_nombre', 'u.wge_roles_extra'))
+			.filter((u) => ROLES_EQUIPO[u.rol_nombre] || rolesDe(u.rol_nombre, u.wge_roles_extra).length).map((u) => u.id);
 		if (validos.length !== ids.length) throw new WgeError(400, 'VALOR_INVALIDO', 'Algún usuario no es colaborador de Will Go');
 		const r = await db('wge_equipo').insert(validos.map((usuario_id) => nueva(req.accountability.user, {
 			edicion_id: e.id, usuario_id, clave_unica: `${e.id}:${usuario_id}`,
