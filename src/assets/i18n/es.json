@@ -1540,8 +1540,6 @@
         "sinInscritosAyudaColegio": "Cuando un estudiante se inscriba en el programa desde {{colegio}}, aparecerá aquí automáticamente.",
         "seleccionarTodos": "Seleccionar todos",
         "estudiante": "Estudiante",
-        "codigo": "Código",
-        "codigoAyuda": "Código corto del estudiante para buscarlo o escanearlo (QR) en la caja y al entregar dinero",
         "saldo": "Saldo",
         "presente": "Presente",
         "seleccionarA": "Seleccionar a {{nombre}}",
@@ -1585,7 +1583,13 @@
         "sinGrado": "Sin grado",
         "filtrarGrupo": "Filtrar por grupo",
         "todosGrupos": "Todos los grupos",
-        "grupo": "Grupo"
+        "grupo": "Grupo",
+        "grupoWillGo": "Grupo",
+        "grupoDe": "Grupo de {{nombre}}",
+        "sinGrupoWillGo": "Sin grupo",
+        "sinGruposPais": "Sin grupos",
+        "filtrarGrupoWillGo": "Filtrar por grupo de Will-Go",
+        "todosGruposWillGo": "Todos los grupos Will-Go"
       },
       "equipo": {
         "intro": "Solo los colaboradores de esta lista pueden operar en la edición: entregar dinero, cobrar en la tienda o repartir desde el banco.",

@@ -1540,8 +1540,6 @@
         "sinInscritosAyudaColegio": "When a student from {{colegio}} enrolls in the program, they will show up here automatically.",
         "seleccionarTodos": "Select all",
         "estudiante": "Student",
-        "codigo": "Code",
-        "codigoAyuda": "Student's short code to find or scan them (QR) at the register and when giving money",
         "saldo": "Balance",
         "presente": "Present",
         "seleccionarA": "Select {{nombre}}",
@@ -1585,7 +1583,13 @@
         "sinGrado": "No grade",
         "filtrarGrupo": "Filter by group",
         "todosGrupos": "All groups",
-        "grupo": "Group"
+        "grupo": "Group",
+        "grupoWillGo": "Group",
+        "grupoDe": "{{nombre}}'s group",
+        "sinGrupoWillGo": "No group",
+        "sinGruposPais": "No groups",
+        "filtrarGrupoWillGo": "Filter by Will-Go group",
+        "todosGruposWillGo": "All Will-Go groups"
       },
       "equipo": {
         "intro": "Only the staff on this list can operate in the edition: give money, charge at the store or distribute from the bank.",

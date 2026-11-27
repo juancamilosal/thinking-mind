@@ -1540,8 +1540,6 @@
         "sinInscritosAyudaColegio": "Lorsqu'un élève de {{colegio}} s'inscrira au programme, il apparaîtra ici automatiquement.",
         "seleccionarTodos": "Tout sélectionner",
         "estudiante": "Élève",
-        "codigo": "Code",
-        "codigoAyuda": "Code court de l'élève pour le trouver ou le scanner (QR) à la caisse et lors de la remise d'argent",
         "saldo": "Solde",
         "presente": "Présent",
         "seleccionarA": "Sélectionner {{nombre}}",
@@ -1585,7 +1583,13 @@
         "sinGrado": "Sans niveau",
         "filtrarGrupo": "Filtrer par groupe",
         "todosGrupos": "Tous les groupes",
-        "grupo": "Groupe"
+        "grupo": "Groupe",
+        "grupoWillGo": "Groupe",
+        "grupoDe": "Groupe de {{nombre}}",
+        "sinGrupoWillGo": "Sans groupe",
+        "sinGruposPais": "Aucun groupe",
+        "filtrarGrupoWillGo": "Filtrer par groupe Will-Go",
+        "todosGruposWillGo": "Tous les groupes Will-Go"
       },
       "equipo": {
         "intro": "Seuls les collaborateurs de cette liste peuvent opérer dans l'édition : remettre de l'argent, encaisser au magasin ou distribuer depuis la banque.",
