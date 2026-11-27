@@ -14,7 +14,8 @@ import { TranslatePipe } from '@ngx-translate/core';
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">{{ 'wg.banco.pagina.titulo' | translate }}</h1>
+          <h1 class="sr-only">{{ 'wg.banco.pagina.titulo' | translate }}</h1>
+          <img src="assets/images/will-go/gobank-logo.png" alt="GO.BANK · Save · Invest · Grow" class="h-14 sm:h-16 w-auto max-w-full -ml-1">
         </div>
       </div>
       <wg-selector-edicion class="block mt-4" [ediciones]="ediciones" [(edicionId)]="edicionId" />
