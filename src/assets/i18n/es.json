@@ -570,8 +570,7 @@
         "paises": "Países y banco",
         "reglas": "Economía",
         "horario": "Horario",
-        "fondos": "Fondos",
-        "grupos": "Grupos"
+        "fondos": "Fondos"
       }
     },
     "banco": {
@@ -865,28 +864,23 @@
       }
     },
     "grupos": {
-      "intro": "Crea grupos dentro de cada país (con nombre y color) y ubica a los estudiantes. Los docentes ven los grupos en la rúbrica y pueden calificar a todo un grupo.",
-      "sinPaises": "Primero crea los países de la edición.",
-      "gruposDe": "Grupos de {{pais}}",
       "nuevo": "+ Nuevo grupo",
-      "vacio": "Este país todavía no tiene grupos.",
-      "quitar": "Quitar",
-      "sinEstudiantes": "Sin estudiantes todavía.",
-      "sinGrupo": "Sin grupo asignado",
       "agregarA": "Agregar al grupo",
-      "eligeGrupo": "Elige el grupo…",
-      "agregarN": "Agregar ({{n}})",
-      "todosConGrupo": "Todos los estudiantes del país tienen grupo.",
-      "todos": "Seleccionar todos",
       "editarTitulo": "Editar grupo",
-      "nuevoTitulo": "Nuevo grupo en {{pais}}",
       "ejemploNombre": "Ej.: Los Exploradores",
       "color": "Color",
       "otroColor": "Otro color",
       "guardado": "Listo: grupo «{{nombre}}» guardado.",
       "confirmarBorrar": "¿Eliminar el grupo «{{nombre}}»?",
       "confirmarBorrarTexto": "Sus estudiantes quedan en el país, sin grupo.",
-      "borrado": "Grupo «{{nombre}}» eliminado."
+      "borrado": "Grupo «{{nombre}}» eliminado.",
+      "titulo": "Grupos",
+      "vacioCorto": "Aún no hay grupos. Crea uno y ubica a los estudiantes desde la columna Grupo o seleccionando varios.",
+      "editarA": "Editar el grupo {{nombre}}",
+      "eliminarA": "Eliminar el grupo {{nombre}}",
+      "nuevoTituloCorto": "Nuevo grupo",
+      "agregados": "Listo: {{n}} estudiante(s) agregados al grupo.",
+      "sacados": "Listo: {{n}} estudiante(s) quedaron sin grupo."
     },
     "montobanco": {
       "efectivo": "Efectivo",

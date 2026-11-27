@@ -570,8 +570,7 @@
         "paises": "Countries and bank",
         "reglas": "Economy",
         "horario": "Schedule",
-        "fondos": "Companies",
-        "grupos": "Groups"
+        "fondos": "Companies"
       }
     },
     "banco": {
@@ -865,28 +864,23 @@
       }
     },
     "grupos": {
-      "intro": "Create groups inside each country (with a name and a color) and place the students. Teachers see the groups in the rubric and can grade a whole group.",
-      "sinPaises": "First create the edition's countries.",
-      "gruposDe": "{{pais}} groups",
       "nuevo": "+ New group",
-      "vacio": "This country has no groups yet.",
-      "quitar": "Remove",
-      "sinEstudiantes": "No students yet.",
-      "sinGrupo": "No group assigned",
       "agregarA": "Add to group",
-      "eligeGrupo": "Choose the group…",
-      "agregarN": "Add ({{n}})",
-      "todosConGrupo": "Every student in the country has a group.",
-      "todos": "Select all",
       "editarTitulo": "Edit group",
-      "nuevoTitulo": "New group in {{pais}}",
       "ejemploNombre": "E.g.: The Explorers",
       "color": "Color",
       "otroColor": "Other color",
       "guardado": "Done: group “{{nombre}}” saved.",
       "confirmarBorrar": "Delete the group “{{nombre}}”?",
       "confirmarBorrarTexto": "Its students stay in the country, with no group.",
-      "borrado": "Group “{{nombre}}” deleted."
+      "borrado": "Group “{{nombre}}” deleted.",
+      "titulo": "Groups",
+      "vacioCorto": "No groups yet. Create one and place students from the Group column or by selecting several.",
+      "editarA": "Edit group {{nombre}}",
+      "eliminarA": "Delete group {{nombre}}",
+      "nuevoTituloCorto": "New group",
+      "agregados": "Done: {{n}} student(s) added to the group.",
+      "sacados": "Done: {{n}} student(s) now have no group."
     },
     "montobanco": {
       "efectivo": "Cash",

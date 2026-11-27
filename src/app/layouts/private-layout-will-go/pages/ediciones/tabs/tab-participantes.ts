@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { formatearNumero } from '../../../numero-miles.directive';
 import { Edicion, Grupo, Pais, Participante, WillGoService } from '../../../../../core/services/will-go.service';
+import { ConfirmacionService } from '../../../../../core/services/confirmacion.service';
 
 @Component({
   selector: 'app-tab-participantes',
@@ -36,6 +37,29 @@ import { Edicion, Grupo, Pais, Participante, WillGoService } from '../../../../.
         <button type="button" (click)="filtro = 'reembolso'" class="chip !border-red-200 !text-red-700" [class.activo]="filtro === 'reembolso'">{{ 'wg.pestanas.participantes.pidieronReembolso' | translate }} · {{ conReembolso.length }}</button>
       }
     </div>
+
+    <!-- Grupos de Will-Go: etiquetas compactas (tocar una filtra la lista; ✎ edita; ✕ elimina) -->
+    <section class="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3">
+      <div class="flex items-center justify-between gap-3">
+        <h3 class="text-sm font-bold text-gray-800">{{ 'wg.grupos.titulo' | translate }}</h3>
+        <button type="button" (click)="nuevoGrupo()" [disabled]="!paises.length" class="shrink-0 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:brightness-110 disabled:opacity-40">{{ 'wg.grupos.nuevo' | translate }}</button>
+      </div>
+      @if (!gruposFiltro.length) {
+        <p class="mt-2 text-xs text-gray-500">{{ 'wg.grupos.vacioCorto' | translate }}</p>
+      } @else {
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (g of gruposFiltro; track g.id) {
+            <span class="inline-flex items-center rounded-full text-white text-sm font-semibold shadow-sm overflow-hidden" [style.background]="g.color || '#475569'"
+                  [class.ring-2]="filtroGrupoWillGo === g.id" [class.ring-offset-2]="filtroGrupoWillGo === g.id" [class.ring-gray-800]="filtroGrupoWillGo === g.id">
+              <button type="button" (click)="filtroGrupoWillGo = filtroGrupoWillGo === g.id ? '' : g.id; seleccion.clear()" class="pl-3 pr-2 py-1 hover:bg-black/10"
+                      [attr.aria-pressed]="filtroGrupoWillGo === g.id">{{ g.nombre }}@if (paises.length > 1 && !paisDelFiltro) { <span class="font-normal opacity-80"> · {{ nombrePais(g.pais_id) }}</span> } · {{ enGrupo(g.id) }}</button>
+              <button type="button" (click)="editarGrupo(g)" class="px-1.5 py-1 hover:bg-black/10" [attr.aria-label]="'wg.grupos.editarA' | translate: { nombre: g.nombre }">✎</button>
+              <button type="button" (click)="borrarGrupo(g)" class="pl-1 pr-2.5 py-1 hover:bg-black/10" [attr.aria-label]="'wg.grupos.eliminarA' | translate: { nombre: g.nombre }">✕</button>
+            </span>
+          }
+        </div>
+      }
+    </section>
 
     <!-- Buscador y filtro por grado (agrupa por nivel: Kinder, Transición, 1°, 2°…) -->
     <div class="mt-3 flex flex-col sm:flex-row gap-2">
@@ -77,6 +101,14 @@ import { Edicion, Grupo, Pais, Participante, WillGoService } from '../../../../.
           <span class="text-sm text-slate-300">{{ 'wg.pestanas.participantes.asignarA' | translate }}</span>
           @for (p of paises; track p.id) {
             <button type="button" (click)="asignarSeleccion(p.id)" class="px-3 py-1.5 rounded-lg text-sm font-semibold" [style.background]="p.color">{{ p.nombre }}</button>
+          }
+          @if (gruposSeleccion.length) {
+            <select [ngModel]="''" (ngModelChange)="asignarGrupoSeleccion($event)" [attr.aria-label]="'wg.grupos.agregarA' | translate"
+                    class="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-900 bg-white">
+              <option value="" disabled>{{ 'wg.grupos.agregarA' | translate }}…</option>
+              @for (g of gruposSeleccion; track g.id) { <option [value]="g.id">{{ g.nombre }}</option> }
+              <option value="__sin">{{ 'wg.pestanas.participantes.sinGrupoWillGo' | translate }}</option>
+            </select>
           }
           <button type="button" (click)="pedirRetiro(seleccionLista)" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-red-600">{{ 'wg.pestanas.participantes.retirar' | translate }}</button>
         }
@@ -226,6 +258,35 @@ import { Edicion, Grupo, Pais, Participante, WillGoService } from '../../../../.
         </div>
       </div>
     }
+
+    <!-- Crear / editar grupo -->
+    @if (borradorGrupo) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" (click)="borradorGrupo = null">
+        <div class="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl p-6" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="titulo-grupo">
+          <h2 id="titulo-grupo" class="text-lg font-bold text-gray-800">{{ (borradorGrupo.id ? 'wg.grupos.editarTitulo' : 'wg.grupos.nuevoTituloCorto') | translate }}</h2>
+          <label for="g-pais-grupo" class="mt-4 block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.comun.pais' | translate }}</label>
+          <select id="g-pais-grupo" [(ngModel)]="borradorGrupo.pais_id" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+            @for (pa of paises; track pa.id) { <option [value]="pa.id">{{ pa.nombre }}</option> }
+          </select>
+          <label for="g-nombre-grupo" class="mt-4 block text-sm font-semibold text-gray-700 mb-1">{{ 'wg.pestanas.comun.nombre' | translate }}</label>
+          <input id="g-nombre-grupo" [(ngModel)]="borradorGrupo.nombre" maxlength="60" [placeholder]="'wg.grupos.ejemploNombre' | translate"
+                 class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-300">
+          <p class="mt-4 text-sm font-semibold text-gray-700 mb-2">{{ 'wg.grupos.color' | translate }}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            @for (c of coloresGrupo; track c) {
+              <button type="button" (click)="borradorGrupo.color = c" class="w-9 h-9 rounded-full ring-offset-2" [style.background]="c" [class]="borradorGrupo.color === c ? 'ring-2 ring-gray-800' : ''" [attr.aria-label]="c"></button>
+            }
+            <input type="color" [(ngModel)]="borradorGrupo.color" class="w-9 h-9 rounded-full border border-gray-200 p-0.5 bg-white" [attr.aria-label]="'wg.grupos.otroColor' | translate">
+          </div>
+          <div class="mt-4 rounded-xl px-4 py-3 text-white font-extrabold" [style.background]="borradorGrupo.color">{{ borradorGrupo.nombre || ('wg.grupos.ejemploNombre' | translate) }}</div>
+          @if (errorGrupo) { <p class="mt-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">{{ errorGrupo }}</p> }
+          <div class="mt-5 flex flex-col-reverse sm:flex-row gap-2">
+            <button type="button" (click)="borradorGrupo = null" class="flex-1 py-3 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50">{{ 'wg.pestanas.comun.cancelar' | translate }}</button>
+            <button type="button" (click)="guardarGrupo()" [disabled]="guardandoGrupo || !borradorGrupo.nombre.trim() || !borradorGrupo.pais_id" class="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 disabled:opacity-50">{{ (guardandoGrupo ? 'wg.pestanas.comun.guardando' : 'wg.pestanas.comun.guardar') | translate }}</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; background: #fff; border: 1px solid #e5e7eb; color: #4b5563; }
@@ -237,6 +298,7 @@ export class TabParticipantes implements OnInit {
   @Output() cambio = new EventEmitter<void>();
   private willGo = inject(WillGoService);
   private t = inject(TranslateService);
+  private confirmacion = inject(ConfirmacionService);
 
   lista: Participante[] = [];
   paises: Pais[] = [];
@@ -248,6 +310,85 @@ export class TabParticipantes implements OnInit {
   readonly miles = (v: unknown) => formatearNumero(v as number);
   aviso = '';
   avisoError = false;
+
+  readonly coloresGrupo = ['#F97316', '#3B82F6', '#22C55E', '#A855F7', '#EF4444', '#14B8A6', '#EAB308', '#EC4899'];
+  borradorGrupo: { id?: string; pais_id: string; nombre: string; color: string } | null = null;
+  guardandoGrupo = false;
+  errorGrupo = '';
+
+  /** País elegido en los chips de arriba (o null). */
+  get paisDelFiltro(): string | null { return ['', 'sin', 'retirados', 'reembolso'].includes(this.filtro) ? null : this.filtro; }
+  enGrupo(id: string): number { return this.activos.filter((p) => p.grupo_id === id).length; }
+
+  /** Grupos que se pueden asignar a la selección: los del país de los seleccionados (si todos son del mismo). */
+  get gruposSeleccion(): Grupo[] {
+    const paises = new Set(this.seleccionLista.map((p) => p.pais_id));
+    if (paises.size !== 1) return [];
+    const pais = [...paises][0];
+    return pais ? this.gruposDe(pais) : [];
+  }
+  asignarGrupoSeleccion(valor: string): void {
+    if (!valor) return;
+    const grupoId = valor === '__sin' ? null : valor;
+    const ids = this.seleccionLista.map((p) => p.id);
+    this.willGo.actualizarParticipantes(ids, { grupo_id: grupoId }).subscribe({
+      next: () => {
+        this.seleccionLista.forEach((p) => (p.grupo_id = grupoId));
+        this.seleccion.clear();
+        this.mostrar(this.t.instant(grupoId ? 'wg.grupos.agregados' : 'wg.grupos.sacados', { n: ids.length }), false);
+      },
+      error: (e) => this.mostrar(WillGoService.mensajeDeError(e), true),
+    });
+  }
+
+  nuevoGrupo(): void {
+    const pais = this.paisDelFiltro ?? this.paises[0]?.id ?? '';
+    this.errorGrupo = '';
+    this.borradorGrupo = { pais_id: pais, nombre: '', color: this.coloresGrupo[this.gruposDe(pais).length % this.coloresGrupo.length] };
+  }
+  editarGrupo(g: Grupo): void {
+    this.errorGrupo = '';
+    this.borradorGrupo = { id: g.id, pais_id: g.pais_id, nombre: g.nombre, color: g.color || this.coloresGrupo[0] };
+  }
+  guardarGrupo(): void {
+    const b = this.borradorGrupo;
+    if (!b || !b.nombre.trim() || !b.pais_id) return;
+    this.guardandoGrupo = true;
+    this.errorGrupo = '';
+    const datos: Partial<Grupo> = { nombre: b.nombre.trim(), color: b.color, pais_id: b.pais_id };
+    const peticion = b.id
+      ? this.willGo.actualizarEnSeccion<Grupo>('grupos', b.id, datos)
+      : this.willGo.crearEnSeccion<Grupo>(this.edicion.id, 'grupos', { ...datos, orden: this.gruposDe(b.pais_id).length + 1 });
+    peticion.subscribe({
+      next: (g) => {
+        const anterior = this.gruposWillGo.find((x) => x.id === g.id);
+        // Si el grupo cambió de país, sus estudiantes quedaron sin grupo
+        if (anterior && anterior.pais_id !== g.pais_id) this.activos.forEach((p) => { if (p.grupo_id === g.id) p.grupo_id = null; });
+        this.gruposWillGo = anterior ? this.gruposWillGo.map((x) => (x.id === g.id ? g : x)) : [...this.gruposWillGo, g];
+        this.guardandoGrupo = false;
+        this.borradorGrupo = null;
+        this.mostrar(this.t.instant('wg.grupos.guardado', { nombre: g.nombre }), false);
+      },
+      error: (e) => { this.guardandoGrupo = false; this.errorGrupo = WillGoService.mensajeDeError(e); },
+    });
+  }
+  async borrarGrupo(g: Grupo): Promise<void> {
+    const ok = await this.confirmacion.pedir({
+      titulo: this.t.instant('wg.grupos.confirmarBorrar', { nombre: g.nombre }),
+      texto: this.t.instant('wg.grupos.confirmarBorrarTexto'),
+      aceptar: this.t.instant('wg.pestanas.comun.eliminar'), peligro: true,
+    });
+    if (!ok) return;
+    this.willGo.borrarGrupo(g.id).subscribe({
+      next: () => {
+        this.gruposWillGo = this.gruposWillGo.filter((x) => x.id !== g.id);
+        this.activos.forEach((p) => { if (p.grupo_id === g.id) p.grupo_id = null; });
+        if (this.filtroGrupoWillGo === g.id) this.filtroGrupoWillGo = '';
+        this.mostrar(this.t.instant('wg.grupos.borrado', { nombre: g.nombre }), false);
+      },
+      error: (e) => this.mostrar(WillGoService.mensajeDeError(e), true),
+    });
+  }
 
   /** Filtro por grupo de Will-Go ('' = todos, '__sin' = sin grupo). */
   filtroGrupoWillGo = '';

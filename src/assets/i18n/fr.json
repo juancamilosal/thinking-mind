@@ -570,8 +570,7 @@
         "paises": "Pays et banque",
         "reglas": "Économie",
         "horario": "Horaire",
-        "fondos": "Entreprises",
-        "grupos": "Groupes"
+        "fondos": "Entreprises"
       }
     },
     "banco": {
@@ -865,28 +864,23 @@
       }
     },
     "grupos": {
-      "intro": "Créez des groupes dans chaque pays (avec un nom et une couleur) et placez-y les élèves. Les enseignants voient les groupes dans la grille et peuvent évaluer tout un groupe.",
-      "sinPaises": "Créez d'abord les pays de l'édition.",
-      "gruposDe": "Groupes de {{pais}}",
       "nuevo": "+ Nouveau groupe",
-      "vacio": "Ce pays n'a pas encore de groupes.",
-      "quitar": "Retirer",
-      "sinEstudiantes": "Pas encore d'élèves.",
-      "sinGrupo": "Sans groupe",
       "agregarA": "Ajouter au groupe",
-      "eligeGrupo": "Choisissez le groupe…",
-      "agregarN": "Ajouter ({{n}})",
-      "todosConGrupo": "Tous les élèves du pays ont un groupe.",
-      "todos": "Tout sélectionner",
       "editarTitulo": "Modifier le groupe",
-      "nuevoTitulo": "Nouveau groupe à {{pais}}",
       "ejemploNombre": "Ex. : Les Explorateurs",
       "color": "Couleur",
       "otroColor": "Autre couleur",
       "guardado": "C'est fait : groupe « {{nombre}} » enregistré.",
       "confirmarBorrar": "Supprimer le groupe « {{nombre}} » ?",
       "confirmarBorrarTexto": "Ses élèves restent dans le pays, sans groupe.",
-      "borrado": "Groupe « {{nombre}} » supprimé."
+      "borrado": "Groupe « {{nombre}} » supprimé.",
+      "titulo": "Groupes",
+      "vacioCorto": "Pas encore de groupes. Créez-en un et placez les élèves depuis la colonne Groupe ou en en sélectionnant plusieurs.",
+      "editarA": "Modifier le groupe {{nombre}}",
+      "eliminarA": "Supprimer le groupe {{nombre}}",
+      "nuevoTituloCorto": "Nouveau groupe",
+      "agregados": "C'est fait : {{n}} élève(s) ajouté(s) au groupe.",
+      "sacados": "C'est fait : {{n}} élève(s) sans groupe."
     },
     "montobanco": {
       "efectivo": "Espèces",
