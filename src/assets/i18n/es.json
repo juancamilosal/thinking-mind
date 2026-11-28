@@ -774,7 +774,11 @@
         "reverso": "Reverso",
         "ambas": "Frente y reverso",
         "consejoReverso": "Cada tarjeta sale con su frente y, al lado, su reverso. Recorta las dos partes y pégalas espalda con espalda (o dobla por la mitad antes de plastificar).",
-        "volver": "Volver"
+        "volver": "Volver",
+        "tamano": "Tamaño",
+        "real": "Real (varias por hoja)",
+        "grande": "Grande (una por hoja)",
+        "consejoGrande": "Cada estudiante sale en su propia hoja A4, con el frente y el reverso en grande. Imprime a tamaño real (100 %) y con gráficos de fondo activados."
       }
     },
     "errores": {
