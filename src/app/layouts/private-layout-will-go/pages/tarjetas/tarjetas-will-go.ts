@@ -26,8 +26,8 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ 'wg.cuentas.tarjetas.titulo' | translate }}</p>
         <h1 class="text-xl font-bold text-gray-800 break-words">{{ nombreEdicion || '—' }}</h1>
         @if (!cargando && !error && tarjetas.length) {
-          <div class="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
-            <div class="sm:w-64">
+          <div class="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+            <div class="sm:w-64 shrink-0">
               <label for="wg-tj-buscar" class="block text-xs font-semibold text-gray-500 mb-1">{{ 'wg.cuentas.tarjetas.buscar' | translate }}</label>
               <div class="relative">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
@@ -54,6 +54,15 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                 }
               </div>
             </div>
+            <div>
+              <p class="block text-xs font-semibold text-gray-500 mb-1">{{ 'wg.cuentas.tarjetas.tamano' | translate }}</p>
+              <div class="inline-flex gap-1 bg-gray-100 rounded-xl p-1" role="tablist">
+                @for (o of tamanos; track o.id) {
+                  <button type="button" role="tab" [attr.aria-selected]="tamano === o.id" (click)="elegirTamano(o.id)"
+                          class="px-3 h-9 rounded-lg text-sm font-semibold whitespace-nowrap" [class]="tamano === o.id ? 'bg-white shadow text-gray-900' : 'text-gray-600'">{{ o.texto | translate }}</button>
+                }
+              </div>
+            </div>
             <p class="flex-1 text-sm text-gray-600 whitespace-nowrap">{{ (visibles.length === 1 ? 'wg.cuentas.tarjetas.una' : 'wg.cuentas.tarjetas.varias') | translate: { n: visibles.length } }}</p>
             <button type="button" (click)="imprimir()" [disabled]="!visibles.length"
                     class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-40">
@@ -61,8 +70,8 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
               {{ 'wg.cuentas.tarjetas.imprimir' | translate }}
             </button>
           </div>
-          <p class="mt-3 text-xs text-gray-500">{{ 'wg.cuentas.tarjetas.consejo' | translate }}</p>
-          @if (lado === 'ambas') { <p class="mt-1 text-xs text-gray-500">{{ 'wg.cuentas.tarjetas.consejoReverso' | translate }}</p> }
+          <p class="mt-3 text-xs text-gray-500">{{ (tamano === 'grande' ? 'wg.cuentas.tarjetas.consejoGrande' : 'wg.cuentas.tarjetas.consejo') | translate }}</p>
+          @if (lado === 'ambas' && tamano === 'real') { <p class="mt-1 text-xs text-gray-500">{{ 'wg.cuentas.tarjetas.consejoReverso' | translate }}</p> }
         }
       </div>
 
@@ -74,8 +83,10 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         <div class="wg-tj-noimprimir max-w-4xl mx-auto mt-5 bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-600">{{ (tarjetas.length ? 'wg.cuentas.tarjetas.sinCoincidencias' : 'wg.cuentas.tarjetas.sinTarjetas') | translate }}</div>
       } @else {
         <!-- Cada tarjeta en su fila: el frente y, al lado, su reverso -->
-        <div class="wg-tj-hoja">
+        <div class="wg-tj-hoja" [class.wg-tj-grande]="tamano === 'grande'">
           @for (t of visibles; track t.id) {
+            <!-- Las tarjetas de un estudiante (en tamaño grande, cada estudiante en su propia hoja) -->
+            <div class="wg-tj-alumno">
             @if (lado !== 'reverso') {
               <div class="wg-tj-celda">
               <!-- Tarjeta débito GO.BANK (cada QR lleva la llave del estudiante) -->
@@ -121,6 +132,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
                     </article>
               </div>
             }
+            </div>
           }
         </div>
       }
@@ -136,6 +148,15 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
     }
     /* En pantalla, igual que en la hoja: 2 columnas (frente y, al lado, su reverso) */
     @media (min-width: 640px) { .wg-tj-hoja { grid-template-columns: repeat(2, 85.6mm); } }
+    /* Real: las tarjetas van seguidas (2 columnas). Grande: cada estudiante en su hoja, frente y reverso ampliados */
+    .wg-tj-alumno { display: contents; }
+    .wg-tj-grande { grid-template-columns: 1fr !important; }
+    .wg-tj-grande .wg-tj-alumno {
+      display: flex; flex-direction: column; align-items: center; gap: 12mm;
+      padding: 6mm 0 10mm; border-bottom: 2px dashed #cbd5e1;
+    }
+    .wg-tj-grande .wg-tj-celda { zoom: 1; }
+    @media (min-width: 900px) { .wg-tj-grande .wg-tj-celda { zoom: 1.6; } }
     .wg-tj-celda {
       width: 85.6mm;
       height: 54mm;
@@ -239,6 +260,11 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         margin: 0;
       }
       body.${CLASE_BODY} .wg-tj-tarjeta { box-shadow: none; }
+      /* Tamaño grande: una hoja por estudiante; 85,6 × 54 mm × 2,15 ≈ 184 × 116 mm cada lado (caben los dos en A4) */
+      body.${CLASE_BODY} .wg-tj-grande { grid-template-columns: 1fr !important; gap: 0; }
+      body.${CLASE_BODY} .wg-tj-grande .wg-tj-alumno { padding: 0; border: 0; gap: 10mm; break-after: page; page-break-after: always; }
+      body.${CLASE_BODY} .wg-tj-grande .wg-tj-alumno:last-child { break-after: auto; page-break-after: auto; }
+      body.${CLASE_BODY} .wg-tj-grande .wg-tj-celda { zoom: 2.15; }
       body.${CLASE_BODY} * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   `],
@@ -283,6 +309,17 @@ export class TarjetasWillGo implements OnInit, OnDestroy {
     { id: 'frente', texto: 'wg.cuentas.tarjetas.frente' },
     { id: 'reverso', texto: 'wg.cuentas.tarjetas.reverso' },
   ];
+  /** Real: tamaño de tarjeta (varias por hoja). Grande: una hoja por estudiante, con la tarjeta ampliada. */
+  readonly tamanos: { id: 'real' | 'grande'; texto: string }[] = [
+    { id: 'real', texto: 'wg.cuentas.tarjetas.real' },
+    { id: 'grande', texto: 'wg.cuentas.tarjetas.grande' },
+  ];
+  tamano: 'real' | 'grande' = (() => { try { return localStorage.getItem('wg_tarjetas_tamano') === 'grande' ? 'grande' : 'real'; } catch { return 'real'; } })();
+  elegirTamano(t: 'real' | 'grande'): void {
+    this.tamano = t;
+    try { localStorage.setItem('wg_tarjetas_tamano', t); } catch { /* sin almacenamiento */ }
+  }
+
   /** Por defecto, cada tarjeta con su frente y al lado su reverso. */
   lado: 'frente' | 'reverso' | 'ambas' = 'ambas';
 
