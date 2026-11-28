@@ -774,11 +774,7 @@
         "reverso": "Verso",
         "ambas": "Recto et verso",
         "consejoReverso": "Chaque carte sort avec son recto et, à côté, son verso. Découpez les deux parties et collez-les dos à dos (ou pliez en deux avant de plastifier).",
-        "volver": "Retour",
-        "tamano": "Taille",
-        "real": "Réelle (plusieurs par feuille)",
-        "grande": "Grande (une par feuille)",
-        "consejoGrande": "Chaque élève a sa propre feuille A4, avec le recto et le verso en grand. Imprimez à taille réelle (100 %) avec les graphiques d'arrière-plan activés."
+        "volver": "Retour"
       }
     },
     "errores": {
