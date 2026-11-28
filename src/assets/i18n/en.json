@@ -774,11 +774,7 @@
         "reverso": "Back",
         "ambas": "Front and back",
         "consejoReverso": "Each card comes with its front and, next to it, its back. Cut both parts and glue them back to back (or fold in half before laminating).",
-        "volver": "Back",
-        "tamano": "Size",
-        "real": "Actual (several per sheet)",
-        "grande": "Large (one per sheet)",
-        "consejoGrande": "Each student gets their own A4 sheet, with the front and back printed large. Print at actual size (100%) with background graphics on."
+        "volver": "Back"
       }
     },
     "errores": {
