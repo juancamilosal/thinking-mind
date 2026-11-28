@@ -156,7 +156,7 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
       padding: 6mm 0 10mm; border-bottom: 2px dashed #cbd5e1;
     }
     .wg-tj-grande .wg-tj-celda { zoom: 1; }
-    @media (min-width: 900px) { .wg-tj-grande .wg-tj-celda { zoom: 1.4; } }
+    @media (min-width: 900px) { .wg-tj-grande .wg-tj-celda { zoom: 1.6; } }
     .wg-tj-celda {
       width: 85.6mm;
       height: 54mm;
@@ -260,11 +260,11 @@ const CLASE_BODY = 'wg-imprimiendo-tarjetas';
         margin: 0;
       }
       body.${CLASE_BODY} .wg-tj-tarjeta { box-shadow: none; }
-      /* Tamaño grande: una hoja por estudiante; 85,6 × 54 mm × 1,6 ≈ 137 × 86 mm cada lado */
+      /* Tamaño grande: una hoja por estudiante; 85,6 × 54 mm × 2,15 ≈ 184 × 116 mm cada lado (caben los dos en A4) */
       body.${CLASE_BODY} .wg-tj-grande { grid-template-columns: 1fr !important; gap: 0; }
       body.${CLASE_BODY} .wg-tj-grande .wg-tj-alumno { padding: 0; border: 0; gap: 10mm; break-after: page; page-break-after: always; }
       body.${CLASE_BODY} .wg-tj-grande .wg-tj-alumno:last-child { break-after: auto; page-break-after: auto; }
-      body.${CLASE_BODY} .wg-tj-grande .wg-tj-celda { zoom: 1.6; }
+      body.${CLASE_BODY} .wg-tj-grande .wg-tj-celda { zoom: 2.15; }
       body.${CLASE_BODY} * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   `],
